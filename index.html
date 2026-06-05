@@ -85,7 +85,7 @@
     onAuthStateChanged, signOut, setPersistence, browserLocalPersistence,
   } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
   import {
-    getFirestore, doc, getDoc, setDoc, serverTimestamp, collection, getDocs,
+    getFirestore, doc, getDoc, setDoc, serverTimestamp, collection, getDocs, addDoc,
   } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -101,6 +101,22 @@
   const db = getFirestore(app);
   setPersistence(auth, browserLocalPersistence).catch(console.error);
   window.__fp = { auth, db, signOut };
+
+  // ===== audit log (重要操作の記録) =====
+  async function audit(action, detail) {
+    const u = auth.currentUser;
+    if (!u) return;
+    try {
+      await addDoc(collection(db, "audit_logs"), {
+        uid: u.uid, email: u.email,
+        tenantId: window.__fp?.tenantId || null,
+        action, detail: detail || null,
+        userAgent: navigator.userAgent.slice(0, 200),
+        timestamp: serverTimestamp(),
+      });
+    } catch (e) { console.warn("audit log failed:", e); }
+  }
+  window.__fp.audit = audit;
 
   // ===== 紹介パラメータ捕捉 (?ref / ?agent) =====
   (function(){
@@ -280,6 +296,8 @@
       window.LEAD_SCENARIO = window.LEAD_SCENARIO || {};
       window.LEAD_FORM = window.LEAD_FORM || {};
       gateRemove();
+      // audit log
+      audit("login", { tenantId: window.__fp.tenantId, clientCount: clients.length });
       // 既存 CRM 初期化フックがあれば呼ぶ
       if (typeof window.fpReadyAfterAuth === "function") window.fpReadyAfterAuth();
       // top bar に user 情報表示 + ログアウトボタン挿入
