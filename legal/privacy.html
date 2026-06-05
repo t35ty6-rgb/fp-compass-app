@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>プライバシーポリシー — FP Compass | Skeleton Inc.</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after { box-sizing:border-box; }
+  body { margin:0; font-family:'Noto Sans JP',sans-serif; background:#FAFAF7; color:#1A1A1A;
+    line-height:1.85; font-feature-settings:"palt"; -webkit-font-smoothing:antialiased; }
+  .doc { max-width:760px; margin:0 auto; padding:56px 48px 80px;
+    background:#fff; box-shadow:0 24px 60px rgba(0,0,0,0.06); min-height:100vh; }
+  .doc-head { border-bottom:2px solid #1A1A1A; padding-bottom:24px; margin-bottom:32px; }
+  .doc-eyebrow { font-family:'JetBrains Mono',monospace; font-weight:700;
+    font-size:11px; letter-spacing:0.28em; color:#888; margin-bottom:12px; }
+  .doc-title { font-size:30px; font-weight:700; margin:0; letter-spacing:-0.01em; }
+  .doc-meta { margin-top:16px; display:flex; gap:24px;
+    font-size:12.5px; color:#666; font-family:'JetBrains Mono',monospace; }
+  h2 { font-size:17px; font-weight:700; margin:36px 0 12px;
+    padding-bottom:6px; border-bottom:1px dashed #ccc; letter-spacing:0.02em; }
+  p { font-size:14px; margin:10px 0; }
+  ol, ul { padding-left:28px; margin:10px 0; }
+  li { font-size:14px; margin:8px 0; line-height:1.85; }
+  .callout { background:#F4F2EC; padding:18px 24px; border-left:4px solid #1A1A1A; margin:16px 0; font-size:13px; }
+  table { width:100%; border-collapse:collapse; margin:16px 0; }
+  th, td { padding:12px 16px; text-align:left; border-bottom:1px solid #DDD; font-size:13px; }
+  th { background:#F4F2EC; font-weight:700; }
+  @media (max-width:680px) { .doc { padding:32px 22px; } }
+</style>
+</head>
+<body>
+<div class="doc">
+
+  <div class="doc-head">
+    <div class="doc-eyebrow">SKELETON INC. · PRIVACY POLICY v2.0</div>
+    <h1 class="doc-title">プライバシーポリシー</h1>
+    <div class="doc-meta">
+      <span>制定日: 2026-06-06</span>
+      <span>最終更新: 2026-06-06</span>
+    </div>
+  </div>
+
+  <p>スケルトン株式会社 (以下「当社」) は、 SaaS サービス「FP Compass」 (以下「本サービス」)
+  における個人情報の取扱いについて、 個人情報保護法その他関連法令を遵守し、
+  以下のとおりプライバシーポリシー (以下「本ポリシー」) を定めます。</p>
+
+  <h2>第1条 (取得する個人情報)</h2>
+  <p>当社は本サービスの提供に際し、 次の個人情報を取得します:</p>
+  <table>
+    <tr><th style="width:200px;">対象</th><th>取得する情報</th></tr>
+    <tr><td><b>FP (本サービス利用者)</b></td><td>氏名、 メールアドレス、 屋号 / 法人名、 パスワード (SCRYPT ハッシュ化)、 IP アドレス、 利用ログ</td></tr>
+    <tr><td><b>エンドユーザー (FP の顧客)</b></td><td>FP が入力する氏名、 連絡先、 家族構成、 相談履歴、 LINE 履歴、 議事録 等</td></tr>
+    <tr><td><b>代理店</b></td><td>氏名、 屋号、 メアド、 電話、 SNS URL、 業界経験、 銀行口座 (報酬振込用)</td></tr>
+    <tr><td><b>申請者・問い合わせ者</b></td><td>申請フォーム / お問い合わせフォームに入力された情報</td></tr>
+  </table>
+
+  <h2>第2条 (利用目的)</h2>
+  <ol>
+    <li>本サービスの提供、 認証、 サポート、 不正利用防止</li>
+    <li>料金請求、 代理店報酬計算・支払</li>
+    <li>サービスの改善、 統計分析、 AI モデル学習 (個人特定不可な集計データのみ)</li>
+    <li>利用規約違反の調査、 法令対応、 紛争解決</li>
+    <li>サービスに関する重要なお知らせ・通知の送付</li>
+  </ol>
+
+  <h2>第3条 (データの管理体制)</h2>
+  <p>当社は本サービスのデータを Google Cloud (Firebase / Firestore) 上に保管しており、
+  以下の技術的・組織的安全管理措置を講じています:</p>
+  <ul>
+    <li><b>暗号化:</b> 通信は TLS 1.3、 パスワードは SCRYPT ハッシュ、 保存データは AES-256 で暗号化</li>
+    <li><b>テナント分離:</b> Firestore セキュリティルールにより、 各 FP は自社のデータのみ閲覧可能</li>
+    <li><b>バックアップ:</b> Point-in-time recovery (7日)、 Daily (7日)、 Weekly (12週) の3層</li>
+    <li><b>アクセス制御:</b> 当社内では Skeleton 代表取締役のみが管理者権限を保有</li>
+    <li><b>監査ログ:</b> 全ての read / write / delete 操作を audit_logs に記録</li>
+    <li><b>所在地:</b> サーバーは Google Cloud asia-northeast1 (東京) リージョン</li>
+  </ul>
+
+  <h2>第4条 (第三者提供)</h2>
+  <p>当社は、 法令に基づく場合を除き、 ご本人の同意なく個人情報を第三者に提供しません。
+  ただし、 以下の業務委託先には業務上必要な範囲で情報を共有します:</p>
+  <ul>
+    <li><b>Google Cloud Platform</b> (本サービスのインフラ提供)</li>
+    <li><b>Stripe</b> (決済処理。 クレジットカード情報は Stripe が PCI DSS 準拠で取り扱い、 当社サーバーには保存しない)</li>
+    <li><b>クラウドサイン</b> (代理店との電子契約締結)</li>
+    <li><b>Anthropic</b> (AI 議事録要約。 議事録テキストは Anthropic に送信されるが、 学習には使用されない契約)</li>
+  </ul>
+
+  <h2>第5条 (代理店プログラムにおける情報共有)</h2>
+  <p>代理店経由で本サービスに登録された FP の情報のうち、 以下の項目のみ
+  代理店本人のダッシュボードで開示されます:</p>
+  <ul>
+    <li>FP の屋号 / 法人名</li>
+    <li>登録日</li>
+    <li>有料化・解約等のステータス</li>
+  </ul>
+  <p>代理店には FP のエンドユーザー (相談者) の情報は<strong>一切開示されません</strong>。</p>
+
+  <h2>第6条 (お客様の権利)</h2>
+  <p>お客様は、 ご自身の個人情報について、 次の権利を行使できます:</p>
+  <ul>
+    <li><b>開示請求:</b> ご自身の情報の開示を求めることができます</li>
+    <li><b>訂正・削除:</b> 情報の訂正・削除を求めることができます</li>
+    <li><b>データポータビリティ:</b> 解約時、 全データを CSV/JSON で自動 DL 可能</li>
+    <li><b>利用停止:</b> 同意の撤回 / 利用停止を求めることができます</li>
+  </ul>
+  <p>これらの権利行使は support@skeleton-inc.jp までご連絡ください。
+  本人確認後、 速やかに対応します (原則7営業日以内)。</p>
+
+  <h2>第7条 (Cookie・解析ツール)</h2>
+  <p>本サービスはサービスの改善のため、 以下のツールを利用しています:</p>
+  <ul>
+    <li><b>Firebase Analytics:</b> 利用状況の集計 (IP 匿名化済)</li>
+    <li><b>Cookie / localStorage:</b> ログイン状態の保持、 紹介トラッキング</li>
+  </ul>
+  <p>ブラウザ設定で無効化することも可能ですが、 一部機能が制限される場合があります。</p>
+
+  <h2>第8条 (未成年者)</h2>
+  <p>本サービスは事業者向けであり、 未成年者の利用を想定していません。
+  万一未成年者の個人情報を取得していたことが判明した場合、 速やかに削除します。</p>
+
+  <h2>第9条 (本ポリシーの改定)</h2>
+  <p>当社は、 法令の改正、 サービスの変更等に応じ、 本ポリシーを改定することがあります。
+  重要な変更については本サービス上で30日前までに通知します。</p>
+
+  <h2>第10条 (お問い合わせ)</h2>
+  <div class="callout">
+    <p style="margin:0;line-height:1.9;">
+      <b>個人情報保護管理者:</b> スケルトン株式会社 代表取締役 吉田 恭聡<br>
+      <b>連絡先:</b> support@skeleton-inc.jp<br>
+      <b>所在地:</b> 〒910-0833 福井県大野市寺町通り1丁目4-31
+    </p>
+  </div>
+
+</div>
+</body>
+</html>

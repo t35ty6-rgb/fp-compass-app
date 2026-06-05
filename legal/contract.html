@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>業務委託契約書 — FP Compass 代理店プログラム | Skeleton Inc.</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Noto Sans JP', sans-serif;
+    background: #FAFAF7;
+    color: #1A1A1A;
+    line-height: 1.85;
+    font-feature-settings: "palt";
+    -webkit-font-smoothing: antialiased;
+  }
+  .doc {
+    max-width: 760px; margin: 0 auto;
+    padding: 56px 48px 80px;
+    background: #fff;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.06);
+    min-height: 100vh;
+  }
+  .doc-head { border-bottom: 2px solid #1A1A1A; padding-bottom: 24px; margin-bottom: 32px; }
+  .doc-eyebrow { font-family: 'JetBrains Mono', monospace; font-weight: 700;
+    font-size: 11px; letter-spacing: 0.28em; color: #888;
+    margin-bottom: 12px; }
+  .doc-title { font-size: 30px; font-weight: 700; margin: 0;
+    letter-spacing: -0.01em; }
+  .doc-meta { margin-top: 16px; display: flex; gap: 24px;
+    font-size: 12.5px; color: #666; font-family: 'JetBrains Mono', monospace; }
+
+  .doc h2 {
+    font-size: 17px; font-weight: 700; margin: 40px 0 12px;
+    padding-bottom: 6px; border-bottom: 1px dashed #ccc;
+    letter-spacing: 0.02em;
+  }
+  .doc h3 {
+    font-size: 15px; font-weight: 700; margin: 24px 0 10px;
+    color: #333;
+  }
+  .doc p { font-size: 14px; margin: 10px 0; }
+  .doc ol, .doc ul { margin: 10px 0; padding-left: 28px; }
+  .doc li { font-size: 14px; margin: 8px 0; line-height: 1.85; }
+
+  .preamble {
+    background: #F4F2EC;
+    padding: 22px 28px; border-left: 4px solid #1A1A1A;
+    margin: 24px 0;
+  }
+  .preamble p { margin: 4px 0; font-size: 14px; }
+
+  .sign-block {
+    margin-top: 48px; padding-top: 32px; border-top: 2px solid #1A1A1A;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 40px;
+  }
+  .sign-cell {
+    border: 1.5px solid #1A1A1A; padding: 20px 24px;
+    min-height: 200px;
+  }
+  .sign-cell-h { font-weight: 700; font-size: 14px; margin-bottom: 14px;
+    padding-bottom: 8px; border-bottom: 1px dashed #999; }
+  .sign-line { margin-top: 60px; padding-top: 8px; border-top: 1px solid #999;
+    font-size: 11px; color: #888; }
+
+  .foot-note {
+    margin-top: 48px; padding: 18px 22px;
+    background: #FFF8E1; border: 1px solid #F0D88B;
+    font-size: 12px; color: #6B5A1F; line-height: 1.8;
+  }
+
+  @media (max-width: 680px) {
+    .doc { padding: 32px 22px; }
+    .sign-block { grid-template-columns: 1fr; }
+  }
+  @media print {
+    body { background: #fff; }
+    .doc { box-shadow: none; padding: 24px 32px; }
+    .foot-note { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="doc">
+
+  <div class="doc-head">
+    <div class="doc-eyebrow">SKELETON INC. · FP COMPASS</div>
+    <h1 class="doc-title">業務委託契約書</h1>
+    <div class="doc-meta">
+      <span>Doc: AGENCY-CONTRACT v1.0</span>
+      <span>制定日: 2026-06-06</span>
+    </div>
+  </div>
+
+  <div class="preamble">
+    <p>スケルトン株式会社 (以下「甲」という) と、 末尾署名欄記載の代理店事業者 (以下「乙」という) は、
+    甲が提供する SaaS サービス「FP Compass」 (以下「本サービス」という) の
+    紹介・販売代理に関し、 以下のとおり業務委託契約 (以下「本契約」という) を締結する。</p>
+  </div>
+
+  <h2>第1条 (目的)</h2>
+  <p>本契約は、 甲が乙に対し、 本サービスを FP 事業者 (以下「エンドユーザー」という) へ
+  紹介・販売する業務 (以下「本業務」という) を委託し、 乙がこれを受託する条件を定めるものである。</p>
+
+  <h2>第2条 (本業務の内容)</h2>
+  <ol>
+    <li>乙は、 甲から発行された専用の紹介 URL (以下「代理店 URL」という) を用いて、
+        本サービスを必要とする FP 事業者にこれを紹介し、 契約に至るよう営業活動を行う。</li>
+    <li>乙は、 営業活動において以下を遵守する:
+      <ul>
+        <li>本サービスの仕様・料金を正確に説明し、 虚偽説明・誇大表現を行わない。</li>
+        <li>エンドユーザーに対し本サービスの購入を強制しない。 押し売り行為を一切行わない。</li>
+        <li>本サービスの内容と異なる利益保証・効果保証を行わない。</li>
+        <li>連鎖販売取引 (MLM) その他、 特定商取引法・各種法令に抵触する勧誘を一切行わない。</li>
+      </ul>
+    </li>
+  </ol>
+
+  <h2>第3条 (報酬)</h2>
+  <ol>
+    <li>甲は乙に対し、 乙の代理店 URL 経由で契約・有料化された各エンドユーザーにつき、
+        次の報酬を支払う:
+      <ul>
+        <li><strong>継続報酬:</strong> 1社あたり月額 <strong>¥7,000 (税抜)</strong>。
+            当該エンドユーザーが本サービスを有料利用している期間、 毎月支払う。</li>
+        <li><strong>新規ボーナス:</strong> 1社あたり <strong>¥15,000 (税抜)</strong>。
+            ただし当該エンドユーザーが <strong>3ヶ月間連続して有料利用</strong> を維持した場合に限り、
+            4ヶ月目に支払う。</li>
+      </ul>
+    </li>
+    <li>報酬の確定基準日は毎月末日、 支払日は翌月15日 (銀行休業日の場合は翌営業日) とする。
+        振込手数料は甲負担とする。</li>
+    <li>1ヶ月の支払額が ¥10,000 未満の場合は翌月以降に繰越し、 累積額が ¥10,000 以上に達した時点で支払う。</li>
+    <li>エンドユーザーが解約 / 支払停止 / Chargeback 等により当該月の有料状態を満たさなかった場合、
+        当該月の継続報酬は発生しない。</li>
+  </ol>
+
+  <h2>第4条 (税務処理)</h2>
+  <p>第3条の報酬は乙の事業収入として乙が自ら確定申告を行うものとし、
+  甲は適格請求書発行事業者である乙への支払いに際し源泉徴収を行わない。
+  乙が源泉徴収対象事業者である場合、 甲は源泉所得税を差し引いて支払うことができる。</p>
+
+  <h2>第5条 (代理店階層)</h2>
+  <ol>
+    <li>乙は本契約に基づき、 単独の代理店としてのみ活動するものとし、
+        乙の下層代理店 (孫代理店) を組織することはできない。</li>
+    <li>これは特定商取引法第33条 (連鎖販売取引) の適用を回避するための重要条項である。</li>
+  </ol>
+
+  <h2>第6条 (秘密保持)</h2>
+  <p>乙は、 本業務を通じて知り得た甲の営業上・技術上・顧客に関する一切の情報を、
+  本契約期間中および契約終了後3年間、 第三者に開示・漏洩してはならない。</p>
+
+  <h2>第7条 (反社会的勢力の排除)</h2>
+  <ol>
+    <li>乙は、 自身が暴力団・暴力団員・反社会的勢力に該当しないこと、
+        またこれらと関係を有しないことを表明・保証する。</li>
+    <li>前項の表明・保証に違反した場合、 甲は何らの催告なく本契約を解除し、 損害賠償を請求できる。</li>
+  </ol>
+
+  <h2>第8条 (契約期間および解除)</h2>
+  <ol>
+    <li>本契約の期間は、 締結日から1年間とし、 期間満了の30日前までに
+        甲または乙からの解約の意思表示がない場合、 同一条件で自動的に1年間更新される。</li>
+    <li>甲または乙は、 30日前までに書面 (電子的方法を含む) で通知することにより、 本契約を解約できる。</li>
+    <li>乙が次の各号のいずれかに該当する場合、 甲は催告なく本契約を解除できる:
+      <ul>
+        <li>第2条の遵守事項に違反し、 エンドユーザーから3件以上のクレームが発生した場合 (要警告)、
+            または5件以上に達した場合 (即解除)。</li>
+        <li>本契約に基づく義務を継続的に履行しない場合。</li>
+        <li>第7条の表明・保証に違反した場合。</li>
+        <li>本契約締結から1年間において新規エンドユーザー獲得が0社の場合 (休眠扱い)。</li>
+      </ul>
+    </li>
+    <li>契約解除後も、 解除前に成立した有料契約に基づく継続報酬の支払義務は存続する。
+        ただし、 乙が第7条に違反した場合はこの限りでない。</li>
+  </ol>
+
+  <h2>第9条 (損害賠償)</h2>
+  <p>甲または乙が本契約に違反し、 相手方に損害を与えた場合、
+  当該違反者は相手方に対し当該損害を賠償する責を負う。
+  ただし、 甲の責に帰すべき事由による損害賠償の累計額は、
+  当該損害発生直前の12ヶ月間に甲が乙に支払った報酬総額を上限とする。</p>
+
+  <h2>第10条 (協議事項)</h2>
+  <p>本契約に定めのない事項、 または本契約の条項の解釈について疑義が生じた場合、
+  甲乙双方は誠実に協議し、 これを解決するものとする。</p>
+
+  <h2>第11条 (合意管轄)</h2>
+  <p>本契約に関連する一切の紛争については、 福井地方裁判所を第一審の専属的合意管轄裁判所とする。</p>
+
+  <p style="margin-top:40px;">以上を証するため本契約書を電子的に作成し、 甲乙それぞれ署名押印 (電子署名) のうえ各1通を保有する。</p>
+
+  <div class="sign-block">
+    <div class="sign-cell">
+      <div class="sign-cell-h">甲 (委託者)</div>
+      <div style="font-size:13px;line-height:1.9;">
+        スケルトン株式会社<br>
+        所在地: 福井県大野市寺町通り1丁目4-31<br>
+        代表取締役: 吉田 恭聡
+      </div>
+      <div class="sign-line">電子署名 / 押印</div>
+    </div>
+    <div class="sign-cell">
+      <div class="sign-cell-h">乙 (受託者)</div>
+      <div style="font-size:13px;line-height:1.9;color:#888;">
+        屋号 / 法人名: ____________<br>
+        所在地: ____________<br>
+        代表者: ____________
+      </div>
+      <div class="sign-line">電子署名 / 押印</div>
+    </div>
+  </div>
+
+  <div class="foot-note">
+    📝 <strong>このテンプレートについて:</strong> 本ファイルは Skeleton Inc. が代理店プログラムに使用する
+    標準業務委託契約書のテンプレートです。 実際の契約締結は <strong>クラウドサイン</strong> 等の
+    電子契約サービス経由で行います。 法律的な疑義・修正提案は support@skeleton-inc.jp までご連絡ください。
+  </div>
+
+</div>
+</body>
+</html>
