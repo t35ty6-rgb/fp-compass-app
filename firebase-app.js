@@ -101,10 +101,12 @@ async function doSignup() {
 
   const btn = $("signup-btn");
   btn.disabled = true; btn.textContent = "作成中…";
+  signupInProgress = true;
   let cred;
   try {
     cred = await createUserWithEmailAndPassword(auth, email, password);
   } catch (e) {
+    signupInProgress = false;
     console.error(e);
     const map = {
       "auth/email-already-in-use": "このメールアドレスは既に登録されています。ログインタブから入ってください。",
@@ -133,31 +135,44 @@ async function doSignup() {
       createdAt: serverTimestamp(),
     });
     msg("ok", `${fpName} を作成しました。ログイン中…`);
-    // onAuthStateChanged が自動で続きを処理する
+    signupInProgress = false;
+    // onAuthStateChanged の retry がこのタイミングで成功する
   } catch (e) {
     console.error(e);
+    signupInProgress = false;
     msg("err", "テナント作成に失敗: " + e.message + "。Skeleton 管理者にご連絡ください。");
     btn.disabled = false; btn.textContent = "アカウント作成";
   }
 }
 
 // ============ 認証状態の監視 ============
+let signupInProgress = false;
+async function fetchUserDocWithRetry(uid, maxRetries = 5) {
+  for (let i = 0; i < maxRetries; i++) {
+    const snap = await getDoc(doc(db, "users", uid));
+    if (snap.exists()) return snap;
+    if (i < maxRetries - 1) await new Promise(r => setTimeout(r, 800));
+  }
+  return null;
+}
+
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
     loginEl.style.display = "grid";
     appEl.style.display = "none";
     return;
   }
+  // 新規登録進行中なら、users/{uid} のセット完了を待つ
   let userDoc;
   try {
-    userDoc = await getDoc(doc(db, "users", user.uid));
+    userDoc = await fetchUserDocWithRetry(user.uid, signupInProgress ? 10 : 3);
   } catch (e) {
     msg("err", "ユーザー情報の取得に失敗: " + e.message);
     return;
   }
-  if (!userDoc.exists()) {
+  if (!userDoc) {
     loginEl.style.display = "grid";
-    msg("err", `${user.email} は Skeleton 側にまだ登録されていません。管理者にご連絡ください。`);
+    msg("err", `${user.email} は Skeleton 側にまだ登録されていません。新規登録タブで作成してください。`);
     await signOut(auth);
     return;
   }
