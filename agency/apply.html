@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>代理店申請 — FP Compass | Skeleton Inc.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Noto+Sans+JP:wght@400;500;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0F172A;
+    --ink-2: #475569;
+    --ink-3: #94A3B8;
+    --indigo: #5B5BF0;
+    --indigo-deep: #3838CC;
+    --gold: #B89058;
+    --ok: #10B981;
+    --warn: #F59E0B;
+    --err: #E11D48;
+    --bg: #F7F8FC;
+    --paper: #FFFFFF;
+    --line: #E2E8F0;
+  }
+  *,*::before,*::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: "palt";
+  }
+
+  /* ===== Hero ===== */
+  .hero {
+    background: linear-gradient(135deg, var(--ink) 0%, #1B2658 100%);
+    color: #fff;
+    padding: 64px 32px 80px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: ""; position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 600px 300px at 80% 0%, rgba(184,144,88,0.18), transparent 60%);
+    pointer-events: none;
+  }
+  .hero-wrap { max-width: 720px; margin: 0 auto; position: relative; }
+  .hero-brand {
+    display: flex; align-items: center; gap: 10px;
+    font-family: 'Manrope', sans-serif; font-weight: 800;
+    font-size: 14px; opacity: 0.9; margin-bottom: 32px;
+  }
+  .hero-brand-mark {
+    width: 28px; height: 28px; border-radius: 6px;
+    background: linear-gradient(135deg, var(--indigo), var(--indigo-deep));
+    display: grid; place-items: center;
+    font-family: 'Manrope', sans-serif; font-weight: 800; color: #fff; font-size: 13px;
+  }
+  .hero-eyebrow {
+    font-family: 'Manrope', sans-serif; font-weight: 700;
+    font-size: 11px; letter-spacing: 0.32em; text-transform: uppercase;
+    color: #FFB300; margin-bottom: 18px;
+  }
+  .hero-title {
+    font-family: 'Noto Sans JP', sans-serif; font-weight: 900;
+    font-size: clamp(32px, 5vw, 48px); line-height: 1.2; letter-spacing: -0.02em;
+    margin: 0;
+  }
+  .hero-title span { color: #FFB300; }
+  .hero-sub {
+    margin-top: 18px; font-size: 15px; line-height: 1.8;
+    opacity: 0.85;
+  }
+  .hero-perks {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;
+    margin-top: 36px;
+  }
+  .perk {
+    background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.16);
+    border-radius: 12px; padding: 16px 18px;
+  }
+  .perk-num {
+    font-family: 'Manrope', sans-serif; font-weight: 800; font-size: 22px;
+    color: #FFB300; letter-spacing: -0.02em;
+  }
+  .perk-num small { font-size: 12px; opacity: 0.7; font-weight: 500; }
+  .perk-lbl { font-size: 11.5px; opacity: 0.75; margin-top: 4px; }
+
+  /* ===== Form ===== */
+  .form-wrap {
+    max-width: 720px; margin: -32px auto 80px;
+    background: #fff; border-radius: 20px; padding: 48px;
+    box-shadow: 0 20px 60px rgba(15,23,42,0.08);
+    position: relative;
+  }
+  .form-h {
+    font-family: 'Manrope', sans-serif; font-weight: 800;
+    font-size: 22px; letter-spacing: -0.01em;
+    margin: 0 0 8px;
+  }
+  .form-sub {
+    color: var(--ink-2); font-size: 13.5px; margin: 0 0 32px;
+  }
+  .field {
+    margin-bottom: 22px;
+  }
+  .field-label {
+    display: block; font-weight: 700; font-size: 12.5px;
+    margin-bottom: 8px;
+    letter-spacing: 0.02em;
+  }
+  .field-label small { font-weight: 500; color: var(--ink-3); margin-left: 6px; }
+  .field-label .req {
+    color: var(--err); font-size: 11px; font-weight: 800;
+    background: #FEE2E2; padding: 2px 6px; border-radius: 4px;
+    margin-left: 6px;
+  }
+  .field-input, .field-textarea, .field-select {
+    width: 100%; padding: 12px 14px;
+    border: 1.5px solid var(--line); border-radius: 10px;
+    font-family: inherit; font-size: 14px;
+    background: #fff; color: var(--ink);
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .field-input:focus, .field-textarea:focus, .field-select:focus {
+    outline: none; border-color: var(--indigo);
+    box-shadow: 0 0 0 4px rgba(91,91,240,0.12);
+  }
+  .field-textarea { resize: vertical; min-height: 92px; line-height: 1.7; }
+  .field-help {
+    font-size: 11.5px; color: var(--ink-3);
+    margin-top: 6px; line-height: 1.5;
+  }
+  .field-row {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+  }
+  .field-check {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 14px 16px; background: #F8FAFC; border-radius: 10px;
+    font-size: 12.5px; line-height: 1.6;
+    cursor: pointer;
+    border: 1.5px solid transparent;
+    transition: background .15s, border-color .15s;
+  }
+  .field-check:hover { background: #F1F5F9; }
+  .field-check input { margin-top: 2px; transform: scale(1.1); cursor: pointer; }
+  .field-check input:checked + span { color: var(--ink); }
+  .field-check span { color: var(--ink-2); }
+  .field-check b { color: var(--ink); }
+
+  .submit-btn {
+    width: 100%; padding: 16px; margin-top: 12px;
+    background: var(--indigo); color: #fff; border: none;
+    border-radius: 10px;
+    font-family: 'Manrope', sans-serif; font-weight: 800;
+    font-size: 15px; letter-spacing: 0.02em;
+    cursor: pointer;
+    transition: background .15s, transform .15s, box-shadow .15s;
+    box-shadow: 0 10px 24px rgba(91,91,240,0.3);
+  }
+  .submit-btn:hover:not(:disabled) {
+    background: var(--indigo-deep); transform: translateY(-1px);
+    box-shadow: 0 14px 32px rgba(91,91,240,0.42);
+  }
+  .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  .msg {
+    margin-top: 18px; padding: 14px 16px; border-radius: 10px;
+    font-size: 13.5px; line-height: 1.6; display: none;
+  }
+  .msg.ok { background: #ECFDF5; color: #065F46; border: 1px solid #A7F3D0; display: block; }
+  .msg.err { background: #FEF2F2; color: #991B1B; border: 1px solid #FECACA; display: block; }
+
+  /* ===== Conditions sidebar ===== */
+  .conditions {
+    max-width: 720px; margin: 0 auto 80px;
+    background: #fff; border: 1px solid var(--line); border-radius: 16px;
+    padding: 32px;
+  }
+  .cond-h {
+    font-family: 'Manrope', sans-serif; font-weight: 800;
+    font-size: 16px; margin: 0 0 16px;
+    padding-bottom: 12px; border-bottom: 1.5px dashed var(--line);
+  }
+  .cond-list {
+    display: grid; gap: 12px;
+  }
+  .cond-item {
+    display: grid; grid-template-columns: 28px 1fr; gap: 14px;
+    font-size: 13.5px; line-height: 1.65;
+  }
+  .cond-item-num {
+    width: 24px; height: 24px; border-radius: 50%;
+    background: var(--indigo);
+    color: #fff; display: grid; place-items: center;
+    font-family: 'Manrope', sans-serif; font-weight: 800; font-size: 11px;
+    margin-top: 2px;
+  }
+  .cond-item b { color: var(--ink); }
+  .cond-item small { color: var(--ink-3); font-size: 12px; display: block; margin-top: 2px; }
+
+  /* ===== Foot ===== */
+  .foot {
+    text-align: center; padding: 32px;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: var(--ink-3); letter-spacing: 0.1em;
+  }
+
+  @media (max-width: 720px) {
+    .hero { padding: 48px 24px 64px; }
+    .form-wrap, .conditions { margin-left: 16px; margin-right: 16px; padding: 28px 22px; }
+    .hero-perks { grid-template-columns: 1fr; }
+    .field-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-wrap">
+    <div class="hero-brand">
+      <div class="hero-brand-mark">S</div>
+      Skeleton Inc.
+    </div>
+    <div class="hero-eyebrow">FP Compass · Agency Program</div>
+    <h1 class="hero-title">FP事業所を獲得して、<br><span>毎月¥7,000の継続収入</span>を。</h1>
+    <p class="hero-sub">
+      FP Compass の代理店プログラムです。月額¥19,800のサービスをFP事業所へ紹介し、
+      契約してくれた1社あたり<strong>毎月¥7,000のリカーリングコミッション</strong>と
+      <strong>新規ボーナス¥15,000</strong>(継続3ヶ月条件)が銀行振込されます。
+    </p>
+
+    <div class="hero-perks">
+      <div class="perk">
+        <div class="perk-num">¥7,000<small>/月</small></div>
+        <div class="perk-lbl">1社あたりリカーリング</div>
+      </div>
+      <div class="perk">
+        <div class="perk-num">¥15,000</div>
+        <div class="perk-lbl">新規ボーナス (1社)</div>
+      </div>
+      <div class="perk">
+        <div class="perk-num">¥0</div>
+        <div class="perk-lbl">入会金 / 月会費</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="form-wrap">
+  <h2 class="form-h">代理店申請フォーム</h2>
+  <p class="form-sub">5分で入力できます。3営業日以内に審査結果をメールでお知らせします。</p>
+
+  <div class="field">
+    <label class="field-label" for="name">お名前 (代表者) <span class="req">必須</span></label>
+    <input id="name" class="field-input" type="text" placeholder="山田 太郎">
+  </div>
+
+  <div class="field-row">
+    <div class="field">
+      <label class="field-label" for="email">メールアドレス <span class="req">必須</span></label>
+      <input id="email" class="field-input" type="email" placeholder="you@example.com">
+    </div>
+    <div class="field">
+      <label class="field-label" for="phone">電話番号 <span class="req">必須</span></label>
+      <input id="phone" class="field-input" type="tel" placeholder="090-XXXX-XXXX">
+    </div>
+  </div>
+
+  <div class="field">
+    <label class="field-label" for="company">屋号 / 法人名 <small>個人事業主の場合は屋号</small></label>
+    <input id="company" class="field-input" type="text" placeholder="株式会社○○ / ○○FPコンサルティング">
+  </div>
+
+  <div class="field">
+    <label class="field-label" for="entity">事業形態 <span class="req">必須</span></label>
+    <select id="entity" class="field-select">
+      <option value="">選択してください</option>
+      <option value="corp">法人</option>
+      <option value="sole">個人事業主</option>
+      <option value="sidegig">副業可能な会社員</option>
+      <option value="other">その他</option>
+    </select>
+    <div class="field-help">コミッション受取時に税務処理が必要なため確認しています。</div>
+  </div>
+
+  <div class="field">
+    <label class="field-label" for="background">業界経験 <span class="req">必須</span></label>
+    <select id="background" class="field-select">
+      <option value="">選択してください</option>
+      <option value="fp">FP として活動中</option>
+      <option value="insurance">保険業界 経験あり</option>
+      <option value="banking">金融機関 経験あり</option>
+      <option value="consultant">コンサル / 営業 経験あり</option>
+      <option value="other">その他</option>
+    </select>
+  </div>
+
+  <div class="field">
+    <label class="field-label" for="sns">SNS / ブログ URL <small>あれば</small></label>
+    <input id="sns" class="field-input" type="url" placeholder="https://twitter.com/... / https://...">
+    <div class="field-help">必須ではありません。発信実績の参考にさせていただきます。</div>
+  </div>
+
+  <div class="field">
+    <label class="field-label" for="plan">どうやって FP を獲得しますか？ <span class="req">必須</span></label>
+    <textarea id="plan" class="field-textarea" placeholder="例: 既存のFP仲間から声かけ / セミナー開催 / SNS発信 / 業界団体経由 等"></textarea>
+  </div>
+
+  <div class="field">
+    <label class="field-label" for="target">3ヶ月以内に獲得を見込む社数 <span class="req">必須</span></label>
+    <select id="target" class="field-select">
+      <option value="">選択してください</option>
+      <option value="1-3">1〜3社</option>
+      <option value="4-10">4〜10社</option>
+      <option value="11-30">11〜30社</option>
+      <option value="30+">30社以上</option>
+    </select>
+  </div>
+
+  <label class="field-check">
+    <input id="agree1" type="checkbox">
+    <span>
+      <b>業務委託契約</b> として活動することに同意し、<br>
+      コミッション収入は <b>確定申告 / 報酬扱い</b> で処理することを承知しています。
+    </span>
+  </label>
+  <div style="height:10px;"></div>
+  <label class="field-check">
+    <input id="agree2" type="checkbox">
+    <span>
+      <b>反社会的勢力</b> に該当しないこと、 押し売り・虚偽説明・連鎖販売 (MLM) 等の<br>
+      不適切営業を行わないことを誓約します。
+    </span>
+  </label>
+
+  <div id="msg" class="msg"></div>
+  <button id="submit-btn" class="submit-btn">申請を送信する</button>
+</div>
+
+<div class="conditions">
+  <h3 class="cond-h">承認後の流れ</h3>
+  <div class="cond-list">
+    <div class="cond-item">
+      <div class="cond-item-num">1</div>
+      <div><b>3営業日以内に審査結果メール</b><small>承認 or 却下、 不明点があれば追加質問</small></div>
+    </div>
+    <div class="cond-item">
+      <div class="cond-item-num">2</div>
+      <div><b>業務委託契約を電子署名</b><small>クラウドサインで5分、 印鑑不要</small></div>
+    </div>
+    <div class="cond-item">
+      <div class="cond-item-num">3</div>
+      <div><b>代理店 ID + 専用URL 発行</b><small>QRコード・名刺発注も用意</small></div>
+    </div>
+    <div class="cond-item">
+      <div class="cond-item-num">4</div>
+      <div><b>営業開始 → 獲得分が毎月15日に銀行振込</b><small>明細は専用ダッシュボードで常時確認可能</small></div>
+    </div>
+  </div>
+</div>
+
+<div class="foot">
+  Skeleton Inc. · FP Compass Agency Program · 2026
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+  import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+  const firebaseConfig = {
+    apiKey: "AIzaSyAmVAEe9l9e1Yo_dzzJdbTVU35wWKd2sH4",
+    authDomain: "skeleton-fp-compass-632026.firebaseapp.com",
+    projectId: "skeleton-fp-compass-632026",
+    storageBucket: "skeleton-fp-compass-632026.firebasestorage.app",
+    messagingSenderId: "833972948597",
+    appId: "1:833972948597:web:b7310cc22ce41d9738f23c",
+  };
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const $ = (id) => document.getElementById(id);
+  const msgEl = $("msg");
+  function msg(kind, text) { msgEl.className = "msg " + kind; msgEl.textContent = text; }
+
+  $("submit-btn").addEventListener("click", async () => {
+    const data = {
+      name: $("name").value.trim(),
+      email: $("email").value.trim(),
+      phone: $("phone").value.trim(),
+      company: $("company").value.trim() || null,
+      entity: $("entity").value,
+      background: $("background").value,
+      sns: $("sns").value.trim() || null,
+      plan: $("plan").value.trim(),
+      target: $("target").value,
+    };
+
+    // validation
+    const errs = [];
+    if (!data.name) errs.push("お名前");
+    if (!data.email || !data.email.includes("@")) errs.push("有効なメールアドレス");
+    if (!data.phone) errs.push("電話番号");
+    if (!data.entity) errs.push("事業形態");
+    if (!data.background) errs.push("業界経験");
+    if (!data.plan) errs.push("獲得方法");
+    if (!data.target) errs.push("見込み社数");
+    if (!$("agree1").checked) errs.push("業務委託契約への同意");
+    if (!$("agree2").checked) errs.push("反社該当しない誓約");
+    if (errs.length) { msg("err", "未入力: " + errs.join(", ")); return; }
+
+    const btn = $("submit-btn");
+    btn.disabled = true; btn.textContent = "送信中…";
+    try {
+      await addDoc(collection(db, "agency_applications"), {
+        ...data,
+        status: "pending",
+        createdAt: serverTimestamp(),
+        userAgent: navigator.userAgent.slice(0, 200),
+        // 紹介トラッキング (代理店申請も誰から紹介されたか記録可能)
+        refSource: localStorage.getItem("fpc.agent") || localStorage.getItem("fpc.ref") || null,
+      });
+      msg("ok", `申請を受け付けました。3営業日以内に ${data.email} に審査結果をお送りします。`);
+      btn.textContent = "送信完了";
+    } catch (e) {
+      console.error(e);
+      msg("err", "送信失敗: " + e.message + " / 問題が続く場合は Skeleton (t3.5ty6@gmail.com) まで直接ご連絡ください。");
+      btn.disabled = false; btn.textContent = "申請を送信する";
+    }
+  });
+</script>
+</body>
+</html>

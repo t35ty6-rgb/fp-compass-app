@@ -24,6 +24,47 @@ const db = getFirestore(app);
 // ブラウザを閉じても (30日まで) 自動ログイン維持
 setPersistence(auth, browserLocalPersistence).catch(console.error);
 
+// ============ 紹介パラメータ捕捉 (?ref / ?agent) ============
+// 初回アクセス時に localStorage に保存、サインアップ時に tenant に紐付け
+(function captureReferral() {
+  try {
+    const u = new URL(window.location.href);
+    const ref = u.searchParams.get("ref");
+    const agent = u.searchParams.get("agent");
+    if (ref) {
+      localStorage.setItem("fpc.ref", ref);
+      localStorage.setItem("fpc.ref.ts", String(Date.now()));
+    }
+    if (agent) {
+      localStorage.setItem("fpc.agent", agent);
+      localStorage.setItem("fpc.agent.ts", String(Date.now()));
+    }
+    // URL クリーンアップ (UX のため、 ?ref/?agent をアドレスバーから消す)
+    if (ref || agent) {
+      u.searchParams.delete("ref");
+      u.searchParams.delete("agent");
+      history.replaceState(null, "", u.pathname + (u.search || ""));
+    }
+  } catch (e) { console.warn("ref capture failed:", e); }
+})();
+
+function readReferral() {
+  const ref = localStorage.getItem("fpc.ref");
+  const agent = localStorage.getItem("fpc.agent");
+  // 90 日経過したものは無視
+  const NINETY_DAYS = 90 * 24 * 3600 * 1000;
+  const now = Date.now();
+  const refOk = ref && (now - Number(localStorage.getItem("fpc.ref.ts") || 0) < NINETY_DAYS);
+  const agentOk = agent && (now - Number(localStorage.getItem("fpc.agent.ts") || 0) < NINETY_DAYS);
+  return { ref: refOk ? ref : null, agent: agentOk ? agent : null };
+}
+function clearReferralAfterUse() {
+  localStorage.removeItem("fpc.ref");
+  localStorage.removeItem("fpc.ref.ts");
+  localStorage.removeItem("fpc.agent");
+  localStorage.removeItem("fpc.agent.ts");
+}
+
 const $ = (id) => document.getElementById(id);
 const loginEl = $("login");
 const appEl = $("app");
@@ -122,18 +163,65 @@ async function doSignup() {
   // tenantId = メアドの local part を slug 化 + UID 末尾4桁で衝突回避
   const slug = email.split("@")[0].toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "").slice(0, 24) || "tenant";
   const tenantId = `${slug}-${cred.user.uid.slice(-6)}`;
+  // 紹介情報を取り込む
+  const { ref, agent } = readReferral();
+  // 紹介トークン: agent優先 (代理店経由 = 現金コミッション発生)
+  // refとagent両方ある場合は agent が優先 (Skeleton への売上影響大きいから)
   try {
-    await setDoc(doc(db, "tenants", tenantId), {
+    const tenantDoc = {
       name: fpName, plan: "starter", status: "active",
       isDemo: false, isSelfSignup: true,
       contractStartedAt: serverTimestamp(),
       createdAt: serverTimestamp(),
       ownerEmail: email,
-    });
+      // 紹介関連
+      referralSource: agent ? "agent" : (ref ? "fp_referral" : "direct"),
+      referredByAgent: agent || null,
+      referredByFp: agent ? null : (ref || null),  // agent 優先で fp_ref はクリア
+      // 課金関連 (Stripe 連携前の placeholder)
+      billing: {
+        baseMonthly: 19800,
+        discountPerReferral: 3500,
+        currentDiscount: 0,
+        nextMonthAmount: 19800,
+        stripeCustomerId: null,        // TODO: Stripe webhook で更新
+        stripeSubscriptionId: null,    // TODO: Stripe webhook で更新
+        status: "trial",               // trial → active → past_due → canceled
+        trialEndsAt: null,             // TODO: Stripe webhook で更新
+      },
+    };
+    await setDoc(doc(db, "tenants", tenantId), tenantDoc);
     await setDoc(doc(db, "users", cred.user.uid), {
       email, role: "fp_owner", tenantId,
       createdAt: serverTimestamp(),
     });
+    // referral_ledger に記録 (紹介者の dashboard で表示用)
+    if (agent) {
+      await setDoc(doc(db, "referral_ledger", `agent_${agent}_${tenantId}`), {
+        type: "agent",
+        agentCode: agent,
+        referredTenantId: tenantId,
+        referredTenantName: fpName,
+        referredEmail: email,
+        status: "trial",
+        commissionPerMonth: 7000,
+        signupBonus: 15000,
+        bonusEligibleAt: null,  // TODO: Stripe webhook で 3ヶ月継続後にセット
+        createdAt: serverTimestamp(),
+      });
+    } else if (ref) {
+      await setDoc(doc(db, "referral_ledger", `fp_${ref}_${tenantId}`), {
+        type: "fp_referral",
+        referrerTenantId: ref,
+        referredTenantId: tenantId,
+        referredTenantName: fpName,
+        referredEmail: email,
+        status: "trial",
+        discountPerMonth: 3500,
+        createdAt: serverTimestamp(),
+      });
+    }
+    clearReferralAfterUse();
     msg("ok", `${fpName} を作成しました。ログイン中…`);
     signupInProgress = false;
     // onAuthStateChanged の retry がこのタイミングで成功する

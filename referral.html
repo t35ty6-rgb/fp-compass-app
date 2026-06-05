@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>紹介プログラム — FP Compass</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Noto+Sans+JP:wght@400;500;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink:#0F172A; --ink-2:#475569; --ink-3:#94A3B8;
+    --indigo:#5B5BF0; --indigo-deep:#3838CC;
+    --gold:#FFB300; --ok:#10B981; --warn:#F59E0B;
+    --bg:#F7F8FC; --paper:#fff; --line:#E2E8F0;
+  }
+  *,*::before,*::after { box-sizing:border-box; }
+  body { margin:0; font-family:'Noto Sans JP',sans-serif; background:var(--bg); color:var(--ink);
+    font-feature-settings:"palt"; -webkit-font-smoothing:antialiased; }
+
+  /* Login */
+  #login { min-height:100vh; display:grid; place-items:center;
+    background:radial-gradient(ellipse at top left, #EEF2FF, var(--bg)); padding:20px; }
+  .login-card { max-width:420px; width:100%; background:#fff; border:1px solid var(--line);
+    border-radius:20px; box-shadow:0 24px 64px rgba(15,23,42,0.10); padding:38px 34px; }
+  .lbl { display:block; font-weight:700; font-size:12px; margin:14px 0 6px; }
+  .lin { width:100%; padding:12px 14px; font-size:14px; border:1.5px solid var(--line);
+    border-radius:10px; font-family:inherit; }
+  .lin:focus { outline:none; border-color:var(--indigo); box-shadow:0 0 0 4px rgba(91,91,240,0.12); }
+  .lbtn { width:100%; padding:13px; margin-top:18px; background:var(--indigo); color:#fff;
+    border:none; border-radius:10px; font-family:'Manrope',sans-serif; font-weight:800; font-size:14px;
+    cursor:pointer; }
+  .lmsg { margin-top:14px; padding:12px 14px; border-radius:10px; font-size:13px; line-height:1.6; display:none; }
+  .lmsg.err { background:#FEF2F2; color:#991B1B; border:1px solid #FECACA; display:block; }
+
+  /* App */
+  #app { display:none; }
+  .topbar { background:#fff; border-bottom:1px solid var(--line); padding:14px 28px;
+    display:flex; align-items:center; justify-content:space-between; }
+  .topbar-h { display:flex; align-items:center; gap:8px; font-family:'Manrope',sans-serif; font-weight:800; font-size:17px; }
+  .topbar-dot { width:11px; height:11px; border-radius:3px; background:linear-gradient(135deg,var(--indigo),var(--indigo-deep)); }
+  .topbar-user { display:flex; align-items:center; gap:12px; font-size:13px; color:var(--ink-2); }
+  .topbar-tenant { background:#EEF2FF; color:var(--indigo-deep); padding:5px 12px; border-radius:6px;
+    font-family:'Manrope',sans-serif; font-weight:800; font-size:11px; letter-spacing:0.06em; }
+  .topbar-actions { display:flex; gap:8px; }
+  .top-link { padding:6px 12px; font-size:12px; font-weight:600;
+    color:var(--ink-2); border:1px solid var(--line); border-radius:6px; text-decoration:none; }
+  .top-link:hover { background:var(--bg); }
+
+  .main { max-width:960px; margin:0 auto; padding:32px 28px 80px; }
+  .page-h { font-family:'Manrope',sans-serif; font-weight:800; font-size:26px;
+    margin:0 0 8px; letter-spacing:-0.015em; }
+  .page-sub { color:var(--ink-2); font-size:13.5px; margin-bottom:28px; }
+
+  /* Hero progress block */
+  .progress-block {
+    background:linear-gradient(135deg,var(--indigo) 0%, var(--indigo-deep) 100%);
+    color:#fff; border-radius:20px; padding:36px; margin-bottom:28px;
+    position:relative; overflow:hidden;
+  }
+  .progress-block::before { content:""; position:absolute; inset:0;
+    background:radial-gradient(ellipse 700px 350px at 100% -10%, rgba(255,255,255,0.16), transparent 60%);
+    pointer-events:none; }
+  .progress-lbl { font-family:'Manrope',sans-serif; font-weight:800; font-size:11px;
+    letter-spacing:0.24em; text-transform:uppercase; color:var(--gold); margin-bottom:14px; position:relative; }
+  .progress-num { font-family:'Manrope',sans-serif; font-weight:800; font-size:54px;
+    line-height:1; letter-spacing:-0.03em; position:relative; }
+  .progress-num small { font-size:18px; opacity:0.7; font-weight:700; }
+  .progress-msg { margin-top:14px; font-size:14.5px; opacity:0.92; line-height:1.55; position:relative; }
+  .progress-bar {
+    margin-top:24px; height:14px; background:rgba(255,255,255,0.16);
+    border-radius:999px; overflow:hidden; position:relative;
+  }
+  .progress-bar-fill {
+    height:100%; background:var(--gold);
+    border-radius:999px; transition:width 1.2s cubic-bezier(.2,.7,.2,1);
+  }
+  .progress-meta { display:flex; justify-content:space-between; margin-top:8px; font-size:11.5px;
+    opacity:0.7; font-family:'JetBrains Mono',monospace; position:relative; }
+
+  /* Ref URL block */
+  .ref-block { background:#fff; border:1px solid var(--line); border-radius:16px;
+    padding:24px 28px; margin-bottom:20px; }
+  .ref-h { font-family:'Manrope',sans-serif; font-weight:800; font-size:13px;
+    letter-spacing:0.04em; margin-bottom:14px; }
+  .ref-url { font-family:'JetBrains Mono',monospace; font-size:13.5px;
+    padding:14px 16px; background:#F1F5F9; border:1px dashed var(--line);
+    border-radius:10px; word-break:break-all; color:var(--indigo-deep); }
+  .ref-actions { display:flex; gap:8px; margin-top:14px; flex-wrap:wrap; }
+  .ref-btn { padding:9px 14px; font-family:inherit; font-size:12.5px; font-weight:700;
+    border:1px solid var(--line); background:#fff; border-radius:8px; cursor:pointer; color:var(--ink); }
+  .ref-btn:hover { background:var(--bg); }
+  .ref-btn.primary { background:var(--ink); color:#fff; border-color:var(--ink); }
+
+  /* KPI */
+  .kpi-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:24px; }
+  .kpi-card { background:#fff; border:1px solid var(--line); border-radius:14px;
+    padding:20px 22px; border-left:4px solid var(--indigo); }
+  .kpi-card.ok { border-left-color:var(--ok); }
+  .kpi-card.warn { border-left-color:var(--warn); }
+  .kpi-num { font-family:'Manrope',sans-serif; font-weight:800; font-size:28px;
+    line-height:1; letter-spacing:-0.02em; }
+  .kpi-num small { font-size:13px; opacity:0.55; font-weight:600; }
+  .kpi-lbl { font-family:'Manrope',sans-serif; font-weight:700; font-size:10.5px;
+    letter-spacing:0.16em; text-transform:uppercase; color:var(--ink-3); margin-top:8px; }
+
+  /* List */
+  .panel { background:#fff; border:1px solid var(--line); border-radius:14px; overflow:hidden; }
+  .panel-h { padding:18px 24px; border-bottom:1px solid var(--line);
+    display:flex; justify-content:space-between; align-items:center; }
+  .panel-h h2 { margin:0; font-family:'Manrope',sans-serif; font-weight:800; font-size:15px; }
+  .panel-h .count { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink-3); }
+  .row { padding:14px 24px; border-bottom:1px solid var(--line);
+    display:grid; grid-template-columns:1fr auto auto; gap:14px; align-items:center; }
+  .row:last-child { border-bottom:none; }
+  .row-name { font-weight:600; font-size:14px; }
+  .row-meta { font-size:11.5px; color:var(--ink-3); margin-top:2px; }
+  .row-status { font-family:'JetBrains Mono',monospace; font-size:10.5px; font-weight:700;
+    padding:3px 9px; border-radius:999px;
+    background:#ECFDF5; color:#065F46; }
+  .row-status.trial { background:#FEF7E1; color:#946000; }
+  .row-amount { font-family:'Manrope',sans-serif; font-weight:700; font-size:13.5px; color:var(--ok); }
+  .empty { padding:50px 30px; text-align:center; color:var(--ink-2); }
+  .empty-icon { font-size:34px; opacity:0.5; margin-bottom:10px; }
+
+  /* Stripe banner */
+  .stripe-banner { background:#FEF7E1; border:1.5px dashed #F59E0B; border-radius:10px;
+    padding:14px 18px; margin-bottom:22px; font-size:13px; color:#92400E; line-height:1.6; }
+
+  @media (max-width:760px) {
+    .kpi-grid { grid-template-columns:1fr; }
+    .topbar { padding:12px 18px; }
+    .main { padding:22px 16px; }
+    .progress-block { padding:26px 22px; }
+    .progress-num { font-size:42px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="login">
+  <div class="login-card">
+    <div style="display:flex;align-items:center;gap:10px;font-family:'Manrope',sans-serif;font-weight:800;font-size:18px;margin-bottom:6px;">
+      <span style="width:14px;height:14px;border-radius:4px;background:linear-gradient(135deg,var(--indigo),var(--indigo-deep));"></span>
+      FP Compass · 紹介プログラム
+    </div>
+    <div style="font-size:13px;color:var(--ink-2);margin-bottom:24px;line-height:1.7;">FPアカウントでログインしてください。</div>
+    <label class="lbl" for="email">メールアドレス</label>
+    <input id="email" class="lin" type="email">
+    <label class="lbl" for="pw">パスワード</label>
+    <input id="pw" class="lin" type="password">
+    <button id="login-btn" class="lbtn">ログイン</button>
+    <div id="lmsg" class="lmsg"></div>
+  </div>
+</div>
+
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-h"><span class="topbar-dot"></span>FP Compass · 紹介プログラム</div>
+    <div class="topbar-user">
+      <span id="user-email"></span>
+      <span class="topbar-tenant" id="user-tenant"></span>
+      <div class="topbar-actions">
+        <a class="top-link" href="./">CRM</a>
+        <button class="top-link" id="logout-btn" style="cursor:pointer;background:transparent;font-family:inherit;">ログアウト</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="main">
+    <h1 class="page-h">紹介プログラム</h1>
+    <p class="page-sub">他のFPさんに FP Compass を紹介すると、 あなたの月額が下がります。 6人で永久無料。</p>
+
+    <div class="stripe-banner" id="stripe-banner">
+      <b>💡 ステータス:</b> Stripe 決済連携前のため、 数値はテスト表示です。 連携完了後、 リアルな請求額に切り替わります。
+    </div>
+
+    <!-- Progress block -->
+    <div class="progress-block">
+      <div class="progress-lbl">あなたの達成状況</div>
+      <div class="progress-num" id="ref-count">0 <small>/ 6人</small></div>
+      <div class="progress-msg" id="progress-msg">最初の1人を紹介すると、 来月から ¥3,500 OFF。</div>
+      <div class="progress-bar"><div class="progress-bar-fill" id="bar-fill" style="width:0%;"></div></div>
+      <div class="progress-meta">
+        <span>標準 ¥19,800</span>
+        <span>あと <span id="left-count">6</span> 人で <span style="color:var(--gold);">¥0</span></span>
+      </div>
+    </div>
+
+    <!-- Ref URL block -->
+    <div class="ref-block">
+      <div class="ref-h">あなたの紹介URL</div>
+      <div class="ref-url" id="ref-url">—</div>
+      <div class="ref-actions">
+        <button class="ref-btn primary" id="copy-btn">コピー</button>
+        <button class="ref-btn" id="qr-btn">QRコード</button>
+        <button class="ref-btn" id="line-btn">LINEで送る</button>
+        <button class="ref-btn" id="mail-btn">メールで送る</button>
+      </div>
+    </div>
+
+    <!-- KPI -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-num" id="kpi-active">0<small>人</small></div>
+        <div class="kpi-lbl">有料化済み紹介</div>
+      </div>
+      <div class="kpi-card warn">
+        <div class="kpi-num" id="kpi-trial">0<small>人</small></div>
+        <div class="kpi-lbl">トライアル中</div>
+      </div>
+      <div class="kpi-card ok">
+        <div class="kpi-num" id="kpi-next">¥19,800</div>
+        <div class="kpi-lbl">来月の請求額</div>
+      </div>
+    </div>
+
+    <!-- List -->
+    <div class="panel">
+      <div class="panel-h">
+        <h2>紹介したFP一覧</h2>
+        <span class="count" id="count">0 件</span>
+      </div>
+      <div id="list">
+        <div class="empty">
+          <div class="empty-icon">⏳</div>
+          読み込み中…
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="qr-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:1000;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:#fff;border-radius:16px;padding:32px;max-width:380px;text-align:center;">
+    <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:15px;margin-bottom:14px;">あなたの紹介URL QRコード</div>
+    <img id="qr-img" style="width:280px;height:280px;border:1px solid var(--line);border-radius:8px;" alt="QR">
+    <button onclick="document.getElementById('qr-modal').style.display='none'" style="margin-top:18px;padding:10px 24px;background:var(--ink);color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;">閉じる</button>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut,
+    setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
+  import { getFirestore, doc, getDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAmVAEe9l9e1Yo_dzzJdbTVU35wWKd2sH4",
+    authDomain: "skeleton-fp-compass-632026.firebaseapp.com",
+    projectId: "skeleton-fp-compass-632026",
+    storageBucket: "skeleton-fp-compass-632026.firebasestorage.app",
+    messagingSenderId: "833972948597",
+    appId: "1:833972948597:web:b7310cc22ce41d9738f23c",
+  };
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  setPersistence(auth, browserLocalPersistence).catch(console.error);
+
+  const $ = (id) => document.getElementById(id);
+  const loginEl = $("login"), appEl = $("app"), msgEl = $("lmsg");
+  function msg(kind, text) { msgEl.className = "lmsg " + kind; msgEl.textContent = text; }
+
+  $("login-btn").addEventListener("click", async () => {
+    const e = $("email").value.trim(), p = $("pw").value;
+    if (!e || !p) { msg("err", "メアド・パスワード入力してください"); return; }
+    try { await signInWithEmailAndPassword(auth, e, p); }
+    catch (err) { msg("err", "ログイン失敗: " + (err.code || err.message)); }
+  });
+  $("pw").addEventListener("keydown", e => { if (e.key === "Enter") $("login-btn").click(); });
+  $("logout-btn").addEventListener("click", async () => { await signOut(auth); location.reload(); });
+
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) { loginEl.style.display = "grid"; appEl.style.display = "none"; return; }
+    let uDoc;
+    try { uDoc = await getDoc(doc(db, "users", user.uid)); }
+    catch (e) { msg("err", "ユーザー情報取得失敗"); return; }
+    if (!uDoc.exists()) {
+      msg("err", `${user.email} は登録されていません。`); await signOut(auth); return;
+    }
+    const userData = uDoc.data();
+    if (userData.role !== "fp_owner") {
+      msg("err", `FP アカウントでログインしてください (現在: ${userData.role})。`); await signOut(auth); return;
+    }
+    const tenantId = userData.tenantId;
+    loginEl.style.display = "none"; appEl.style.display = "block";
+
+    $("user-email").textContent = user.email;
+    $("user-tenant").textContent = tenantId.toUpperCase();
+    const refUrl = `https://app.skeleton-inc.jp/?ref=${tenantId}`;
+    $("ref-url").textContent = refUrl;
+
+    // 紹介履歴取得
+    const q = query(collection(db, "referral_ledger"),
+      where("type", "==", "fp_referral"),
+      where("referrerTenantId", "==", tenantId));
+    const snap = await getDocs(q);
+    const items = []; snap.forEach(d => items.push({ id: d.id, ...d.data() }));
+    render(items);
+
+    // ボタン
+    $("copy-btn").addEventListener("click", async () => {
+      await navigator.clipboard.writeText(refUrl);
+      $("copy-btn").textContent = "コピー完了 ✓"; setTimeout(() => $("copy-btn").textContent = "コピー", 2000);
+    });
+    $("qr-btn").addEventListener("click", () => {
+      $("qr-img").src = `https://api.qrserver.com/v1/create-qr-code/?size=560x560&data=${encodeURIComponent(refUrl)}`;
+      $("qr-modal").style.display = "flex";
+    });
+    $("line-btn").addEventListener("click", () => {
+      const text = `FP Compass という顧客管理ツールおすすめです。 ここから登録すると私の月額も下がります → ${refUrl}`;
+      window.open(`https://line.me/R/msg/text/?${encodeURIComponent(text)}`, "_blank");
+    });
+    $("mail-btn").addEventListener("click", () => {
+      const subj = encodeURIComponent("FP Compass 紹介");
+      const body = encodeURIComponent(`こんにちは、\n\nFP顧客管理ツール 「FP Compass」 を試してみませんか?\n14日間無料、 私からの紹介リンクから登録いただくと月¥19,800のところ ¥3,500/月割引でご利用いただけます。\n\n登録URL: ${refUrl}\n`);
+      window.open(`mailto:?subject=${subj}&body=${body}`, "_blank");
+    });
+  });
+
+  function render(items) {
+    const active = items.filter(x => x.status === "active");
+    const trial = items.filter(x => x.status === "trial");
+    const n = active.length;
+    $("ref-count").innerHTML = `${n} <small>/ 6人</small>`;
+    $("kpi-active").innerHTML = `${active.length}<small>人</small>`;
+    $("kpi-trial").innerHTML = `${trial.length}<small>人</small>`;
+    const discount = Math.min(n, 6) * 3500;
+    const next = Math.max(0, 19800 - discount);
+    $("kpi-next").textContent = `¥${next.toLocaleString()}`;
+    $("left-count").textContent = Math.max(0, 6 - n);
+    $("bar-fill").style.width = `${Math.min(100, (n / 6) * 100)}%`;
+    $("count").textContent = `${items.length} 件`;
+
+    if (n === 0) $("progress-msg").textContent = "最初の1人を紹介すると、 来月から ¥3,500 OFF。";
+    else if (n < 6) $("progress-msg").textContent = `現在 ¥${discount.toLocaleString()} OFF 適用中。 あと ${6 - n} 人で永久無料。`;
+    else $("progress-msg").innerHTML = `🎉 永久無料達成！ <small style="opacity:0.7;">紹介相手が払い続ける限り維持</small>`;
+
+    if (!items.length) {
+      $("list").innerHTML = `<div class="empty"><div class="empty-icon">📋</div>まだ紹介がありません。 上の紹介URLをLINE/メールでシェアしましょう。</div>`;
+      return;
+    }
+    const html = items.map(it => {
+      const stat = it.status === "active" ? "有料化" : it.status === "trial" ? "トライアル" : it.status;
+      const cls = it.status === "active" ? "" : it.status === "trial" ? "trial" : "";
+      const amount = it.status === "active" ? "-¥3,500/月" : "—";
+      return `
+        <div class="row">
+          <div>
+            <div class="row-name">${escapeHtml(it.referredTenantName || it.referredEmail)}</div>
+            <div class="row-meta">${escapeHtml(it.referredEmail)}</div>
+          </div>
+          <div class="row-status ${cls}">${escapeHtml(stat)}</div>
+          <div class="row-amount">${amount}</div>
+        </div>`;
+    }).join("");
+    $("list").innerHTML = html;
+  }
+  function escapeHtml(s) {
+    return String(s == null ? "" : s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#39;");
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>代理店管理 — Skeleton Admin Console</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Noto+Sans+JP:wght@400;500;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink:#0F172A; --ink-2:#475569; --ink-3:#94A3B8;
+    --indigo:#5B5BF0; --gold:#FFB300; --ok:#10B981; --err:#E11D48; --warn:#F59E0B;
+    --bg:#F7F8FC; --paper:#fff; --line:#E2E8F0;
+  }
+  *,*::before,*::after { box-sizing: border-box; }
+  body { margin:0; font-family:'Noto Sans JP',sans-serif; background:var(--bg); color:var(--ink);
+    font-feature-settings:"palt"; -webkit-font-smoothing:antialiased; }
+
+  /* Auth gate */
+  #gate { min-height:100vh; display:grid; place-items:center; background:#0F172A; color:#fff; padding:20px; }
+  .gate-card {
+    background:#1E293B; border:1px solid rgba(255,255,255,0.12); border-radius:18px;
+    padding:36px; max-width:420px; width:100%;
+  }
+  .gate-h { font-family:'Manrope',sans-serif; font-weight:800; font-size:18px; }
+  .gate-sub { color:#94A3B8; font-size:13px; margin-top:8px; }
+  .gate-input { width:100%; padding:12px 14px; background:#0F172A; border:1px solid rgba(255,255,255,0.18);
+    color:#fff; border-radius:8px; font-family:inherit; font-size:14px; margin:14px 0 0; }
+  .gate-input:focus { outline:none; border-color:var(--indigo); }
+  .gate-btn { width:100%; padding:13px; background:var(--indigo); color:#fff; border:none; border-radius:8px;
+    font-family:'Manrope',sans-serif; font-weight:800; font-size:14px; cursor:pointer; margin-top:14px; }
+  .gate-msg { margin-top:12px; font-size:13px; color:#FCA5A5; min-height:18px; }
+
+  /* App */
+  #app { display:none; }
+  .topbar { background:var(--ink); color:#fff; padding:14px 32px;
+    display:flex; align-items:center; justify-content:space-between; }
+  .topbar-h { font-family:'Manrope',sans-serif; font-weight:800; font-size:15px;
+    display:flex; align-items:center; gap:10px; }
+  .topbar-mark { width:24px; height:24px; border-radius:6px;
+    background:linear-gradient(135deg,var(--gold),#E68900); color:var(--ink);
+    display:grid; place-items:center; font-family:'Manrope',sans-serif; font-weight:800; font-size:12px; }
+  .topbar-actions { display:flex; gap:14px; font-size:13px; }
+  .topbar-actions a, .topbar-actions button {
+    color:rgba(255,255,255,0.7); text-decoration:none; background:none; border:none;
+    font-family:inherit; font-size:13px; cursor:pointer; padding:4px 8px;
+  }
+  .topbar-actions a:hover, .topbar-actions button:hover { color:#fff; }
+
+  .main { max-width:1200px; margin:0 auto; padding:28px 32px 80px; }
+  .page-h { font-family:'Manrope',sans-serif; font-weight:800; font-size:24px;
+    margin:0 0 6px; letter-spacing:-0.015em; }
+  .page-sub { color:var(--ink-2); font-size:13px; margin-bottom:24px; }
+
+  /* Tabs */
+  .tabs { display:flex; gap:4px; background:#fff; border:1px solid var(--line);
+    border-radius:10px; padding:4px; margin-bottom:24px; max-width:540px; }
+  .tab { flex:1; padding:9px 12px; border:none; background:transparent; cursor:pointer;
+    font-family:'Manrope',sans-serif; font-weight:700; font-size:12.5px;
+    color:var(--ink-3); border-radius:7px; }
+  .tab.on { background:var(--ink); color:#fff; }
+
+  /* Stats */
+  .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:24px; }
+  .stat { background:#fff; border:1px solid var(--line); border-radius:12px; padding:18px 22px;
+    border-left:4px solid var(--indigo); }
+  .stat.warn { border-left-color:var(--warn); }
+  .stat.ok { border-left-color:var(--ok); }
+  .stat.err { border-left-color:var(--err); }
+  .stat-num { font-family:'Manrope',sans-serif; font-weight:800; font-size:26px; letter-spacing:-0.02em; }
+  .stat-num small { font-size:13px; font-weight:600; opacity:0.55; }
+  .stat-lbl { font-size:10.5px; font-family:'Manrope',sans-serif; font-weight:700;
+    letter-spacing:0.16em; text-transform:uppercase; color:var(--ink-3); margin-top:6px; }
+
+  /* List */
+  .panel { background:#fff; border:1px solid var(--line); border-radius:14px; overflow:hidden; }
+  .panel-h { padding:18px 24px; border-bottom:1px solid var(--line);
+    display:flex; justify-content:space-between; align-items:center; }
+  .panel-h h2 { margin:0; font-family:'Manrope',sans-serif; font-weight:800; font-size:15px; }
+  .app-row { padding:18px 24px; border-bottom:1px solid var(--line); }
+  .app-row:last-child { border-bottom:none; }
+  .app-top { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; }
+  .app-name { font-weight:700; font-size:15px; }
+  .app-meta { font-size:12px; color:var(--ink-3); margin-top:4px;
+    display:flex; flex-wrap:wrap; gap:10px; }
+  .app-meta span::before { content:"·"; margin-right:10px; color:var(--line); }
+  .app-meta span:first-child::before { display:none; }
+  .app-status { font-family:'JetBrains Mono',monospace; font-size:10.5px; font-weight:700;
+    padding:4px 10px; border-radius:999px; flex-shrink:0; }
+  .app-status.pending { background:#FEF7E1; color:#946000; }
+  .app-status.approved { background:#ECFDF5; color:#065F46; }
+  .app-status.rejected { background:#FBE6E2; color:#991B1B; }
+  .app-details { margin-top:14px; padding-top:14px; border-top:1px dashed var(--line);
+    display:grid; grid-template-columns:repeat(2,1fr); gap:10px 24px; font-size:13px;
+    color:var(--ink-2); }
+  .app-details b { color:var(--ink); }
+  .app-actions { margin-top:14px; display:flex; gap:8px; flex-wrap:wrap; }
+  .act-btn { padding:7px 14px; font-family:inherit; font-size:12.5px; font-weight:700;
+    border:1px solid var(--line); background:#fff; color:var(--ink); border-radius:6px; cursor:pointer; }
+  .act-btn:hover { background:var(--bg); }
+  .act-btn.approve { background:var(--ok); color:#fff; border-color:var(--ok); }
+  .act-btn.approve:hover { background:#0E9F73; }
+  .act-btn.reject { background:#fff; color:var(--err); border-color:#FCA5A5; }
+  .act-btn.reject:hover { background:#FEF2F2; }
+
+  .empty { padding:60px 30px; text-align:center; color:var(--ink-2); }
+
+  /* Toast */
+  #toast { position:fixed; bottom:20px; right:20px; padding:14px 22px;
+    background:var(--ink); color:#fff; border-radius:10px; font-size:13.5px;
+    box-shadow:0 16px 40px rgba(0,0,0,0.25); display:none; z-index:1000; }
+  #toast.ok { background:var(--ok); }
+  #toast.err { background:var(--err); }
+
+  @media (max-width:760px) {
+    .stats { grid-template-columns:1fr 1fr; }
+    .main { padding:22px 18px; }
+    .app-details { grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Auth gate -->
+<div id="gate">
+  <div class="gate-card">
+    <div class="gate-h">Skeleton Admin Console</div>
+    <div class="gate-sub">代理店管理 — t3.5ty6@gmail.com (skeleton_admin) のみアクセス可能</div>
+    <input id="gate-email" class="gate-input" type="email" placeholder="管理者メールアドレス" value="t3.5ty6@gmail.com">
+    <input id="gate-pw" class="gate-input" type="password" placeholder="パスワード">
+    <button id="gate-btn" class="gate-btn">サインイン</button>
+    <div id="gate-msg" class="gate-msg"></div>
+  </div>
+</div>
+
+<!-- App -->
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-h">
+      <span class="topbar-mark">S</span>
+      Skeleton Admin · Agency
+    </div>
+    <div class="topbar-actions">
+      <a href="../">FP CRM</a>
+      <span id="admin-email"></span>
+      <button id="logout-btn">ログアウト</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <h1 class="page-h">代理店管理</h1>
+    <p class="page-sub">申請の承認 / 却下、 承認済み代理店の一覧</p>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab on" data-tab="pending">⏳ 申請待ち</button>
+      <button class="tab" data-tab="approved">✓ 承認済み</button>
+      <button class="tab" data-tab="rejected">✗ 却下</button>
+      <button class="tab" data-tab="agents">📋 代理店一覧</button>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats">
+      <div class="stat warn">
+        <div class="stat-num" id="s-pending">0<small>件</small></div>
+        <div class="stat-lbl">申請待ち</div>
+      </div>
+      <div class="stat ok">
+        <div class="stat-num" id="s-approved">0<small>件</small></div>
+        <div class="stat-lbl">承認済み</div>
+      </div>
+      <div class="stat err">
+        <div class="stat-num" id="s-rejected">0<small>件</small></div>
+        <div class="stat-lbl">却下</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num" id="s-agents">0<small>社</small></div>
+        <div class="stat-lbl">稼働中代理店</div>
+      </div>
+    </div>
+
+    <!-- List -->
+    <div class="panel">
+      <div class="panel-h">
+        <h2 id="list-title">⏳ 申請待ち</h2>
+        <span id="list-count" style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--ink-3);">0 件</span>
+      </div>
+      <div id="list-body">
+        <div class="empty">読み込み中…</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+  import {
+    getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut,
+    setPersistence, browserLocalPersistence,
+  } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
+  import {
+    getFirestore, doc, getDoc, setDoc, updateDoc, collection, getDocs, query, where, orderBy, serverTimestamp,
+  } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAmVAEe9l9e1Yo_dzzJdbTVU35wWKd2sH4",
+    authDomain: "skeleton-fp-compass-632026.firebaseapp.com",
+    projectId: "skeleton-fp-compass-632026",
+    storageBucket: "skeleton-fp-compass-632026.firebasestorage.app",
+    messagingSenderId: "833972948597",
+    appId: "1:833972948597:web:b7310cc22ce41d9738f23c",
+  };
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  setPersistence(auth, browserLocalPersistence).catch(console.error);
+
+  const $ = (id) => document.getElementById(id);
+  const gateEl = $("gate"), appEl = $("app");
+
+  function toast(kind, text) {
+    const t = $("toast"); t.className = kind; t.textContent = text; t.style.display = "block";
+    setTimeout(() => { t.style.display = "none"; }, 4000);
+  }
+
+  $("gate-btn").addEventListener("click", async () => {
+    const email = $("gate-email").value.trim();
+    const pw = $("gate-pw").value;
+    $("gate-msg").textContent = "認証中…";
+    try { await signInWithEmailAndPassword(auth, email, pw); }
+    catch (e) { $("gate-msg").textContent = "認証失敗: " + (e.code || e.message); }
+  });
+  $("gate-pw").addEventListener("keydown", e => { if (e.key === "Enter") $("gate-btn").click(); });
+  $("logout-btn").addEventListener("click", async () => { await signOut(auth); location.reload(); });
+
+  let currentTab = "pending";
+  document.querySelectorAll(".tab").forEach(t => t.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach(x => x.classList.remove("on"));
+    t.classList.add("on");
+    currentTab = t.dataset.tab;
+    refresh();
+  }));
+
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) { gateEl.style.display = "grid"; appEl.style.display = "none"; return; }
+    // skeleton_admin チェック
+    const uDoc = await getDoc(doc(db, "users", user.uid));
+    if (!uDoc.exists() || uDoc.data().role !== "skeleton_admin") {
+      $("gate-msg").textContent = `${user.email} は管理者権限がありません。`;
+      await signOut(auth);
+      return;
+    }
+    gateEl.style.display = "none";
+    appEl.style.display = "block";
+    $("admin-email").textContent = user.email;
+    refresh();
+  });
+
+  async function refresh() {
+    await refreshStats();
+    if (currentTab === "agents") {
+      await loadAgents();
+    } else {
+      await loadApplications(currentTab);
+    }
+  }
+
+  async function refreshStats() {
+    const all = await getDocs(collection(db, "agency_applications"));
+    let p=0, a=0, r=0;
+    all.forEach(d => {
+      const s = d.data().status;
+      if (s === "pending") p++; else if (s === "approved") a++; else if (s === "rejected") r++;
+    });
+    const ag = await getDocs(query(collection(db, "agents"), where("status", "==", "active")));
+    $("s-pending").innerHTML = `${p}<small>件</small>`;
+    $("s-approved").innerHTML = `${a}<small>件</small>`;
+    $("s-rejected").innerHTML = `${r}<small>件</small>`;
+    $("s-agents").innerHTML = `${ag.size}<small>社</small>`;
+  }
+
+  async function loadApplications(status) {
+    const titles = { pending: "⏳ 申請待ち", approved: "✓ 承認済み", rejected: "✗ 却下" };
+    $("list-title").textContent = titles[status];
+    const snap = await getDocs(query(collection(db, "agency_applications"), where("status", "==", status)));
+    const rows = []; snap.forEach(d => rows.push({ id: d.id, ...d.data() }));
+    rows.sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
+    $("list-count").textContent = `${rows.length} 件`;
+    if (!rows.length) { $("list-body").innerHTML = `<div class="empty">該当する申請はありません。</div>`; return; }
+    $("list-body").innerHTML = rows.map(r => renderApp(r)).join("");
+    rows.forEach(r => {
+      const a = document.getElementById(`approve-${r.id}`);
+      const j = document.getElementById(`reject-${r.id}`);
+      if (a) a.addEventListener("click", () => approveApp(r));
+      if (j) j.addEventListener("click", () => rejectApp(r));
+    });
+  }
+
+  function renderApp(r) {
+    const ts = r.createdAt?.toDate?.()?.toISOString?.()?.slice(0, 16).replace("T", " ") || "—";
+    const entityLabel = { corp: "法人", sole: "個人事業主", sidegig: "副業可会社員", other: "その他" }[r.entity] || r.entity;
+    const backLabel = { fp: "FP活動中", insurance: "保険業界", banking: "金融機関", consultant: "コンサル/営業", other: "その他" }[r.background] || r.background;
+    const targetLabel = { "1-3": "1〜3社", "4-10": "4〜10社", "11-30": "11〜30社", "30+": "30社以上" }[r.target] || r.target;
+    const actions = r.status === "pending" ? `
+      <div class="app-actions">
+        <button class="act-btn approve" id="approve-${r.id}">承認 → agents 登録</button>
+        <button class="act-btn reject" id="reject-${r.id}">却下</button>
+      </div>` : (r.status === "approved" ? `
+      <div class="app-actions">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--ok);">→ agents/${escapeHtml(r.assignedAgentCode || "?")} 登録済</span>
+      </div>` : `
+      <div class="app-actions">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--err);">理由: ${escapeHtml(r.rejectionReason || "(なし)")}</span>
+      </div>`);
+    return `
+      <div class="app-row">
+        <div class="app-top">
+          <div>
+            <div class="app-name">${escapeHtml(r.name)}</div>
+            <div class="app-meta">
+              <span>${escapeHtml(r.email)}</span>
+              <span>${escapeHtml(r.phone || "")}</span>
+              <span>${escapeHtml(entityLabel || "")}</span>
+              <span>${ts}</span>
+            </div>
+          </div>
+          <span class="app-status ${r.status}">${r.status.toUpperCase()}</span>
+        </div>
+        <div class="app-details">
+          <div><b>屋号/法人名:</b><br>${escapeHtml(r.company || "(なし)")}</div>
+          <div><b>業界経験:</b><br>${escapeHtml(backLabel || "")}</div>
+          <div><b>3ヶ月見込み:</b><br>${escapeHtml(targetLabel || "")}</div>
+          <div><b>SNS/ブログ:</b><br>${r.sns ? `<a href="${escapeHtml(r.sns)}" target="_blank" style="color:var(--indigo);">${escapeHtml(r.sns)}</a>` : "(なし)"}</div>
+          <div style="grid-column:span 2;"><b>獲得方法:</b><br>${escapeHtml(r.plan || "")}</div>
+        </div>
+        ${actions}
+      </div>`;
+  }
+
+  async function loadAgents() {
+    $("list-title").textContent = "📋 代理店一覧";
+    const snap = await getDocs(collection(db, "agents"));
+    const rows = []; snap.forEach(d => rows.push({ id: d.id, ...d.data() }));
+    $("list-count").textContent = `${rows.length} 社`;
+    if (!rows.length) { $("list-body").innerHTML = `<div class="empty">代理店はまだいません。</div>`; return; }
+    $("list-body").innerHTML = rows.map(r => `
+      <div class="app-row">
+        <div class="app-top">
+          <div>
+            <div class="app-name">${escapeHtml(r.name)} <small style="color:var(--ink-3);font-weight:500;">(${escapeHtml(r.code)})</small></div>
+            <div class="app-meta">
+              <span>${escapeHtml(r.email)}</span>
+              <span>承認: ${r.contractStartedAt?.toDate?.()?.toISOString?.()?.slice(0,10) || "—"}</span>
+            </div>
+          </div>
+          <span class="app-status ${r.status === 'active' ? 'approved' : 'rejected'}">${escapeHtml(r.status.toUpperCase())}</span>
+        </div>
+        <div class="app-details">
+          <div style="grid-column:span 2;"><b>代理店URL:</b><br>
+            <code style="font-size:12px;background:var(--bg);padding:4px 8px;border-radius:4px;word-break:break-all;">${escapeHtml(r.referralUrl)}</code>
+          </div>
+        </div>
+      </div>`).join("");
+  }
+
+  async function approveApp(r) {
+    if (!confirm(`${r.name} (${r.email}) を承認しますか？\nagents/ に登録され、 代理店ID + 専用URLが発行されます。`)) return;
+    const agentCode = genAgentCode(r.name);
+    try {
+      // (admin の write は ルール上 false だが、 admin SDK ではバイパス可能 — ここはブラウザからの呼び出しなのでルールチェックされる)
+      // → admin がブラウザから admin SDK 経由なしで書ける必要があるので skeleton_admin に対する agents write を許可するルール拡張を後で適用
+      // 一旦 ad-hoc: skeleton_admin role の人だけ書ける rule に追加
+      await setDoc(doc(db, "agents", agentCode), {
+        code: agentCode, name: r.name, email: r.email, phone: r.phone || null,
+        company: r.company || null, entity: r.entity, background: r.background,
+        sns: r.sns || null, status: "active",
+        commissionPerMonth: 7000, signupBonus: 15000, bonusContinuationMonths: 3,
+        referralUrl: `https://app.skeleton-inc.jp/?agent=${agentCode}`,
+        ownerUid: null,
+        contractStartedAt: serverTimestamp(),
+        createdAt: serverTimestamp(),
+        sourceApplicationId: r.id,
+      });
+      await updateDoc(doc(db, "agency_applications", r.id), {
+        status: "approved", approvedAt: serverTimestamp(), assignedAgentCode: agentCode,
+      });
+      toast("ok", `✓ ${r.name} を承認 (${agentCode})`);
+      refresh();
+    } catch (e) { console.error(e); toast("err", "承認失敗: " + e.message); }
+  }
+
+  async function rejectApp(r) {
+    const reason = prompt(`${r.name} を却下する理由 (申請者には通知されません):`);
+    if (reason === null) return;
+    try {
+      await updateDoc(doc(db, "agency_applications", r.id), {
+        status: "rejected", rejectedAt: serverTimestamp(), rejectionReason: reason || "(理由なし)",
+      });
+      toast("ok", `✗ ${r.name} を却下`);
+      refresh();
+    } catch (e) { toast("err", "却下失敗: " + e.message); }
+  }
+
+  function genAgentCode(name) {
+    const slug = (name || "agent").toLowerCase().replace(/[^a-z0-9]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "").slice(0, 20);
+    const suffix = Math.random().toString(36).slice(2, 8);
+    return `${slug || "agent"}-${suffix}`;
+  }
+  function escapeHtml(s) {
+    return String(s == null ? "" : s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#39;");
+  }
+</script>
+</body>
+</html>
