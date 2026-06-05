@@ -1,0 +1,379 @@
+/* ====================================================================
+   FP Compass v3 — SOMPO リファレンス準拠 上品系刷新レイヤー
+   白基調 / 上品な navy + warm accent / 線画SVGアイコン /
+   グリッド整然 / セリフ見出し / 細密ボックス分割
+==================================================================== */
+
+:root {
+  /* Refined palette — 既存変数を上書き */
+  --bg: #fbfaf6;
+  --surface: #ffffff;
+  --surface-2: #fafaf6;
+  --surface-warm: #fdfbf4;
+  --ink: #1a1a2e;
+  --ink-2: #2d3142;
+  --muted: #6b7280;
+  --muted-2: #94a3b8;
+  --line: #ebe5d4;
+  --line-2: #d4cdbb;
+  --accent: #1e3a5f;            /* 深い navy (信頼感) */
+  --accent-2: #2d4a73;
+  --accent-soft: #f0f4fa;
+  --gold: #b8893d;              /* 上品な金 */
+  --gold-2: #9a7330;
+  --warm: #c84e3f;              /* SOMPO風 暖色アクセント */
+  --warm-soft: #fdf3f2;
+  --green: #2d7d4e;
+  --green-soft: #ebf4ed;
+  --shadow-xs: 0 1px 2px rgba(26, 26, 46, 0.04);
+  --shadow-sm: 0 1px 3px rgba(26, 26, 46, 0.05), 0 1px 2px rgba(26, 26, 46, 0.03);
+  --shadow-md: 0 4px 16px rgba(26, 26, 46, 0.06), 0 2px 4px rgba(26, 26, 46, 0.03);
+  --shadow-lg: 0 16px 40px rgba(26, 26, 46, 0.08), 0 4px 8px rgba(26, 26, 46, 0.04);
+  --radius: 8px;
+  --radius-sm: 4px;
+  --radius-lg: 12px;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+}
+
+/* ───────── Header — premium 仕立て ───────── */
+.app-header {
+  background: #ffffff;
+  border-bottom: 1px solid var(--line);
+  padding: 18px 40px;
+  box-shadow: none;
+  position: relative;
+}
+.app-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent) 0%, var(--accent) 30%, var(--gold) 30%, var(--gold) 100%);
+}
+.app-title {
+  font-family: 'Noto Serif JP', serif;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.app-title .logo {
+  width: 38px; height: 38px;
+  background: var(--accent);
+  border-radius: 4px;
+  color: #fff;
+  font-family: 'Inter', sans-serif;
+  font-weight: 900;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  box-shadow: 0 4px 12px rgba(30, 58, 95, 0.25);
+}
+.app-title .sub {
+  font-family: 'Inter', sans-serif;
+  font-size: 10.5px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 600;
+  padding-left: 14px;
+  border-left: 1px solid var(--line-2);
+  margin-left: 6px;
+}
+.app-meta {
+  font-family: 'Inter', sans-serif;
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+/* ───────── Tabs — 細密ライン仕様 ───────── */
+.tabs {
+  background: #fff;
+  border-bottom: 1px solid var(--line);
+  padding: 0 40px;
+  gap: 0;
+}
+.tab {
+  padding: 16px 22px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+  border-bottom: 2px solid transparent;
+  transition: all 0.15s;
+}
+.tab:hover { color: var(--ink); }
+.tab.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+  font-weight: 700;
+}
+.tab.tab-line.active {
+  color: var(--gold-2);
+  border-bottom-color: var(--gold);
+}
+
+/* ───────── Container ───────── */
+.container {
+  max-width: 1280px;
+  padding: 40px;
+}
+
+/* ───────── Section Title — eyebrow + serif ───────── */
+.section-title {
+  font-family: 'Noto Serif JP', serif !important;
+  font-size: 20px !important;
+  font-weight: 600 !important;
+  color: var(--ink) !important;
+  letter-spacing: 0.02em !important;
+  margin: 36px 0 8px !important;
+  padding-bottom: 0 !important;
+  border: none !important;
+  display: block !important;
+  position: relative;
+  padding-left: 0 !important;
+}
+.section-title::before {
+  content: attr(data-eyebrow);
+  display: block !important;
+  font-family: 'Inter', sans-serif !important;
+  font-size: 10.5px !important;
+  font-weight: 700 !important;
+  color: var(--gold) !important;
+  letter-spacing: 0.22em !important;
+  text-transform: uppercase !important;
+  margin-bottom: 6px !important;
+  background: none !important;
+  width: auto !important;
+  height: auto !important;
+}
+.section-title::after {
+  content: '';
+  display: block;
+  width: 28px;
+  height: 2px;
+  background: var(--gold);
+  margin-top: 14px;
+}
+.section-sub {
+  font-size: 13px;
+  color: var(--muted);
+  margin: 18px 0 24px;
+  line-height: 1.85;
+  letter-spacing: 0.02em;
+}
+
+/* ───────── KPI cards — icon-led, box-divided ───────── */
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+.kpi {
+  background: #fff;
+  border: none;
+  border-right: 1px solid var(--line);
+  border-radius: 0;
+  padding: 28px 28px;
+  box-shadow: none;
+  position: relative;
+}
+.kpi:last-child { border-right: none; }
+.kpi::after { display: none; }
+.kpi::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 28px; height: 2px;
+  background: var(--gold);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.kpi:hover { transform: none; box-shadow: none; background: #fafaf6; }
+.kpi:hover::before { opacity: 1; }
+.kpi-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  margin-bottom: 14px;
+  display: flex; align-items: center; gap: 8px;
+}
+.kpi-icon {
+  width: 18px; height: 18px;
+  color: var(--gold);
+}
+.kpi-value {
+  font-family: 'Inter', sans-serif;
+  font-size: 34px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.kpi-value .unit {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+  margin-left: 6px;
+}
+.kpi-sub {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 10px;
+  letter-spacing: 0.04em;
+  font-family: 'Inter', sans-serif;
+}
+
+/* ───────── How-to banner — 上品な紹介ボックス ───────── */
+.howto-banner {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--gold);
+  border-radius: var(--radius);
+  padding: 24px 30px;
+  margin-bottom: 32px;
+  box-shadow: var(--shadow-xs);
+}
+.howto-banner-head {
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+.howto-banner-title {
+  font-family: 'Noto Serif JP', serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+  display: block;
+  margin-bottom: 4px;
+}
+.howto-banner-subtitle {
+  font-family: 'Inter', sans-serif;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.howto-steps {
+  display: grid;
+  gap: 12px;
+}
+.howto-step {
+  display: grid;
+  grid-template-columns: 32px 1fr;
+  gap: 14px;
+  align-items: start;
+  font-size: 13px;
+  color: var(--ink-2);
+  line-height: 1.75;
+}
+.howto-step-no {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+}
+.btn-hint {
+  display: inline-block;
+  background: var(--surface-warm);
+  border: 1px solid var(--gold);
+  color: var(--gold-2);
+  padding: 1px 8px;
+  border-radius: 3px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  margin: 0 2px;
+}
+
+/* ───────── Tables — 上品グリッド ───────── */
+table.clients {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-xs);
+  margin-top: 20px;
+}
+table.clients thead th {
+  background: #fafaf6;
+  border-bottom: 1px solid var(--line);
+  font-family: 'Inter', sans-serif;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  padding: 14px 16px;
+  text-align: left;
+}
+table.clients tbody td {
+  border-bottom: 1px solid #f0ecdf;
+  padding: 16px;
+  font-size: 13px;
+  color: var(--ink);
+  vertical-align: middle;
+}
+table.clients tbody tr:last-child td { border-bottom: none; }
+table.clients tbody tr:hover { background: #fafaf6; cursor: pointer; }
+
+/* ───────── Primary buttons — 上品 navy ───────── */
+button.primary, .primary {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 11px 22px;
+  font-family: 'Inter', 'Noto Sans JP', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: all 0.15s;
+  box-shadow: 0 2px 6px rgba(30, 58, 95, 0.18);
+}
+button.primary:hover, .primary:hover {
+  background: var(--accent-2);
+  box-shadow: 0 4px 12px rgba(30, 58, 95, 0.25);
+}
+
+/* ───────── Status pills — 細密 ───────── */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  border: 1px solid transparent;
+}
+.status-pill::before {
+  content: '';
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.status-pill.important { background: var(--warm-soft); color: #8b1e1e; border-color: #f5c6c6; }
+.status-pill.active    { background: var(--green-soft); color: var(--green); border-color: #c4e3cd; }
+.status-pill.new       { background: var(--accent-soft); color: var(--accent); border-color: #d4ddeb; }
+.status-pill.dormant   { background: #f5f1e8; color: #7d6d3f; border-color: #ddd0a8; }

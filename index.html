@@ -1,274 +1,1025 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>FP Compass — セキュアログイン版</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FP Compass — ファイナンシャルプランナー向け 顧客管理 SaaS</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --indigo:#5B5BF0; --indigo-deep:#3838CC;
-    --ok:#10B981; --warn:#F59E0B; --err:#E11D48;
-    --bg:#F7F8FC; --ink:#0F172A; --ink-2:#475569; --line:#E2E8F0;
-  }
-  *,*::before,*::after { box-sizing:border-box }
-  html,body { margin:0; padding:0; background:var(--bg); color:var(--ink);
-    font-family:'Noto Sans JP',-apple-system,BlinkMacSystemFont,sans-serif;
-    -webkit-font-smoothing:antialiased }
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css?v=20260531n">
+<link rel="stylesheet" href="styles-v2.css?v=20260531n">
+<link rel="stylesheet" href="styles-v3.css?v=20260531n">
+<link rel="stylesheet" href="styles-v8-workspace.css?v=20260603h-next-action">
+<script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<script>
+  // Force cache-bust: if URL has no nocache param, redirect with timestamp
+  (function(){
+    var u = new URL(window.location.href);
+    if (!u.searchParams.has('nocache')) {
+      u.searchParams.set('nocache', Date.now().toString(36));
+      window.location.replace(u.toString());
+    }
+  })();
+</script>
 
-  /* ============ ログイン画面 ============ */
-  #login {
-    min-height:100vh; display:grid; place-items:center;
-    background:radial-gradient(ellipse at top left, #EEF2FF, var(--bg));
-    padding:20px;
-  }
-  .login-card {
-    width:100%; max-width:460px; background:#fff; border:1px solid var(--line);
-    border-radius:20px; box-shadow:0 24px 64px rgba(15,23,42,0.10);
-    padding:42px 38px 36px;
-  }
-  .login-brand { font-family:'Manrope',sans-serif; font-weight:800;
-    font-size:22px; letter-spacing:-0.02em; color:var(--ink);
-    display:flex; align-items:center; gap:10px; margin-bottom:8px; }
-  .login-brand-dot { width:14px; height:14px; background:linear-gradient(135deg,var(--indigo),var(--indigo-deep));
-    border-radius:4px; box-shadow:0 4px 12px rgba(91,91,240,0.4); }
-  .login-tagline { font-size:13px; color:var(--ink-2); margin-bottom:32px; line-height:1.7; }
-  .login-label { display:block; font-size:12.5px; font-weight:700; color:var(--ink);
-    margin-bottom:8px; letter-spacing:0.02em; }
-  .login-input {
-    width:100%; padding:14px 16px; font-size:15px; border:1.5px solid var(--line);
-    border-radius:10px; font-family:inherit; transition:border-color .15s, box-shadow .15s;
-    background:#fff; color:var(--ink);
-  }
-  .login-input:focus { outline:none; border-color:var(--indigo);
-    box-shadow:0 0 0 4px rgba(91,91,240,0.12); }
-  .login-btn {
-    width:100%; padding:14px; margin-top:18px; background:var(--indigo);
-    color:#fff; border:none; border-radius:10px; font-family:'Manrope',sans-serif;
-    font-weight:800; font-size:14.5px; letter-spacing:0.02em; cursor:pointer;
-    transition:transform .12s, box-shadow .12s, background .12s;
-    box-shadow:0 8px 20px rgba(91,91,240,0.3);
-  }
-  .login-btn:hover:not(:disabled) { background:var(--indigo-deep); transform:translateY(-1px);
-    box-shadow:0 12px 28px rgba(91,91,240,0.42); }
-  .login-btn:disabled { opacity:.55; cursor:not-allowed; transform:none; }
-  .login-note {
-    margin-top:22px; padding:14px 16px; background:#F1F5F9; border-radius:10px;
-    font-size:11.5px; color:var(--ink-2); line-height:1.75;
-  }
-  .login-note b { color:var(--ink); }
-  .login-msg {
-    margin-top:14px; padding:14px 16px; border-radius:10px; font-size:13px;
-    line-height:1.65; display:none;
-  }
-  .login-msg.ok { background:#ECFDF5; color:#065F46; border:1px solid #A7F3D0; display:block; }
-  .login-msg.err { background:#FEF2F2; color:#991B1B; border:1px solid #FECACA; display:block; }
-  .login-foot { margin-top:28px; padding-top:20px; border-top:1px solid var(--line);
-    font-size:11px; color:#94A3B8; text-align:center; }
-
-  /* ============ メインアプリ ============ */
-  #app { display:none; }
-  .topbar {
-    background:#fff; border-bottom:1px solid var(--line); padding:14px 28px;
-    display:flex; align-items:center; justify-content:space-between;
-  }
-  .topbar-brand { font-family:'Manrope',sans-serif; font-weight:800; font-size:17px;
-    display:flex; align-items:center; gap:8px; }
-  .topbar-brand-dot { width:11px; height:11px; background:linear-gradient(135deg,var(--indigo),var(--indigo-deep));
-    border-radius:3px; }
-  .topbar-user { display:flex; align-items:center; gap:12px; font-size:13px; color:var(--ink-2); }
-  .topbar-tenant {
-    background:#EEF2FF; color:var(--indigo-deep); padding:5px 12px; border-radius:6px;
-    font-weight:700; font-size:11.5px; letter-spacing:0.04em;
-    font-family:'Manrope',sans-serif;
-  }
-  .topbar-logout {
-    background:transparent; border:1px solid var(--line); padding:6px 14px;
-    border-radius:6px; cursor:pointer; font-size:12px; font-weight:600;
-    color:var(--ink-2); transition:background .12s;
-  }
-  .topbar-logout:hover { background:var(--bg); color:var(--err); border-color:var(--err); }
-
-  .main { max-width:1200px; margin:0 auto; padding:32px 28px; }
-  .page-h { font-family:'Manrope',sans-serif; font-weight:800; font-size:26px;
-    letter-spacing:-0.015em; margin:0 0 8px; }
-  .page-sub { color:var(--ink-2); font-size:13.5px; margin-bottom:24px; }
-
-  .summary {
-    display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:28px;
-  }
-  .summary-card {
-    background:#fff; border:1px solid var(--line); border-radius:14px; padding:18px 20px;
-    border-left:4px solid var(--indigo);
-  }
-  .summary-card.ok { border-left-color:var(--ok); }
-  .summary-card.warn { border-left-color:var(--warn); }
-  .summary-num { font-family:'Manrope',sans-serif; font-weight:800; font-size:30px; line-height:1; }
-  .summary-lbl { font-size:11.5px; color:var(--ink-2); margin-top:6px;
-    letter-spacing:0.06em; text-transform:uppercase; font-weight:700; font-family:'Manrope',sans-serif; }
-
-  .clients {
-    background:#fff; border:1px solid var(--line); border-radius:14px; overflow:hidden;
-  }
-  .clients-h {
-    padding:16px 22px; border-bottom:1px solid var(--line); display:flex;
-    align-items:center; justify-content:space-between;
-  }
-  .clients-h h2 { margin:0; font-family:'Manrope',sans-serif; font-weight:800; font-size:16px; }
-  .clients-h .count { font-size:12px; color:var(--ink-2); font-family:'Manrope',sans-serif;
-    background:#F1F5F9; padding:3px 10px; border-radius:5px; font-weight:700; }
-  .client {
-    padding:16px 22px; border-bottom:1px solid var(--line); display:grid;
-    grid-template-columns:auto 1fr auto; gap:14px; align-items:center;
-    transition:background .12s;
-  }
-  .client:last-child { border-bottom:none; }
-  .client:hover { background:#FAFBFD; }
-  .client-avatar {
-    width:38px; height:38px; border-radius:10px;
-    background:linear-gradient(135deg,#EEF2FF,#E0E7FF);
-    color:var(--indigo-deep); display:grid; place-items:center;
-    font-family:'Manrope',sans-serif; font-weight:800; font-size:14px;
-  }
-  .client-info { min-width:0; }
-  .client-name { font-weight:700; font-size:14.5px; }
-  .client-meta { font-size:11.5px; color:var(--ink-2); margin-top:3px; }
-  .client-stage {
-    font-family:'Manrope',sans-serif; font-size:10.5px; font-weight:700;
-    letter-spacing:0.08em; text-transform:uppercase; padding:5px 10px; border-radius:5px;
-    background:#FEF3C7; color:#92400E;
-  }
-
-  .empty {
-    padding:60px 30px; text-align:center; color:var(--ink-2);
-  }
-  .empty-icon { font-size:36px; margin-bottom:12px; opacity:.5; }
-
-  .audit-strip {
-    margin-top:24px; padding:14px 18px; background:#fff; border:1px solid var(--line);
-    border-radius:10px; font-size:11.5px; color:var(--ink-2); display:flex;
-    align-items:center; gap:14px; flex-wrap:wrap;
-  }
-  .audit-strip b { color:var(--ink); font-family:'Manrope',sans-serif; font-weight:700;
-    letter-spacing:0.04em; text-transform:uppercase; font-size:10.5px; }
-
-  @media (max-width:680px) {
-    .summary { grid-template-columns:1fr 1fr; }
-    .main { padding:22px 16px; }
-    .topbar { padding:12px 18px; }
-    .topbar-tenant { display:none; }
-  }
+<style id="fp-gate-css">
+#fp-gate-overlay{position:fixed;inset:0;background:linear-gradient(135deg,#0F172A 0%,#1B2658 60%,#3838CC 100%);z-index:2147483647;display:flex;align-items:center;justify-content:center;font-family:'Noto Sans JP','Manrope',sans-serif;color:#fff}
+#fp-gate-card{max-width:440px;width:90%;background:rgba(255,255,255,0.06);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.18);border-radius:16px;padding:42px 38px;box-shadow:0 24px 64px rgba(0,0,0,0.4)}
+#fp-gate-brand{font-family:'Manrope',sans-serif;font-size:11px;letter-spacing:0.32em;text-transform:uppercase;opacity:0.85;margin-bottom:14px;font-weight:700}
+#fp-gate-tabs{display:flex;gap:4px;background:rgba(255,255,255,0.06);border-radius:8px;padding:3px;margin-bottom:20px}
+#fp-gate-tabs button{flex:1;padding:9px;border:none;background:transparent;color:rgba(255,255,255,0.7);border-radius:6px;cursor:pointer;font-family:'Manrope',sans-serif;font-weight:700;font-size:12.5px}
+#fp-gate-tabs button.on{background:rgba(255,255,255,0.16);color:#fff}
+#fp-gate-title{font-family:'Manrope',sans-serif;font-size:22px;font-weight:800;letter-spacing:-0.01em;margin-bottom:6px;line-height:1.35}
+#fp-gate-sub{font-size:13px;opacity:0.85;margin-bottom:22px;line-height:1.7}
+.fp-gate-label{display:block;font-size:11.5px;font-weight:700;margin:14px 0 6px;letter-spacing:0.04em;opacity:0.85}
+.fp-gate-input{width:100%;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.3);border-radius:8px;padding:12px 14px;font-size:14px;color:#fff;font-family:inherit;outline:none}
+.fp-gate-input::placeholder{color:rgba(255,255,255,0.45)}
+.fp-gate-input:focus{border-color:#FFE9A8;background:rgba(255,255,255,0.12)}
+#fp-gate-btn{width:100%;background:#FFE9A8;color:#0F172A;border:none;border-radius:8px;padding:14px;margin-top:18px;font-size:14px;font-weight:800;letter-spacing:0.08em;cursor:pointer;font-family:'Manrope',sans-serif;text-transform:uppercase;transition:all 0.15s}
+#fp-gate-btn:hover:not(:disabled){background:#fff;transform:translateY(-1px)}
+#fp-gate-btn:disabled{opacity:0.55;cursor:not-allowed}
+#fp-gate-msg{margin-top:14px;font-size:12.5px;min-height:18px;text-align:center;line-height:1.6}
+#fp-gate-msg.ok{color:#86EFAC}
+#fp-gate-msg.err{color:#FFB5B5}
+#fp-gate-help{margin-top:24px;padding-top:18px;border-top:1px solid rgba(255,255,255,0.12);font-size:11.5px;opacity:0.7;line-height:1.7;text-align:center}
+#fp-gate-help a{color:#FFE9A8;text-decoration:none}
 </style>
-</head>
-<body>
+<div id="fp-gate-overlay">
+  <div id="fp-gate-card">
+    <div id="fp-gate-brand">FP COMPASS · Skeleton Inc.</div>
+    <div id="fp-gate-tabs">
+      <button id="fp-tab-login" class="on">ログイン</button>
+      <button id="fp-tab-signup">新規登録</button>
+    </div>
+    <div id="fp-gate-title">ようこそ</div>
+    <div id="fp-gate-sub" data-login="登録済みのメアドとパスワードで入ってください。30日間ログイン維持。" data-signup="あなた専用の管理画面が30秒で作れます。">登録済みのメアドとパスワードで入ってください。30日間ログイン維持。</div>
 
-<!-- ============ ログイン画面 ============ -->
-<div id="login">
-  <div class="login-card">
-    <div class="login-brand"><span class="login-brand-dot"></span>FP Compass</div>
-
-    <!-- ===== タブ切替 ===== -->
-    <div id="auth-tabs" style="display:flex;gap:6px;margin-bottom:20px;border:1px solid var(--line);border-radius:10px;padding:4px;background:#F8FAFC;">
-      <button id="tab-login"  class="auth-tab auth-tab-on"  data-mode="login"
-        style="flex:1;padding:9px;border:none;background:#fff;color:var(--ink);border-radius:7px;font-family:'Manrope',sans-serif;font-weight:700;font-size:13px;cursor:pointer;box-shadow:0 1px 3px rgba(15,23,42,0.08);">ログイン</button>
-      <button id="tab-signup" class="auth-tab"               data-mode="signup"
-        style="flex:1;padding:9px;border:none;background:transparent;color:var(--ink-2);border-radius:7px;font-family:'Manrope',sans-serif;font-weight:700;font-size:13px;cursor:pointer;">新規登録</button>
+    <div id="fp-row-fpname" style="display:none;">
+      <label class="fp-gate-label" for="fp-fpname-input">FP事務所名</label>
+      <input id="fp-fpname-input" type="text" class="fp-gate-input" placeholder="例: 田中FP事務所" autocomplete="organization">
+    </div>
+    <label class="fp-gate-label" for="fp-email-input">メールアドレス</label>
+    <input id="fp-email-input" type="email" class="fp-gate-input" placeholder="you@example.com" autocomplete="email">
+    <label class="fp-gate-label" for="fp-pw-input">パスワード</label>
+    <input id="fp-pw-input" type="password" class="fp-gate-input" placeholder="パスワード" autocomplete="current-password">
+    <div id="fp-row-pwconfirm" style="display:none;">
+      <label class="fp-gate-label" for="fp-pwconfirm-input">パスワード (確認)</label>
+      <input id="fp-pwconfirm-input" type="password" class="fp-gate-input" placeholder="もう一度入力" autocomplete="new-password">
     </div>
 
-    <p id="login-tagline" class="login-tagline">
-      登録済みのメールアドレスとパスワードでログインしてください。<br>
-      一度ログインすると、同じブラウザでは <strong>30日間自動でログイン状態</strong> が保たれます。
-    </p>
-    <p id="signup-tagline" class="login-tagline" style="display:none;">
-      FP事務所名・メールアドレス・パスワードを入力すると、<strong>あなた専用の管理画面</strong>がすぐに使えるようになります。
-    </p>
-
-    <!-- 新規登録時のみ表示: FP事務所名 -->
-    <div id="row-fpname" style="display:none;">
-      <label class="login-label" for="fpname-input">FP事務所名</label>
-      <input id="fpname-input" type="text" class="login-input" placeholder="例: 田中FP事務所" autocomplete="organization" style="margin-bottom:14px;">
-    </div>
-
-    <label class="login-label" for="email-input">メールアドレス</label>
-    <input id="email-input" type="email" class="login-input" placeholder="例: you@example.com" autocomplete="email" style="margin-bottom:14px;">
-    <label class="login-label" for="password-input"><span id="pw-label">パスワード</span></label>
-    <input id="password-input" type="password" class="login-input" placeholder="パスワード" autocomplete="current-password">
-
-    <!-- 新規登録時のみ表示: パスワード確認 -->
-    <div id="row-pwconfirm" style="display:none; margin-top:14px;">
-      <label class="login-label" for="pwconfirm-input">パスワード (確認)</label>
-      <input id="pwconfirm-input" type="password" class="login-input" placeholder="もう一度入力" autocomplete="new-password">
-    </div>
-
-    <button id="login-btn"  class="login-btn">ログイン</button>
-    <button id="signup-btn" class="login-btn" style="display:none;">アカウント作成</button>
-
-    <div id="login-msg" class="login-msg"></div>
-
-    <div class="login-note">
-      <b>セキュリティについて：</b> パスワードは Firebase Auth (Google Cloud Identity Platform) によって SCRYPT ハッシュ化され、平文では保存されません。5回連続でログイン失敗するとアカウントが一時ロックされます。新規登録時、あなた専用のテナントが Skeleton 管理下に自動作成され、他社からは一切閲覧できません。
-    </div>
-    <div class="login-foot">
-      Skeleton FP Compass · v1.1 (Email + Password Auth + Self Sign-up)
-    </div>
+    <button id="fp-gate-btn">ログイン</button>
+    <div id="fp-gate-msg"></div>
+    <div id="fp-gate-help">サポート → <a href="mailto:support@skeleton-inc.jp">support@skeleton-inc.jp</a></div>
   </div>
 </div>
 
-<!-- ============ メインアプリ (ログイン後) ============ -->
-<div id="app">
-  <div class="topbar">
-    <div class="topbar-brand"><span class="topbar-brand-dot"></span>FP Compass</div>
-    <div class="topbar-user">
-      <span id="user-email"></span>
-      <span class="topbar-tenant" id="user-tenant"></span>
-      <a href="./referral.html" class="topbar-logout" style="text-decoration:none;">🎁 紹介</a>
-      <button class="topbar-logout" id="logout-btn">ログアウト</button>
-    </div>
-  </div>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+  import {
+    getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword,
+    onAuthStateChanged, signOut, setPersistence, browserLocalPersistence,
+  } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
+  import {
+    getFirestore, doc, getDoc, setDoc, serverTimestamp, collection, getDocs,
+  } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
 
+  const firebaseConfig = {
+    apiKey: "AIzaSyAmVAEe9l9e1Yo_dzzJdbTVU35wWKd2sH4",
+    authDomain: "skeleton-fp-compass-632026.firebaseapp.com",
+    projectId: "skeleton-fp-compass-632026",
+    storageBucket: "skeleton-fp-compass-632026.firebasestorage.app",
+    messagingSenderId: "833972948597",
+    appId: "1:833972948597:web:b7310cc22ce41d9738f23c",
+  };
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  setPersistence(auth, browserLocalPersistence).catch(console.error);
+  window.__fp = { auth, db, signOut };
+
+  // ===== 紹介パラメータ捕捉 (?ref / ?agent) =====
+  (function(){
+    try {
+      const u = new URL(window.location.href);
+      const ref = u.searchParams.get("ref");
+      const agent = u.searchParams.get("agent");
+      if (ref) { localStorage.setItem("fpc.ref", ref); localStorage.setItem("fpc.ref.ts", String(Date.now())); }
+      if (agent) { localStorage.setItem("fpc.agent", agent); localStorage.setItem("fpc.agent.ts", String(Date.now())); }
+      if (ref || agent) {
+        u.searchParams.delete("ref"); u.searchParams.delete("agent");
+        history.replaceState(null, "", u.pathname + (u.search || ""));
+      }
+    } catch (e) {}
+  })();
+  function readReferral(){
+    const ref = localStorage.getItem("fpc.ref"), agent = localStorage.getItem("fpc.agent");
+    const NINETY = 90*24*3600*1000, now = Date.now();
+    return {
+      ref: (ref && now - Number(localStorage.getItem("fpc.ref.ts")||0) < NINETY) ? ref : null,
+      agent: (agent && now - Number(localStorage.getItem("fpc.agent.ts")||0) < NINETY) ? agent : null,
+    };
+  }
+  function clearReferral(){ ["fpc.ref","fpc.ref.ts","fpc.agent","fpc.agent.ts"].forEach(k => localStorage.removeItem(k)); }
+
+  const $ = (id) => document.getElementById(id);
+  const msgEl = $("fp-gate-msg");
+  function msg(kind, text) { msgEl.className = kind || ""; msgEl.textContent = text; }
+  function gateRemove() {
+    const el = $("fp-gate-overlay"); if (el) el.remove();
+    const css = $("fp-gate-css"); if (css) css.remove();
+  }
+
+  let mode = "login";
+  function setMode(m) {
+    mode = m;
+    $("fp-tab-login").classList.toggle("on", m === "login");
+    $("fp-tab-signup").classList.toggle("on", m === "signup");
+    $("fp-row-fpname").style.display = m === "signup" ? "" : "none";
+    $("fp-row-pwconfirm").style.display = m === "signup" ? "" : "none";
+    $("fp-gate-btn").textContent = m === "signup" ? "アカウント作成" : "ログイン";
+    $("fp-pw-input").setAttribute("autocomplete", m === "signup" ? "new-password" : "current-password");
+    $("fp-gate-sub").textContent = $("fp-gate-sub").dataset[m];
+    msg("", "");
+  }
+  $("fp-tab-login").addEventListener("click", () => setMode("login"));
+  $("fp-tab-signup").addEventListener("click", () => setMode("signup"));
+
+  async function submit() {
+    const email = $("fp-email-input").value.trim();
+    const pw = $("fp-pw-input").value;
+    if (!email.includes("@")) { msg("err", "メアドの形式が正しくありません"); return; }
+    if (!pw) { msg("err", "パスワードを入力してください"); return; }
+
+    const btn = $("fp-gate-btn"); btn.disabled = true; btn.textContent = "認証中…";
+    try {
+      if (mode === "signup") {
+        const fpName = $("fp-fpname-input").value.trim();
+        const pwc = $("fp-pwconfirm-input").value;
+        if (!fpName) throw { code: "_", message: "FP事務所名を入力してください" };
+        if (pw.length < 8) throw { code: "_", message: "パスワードは8文字以上" };
+        if (pw !== pwc) throw { code: "_", message: "パスワード確認が一致しません" };
+
+        const cred = await createUserWithEmailAndPassword(auth, email, pw);
+        const slug = email.split("@")[0].toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "").slice(0,24) || "tenant";
+        const tenantId = `${slug}-${cred.user.uid.slice(-6)}`;
+        const { ref, agent } = readReferral();
+        await setDoc(doc(db, "tenants", tenantId), {
+          name: fpName, plan: "starter", status: "active",
+          isDemo: false, isSelfSignup: true,
+          contractStartedAt: serverTimestamp(), createdAt: serverTimestamp(),
+          ownerEmail: email,
+          referralSource: agent ? "agent" : (ref ? "fp_referral" : "direct"),
+          referredByAgent: agent || null,
+          referredByFp: agent ? null : (ref || null),
+          billing: {
+            baseMonthly: 19800, discountPerReferral: 3500,
+            currentDiscount: 0, nextMonthAmount: 19800,
+            stripeCustomerId: null, stripeSubscriptionId: null,
+            status: "trial", trialEndsAt: null,
+          },
+        });
+        await setDoc(doc(db, "users", cred.user.uid), {
+          email, role: "fp_owner", tenantId, createdAt: serverTimestamp(),
+        });
+        if (agent) {
+          await setDoc(doc(db, "referral_ledger", `agent_${agent}_${tenantId}`), {
+            type: "agent", agentCode: agent,
+            referredTenantId: tenantId, referredTenantName: fpName, referredEmail: email,
+            status: "trial", commissionPerMonth: 7000, signupBonus: 15000,
+            bonusEligibleAt: null, createdAt: serverTimestamp(),
+          });
+        } else if (ref) {
+          await setDoc(doc(db, "referral_ledger", `fp_${ref}_${tenantId}`), {
+            type: "fp_referral", referrerTenantId: ref,
+            referredTenantId: tenantId, referredTenantName: fpName, referredEmail: email,
+            status: "trial", discountPerMonth: 3500, createdAt: serverTimestamp(),
+          });
+        }
+        clearReferral();
+      } else {
+        await signInWithEmailAndPassword(auth, email, pw);
+      }
+    } catch (e) {
+      console.error(e);
+      const map = {
+        "auth/invalid-credential": "メアド or パスワードが違います",
+        "auth/user-not-found": "未登録のメアドです",
+        "auth/wrong-password": "パスワードが違います",
+        "auth/email-already-in-use": "既に登録済 → ログインタブから入ってください",
+        "auth/too-many-requests": "試行回数超過、 少し時間をおいて再試行を",
+        "auth/network-request-failed": "ネットワーク接続を確認してください",
+      };
+      msg("err", map[e.code] || (e.message || e.code));
+      btn.disabled = false; btn.textContent = mode === "signup" ? "アカウント作成" : "ログイン";
+    }
+  }
+  $("fp-gate-btn").addEventListener("click", submit);
+  $("fp-pw-input").addEventListener("keydown", e => { if (e.key === "Enter") submit(); });
+  $("fp-pwconfirm-input").addEventListener("keydown", e => { if (e.key === "Enter") submit(); });
+
+  // ===== 認証状態の監視 + Firestore からデータ読み込み =====
+  let signupInProgress = false;
+  async function loadTenantData(tenantId) {
+    const snap = await getDocs(collection(db, "tenants", tenantId, "customers"));
+    const list = [];
+    for (const d of snap.docs) {
+      const c = { id: d.id, ...d.data() };
+      // 各 customer のサブコレを並列で読む (line_messages, cancellations)
+      const [lineSnap, cxlSnap] = await Promise.all([
+        getDocs(collection(db, "tenants", tenantId, "customers", d.id, "line_messages")).catch(() => null),
+        getDocs(collection(db, "tenants", tenantId, "customers", d.id, "cancellations")).catch(() => null),
+      ]);
+      c.lineHistory = lineSnap ? lineSnap.docs.map(x => x.data()).sort((a,b) => (a.idx||0) - (b.idx||0)) : [];
+      c.cancellations = cxlSnap ? cxlSnap.docs.map(x => x.data()).sort((a,b) => (a.idx||0) - (b.idx||0)) : [];
+      list.push(c);
+    }
+    return list;
+  }
+  async function fetchUserDocWithRetry(uid, maxRetries) {
+    for (let i = 0; i < maxRetries; i++) {
+      const snap = await getDoc(doc(db, "users", uid));
+      if (snap.exists()) return snap;
+      if (i < maxRetries - 1) await new Promise(r => setTimeout(r, 800));
+    }
+    return null;
+  }
+
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) { return; }
+    const uDoc = await fetchUserDocWithRetry(user.uid, 4);
+    if (!uDoc) {
+      msg("err", `${user.email} は登録されていません。`);
+      await signOut(auth);
+      return;
+    }
+    const userData = uDoc.data();
+    if (userData.role === "skeleton_admin") {
+      // skeleton_admin は demo テナントを見せる (商談デモ用)
+      window.__fp.tenantId = "demo";
+      window.__fp.tenantName = "Skeleton 管理者 — DEMO ビュー";
+    } else {
+      window.__fp.tenantId = userData.tenantId;
+      const tDoc = await getDoc(doc(db, "tenants", userData.tenantId));
+      window.__fp.tenantName = tDoc.exists() ? (tDoc.data().name || userData.tenantId) : userData.tenantId;
+    }
+    window.__fp.userEmail = user.email;
+    msg("ok", `${window.__fp.tenantName} のデータを読み込み中…`);
+
+    try {
+      const clients = await loadTenantData(window.__fp.tenantId);
+      window.DUMMY_CLIENTS = clients;
+      window.DUMMY_CLIENTS_VERSION = `firestore-${window.__fp.tenantId}`;
+      window.UPCOMING_BOOKINGS = window.UPCOMING_BOOKINGS || [];
+      window.HOT_LEADS = window.HOT_LEADS || [];
+      window.LEAD_FUNNEL = window.LEAD_FUNNEL || { added:0, surveyed:0, booked:0, completed:0 };
+      window.LEAD_SCENARIO = window.LEAD_SCENARIO || {};
+      window.LEAD_FORM = window.LEAD_FORM || {};
+      gateRemove();
+      // 既存 CRM 初期化フックがあれば呼ぶ
+      if (typeof window.fpReadyAfterAuth === "function") window.fpReadyAfterAuth();
+      // top bar に user 情報表示 + ログアウトボタン挿入
+      setTimeout(() => attachUserBar(), 200);
+    } catch (e) {
+      console.error(e);
+      msg("err", "データ取得失敗: " + e.message);
+    }
+  });
+
+  function attachUserBar() {
+    if (document.getElementById("fp-user-bar")) return;
+    const bar = document.createElement("div");
+    bar.id = "fp-user-bar";
+    bar.style.cssText = "position:fixed;top:12px;right:16px;z-index:999;background:rgba(15,23,42,0.92);color:#fff;padding:7px 14px;border-radius:999px;font-family:'Manrope',sans-serif;font-size:12px;display:flex;align-items:center;gap:10px;backdrop-filter:blur(8px);box-shadow:0 8px 24px rgba(0,0,0,0.2);";
+    bar.innerHTML = `
+      <span style="font-weight:600;">${window.__fp.userEmail || ""}</span>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:0.08em;color:#FFE9A8;">${(window.__fp.tenantId || "").toUpperCase()}</span>
+      <a href="./referral.html" style="background:rgba(255,233,168,0.18);color:#FFE9A8;padding:4px 10px;border-radius:6px;text-decoration:none;font-weight:700;font-size:11px;">🎁 紹介</a>
+      <button id="fp-logout-btn" style="background:transparent;color:#FFB5B5;border:1px solid rgba(255,181,181,0.3);padding:4px 10px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:11px;font-weight:600;">ログアウト</button>
+    `;
+    document.body.appendChild(bar);
+    document.getElementById("fp-logout-btn").addEventListener("click", async () => {
+      await signOut(auth);
+      location.reload();
+    });
+  }
+</script>
+
+</head>
+<body data-prod="1">
+
+<div class="shell">
+
+  <!-- ===== Sidebar (dark) ===== -->
+  <aside class="sidebar">
+    <div class="sidebar-glow"></div>
+
+    <div class="sidebar-brand">
+      <span class="brand-logo">
+        <span class="brand-logo-inner">FP</span>
+        <span class="brand-logo-glow"></span>
+      </span>
+      <div class="brand-text">
+        <div class="brand-name">FP Compass <span class="brand-badge">Pro</span></div>
+        <div class="brand-sub">Skeleton Inc.</div>
+      </div>
+    </div>
+
+    <div class="sidebar-search">
+      <i data-lucide="search"></i>
+      <input type="search" placeholder="顧客・職業・LINEを検索" id="sidebar-search-input">
+      <span class="kbd">⌘K</span>
+    </div>
+
+    <div class="sidebar-group">
+      <div class="sidebar-label">
+        <i data-lucide="layout"></i><span>ワークスペース</span>
+      </div>
+      <nav class="sidebar-nav tabs">
+        <div class="tab active" data-tab="dashboard">
+          <i data-lucide="home"></i>
+          <span>ホーム</span>
+        </div>
+        <div class="tab" data-tab="clients">
+          <i data-lucide="users"></i>
+          <span>顧客台帳</span>
+          <span class="nav-count" id="nav-count-clients"></span>
+        </div>
+        <div class="tab" data-tab="timeline">
+          <i data-lucide="git-commit-horizontal"></i>
+          <span>ライフイベント</span>
+        </div>
+        <div class="tab" data-tab="kpi">
+          <i data-lucide="target"></i>
+          <span>KPI / 目標</span>
+          <span class="nav-count nav-count-alert" id="nav-count-kpi"></span>
+        </div>
+      </nav>
+    </div>
+
+    <div class="sidebar-group">
+      <div class="sidebar-label">
+        <i data-lucide="zap"></i><span>LINE オートメーション</span>
+      </div>
+      <nav class="sidebar-nav tabs">
+        <div class="tab tab-line" data-tab="leadHub">
+          <i data-lucide="user-plus"></i>
+          <span>新規相談</span>
+          <span class="nav-count nav-count-alert" id="nav-count-lead"></span>
+        </div>
+
+        <div class="tab tab-line" data-tab="distributionHub">
+          <i data-lucide="send"></i>
+          <span>配信</span>
+        </div>
+        <div class="tab tab-line" data-tab="birthdayTab">
+          <i data-lucide="cake"></i>
+          <span>誕生日</span>
+          <span class="nav-count" id="nav-count-bday"></span>
+        </div>
+        <div class="tab tab-line" data-tab="calendarTab">
+          <i data-lucide="calendar-days"></i>
+          <span>年末配布</span>
+          <span class="nav-count nav-count-alert" id="nav-count-cal"></span>
+        </div>
+        <div class="tab tab-line" data-tab="settingsHub">
+          <i data-lucide="settings"></i>
+          <span>設定</span>
+        </div>
+      </nav>
+    </div>
+
+    <div class="sidebar-foot">
+      <button class="real-mode-toggle" id="real-mode-btn" title="実モード ⇄ 本番モード">
+        <i data-lucide="users-round"></i>
+        <span class="real-mode-label" id="real-mode-label">本番モード (30名)</span>
+        <span class="real-mode-switch"><span class="real-mode-switch-knob"></span></span>
+      </button>
+      <button class="upgrade-mini" id="upgrade-mini-btn" title="Pro Plan - 残り8日 (クリックで詳細)">
+        <span class="upgrade-mini-icon"><i data-lucide="sparkles"></i></span>
+        <span class="upgrade-mini-text">
+          <span class="upgrade-mini-title">Pro 残り 8 日</span>
+          <span class="upgrade-mini-bar"><span class="upgrade-mini-bar-fill" style="width:42%"></span></span>
+        </span>
+        <i data-lucide="chevron-right" class="upgrade-mini-chev"></i>
+      </button>
+      <div class="sidebar-user">
+        <div class="user-avatar-wrap">
+          <div class="user-avatar">YT</div>
+          <span class="user-status-dot"></span>
+        </div>
+        <div class="user-text">
+          <div class="user-name">吉田 恭聡</div>
+          <div class="user-role"><i data-lucide="shield-check"></i><span>Owner</span></div>
+        </div>
+        <i data-lucide="chevrons-up-down" class="user-chevron"></i>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ===== Main ===== -->
   <div class="main">
-    <h1 class="page-h" id="welcome">ようこそ</h1>
-    <p class="page-sub">あなたのテナント (顧客データ) のみ表示されています。他社のデータには一切アクセスできません。</p>
 
-    <div class="summary">
-      <div class="summary-card">
-        <div class="summary-num" id="stat-total">—</div>
-        <div class="summary-lbl">登録顧客数</div>
-      </div>
-      <div class="summary-card ok">
-        <div class="summary-num" id="stat-active">—</div>
-        <div class="summary-lbl">アクティブ顧客</div>
-      </div>
-      <div class="summary-card warn">
-        <div class="summary-num" id="stat-lead">—</div>
-        <div class="summary-lbl">見込み客</div>
-      </div>
-    </div>
-
-    <div class="clients">
-      <div class="clients-h">
-        <h2>顧客一覧</h2>
-        <span class="count" id="client-count">0 件</span>
-      </div>
-      <div id="client-list">
-        <div class="empty">
-          <div class="empty-icon">⏳</div>
-          読み込み中…
+    <!-- Top bar -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <div class="breadcrumb">
+          <span class="crumb">FP Compass</span>
+          <i data-lucide="chevron-right"></i>
+          <span class="crumb crumb-current" id="current-crumb">ホーム</span>
         </div>
       </div>
-    </div>
+      <div class="topbar-right">
+        <span class="app-meta" id="app-meta">—</span>
+        <button class="icon-btn" title="通知"><i data-lucide="bell"></i></button>
+        <button class="icon-btn" title="ヘルプ"><i data-lucide="help-circle"></i></button>
+      </div>
+    </header>
 
-    <div class="audit-strip">
-      <span><b>テナントID:</b> <code id="audit-tenant">—</code></span>
-      <span><b>UID:</b> <code id="audit-uid">—</code></span>
-      <span><b>認証方式:</b> Email + Password (SCRYPT)</span>
-      <span><b>サーバー:</b> Firestore asia-northeast1 (東京)</span>
-    </div>
+    <!-- Workspace -->
+    <main class="workspace">
+      <div class="container">
+
+        <!-- ===== ダッシュボード ===== -->
+        <section class="view active" data-view="dashboard">
+
+          <!-- ===== MEGA HERO ===== -->
+          <div class="mega-hero">
+            <div class="mega-hero-bg"></div>
+            <div class="mega-hero-grid">
+
+              <!-- Left: hero copy -->
+              <div class="mega-hero-left">
+                <div class="mega-hero-date" id="mega-hero-date">2026年5月27日 水曜日</div>
+                <h1 class="mega-hero-title">
+                  おはよう、<span class="mega-hero-name">Tsukasa</span>.<br>
+                  今日は <span class="mega-hero-highlight" id="mega-hero-num">—</span> 人のお客様が<br>あなたを必要としています。
+                </h1>
+                <p class="mega-hero-lead" id="mega-hero-lead">優先度の高い順に、AI が次に取るべきアクションをまとめました。</p>
+
+                <div class="mega-hero-stats">
+                  <div class="mega-hero-stat">
+                    <span class="mega-hero-stat-label">今週フォロー</span>
+                    <span class="mega-hero-stat-value" id="mh-stat-week">—</span>
+                  </div>
+                  <div class="mega-hero-stat">
+                    <span class="mega-hero-stat-label">30日以内のイベント</span>
+                    <span class="mega-hero-stat-value" id="mh-stat-events">—</span>
+                  </div>
+                  <div class="mega-hero-stat">
+                    <span class="mega-hero-stat-label">未読LINE</span>
+                    <span class="mega-hero-stat-value">3</span>
+                  </div>
+                </div>
+
+                <div class="mega-hero-actions">
+                  <button class="primary primary-lg" id="hero-cta-new">
+                    <i data-lucide="user-plus"></i><span>新規顧客を登録</span>
+                  </button>
+                  <button class="ghost-btn ghost-btn-lg" id="hero-cta-broadcast">
+                    <i data-lucide="send"></i><span>一斉配信</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Right: featured next client card (hidden — Senior Cards 下にあるので重複削除) -->
+              <div class="mega-hero-right" style="display:none;">
+                <div class="featured-card" id="featured-card"></div>
+              </div>
+
+            </div>
+          </div>
+
+          <div id="notice-area"></div>
+
+          <!-- ===== Workflow guide — FPの1日の業務フロー ===== -->
+          <div class="section-title" data-eyebrow="Workflow">今日の進め方</div>
+          <div class="section-sub">朝 → 面談前 → 面談中 → 面談後。各ステップで「次にやること」が明確になります。</div>
+          <div class="workflow-grid">
+            <div class="workflow-step workflow-step-active">
+              <div class="workflow-step-num">1</div>
+              <div class="workflow-step-icon"><i data-lucide="sun"></i></div>
+              <div class="workflow-step-title">朝のブリーフ</div>
+              <div class="workflow-step-desc">上の Hero で「今日話す客」を確認。優先順に1人ずつ。</div>
+              <div class="workflow-step-status">いま ここ</div>
+            </div>
+            <div class="workflow-step">
+              <div class="workflow-step-num">2</div>
+              <div class="workflow-step-icon"><i data-lucide="search"></i></div>
+              <div class="workflow-step-title">面談前リサーチ</div>
+              <div class="workflow-step-desc">該当客の詳細を開く → 家族構成・タイムライン・過去提案を10秒で再確認。</div>
+            </div>
+            <div class="workflow-step">
+              <div class="workflow-step-num">3</div>
+              <div class="workflow-step-icon"><i data-lucide="mic"></i></div>
+              <div class="workflow-step-title">面談・録画</div>
+              <div class="workflow-step-desc">Zoom面談 → 録画ボタンで自動収録 → Drive に保存。</div>
+            </div>
+            <div class="workflow-step">
+              <div class="workflow-step-num">4</div>
+              <div class="workflow-step-icon"><i data-lucide="file-text"></i></div>
+              <div class="workflow-step-title">文字起こし → タスク化</div>
+              <div class="workflow-step-desc">AI議事録ボタンで自動文字起こし。提案・調査・連絡タスクを抽出して保存。</div>
+            </div>
+            <div class="workflow-step">
+              <div class="workflow-step-num">5</div>
+              <div class="workflow-step-icon"><i data-lucide="message-square-text"></i></div>
+              <div class="workflow-step-title">フォローアップ</div>
+              <div class="workflow-step-desc">AI返信下書きで LINE 文面を作って送信。次回面談を予約。</div>
+            </div>
+          </div>
+
+          <!-- ===== ★メイン: 今日やる事 (Senior Cards) ===== -->
+          <div class="section-header">
+            <div>
+              <div class="section-eyebrow-pill">TODAY</div>
+              <h2 class="section-big-title">今日 話すべき方</h2>
+              <p class="section-big-sub">上から順番に対応すればOK。各カードの「文面を作って送る」を押すだけ。</p>
+            </div>
+            <div class="section-header-aside">
+              <span class="section-counter" id="senior-counter">—</span>
+            </div>
+          </div>
+          <div class="action-list" id="action-list"></div>
+
+          <!-- ===== 概況 (折り畳み可) ===== -->
+          <details class="home-collapsible" open>
+            <summary class="home-collapsible-summary">
+              <i data-lucide="bar-chart-2"></i>
+              <span>今月の数字</span>
+              <i data-lucide="chevron-down" class="home-collapsible-chev"></i>
+            </summary>
+            <div class="home-collapsible-body">
+              <div class="kpi-row" id="kpi-area"></div>
+            </div>
+          </details>
+
+          <!-- ===== 客層・資産分析 (折り畳み) ===== -->
+          <details class="home-collapsible">
+            <summary class="home-collapsible-summary">
+              <i data-lucide="pie-chart"></i>
+              <span>客層・資産分析</span>
+              <i data-lucide="chevron-down" class="home-collapsible-chev"></i>
+            </summary>
+            <div class="home-collapsible-body">
+              <div class="chart-grid">
+                <div class="chart-card">
+                  <div class="chart-card-head">
+                    <i data-lucide="pie-chart"></i>
+                    <div>
+                      <div class="chart-card-title">顧客ステータス構成</div>
+                      <div class="chart-card-sub">重点 / 管理中 / 新規 / 休眠</div>
+                    </div>
+                  </div>
+                  <div class="chart-canvas-wrap"><canvas id="chart-status"></canvas></div>
+                </div>
+                <div class="chart-card">
+                  <div class="chart-card-head">
+                    <i data-lucide="bar-chart-3"></i>
+                    <div>
+                      <div class="chart-card-title">年代別 管理資産</div>
+                      <div class="chart-card-sub">AUM 合計 (万円)</div>
+                    </div>
+                  </div>
+                  <div class="chart-canvas-wrap"><canvas id="chart-aum"></canvas></div>
+                </div>
+                <div class="chart-card chart-card-wide">
+                  <div class="chart-card-head">
+                    <i data-lucide="line-chart"></i>
+                    <div>
+                      <div class="chart-card-title">向こう12ヶ月のライフイベント</div>
+                      <div class="chart-card-sub">教育 / 退職・年金 / 住宅 / 相続 ほか</div>
+                    </div>
+                  </div>
+                  <div class="chart-canvas-wrap chart-canvas-wide"><canvas id="chart-events"></canvas></div>
+                </div>
+              </div>
+            </div>
+          </details>
+
+          <div class="footnote">
+            ※ 優先度は「ライフイベントの近さ × 重要度 × 最終接触からの経過」を組み合わせて自動算出しています。
+          </div>
+        </section>
+
+        <!-- ===== 顧客一覧 ===== -->
+        <section class="view" data-view="clients">
+          <div class="page-head">
+            <div>
+              <span class="hero-eyebrow">CLIENT LEDGER</span>
+              <h1 class="hero-title">顧客台帳</h1>
+              <p class="hero-sub">最終接触日が古い順。タップで詳細モーダル（家族構成・30年タイムライン・提案履歴）。</p>
+            </div>
+            <div class="hero-actions">
+              <button class="primary" id="add-client-btn" data-hint="新しい顧客をCRMに追加。家族の生年月日も入れるとライフイベントが30年自動展開">
+                <i data-lucide="plus"></i><span>新規顧客を登録</span>
+              </button>
+            </div>
+          </div>
+          <div class="client-toolbar">
+            <input type="search" id="client-search" placeholder="名前 / 職業 / かな で検索">
+            <select id="status-filter">
+              <option value="all">全ステータス</option>
+              <option value="important">重点</option>
+              <option value="active">管理中</option>
+              <option value="new">新規</option>
+              <option value="dormant">休眠</option>
+            </select>
+            <select id="sort-by">
+              <option value="contact-asc">最終接触 — 新しい順 (直近接触)</option>
+              <option value="contact-desc">最終接触 — 古い順 (要フォロー)</option>
+              <option value="aum-desc">管理資産 — 多い順</option>
+              <option value="aum-asc">管理資産 — 少ない順</option>
+              <option value="age-desc">年齢 — 高い順</option>
+              <option value="age-asc">年齢 — 低い順</option>
+              <option value="name-asc">名前 — あいうえお順</option>
+              <option value="status">状態 — 重点優先</option>
+              <option value="event-near">直近ライフイベント 順</option>
+            </select>
+            <span class="count" id="client-count">—</span>
+          </div>
+          <table class="clients">
+            <thead>
+              <tr>
+                <th>顧客</th>
+                <th>年齢</th>
+                <th class="hide-mobile">職業</th>
+                <th>家族</th>
+                <th>状態</th>
+                <th style="text-align:right;">管理資産</th>
+                <th>最終接触</th>
+              </tr>
+            </thead>
+            <tbody id="client-tbody"></tbody>
+          </table>
+        </section>
+
+        <!-- ===== ライフイベント・マップ ===== -->
+        <section class="view" data-view="timeline">
+          <div class="page-head">
+            <div>
+              <span class="hero-eyebrow">LIFE EVENTS</span>
+              <h1 class="hero-title">ライフイベント・マップ</h1>
+              <p class="hero-sub">家族構成と生年月日から、進学・退職・年金・後期高齢・住宅ローン完済を時系列に自動展開。</p>
+            </div>
+          </div>
+          <div id="timeline-area"></div>
+          <div class="footnote">
+            ※ 顧客の家族構成と生年月日から、進学・退職・年金・後期高齢・住宅ローン完済を自動展開。カードクリックで顧客詳細を開きます。
+          </div>
+        </section>
+
+        <!-- ===== KPI / タスク管理 ===== -->
+        <section class="view" data-view="kpi">
+          <div class="page-head">
+            <div>
+              <span class="hero-eyebrow">KPI BOARD</span>
+              <h1 class="hero-title">業務 KPI とタスク</h1>
+              <p class="hero-sub">月次の主要 KPI と、それを達成するための具体的アクション。タスクから顧客 1 人ずつアプローチできます。</p>
+            </div>
+          </div>
+          <div id="kpi-board"></div>
+        </section>
+
+        <!-- ===== 新規相談 ===== -->
+        <section class="view" data-view="leadHub">
+          <div data-line-view="leadHub"></div>
+        </section>
+
+        <!-- ===== LINE配信 ===== -->
+        <section class="view" data-view="distributionHub">
+          <div data-line-view="distributionHub"></div>
+        </section>
+
+        <!-- ===== 誕生日メッセージ ===== -->
+        <section class="view" data-view="birthdayTab">
+          <div data-line-view="birthdayTab"></div>
+        </section>
+
+        <!-- ===== カレンダー配布 ===== -->
+        <section class="view" data-view="calendarTab">
+          <div data-line-view="calendarTab"></div>
+        </section>
+
+        <!-- ===== LINE設定 ===== -->
+        <section class="view" data-view="settingsHub">
+          <div data-line-view="settingsHub"></div>
+        </section>
+
+      </div>
+    </main>
   </div>
 </div>
 
-<script type="module" src="firebase-app.js?v=20260605e-signup-race-fix"></script>
+<!-- 顧客フォームモーダル -->
+<div class="modal-overlay" id="form-overlay" style="display:none;">
+  <div class="modal" id="form-content"></div>
+</div>
+
+<!-- 顧客詳細モーダル -->
+<div class="modal-overlay" id="modal-overlay" style="display:none;">
+  <div class="modal" id="modal-content"></div>
+</div>
+
+<script>
+// Firebase 認証完了後にこの関数が呼ばれて、 CRM スクリプト一式を順次注入する。
+// app.js は読み込み時に window.DUMMY_CLIENTS をスナップショットするので、
+// 認証 → Firestore 読み込み → window.DUMMY_CLIENTS セット → スクリプト注入 の順序を守る。
+window.fpReadyAfterAuth = function() {
+  if (window.__fpScriptsLoaded) return;
+  window.__fpScriptsLoaded = true;
+  const ver = "20260606A-firestore";
+  const scripts = [
+    "life-events.js?v=" + ver,
+    "recommender.js?v=" + ver,
+    "line-data.js?v=" + ver,
+    "app.js?v=" + ver,
+    "line-app.js?v=" + ver,
+    "charts.js?v=" + ver,
+  ];
+  function load(i) {
+    if (i >= scripts.length) {
+      // 全部終わったら DOMContentLoaded を擬似発火 (app.js が listening)
+      document.dispatchEvent(new Event('DOMContentLoaded'));
+      return;
+    }
+    const s = document.createElement('script');
+    s.src = scripts[i];
+    s.onload = () => load(i + 1);
+    s.onerror = () => { console.error('script load failed:', scripts[i]); load(i + 1); };
+    document.body.appendChild(s);
+  }
+  load(0);
+};
+</script>
+<script>
+  // Lucide icon hydration
+  function hydrateIcons() {
+    if (window.lucide && window.lucide.createIcons) {
+      window.lucide.createIcons({ attrs: { 'stroke-width': '1.6' } });
+    }
+  }
+  document.addEventListener('DOMContentLoaded', () => {
+    hydrateIcons();
+    setInterval(hydrateIcons, 1200);
+  });
+
+  // Howto banner: collapse by default + dismissible + persisted
+  function howtoKey(banner) {
+    const view = banner.closest('.view, [data-view], [data-line-view]');
+    const viewId = view ? (view.dataset.view || view.dataset.lineView || 'global') : 'global';
+    const title = (banner.querySelector('.howto-banner-title')?.textContent || '').trim();
+    return `fpcrm-howto-${viewId}-${title}`;
+  }
+  function setupHowtoBanner(banner) {
+    if (banner.dataset.howtoReady) return;
+    banner.dataset.howtoReady = '1';
+    const key = howtoKey(banner);
+    if (localStorage.getItem(key + '::dismissed') === '1') {
+      banner.classList.add('is-dismissed');
+      return;
+    }
+    // Add dismiss button if missing
+    if (!banner.querySelector('.howto-banner-dismiss')) {
+      const btn = document.createElement('button');
+      btn.className = 'howto-banner-dismiss';
+      btn.title = 'もう表示しない';
+      btn.setAttribute('aria-label', '閉じる');
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        banner.classList.add('is-dismissed');
+        localStorage.setItem(key + '::dismissed', '1');
+      });
+      banner.appendChild(btn);
+    }
+    // Toggle on header click
+    const head = banner.querySelector('.howto-banner-head');
+    if (head) {
+      head.addEventListener('click', () => banner.classList.toggle('is-open'));
+    }
+  }
+  function scanHowtoBanners() {
+    document.querySelectorAll('.howto-banner').forEach(setupHowtoBanner);
+  }
+  document.addEventListener('DOMContentLoaded', () => {
+    scanHowtoBanners();
+    setInterval(scanHowtoBanners, 1500);
+  });
+
+  // Breadcrumb sync (current tab → top bar)
+  const CRUMB_MAP = {
+    dashboard: 'ホーム',
+    clients: '顧客台帳',
+    timeline: 'ライフイベント',
+    kpi: 'KPI / タスク',
+    leadHub: 'LINE / 新規相談',
+    distributionHub: 'LINE / 配信',
+    birthdayTab: 'LINE / 誕生日メッセージ',
+    calendarTab: 'LINE / カレンダー配布',
+    settingsHub: 'LINE / 設定',
+  };
+  document.addEventListener('click', (e) => {
+    const tab = e.target.closest('.tab[data-tab]');
+    if (tab) {
+      const crumb = CRUMB_MAP[tab.dataset.tab];
+      if (crumb) document.getElementById('current-crumb').textContent = crumb;
+    }
+  });
+
+  // Sidebar search → focus client search and switch tab
+  document.getElementById('sidebar-search-input').addEventListener('focus', (e) => {
+    // Switch to clients tab if not already
+    const clientsTab = document.querySelector('.tab[data-tab="clients"]');
+    if (clientsTab && !clientsTab.classList.contains('active')) clientsTab.click();
+    setTimeout(() => {
+      const cs = document.getElementById('client-search');
+      if (cs) cs.focus();
+    }, 100);
+  });
+  document.getElementById('sidebar-search-input').addEventListener('input', (e) => {
+    const cs = document.getElementById('client-search');
+    if (cs) {
+      cs.value = e.target.value;
+      cs.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+  });
+
+  // Hero CTAs
+  document.getElementById('hero-cta-new')?.addEventListener('click', () => {
+    document.querySelector('.tab[data-tab="clients"]')?.click();
+    setTimeout(() => document.getElementById('add-client-btn')?.click(), 100);
+  });
+  document.getElementById('hero-cta-broadcast')?.addEventListener('click', () => {
+    document.querySelector('.tab[data-tab="distributionHub"]')?.click();
+  });
+
+  // Stale cache diagnostic banner — DUMMY_CLIENTS_VERSION 未定義なら古い JS 読込中
+  setTimeout(function () {
+    if (!window.DUMMY_CLIENTS_VERSION) {
+      var bar = document.createElement('div');
+      bar.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#DC2B2B;color:#fff;padding:12px 16px;text-align:center;font-family:Manrope,"Noto Sans JP",sans-serif;font-size:13px;font-weight:600;line-height:1.5;box-shadow:0 4px 16px rgba(220,43,43,0.3);';
+      bar.innerHTML = '⚠ 古いキャッシュで動作中です (LINE履歴など最新機能が見えません)。<button onclick="var u=new URL(location.href);u.searchParams.set(\'nocache\',Date.now().toString(36));location.replace(u.toString());" style="margin-left:12px;background:#fff;color:#DC2B2B;border:none;padding:6px 14px;border-radius:6px;font-weight:700;cursor:pointer;font-family:inherit;font-size:12.5px;">▶ 最新を読み込む</button>';
+      document.body.appendChild(bar);
+    } else {
+      console.log('[FP Compass] DUMMY_CLIENTS_VERSION:', window.DUMMY_CLIENTS_VERSION);
+    }
+    // ⚠ デバッグチップは window.FP_DEBUG=true の時のみ
+    if (window.FP_DEBUG) {
+      try {
+        var c1 = (window.DUMMY_CLIENTS || []).find(function (x) { return x.id === 'c001'; });
+        var lhLen = (c1 && c1.lineHistory || []).length;
+        var lhKeys = c1 ? Object.keys(c1).filter(function (k) { return k.indexOf('line') >= 0; }).join(',') : 'no-c001';
+        var chip = document.createElement('div');
+        chip.id = 'fpc-debug-chip';
+        chip.style.cssText = 'position:fixed;bottom:8px;right:8px;z-index:9998;background:#0F1117;color:#A5B4FC;padding:6px 10px;border-radius:6px;font-family:ui-monospace,monospace;font-size:10.5px;border:1px solid #1E2330;opacity:0.85;cursor:pointer;';
+        chip.textContent = 'v=' + (window.DUMMY_CLIENTS_VERSION || 'none') + ' / c001.lh=' + lhLen;
+        document.body.appendChild(chip);
+      } catch (e) {}
+    }
+  }, 1500);
+
+  // Sidebar nav counts: 動的に計算
+  function updateNavCounts() {
+    const clients = window.DUMMY_CLIENTS || [];
+    if (!clients.length) return;
+    const today = (window.LifeEvents && window.LifeEvents.TODAY) || new Date('2026-05-27');
+    const daysFn = (d) => Math.floor((today - new Date(d)) / 86400000);
+    const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val || ''; };
+    setText('nav-count-clients', clients.length);
+    // KPI/タスク: アクション必要
+    let kpiAlert = 0;
+    clients.forEach(c => {
+      const dsl = daysFn(c.lastContact);
+      const lastCancel = (c.cancellations || []).slice().sort((a, b) => new Date(b.date) - new Date(a.date))[0];
+      if (lastCancel && daysFn(lastCancel.date) <= 30) { kpiAlert++; return; }
+      const stalled = (c.proposals || []).find(p => (p.result === '検討中' || p.result === '提案中') && daysFn(p.date) >= 30);
+      if (stalled) { kpiAlert++; return; }
+      if (c.status === 'dormant' || dsl >= 180) { kpiAlert++; return; }
+      if (dsl >= 30 && c.status !== 'dormant') { kpiAlert++; }
+    });
+    setText('nav-count-kpi', kpiAlert);
+    setText('nav-count-lead', clients.length > 0 ? Math.min(4, clients.length) : '');
+    const m = today.getMonth() + 1;
+    const bdayCount = clients.filter(c => c.birth && (new Date(c.birth).getMonth() + 1) === m).length;
+    setText('nav-count-bday', bdayCount);
+    setText('nav-count-cal', clients.length > 5 ? 4 : '');
+  }
+  setTimeout(updateNavCounts, 800);
+  setInterval(updateNavCounts, 5000);
+
+  // MEGA HERO hydration
+  function hydrateHero() {
+    if (!window.DUMMY_CLIENTS || !window.Recommender || !window.LifeEvents) return false;
+    const navCount = document.getElementById('nav-count-clients');
+    if (navCount) navCount.textContent = window.DUMMY_CLIENTS.length;
+
+    const today = new Date('2026-05-27');
+
+    // 30d events
+    const horizon = new Date(today); horizon.setDate(horizon.getDate() + 30);
+    let count30 = 0;
+    window.DUMMY_CLIENTS.forEach(c => {
+      window.LifeEvents.generate(c).forEach(ev => {
+        const ed = new Date(ev.date || ev.when || ev.d);
+        if (!isNaN(ed) && ed >= today && ed <= horizon) count30++;
+      });
+    });
+
+    // Top priority
+    const tops = window.Recommender.topAcrossClients(window.DUMMY_CLIENTS, 8);
+    const topCount = tops.length;
+    const setText = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    setText('mega-hero-num', topCount);
+    setText('mh-stat-week', topCount);
+    setText('mh-stat-events', count30);
+
+    // Date label
+    const W = ['日','月','火','水','木','金','土'];
+    const d = today;
+    setText('mega-hero-date', `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日 ${W[d.getDay()]}曜日`);
+
+    // Featured card — top 1 client
+    if (topCount > 0) {
+      const t = tops[0];
+      const c = t.client;
+      const initial = (c.name || '?').replace(/\s+/g, '').slice(0, 1);
+      const reason = (t.reasons && t.reasons[0]) || (t.priorityLabel) || (t.label) || '優先対応';
+      const age = window.LifeEvents.currentAge(c);
+      const aumOku = (c.aum / 100000000).toFixed(2);
+      const aumMan = Math.round(c.aum / 10000);
+      const aumDisp = c.aum >= 100000000 ? `¥${aumOku}億` : `¥${aumMan.toLocaleString()}万`;
+      const childCount = (c.family || []).filter(m => m.rel === 'child').length;
+      const family = childCount > 0 ? `配偶者 + 子${childCount}` :
+        ((c.family || []).find(m => m.rel === 'spouse') ? '夫婦' : '単身');
+
+      // Next event
+      const evs = window.LifeEvents.generate(c);
+      const futureEv = evs.find(ev => new Date(ev.date) >= today);
+      const nextEvent = futureEv ? {
+        title: futureEv.title || futureEv.kind || futureEv.name || 'イベント',
+        rel: window.LifeEvents.formatRelative(new Date(futureEv.date))
+      } : null;
+
+      const daysFromContact = Math.max(0, Math.floor((today - new Date(c.lastContact)) / 86400000));
+
+      document.getElementById('featured-card').innerHTML = `
+        <div class="featured-rank">
+          <i data-lucide="flame"></i>
+          <span>NEXT BEST ACTION</span>
+        </div>
+        <div class="featured-head">
+          <div class="featured-avatar">${initial}</div>
+          <div class="featured-meta">
+            <div class="featured-name">${c.name} 様</div>
+            <div class="featured-sub">${age}歳 / ${c.occupation || '—'} / ${family}</div>
+          </div>
+          <div class="featured-aum">
+            <div class="featured-aum-label">管理資産</div>
+            <div class="featured-aum-value">${aumDisp}</div>
+          </div>
+        </div>
+        <div class="featured-reason">
+          <i data-lucide="sparkles"></i>
+          <span>${reason}</span>
+        </div>
+        <div class="featured-metrics">
+          <div class="featured-metric">
+            <span class="featured-metric-label">最終接触</span>
+            <span class="featured-metric-value">${daysFromContact}<span class="featured-metric-unit">日前</span></span>
+          </div>
+          <div class="featured-metric">
+            <span class="featured-metric-label">次のイベント</span>
+            <span class="featured-metric-value featured-metric-text">${nextEvent ? nextEvent.title : 'なし'}</span>
+            ${nextEvent ? `<span class="featured-metric-sub">${nextEvent.rel}</span>` : ''}
+          </div>
+        </div>
+        <button class="featured-cta primary" data-featured-open="${c.id}">
+          <i data-lucide="message-square-text"></i>
+          <span>この方の詳細を開く</span>
+        </button>
+      `;
+
+      document.querySelector('[data-featured-open]')?.addEventListener('click', () => {
+        document.querySelector('.tab[data-tab="clients"]')?.click();
+        setTimeout(() => {
+          const tr = document.querySelector(`tr[data-client-id="${c.id}"]`);
+          if (tr) tr.click();
+        }, 200);
+      });
+    }
+    return true;
+  }
+  let heroTries = 0;
+  function tryHero() {
+    if (hydrateHero()) return;
+    if (heroTries++ < 30) setTimeout(tryHero, 200);
+  }
+  setTimeout(tryHero, 400);
+</script>
+
 </body>
 </html>

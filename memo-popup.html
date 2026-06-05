@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>面談メモ</title>
+<style>
+  body { font-family: 'Noto Sans JP', -apple-system, sans-serif; margin: 0; background: linear-gradient(180deg,#fafbfc,#f1f5f9); display:flex; flex-direction:column; height:100vh; }
+  header { background: #fafbfc; padding:14px 18px; border-bottom:1px solid #e5e7eb; display:flex; align-items:center; gap:10px; }
+  header h1 { margin:0; font-size:15px; font-family:'Noto Serif JP', serif; flex:1; }
+  .hint { background:#fffbf2; border:1px solid #f0d36b; border-radius:8px; padding:10px 14px; margin:14px 18px 8px; font-size:11.5px; color:#5e4d1a; line-height:1.6; }
+  textarea { flex:1; margin:8px 18px; padding:14px 16px; border:1.5px solid #e5e7eb; border-radius:10px; font-size:13.5px; font-family:'Noto Sans JP', sans-serif; line-height:1.7; resize:none; box-sizing:border-box; min-height:200px; }
+  footer { padding:12px 18px; background:#fafbfc; border-top:1px solid #e5e7eb; display:flex; gap:8px; justify-content:flex-end; }
+  button { font-size:13px; padding:10px 22px; background:linear-gradient(135deg,#b8893d,#d4a017); color:#fff; border:none; border-radius:8px; cursor:pointer; font-weight:700; font-family:inherit; }
+  #tasks { padding:0 18px 14px; max-height:200px; overflow-y:auto; }
+  .task-row { display:grid; grid-template-columns:auto auto 1fr auto; gap:8px; align-items:center; padding:8px 10px; background:#fff; border:1px solid #e5e7eb; border-radius:7px; font-size:11.5px; margin-bottom:6px; }
+  .pri { font-size:9.5px; font-weight:700; padding:3px 7px; border-radius:9px; }
+  .pri-urgent { background:#fef2f2; color:#b91c3c; }
+  .pri-mid { background:#fff7ed; color:#c2410c; }
+  .pri-low { background:#f0f9ff; color:#075985; }
+</style>
+</head>
+<body>
+<header>
+  <span style="font-size:17px;">📝</span>
+  <h1 id="title">面談メモ</h1>
+  <span id="autosave-ind" style="font-size:10.5px;color:#94a3b8;font-weight:600;letter-spacing:0.04em;">自動保存中...</span>
+  <span style="font-size:9.5px;color:#cbd5e1;font-weight:500;font-family:'Inter',sans-serif;">v6.0.3w</span>
+  <button id="close-btn" style="background:#fff;color:#6b7280;border:1px solid #e5e7eb;padding:5px 8px;font-size:11px;font-weight:600;">✕</button>
+</header>
+
+<!-- 「面談を完了する」 RECピル同色の目立つ赤バー (オーナーfb: メモ上に必ず) -->
+<div id="finish-banner" style="padding:14px 16px;background:linear-gradient(135deg,#d9264c,#b91c3c);border-bottom:1px solid #8c1d22;box-shadow:0 4px 16px rgba(217,38,76,0.25);">
+  <button id="finish-meeting-btn" style="width:100%;background:#fff;color:#b91c3c;border:none;padding:16px 18px;font-family:'Inter','Noto Sans JP',sans-serif;font-size:15px;font-weight:900;letter-spacing:0.12em;cursor:pointer;border-radius:8px;box-shadow:0 4px 14px rgba(0,0,0,0.18);display:flex;align-items:center;justify-content:space-between;gap:10px;transition:all 0.2s;">
+    <span style="display:flex;align-items:center;gap:10px;">
+      <span style="width:12px;height:12px;background:#d9264c;border-radius:50%;animation:fp-rec-dot 1s ease-in-out infinite;box-shadow:0 0 12px rgba(217,38,76,0.7);"></span>
+      <span>■ 面談を完了する</span>
+    </span>
+    <span style="font-family:'Inter',sans-serif;font-size:11px;font-weight:700;opacity:0.7;letter-spacing:0.04em;text-transform:none;">録画停止 → AI解析</span>
+  </button>
+  <div style="margin-top:8px;text-align:center;color:#fff;font-size:10.5px;font-weight:600;letter-spacing:0.04em;line-height:1.55;opacity:0.95;">
+    終了時にこのボタンを押す / Chrome「共有を停止」でも自動停止
+  </div>
+</div>
+<style>
+@keyframes fp-rec-dot { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
+@keyframes fp-spin { to { transform: rotate(360deg); } }
+#finish-meeting-btn:hover { transform:translateY(-1px); box-shadow:0 8px 22px rgba(0,0,0,0.25); }
+#finish-meeting-btn:disabled { opacity:0.85; cursor:wait; }
+</style>
+<div class="hint"><strong>書き方のコツ:</strong> 「○月○日までに XXする」「来週 △△を送る」「3ヶ月後に □□確認」 のように期限+動作を含めると自動でタスク化されます</div>
+<textarea id="memo" placeholder="例:&#10;・新NISAの最適配分シミュレーション資料を 来週中に送る&#10;・教育費見直し 3ヶ月後に再面談&#10;・iDeCo加入手続きの進捗を 2ヶ月後に確認"></textarea>
+<div id="tasks"></div>
+<footer>
+  <button id="save-btn">💡 保存して タスク自動抽出</button>
+</footer>
+<script>
+const params = new URLSearchParams(location.search);
+const memoKey = params.get('memoKey') || 'fp-memo-popup-default';
+const tasksKey = params.get('tasksKey') || 'fp-tasks-popup-default';
+const customerName = params.get('name') || 'お客様';
+const baseDate = params.get('baseDate') || new Date().toISOString().slice(0,10);
+document.getElementById('title').textContent = '面談メモ — ' + customerName + '様';
+
+// localStorage から既存メモ復元 (CRMと同origin = skeleton-demos.github.io なのでshare可)
+try {
+  const existing = localStorage.getItem(memoKey);
+  if (existing) document.getElementById('memo').value = existing;
+} catch (e) {}
+
+// 入力中も自動で localStorage に保存 (×で閉じても消えないように)
+let saveTimer = null;
+document.getElementById('memo').addEventListener('input', () => {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    try { localStorage.setItem(memoKey, document.getElementById('memo').value); } catch (e) {}
+    const ind = document.getElementById('autosave-ind');
+    if (ind) { ind.textContent = '✓ 自動保存済 ' + new Date().toLocaleTimeString('ja-JP', {hour:'2-digit',minute:'2-digit'}); }
+  }, 300);
+});
+document.getElementById('close-btn').addEventListener('click', () => {
+  // 念のため最後の保存
+  try { localStorage.setItem(memoKey, document.getElementById('memo').value); } catch (e) {}
+  window.close();
+});
+
+// 「面談を完了」 ボタン → CRM(opener) に postMessage で停止指示
+document.getElementById('finish-meeting-btn').addEventListener('click', () => {
+  if (!confirm('録画を停止して AI 議事録を生成しますか?\n(Zoom も自動で閉じます)')) return;
+  // メモ最終保存
+  try { localStorage.setItem(memoKey, document.getElementById('memo').value); } catch (e) {}
+  // CRM ウィンドウに通知 + ボタンを処理中表示に
+  const btn = document.getElementById('finish-meeting-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span style="display:flex;align-items:center;gap:10px;"><span style="width:14px;height:14px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;display:inline-block;animation:fp-spin 0.8s linear infinite;"></span><span>処理中... CRM 画面に切替えてください</span></span>';
+  try {
+    if (window.opener && !window.opener.closed) {
+      window.opener.postMessage({ type: 'fp-finish-meeting' }, '*');
+      window.opener.focus();
+    }
+  } catch (e) {}
+  // メモウィンドウはCRM 側の処理完了後に自動で閉じる (ここで自動 close しない)
+});
+
+document.getElementById('save-btn').addEventListener('click', () => {
+  const memo = document.getElementById('memo').value;
+  try { localStorage.setItem(memoKey, memo); } catch (e) {}
+  const tasks = extractTasks(memo, new Date(baseDate));
+  if (tasks.length === 0) {
+    document.getElementById('tasks').innerHTML = '<div style="color:#9ca3af;text-align:center;padding:14px;">タスク抽出なし</div>';
+    return;
+  }
+  try {
+    const existing = JSON.parse(localStorage.getItem(tasksKey) || '[]');
+    const enriched = tasks.map(t => ({...t, createdAt: new Date().toISOString(), customerName, bookingTs: params.get('bookingTs') || ''}));
+    localStorage.setItem(tasksKey, JSON.stringify(existing.concat(enriched)));
+  } catch (e) {}
+  document.getElementById('tasks').innerHTML = '<div style="margin-bottom:8px;font-size:11px;color:#5e4d1a;background:#fff8e1;padding:8px 12px;border-radius:8px;border:1px solid #f0d36b;font-weight:700;">✨ '+tasks.length+'件のタスクを抽出して顧客カードに保存しました</div>' +
+    tasks.map(t => '<div class="task-row"><span class="pri '+(t.priority==='至急'?'pri-urgent':(t.priority==='今週'||t.priority==='2週間以内')?'pri-mid':'pri-low')+'">'+t.priority+'</span><span>'+t.icon+'</span><span>'+escapeHTML(t.task)+'</span><span style="color:#6b7280;font-size:10.5px;">'+t.due+'</span></div>').join('');
+});
+
+function escapeHTML(s) { return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+function extractTasks(memo, base) {
+  if (!memo || !memo.trim()) return [];
+  const lines = memo.split(/\n|・|・|✓|☐|□|■/).map(s => s.trim()).filter(s => s.length > 3);
+  return lines.map(line => parseLine(line, base)).filter(t => t);
+}
+function parseLine(line, today) {
+  let due = null, priority = '来月';
+  let m;
+  if ((m = line.match(/(\d{1,2})月(\d{1,2})日/))) {
+    const mo = parseInt(m[1]), dd = parseInt(m[2]);
+    const yr = today.getFullYear() + (mo < today.getMonth() + 1 ? 1 : 0);
+    due = new Date(yr, mo - 1, dd);
+  } else if ((m = line.match(/(\d{1,2})月末/))) {
+    const mo = parseInt(m[1]);
+    const yr = today.getFullYear() + (mo < today.getMonth() + 1 ? 1 : 0);
+    due = new Date(yr, mo, 0);
+  } else if (line.match(/今週中|今週/)) due = addDays(today, 7);
+  else if (line.match(/来週/)) due = addDays(today, 14);
+  else if (line.match(/3ヶ月後|3ヵ月後|三ヶ月後/)) due = addMonths(today, 3);
+  else if (line.match(/2ヶ月後|2ヵ月後|二ヶ月後/)) due = addMonths(today, 2);
+  else if (line.match(/半年後|6ヶ月後/)) due = addMonths(today, 6);
+  else if (line.match(/1年後|来年/)) due = addMonths(today, 12);
+  else if (line.match(/明日|翌日/)) due = addDays(today, 1);
+  else if (line.match(/急ぎ|至急|今日中/)) due = today;
+  else due = addMonths(today, 1);
+  const days = Math.ceil((due - today) / 86400000);
+  if (days <= 7) priority = '今週'; else if (days <= 14) priority = '2週間以内';
+  else if (days <= 30) priority = '来月'; else if (days <= 90) priority = '3ヶ月以内'; else priority = '半年以降';
+  let icon = '✅';
+  if (line.match(/送(る|付|る)|送信/)) icon = '📤';
+  else if (line.match(/確認/)) icon = '👀';
+  else if (line.match(/電話|TEL|連絡/)) icon = '📞';
+  else if (line.match(/資料|PDF|レポート/)) icon = '📄';
+  else if (line.match(/面談|相談|ZOOM|Zoom/)) icon = '💻';
+  else if (line.match(/シミュ|シミュレーション/)) icon = '📊';
+  return { task: line, due: formatDate(due), priority, icon };
+}
+function addDays(d, n) { const x = new Date(d); x.setDate(x.getDate()+n); return x; }
+function addMonths(d, n) { const x = new Date(d); x.setMonth(x.getMonth()+n); return x; }
+function formatDate(d) {
+  const wd = ['日','月','火','水','木','金','土'][d.getDay()];
+  return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}(${wd})`;
+}
+</script>
+</body>
+</html>

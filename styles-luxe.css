@@ -1,0 +1,918 @@
+/* ============================================================
+   FP Compass — LUXE スキン (黒×金×セリフ・FP本人専用)
+   ヒカル先生 IDEAL SKIN UI ライク。styles.css / styles-v2.css を全面上書き
+============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Shippori+Mincho:wght@500;600;700&family=Noto+Serif+JP:wght@500;600;700&display=swap');
+
+:root {
+  --black: #0E0B09;
+  --black-soft: #15110D;
+  --black-card: #1B1612;
+  --black-card-2: #221C17;
+  --paper: #F5F0E6;
+  --paper-2: #E8E2D4;
+  --gold: #C5A472;
+  --gold-bright: #D9B98C;
+  --gold-deep: #8E703F;
+  --gold-faint: rgba(197,164,114,0.25);
+  --gold-soft: rgba(197,164,114,0.08);
+  --gold-line: rgba(197,164,114,0.18);
+  --line: rgba(245,240,230,0.08);
+  --line-strong: rgba(245,240,230,0.16);
+  --text: #F5F0E6;
+  --muted: rgba(245,240,230,0.55);
+  --muted-2: rgba(245,240,230,0.38);
+  --red: #d28a6e;
+  --red-soft: rgba(210,138,110,0.12);
+  --green: #97b58a;
+  --green-soft: rgba(151,181,138,0.12);
+  /* 元 styles.css のカラー上書き */
+  --bg: var(--black);
+  --surface: var(--black-card);
+  --surface-2: var(--black-soft);
+  --ink: var(--text);
+  --ink-2: var(--paper-2);
+  --accent: var(--gold);
+  --accent-2: var(--gold-deep);
+  --accent-soft: var(--gold-soft);
+  --line-green: var(--green);
+  --line-green-deep: var(--green);
+  --line-green-soft: var(--green-soft);
+}
+
+html, body {
+  background: var(--black) !important;
+  color: var(--text) !important;
+  font-family: 'Shippori Mincho', 'Noto Serif JP', serif !important;
+  letter-spacing: 0.01em;
+}
+
+/* ───── header ───── */
+.app-header {
+  background: linear-gradient(180deg, var(--black-soft), var(--black)) !important;
+  border-bottom: 1px solid var(--gold-line) !important;
+  padding: 20px 40px !important;
+  box-shadow: none !important;
+}
+.app-title {
+  font-family: 'Cinzel', serif !important;
+  font-size: 16px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.32em !important;
+  color: var(--gold) !important;
+  text-transform: uppercase;
+}
+.app-title .logo {
+  background: transparent !important;
+  border: 1px solid var(--gold) !important;
+  color: var(--gold) !important;
+  border-radius: 0 !important;
+  width: 38px !important;
+  height: 38px !important;
+  font-family: 'Cinzel', serif !important;
+  font-size: 11px !important;
+  letter-spacing: 0.18em !important;
+  box-shadow: none !important;
+}
+.app-title .sub {
+  color: var(--muted) !important;
+  border-left: 1px solid var(--gold-faint) !important;
+  font-family: 'Cinzel', serif !important;
+  font-size: 10px !important;
+  letter-spacing: 0.24em !important;
+}
+.app-meta {
+  color: var(--muted) !important;
+  font-family: 'Cinzel', serif !important;
+  font-size: 10px !important;
+  letter-spacing: 0.18em !important;
+}
+
+/* ───── tabs ───── */
+.tabs {
+  background: var(--black) !important;
+  border-bottom: 1px solid var(--line) !important;
+  padding: 0 40px !important;
+}
+.tab {
+  font-family: 'Cinzel', 'Shippori Mincho', serif !important;
+  font-size: 11.5px !important;
+  letter-spacing: 0.22em !important;
+  color: var(--muted) !important;
+  padding: 16px 24px !important;
+  text-transform: uppercase;
+  border-bottom: 1px solid transparent !important;
+  font-weight: 500 !important;
+}
+.tab:hover {
+  color: var(--text) !important;
+  background: transparent !important;
+}
+.tab.active {
+  color: var(--gold) !important;
+  border-bottom-color: var(--gold) !important;
+  font-weight: 600 !important;
+}
+.tab.active::after { display: none !important; }
+
+/* ───── container ───── */
+.container {
+  background: var(--black);
+  max-width: 1400px !important;
+  padding: 40px !important;
+}
+
+/* ───── section title ───── */
+.section-title {
+  font-family: 'Cinzel', serif !important;
+  font-size: 10.5px !important;
+  font-weight: 500 !important;
+  color: var(--gold) !important;
+  letter-spacing: 0.28em !important;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--gold-faint) !important;
+  padding-bottom: 10px !important;
+  margin: 36px 0 18px !important;
+}
+.section-title::before { display: none !important; }
+
+/* ───── KPI ───── */
+.kpi-row {
+  background: var(--line);
+  border: 1px solid var(--line);
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: 1px !important;
+}
+.kpi {
+  background: var(--black-card) !important;
+  border: none !important;
+  border-radius: 0 !important;
+  padding: 26px 28px !important;
+  box-shadow: none !important;
+}
+.kpi:hover {
+  background: var(--black-card-2) !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+.kpi::after { display: none !important; }
+.kpi-label {
+  font-family: 'Cinzel', serif !important;
+  font-size: 10px !important;
+  font-weight: 500 !important;
+  color: var(--gold-deep) !important;
+  letter-spacing: 0.26em !important;
+  text-transform: uppercase;
+  margin-bottom: 12px !important;
+}
+.kpi-value {
+  font-family: 'Shippori Mincho', serif !important;
+  font-size: 42px !important;
+  font-weight: 500 !important;
+  color: var(--text) !important;
+  letter-spacing: -0.01em !important;
+  line-height: 1 !important;
+}
+.kpi-value .unit {
+  color: var(--muted) !important;
+  font-size: 14px !important;
+}
+.kpi-sub {
+  color: var(--muted-2) !important;
+  font-size: 11px !important;
+  letter-spacing: 0.04em !important;
+  margin-top: 10px !important;
+}
+.kpi.alert .kpi-value { color: var(--red) !important; }
+.kpi.warn .kpi-value { color: var(--gold) !important; }
+.kpi.good .kpi-value { color: var(--green) !important; }
+
+/* ───── action list ───── */
+.action-list {
+  background: var(--black-card) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+.action-item {
+  border-bottom: 1px solid var(--line) !important;
+  padding: 20px 26px !important;
+  grid-template-columns: 90px 1.6fr 1.6fr 100px !important;
+}
+.action-item:hover {
+  background: var(--gold-soft) !important;
+}
+.action-priority {
+  font-family: 'Cinzel', serif !important;
+  font-size: 9px !important;
+  letter-spacing: 0.18em !important;
+  padding: 4px 11px !important;
+  border-radius: 0 !important;
+  border: 1px solid currentColor !important;
+  background: transparent !important;
+}
+.action-priority.high { color: var(--red) !important; background: var(--red-soft) !important; }
+.action-priority.mid { color: var(--gold) !important; background: var(--gold-soft) !important; }
+.action-priority.low { color: var(--paper-2) !important; background: transparent !important; }
+.action-client-name {
+  font-family: 'Shippori Mincho', serif !important;
+  font-size: 16px !important;
+  letter-spacing: 0.05em !important;
+  color: var(--text) !important;
+}
+.client-meta {
+  font-family: 'Cinzel', serif !important;
+  font-size: 10.5px !important;
+  color: var(--muted) !important;
+  letter-spacing: 0.06em !important;
+}
+.action-detail strong {
+  font-family: 'Shippori Mincho', serif !important;
+  color: var(--paper) !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+}
+.action-detail .reason {
+  color: var(--muted) !important;
+  font-size: 11.5px !important;
+  letter-spacing: 0.02em !important;
+}
+
+/* ───── avatar ───── */
+.avatar {
+  background: linear-gradient(135deg, var(--gold-deep), var(--gold)) !important;
+  color: var(--black) !important;
+  font-family: 'Shippori Mincho', serif !important;
+  border: 1px solid var(--gold-faint) !important;
+  box-shadow: none !important;
+  font-weight: 600 !important;
+}
+
+/* ───── status pill ───── */
+.status-pill {
+  font-family: 'Cinzel', serif !important;
+  font-size: 9px !important;
+  letter-spacing: 0.18em !important;
+  padding: 3px 10px !important;
+  border-radius: 0 !important;
+  border: 1px solid currentColor !important;
+  background: transparent !important;
+}
+.status-pill.active { color: var(--green) !important; }
+.status-pill.important { color: var(--gold) !important; }
+.status-pill.new { color: var(--paper-2) !important; }
+.status-pill.dormant { color: var(--muted-2) !important; }
+
+/* ───── table ───── */
+table.clients {
+  background: var(--black-card) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+table.clients th {
+  background: var(--black-soft) !important;
+  color: var(--gold-deep) !important;
+  font-family: 'Cinzel', serif !important;
+  font-size: 10px !important;
+  letter-spacing: 0.18em !important;
+  padding: 14px 18px !important;
+  border-bottom: 1px solid var(--gold-faint) !important;
+}
+table.clients td {
+  padding: 16px 18px !important;
+  border-bottom: 1px solid var(--line) !important;
+  color: var(--text) !important;
+}
+table.clients tbody tr:hover {
+  background: var(--gold-soft) !important;
+}
+table.clients strong {
+  font-family: 'Shippori Mincho', serif !important;
+  color: var(--paper) !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.04em !important;
+  font-size: 14px !important;
+}
+.contact-stale { color: var(--red) !important; }
+.contact-warn { color: var(--gold) !important; }
+
+/* ───── client toolbar ───── */
+.client-toolbar input,
+.client-toolbar select {
+  background: var(--black-card) !important;
+  border: 1px solid var(--line-strong) !important;
+  color: var(--text) !important;
+  border-radius: 0 !important;
+  padding: 10px 14px !important;
+  font-family: inherit !important;
+}
+.client-toolbar input:focus,
+.client-toolbar select:focus {
+  border-color: var(--gold-faint) !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+.client-toolbar .count {
+  font-family: 'Cinzel', serif !important;
+  color: var(--muted) !important;
+  font-size: 10.5px !important;
+  letter-spacing: 0.14em !important;
+}
+
+/* ───── buttons ───── */
+button {
+  background: transparent !important;
+  border: 1px solid var(--line-strong) !important;
+  color: var(--text) !important;
+  border-radius: 0 !important;
+  font-family: 'Cinzel', 'Shippori Mincho', serif !important;
+  font-size: 11.5px !important;
+  letter-spacing: 0.14em !important;
+  padding: 9px 18px !important;
+  font-weight: 500 !important;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+button:hover {
+  border-color: var(--gold) !important;
+  color: var(--gold) !important;
+  background: transparent !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+button.primary {
+  background: var(--gold) !important;
+  border: 1px solid var(--gold) !important;
+  color: var(--black) !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.18em !important;
+  box-shadow: none !important;
+}
+button.primary:hover {
+  background: var(--gold-bright) !important;
+  border-color: var(--gold-bright) !important;
+  color: var(--black) !important;
+  transform: none !important;
+}
+button.ghost {
+  border: 1px solid var(--line-strong) !important;
+}
+
+/* ───── input / form ───── */
+input, select, textarea {
+  background: var(--black-card) !important;
+  border: 1px solid var(--line-strong) !important;
+  color: var(--text) !important;
+  border-radius: 0 !important;
+  padding: 10px 14px !important;
+  font-family: inherit !important;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: var(--gold-faint) !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* ───── modal ───── */
+.modal-overlay {
+  background: rgba(14, 11, 9, 0.86) !important;
+  backdrop-filter: blur(6px);
+}
+.modal {
+  background: var(--black-card) !important;
+  border: 1px solid var(--gold-faint) !important;
+  border-radius: 0 !important;
+  box-shadow: 0 28px 80px rgba(0,0,0,0.7) !important;
+}
+.modal-header {
+  background: linear-gradient(180deg, var(--black-soft), var(--black-card)) !important;
+  border-bottom: 1px solid var(--gold-faint) !important;
+  padding: 22px 32px !important;
+}
+.modal-header h2 {
+  font-family: 'Shippori Mincho', serif !important;
+  font-size: 20px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.05em !important;
+  color: var(--paper) !important;
+}
+.modal-close {
+  color: var(--muted) !important;
+}
+.modal-body {
+  padding: 28px 32px 36px !important;
+  background: var(--black-card) !important;
+}
+
+/* ───── detail block ───── */
+.detail-block {
+  background: var(--black-soft) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 0 !important;
+  padding: 20px 24px !important;
+}
+.detail-block h3 {
+  font-family: 'Cinzel', serif !important;
+  font-size: 10px !important;
+  letter-spacing: 0.22em !important;
+  color: var(--gold-deep) !important;
+  font-weight: 500 !important;
+  border-bottom: 1px solid var(--gold-faint) !important;
+  padding-bottom: 6px !important;
+}
+.detail-block dt {
+  color: var(--muted) !important;
+  font-family: 'Cinzel', serif !important;
+  font-size: 10.5px !important;
+  letter-spacing: 0.1em !important;
+}
+.detail-block dd {
+  color: var(--paper) !important;
+  font-family: 'Shippori Mincho', serif !important;
+  font-size: 13.5px !important;
+  font-weight: 500 !important;
+}
+.family-list li {
+  border-bottom: 1px dashed var(--line) !important;
+  color: var(--text) !important;
+}
+.family-list .rel-tag {
+  background: transparent !important;
+  border: 1px solid var(--gold-faint) !important;
+  color: var(--gold) !important;
+  font-family: 'Cinzel', serif !important;
+  font-size: 9px !important;
+  letter-spacing: 0.14em !important;
+  padding: 2px 7px !important;
+  border-radius: 0 !important;
+  text-transform: uppercase;
+}
+.family-list .rel-tag.spouse { color: var(--green) !important; border-color: var(--green) !important; }
+.family-list .rel-tag.child { color: var(--gold) !important; border-color: var(--gold) !important; }
+
+/* ───── proposals ───── */
+.proposals-list li {
+  border-bottom: 1px solid var(--line) !important;
+  color: var(--text) !important;
+}
+.proposals-list .pdate {
+  color: var(--muted) !important;
+  font-family: 'Cinzel', serif !important;
+  font-size: 11px !important;
+}
+.presult {
+  border: 1px solid currentColor !important;
+  border-radius: 0 !important;
+  font-family: 'Cinzel', serif !important;
+  font-size: 9px !important;
+  letter-spacing: 0.16em !important;
+  padding: 3px 8px !important;
+  background: transparent !important;
+}
+.presult.成約 { color: var(--green) !important; }
+.presult.検討中, .presult.提案中 { color: var(--gold) !important; }
+.presult.見送り { color: var(--muted-2) !important; }
+
+/* ───── client timeline ───── */
+.client-timeline {
+  background: var(--black-soft) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 0 !important;
+}
+.client-timeline-item {
+  border-bottom: 1px dashed var(--line) !important;
+  color: var(--text) !important;
+}
+.client-timeline-item .when {
+  color: var(--muted) !important;
+  font-family: 'Cinzel', serif !important;
+}
+.client-timeline-item .ev-who {
+  background: transparent !important;
+  color: var(--muted) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 0 !important;
+  font-family: 'Cinzel', serif !important;
+  font-size: 10px !important;
+  letter-spacing: 0.08em !important;
+}
+
+/* ───── timeline event tags (色トーン調整) ───── */
+.timeline-event {
+  border-radius: 0 !important;
+  font-family: 'Shippori Mincho', serif !important;
+  letter-spacing: 0.04em !important;
+}
+.timeline-event.education { background: var(--gold-soft) !important; color: var(--gold) !important; }
+.timeline-event.retirement { background: rgba(210, 138, 110, 0.12) !important; color: var(--red) !important; }
+.timeline-event.health { background: var(--red-soft) !important; color: var(--red) !important; }
+.timeline-event.inherit { background: rgba(151, 181, 138, 0.12) !important; color: var(--green) !important; }
+.timeline-event.finance { background: var(--green-soft) !important; color: var(--green) !important; }
+.timeline-event.family { background: var(--gold-soft) !important; color: var(--paper-2) !important; }
+
+/* ───── actions-list (次にやること) ───── */
+.actions-list {
+  background: linear-gradient(135deg, rgba(197,164,114,0.05), transparent) !important;
+  border: 1px solid var(--gold-faint) !important;
+  border-radius: 0 !important;
+}
+.actions-list .a-item {
+  color: var(--text);
+}
+.actions-list .p-tag {
+  border: 1px solid currentColor !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+  font-family: 'Cinzel', serif !important;
+  font-size: 9px !important;
+  letter-spacing: 0.16em !important;
+  color: var(--gold) !important;
+}
+.actions-list .a-item .a-reason {
+  color: var(--muted) !important;
+}
+
+/* ───── timeline map ───── */
+.tl-toolbar {
+  background: var(--black-card) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 0 !important;
+}
+.tl-pill {
+  background: transparent !important;
+  border: 1px solid var(--line-strong) !important;
+  color: var(--muted) !important;
+  border-radius: 0 !important;
+  font-family: 'Cinzel', serif !important;
+  font-size: 10px !important;
+  letter-spacing: 0.14em !important;
+  padding: 5px 12px !important;
+}
+.tl-pill:hover { color: var(--gold) !important; border-color: var(--gold) !important; }
+.tl-pill.on { background: var(--gold) !important; color: var(--black) !important; border-color: var(--gold) !important; }
+.tl-month-header {
+  border-bottom: 1px solid var(--gold-faint) !important;
+}
+.tl-month-title {
+  font-family: 'Shippori Mincho', serif !important;
+  color: var(--paper) !important;
+  letter-spacing: 0.06em !important;
+}
+.tl-month-sub {
+  background: transparent !important;
+  border: 1px solid var(--gold-faint) !important;
+  color: var(--gold) !important;
+  border-radius: 0 !important;
+  font-family: 'Cinzel', serif !important;
+  font-size: 9px !important;
+  letter-spacing: 0.16em !important;
+}
+.tl-month-count {
+  font-family: 'Cinzel', serif !important;
+  color: var(--muted) !important;
+  font-size: 10px !important;
+  letter-spacing: 0.14em !important;
+}
+.tl-card {
+  background: var(--black-card) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+.tl-card:hover {
+  border-color: var(--gold) !important;
+  box-shadow: none !important;
+}
+.tl-card-label {
+  color: var(--paper) !important;
+  font-family: 'Shippori Mincho', serif !important;
+}
+.tl-card-date { color: var(--gold) !important; font-family: 'Cinzel', serif !important; }
+.tl-card-client { color: var(--paper) !important; }
+.tl-card-sub { color: var(--muted) !important; }
+.tl-major-tag {
+  background: var(--gold) !important;
+  color: var(--black) !important;
+  border-radius: 0 !important;
+  font-family: 'Cinzel', serif !important;
+  letter-spacing: 0.14em !important;
+}
+
+/* ───── LINE hero (タブ内のLINE系) ───── */
+.line-hero {
+  background: linear-gradient(135deg, var(--black-soft), var(--black-card-2)) !important;
+  border: 1px solid var(--gold-faint) !important;
+  border-radius: 0 !important;
+  color: var(--text) !important;
+  box-shadow: none !important;
+}
+.line-hero::before { display: none !important; }
+.line-hero-logo {
+  background: transparent !important;
+  border: 1px solid var(--gold) !important;
+  color: var(--gold) !important;
+  border-radius: 0 !important;
+  font-family: 'Cinzel', serif !important;
+}
+.line-hero-title {
+  font-family: 'Shippori Mincho', serif !important;
+  color: var(--paper) !important;
+  letter-spacing: 0.08em !important;
+}
+.line-hero-sub { color: var(--muted) !important; }
+.line-hero-right button {
+  background: var(--gold) !important;
+  color: var(--black) !important;
+  border: 1px solid var(--gold) !important;
+}
+
+/* ───── LINE subnav ───── */
+.line-subnav {
+  background: var(--black-card) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+.line-subtab {
+  color: var(--muted) !important;
+  font-family: 'Shippori Mincho', serif !important;
+  font-size: 12.5px !important;
+  letter-spacing: 0.06em !important;
+  border-radius: 0 !important;
+  border-bottom: 2px solid transparent !important;
+  padding: 14px 20px !important;
+}
+.line-subtab:hover {
+  background: transparent !important;
+  color: var(--text) !important;
+}
+.line-subtab.active {
+  background: transparent !important;
+  color: var(--gold) !important;
+  border-bottom-color: var(--gold) !important;
+  font-weight: 600 !important;
+  box-shadow: none !important;
+}
+
+/* ───── line-card ───── */
+.line-card {
+  background: var(--black-card) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+/* ───── booking-row / bday-row ───── */
+.booking-row, .bday-row {
+  background: var(--black-card) !important;
+  border: 1px solid var(--line) !important;
+  border-left: 2px solid var(--gold) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+.booking-row:hover, .bday-row:hover {
+  border-color: var(--gold) !important;
+  border-left-color: var(--gold-bright) !important;
+}
+.booking-date, .bday-date {
+  font-family: 'Shippori Mincho', serif !important;
+  color: var(--paper) !important;
+}
+.booking-time, .bday-rel { color: var(--muted) !important; font-family: 'Cinzel', serif !important; letter-spacing: 0.06em !important; }
+.booking-name, .bday-main strong { color: var(--paper) !important; font-family: 'Shippori Mincho', serif !important; }
+.booking-meta {
+  background: var(--gold-soft) !important;
+  color: var(--gold) !important;
+  border-radius: 0 !important;
+  border: 1px solid var(--gold-faint) !important;
+  font-family: 'Cinzel', serif !important;
+  font-size: 10.5px !important;
+  letter-spacing: 0.08em !important;
+}
+.booking-want, .bday-meta { color: var(--muted) !important; }
+
+/* ───── segment cards ───── */
+.segment-card {
+  background: var(--black-card) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+.segment-card:hover {
+  border-color: var(--gold) !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+.seg-name { color: var(--paper) !important; font-family: 'Shippori Mincho', serif !important; }
+.seg-count {
+  background: transparent !important;
+  border: 1px solid var(--gold) !important;
+  color: var(--gold) !important;
+  border-radius: 0 !important;
+  font-family: 'Cinzel', serif !important;
+  letter-spacing: 0.14em !important;
+}
+.seg-desc { color: var(--muted) !important; }
+.seg-chip {
+  background: var(--gold-soft) !important;
+  color: var(--gold) !important;
+  border: 1px solid var(--gold-faint) !important;
+  border-radius: 0 !important;
+  font-family: 'Cinzel', serif !important;
+  font-size: 10px !important;
+  letter-spacing: 0.06em !important;
+}
+
+/* ───── sched table ───── */
+.sched-table {
+  background: var(--black-card) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 0 !important;
+}
+.sched-table th {
+  background: var(--black-soft) !important;
+  color: var(--gold-deep) !important;
+  font-family: 'Cinzel', serif !important;
+  letter-spacing: 0.18em !important;
+  border-bottom: 1px solid var(--gold-faint) !important;
+}
+.sched-table td { color: var(--text) !important; border-bottom: 1px solid var(--line) !important; }
+
+/* ───── toggle switch ───── */
+.toggle-switch span {
+  background: rgba(245,240,230,0.16) !important;
+  border-radius: 13px !important;
+}
+.toggle-switch input:checked + span {
+  background: var(--gold) !important;
+  box-shadow: 0 0 12px rgba(197,164,114,0.5) !important;
+}
+.toggle-switch span::before {
+  background: var(--paper) !important;
+}
+.toggle-switch input:checked + span::before {
+  background: var(--black) !important;
+}
+
+/* ───── tpl card ───── */
+.tpl-card {
+  background: var(--black-card) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+.tpl-card:hover { border-color: var(--gold) !important; transform: none !important; box-shadow: none !important; }
+.tpl-name { color: var(--paper) !important; font-family: 'Shippori Mincho', serif !important; }
+.tpl-cat {
+  background: transparent !important;
+  border: 1px solid var(--gold) !important;
+  color: var(--gold) !important;
+  border-radius: 0 !important;
+  font-family: 'Cinzel', serif !important;
+  letter-spacing: 0.14em !important;
+}
+.tpl-target { color: var(--muted) !important; }
+.tpl-body {
+  background: var(--black-soft) !important;
+  border-left: 2px solid var(--gold) !important;
+  color: var(--paper-2) !important;
+  border-radius: 0 !important;
+  font-family: 'Shippori Mincho', serif !important;
+}
+
+/* ───── step row ───── */
+.step-row { border-bottom: 1px solid var(--line) !important; }
+.step-no {
+  background: linear-gradient(135deg, var(--gold-deep), var(--gold)) !important;
+  color: var(--black) !important;
+  font-family: 'Cinzel', serif !important;
+  box-shadow: none !important;
+}
+.step-day {
+  background: transparent !important;
+  border: 1px solid var(--gold) !important;
+  color: var(--gold) !important;
+  border-radius: 0 !important;
+  font-family: 'Cinzel', serif !important;
+  letter-spacing: 0.14em !important;
+}
+.step-time { color: var(--muted) !important; font-family: 'Cinzel', serif !important; letter-spacing: 0.08em !important; }
+.step-title { color: var(--paper) !important; font-family: 'Shippori Mincho', serif !important; }
+.step-body {
+  background: var(--black-soft) !important;
+  border-left: 2px solid var(--gold) !important;
+  color: var(--paper-2) !important;
+  border-radius: 0 !important;
+}
+
+/* ───── settings ───── */
+.settings-row { border-bottom: 1px solid var(--line) !important; }
+.settings-row label {
+  color: var(--gold-deep) !important;
+  font-family: 'Cinzel', serif !important;
+  letter-spacing: 0.18em !important;
+}
+.settings-row input { background: var(--black-soft) !important; }
+
+/* ───── funnel ───── */
+.funnel-grid {
+  background: var(--black-card) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+.funnel-step {
+  background: transparent !important;
+}
+.funnel-step:hover { background: var(--gold-soft) !important; transform: none !important; }
+.funnel-step.highlight {
+  background: linear-gradient(135deg, var(--gold-soft), transparent) !important;
+  border: 1px solid var(--gold-faint) !important;
+}
+.funnel-icon { color: var(--gold) !important; }
+.funnel-label { color: var(--gold-deep) !important; font-family: 'Cinzel', serif !important; letter-spacing: 0.18em !important; }
+.funnel-value { color: var(--paper) !important; font-family: 'Shippori Mincho', serif !important; }
+.funnel-conv { color: var(--gold) !important; font-family: 'Cinzel', serif !important; letter-spacing: 0.08em !important; }
+.funnel-arrow { color: var(--gold-deep) !important; }
+
+/* ───── live bar ───── */
+.live-bar {
+  background: linear-gradient(135deg, var(--gold-deep), var(--gold)) !important;
+  color: var(--black) !important;
+  border-radius: 0 !important;
+  box-shadow: 0 4px 20px rgba(197,164,114,0.25) !important;
+  font-family: 'Shippori Mincho', serif !important;
+}
+.live-bar .live-dot { background: var(--black) !important; }
+.live-bar-label { font-family: 'Cinzel', serif !important; letter-spacing: 0.22em !important; }
+
+/* ───── modal-edit-btn / AI返信下書きボタン (顧客モーダル) ───── */
+#modal-draft-btn {
+  background: linear-gradient(135deg, var(--gold-deep), var(--gold)) !important;
+  color: var(--black) !important;
+  border: 1px solid var(--gold) !important;
+  font-family: 'Cinzel', serif !important;
+  font-size: 10.5px !important;
+  letter-spacing: 0.16em !important;
+}
+#modal-edit-btn {
+  border-color: var(--line-strong) !important;
+}
+.modal-close { background: transparent !important; border: none !important; font-size: 22px !important; }
+
+/* ───── rec buttons ───── */
+.btn-rec-start {
+  background: var(--red) !important;
+  color: var(--black) !important;
+  border: 1px solid var(--red) !important;
+  border-radius: 0 !important;
+  font-family: 'Cinzel', serif !important;
+  letter-spacing: 0.12em !important;
+}
+.btn-rec-stop {
+  background: transparent !important;
+  color: var(--red) !important;
+  border: 1px solid var(--red) !important;
+  border-radius: 0 !important;
+  font-family: 'Cinzel', serif !important;
+  letter-spacing: 0.12em !important;
+}
+.rec-pill {
+  border-radius: 0 !important;
+  font-family: 'Cinzel', serif !important;
+  letter-spacing: 0.14em !important;
+}
+.rec-pill.recording { color: var(--red) !important; border-color: var(--red) !important; background: var(--red-soft) !important; }
+.rec-pill.saved { color: var(--gold) !important; border-color: var(--gold) !important; background: var(--gold-soft) !important; }
+
+/* ───── スクロールバー (Dark対応) ───── */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--black); }
+::-webkit-scrollbar-thumb { background: var(--gold-deep); border-radius: 0; }
+::-webkit-scrollbar-thumb:hover { background: var(--gold); }
+
+/* ───── 一般リンク・テキスト ───── */
+a { color: var(--gold) !important; }
+a:hover { color: var(--gold-bright) !important; }
+
+/* ───── count badge ───── */
+.count-badge {
+  background: transparent !important;
+  border: 1px solid var(--gold) !important;
+  color: var(--gold) !important;
+  border-radius: 0 !important;
+  font-family: 'Cinzel', serif !important;
+  letter-spacing: 0.14em !important;
+}
+
+/* 全コーナーを直線型 (LUXE 路線) */
+.card, .funnel-grid, .modal, .line-card, .booking-row, .bday-row,
+.segment-card, .tpl-card, .sched-table, .kpi, .action-list,
+.tl-card, table.clients {
+  border-radius: 0 !important;
+}
