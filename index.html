@@ -87,6 +87,9 @@
   import {
     getFirestore, doc, getDoc, setDoc, serverTimestamp, collection, getDocs, addDoc,
   } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+  import {
+    getFunctions, httpsCallable,
+  } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-functions.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyAmVAEe9l9e1Yo_dzzJdbTVU35wWKd2sH4",
@@ -99,8 +102,9 @@
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
+  const functions = getFunctions(app, "asia-northeast1");
   setPersistence(auth, browserLocalPersistence).catch(console.error);
-  window.__fp = { auth, db, signOut };
+  window.__fp = { auth, db, functions, signOut };
 
   // ===== audit log (重要操作の記録) =====
   async function audit(action, detail) {
@@ -118,7 +122,7 @@
   }
   window.__fp.audit = audit;
 
-  // ===== 紹介パラメータ捕捉 (?ref / ?agent) =====
+  // ===== 紹介パラメータ捕捉 (?ref / ?agent) + Stripe Checkout 戻り処理 =====
   (function(){
     try {
       const u = new URL(window.location.href);
@@ -126,12 +130,35 @@
       const agent = u.searchParams.get("agent");
       if (ref) { localStorage.setItem("fpc.ref", ref); localStorage.setItem("fpc.ref.ts", String(Date.now())); }
       if (agent) { localStorage.setItem("fpc.agent", agent); localStorage.setItem("fpc.agent.ts", String(Date.now())); }
-      if (ref || agent) {
-        u.searchParams.delete("ref"); u.searchParams.delete("agent");
-        history.replaceState(null, "", u.pathname + (u.search || ""));
+      // Stripe Checkout 戻り処理
+      if (u.searchParams.get("signup_success")) {
+        sessionStorage.setItem("fpc.checkout.result", "success");
+      } else if (u.searchParams.get("signup_canceled")) {
+        sessionStorage.setItem("fpc.checkout.result", "canceled");
       }
+      const cleanupKeys = ["ref","agent","signup_success","signup_canceled","session_id"];
+      let changed = false;
+      cleanupKeys.forEach(k => { if (u.searchParams.has(k)) { u.searchParams.delete(k); changed = true; } });
+      if (changed) history.replaceState(null, "", u.pathname + (u.search || ""));
     } catch (e) {}
   })();
+  // Checkout 結果の表示 (DOM ready 後に banner)
+  document.addEventListener('DOMContentLoaded', () => {
+    const r = sessionStorage.getItem("fpc.checkout.result");
+    if (!r) return;
+    sessionStorage.removeItem("fpc.checkout.result");
+    setTimeout(() => {
+      const banner = document.createElement('div');
+      banner.style.cssText = `position:fixed;top:60px;left:50%;transform:translateX(-50%);z-index:998;padding:14px 22px;border-radius:10px;font-family:'Manrope',sans-serif;font-weight:700;font-size:13.5px;box-shadow:0 12px 32px rgba(0,0,0,0.2);background:${r==='success'?'#10B981':'#F59E0B'};color:#fff;max-width:560px;text-align:center;`;
+      banner.textContent = r === 'success'
+        ? '✓ お支払い設定完了。 14日間無料トライアル中です。'
+        : '⚠ お支払い設定がキャンセルされました。 トライアル期間中ですが、 14日後までに決済登録が必要です。';
+      document.body.appendChild(banner);
+      setTimeout(() => banner.style.transition = 'opacity 0.6s', 100);
+      setTimeout(() => banner.style.opacity = '0', 6000);
+      setTimeout(() => banner.remove(), 6800);
+    }, 1500);
+  });
   function readReferral(){
     const ref = localStorage.getItem("fpc.ref"), agent = localStorage.getItem("fpc.agent");
     const NINETY = 90*24*3600*1000, now = Date.now();
@@ -217,6 +244,22 @@
           });
         }
         clearReferral();
+        // ★ サインアップ成功 → Stripe Checkout へリダイレクト
+        msg("ok", "アカウント作成完了。 決済画面に進みます…");
+        try {
+          const createSession = httpsCallable(functions, "createCheckoutSession");
+          const result = await createSession({});
+          if (result.data?.url) {
+            window.location.href = result.data.url;
+            return;
+          } else {
+            throw new Error("Checkout URL が返されませんでした");
+          }
+        } catch (stripeErr) {
+          // Stripe 未設定の場合は通常ログインに進む (オーナー Stripe 開設前など)
+          console.warn("Stripe Checkout 起動失敗 (未設定の可能性):", stripeErr.message);
+          msg("ok", "アカウント作成完了。 (決済機能は本番稼働前のため、 トライアル無制限で利用可能)");
+        }
       } else {
         await signInWithEmailAndPassword(auth, email, pw);
       }
