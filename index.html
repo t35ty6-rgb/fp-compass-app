@@ -168,24 +168,50 @@
 <div id="login">
   <div class="login-card">
     <div class="login-brand"><span class="login-brand-dot"></span>FP Compass</div>
-    <p class="login-tagline">
-      登録されたメールアドレスとパスワードでログインしてください。<br>
+
+    <!-- ===== タブ切替 ===== -->
+    <div id="auth-tabs" style="display:flex;gap:6px;margin-bottom:20px;border:1px solid var(--line);border-radius:10px;padding:4px;background:#F8FAFC;">
+      <button id="tab-login"  class="auth-tab auth-tab-on"  data-mode="login"
+        style="flex:1;padding:9px;border:none;background:#fff;color:var(--ink);border-radius:7px;font-family:'Manrope',sans-serif;font-weight:700;font-size:13px;cursor:pointer;box-shadow:0 1px 3px rgba(15,23,42,0.08);">ログイン</button>
+      <button id="tab-signup" class="auth-tab"               data-mode="signup"
+        style="flex:1;padding:9px;border:none;background:transparent;color:var(--ink-2);border-radius:7px;font-family:'Manrope',sans-serif;font-weight:700;font-size:13px;cursor:pointer;">新規登録</button>
+    </div>
+
+    <p id="login-tagline" class="login-tagline">
+      登録済みのメールアドレスとパスワードでログインしてください。<br>
       一度ログインすると、同じブラウザでは <strong>30日間自動でログイン状態</strong> が保たれます。
     </p>
+    <p id="signup-tagline" class="login-tagline" style="display:none;">
+      FP事務所名・メールアドレス・パスワードを入力すると、<strong>あなた専用の管理画面</strong>がすぐに使えるようになります。
+    </p>
+
+    <!-- 新規登録時のみ表示: FP事務所名 -->
+    <div id="row-fpname" style="display:none;">
+      <label class="login-label" for="fpname-input">FP事務所名</label>
+      <input id="fpname-input" type="text" class="login-input" placeholder="例: 田中FP事務所" autocomplete="organization" style="margin-bottom:14px;">
+    </div>
 
     <label class="login-label" for="email-input">メールアドレス</label>
     <input id="email-input" type="email" class="login-input" placeholder="例: you@example.com" autocomplete="email" style="margin-bottom:14px;">
-    <label class="login-label" for="password-input">パスワード</label>
+    <label class="login-label" for="password-input"><span id="pw-label">パスワード</span></label>
     <input id="password-input" type="password" class="login-input" placeholder="パスワード" autocomplete="current-password">
-    <button id="login-btn" class="login-btn">ログイン</button>
+
+    <!-- 新規登録時のみ表示: パスワード確認 -->
+    <div id="row-pwconfirm" style="display:none; margin-top:14px;">
+      <label class="login-label" for="pwconfirm-input">パスワード (確認)</label>
+      <input id="pwconfirm-input" type="password" class="login-input" placeholder="もう一度入力" autocomplete="new-password">
+    </div>
+
+    <button id="login-btn"  class="login-btn">ログイン</button>
+    <button id="signup-btn" class="login-btn" style="display:none;">アカウント作成</button>
 
     <div id="login-msg" class="login-msg"></div>
 
     <div class="login-note">
-      <b>セキュリティについて：</b> パスワードは Firebase Auth (Google Cloud Identity Platform) によって SCRYPT ハッシュ化され、平文では保存されません。5回連続でログイン失敗するとアカウントが一時ロックされます。パスワードを忘れた場合は Skeleton 管理者にご連絡ください。
+      <b>セキュリティについて：</b> パスワードは Firebase Auth (Google Cloud Identity Platform) によって SCRYPT ハッシュ化され、平文では保存されません。5回連続でログイン失敗するとアカウントが一時ロックされます。新規登録時、あなた専用のテナントが Skeleton 管理下に自動作成され、他社からは一切閲覧できません。
     </div>
     <div class="login-foot">
-      Skeleton FP Compass · v1.0 (Email + Password Auth)
+      Skeleton FP Compass · v1.1 (Email + Password Auth + Self Sign-up)
     </div>
   </div>
 </div>
@@ -242,6 +268,6 @@
   </div>
 </div>
 
-<script type="module" src="firebase-app.js?v=20260605c-display-fix"></script>
+<script type="module" src="firebase-app.js?v=20260605d-signup"></script>
 </body>
 </html>

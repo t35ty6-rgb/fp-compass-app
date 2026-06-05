@@ -2,11 +2,11 @@
 // Uses Firebase JS SDK v10 via CDN modular imports.
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
 import {
-  getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut,
-  setPersistence, browserLocalPersistence,
+  getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword,
+  onAuthStateChanged, signOut, setPersistence, browserLocalPersistence,
 } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
 import {
-  getFirestore, doc, getDoc, collection, getDocs,
+  getFirestore, doc, getDoc, setDoc, serverTimestamp, collection, getDocs,
 } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -34,9 +34,34 @@ function msg(kind, text) {
   msgEl.textContent = text;
 }
 
+// ============ ログイン/新規登録 タブ切替 ============
+let mode = "login";
+function setMode(newMode) {
+  mode = newMode;
+  const isLogin = newMode === "login";
+  $("tab-login").style.background  = isLogin ? "#fff" : "transparent";
+  $("tab-login").style.color       = isLogin ? "var(--ink)" : "var(--ink-2)";
+  $("tab-login").style.boxShadow   = isLogin ? "0 1px 3px rgba(15,23,42,0.08)" : "none";
+  $("tab-signup").style.background = isLogin ? "transparent" : "#fff";
+  $("tab-signup").style.color      = isLogin ? "var(--ink-2)" : "var(--ink)";
+  $("tab-signup").style.boxShadow  = isLogin ? "none" : "0 1px 3px rgba(15,23,42,0.08)";
+  $("login-tagline").style.display  = isLogin ? "" : "none";
+  $("signup-tagline").style.display = isLogin ? "none" : "";
+  $("row-fpname").style.display     = isLogin ? "none" : "";
+  $("row-pwconfirm").style.display  = isLogin ? "none" : "";
+  $("login-btn").style.display      = isLogin ? "" : "none";
+  $("signup-btn").style.display     = isLogin ? "none" : "";
+  $("password-input").setAttribute("autocomplete", isLogin ? "current-password" : "new-password");
+  $("pw-label").textContent = isLogin ? "パスワード" : "パスワード (8文字以上)";
+  msgEl.style.display = "none";
+}
+$("tab-login").addEventListener("click", () => setMode("login"));
+$("tab-signup").addEventListener("click", () => setMode("signup"));
+
 // ============ ログイン ============
 $("login-btn").addEventListener("click", doLogin);
-$("password-input").addEventListener("keydown", (e) => { if (e.key === "Enter") doLogin(); });
+$("signup-btn").addEventListener("click", doSignup);
+$("password-input").addEventListener("keydown", (e) => { if (e.key === "Enter") { mode === "login" ? doLogin() : (e.target === $("password-input") && $("row-pwconfirm").style.display !== "none" ? $("pwconfirm-input").focus() : doSignup()); } });
 $("email-input").addEventListener("keydown", (e) => { if (e.key === "Enter") $("password-input").focus(); });
 
 async function doLogin() {
@@ -53,13 +78,66 @@ async function doLogin() {
     console.error(e);
     const map = {
       "auth/invalid-credential": "メールアドレスまたはパスワードが違います。",
-      "auth/user-not-found":     "このメールアドレスは登録されていません。",
+      "auth/user-not-found":     "このメールアドレスは登録されていません。新規登録タブで作成してください。",
       "auth/wrong-password":     "パスワードが違います。",
       "auth/too-many-requests":  "ログイン試行回数が多すぎます。少し時間をおいて再度お試しください。",
       "auth/network-request-failed": "ネットワーク接続を確認してください。",
     };
     msg("err", map[e.code] || ("ログイン失敗: " + (e.message || e.code)));
     btn.disabled = false; btn.textContent = "ログイン";
+  }
+}
+
+// ============ 新規登録 (セルフサービス) ============
+async function doSignup() {
+  const fpName = $("fpname-input").value.trim();
+  const email = $("email-input").value.trim();
+  const password = $("password-input").value;
+  const pwConfirm = $("pwconfirm-input").value;
+  if (!fpName) { msg("err", "FP事務所名を入力してください。"); return; }
+  if (!email || !email.includes("@")) { msg("err", "有効なメールアドレスを入力してください。"); return; }
+  if (password.length < 8) { msg("err", "パスワードは8文字以上にしてください。"); return; }
+  if (password !== pwConfirm) { msg("err", "パスワードと確認用が一致しません。"); return; }
+
+  const btn = $("signup-btn");
+  btn.disabled = true; btn.textContent = "作成中…";
+  let cred;
+  try {
+    cred = await createUserWithEmailAndPassword(auth, email, password);
+  } catch (e) {
+    console.error(e);
+    const map = {
+      "auth/email-already-in-use": "このメールアドレスは既に登録されています。ログインタブから入ってください。",
+      "auth/invalid-email":        "メールアドレスの形式が正しくありません。",
+      "auth/weak-password":        "パスワードが弱すぎます (8文字以上推奨)。",
+      "auth/operation-not-allowed":"新規登録が無効化されています。Skeleton 管理者にお問い合わせください。",
+      "auth/network-request-failed":"ネットワーク接続を確認してください。",
+    };
+    msg("err", map[e.code] || ("作成失敗: " + (e.message || e.code)));
+    btn.disabled = false; btn.textContent = "アカウント作成";
+    return;
+  }
+  // tenantId = メアドの local part を slug 化 + UID 末尾4桁で衝突回避
+  const slug = email.split("@")[0].toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "").slice(0, 24) || "tenant";
+  const tenantId = `${slug}-${cred.user.uid.slice(-6)}`;
+  try {
+    await setDoc(doc(db, "tenants", tenantId), {
+      name: fpName, plan: "starter", status: "active",
+      isDemo: false, isSelfSignup: true,
+      contractStartedAt: serverTimestamp(),
+      createdAt: serverTimestamp(),
+      ownerEmail: email,
+    });
+    await setDoc(doc(db, "users", cred.user.uid), {
+      email, role: "fp_owner", tenantId,
+      createdAt: serverTimestamp(),
+    });
+    msg("ok", `${fpName} を作成しました。ログイン中…`);
+    // onAuthStateChanged が自動で続きを処理する
+  } catch (e) {
+    console.error(e);
+    msg("err", "テナント作成に失敗: " + e.message + "。Skeleton 管理者にご連絡ください。");
+    btn.disabled = false; btn.textContent = "アカウント作成";
   }
 }
 
