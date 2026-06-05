@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FP Compass — セキュアログイン版</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --indigo:#5B5BF0; --indigo-deep:#3838CC;
+    --ok:#10B981; --warn:#F59E0B; --err:#E11D48;
+    --bg:#F7F8FC; --ink:#0F172A; --ink-2:#475569; --line:#E2E8F0;
+  }
+  *,*::before,*::after { box-sizing:border-box }
+  html,body { margin:0; padding:0; background:var(--bg); color:var(--ink);
+    font-family:'Noto Sans JP',-apple-system,BlinkMacSystemFont,sans-serif;
+    -webkit-font-smoothing:antialiased }
+
+  /* ============ ログイン画面 ============ */
+  #login {
+    min-height:100vh; display:grid; place-items:center;
+    background:radial-gradient(ellipse at top left, #EEF2FF, var(--bg));
+    padding:20px;
+  }
+  .login-card {
+    width:100%; max-width:460px; background:#fff; border:1px solid var(--line);
+    border-radius:20px; box-shadow:0 24px 64px rgba(15,23,42,0.10);
+    padding:42px 38px 36px;
+  }
+  .login-brand { font-family:'Manrope',sans-serif; font-weight:800;
+    font-size:22px; letter-spacing:-0.02em; color:var(--ink);
+    display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+  .login-brand-dot { width:14px; height:14px; background:linear-gradient(135deg,var(--indigo),var(--indigo-deep));
+    border-radius:4px; box-shadow:0 4px 12px rgba(91,91,240,0.4); }
+  .login-tagline { font-size:13px; color:var(--ink-2); margin-bottom:32px; line-height:1.7; }
+  .login-label { display:block; font-size:12.5px; font-weight:700; color:var(--ink);
+    margin-bottom:8px; letter-spacing:0.02em; }
+  .login-input {
+    width:100%; padding:14px 16px; font-size:15px; border:1.5px solid var(--line);
+    border-radius:10px; font-family:inherit; transition:border-color .15s, box-shadow .15s;
+    background:#fff; color:var(--ink);
+  }
+  .login-input:focus { outline:none; border-color:var(--indigo);
+    box-shadow:0 0 0 4px rgba(91,91,240,0.12); }
+  .login-btn {
+    width:100%; padding:14px; margin-top:18px; background:var(--indigo);
+    color:#fff; border:none; border-radius:10px; font-family:'Manrope',sans-serif;
+    font-weight:800; font-size:14.5px; letter-spacing:0.02em; cursor:pointer;
+    transition:transform .12s, box-shadow .12s, background .12s;
+    box-shadow:0 8px 20px rgba(91,91,240,0.3);
+  }
+  .login-btn:hover:not(:disabled) { background:var(--indigo-deep); transform:translateY(-1px);
+    box-shadow:0 12px 28px rgba(91,91,240,0.42); }
+  .login-btn:disabled { opacity:.55; cursor:not-allowed; transform:none; }
+  .login-note {
+    margin-top:22px; padding:14px 16px; background:#F1F5F9; border-radius:10px;
+    font-size:11.5px; color:var(--ink-2); line-height:1.75;
+  }
+  .login-note b { color:var(--ink); }
+  .login-msg {
+    margin-top:14px; padding:14px 16px; border-radius:10px; font-size:13px;
+    line-height:1.65; display:none;
+  }
+  .login-msg.ok { background:#ECFDF5; color:#065F46; border:1px solid #A7F3D0; display:block; }
+  .login-msg.err { background:#FEF2F2; color:#991B1B; border:1px solid #FECACA; display:block; }
+  .login-foot { margin-top:28px; padding-top:20px; border-top:1px solid var(--line);
+    font-size:11px; color:#94A3B8; text-align:center; }
+
+  /* ============ メインアプリ ============ */
+  #app { display:none; }
+  .topbar {
+    background:#fff; border-bottom:1px solid var(--line); padding:14px 28px;
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .topbar-brand { font-family:'Manrope',sans-serif; font-weight:800; font-size:17px;
+    display:flex; align-items:center; gap:8px; }
+  .topbar-brand-dot { width:11px; height:11px; background:linear-gradient(135deg,var(--indigo),var(--indigo-deep));
+    border-radius:3px; }
+  .topbar-user { display:flex; align-items:center; gap:12px; font-size:13px; color:var(--ink-2); }
+  .topbar-tenant {
+    background:#EEF2FF; color:var(--indigo-deep); padding:5px 12px; border-radius:6px;
+    font-weight:700; font-size:11.5px; letter-spacing:0.04em;
+    font-family:'Manrope',sans-serif;
+  }
+  .topbar-logout {
+    background:transparent; border:1px solid var(--line); padding:6px 14px;
+    border-radius:6px; cursor:pointer; font-size:12px; font-weight:600;
+    color:var(--ink-2); transition:background .12s;
+  }
+  .topbar-logout:hover { background:var(--bg); color:var(--err); border-color:var(--err); }
+
+  .main { max-width:1200px; margin:0 auto; padding:32px 28px; }
+  .page-h { font-family:'Manrope',sans-serif; font-weight:800; font-size:26px;
+    letter-spacing:-0.015em; margin:0 0 8px; }
+  .page-sub { color:var(--ink-2); font-size:13.5px; margin-bottom:24px; }
+
+  .summary {
+    display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:28px;
+  }
+  .summary-card {
+    background:#fff; border:1px solid var(--line); border-radius:14px; padding:18px 20px;
+    border-left:4px solid var(--indigo);
+  }
+  .summary-card.ok { border-left-color:var(--ok); }
+  .summary-card.warn { border-left-color:var(--warn); }
+  .summary-num { font-family:'Manrope',sans-serif; font-weight:800; font-size:30px; line-height:1; }
+  .summary-lbl { font-size:11.5px; color:var(--ink-2); margin-top:6px;
+    letter-spacing:0.06em; text-transform:uppercase; font-weight:700; font-family:'Manrope',sans-serif; }
+
+  .clients {
+    background:#fff; border:1px solid var(--line); border-radius:14px; overflow:hidden;
+  }
+  .clients-h {
+    padding:16px 22px; border-bottom:1px solid var(--line); display:flex;
+    align-items:center; justify-content:space-between;
+  }
+  .clients-h h2 { margin:0; font-family:'Manrope',sans-serif; font-weight:800; font-size:16px; }
+  .clients-h .count { font-size:12px; color:var(--ink-2); font-family:'Manrope',sans-serif;
+    background:#F1F5F9; padding:3px 10px; border-radius:5px; font-weight:700; }
+  .client {
+    padding:16px 22px; border-bottom:1px solid var(--line); display:grid;
+    grid-template-columns:auto 1fr auto; gap:14px; align-items:center;
+    transition:background .12s;
+  }
+  .client:last-child { border-bottom:none; }
+  .client:hover { background:#FAFBFD; }
+  .client-avatar {
+    width:38px; height:38px; border-radius:10px;
+    background:linear-gradient(135deg,#EEF2FF,#E0E7FF);
+    color:var(--indigo-deep); display:grid; place-items:center;
+    font-family:'Manrope',sans-serif; font-weight:800; font-size:14px;
+  }
+  .client-info { min-width:0; }
+  .client-name { font-weight:700; font-size:14.5px; }
+  .client-meta { font-size:11.5px; color:var(--ink-2); margin-top:3px; }
+  .client-stage {
+    font-family:'Manrope',sans-serif; font-size:10.5px; font-weight:700;
+    letter-spacing:0.08em; text-transform:uppercase; padding:5px 10px; border-radius:5px;
+    background:#FEF3C7; color:#92400E;
+  }
+
+  .empty {
+    padding:60px 30px; text-align:center; color:var(--ink-2);
+  }
+  .empty-icon { font-size:36px; margin-bottom:12px; opacity:.5; }
+
+  .audit-strip {
+    margin-top:24px; padding:14px 18px; background:#fff; border:1px solid var(--line);
+    border-radius:10px; font-size:11.5px; color:var(--ink-2); display:flex;
+    align-items:center; gap:14px; flex-wrap:wrap;
+  }
+  .audit-strip b { color:var(--ink); font-family:'Manrope',sans-serif; font-weight:700;
+    letter-spacing:0.04em; text-transform:uppercase; font-size:10.5px; }
+
+  @media (max-width:680px) {
+    .summary { grid-template-columns:1fr 1fr; }
+    .main { padding:22px 16px; }
+    .topbar { padding:12px 18px; }
+    .topbar-tenant { display:none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ ログイン画面 ============ -->
+<div id="login">
+  <div class="login-card">
+    <div class="login-brand"><span class="login-brand-dot"></span>FP Compass</div>
+    <p class="login-tagline">
+      登録されたメールアドレスとパスワードでログインしてください。<br>
+      一度ログインすると、同じブラウザでは <strong>30日間自動でログイン状態</strong> が保たれます。
+    </p>
+
+    <label class="login-label" for="email-input">メールアドレス</label>
+    <input id="email-input" type="email" class="login-input" placeholder="例: you@example.com" autocomplete="email" style="margin-bottom:14px;">
+    <label class="login-label" for="password-input">パスワード</label>
+    <input id="password-input" type="password" class="login-input" placeholder="パスワード" autocomplete="current-password">
+    <button id="login-btn" class="login-btn">ログイン</button>
+
+    <div id="login-msg" class="login-msg"></div>
+
+    <div class="login-note">
+      <b>セキュリティについて：</b> パスワードは Firebase Auth (Google Cloud Identity Platform) によって SCRYPT ハッシュ化され、平文では保存されません。5回連続でログイン失敗するとアカウントが一時ロックされます。パスワードを忘れた場合は Skeleton 管理者にご連絡ください。
+    </div>
+    <div class="login-foot">
+      Skeleton FP Compass · v1.0 (Email + Password Auth)
+    </div>
+  </div>
+</div>
+
+<!-- ============ メインアプリ (ログイン後) ============ -->
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-brand"><span class="topbar-brand-dot"></span>FP Compass</div>
+    <div class="topbar-user">
+      <span id="user-email"></span>
+      <span class="topbar-tenant" id="user-tenant"></span>
+      <button class="topbar-logout" id="logout-btn">ログアウト</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <h1 class="page-h" id="welcome">ようこそ</h1>
+    <p class="page-sub">あなたのテナント (顧客データ) のみ表示されています。他社のデータには一切アクセスできません。</p>
+
+    <div class="summary">
+      <div class="summary-card">
+        <div class="summary-num" id="stat-total">—</div>
+        <div class="summary-lbl">登録顧客数</div>
+      </div>
+      <div class="summary-card ok">
+        <div class="summary-num" id="stat-active">—</div>
+        <div class="summary-lbl">アクティブ顧客</div>
+      </div>
+      <div class="summary-card warn">
+        <div class="summary-num" id="stat-lead">—</div>
+        <div class="summary-lbl">見込み客</div>
+      </div>
+    </div>
+
+    <div class="clients">
+      <div class="clients-h">
+        <h2>顧客一覧</h2>
+        <span class="count" id="client-count">0 件</span>
+      </div>
+      <div id="client-list">
+        <div class="empty">
+          <div class="empty-icon">⏳</div>
+          読み込み中…
+        </div>
+      </div>
+    </div>
+
+    <div class="audit-strip">
+      <span><b>テナントID:</b> <code id="audit-tenant">—</code></span>
+      <span><b>UID:</b> <code id="audit-uid">—</code></span>
+      <span><b>認証方式:</b> Email + Password (SCRYPT)</span>
+      <span><b>サーバー:</b> Firestore asia-northeast1 (東京)</span>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="firebase-app.js?v=20260605c-display-fix"></script>
+</body>
+</html>
