@@ -1,0 +1,541 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FP Compass — FP事業者のための顧客管理 SaaS | Skeleton Inc.</title>
+<meta name="description" content="LINE連携・Zoom議事録・AI推奨を備えた、FP事業者向け顧客管理ツール。月額¥19,800、14日間無料トライアル。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400;9..144,700;9..144,900&family=Manrope:wght@500;700;800&family=Noto+Serif+JP:wght@500;700;900&family=Noto+Sans+JP:wght@400;500;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink:#0F1F3D;
+    --ink-2:#3E4B6B;
+    --ink-3:#7B85A0;
+    --cream:#F8F4EB;
+    --cream-2:#EFEADD;
+    --gold:#C9974C;
+    --gold-2:#A07432;
+    --indigo:#3838CC;
+    --paper:#FBFAF6;
+    --line:rgba(15,31,61,0.10);
+  }
+  *,*::before,*::after { box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+  body { margin:0; background:var(--paper); color:var(--ink);
+    font-family:'Noto Sans JP',sans-serif; -webkit-font-smoothing:antialiased;
+    font-feature-settings:"palt"; overflow-x:hidden; }
+  .serif { font-family:'Fraunces','Noto Serif JP',serif;
+    font-variation-settings:"opsz" 144, "SOFT" 30; }
+  .ital { font-style:italic; font-variation-settings:"opsz" 144, "SOFT" 100; }
+  .mono { font-family:'JetBrains Mono',monospace; }
+
+  /* ==== Nav ==== */
+  nav { position:fixed; top:0; left:0; right:0; z-index:100;
+    background:rgba(251,250,246,0.85); backdrop-filter:blur(12px);
+    border-bottom:1px solid var(--line);
+    padding:14px 36px; display:flex; justify-content:space-between; align-items:center; }
+  .nav-brand { font-family:'Manrope',sans-serif; font-weight:800; font-size:15px;
+    display:flex; align-items:center; gap:10px; }
+  .nav-mark { width:28px; height:28px; border-radius:50%;
+    background:linear-gradient(135deg,var(--gold),var(--gold-2));
+    display:grid; place-items:center;
+    font-family:'Fraunces',serif; font-weight:900; font-size:14px; color:var(--ink); }
+  .nav-actions { display:flex; gap:14px; align-items:center; }
+  .nav-actions a { color:var(--ink-2); text-decoration:none; font-size:13px; font-weight:600; }
+  .nav-cta { padding:8px 18px; background:var(--ink); color:var(--paper) !important;
+    border-radius:999px; font-weight:700; }
+
+  /* ==== Hero ==== */
+  .hero { padding:160px 36px 80px; max-width:1280px; margin:0 auto;
+    position:relative; overflow:hidden; }
+  .hero::before {
+    content:""; position:absolute; top:0; right:-100px; width:600px; height:600px;
+    background:radial-gradient(circle, rgba(201,151,76,0.18) 0%, transparent 70%);
+    pointer-events:none;
+  }
+  .hero-eyebrow { font-family:'Manrope'; font-weight:700; font-size:11.5px;
+    letter-spacing:0.32em; text-transform:uppercase; color:var(--gold-2);
+    margin-bottom:22px; display:flex; align-items:center; gap:14px; }
+  .hero-eyebrow::before { content:""; width:36px; height:1px; background:var(--gold-2); }
+  .hero h1 { font-family:'Fraunces','Noto Serif JP',serif; font-weight:900;
+    font-variation-settings:"opsz" 144, "SOFT" 30;
+    font-size:clamp(46px,7.5vw,108px); line-height:0.96; letter-spacing:-0.04em;
+    margin:0 0 28px; position:relative; max-width:980px; }
+  .hero h1 em { font-style:italic; color:var(--gold-2);
+    font-variation-settings:"opsz" 144, "SOFT" 100; }
+  .hero-sub { font-size:17px; line-height:1.85; color:var(--ink-2);
+    max-width:680px; margin:0 0 40px; position:relative; }
+  .hero-sub b { color:var(--ink); font-weight:700; }
+  .hero-cta { display:flex; gap:14px; align-items:center; flex-wrap:wrap;
+    position:relative; }
+  .btn-primary { padding:16px 32px; background:var(--ink); color:var(--paper);
+    text-decoration:none; border-radius:999px; font-family:'Manrope',sans-serif;
+    font-weight:800; font-size:14px; letter-spacing:0.04em;
+    display:inline-flex; align-items:center; gap:10px;
+    transition:transform .15s, box-shadow .15s;
+    box-shadow:0 12px 28px rgba(15,31,61,0.18); }
+  .btn-primary:hover { transform:translateY(-2px);
+    box-shadow:0 16px 36px rgba(15,31,61,0.28); }
+  .btn-primary::after { content:"→"; font-size:18px; }
+  .btn-ghost { padding:16px 24px; background:transparent; color:var(--ink);
+    text-decoration:none; font-family:'Manrope',sans-serif;
+    font-weight:700; font-size:14px; border-bottom:2px solid var(--ink); }
+
+  .hero-trust { margin-top:48px; padding-top:32px; border-top:1px dashed var(--line);
+    display:grid; grid-template-columns:repeat(4,1fr); gap:32px; position:relative; }
+  .trust-item { font-family:'Manrope',sans-serif; }
+  .trust-num { font-family:'Fraunces',serif; font-weight:900;
+    font-variation-settings:"opsz" 144;
+    font-size:32px; line-height:1; letter-spacing:-0.03em; color:var(--ink); }
+  .trust-num small { font-size:14px; opacity:0.6; font-weight:500; }
+  .trust-lbl { font-size:11.5px; color:var(--ink-3); letter-spacing:0.18em;
+    text-transform:uppercase; font-weight:700; margin-top:6px; }
+
+  /* ==== Section base ==== */
+  section { padding:110px 36px; max-width:1280px; margin:0 auto; }
+  .sec-eyebrow { font-family:'Manrope'; font-weight:700; font-size:11.5px;
+    letter-spacing:0.32em; text-transform:uppercase; color:var(--gold-2);
+    margin-bottom:20px; }
+  .sec-h { font-family:'Fraunces','Noto Serif JP',serif; font-weight:900;
+    font-variation-settings:"opsz" 144, "SOFT" 30;
+    font-size:clamp(36px,4.6vw,60px); line-height:1.05; letter-spacing:-0.025em;
+    margin:0 0 24px; max-width:880px; }
+  .sec-h em { font-style:italic; color:var(--gold-2);
+    font-variation-settings:"opsz" 144, "SOFT" 100; }
+  .sec-lead { font-size:16px; line-height:1.85; color:var(--ink-2); max-width:760px; }
+
+  /* ==== Pain Points ==== */
+  .pain { background:var(--cream); }
+  .pain-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:24px; margin-top:48px; }
+  .pain-card { background:var(--paper); border:1px solid var(--line); border-radius:18px;
+    padding:32px; position:relative; }
+  .pain-num { font-family:'Fraunces',serif; font-weight:900; font-style:italic;
+    font-variation-settings:"opsz" 144, "SOFT" 80;
+    font-size:52px; line-height:1; letter-spacing:-0.04em; color:var(--gold-2);
+    opacity:0.4; position:absolute; top:24px; right:28px; }
+  .pain-h { font-family:'Manrope',sans-serif; font-weight:800; font-size:18px;
+    margin:0 0 12px; padding-right:60px; }
+  .pain-p { font-size:14px; color:var(--ink-2); line-height:1.8; }
+  .pain-quote { margin-top:18px; padding-top:18px; border-top:1px dashed var(--line);
+    font-style:italic; color:var(--ink-3); font-size:13px; }
+  .pain-quote::before { content:"「 "; color:var(--gold-2); }
+  .pain-quote::after { content:" 」"; color:var(--gold-2); }
+
+  /* ==== Solution ==== */
+  .solution-grid { display:grid; grid-template-columns:1.2fr 1fr; gap:60px;
+    margin-top:60px; align-items:start; }
+  .feature-stack { display:grid; gap:14px; }
+  .feat { background:var(--paper); border:1px solid var(--line); border-radius:14px;
+    padding:24px 28px; display:grid; grid-template-columns:auto 1fr; gap:22px;
+    align-items:start; transition:transform .25s, box-shadow .25s; }
+  .feat:hover { transform:translateX(6px); box-shadow:-8px 8px 0 var(--gold); }
+  .feat-num { font-family:'Manrope',sans-serif; font-weight:800; font-size:11px;
+    letter-spacing:0.22em; color:var(--gold-2);
+    background:var(--cream); padding:6px 10px; border-radius:4px;
+    border:1px solid var(--cream-2); }
+  .feat-h { font-family:'Manrope',sans-serif; font-weight:800; font-size:16px;
+    margin:0 0 6px; letter-spacing:-0.005em; }
+  .feat-p { font-size:13.5px; color:var(--ink-2); line-height:1.75; margin:0; }
+
+  .showcase { background:var(--ink); border-radius:24px; padding:32px;
+    color:var(--paper); position:sticky; top:100px;
+    box-shadow:0 32px 72px rgba(15,31,61,0.28); overflow:hidden; position:relative; }
+  .showcase::before { content:""; position:absolute; inset:0;
+    background:radial-gradient(ellipse 500px 300px at 100% 0%, rgba(201,151,76,0.18), transparent 60%);
+    pointer-events:none; }
+  .showcase-tag { font-family:'JetBrains Mono'; font-weight:700; font-size:10.5px;
+    letter-spacing:0.24em; color:var(--gold); margin-bottom:16px; position:relative; }
+  .showcase h3 { font-family:'Fraunces',serif; font-weight:800;
+    font-variation-settings:"opsz" 144, "SOFT" 30;
+    font-size:26px; line-height:1.1; letter-spacing:-0.02em;
+    margin:0 0 18px; position:relative; }
+  .showcase p { font-size:13.5px; line-height:1.8; opacity:0.85; position:relative; }
+  .showcase-screen {
+    background:var(--paper); border-radius:12px; padding:18px;
+    color:var(--ink); margin-top:22px; position:relative;
+    box-shadow:0 16px 32px rgba(0,0,0,0.2);
+  }
+  .ss-row { display:flex; gap:10px; align-items:center; padding:8px 0;
+    border-bottom:1px solid var(--line); font-size:12.5px; }
+  .ss-row:last-child { border-bottom:none; }
+  .ss-avatar { width:28px; height:28px; border-radius:50%;
+    background:linear-gradient(135deg,#A3B8F5,#5871D6); color:#fff;
+    display:grid; place-items:center; font-weight:800; font-size:11px;
+    font-family:'Manrope',sans-serif; }
+  .ss-info { flex:1; }
+  .ss-name { font-weight:700; }
+  .ss-meta { font-size:10.5px; color:var(--ink-3); margin-top:2px; }
+  .ss-tag { font-family:'JetBrains Mono'; font-size:9px; letter-spacing:0.1em;
+    padding:2px 6px; border-radius:3px; background:var(--cream); color:var(--gold-2); font-weight:700; }
+
+  /* ==== Pricing ==== */
+  .price-block { padding:120px 36px; }
+  .price-card { max-width:680px; margin:60px auto 0; background:var(--ink);
+    color:var(--paper); border-radius:32px; padding:56px 48px;
+    position:relative; overflow:hidden; }
+  .price-card::before { content:""; position:absolute; inset:0;
+    background:
+      radial-gradient(ellipse 600px 300px at 100% 0%, rgba(201,151,76,0.22), transparent 60%),
+      radial-gradient(ellipse 400px 200px at 0% 100%, rgba(255,255,255,0.06), transparent 60%);
+    pointer-events:none; }
+  .price-tag { font-family:'Manrope'; font-weight:800; font-size:11px;
+    letter-spacing:0.32em; text-transform:uppercase; color:var(--gold);
+    margin-bottom:20px; position:relative; }
+  .price-amount { font-family:'Fraunces',serif; font-weight:900;
+    font-variation-settings:"opsz" 144;
+    font-size:96px; line-height:0.95; letter-spacing:-0.045em;
+    display:flex; align-items:flex-start; gap:8px; position:relative; }
+  .price-amount .yen { font-size:38px; font-weight:500; margin-top:14px; opacity:0.85; }
+  .price-amount .per { font-family:'Manrope',sans-serif; font-size:14px; font-weight:600;
+    letter-spacing:0.08em; text-transform:uppercase; margin-top:62px; opacity:0.6; }
+  .price-tagline { margin-top:20px; font-size:15px; line-height:1.7; opacity:0.85;
+    position:relative; }
+  .price-tagline b { color:var(--gold); font-weight:700; }
+  .price-features { margin-top:32px; display:grid; grid-template-columns:repeat(2,1fr);
+    gap:12px; position:relative; }
+  .price-feat { font-size:13px; padding-left:22px; position:relative; opacity:0.9; line-height:1.6; }
+  .price-feat::before { content:"✓"; position:absolute; left:0; color:var(--gold);
+    font-weight:700; }
+  .price-cta { margin-top:32px; display:flex; gap:14px; position:relative; flex-wrap:wrap; }
+  .price-cta .btn { padding:16px 30px; border-radius:999px;
+    font-family:'Manrope',sans-serif; font-weight:800; font-size:14px;
+    letter-spacing:0.04em; text-decoration:none;
+    display:inline-flex; align-items:center; gap:10px; }
+  .price-cta .btn-gold { background:var(--gold); color:var(--ink); }
+  .price-cta .btn-gold::after { content:"→"; }
+  .price-cta .btn-line { color:var(--paper); border:1px solid rgba(255,255,255,0.3); }
+
+  /* ==== FAQ ==== */
+  .faq { background:var(--cream); }
+  .faq-list { margin-top:48px; max-width:880px; }
+  .faq-item { border-bottom:1px solid var(--line); padding:24px 0; cursor:pointer; }
+  .faq-item summary { font-family:'Manrope',sans-serif; font-weight:700; font-size:16px;
+    list-style:none; display:flex; justify-content:space-between; align-items:center;
+    padding-right:14px; }
+  .faq-item summary::-webkit-details-marker { display:none; }
+  .faq-item summary::after { content:"+"; font-family:'Fraunces',serif; font-weight:900;
+    font-size:24px; color:var(--gold-2); transition:transform .3s; }
+  .faq-item[open] summary::after { transform:rotate(45deg); }
+  .faq-item p { margin:14px 0 0; font-size:14px; line-height:1.85; color:var(--ink-2); padding-right:30px; }
+
+  /* ==== Closing ==== */
+  .closing { background:var(--ink); color:var(--paper); padding:140px 36px 80px;
+    position:relative; overflow:hidden; text-align:center; }
+  .closing::before { content:""; position:absolute; inset:0;
+    background:radial-gradient(ellipse 1000px 500px at 50% 0%, rgba(201,151,76,0.18), transparent 70%);
+    pointer-events:none; }
+  .closing h2 { font-family:'Fraunces','Noto Serif JP',serif; font-weight:900;
+    font-variation-settings:"opsz" 144, "SOFT" 30;
+    font-size:clamp(40px,6vw,84px); line-height:1; letter-spacing:-0.03em;
+    margin:0 0 24px; position:relative; }
+  .closing h2 em { font-style:italic; color:var(--gold);
+    font-variation-settings:"opsz" 144, "SOFT" 100; }
+  .closing p { font-size:16px; line-height:1.85; opacity:0.85;
+    max-width:560px; margin:0 auto 40px; position:relative; }
+  .closing .btn-primary { background:var(--gold); color:var(--ink); position:relative; }
+  .closing .btn-primary:hover { background:var(--paper); }
+
+  /* ==== Footer ==== */
+  footer { padding:40px 36px; border-top:1px solid rgba(255,255,255,0.12);
+    color:var(--ink-3); display:grid; grid-template-columns:1fr auto; gap:20px;
+    background:var(--ink); font-size:12px; font-family:'JetBrains Mono'; }
+  footer a { color:var(--ink-3); text-decoration:none; margin-left:18px; }
+  footer a:hover { color:var(--paper); }
+
+  /* ==== Responsive ==== */
+  @media (max-width:980px) {
+    nav { padding:12px 22px; }
+    .hero { padding:140px 22px 60px; }
+    section, .price-block, .closing { padding-left:22px; padding-right:22px; }
+    section, .price-block { padding-top:80px; padding-bottom:80px; }
+    .hero-trust { grid-template-columns:1fr 1fr; gap:20px; }
+    .pain-grid { grid-template-columns:1fr; }
+    .solution-grid { grid-template-columns:1fr; gap:40px; }
+    .showcase { position:relative; top:0; }
+    .price-card { padding:40px 28px; }
+    .price-amount { font-size:64px; }
+    .price-amount .per { margin-top:42px; }
+    .price-features { grid-template-columns:1fr; }
+    footer { grid-template-columns:1fr; text-align:left; }
+    footer .foot-links { margin-left:0; }
+    footer .foot-links a:first-child { margin-left:0; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand">
+    <span class="nav-mark">S</span>
+    <span>FP Compass</span>
+  </div>
+  <div class="nav-actions">
+    <a href="#features">機能</a>
+    <a href="#pricing">料金</a>
+    <a href="#faq">FAQ</a>
+    <a href="/" class="nav-cta">無料で始める</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="hero-eyebrow">FOR FINANCIAL PLANNERS</div>
+  <h1>顧客の <em>本音</em> が、<br>溜まる。 <em>育つ</em>。 <em>提案になる</em>。</h1>
+  <p class="hero-sub">
+    LINE 履歴・面談議事録・家族構成、 全部を 1 人ごとに束ねる FP事業者専用ツール。
+    <b>AI が次の一手を提案</b>するから、 ベテラン FP も新人 FP も、 商談前の準備が10分で終わる。
+  </p>
+  <div class="hero-cta">
+    <a class="btn-primary" href="/">14日間 無料で試す</a>
+    <a class="btn-ghost" href="#features">機能を見る</a>
+  </div>
+
+  <div class="hero-trust">
+    <div class="trust-item">
+      <div class="trust-num">¥19,800<small>/月</small></div>
+      <div class="trust-lbl">シンプル定額</div>
+    </div>
+    <div class="trust-item">
+      <div class="trust-num">14日間</div>
+      <div class="trust-lbl">無料トライアル</div>
+    </div>
+    <div class="trust-item">
+      <div class="trust-num">∞</div>
+      <div class="trust-lbl">顧客数 無制限</div>
+    </div>
+    <div class="trust-item">
+      <div class="trust-num">SCRYPT</div>
+      <div class="trust-lbl">企業級セキュリティ</div>
+    </div>
+  </div>
+</header>
+
+<!-- PAIN POINTS -->
+<section class="pain" id="pain">
+  <div class="sec-eyebrow">FP の現場で起きている3つのこと</div>
+  <h2 class="sec-h">「次に何を提案するか」 で<br><em>毎晩</em> 悩んでいませんか。</h2>
+  <p class="sec-lead">
+    顧客が増えるほど、 LINE が散らかり、 議事録がフォルダの奥に眠り、 家族構成は手帳に書きっぱなし。
+    FP の 7 割が 「整理に時間を取られて、 提案準備が後回し」 になっている。
+  </p>
+
+  <div class="pain-grid">
+    <div class="pain-card">
+      <div class="pain-num">01</div>
+      <h3 class="pain-h">LINE が散らかる</h3>
+      <p class="pain-p">「あの相談、 いつだっけ」「子供の名前なんだっけ」 と毎回スクロール。
+        重要な発言が流れて、 提案チャンスを逃している。</p>
+      <div class="pain-quote">3年前の会話を探すのに30分かかった</div>
+    </div>
+    <div class="pain-card">
+      <div class="pain-num">02</div>
+      <h3 class="pain-h">議事録が眠る</h3>
+      <p class="pain-p">面談で熱く語った要望も、 Word ファイルに保存して終わり。
+        次の面談で「前回どこまで話したか」 を思い出せず、 同じ話を繰り返す。</p>
+      <div class="pain-quote">前回の話、 全然覚えてもらえなかった と言われた</div>
+    </div>
+    <div class="pain-card">
+      <div class="pain-num">03</div>
+      <h3 class="pain-h">勘で提案している</h3>
+      <p class="pain-p">「学資保険どうですか」 を全員に投げて、 反応見て次を考える。
+        顧客の本音 (家計の不安、 将来の理想) を読み取れていない。</p>
+      <div class="pain-quote">同じ提案ばかりで、 機械的に感じる</div>
+    </div>
+  </div>
+</section>
+
+<!-- SOLUTION -->
+<section id="features">
+  <div class="sec-eyebrow">FP Compass のアプローチ</div>
+  <h2 class="sec-h">顧客の <em>声</em> を、<br>1 人ずつ、 蓄積する。</h2>
+  <p class="sec-lead">
+    LINE・面談議事録・家族構成、 全部を 1 つのカードに束ねて、
+    AI が「この人には何を提案するべきか」 を毎日アップデート。
+  </p>
+
+  <div class="solution-grid">
+    <div class="feature-stack">
+      <div class="feat">
+        <div class="feat-num">01</div>
+        <div>
+          <h4 class="feat-h">LINE 履歴 自動取り込み</h4>
+          <p class="feat-p">LINE 公式アカウントと連携。 顧客とのチャットが
+          顧客カードに自動で時系列保存。 過去の発言を秒で検索。</p>
+        </div>
+      </div>
+      <div class="feat">
+        <div class="feat-num">02</div>
+        <div>
+          <h4 class="feat-h">Zoom 議事録 AI 要約</h4>
+          <p class="feat-p">面談を Zoom で行えば、 自動で文字起こし → AI が要点 5 行に要約。
+          「お客さんが本当に気にしてること」 をハイライト。</p>
+        </div>
+      </div>
+      <div class="feat">
+        <div class="feat-num">03</div>
+        <div>
+          <h4 class="feat-h">AI 推奨 — 次の一手</h4>
+          <p class="feat-p">家族構成・年齢・過去の提案履歴・LINE での発言を全部読んで、
+          「次に提案すべき商品」 を AI が示唆。 ベテランの勘を、 全 FP に。</p>
+        </div>
+      </div>
+      <div class="feat">
+        <div class="feat-num">04</div>
+        <div>
+          <h4 class="feat-h">家族マップ + ライフイベント</h4>
+          <p class="feat-p">配偶者・子供の年齢を入れれば、 「子供が大学進学する 12 年後」
+          「住宅ローン完済 28 年後」 を自動でカレンダー化。 先を見据えた提案が組める。</p>
+        </div>
+      </div>
+      <div class="feat">
+        <div class="feat-num">05</div>
+        <div>
+          <h4 class="feat-h">キャンセル履歴 + 解約予兆検知</h4>
+          <p class="feat-p">面談キャンセルが続く顧客は AI が早期警告。
+          「離脱しそう」 のシグナルが出る前にフォローアップ。</p>
+        </div>
+      </div>
+      <div class="feat">
+        <div class="feat-num">06</div>
+        <div>
+          <h4 class="feat-h">スマホ完全対応</h4>
+          <p class="feat-p">外出先でもスマホから顧客カード閲覧・LINE 返信。
+          オフィス縛りなし、 移動中の隙間時間が稼働時間に。</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="showcase">
+      <div class="showcase-tag">PRODUCT PREVIEW</div>
+      <h3>顧客一覧 → 詳細 → AI 推奨、<br>3 クリックで提案完了。</h3>
+      <p>顧客を選ぶ → AI が過去履歴を読んで提案候補を提示 →
+      その場で 「これで送る」 ボタン。 提案準備が 10 分で終わる。</p>
+      <div class="showcase-screen">
+        <div class="ss-row">
+          <div class="ss-avatar">田</div>
+          <div class="ss-info">
+            <div class="ss-name">田中 健一</div>
+            <div class="ss-meta">38歳・会社員 (IT) / 大翔 8歳・結愛 5歳</div>
+          </div>
+          <div class="ss-tag">提案準備</div>
+        </div>
+        <div class="ss-row">
+          <div class="ss-avatar" style="background:linear-gradient(135deg,#F5C9A3,#D69458);">佐</div>
+          <div class="ss-info">
+            <div class="ss-name">佐藤 由美</div>
+            <div class="ss-meta">52歳・看護師 / 退職金準備プラン 検討中</div>
+          </div>
+          <div class="ss-tag">フォロー</div>
+        </div>
+        <div class="ss-row">
+          <div class="ss-avatar" style="background:linear-gradient(135deg,#A3F5B8,#58D690);">高</div>
+          <div class="ss-info">
+            <div class="ss-name">高橋 真理子</div>
+            <div class="ss-meta">45歳・公務員 / 住宅購入 想定 3年後</div>
+          </div>
+          <div class="ss-tag">新規面談</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="price-block" id="pricing">
+  <div class="sec-eyebrow">PRICING</div>
+  <h2 class="sec-h">料金は <em>潔く一本</em>。</h2>
+  <p class="sec-lead">無料プランも段階制もなし。 月額 ¥19,800 で全機能、
+    14 日間の無料トライアル付き。 紹介すれば月額が下がる、 シンプル。</p>
+
+  <div class="price-card">
+    <div class="price-tag">FP Compass · Starter</div>
+    <div class="price-amount">
+      <span class="yen">¥</span>
+      <span>19,800</span>
+      <span class="per">/ 月 (税込)</span>
+    </div>
+    <p class="price-tagline">
+      全機能込み・顧客数無制限・14日間無料トライアル。<br>
+      <b>FP 同士の紹介で月額が安くなる</b>、 6 人連れて永久無料。
+    </p>
+    <div class="price-features">
+      <div class="price-feat">LINE 履歴 自動取り込み</div>
+      <div class="price-feat">Zoom 議事録 AI 要約</div>
+      <div class="price-feat">AI 推奨 / 次の一手</div>
+      <div class="price-feat">家族マップ + ライフイベント</div>
+      <div class="price-feat">スマホ・PC 完全対応</div>
+      <div class="price-feat">企業級セキュリティ (SCRYPT)</div>
+      <div class="price-feat">テナント分離 / データ独立</div>
+      <div class="price-feat">いつでも解約・データ DL 可</div>
+    </div>
+    <div class="price-cta">
+      <a class="btn btn-gold" href="/">14日間 無料で試す</a>
+      <a class="btn btn-line" href="#faq">解約・データ保護について</a>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="faq" id="faq">
+  <div class="sec-eyebrow">FAQ — よくある質問</div>
+  <h2 class="sec-h">気になる <em>不安</em> を、 先に。</h2>
+
+  <div class="faq-list">
+    <details class="faq-item">
+      <summary>本当に 14 日間無料ですか?</summary>
+      <p>はい。 クレジットカード登録は必要ですが、 14 日以内に解約すれば一切請求されません。
+      14 日経過時点で自動的に有料プランに移行します (1 日前にメールで通知)。</p>
+    </details>
+    <details class="faq-item">
+      <summary>顧客データはどこに保管されますか?</summary>
+      <p>Google Cloud の Firestore (東京リージョン) に保管されます。 各 FP事業者ごとに
+      完全に分離されており、 他の FP がアクセスすることは技術的に不可能です。
+      パスワードは SCRYPT で暗号化、 通信は TLS 1.3 で保護されます。</p>
+    </details>
+    <details class="faq-item">
+      <summary>解約したらデータはどうなりますか?</summary>
+      <p>解約後 30 日間データが保管され、 その期間中はいつでも JSON 形式で全データを
+      ダウンロードできます。 30 日経過後、 完全削除されます。</p>
+    </details>
+    <details class="faq-item">
+      <summary>紹介割引の仕組みは?</summary>
+      <p>あなた専用の紹介 URL を他の FP に共有し、 そこから登録 → 有料化した FP の数だけ
+      あなたの月額が下がります (1 人あたり -¥3,500、 最大 6 人で永久無料)。
+      紹介した FP が解約すると割引も連動して減ります。</p>
+    </details>
+    <details class="faq-item">
+      <summary>LINE 公式アカウントを持っていなくても使えますか?</summary>
+      <p>もちろん使えます。 LINE 連携は任意機能で、 顧客管理・議事録 AI・提案準備
+      といった主要機能は LINE なしで完結します。 後から LINE 連携を追加することも可能。</p>
+    </details>
+    <details class="faq-item">
+      <summary>サポート体制は?</summary>
+      <p>平日 10-18 時、 メール (support@skeleton-inc.jp) で対応。 AI チャットボット
+      (24 時間) で基本的な質問は即時回答。 重要なトラブルは Skeleton 代表が直接対応します。</p>
+    </details>
+  </div>
+</section>
+
+<!-- CLOSING -->
+<footer-section class="closing">
+  <h2>14 日。 <em>試すだけ</em>。</h2>
+  <p>クレジットカード必要ですが、 14日以内なら 1円も請求されません。
+  あなたの FP 業務が、 紙とフォルダから 「育つカード」 に変わる感覚を、 まず体感してください。</p>
+  <a class="btn-primary" href="/">無料で始める</a>
+</footer-section>
+
+<footer>
+  <div>Skeleton Inc. · FP Compass · ©2026</div>
+  <div class="foot-links">
+    <a href="../legal/privacy.html">プライバシー</a>
+    <a href="../legal/specified-commercial.html">特商法</a>
+    <a href="../legal/contract.html">代理店契約</a>
+    <a href="../agency/apply.html">代理店募集</a>
+    <a href="../status.html">ステータス</a>
+  </div>
+</footer>
+
+</body>
+</html>
