@@ -312,7 +312,7 @@
     });
     $("mail-btn").addEventListener("click", () => {
       const subj = encodeURIComponent("FP Compass 紹介");
-      const body = encodeURIComponent(`こんにちは、\n\nFP顧客管理ツール 「FP Compass」 を試してみませんか?\n14日間無料、 私からの紹介リンクから登録いただくと月¥19,800のところ ¥3,500/月割引でご利用いただけます。\n\n登録URL: ${refUrl}\n`);
+      const body = encodeURIComponent(`こんにちは、\n\nFP顧客管理ツール 「FP Compass」 をご紹介します。\n月¥19,800、 私からの紹介リンクから登録いただくと利用開始できます。\n\n登録URL: ${refUrl}\n`);
       window.open(`mailto:?subject=${subj}&body=${body}`, "_blank");
     });
   });

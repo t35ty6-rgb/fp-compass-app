@@ -151,8 +151,8 @@
       const banner = document.createElement('div');
       banner.style.cssText = `position:fixed;top:60px;left:50%;transform:translateX(-50%);z-index:998;padding:14px 22px;border-radius:10px;font-family:'Manrope',sans-serif;font-weight:700;font-size:13.5px;box-shadow:0 12px 32px rgba(0,0,0,0.2);background:${r==='success'?'#10B981':'#F59E0B'};color:#fff;max-width:560px;text-align:center;`;
       banner.textContent = r === 'success'
-        ? '✓ お支払い設定完了。 14日間無料トライアル中です。'
-        : '⚠ お支払い設定がキャンセルされました。 トライアル期間中ですが、 14日後までに決済登録が必要です。';
+        ? '✓ ご登録ありがとうございます。 ご利用開始です。'
+        : '⚠ 決済がキャンセルされました。 再登録の場合は再度サインアップしてください。';
       document.body.appendChild(banner);
       setTimeout(() => banner.style.transition = 'opacity 0.6s', 100);
       setTimeout(() => banner.style.opacity = '0', 6000);
