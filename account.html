@@ -163,20 +163,23 @@
       </div>
     </div>
 
-    <!-- 解約 (Danger Zone) -->
+    <!-- サブスク管理 -->
     <div class="section danger-zone">
       <div class="section-h">
-        <div class="section-title">解約手続き (Danger Zone)</div>
-        <p class="section-sub">サービスの利用を停止し、 アカウントを閉鎖します</p>
+        <div class="section-title">サブスク管理</div>
+        <p class="section-sub">カード変更 / 領収書ダウンロード / 解約手続き</p>
       </div>
       <div class="section-body">
         <p style="font-size:13px;color:var(--ink-2);margin:0 0 14px;line-height:1.8;">
-          解約すると <strong>当月末まで利用可能</strong>、 翌月から課金停止します。<br>
-          データは <strong>解約後30日間</strong> 保管され、 その後完全削除します。<br>
-          解約前に「全データをJSONでダウンロード」 することを強く推奨します。
+          Stripe のサブスク管理画面 が開きます。 以下が セルフ で 行えます:<br>
+          ・ <strong>カード情報の変更</strong> (有効期限切れ ・ 紛失時)<br>
+          ・ <strong>過去の領収書 ・ 請求書 PDF ダウンロード</strong><br>
+          ・ <strong>解約手続き</strong> (当月末 まで 利用可能、 翌月 から 課金停止)<br>
+          <br>
+          解約前に「全データをJSONでダウンロード」 することを推奨します。
         </p>
         <div class="btn-row">
-          <button class="btn danger" id="cancel-btn">解約を申し込む</button>
+          <button class="btn danger" id="cancel-btn">サブスク管理画面を開く</button>
         </div>
         <div id="cancel-msg" class="msg"></div>
       </div>
@@ -189,6 +192,7 @@
   import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut,
     setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
   import { getFirestore, doc, getDoc, updateDoc, collection, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+  import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-functions.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyAmVAEe9l9e1Yo_dzzJdbTVU35wWKd2sH4",
@@ -201,6 +205,7 @@
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
+  const functions = getFunctions(app, "asia-northeast1");
   setPersistence(auth, browserLocalPersistence).catch(console.error);
 
   const $ = (id) => document.getElementById(id);
@@ -276,33 +281,19 @@
     }
   });
 
-  // ==== 解約 ====
+  // ==== 解約 / カード変更 / 領収書閲覧 (Stripe Billing Portal) ====
   $("cancel-btn").addEventListener("click", async () => {
     if (!currentTenantId) return;
-    const confirmed = confirm("本当に解約しますか?\n\n・当月末まで利用可能\n・翌月から課金停止\n・解約後30日間データ保管、 以降完全削除\n\n解約前にデータDL推奨です。");
-    if (!confirmed) return;
-    const reason = prompt("解約理由 (任意、 サービス改善のため):");
-    msg("cancel-msg", "info", "解約処理中…");
+    msg("cancel-msg", "info", "サブスク管理画面を開いています…");
     try {
-      // 直接 status 変更はせず、 cancellation_requests/ に記録 (admin が確認後に処理)
-      await updateDoc(doc(db, "tenants", currentTenantId), {
-        cancellationRequested: true,
-        cancellationRequestedAt: serverTimestamp(),
-        cancellationReason: reason || "(理由なし)",
-      }).catch(async (err) => {
-        // tenants の update は rule で禁止されてるので、 別 collection に書く
-        const { setDoc, doc } = await import("https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js");
-        await setDoc(doc(db, "cancellation_requests", `${currentTenantId}_${Date.now()}`), {
-          tenantId: currentTenantId,
-          requestedAt: serverTimestamp(),
-          reason: reason || "(理由なし)",
-          requestedBy: auth.currentUser.email,
-        });
-      });
-      msg("cancel-msg", "ok", "✓ 解約申し込みを受け付けました。 Skeleton 管理者が確認し、 当月末で処理します。 ご利用ありがとうございました。");
+      const createPortalSession = httpsCallable(functions, "createPortalSession");
+      const result = await createPortalSession();
+      const url = result.data?.url;
+      if (!url) throw new Error("Portal URL が取得できませんでした");
+      window.location.href = url;
     } catch (e) {
       console.error(e);
-      msg("cancel-msg", "err", "申込失敗: " + e.message + " / support@skeleton-inc.jp に直接ご連絡ください。");
+      msg("cancel-msg", "err", "Portal 起動失敗: " + (e.message || e.code) + " / support@skeleton-inc.jp までご連絡ください。");
     }
   });
 </script>
