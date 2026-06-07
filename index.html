@@ -820,7 +820,20 @@
 window.fpReadyAfterAuth = function() {
   if (window.__fpScriptsLoaded) return;
   window.__fpScriptsLoaded = true;
-  const ver = "20260606A-firestore";
+
+  // ★ デモデータ leak 防止 — 認証済テナントは Firestore が信頼の単一ソース。
+  // 過去のデモモード由来で localStorage に 吉田恭聡 / 田中健一 等が残ると
+  // 新規 FP の 空テナント に 該当顧客が leak する → 明示的にクリア。
+  const legacyDemoKeys = [
+    'fp-crm-clients-v1',       // app.js が 起動時 読込む 顧客リストキャッシュ
+    'fp-crm-real-clients-v1',  // 旧 real-mode 顧客キャッシュ
+    'fp-crm-real-mode',         // 旧 real-mode フラグ
+    'fp-crm-state-v1',          // 旧アプリ状態キャッシュ
+    'fp-cleared-permanently',   // 旧クリアフラグ
+  ];
+  legacyDemoKeys.forEach(k => { try { localStorage.removeItem(k); } catch (_) {} });
+
+  const ver = "20260607A-no-leak";
   const scripts = [
     "life-events.js?v=" + ver,
     "recommender.js?v=" + ver,
@@ -831,6 +844,14 @@ window.fpReadyAfterAuth = function() {
   ];
   function load(i) {
     if (i >= scripts.length) {
+      // ★ line-data.js が UPCOMING_BOOKINGS/HOT_LEADS/LEAD_FUNNEL を demo 値で
+      // 上書きするので、 認証済テナントでは Firestore データに即差し替え。
+      // (現状 Firestore に bookings/leads サブコレクション無いので空配列で確定)
+      window.UPCOMING_BOOKINGS = [];
+      window.HOT_LEADS = [];
+      window.LEAD_FUNNEL = { added: 0, surveyed: 0, booked: 0, completed: 0 };
+      window.LEAD_SCENARIO = {};
+      window.LEAD_FORM = {};
       // 全部終わったら DOMContentLoaded を擬似発火 (app.js が listening)
       document.dispatchEvent(new Event('DOMContentLoaded'));
       return;
