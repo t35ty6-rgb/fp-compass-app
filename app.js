@@ -2680,24 +2680,17 @@
     const myTs = new Set(myBookings.map(b => b.ts).filter(Boolean));
     const myNames = new Set([client.name].concat(myBookings.map(b => b.name).filter(Boolean)));
     // 「fp-ai-お客様」 等の汎用 fallback キー → 録画時に客を特定できなかった分。
-    // 開いてる客が LINE 連携客なら、無条件で汎用 fallback を吸収する。
-    // (複数人 LINE 友だちがいて誤紐付けされても、後で別客カードで「これ違う」と
-    //  分かれば手動で消せばいい。空白で見えないより遥かにマシ。)
+    // ★ 旧仕様: LINE 連携客なら無条件で吸収 → A様の議事録が全員に表示される 重大データ漏れ
+    // ★ 新仕様: userId / bookingTs / customerName のいずれか strict 一致のみ吸収 (= 紐付け失敗時は表示しない)
     allKeys.forEach(k => {
       if (aiCandidateKeys.has(k)) return;  // 既出
       try {
         const arr = JSON.parse(localStorage.getItem(k) || '[]');
         arr.forEach(a => {
-          const matchUser   = a.userId       && myUids.has(a.userId);
-          const matchTs     = a.bookingTs    && myTs.has(a.bookingTs);
-          const matchName   = a.customerName && myNames.has(a.customerName);
-          // 汎用 fallback: 録画時に客特定できなかった分
-          const isGeneric = (k === 'fp-ai-お客様' || a.customerName === 'お客様' || !a.customerName);
-          const genericFallback = isGeneric && client.lineFriendId;
-          if (matchUser || matchTs || matchName || genericFallback) {
-            // userId 空なら現在の client.lineFriendId で補正してから push
-            if (!a.userId && client.lineFriendId) a.userId = client.lineFriendId;
-            if (!a.customerName || a.customerName === 'お客様') a.customerName = client.name;
+          const matchUser = a.userId       && myUids.has(a.userId);
+          const matchTs   = a.bookingTs    && myTs.has(a.bookingTs);
+          const matchName = a.customerName && a.customerName !== 'お客様' && myNames.has(a.customerName);
+          if (matchUser || matchTs || matchName) {
             aiResults.push(a);
           }
         });
@@ -2706,11 +2699,10 @@
     // GAS 永続化シートからも取得 (別ブラウザで保存された分)
     const liveAiResults = (window.LineAppLiveData && window.LineAppLiveData.ai_results) || [];
     liveAiResults.forEach(r => {
-      const match = (r.userId && (r.userId === client.lineFriendId)) ||
-                    (r.customerName && r.customerName === client.name) ||
-                    myBookings.some(b => b.ts === r.bookingTs || b.userId === r.userId) ||
-                    // 汎用 fallback: customerName が 'お客様' or 空 → LINE連携客なら吸収
-                    ((!r.customerName || r.customerName === 'お客様') && client.lineFriendId);
+      // ★ strict 一致のみ (顧客名不明=「お客様」/空 の議事録は表示しない、 データ漏れ防止)
+      const match = (r.userId && client.lineFriendId && r.userId === client.lineFriendId) ||
+                    (r.customerName && r.customerName !== 'お客様' && r.customerName === client.name) ||
+                    myBookings.some(b => (b.ts && b.ts === r.bookingTs) || (b.userId && r.userId && b.userId === r.userId));
       if (!match) return;
       // key_concerns は文字列で来てるので JSON.parse
       let kc = r.key_concerns;
@@ -4099,16 +4091,11 @@
       const found = [];
       const consider = (a, srcKey) => {
         if (!a || (!a.summary && !a.transcript)) return;
-        // ★ 顧客モーダル「面談録」タブと同じ lookup ロジック (汎用 fallback 含む)
-        // 「お客様」名義で保存された議事録は lineFriendId 持つ客全員に表示されるが、
-        // score を低めにして「推定」マーク。明示マッチ (userId/bookingTs/name) があれば
-        // それを優先表示するソートで対応。
-        const matchUser   = a.userId && client.lineFriendId && a.userId === client.lineFriendId;
-        const matchTs     = a.bookingTs && myTs.has(a.bookingTs);
-        const matchName   = a.customerName && a.customerName === client.name;
-        const isGeneric   = (!a.customerName || a.customerName === 'お客様');
-        const genericFallback = isGeneric && client.lineFriendId;
-        const score = matchUser ? 3 : matchTs ? 3 : matchName ? 2 : genericFallback ? 1 : 0;
+        // ★ strict match のみ (汎用 fallback 廃止: 「お客様」名義は他客へ漏れるためAI prompt にも使わない)
+        const matchUser = a.userId && client.lineFriendId && a.userId === client.lineFriendId;
+        const matchTs   = a.bookingTs && myTs.has(a.bookingTs);
+        const matchName = a.customerName && a.customerName !== 'お客様' && a.customerName === client.name;
+        const score = matchUser ? 3 : matchTs ? 3 : matchName ? 2 : 0;
         if (score > 0) {
           let kc = a.key_concerns;
           if (typeof kc === 'string') { try { kc = JSON.parse(kc); } catch (_) { kc = []; } }
