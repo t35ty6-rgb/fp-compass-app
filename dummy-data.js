@@ -16,11 +16,11 @@
 
   window.DUMMY_CLIENTS = [
     {
-      // ★テスト客 (オーナー自身) — 実LINE userIdで本物の送受信デモ可能
-      id: 'c000', name: '[テスト] 吉田 恭聡', kana: 'よしだ つかさ',
+      // ★テスト客 (デモ用架空) — 実LINE userIdで本物の送受信デモ可能
+      id: 'c000', name: '[テスト] サンプル 太郎', kana: 'さんぷる たろう',
       birth: ymd(Y - 35, 6, 15), gender: 'M', occupation: '会社経営 (IT)',
       family: [
-        { rel: 'spouse', name: '吉田 美咲', birth: ymd(Y - 33, 3, 10) },
+        { rel: 'spouse', name: 'サンプル 花子', birth: ymd(Y - 33, 3, 10) },
       ],
       source: 'デモテスト', status: 'important', aum: 12_000_000,
       lastContact: daysAgo(45),
@@ -33,7 +33,7 @@
       cancellations: [],
       lineHistory: [
         { direction: 'in', ts: '2026-04-18 10:00', text: 'お世話になっております。資産運用のご相談したく、ご連絡しました。' },
-        { direction: 'out', ts: '2026-04-18 10:30', text: '吉田様\n\nご連絡ありがとうございます、FPの福田です。お話伺うのが楽しみです。アンケートよろしくお願いいたします。', label: '初回返信' },
+        { direction: 'out', ts: '2026-04-18 10:30', text: 'サンプル様\n\nご連絡ありがとうございます、FPの福田です。お話伺うのが楽しみです。アンケートよろしくお願いいたします。', label: '初回返信' },
       ],
     },
     {
@@ -472,7 +472,7 @@
         { rel: 'spouse', name: '長谷川 みき', birth: ymd(Y - 34, 2, 16) },
         { rel: 'child', name: '長谷川 樹', birth: ymd(Y - 3, 7, 20) },
       ],
-      source: '紹介 (吉田様)', status: 'active', aum: 11_200_000,
+      source: '紹介 (サンプル様)', status: 'active', aum: 11_200_000,
       lastContact: daysAgo(55),
       proposals: [
         { date: daysAgo(220), title: '住宅購入資金プラン', result: '成約' },

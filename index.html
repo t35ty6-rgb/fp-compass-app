@@ -88,6 +88,12 @@
     <button id="fp-gate-btn">ログイン</button>
     <div id="fp-gate-msg"></div>
     <div id="fp-gate-help">サポート → <a href="mailto:support@skeleton-inc.jp">support@skeleton-inc.jp</a></div>
+    <div id="fp-gate-legal" style="margin-top:14px;font-size:11px;opacity:0.65;text-align:center;line-height:1.7;">
+      申込前に必ずご確認ください:
+      <a href="./legal/specified-commercial.html" style="color:rgba(255,255,255,0.85);text-decoration:underline;margin:0 4px;">特商法表記</a>·
+      <a href="./legal/privacy.html" style="color:rgba(255,255,255,0.85);text-decoration:underline;margin:0 4px;">プライバシー</a>·
+      <a href="./legal/index.html" style="color:rgba(255,255,255,0.85);text-decoration:underline;margin:0 4px;">利用規約</a>
+    </div>
   </div>
 </div>
 
@@ -371,6 +377,18 @@
       if (typeof window.fpReadyAfterAuth === "function") window.fpReadyAfterAuth();
       // top bar に user 情報表示 + ログアウトボタン挿入
       setTimeout(() => attachUserBar(), 200);
+      // sidebar の user-name / avatar を Firestore tenant.name で更新
+      try {
+        const tn = window.__fp.tenantName || (t.name || 'FP事業者');
+        const nameEl = document.getElementById('sidebar-user-name');
+        const avEl = document.getElementById('sidebar-avatar');
+        if (nameEl) nameEl.textContent = tn;
+        if (avEl) {
+          // 名前から先頭2文字 (英数or漢字) を avatar に
+          const initials = tn.replace(/\s+/g,'').slice(0,2);
+          avEl.textContent = initials;
+        }
+      } catch (_) {}
     } catch (e) {
       console.error(e);
       msg("err", "データ取得失敗: " + e.message);
@@ -497,11 +515,11 @@
       </button>
       <div class="sidebar-user">
         <div class="user-avatar-wrap">
-          <div class="user-avatar">YT</div>
+          <div class="user-avatar" id="sidebar-avatar">—</div>
           <span class="user-status-dot"></span>
         </div>
         <div class="user-text">
-          <div class="user-name">吉田 恭聡</div>
+          <div class="user-name" id="sidebar-user-name">FP事業者</div>
           <div class="user-role"><i data-lucide="shield-check"></i><span>Owner</span></div>
         </div>
         <i data-lucide="chevrons-up-down" class="user-chevron"></i>
