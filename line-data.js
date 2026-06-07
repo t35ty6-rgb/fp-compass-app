@@ -286,34 +286,16 @@
     converted: 5,
   };
 
-  // 直近の予約 (Zoom面談)
-  window.UPCOMING_BOOKINGS = [
-    { id: 'bk-1', name: '田村 美咲', date: '2026-05-28', time: '10:00', via: 'Zoom', status: 'confirmed',
-      answers: { q1: '教育費・学資', q2: '30代', q3: '夫婦+子供', q4: '700〜1000万', q5: '子供2人の大学資金が心配' },
-      addedToCrm: false },
-    { id: 'bk-2', name: '矢野 真由', date: '2026-05-29', time: '14:00', via: 'Zoom', status: 'confirmed',
-      answers: { q1: '老後資金', q2: '50代', q3: '夫婦のみ', q4: '1000〜1500万', q5: '退職金の運用方法を相談したい' },
-      addedToCrm: false },
-    { id: 'bk-3', name: '小川 翔太', date: '2026-05-31', time: '11:00', via: 'Zoom', status: 'confirmed',
-      answers: { q1: '住宅購入・ローン', q2: '30代', q3: '夫婦のみ', q4: '700〜1000万', q5: '頭金いくら入れるか迷ってる' },
-      addedToCrm: false },
-    { id: 'bk-4', name: '中島 久美', date: '2026-06-02', time: '13:00', via: 'Zoom', status: 'confirmed',
-      answers: { q1: 'NISA・投資', q2: '40代', q3: '夫婦+子供', q4: '700〜1000万', q5: 'NISA枠の使い方を整理したい' },
-      addedToCrm: false },
-  ];
+  // 直近の予約 (実顧客の Firestore データで動的注入されるため空で初期化)
+  window.UPCOMING_BOOKINGS = [];
 
-  // アンケート回答済・未予約 (ホットリード)
-  window.HOT_LEADS = [
-    { name: '木下 さおり', answeredAt: '2026-05-26 18:42',
-      answers: { q1: '相続・贈与', q2: '60代', q3: 'シニア夫婦', q4: '1500万〜', q5: '親の相続が発生、どこから手をつけるか' } },
-    { name: '高木 健太', answeredAt: '2026-05-26 12:15',
-      answers: { q1: '老後資金', q2: '40代', q3: '夫婦+子供', q4: '700〜1000万', q5: 'iDeCoとNISAの優先順位' } },
-    { name: '上田 美咲', answeredAt: '2026-05-25 21:08',
-      answers: { q1: '保険見直し', q2: '30代', q3: '夫婦+子供', q4: '400〜700万', q5: '今の保険が高すぎる気がする' } },
-  ];
+  // アンケート回答済・未予約 (ホットリード) — 実顧客データで動的注入のため空
+  window.HOT_LEADS = [];
 
-  // アンケート回答 + 候補日 デモデータ (実LIVEが空の時のみ表示)
-  window.SURVEY_DEMO = [
+  // アンケート回答 + 候補日 (実顧客 Firestore データ で動的注入のため空)
+  window.SURVEY_DEMO = [];
+  /* ↓ 旧デモデータ 全削除 (実顧客 leak 防止)
+  window.SURVEY_DEMO_LEGACY = [
     {
       ts: '2026-05-27T14:30:00.000Z',
       userId: 'Udemo1a4b8e1f6c3d2e9001',
@@ -388,6 +370,8 @@
     { name: '吉田 翔太', status: '', address: '', phone: '', note: '', userId: 'demo-11' },
     { name: '山田 智子', status: '', address: '', phone: '', note: '', userId: 'demo-12' },
   ];
+  */
+  window.CALENDAR_DEMO = [];
 
   window.LineCRM = {
     evaluateSegment: evaluateSegment,
