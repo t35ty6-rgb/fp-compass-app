@@ -404,6 +404,22 @@
 
   onAuthStateChanged(auth, async (user) => {
     if (!user) { return; }
+    // ★ テナント分離: 別 uid (= 別 FP事務所) が同じブラウザでログインしたら 前のFP の
+    // localStorage キャッシュ (顧客 / タスク / メモ / 既読等) を全消去 → データ leak 防止
+    try {
+      const lastUid = localStorage.getItem("fp-last-uid");
+      if (lastUid && lastUid !== user.uid) {
+        console.log("[fp] テナント切替検知 → localStorage 全クリア:", lastUid, "→", user.uid);
+        const wipeKeys = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const k = localStorage.key(i);
+          if (k && /^fp[-:_]/.test(k) && k !== "fp-last-uid") wipeKeys.push(k);
+        }
+        wipeKeys.forEach(k => { try { localStorage.removeItem(k); } catch (_) {} });
+      }
+      localStorage.setItem("fp-last-uid", user.uid);
+    } catch (_) {}
+
     const uDoc = await fetchUserDocWithRetry(user.uid, 4);
     if (!uDoc) {
       msg("err", `${user.email} は登録されていません。`);
@@ -913,7 +929,7 @@ window.fpReadyAfterAuth = function() {
   ];
   legacyDemoKeys.forEach(k => { try { localStorage.removeItem(k); } catch (_) {} });
 
-  const ver = "20260607A-no-leak";
+  const ver = "20260608A-tenant-isolation";
   const scripts = [
     "life-events.js?v=" + ver,
     "recommender.js?v=" + ver,
