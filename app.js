@@ -2199,6 +2199,7 @@
                 <textarea id="cd-line-input" placeholder="メッセージを入力... (Cmd+Enter で送信)"></textarea>
                 <div class="cd-line-composer-foot">
                   <span class="cd-line-composer-meta">${c.lineFriendId ? '✓ LINE連携済' : '⚠ LINE friend ID 未登録'}</span>
+                  <button class="cd-line-ai-quick" id="cd-line-ai-quick" data-cid="${escapeHtml(c.id)}" title="AI が直近の履歴から返信案を生成 → textarea に挿入 → 編集して送信" style="background:linear-gradient(135deg,#6366F1,#4338CA);color:#fff;border:none;padding:8px 14px;border-radius:6px;font-weight:800;cursor:pointer;font-size:12.5px;font-family:inherit;letter-spacing:0.04em;margin-right:8px;">✨ AI で返信案</button>
                   <button class="cd-line-send-btn" id="cd-line-send"${c.lineFriendId ? '' : ' disabled'}>
                     <i data-lucide="send"></i><span>送信</span>
                   </button>
@@ -2363,6 +2364,52 @@
     document.querySelectorAll('[data-line-ai]').forEach(btn => {
       btn.addEventListener('click', () => openDraftReplyModal(c, events, recs));
     });
+    // ★ AI で返信案 を 1 クリック生成 (textarea に挿入、 編集して送信)
+    const aiQuickBtn = document.getElementById('cd-line-ai-quick');
+    if (aiQuickBtn) {
+      aiQuickBtn.addEventListener('click', async () => {
+        const tArea = document.getElementById('cd-line-input');
+        const status = document.getElementById('cd-line-msg');
+        const origLabel = aiQuickBtn.innerHTML;
+        aiQuickBtn.disabled = true;
+        aiQuickBtn.innerHTML = '✨ 生成中…';
+        if (status) { status.className = 'cd-line-msg-status'; status.textContent = ''; }
+        try {
+          if (!window.__fp?.functions) throw new Error('functions 未初期化');
+          const { httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-functions.js');
+          const fn = httpsCallable(window.__fp.functions, 'generateLineReply');
+          // 顧客コンテキスト組み立て
+          const ctxParts = [];
+          if (c.birth) ctxParts.push(`生年: ${c.birth}`);
+          if (c.occupation) ctxParts.push(`職業: ${c.occupation}`);
+          if (c.family?.length) ctxParts.push(`家族: ${c.family.map(f => f.rel + ' ' + (f.name||'')).join(' / ')}`);
+          if (c.aum) ctxParts.push(`AUM: ¥${(c.aum/10000).toFixed(0)}万`);
+          if (c.note) ctxParts.push(`メモ: ${c.note.slice(0,200)}`);
+          const result = await fn({
+            customerId: c.id,
+            customerName: c.name || 'お客様',
+            customerContext: ctxParts.join(' / '),
+            lineHistory: (c.lineHistory || []).slice(-12),
+            hint: (tArea && tArea.value.trim()) || null,  // textarea に何か書いてあれば 意図ヒントとして使う
+          });
+          const reply = result.data?.reply;
+          if (!reply) throw new Error('AI 応答が空です');
+          if (tArea) {
+            tArea.value = reply;
+            tArea.focus();
+            tArea.setSelectionRange(reply.length, reply.length);
+          }
+          if (status) { status.className = 'cd-line-msg-status ok'; status.textContent = '✓ AI 返信案を生成しました (編集して送信してください)'; }
+        } catch (e) {
+          console.error('[generateLineReply]', e);
+          if (status) { status.className = 'cd-line-msg-status err'; status.textContent = '生成失敗: ' + (e.message || e.code); }
+        } finally {
+          aiQuickBtn.disabled = false;
+          aiQuickBtn.innerHTML = origLabel;
+        }
+      });
+    }
+
     // LINE 直接送信 (composer)
     const sendBtn = document.getElementById('cd-line-send');
     const input = document.getElementById('cd-line-input');
