@@ -1356,8 +1356,14 @@
     window._fpMessageWired = true;
     window.addEventListener('message', (ev) => {
       if (ev.data && ev.data.type === 'fp-finish-meeting') {
-        if (window._fpRecorder && window._fpRecorder.mediaRecorder && window._fpRecorder.mediaRecorder.state !== 'inactive') {
+        const hasActiveRecording = window._fpRecorder
+          && window._fpRecorder.mediaRecorder
+          && window._fpRecorder.mediaRecorder.state !== 'inactive';
+        if (hasActiveRecording) {
           stopScreenRecording();
+        } else {
+          // 録画なし → silent skip だと「ボタン効かない」 と見える → 理由明示 + メモ保存案内
+          handleFinishWithoutRecording();
         }
       }
     });
@@ -1908,9 +1914,54 @@
     `;
     document.body.appendChild(bar);
     document.getElementById('fp-fixed-complete-btn').addEventListener('click', () => {
+      const hasActiveRecording = window._fpRecorder
+        && window._fpRecorder.mediaRecorder
+        && window._fpRecorder.mediaRecorder.state !== 'inactive';
+      if (!hasActiveRecording) {
+        handleFinishWithoutRecording();
+        return;
+      }
       if (!confirm('録画を停止して AI 議事録を生成しますか?\n(Zoom と メモも一緒に閉じます)')) return;
       stopScreenRecording();
     });
+  }
+
+  // 録画が行われていない状態で「終了」 が押された場合の処理
+  // (音声テスト中の押下 / 何らかの理由で録画開始失敗 / 検証目的 など)
+  // silent skip だと「ボタン効かない」 とユーザーが誤解するため、 必ず可視フィードバックを返す
+  function handleFinishWithoutRecording() {
+    // メモは可能な限り保存
+    try {
+      if (window._fpMemoWin && !window._fpMemoWin.closed) {
+        // popup 側で localStorage に保存済 (memo-popup 側 finish-meeting-btn handler が事前保存している)
+        window._fpMemoWin.close();
+      }
+    } catch (_) {}
+    try { if (window._fpZoomWin && !window._fpZoomWin.closed) window._fpZoomWin.close(); } catch (_) {}
+    hideFixedCompleteButton();
+
+    // モーダルで明示
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.65);backdrop-filter:blur(4px);z-index:99999;display:flex;align-items:center;justify-content:center;padding:24px;font-family:inherit;';
+    overlay.innerHTML = `
+      <div style="background:#fff;max-width:480px;width:100%;border-radius:14px;box-shadow:0 24px 60px rgba(0,0,0,0.35);overflow:hidden;">
+        <div style="background:linear-gradient(135deg,#FEF3C7,#FDE68A);padding:18px 24px;border-bottom:1px solid #F59E0B;">
+          <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:10.5px;letter-spacing:0.22em;color:#92400E;text-transform:uppercase;margin-bottom:4px;">録画なし</div>
+          <h3 style="font-family:'Noto Sans JP',sans-serif;font-weight:900;font-size:18px;margin:0;color:#0E1116;letter-spacing:-0.012em;">AI 議事録 は生成できませんでした</h3>
+        </div>
+        <div style="padding:20px 24px;font-size:13.5px;color:#353D4F;line-height:1.85;">
+          画面録画 が 開始されていない 状態 で 「終了」 が押されたため、 <b style="color:#0E1116;">AI 音声議事録 の 生成 を スキップ</b> しました。<br><br>
+          メモ 入力 がある場合 は ローカル に 保存済み です。<br><br>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#6B7385;">▼ 議事録生成 を 実行 する 場合 は:<br>① 顧客カード → 予約 → 「● 録画ONでZoom開始」<br>② Zoom 終了時 「■ 録画停止」 → 自動で AI 解析 + 議事録生成</span>
+        </div>
+        <div style="padding:14px 24px 20px;display:flex;gap:10px;justify-content:flex-end;">
+          <button id="fp-no-rec-close" style="background:#0E1116;color:#fff;border:none;padding:10px 24px;border-radius:6px;font-family:'Manrope',sans-serif;font-weight:800;font-size:13px;letter-spacing:0.04em;cursor:pointer;">了解</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    document.getElementById('fp-no-rec-close').addEventListener('click', () => overlay.remove());
+    try { window.focus(); } catch (_) {}
   }
   function hideFixedCompleteButton() {
     const b = document.getElementById('fp-fixed-complete');
