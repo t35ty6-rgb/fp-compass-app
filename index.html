@@ -104,7 +104,6 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
   import {
     getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword,
-    sendPasswordResetEmail,
     onAuthStateChanged, signOut, setPersistence, browserLocalPersistence,
   } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
   import {
@@ -227,13 +226,15 @@
     }
     msg("", "再設定メール送信中…");
     try {
-      await sendPasswordResetEmail(auth, target);
+      // Resend経由のCloud Function (Firebase デフォルト送信元が Gmail で silent drop される問題を回避)
+      const sendReset = httpsCallable(functions, "sendBrandedPasswordReset");
+      await sendReset({ email: target });
       msg("ok", `✓ ${target} に再設定メールを送信しました。 メールのリンクから新しいパスワードを設定してください (届かない場合は迷惑メールフォルダもご確認ください)`);
     } catch (e) {
       const map = {
-        "auth/user-not-found": "未登録のメアドです",
-        "auth/invalid-email": "メアドの形式が正しくありません",
-        "auth/too-many-requests": "送信回数超過、 少し時間をおいて再試行を",
+        "functions/invalid-argument": "メアドの形式が正しくありません",
+        "functions/failed-precondition": "メール送信が未設定です。 管理者へお問い合わせください",
+        "functions/internal": "送信失敗、 少し時間をおいて再試行を",
       };
       msg("err", map[e.code] || (e.message || e.code));
     }
