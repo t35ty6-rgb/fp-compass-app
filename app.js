@@ -1892,7 +1892,9 @@
         </details>
       `;
 
-      return headerHtml + kpiHtml + taskListHtml + eventsFold;
+      // ★ シンプル化: 「繋ぎKPI 達成率」(定型ステップ) + 「議事録抽出タスク」(NEXT ACTION と重複) 削除
+      // → headerHtml (面談記録カウント) + eventsFold (全イベント折りたたみ) のみ表示
+      return headerHtml + eventsFold;
     })();
 
     // Proposals
