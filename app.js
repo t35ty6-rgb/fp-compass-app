@@ -150,9 +150,10 @@
   }
 
   function fmtMoney(n) {
+    if (n == null || isNaN(n)) return '—';
     if (n >= 100_000_000) return (n / 100_000_000).toFixed(2).replace(/\.?0+$/, '') + '億';
     if (n >= 10_000) return Math.round(n / 10_000).toLocaleString() + '万';
-    return n.toLocaleString();
+    return Number(n).toLocaleString();
   }
   function fmtDate(d) {
     if (typeof d === 'string') d = new Date(d);
