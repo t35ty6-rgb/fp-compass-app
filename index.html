@@ -84,6 +84,14 @@
       <label class="fp-gate-label" for="fp-pwconfirm-input">パスワード (確認)</label>
       <input id="fp-pwconfirm-input" type="password" class="fp-gate-input" placeholder="もう一度入力" autocomplete="new-password">
     </div>
+    <div id="fp-row-terms" style="display:none;margin-top:14px;padding:12px 14px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:8px;">
+      <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:12px;line-height:1.65;opacity:0.95;">
+        <input id="fp-terms-check" type="checkbox" style="margin-top:3px;width:16px;height:16px;flex-shrink:0;accent-color:#E63946;cursor:pointer;">
+        <span>
+          <a href="./legal/specified-commercial.html" target="_blank" style="color:#FFE9A8;text-decoration:underline;">特商法表記</a>・<a href="./legal/privacy.html" target="_blank" style="color:#FFE9A8;text-decoration:underline;">プライバシーポリシー</a>・<a href="./legal/index.html" target="_blank" style="color:#FFE9A8;text-decoration:underline;">利用規約</a>を確認し、 同意します
+        </span>
+      </label>
+    </div>
     <div id="fp-row-forgot" style="text-align:right;margin-top:8px;">
       <a id="fp-forgot-link" href="#" style="font-size:11.5px;color:rgba(255,255,255,0.75);text-decoration:underline;cursor:pointer;">パスワードを忘れた方</a>
     </div>
@@ -206,6 +214,7 @@
     $("fp-tab-signup").classList.toggle("on", m === "signup");
     $("fp-row-fpname").style.display = m === "signup" ? "" : "none";
     $("fp-row-pwconfirm").style.display = m === "signup" ? "" : "none";
+    $("fp-row-terms").style.display = m === "signup" ? "" : "none";
     $("fp-row-forgot").style.display = m === "signup" ? "none" : "";
     $("fp-gate-btn").textContent = m === "signup" ? "アカウント作成" : "ログイン";
     $("fp-pw-input").setAttribute("autocomplete", m === "signup" ? "new-password" : "current-password");
@@ -254,6 +263,10 @@
         if (!fpName) throw { code: "_", message: "FP事務所名を入力してください" };
         if (pw.length < 8) throw { code: "_", message: "パスワードは8文字以上" };
         if (pw !== pwc) throw { code: "_", message: "パスワード確認が一致しません" };
+        if (!$("fp-terms-check").checked) {
+          throw { code: "_", message: "特商法表記・プライバシーポリシー・利用規約 への同意 が必要です" };
+        }
+        const termsAcceptedAt = new Date().toISOString();
 
         const cred = await createUserWithEmailAndPassword(auth, email, pw);
         const slug = email.split("@")[0].toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "").slice(0,24) || "tenant";
@@ -267,6 +280,7 @@
           referralSource: agent ? "agent" : (ref ? "fp_referral" : "direct"),
           referredByAgent: agent || null,
           referredByFp: agent ? null : (ref || null),
+          termsAcceptedAt: termsAcceptedAt,
           billing: {
             baseMonthly: 19800, discountPerReferral: 3500,
             currentDiscount: 0, nextMonthAmount: 19800,
@@ -274,6 +288,15 @@
             status: "trial", trialEndsAt: null,
           },
         });
+        // 約款同意のaudit_logs記録 (改正民法548条の2 約款合意要件のため法的証跡として永続保存)
+        try {
+          await addDoc(collection(db, "audit_logs"), {
+            uid: cred.user.uid, email,
+            action: "terms_accepted",
+            detail: { tenantId, termsAcceptedAt, userAgent: navigator.userAgent.slice(0,200), referrer: document.referrer || null },
+            timestamp: serverTimestamp(),
+          });
+        } catch (e) { console.warn("audit log failed:", e); }
         await setDoc(doc(db, "users", cred.user.uid), {
           email, role: "fp_owner", tenantId, createdAt: serverTimestamp(),
         });

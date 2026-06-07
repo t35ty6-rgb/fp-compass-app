@@ -287,6 +287,42 @@
     const billStatus = t.billing?.status || (t.status === "active" ? "active" : "—");
     $("info-billing").innerHTML = `<span style="display:inline-block;padding:3px 10px;border-radius:5px;background:${billStatus==='active'?'#ECFDF5':'#FEF7E1'};color:${billStatus==='active'?'#065F46':'#92400E'};font-family:'JetBrains Mono',monospace;font-size:11.5px;font-weight:700;letter-spacing:0.06em;">${(billStatus||'').toUpperCase()}</span>`;
 
+    // 解約済 / past_due → 再加入バナー (ページ上部に prepend)
+    if (billStatus === "canceled" || billStatus === "past_due") {
+      const banner = document.createElement("div");
+      banner.style.cssText = "max-width:760px;margin:0 auto 18px;background:linear-gradient(135deg,#FEF3C7,#FDE68A);border:2px solid #F59E0B;border-radius:12px;padding:18px 22px;display:flex;align-items:center;gap:16px;justify-content:space-between;flex-wrap:wrap;font-family:inherit;";
+      banner.innerHTML = `
+        <div style="flex:1;min-width:220px;">
+          <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:10.5px;letter-spacing:0.22em;color:#92400E;text-transform:uppercase;margin-bottom:6px;">サブスク${billStatus === "canceled" ? "解約済" : "支払い未完了"}</div>
+          <div style="font-size:13.5px;color:#0E1116;line-height:1.7;">
+            ${billStatus === "canceled"
+              ? "現在 サブスクが 停止 中 です。 同じアカウントで <b>1 クリック で 再加入</b> できます (テナント・データは保持済)"
+              : "前回の引き落としが 失敗しています。 <b>カード再設定 で 再加入</b> してください (滞納から 7 日でデータアクセス遮断)"}
+          </div>
+        </div>
+        <button id="resume-btn" style="background:#0E1116;color:#fff;border:none;padding:11px 24px;border-radius:6px;font-family:'Manrope',sans-serif;font-weight:800;font-size:13px;letter-spacing:0.06em;cursor:pointer;white-space:nowrap;">サブスク再加入</button>
+      `;
+      const appWrap = document.querySelector(".app-wrap, .page-wrap, body");
+      if (appWrap) {
+        const firstChild = document.querySelector(".section, .page-h");
+        if (firstChild && firstChild.parentNode) firstChild.parentNode.insertBefore(banner, firstChild);
+        else document.body.insertBefore(banner, document.body.firstChild);
+      }
+      document.getElementById("resume-btn").addEventListener("click", async () => {
+        const btn = document.getElementById("resume-btn");
+        btn.disabled = true; btn.textContent = "Stripe 画面を準備中…";
+        try {
+          const resume = httpsCallable(functions, "resumeSubscription");
+          const result = await resume();
+          if (result.data?.url) location.href = result.data.url;
+          else throw new Error("URL 取得失敗");
+        } catch (e) {
+          btn.disabled = false; btn.textContent = "サブスク再加入";
+          alert("失敗: " + (e.message || e.code) + "\nsupport@skeleton-inc.jp までご連絡ください");
+        }
+      });
+    }
+
     // ==== 紹介リンク + 割引集計 ====
     try {
       const refUrl = `https://app.skeleton-inc.jp/?ref=${encodeURIComponent(uData.tenantId)}`;
