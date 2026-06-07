@@ -393,6 +393,56 @@
     }
     return list;
   }
+  function showBillingGate(status, tenantId) {
+    // 既存ゲートがあれば消す
+    const existing = document.getElementById("fp-billing-gate");
+    if (existing) existing.remove();
+    const label = {
+      "trial": { title: "決済が完了していません", sub: "アカウント作成は完了していますが、 決済手続きが未完了のため 管理画面を ご利用 いただけません。" },
+      "canceled": { title: "サブスクは解約済みです", sub: "再加入手続き で 引き続き ご利用いただけます (データは保持されています)。" },
+      "deleted": { title: "アカウントは削除されました", sub: "30 日間 のデータ保管期限が過ぎたため、 全データを削除済みです。 新規登録から お申込みください。" },
+    }[status || "trial"] || { title: "決済 状態を確認できません", sub: "サブスクの状態が確認できないため アクセスを 制限しています。 support@skeleton-inc.jp までご連絡ください。" };
+    const overlay = document.createElement("div");
+    overlay.id = "fp-billing-gate";
+    overlay.style.cssText = "position:fixed;inset:0;background:linear-gradient(135deg,#0F172A 0%,#1B2658 60%,#3838CC 100%);z-index:2147483647;display:flex;align-items:center;justify-content:center;font-family:'Noto Sans JP','Manrope',sans-serif;color:#fff;padding:24px;";
+    overlay.innerHTML = `
+      <div style="max-width:480px;width:100%;background:rgba(255,255,255,0.06);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.18);border-radius:16px;padding:36px 32px;box-shadow:0 24px 64px rgba(0,0,0,0.4);">
+        <div style="font-family:'Manrope',sans-serif;font-size:10.5px;letter-spacing:0.28em;text-transform:uppercase;color:#FFE9A8;margin-bottom:14px;font-weight:800;">サブスク 未契約</div>
+        <h2 style="font-family:'Noto Sans JP',sans-serif;font-weight:900;font-size:22px;line-height:1.35;margin:0 0 12px;letter-spacing:-0.01em;">${label.title}</h2>
+        <p style="font-size:13.5px;line-height:1.85;opacity:0.92;margin:0 0 24px;">${label.sub}</p>
+        <button id="fp-bgate-pay" style="width:100%;background:#E63946;color:#fff;border:none;border-radius:8px;padding:14px;font-size:14px;font-weight:800;letter-spacing:0.06em;cursor:pointer;font-family:'Manrope',sans-serif;text-transform:uppercase;transition:all 0.15s;">${status === "canceled" ? "サブスク再加入する" : "決済画面に進む"}</button>
+        <button id="fp-bgate-logout" style="width:100%;background:transparent;color:rgba(255,255,255,0.7);border:1px solid rgba(255,255,255,0.22);border-radius:8px;padding:11px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:'Manrope',sans-serif;margin-top:10px;">別のアカウントで ログイン</button>
+        <div id="fp-bgate-msg" style="margin-top:14px;font-size:11.5px;text-align:center;min-height:16px;line-height:1.6;"></div>
+        <div style="margin-top:18px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.12);font-size:11px;opacity:0.65;text-align:center;line-height:1.7;">
+          サポート → <a href="mailto:support@skeleton-inc.jp" style="color:#FFE9A8;text-decoration:none;">support@skeleton-inc.jp</a>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    const payBtn = document.getElementById("fp-bgate-pay");
+    const logoutBtn = document.getElementById("fp-bgate-logout");
+    const msgEl = document.getElementById("fp-bgate-msg");
+    payBtn.addEventListener("click", async () => {
+      payBtn.disabled = true; payBtn.textContent = "決済画面を準備中…";
+      try {
+        const fnName = status === "canceled" ? "resumeSubscription" : "createCheckoutSession";
+        const fn = httpsCallable(functions, fnName);
+        const result = await fn();
+        if (result.data?.url) location.href = result.data.url;
+        else throw new Error("URL 取得失敗");
+      } catch (e) {
+        msgEl.style.color = "#FFB5B5";
+        msgEl.textContent = "失敗: " + (e.message || e.code);
+        payBtn.disabled = false;
+        payBtn.textContent = status === "canceled" ? "サブスク再加入する" : "決済画面に進む";
+      }
+    });
+    logoutBtn.addEventListener("click", async () => {
+      await signOut(auth);
+      location.reload();
+    });
+  }
+
   async function fetchUserDocWithRetry(uid, maxRetries) {
     for (let i = 0; i < maxRetries; i++) {
       const snap = await getDoc(doc(db, "users", uid));
@@ -435,6 +485,12 @@
       window.__fp.tenantId = userData.tenantId;
       const tDoc = await getDoc(doc(db, "tenants", userData.tenantId));
       window.__fp.tenantName = tDoc.exists() ? (tDoc.data().name || userData.tenantId) : userData.tenantId;
+      // ★ 決済 ゲート: billing.status='active' 以外は 管理画面 アクセス禁止 (決済バイパス防止)
+      const billingStatus = tDoc.exists() ? (tDoc.data().billing?.status || null) : null;
+      if (billingStatus !== "active" && billingStatus !== "past_due") {
+        showBillingGate(billingStatus, userData.tenantId);
+        return;
+      }
     }
     window.__fp.userEmail = user.email;
     msg("ok", `${window.__fp.tenantName} のデータを読み込み中…`);
@@ -929,7 +985,7 @@ window.fpReadyAfterAuth = function() {
   ];
   legacyDemoKeys.forEach(k => { try { localStorage.removeItem(k); } catch (_) {} });
 
-  const ver = "20260608A-tenant-isolation";
+  const ver = "20260608B-billing-gate";
   const scripts = [
     "life-events.js?v=" + ver,
     "recommender.js?v=" + ver,
