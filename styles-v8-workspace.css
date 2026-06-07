@@ -2071,7 +2071,10 @@ table.clients [class*="avatar"],
   transform: translateY(-2px);
   box-shadow: 0 12px 28px rgba(91,91,240,0.55), inset 0 1px 0 rgba(255,255,255,0.2);
 }
-.cd-flow-step-next { opacity: 0.55; }
+.cd-flow-step-next { background: rgba(255,255,255,0.10) !important; border: 1px solid rgba(255,255,255,0.22) !important; }
+.cd-flow-step-next .cd-flow-step-label { color: rgba(255,255,255,0.95) !important; }
+.cd-flow-step-next .cd-flow-step-sub { color: rgba(255,255,255,0.72) !important; }
+.cd-flow-step-next .cd-flow-step-no { background: rgba(255,255,255,0.22) !important; color: #fff !important; }
 .cd-flow-step-no {
   display: inline-flex; align-items: center; justify-content: center;
   width: 28px; height: 28px;

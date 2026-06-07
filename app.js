@@ -1884,12 +1884,12 @@
           <span class="cd-tl-rel">${rel}</span>
         </div>`;
       };
-      const allEvents = events.slice(0, 15);
+      const allEvents = events.slice(0, 30);
       const eventsFold = allEvents.length === 0 ? '' : `
-        <details>
-          <summary style="cursor:pointer;font-size:12px;color:var(--muted);font-weight:700;letter-spacing:0.06em;padding:8px 0;border-top:1px dashed var(--line);">📅 全イベント (面談+タスク) (${allEvents.length}件)</summary>
-          <div style="margin-top:8px;">${allEvents.map(renderEventRow).join('')}</div>
-        </details>
+        <div style="background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-top:8px;">
+          <div style="font-size:12px;color:var(--muted);font-weight:700;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:10px;">📅 タイムライン (面談 + タスク + ライフイベント · ${allEvents.length}件)</div>
+          <div style="position:relative;padding-left:16px;border-left:2px solid var(--line);">${allEvents.map(renderEventRow).join('')}</div>
+        </div>
       `;
 
       // ★ シンプル化: 「繋ぎKPI 達成率」(定型ステップ) + 「議事録抽出タスク」(NEXT ACTION と重複) 削除
@@ -4443,25 +4443,35 @@ LINE は **2 段階で Zoom 予約を取る** ことだけ考える。それ以�
 【フェーズ1 = 初回 LINE (まだ客返信なし)】 ${isLoop ? '※今は該当しない' : '※今はこのフェーズ'}
 ═══════════════════════════════════════════
 
-目的: 客が **1秒で答えられる質問 1つ** で、関心の主役を確定する。
+目的: 議事録から読み取った **具体的な提案** で 次の Zoom を取りに行く。 質問形式は最終手段。
 
-✅ 必須:
-- 1行目: 「${client.name}さん、1つだけ確認させてください」程度の短い冒頭
-- 質問本体 = ①②③ の番号付き選択肢 (議事録から固有名詞で書き起こし)
-- 末尾: 「お返事に合わせて、それに特化した資料を作って次の Zoom でお見せします」程度
-- 長さ: 100-160字
+✅ 推奨パターン (議事録から仕入れた情報を活かす):
+**A. 提案型 (議事録から論点が明確な場合 = 推奨)**
+  「議事録で○○の話が出てたので、 △△の試算を作って 次の Zoom で一緒に見ませんか」
+  → 具体名詞・数値・固有事情を盛り込む (一般論禁止)
 
-例 (吉田さん想定):
+**B. 一点絞り型 (論点が複数ある場合だけ)**
+  「○○ / △△ / □□ の中で 今いちばん気になるのは?」と 短く絞り込み
+
+NG: 議事録に触れず テンプレ質問だけ (= 客は「ちゃんと聞いてもらってない」 と感じる)
+NG: 「① ② ③ から選んで」 ばかりを毎回繰り返す
+長さ: 100-180字 (短いほど良い)
+
+✅ 例 1 (提案型 — 推奨):
+${client.name}さん、お疲れさまでした。
+
+議事録で出てた「お子様 3歳・0歳の進路 (公立/私立/医学部)」
+の試算、 A4 1枚で作って次の Zoom で一緒に見ませんか。
+
+候補日 別カードでお送りします。
+
+✅ 例 2 (一点絞り型 — 論点が散ってる時のみ):
 ${client.name}さん、1つだけ確認させてください。
 
-今、一番気になってるのは?
+教育費 / 老後資金 / 奥様の事業の中で
+今 いちばん気になってる論点は?
 
-① お子様 (3歳・0歳) の教育費
-② 自営業の老後資金 (年金少ない問題)
-③ 奥様の8月開業の家計影響
-
-選んでもらえれば、その論点に絞った A4 1枚資料を
-作って、次の Zoom で一緒に見ながら整理します。
+それに絞った資料 作って 次の Zoom でお見せします。
 
 ═══════════════════════════════════════════
 【フェーズ2 = 客返信あり後の LINE】 ${isLoop ? '※今はこのフェーズ' : '※今は該当しない'}
