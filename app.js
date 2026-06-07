@@ -3254,36 +3254,71 @@
     const ov = document.createElement('div');
     ov.id = 'fp-deliv-send-modal';
     ov.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.6);z-index:10020;display:flex;align-items:center;justify-content:center;padding:20px;';
+    // ★ 大きい二段組レイアウト: 左=添付資料プレビュー(編集可) / 右=LINE本文
+    ov.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.7);z-index:10020;display:flex;align-items:center;justify-content:center;padding:16px;';
     const attachmentBlock = hasAttachment ? `
-      <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;margin-bottom:14px;overflow:hidden;">
-        <div style="padding:8px 12px;background:#5B5BF0;color:#fff;font-size:11px;font-weight:800;letter-spacing:0.06em;display:flex;justify-content:space-between;align-items:center;">
-          <span>📎 添付資料プレビュー (編集後の最終版)</span>
-          <span style="opacity:0.85;font-weight:600;">${(finalHtml.length / 1000).toFixed(1)}KB</span>
+      <div style="flex:1.6;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px;display:flex;flex-direction:column;overflow:hidden;min-width:0;">
+        <div style="padding:10px 14px;background:#5B5BF0;color:#fff;font-size:11.5px;font-weight:800;letter-spacing:0.06em;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;">
+          <span>📎 添付資料プレビュー <span style="opacity:0.85;font-weight:600;font-size:10.5px;margin-left:8px;">直接クリックで編集可</span></span>
+          <span style="opacity:0.85;font-weight:600;" id="fp-ds-size">${(finalHtml.length / 1000).toFixed(1)}KB</span>
         </div>
-        <div style="max-height:200px;overflow:auto;padding:12px 14px;font-size:11px;background:#fff;">${finalHtml.slice(0, 4000)}${finalHtml.length > 4000 ? '<div style="text-align:center;color:#94A3B8;font-size:10px;margin-top:8px;">(以下省略 — 送信時は全文添付)</div>' : ''}</div>
+        <div id="fp-ds-preview" contenteditable="true" style="flex:1;overflow:auto;padding:18px 22px;font-size:13px;background:#fff;line-height:1.75;outline:none;">${finalHtml}</div>
+        <div style="padding:8px 14px;background:#FAFBFC;border-top:1px solid #E2E8F0;font-size:10.5px;color:#64748B;display:flex;justify-content:space-between;flex-shrink:0;">
+          <span>✏️ クリック → 編集 → 自動保存 → そのまま送信</span>
+          <span id="fp-ds-edit-status">編集モード ON</span>
+        </div>
       </div>
     ` : '';
     ov.innerHTML = `
-      <div style="background:#fff;width:min(680px,100%);max-height:90vh;border-radius:14px;font-family:'Noto Sans JP',sans-serif;overflow:hidden;display:flex;flex-direction:column;">
-        <div style="padding:16px 22px;background:#06C755;color:#fff;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;">
-          <strong style="font-size:14px;">📤 ${escapeHtml(typeName)} を LINEで送信${hasAttachment ? ' (本文+資料同梱)' : ''}</strong>
-          <button id="fp-ds-close" style="background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);color:#fff;width:28px;height:28px;border-radius:5px;cursor:pointer;">✕</button>
+      <div style="background:#fff;width:min(1400px,98vw);height:min(900px,94vh);border-radius:14px;font-family:'Noto Sans JP',sans-serif;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 28px 70px rgba(15,23,42,0.45);">
+        <div style="padding:16px 24px;background:#06C755;color:#fff;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;">
+          <strong style="font-size:15px;">📤 ${escapeHtml(typeName)} を LINEで送信${hasAttachment ? ' (本文+資料同梱)' : ''}</strong>
+          <div style="display:flex;align-items:center;gap:14px;font-size:12.5px;opacity:0.95;">
+            <span>送信先: <strong>${escapeHtml(client.name)} 様</strong></span>
+            <button id="fp-ds-close" style="background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);color:#fff;width:30px;height:30px;border-radius:5px;cursor:pointer;font-size:14px;">✕</button>
+          </div>
         </div>
-        <div style="padding:18px 22px;overflow-y:auto;flex:1;">
-          <div style="font-size:12px;color:#64748B;margin-bottom:10px;">送信先: <strong>${escapeHtml(client.name)} 様</strong></div>
+        <div style="padding:18px 22px;flex:1;display:flex;gap:18px;min-height:0;${hasAttachment ? '' : 'flex-direction:column;'}">
           ${attachmentBlock}
-          <div style="font-size:11px;font-weight:700;color:#64748B;letter-spacing:0.06em;margin-bottom:6px;text-transform:uppercase;">💬 LINE本文 (編集可)</div>
-          <textarea id="fp-ds-msg" style="width:100%;min-height:160px;border:1.5px solid #E2E8F0;border-radius:8px;padding:12px;font-family:inherit;font-size:13px;line-height:1.75;">${escapeHtml(prefill)}</textarea>
+          <div style="flex:1;display:flex;flex-direction:column;min-width:0;${hasAttachment ? 'max-width:420px;' : ''}">
+            <div style="font-size:11px;font-weight:700;color:#64748B;letter-spacing:0.06em;margin-bottom:6px;text-transform:uppercase;">💬 LINE本文 (編集可)</div>
+            <textarea id="fp-ds-msg" style="flex:1;width:100%;min-height:280px;border:1.5px solid #E2E8F0;border-radius:8px;padding:14px;font-family:inherit;font-size:13.5px;line-height:1.85;resize:none;">${escapeHtml(prefill)}</textarea>
+          </div>
         </div>
-        <div style="padding:14px 22px;border-top:1px solid #E2E8F0;background:#FAFBFC;display:flex;gap:10px;flex-shrink:0;">
-          <button id="fp-ds-cancel" style="flex:1;padding:11px;background:#fff;border:1.5px solid #CBD5E1;color:#475569;border-radius:8px;font-weight:700;cursor:pointer;font-family:inherit;">キャンセル</button>
-          <button id="fp-ds-send" style="flex:2;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-weight:800;cursor:pointer;font-family:inherit;">📤 ${hasAttachment ? '本文+資料を' : ''}LINEで送信</button>
+        <div style="padding:14px 24px;border-top:1px solid #E2E8F0;background:#FAFBFC;display:flex;gap:12px;flex-shrink:0;">
+          <button id="fp-ds-cancel" style="flex:1;padding:13px;background:#fff;border:1.5px solid #CBD5E1;color:#475569;border-radius:8px;font-weight:700;cursor:pointer;font-family:inherit;font-size:13.5px;">キャンセル</button>
+          <button id="fp-ds-send" style="flex:3;padding:13px;background:#06C755;color:#fff;border:none;border-radius:8px;font-weight:800;cursor:pointer;font-family:inherit;font-size:13.5px;">📤 ${hasAttachment ? '本文+(編集後の)資料を ' : ''}LINEで送信</button>
         </div>
       </div>
     `;
     document.body.appendChild(ov);
     document.getElementById('fp-ds-close').addEventListener('click', () => ov.remove());
     document.getElementById('fp-ds-cancel').addEventListener('click', () => ov.remove());
+    // 編集後の HTML を保持する変数 + プレビューでの編集を自動キャプチャ
+    let editedHtml = finalHtml;
+    const previewEl = document.getElementById('fp-ds-preview');
+    const editStatus = document.getElementById('fp-ds-edit-status');
+    const sizeEl = document.getElementById('fp-ds-size');
+    if (previewEl) {
+      previewEl.addEventListener('input', () => {
+        editedHtml = previewEl.innerHTML;
+        if (sizeEl) sizeEl.textContent = (editedHtml.length / 1000).toFixed(1) + 'KB';
+        if (editStatus) { editStatus.textContent = '✓ 編集中…'; editStatus.style.color = '#16A34A'; }
+        // localStorage に自動保存 (同じ顧客 + type で開いた時 復元)
+        try { localStorage.setItem('fp-deliv-edit-' + client.id + '-' + type, editedHtml); } catch (_) {}
+      });
+      // 過去の編集 復元
+      try {
+        const saved = localStorage.getItem('fp-deliv-edit-' + client.id + '-' + type);
+        if (saved && saved.length > 100 && saved !== finalHtml) {
+          if (confirm('前回の編集内容が保存されています。 復元しますか?\n\n(キャンセル = AI生成の最新版を使う)')) {
+            previewEl.innerHTML = saved;
+            editedHtml = saved;
+            if (sizeEl) sizeEl.textContent = (editedHtml.length / 1000).toFixed(1) + 'KB';
+          }
+        }
+      } catch (_) {}
+    }
     document.getElementById('fp-ds-send').addEventListener('click', async () => {
       const text = document.getElementById('fp-ds-msg').value.trim();
       if (!text) { alert('本文を入力してください'); return; }
@@ -3292,7 +3327,7 @@
       try {
         const r = await fetch('https://fp-compass-webhook-527726449426.asia-northeast1.run.app/api/send-line', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: uid, text, deliverableHtml: hasAttachment ? finalHtml : undefined, deliverableType: type, deliverableTitle: taskTitle, customerName: client.name }),
+          body: JSON.stringify({ userId: uid, text, deliverableHtml: hasAttachment ? editedHtml : undefined, deliverableType: type, deliverableTitle: taskTitle, customerName: client.name }),
         });
         const d = await r.json();
         if (d.ok) {
