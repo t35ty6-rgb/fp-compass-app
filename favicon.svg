@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="12" fill="#0E1116"/>
+  <text x="32" y="42" font-family="Manrope, sans-serif" font-weight="900" font-size="26" fill="#E63946" text-anchor="middle" letter-spacing="-1">FC</text>
+  <circle cx="50" cy="14" r="4" fill="#E63946"/>
+</svg>
