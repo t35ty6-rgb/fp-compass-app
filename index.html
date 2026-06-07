@@ -273,7 +273,20 @@
         "auth/too-many-requests": "試行回数超過、 少し時間をおいて再試行を",
         "auth/network-request-failed": "ネットワーク接続を確認してください",
       };
-      msg("err", map[e.code] || (e.message || e.code));
+      if (e.code === "auth/email-already-in-use") {
+        // 既存メアドの場合、ログインタブに 1 クリック切替できるボタンを表示
+        msgEl.className = "err";
+        msgEl.innerHTML = '既に登録済のメアドです。 <button id="fp-switch-login" style="margin-left:8px;background:#fff;color:#0E1116;border:none;padding:6px 14px;border-radius:4px;font-weight:700;font-size:12px;cursor:pointer;">→ ログインタブに切替</button>';
+        $("fp-switch-login").addEventListener("click", () => {
+          setMode("login");
+          // email と pw は保持されたまま、 PW 確認だけ消す
+          $("fp-pwconfirm-input").value = "";
+          msg("", "");
+          $("fp-pw-input").focus();
+        });
+      } else {
+        msg("err", map[e.code] || (e.message || e.code));
+      }
       btn.disabled = false; btn.textContent = mode === "signup" ? "アカウント作成" : "ログイン";
     }
   }
