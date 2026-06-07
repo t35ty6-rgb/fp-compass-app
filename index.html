@@ -121,7 +121,16 @@
     getFunctions, httpsCallable,
   } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-functions.js";
 
-  const firebaseConfig = {
+  // 環境自動切替: hostname に "staging" 含まれてれば staging プロジェクトに接続
+  const __isStaging = /staging|skeleton-fp-compass-staging/.test(location.hostname);
+  const firebaseConfig = __isStaging ? {
+    apiKey: "AIzaSyAV9SEZZ5Tqu8pHUmmjMZ3RhrN_jFgMevs",
+    authDomain: "skeleton-fp-compass-staging.firebaseapp.com",
+    projectId: "skeleton-fp-compass-staging",
+    storageBucket: "skeleton-fp-compass-staging.firebasestorage.app",
+    messagingSenderId: "991197809601",
+    appId: "1:991197809601:web:6f59df4d7c505e16bc3d40",
+  } : {
     apiKey: "AIzaSyAmVAEe9l9e1Yo_dzzJdbTVU35wWKd2sH4",
     authDomain: "skeleton-fp-compass-632026.firebaseapp.com",
     projectId: "skeleton-fp-compass-632026",
@@ -129,6 +138,7 @@
     messagingSenderId: "833972948597",
     appId: "1:833972948597:web:b7310cc22ce41d9738f23c",
   };
+  if (__isStaging) console.log("[FP Compass] STAGING 環境で接続中:", firebaseConfig.projectId);
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
