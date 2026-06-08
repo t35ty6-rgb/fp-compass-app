@@ -989,7 +989,8 @@
                   const myTagIds = getClientTags(c.id);
                   if (!myTagIds.length) return '';
                   const myTags = myTagIds.map(id => master.find(t => t.id === id)).filter(Boolean);
-                  return `<div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:4px;">${myTags.map(t => `<span style="background:${t.color}1A;color:${t.color};border:1px solid ${t.color}55;padding:1px 7px;border-radius:8px;font-size:9.5px;font-weight:700;line-height:1.5;">${escapeHtml(t.label)}</span>`).join('')}</div>`;
+                  // ★ オーナーfb (v AS): 客一覧でタグを 明確に見分けられるよう 濃色solid + 白文字 + サイズUP
+                  return `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;">${myTags.map(t => `<span style="background:${t.color};color:#fff;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:800;line-height:1.4;letter-spacing:0.03em;box-shadow:0 2px 6px ${t.color}66;">${escapeHtml(t.label)}</span>`).join('')}</div>`;
                 })()}
               </div>
             </div>
@@ -1543,7 +1544,7 @@
           const lastReply = (c.lineHistory || []).slice().reverse().find(m => (m.from === 'user' || m.direction === 'in'));
           const replyText = lastReply ? (lastReply.text || lastReply.message || '') : '';
           const replyBanner = `
-            <div style="background:linear-gradient(135deg,#DC2626,#991B1B);color:#fff;padding:16px 18px;border-radius:12px;margin-bottom:14px;box-shadow:0 8px 28px rgba(220,38,38,0.45),0 0 0 4px rgba(255,255,255,0.5);animation:fp-reply-pulse 1.6s ease-in-out infinite;">
+            <div style="background:linear-gradient(135deg,#DC2626,#991B1B);color:#fff;padding:16px 18px;border-radius:12px;margin-bottom:14px;box-shadow:0 8px 28px rgba(220,38,38,0.45),0 0 0 4px rgba(255,255,255,0.5);">
               <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
                 <div style="font-size:28px;">⚠️</div>
                 <div style="flex:1;">
@@ -1562,7 +1563,7 @@
           const urgency = daysSinceSent >= 7 ? '🔥 1週間以上' : '⏰ ' + daysSinceSent + '日';
           const bg = daysSinceSent >= 7 ? 'linear-gradient(135deg,#dc2626,#991b1b)' : 'linear-gradient(135deg,#F97316,#EA580C)';
           const followupBanner = `
-            <div style="background:${bg};color:#fff;padding:12px 16px;border-radius:10px;margin-bottom:12px;display:flex;align-items:center;gap:10px;animation:fp-followup-pulse 2.2s ease-in-out infinite;">
+            <div style="background:${bg};color:#fff;padding:12px 16px;border-radius:10px;margin-bottom:12px;display:flex;align-items:center;gap:10px;">
               <div style="font-size:22px;">📨</div>
               <div style="flex:1;">
                 <div style="font-size:13px;font-weight:800;">${urgency}前送信 — 返信なし (追撃 ${t.followupCount}回目)</div>
@@ -1628,7 +1629,7 @@
           <!-- 進捗フローチャート -->
           <div style="display:flex;gap:4px;align-items:center;overflow-x:auto;padding-bottom:8px;margin-bottom:10px;">
             ${stages.map((s, i) => `
-              <div style="flex:1;min-width:90px;text-align:center;padding:8px 6px;border-radius:8px;background:${i < currentStageIdx ? 'rgba(16,185,129,0.25)' : i === currentStageIdx ? 'linear-gradient(135deg,#f59e0b,#ea580c)' : 'rgba(255,255,255,0.08)'};border:1.5px solid ${i < currentStageIdx ? '#10b981' : i === currentStageIdx ? '#f59e0b' : 'rgba(255,255,255,0.2)'};${i === currentStageIdx ? 'animation:fp-stage-pulse 2s ease-in-out infinite;' : ''}">
+              <div style="flex:1;min-width:90px;text-align:center;padding:8px 6px;border-radius:8px;background:${i < currentStageIdx ? 'rgba(16,185,129,0.25)' : i === currentStageIdx ? 'linear-gradient(135deg,#f59e0b,#ea580c)' : 'rgba(255,255,255,0.08)'};border:1.5px solid ${i < currentStageIdx ? '#10b981' : i === currentStageIdx ? '#f59e0b' : 'rgba(255,255,255,0.2)'};">
                 <div style="font-size:18px;">${i < currentStageIdx ? '✓' : s.icon}</div>
                 <div style="font-size:10px;font-weight:700;margin-top:3px;${i > currentStageIdx ? 'opacity:0.55;' : ''}">${escapeHtml(s.label)}</div>
               </div>
@@ -1940,7 +1941,7 @@
         const isTop = idx === 0;
         const isHot = pri.tier === 'now' || pri.tier === 'overdue';
         const ringStyle = isHot ? `box-shadow:0 0 0 3px ${pri.border}33,0 8px 22px ${pri.border}44;` : '';
-        const pulseStyle = (isTop && isHot) ? 'animation:fp-task-pulse 2s ease-in-out infinite;' : '';
+        const pulseStyle = '';
         return `<div style="background:#fff;border:2px solid ${pri.border};border-radius:10px;padding:12px 14px;margin-bottom:8px;${ringStyle}${pulseStyle}position:relative;">
           ${isTop ? `<div style="position:absolute;top:-10px;right:14px;background:${isHot ? pri.bg : '#5B5BF0'};color:#fff;font-size:10px;font-weight:900;padding:3px 10px;border-radius:10px;letter-spacing:0.08em;box-shadow:0 4px 10px rgba(0,0,0,0.18);">⚡ 最優先で着手</div>` : ''}
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap;">
@@ -2335,7 +2336,7 @@
                 const lastIsUser = lastMsg && (lastMsg.direction === 'in' || lastMsg.from === 'user');
                 if (!lastIsUser) return '';
                 return `
-                  <div style="background:linear-gradient(135deg,#DC2626,#991B1B);color:#fff;padding:14px 18px;border-radius:12px;margin:10px 0 14px;box-shadow:0 8px 28px rgba(220,38,38,0.45),0 0 0 4px rgba(255,255,255,0.5);animation:fp-reply-pulse 1.6s ease-in-out infinite;">
+                  <div style="background:linear-gradient(135deg,#DC2626,#991B1B);color:#fff;padding:14px 18px;border-radius:12px;margin:10px 0 14px;box-shadow:0 8px 28px rgba(220,38,38,0.45),0 0 0 4px rgba(255,255,255,0.5);">
                     <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
                       <div style="font-size:24px;">⚠️</div>
                       <div style="flex:1;">
@@ -3707,43 +3708,81 @@
       lineHistoryRecent: (client.lineHistory || []).slice(-10).map(m => ({ direction: m.direction || m.from, ts: m.ts, text: (m.text || '').slice(0, 200) })),
     };
 
-    // プロンプト (Claude Code に貼る用)
-    const typeGuides = {
-      cashflow: '60歳までのキャッシュフロー表 (5年刻み + 60-90歳)。 収入/支出/貯蓄残高 を可視化。',
-      education: 'お子様の進路別 (公立/私立/医学部) 教育費試算 A4 1枚。',
-      retire: '退職金受取シミュレーション。 一時金 vs 年金型 の手取り比較。',
-      insurance: '保険見直し提案。 現状の保険料 vs 削減提案。',
-      inherit: '相続対策の基礎。 暦年贈与・生前対策の効果額試算。',
-      custom: `「${taskTitle || '依頼内容'}」 に対する 個別資料。`,
-    };
-    const guide = typeGuides[type] || typeGuides.custom;
-    const prompt = `添付の JSON ファイル (customer-data.json) は お客様の情報です。 これを元に A4 1枚 の HTML 資料を 作ってください。
+    // ★ オーナーfb (v AS): タイプ別プロンプト廃止 → 1 つのマスタープロンプト で全タイプ対応
+    // (JSON.meta.deliverableType + taskTitle で 何を作るかは伝わる)
+    const prompt = `あなたは 経験豊富な FP (ファイナンシャル・プランナー) 兼 編集デザイナー です。
+添付の customer-data.json には お客様の情報・面談議事録・提案履歴 が 入っています。
+このデータ を 元に お客様 1人 だけ のために 作り込んだ A4 1枚 の HTML 資料 を 作成してください。
 
-【依頼内容】 ${guide}
+═══════════════════════════════════════════════
+【STEP 1 — JSON を よく 読む】
+═══════════════════════════════════════════════
+- meta.deliverableType: 何を作るか (cashflow / education / retire / insurance / inherit / custom)
+- meta.taskTitle: タイトル として 使う候補
+- customer: 年齢 / 職業 / 家族構成 / AUM / 住宅ローン / ステータス
+- meetingNotes.summary + transcript: 面談で何を 話したか (★ 必ず反映)
+- proposals: 過去の提案履歴 (重複しないよう 配慮)
+- lineHistoryRecent: 直近 LINE のやりとり
 
-【絶対遵守 — A4 1ページ 厳守】
-A4 297mm × 210mm に **必ず** 1ページ で収まる量。 はみ出し 禁止。
+═══════════════════════════════════════════════
+【STEP 2 — タイプ別 構成】
+═══════════════════════════════════════════════
+- **cashflow**: 30〜90歳 5年刻み キャッシュフロー表 (収入/支出/貯蓄残高/年金) + 注目ポイント 3 つ
+- **education**: お子様 進路別 (公立/私立/医学部) 教育費総額 + 月額 積立 必要額 + ピーク年
+- **retire**: 退職金 受取 一時金 vs 年金型 シミュ + 税引後 手取り 比較 + 推奨パターン
+- **insurance**: 現契約 棚卸し → 過不足 診断 → 月額 ¥X 削減 試算
+- **inherit**: 課税対象資産 試算 + 暦年贈与 / 生前対策 効果額 + 優先順位
+- **custom**: taskTitle に従って 自由に構成 (議事録から課題を 拾う)
 
-具体的な目安:
-- **タイトル**: 14pt 1行 (10mm)
-- **本文セクション**: 11pt × 3〜4ブロック (各 50〜60mm)
-- **数表**: 4行×3列 が上限
-- **末尾「次回確認したい点」**: 10pt × 3項目 (30mm)
+═══════════════════════════════════════════════
+【STEP 3 — プロ品質 のデザイン】
+═══════════════════════════════════════════════
+- フォント: 'Noto Serif JP' (見出し), 'Hiragino Sans' (本文) / 印刷用に Google Fonts も link
+- 色: ベース #1F1A12 (墨色) / アクセント #C19A3A (品のある金) / 背景 #FDFCF7 (アイボリー)
+- レイアウト: 上品な余白 / 罫線 hairline (#E8E2D4) / 数表は 偶数行 グレー帯
+- 印刷見せ可能。 銀行/証券 のレポートに 近い 質感
+- グラフ は CSS で書ける 棒/円のみ (Chart.js などは NG / インラインCSS で完結)
 
-【絶対ルール — CSS】
+═══════════════════════════════════════════════
+【STEP 4 — 個別化 (これが最重要)】
+═══════════════════════════════════════════════
+- お客様の名前 を **タイトル + 本文 1箇所** に 入れる
+- 議事録 (summary, transcript) で 出てきた キーワード や 発言 を 必ず 1〜2箇所 引用
+  例: 「先日お話に出てた『○○』 の件、 試算 してみました」
+- 家族構成 から 出てくる 具体名 (お子様の名前 等) も 反映
+- 一般論 ($A → 数値) は 避ける、 お客様固有の数字 を 必ず 含める
+- 末尾 必ず:「次の打ち合わせで 一緒に確認したい点」 3項目 (議事録 と 紐づく内容)
+
+═══════════════════════════════════════════════
+【STEP 5 — A4 1ページ 厳守】
+═══════════════════════════════════════════════
+A4 297mm × 210mm に 1ページ で収まる量に 必ず する。 はみ出し 禁止。
+- タイトル + 顧客名: 14pt 1行 (12mm)
+- セクション 3-4 個 (各 50-60mm = 7-8行)
+- 数表: 5行 × 3-4列 が上限 (合計 50mm)
+- 末尾「次回確認」: 10pt × 3項目 (25mm)
+- 合計 約 250-270mm 以内
+
+═══════════════════════════════════════════════
+【STEP 6 — 必須 CSS】
+═══════════════════════════════════════════════
 <style> 内 必ず:
-- @page { size: A4 portrait; margin: 15mm; }
-- html, body { font-family: 'Noto Serif JP', serif; font-size: 11pt; line-height: 1.5; }
-- body { width: 180mm; height: 267mm; overflow: hidden; page-break-inside: avoid; }
+@page { size: A4 portrait; margin: 15mm; }
+html, body { font-family: 'Noto Serif JP', 'Hiragino Mincho ProN', serif; font-size: 11pt; line-height: 1.55; color: #1F1A12; background: #FDFCF7; }
+body { width: 180mm; height: 267mm; max-height: 267mm; overflow: hidden; box-sizing: border-box; }
+h1, h2, h3 { font-family: 'Noto Serif JP', serif; font-weight: 700; letter-spacing: -0.01em; }
+.accent { color: #C19A3A; }
+table { width: 100%; border-collapse: collapse; font-size: 10pt; }
+table th, table td { padding: 4px 8px; border-bottom: 1px solid #E8E2D4; }
+table tbody tr:nth-child(even) { background: #F7F5EE; }
 
-【絶対ルール — 内容】
-- 完全な HTML文書 (<!DOCTYPE html>...) で 出力
-- code fence や 前置き 一切 不要、 HTML本体だけ
-- お客様の名前 (JSON の customer.name) を 1〜2箇所 入れる
-- 具体的な 数字 / 試算 / 比較表 を 含める (一般論禁止)
-- セクション 3〜4 つまで
-- 末尾に「次の打ち合わせで 一緒に確認したい点」 3項目
-- JSON の meetingNotes (議事録) の中身を 必ず反映する
+═══════════════════════════════════════════════
+【出力フォーマット 厳守】
+═══════════════════════════════════════════════
+- 完全な HTML 文書 (<!DOCTYPE html> から </html> まで) のみ
+- code fence (\`\`\`html ... \`\`\`) 禁止
+- 前置きの文 一切 不要
+- HTML本体 だけ そのまま 出力
 
 それでは 作成してください。`;
 
