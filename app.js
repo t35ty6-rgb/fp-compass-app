@@ -1220,25 +1220,23 @@
       aiKeys.forEach(k => {
         try { JSON.parse(localStorage.getItem(k) || '[]').forEach(collectFromEntry); } catch (_) {}
       });
-      // さらに 全 fp-ai-* キー走査 + 汎用 fallback
+      // さらに 全 fp-ai-* キー走査 (★ genericFallback 撤去 — 厳密一致のみ)
       const allLsKeys = Object.keys(localStorage).filter(k => k.startsWith('fp-ai-'));
       allLsKeys.forEach(k => {
         if (aiKeys.has(k)) return;
         try {
           JSON.parse(localStorage.getItem(k) || '[]').forEach(a => {
-            const ownMatch = (a.userId === c.lineFriendId) || (a.customerName === c.name);
-            const generic  = ((!a.customerName || a.customerName === 'お客様') && c.lineFriendId);
-            if (ownMatch || generic) collectFromEntry(a);
+            const ownMatch = (a.userId && a.userId === c.lineFriendId) || (a.customerName && a.customerName === c.name);
+            if (ownMatch) collectFromEntry(a);
           });
         } catch (_) {}
       });
-      // 2) GAS 永続化シート ai_results からも吸う
+      // 2) GAS 永続化シート ai_results からも吸う (★ genericFallback 撤去)
       const liveAi = (window.LineAppLiveData && window.LineAppLiveData.ai_results) || [];
       liveAi.forEach(r => {
         const match = (r.userId && r.userId === c.lineFriendId) ||
                       (r.customerName && r.customerName === c.name) ||
-                      myBks.some(b => b.ts === r.bookingTs || b.userId === r.userId) ||
-                      ((!r.customerName || r.customerName === 'お客様') && c.lineFriendId);
+                      myBks.some(b => b.ts === r.bookingTs || b.userId === r.userId);
         if (match) collectFromEntry(r);
       });
       // ④ タイムライン細分化: AI議事録から抽出したタスク (due日) を中間イベント化
@@ -1254,8 +1252,7 @@
         if (c.id)           taskKeysTL.add('fp-tasks-' + c.id);
         if (c.name)         taskKeysTL.add('fp-tasks-' + c.name);
         myBks.forEach(b => { if (b.userId) taskKeysTL.add('fp-tasks-' + b.userId); if (b.ts) taskKeysTL.add('fp-tasks-' + b.ts); if (b.name) taskKeysTL.add('fp-tasks-' + b.name); });
-        const allTaskKeys = Object.keys(localStorage).filter(k => k.startsWith('fp-tasks-'));
-        allTaskKeys.forEach(k => taskKeysTL.add(k));
+        // ★ 全 fp-tasks-* スキャン廃止 — この顧客に紐づく key だけ読む
 
         // タスク収集 (フィルタ前)
         const rawTasks = [];
@@ -1263,10 +1260,10 @@
           try { JSON.parse(localStorage.getItem(k) || '[]').forEach(t => { if (t.due && t.task) rawTasks.push(t); }); } catch (_) {}
         });
         ((window.LineAppLiveData && window.LineAppLiveData.ai_tasks) || []).forEach(t => {
+          // ★ genericFallback 撤去 — 厳密一致のみ
           const match = (t.userId && t.userId === c.lineFriendId) ||
                         (t.customerName && t.customerName === c.name) ||
-                        myBks.some(b => b.ts === t.bookingTs || b.userId === t.userId) ||
-                        ((!t.customerName || t.customerName === 'お客様') && c.lineFriendId);
+                        myBks.some(b => b.ts === t.bookingTs || b.userId === t.userId);
           if (match && t.due && t.task) rawTasks.push(t);
         });
 
@@ -2633,10 +2630,10 @@
     // GAS 永続化シートからも
     const liveTasks = (window.LineAppLiveData && window.LineAppLiveData.ai_tasks) || [];
     liveTasks.forEach(t => {
+      // ★ genericFallback 撤去 — 厳密一致のみ
       const match = (t.userId && t.userId === client.lineFriendId) ||
                     (t.customerName && t.customerName === client.name) ||
-                    myBookings.some(b => b.ts === t.bookingTs || b.userId === t.userId) ||
-                    ((!t.customerName || t.customerName === 'お客様') && client.lineFriendId);
+                    myBookings.some(b => b.ts === t.bookingTs || b.userId === t.userId);
       if (!match) return;
       tasks.push({
         task: t.task, due: t.due, priority: t.priority, icon: t.icon,
@@ -3443,15 +3440,15 @@
     allKeys.forEach(k => {
       try {
         JSON.parse(localStorage.getItem(k) || '[]').forEach(a => {
-          const match = (a.userId === client.lineFriendId) || (a.customerName === client.name) ||
-                        ((!a.customerName || a.customerName === 'お客様') && client.lineFriendId);
+          // ★ genericFallback 撤去 — 厳密一致のみ
+          const match = (a.userId && a.userId === client.lineFriendId) || (a.customerName && a.customerName === client.name);
           if (match && (!latestAi || new Date(a.createdAt || 0) > new Date(latestAi.createdAt || 0))) latestAi = a;
         });
       } catch (_) {}
     });
     ((window.LineAppLiveData && window.LineAppLiveData.ai_results) || []).forEach(r => {
-      const match = (r.userId === client.lineFriendId) || (r.customerName === client.name) ||
-                    ((!r.customerName || r.customerName === 'お客様') && client.lineFriendId);
+      // ★ genericFallback 撤去 — 厳密一致のみ
+      const match = (r.userId && r.userId === client.lineFriendId) || (r.customerName && r.customerName === client.name);
       if (!match) return;
       if (!latestAi || (r.ts || '') > (latestAi.createdAt || '')) {
         latestAi = { summary: r.summary, transcript: r.transcript, createdAt: r.ts };
