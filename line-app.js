@@ -39,6 +39,7 @@
     if (name === 'birthdayTab') renderBirthdayTab();
     if (name === 'calendarTab') renderCalendarTab();
     if (name === 'settingsHub') renderSettingsHub();
+    if (name === 'dormantFollowup') renderDormantFollowup();
   }
 
   // ============================
@@ -283,6 +284,166 @@
         btn.disabled = false;
         btn.innerHTML = '<i data-lucide="send"></i><span>友だち全員に一斉配信</span>'; if (window.lucide) lucide.createIcons();
       }
+    });
+  }
+
+  // ============================
+  // 🔔 ご無沙汰フォロー (未接触客 一斉送信)
+  // 期間: Jobs判断で 21日以上 を「ご無沙汰」 と定義
+  //   - 🟡 21-59日 (3週間〜2ヶ月): 軽くタッチ
+  //   - 🟠 60-179日 (2〜6ヶ月): しっかりフォロー
+  //   - 🔴 180日以上 (半年〜): 関係再構築の本気アプローチ
+  // ============================
+  function renderDormantFollowup() {
+    fetchLiveData().then(() => { if (currentSubview === 'dormantFollowup') renderDormantInner(); });
+    renderDormantInner();
+  }
+
+  function daysSinceLastContact(c) {
+    if (!c.lastContact) return 9999;
+    const today = (window.LifeEvents && window.LifeEvents.TODAY) || new Date();
+    return Math.floor((today - new Date(c.lastContact)) / 86400000);
+  }
+
+  function renderDormantInner() {
+    const v = document.querySelector('[data-line-view="dormantFollowup"]');
+    if (!v) return;
+    const clients = (window.DUMMY_CLIENTS || []).filter(c => c.lineFriendId); // LINE連携客のみ
+    const enriched = clients.map(c => ({ c, days: daysSinceLastContact(c) })).filter(x => x.days >= 21);
+    enriched.sort((a, b) => b.days - a.days);
+
+    const buckets = {
+      light:  enriched.filter(x => x.days >= 21  && x.days < 60),
+      mid:    enriched.filter(x => x.days >= 60  && x.days < 180),
+      heavy:  enriched.filter(x => x.days >= 180),
+    };
+    document.getElementById('nav-count-dormant') && (document.getElementById('nav-count-dormant').textContent = String(enriched.length || ''));
+
+    const renderRow = ({ c, days }) => {
+      // 直近 議事録 1行
+      const aiResults = (window.LineAppLiveData && window.LineAppLiveData.ai_results) || [];
+      const myAi = aiResults.find(r => (r.userId && r.userId === c.lineFriendId) || (r.customerName && r.customerName === c.name));
+      const ctx = myAi ? (myAi.summary || '').split('\n')[0].slice(0, 50) : '';
+      return `
+        <label class="fp-dormant-row" style="display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:10px 14px;background:#fff;border:1px solid var(--line);border-radius:8px;margin-bottom:6px;cursor:pointer;">
+          <input type="checkbox" class="fp-dormant-cb" data-uid="${escapeHtml(c.lineFriendId)}" data-name="${escapeHtml(c.name)}" checked style="width:18px;height:18px;cursor:pointer;">
+          <div style="min-width:0;">
+            <div style="font-weight:700;font-size:13px;color:#0F172A;">${escapeHtml(c.name)} 様 <span style="font-size:10px;color:#94A3B8;font-weight:500;margin-left:6px;">${escapeHtml((c.occupation||''))}</span></div>
+            ${ctx ? `<div style="font-size:11px;color:#64748B;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">📝 ${escapeHtml(ctx)}</div>` : '<div style="font-size:11px;color:#CBD5E1;margin-top:2px;font-style:italic;">議事録なし</div>'}
+          </div>
+          <div style="text-align:right;font-size:11.5px;font-weight:800;color:${days>=180?'#DC2626':days>=60?'#EA580C':'#CA8A04'};font-variant-numeric:tabular-nums;">${days}日</div>
+        </label>
+      `;
+    };
+
+    const renderBucket = (key, label, color, items) => items.length === 0 ? '' : `
+      <section style="margin-bottom:18px;">
+        <h3 style="font-size:12px;font-weight:800;letter-spacing:0.06em;color:${color};margin:0 0 10px 0;display:flex;align-items:center;gap:8px;">
+          <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${color};"></span>
+          ${escapeHtml(label)} <span style="color:#94A3B8;font-weight:600;">— ${items.length}名</span>
+          <button class="fp-dormant-select-all" data-bucket="${key}" style="margin-left:auto;background:transparent;color:${color};border:1px solid ${color};padding:3px 10px;border-radius:5px;font-size:10.5px;font-weight:700;cursor:pointer;">全選択/解除</button>
+        </h3>
+        ${items.map(renderRow).join('')}
+      </section>
+    `;
+
+    const defaultMsg = `{name}さん、ご無沙汰しております!
+
+最近いかがお過ごしですか? 😊
+家計や資産のことで 気になってる点や 変化があれば、
+お気軽にメッセージください。
+
+また落ち着いてお話できる機会、楽しみにしてます ✨`;
+
+    v.innerHTML = `
+      <div class="page" style="max-width:920px;">
+        <header class="page-head" style="margin-bottom:16px;">
+          <h1 class="page-title"><i data-lucide="alarm-clock" style="vertical-align:middle;margin-right:8px;"></i>ご無沙汰フォロー</h1>
+          <p class="page-sub">21日以上 LINE で連絡してない方を期間ごとに表示。テンプレ編集 → 全員に1クリック送信。</p>
+        </header>
+
+        ${enriched.length === 0 ? `
+          <div style="background:#F0FDF4;border:1px solid #10B981;color:#065F46;padding:24px;border-radius:10px;text-align:center;font-size:14px;font-weight:600;">
+            ✨ ご無沙汰の方は1人もいません。全顧客と 21日以内 に接触できてます!
+          </div>
+        ` : `
+          <div style="background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:18px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+              <strong style="font-size:13px;color:#0F172A;">対象者 ${enriched.length}名</strong>
+              <div style="font-size:11px;color:#64748B;">名前は送信時に {name} 自動置換</div>
+            </div>
+            ${renderBucket('light', '🟡 21日〜60日未満 (軽くタッチ)', '#CA8A04', buckets.light)}
+            ${renderBucket('mid', '🟠 60日〜180日未満 (しっかりフォロー)', '#EA580C', buckets.mid)}
+            ${renderBucket('heavy', '🔴 180日以上 (関係再構築)', '#DC2626', buckets.heavy)}
+          </div>
+
+          <div style="background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:18px;">
+            <div style="font-size:11px;font-weight:800;color:#475569;letter-spacing:0.06em;margin-bottom:8px;">📝 送信メッセージ (編集可・{name} は自動置換)</div>
+            <textarea id="fp-dormant-msg" rows="8" style="width:100%;padding:14px 16px;border:1.5px solid #E2E8F0;border-radius:8px;font-size:13.5px;font-family:'Noto Sans JP',sans-serif;line-height:1.75;resize:vertical;box-sizing:border-box;">${escapeHtml(defaultMsg)}</textarea>
+          </div>
+
+          <div style="position:sticky;bottom:18px;background:linear-gradient(135deg,#0F172A,#1E293B);border-radius:12px;padding:18px;box-shadow:0 12px 36px rgba(15,23,42,0.32);display:flex;align-items:center;gap:14px;">
+            <div style="flex:1;color:#fff;">
+              <div style="font-size:11.5px;font-weight:700;letter-spacing:0.06em;color:#94A3B8;">✓ 選択中 <span id="fp-dormant-selected-count" style="color:#10B981;font-weight:900;">${enriched.length}</span>名 に送信</div>
+              <div style="font-size:10px;color:#CBD5E1;margin-top:2px;">⚠ 送信後は取消不可。送信前に文面を確認してください</div>
+            </div>
+            <button id="fp-dormant-send" style="background:#fff;color:#0F172A;border:none;padding:14px 28px;border-radius:8px;font-size:14px;font-weight:900;letter-spacing:0.08em;cursor:pointer;font-family:'Inter','Noto Sans JP',sans-serif;box-shadow:0 4px 14px rgba(255,255,255,0.18);">✨ 選択した方に一斉送信</button>
+          </div>
+          <div id="fp-dormant-result" style="margin-top:14px;"></div>
+        `}
+      </div>
+    `;
+    if (window.lucide) lucide.createIcons();
+
+    if (enriched.length === 0) return;
+
+    // 選択カウント更新
+    const updateCount = () => {
+      const n = v.querySelectorAll('.fp-dormant-cb:checked').length;
+      const el = document.getElementById('fp-dormant-selected-count');
+      if (el) el.textContent = String(n);
+    };
+    v.querySelectorAll('.fp-dormant-cb').forEach(cb => cb.addEventListener('change', updateCount));
+
+    // 全選択/解除
+    v.querySelectorAll('.fp-dormant-select-all').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const key = btn.dataset.bucket;
+        const section = btn.closest('section');
+        const cbs = section.querySelectorAll('.fp-dormant-cb');
+        const allChecked = Array.from(cbs).every(cb => cb.checked);
+        cbs.forEach(cb => { cb.checked = !allChecked; });
+        updateCount();
+      });
+    });
+
+    // 送信
+    document.getElementById('fp-dormant-send').addEventListener('click', async () => {
+      const selected = Array.from(v.querySelectorAll('.fp-dormant-cb:checked')).map(cb => ({ uid: cb.dataset.uid, name: cb.dataset.name }));
+      if (selected.length === 0) { alert('送信対象を 1名以上 選択してください'); return; }
+      const tpl = document.getElementById('fp-dormant-msg').value.trim();
+      if (!tpl) { alert('メッセージが空です'); return; }
+      if (!confirm(`${selected.length}名 に 一斉送信します。よろしいですか?\n\n⚠ 送信後は取消できません。`)) return;
+      const btn = document.getElementById('fp-dormant-send');
+      const result = document.getElementById('fp-dormant-result');
+      btn.disabled = true; btn.textContent = '送信中...';
+      let ok = 0, fail = 0;
+      for (const s of selected) {
+        const text = tpl.replace(/\{name\}/g, s.name);
+        try {
+          const r = await fetch(CLOUD_RUN_BASE + '/api/send-line', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: s.uid, text }),
+          });
+          const d = await r.json();
+          if (d.ok) ok++; else fail++;
+        } catch (_) { fail++; }
+        // レート制限対策 200ms 待つ
+        await new Promise(res => setTimeout(res, 200));
+      }
+      result.innerHTML = `<div style="background:${fail===0?'#F0FDF4':'#FEF3C7'};border:1px solid ${fail===0?'#10B981':'#F59E0B'};color:${fail===0?'#065F46':'#92400E'};padding:14px 18px;border-radius:8px;font-size:13px;font-weight:700;">✓ 送信完了: 成功 ${ok}名 / 失敗 ${fail}名</div>`;
+      btn.disabled = false; btn.textContent = '✨ 選択した方に一斉送信';
     });
   }
 
@@ -1427,14 +1588,15 @@
       // ※ Zoom popup が閉じても自動停止しない (誤検知防止のため監視機能を撤廃)
       // 停止は「Chrome 共有を停止」 or 「メモの完了ボタン」 でのみ実行
       const booking = ((liveData && liveData.bookings) || []).find(b => String(b.ts).slice(0,19) === String(bookingTs).slice(0,19));
-      // メモを別ポップアップウィンドウとして開く (CRM とは別ウィンドウ=Zoomを隠さない)
-      const memoFeatures = `width=${memoW},height=${sh},left=0,top=0,toolbar=no,location=no,menubar=no,status=no,scrollbars=yes,resizable=yes`;
+      // ★ オーナーfb: popup ウィンドウだと Zoom と z-order 競合で潜る。物理タブ (同じ Chrome ウィンドウ内の新タブ) に変更。
+      // tab だと Chrome のタブストリップから手動で切り替え or ドラッグでウィンドウ分離可能。CRM 親と同じウィンドウなので focus 問題ゼロ。
       const memoKey = 'fp-memo-' + (bookingTs || '');
       const tasksKey = 'fp-tasks-' + ((booking && booking.userId) || bookingTs);
       const memoQuery = `?v=${Date.now()}&memoKey=${encodeURIComponent(memoKey)}&tasksKey=${encodeURIComponent(tasksKey)}&name=${encodeURIComponent((booking && booking.name) || 'お客様')}&baseDate=${encodeURIComponent((booking && booking.date) || '')}&bookingTs=${encodeURIComponent(bookingTs || '')}`;
-      // 既存メモウィンドウがあれば一旦 close して 強制的に新HTMLを再読込
+      // 既存メモタブがあれば一旦 close
       try { if (window._fpMemoWin && !window._fpMemoWin.closed) window._fpMemoWin.close(); } catch (_) {}
-      window._fpMemoWin = window.open('memo-popup.html' + memoQuery, '_blank', memoFeatures);
+      // features 空文字列 = 通常タブとして開く (popup ではなく)
+      window._fpMemoWin = window.open('memo-popup.html' + memoQuery, '_blank');
       if (!window._fpMemoWin) {
         // ポップアップブロック時はフォールバックで CRM 内モーダル
         localStorage.setItem('fp-memo-pos', JSON.stringify({ left: 0, top: 0 }));

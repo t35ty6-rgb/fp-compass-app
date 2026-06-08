@@ -616,6 +616,11 @@
           <i data-lucide="send"></i>
           <span>配信</span>
         </div>
+        <div class="tab tab-line" data-tab="dormantFollowup">
+          <i data-lucide="alarm-clock"></i>
+          <span>ご無沙汰フォロー</span>
+          <span class="nav-count nav-count-alert" id="nav-count-dormant"></span>
+        </div>
         <div class="tab tab-line" data-tab="birthdayTab">
           <i data-lucide="cake"></i>
           <span>誕生日</span>
@@ -950,6 +955,11 @@
           <div data-line-view="settingsHub"></div>
         </section>
 
+        <!-- ===== ご無沙汰フォロー ===== -->
+        <section class="view" data-view="dormantFollowup">
+          <div data-line-view="dormantFollowup"></div>
+        </section>
+
       </div>
     </main>
   </div>
@@ -985,7 +995,7 @@ window.fpReadyAfterAuth = function() {
   ];
   legacyDemoKeys.forEach(k => { try { localStorage.removeItem(k); } catch (_) {} });
 
-  const ver = "20260608N-memo-zoom-raise";
+  const ver = "20260608O-dormant-tab";
   const scripts = [
     "life-events.js?v=" + ver,
     "recommender.js?v=" + ver,
@@ -1118,14 +1128,10 @@ window.fpReadyAfterAuth = function() {
     document.querySelector('.tab[data-tab="distributionHub"]')?.click();
   });
 
-  // Stale cache diagnostic banner — DUMMY_CLIENTS_VERSION 未定義なら古い JS 読込中
+  // ★ オーナーfb: 「古いキャッシュ警告バナー」は誤動作 + 「最新読み込む」も効かないので撤去
+  // バージョン badge (右下) で十分。DUMMY_CLIENTS_VERSION チェックは console.log だけ残す
   setTimeout(function () {
-    if (!window.DUMMY_CLIENTS_VERSION) {
-      var bar = document.createElement('div');
-      bar.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#DC2B2B;color:#fff;padding:12px 16px;text-align:center;font-family:Manrope,"Noto Sans JP",sans-serif;font-size:13px;font-weight:600;line-height:1.5;box-shadow:0 4px 16px rgba(220,43,43,0.3);';
-      bar.innerHTML = '⚠ 古いキャッシュで動作中です (LINE履歴など最新機能が見えません)。<button onclick="var u=new URL(location.href);u.searchParams.set(\'nocache\',Date.now().toString(36));location.replace(u.toString());" style="margin-left:12px;background:#fff;color:#DC2B2B;border:none;padding:6px 14px;border-radius:6px;font-weight:700;cursor:pointer;font-family:inherit;font-size:12.5px;">▶ 最新を読み込む</button>';
-      document.body.appendChild(bar);
-    } else {
+    if (window.DUMMY_CLIENTS_VERSION) {
       console.log('[FP Compass] DUMMY_CLIENTS_VERSION:', window.DUMMY_CLIENTS_VERSION);
     }
     // ⚠ デバッグチップは window.FP_DEBUG=true の時のみ
@@ -1168,6 +1174,9 @@ window.fpReadyAfterAuth = function() {
     const bdayCount = clients.filter(c => c.birth && (new Date(c.birth).getMonth() + 1) === m).length;
     setText('nav-count-bday', bdayCount);
     setText('nav-count-cal', clients.length > 5 ? 4 : '');
+    // ご無沙汰フォロー: LINE連携 + 21日以上未接触
+    const dormantCount = clients.filter(c => c.lineFriendId && c.lastContact && daysFn(c.lastContact) >= 21).length;
+    setText('nav-count-dormant', dormantCount);
   }
   setTimeout(updateNavCounts, 800);
   setInterval(updateNavCounts, 5000);
@@ -1286,7 +1295,7 @@ window.fpReadyAfterAuth = function() {
 <script>
 (function(){
   // 最新の ver を 1 箇所に集約 (fpReadyAfterAuth 側と一致させる必要あり)
-  const FP_VERSION = "20260608N-memo-zoom-raise";
+  const FP_VERSION = "20260608O-dormant-tab";
   const loadTime = new Date();
   const hhmm = String(loadTime.getHours()).padStart(2,'0') + ':' + String(loadTime.getMinutes()).padStart(2,'0');
   const dateLabel = (FP_VERSION.match(/^(\d{4})(\d{2})(\d{2})/) || []).slice(1).join('/').replace(/^(\d{4})\//,'$1/').replace(/\/(\d{2})\/(\d{2})$/,'/$1/$2') || FP_VERSION;
