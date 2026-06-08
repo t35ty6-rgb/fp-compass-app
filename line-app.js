@@ -3256,23 +3256,26 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
       btn.addEventListener('click', async () => {
         const ts = btn.dataset.recStart;
         const zoomUrl = btn.dataset.zoom;
-        // ★ オーナーfb (v AG): 前回 全画面で Zoom popup 開いてたら 画面共有ダイアログを覆って選択不可になってた。
-        // 修正: pre-open は 小さく 隅に置く → CRM に focus 戻す → ダイアログ見える状態に → 後で 全画面 resize+move
+        // ★ オーナーfb (v AH): Zoom pre-open popup が画面共有ダイアログを覆ってた。
+        // 修正: pre-open は 画面外/極小 で 開いて 即 blur + CRM focus 戻し。 ユーザには見えないように。
         const sw = window.screen.availWidth || screen.width;
         const sh = window.screen.availHeight || screen.height;
-        // 小窓: 右上隅、 400x300。 ダイアログを覆わない
-        const preW = 400, preH = 300;
-        const preZoomFeatures = `width=${preW},height=${preH},left=${sw - preW - 20},top=20,toolbar=no,location=no,menubar=no,status=no,scrollbars=yes,resizable=yes`;
+        // 極小+画面外: 200x100 を screen の右下 さらに先 (見えない位置)
+        const preZoomFeatures = `popup=yes,width=200,height=100,left=${sw - 1},top=${sh - 1},toolbar=no,location=no,menubar=no,status=no,scrollbars=no,resizable=yes`;
         const preZoomWin = window.open('about:blank', 'fp-zoom-win', preZoomFeatures);
         if (preZoomWin) {
           try {
-            preZoomWin.document.title = 'Zoom — 準備中...';
-            preZoomWin.document.body.innerHTML = '<div style="font-family:sans-serif;padding:30px 20px;text-align:center;background:#0F172A;color:#fff;min-height:100vh;box-sizing:border-box;"><div style="font-size:32px;margin-bottom:10px;">⏳</div><strong style="font-size:15px;">Zoom 準備中</strong><div style="margin-top:10px;font-size:11px;opacity:0.85;line-height:1.6;">↙ 左下の画面共有<br>ダイアログを許可</div></div>';
+            preZoomWin.document.title = 'Zoom 準備中...';
+            preZoomWin.document.body.innerHTML = '<div style="font-family:sans-serif;padding:10px;background:#0F172A;color:#fff;font-size:11px;text-align:center;">⏳ 準備中</div>';
+            // 即 blur → CRM focus 戻し
+            preZoomWin.blur();
           } catch (_) {}
         }
-        // CRM に focus 戻す → getDisplayMedia ダイアログが見える状態に
+        try { window.focus(); window.opener?.focus?.(); document.body.click(); } catch (_) {}
+        // 確実に CRM が前面に来てから getDisplayMedia 走らせる (microtask 一発噛ます)
+        await new Promise(r => setTimeout(r, 50));
         try { window.focus(); } catch (_) {}
-        console.log('[layout] pre-open zoom 小窓(右上 ' + preW + 'x' + preH + ') / CRM focus 戻し済');
+        console.log('[layout] pre-open zoom (極小+画面外) + CRM focus 戻し済');
         await startScreenRecording(ts, zoomUrl, { preZoomWin });
         await fetchLiveData();
         renderLeadHubInner();
