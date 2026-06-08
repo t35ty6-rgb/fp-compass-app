@@ -1795,11 +1795,16 @@
         if (!ok) { stream.getTracks().forEach(t => t.stop()); return; }
       }
 
-      // 共有OK → Zoom popup + メモ展開
+      // ★ オーナーfb: 全体のウィンドウ配置を整理。memo は PiP (always-on-top の小窓) になったので、
+      // Zoom は画面のほぼ全面に大きく開く。CRM 親は裏に回る。PiP memo が右上に浮く。
       const sw = window.screen.availWidth || screen.width;
       const sh = window.screen.availHeight || screen.height;
-      const memoW = Math.floor(sw / 4);
-      const zoomW = sw - memoW;
+      // Zoom: 画面の 92% を使う (上下左右に余白 4%) — 大きく快適に
+      const zoomW = Math.floor(sw * 0.92);
+      const zoomH = Math.floor(sh * 0.92);
+      const zoomLeft = Math.floor((sw - zoomW) / 2);
+      const zoomTop = Math.floor((sh - zoomH) / 2);
+      const memoW = 0; // (互換用、 旧 fallback path で使うことがあるので 0 で残す)
       const zoomBrowserUrl = (function() {
         try {
           const m = (zoomUrl || '').match(/zoom\.us\/j\/(\d+)(\?.*)?/);
@@ -1808,7 +1813,7 @@
           return `https://${host}/wc/join/${m[1]}${m[2] || ''}`;
         } catch (_) { return zoomUrl; }
       })();
-      const zoomFeatures = `width=${zoomW},height=${sh},left=${memoW},top=0,toolbar=no,location=no,menubar=no,status=no,scrollbars=yes,resizable=yes`;
+      const zoomFeatures = `width=${zoomW},height=${zoomH},left=${zoomLeft},top=${zoomTop},toolbar=no,location=no,menubar=no,status=no,scrollbars=yes,resizable=yes`;
       const zoomWin = window.open(zoomBrowserUrl, 'fp-zoom-win', zoomFeatures);
       if (!zoomWin) window.open(zoomBrowserUrl, '_blank');
       // Zoom が閉じられたら自動で録画停止 (切り忘れ防止)
@@ -1939,7 +1944,9 @@
       showRecordingBorder();
       fetch(CLOUD_RUN_BASE + '/api/recording/start?ts=' + encodeURIComponent(bookingTs), { method: 'POST' }).catch(() => {});
       showRecordingPill();
-      showFixedCompleteButton(); // 画面下に常時表示の完了ボタン
+      // ★ オーナーfb: CRM下の「面談完了バー」 と memo PiP の完了ボタンが重複していたので CRMバー廃止。
+      // 完了ボタンは memo PiP に集約 (PiP は always-on-top で常に見える)。REC ピル(右上)も停止ボタン有り。
+      // showFixedCompleteButton(); // 旧: 画面下バー廃止 — memo PiP で十分
     } catch (e) {
       hidePickerHint();
       // キャンセル時は事前に開いた PiP も閉じる
