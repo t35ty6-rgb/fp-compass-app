@@ -97,6 +97,12 @@
     </div>
 
     <button id="fp-gate-btn">ログイン</button>
+    <!-- ★ オーナーfb: 0円 デモ申込ボタン (URL に ?demo=1 で signup タブが押されたら表示) -->
+    <div id="fp-row-demo" style="display:none;margin-top:14px;padding:14px 16px;background:linear-gradient(135deg,rgba(16,185,129,0.18),rgba(5,150,105,0.14));border:1px solid rgba(16,185,129,0.55);border-radius:10px;text-align:center;">
+      <div style="font-size:11px;font-weight:800;letter-spacing:0.12em;color:#86EFAC;margin-bottom:4px;">✨ DEMO MODE</div>
+      <div style="font-size:13px;color:#fff;line-height:1.55;margin-bottom:10px;">¥0 で全機能を体験できます<br><span style="font-size:11px;opacity:0.85;">カード入力不要 / 後で有料プランへ切替可</span></div>
+      <button id="fp-demo-signup-btn" type="button" style="background:#10B981;color:#fff;border:none;padding:11px 22px;border-radius:7px;font-size:13px;font-weight:900;cursor:pointer;font-family:inherit;letter-spacing:0.06em;width:100%;box-shadow:0 4px 14px rgba(16,185,129,0.4);">¥0 デモ申込 →</button>
+    </div>
     <div id="fp-gate-msg"></div>
     <div id="fp-gate-help">サポート → <a href="mailto:support@skeleton-inc.jp">support@skeleton-inc.jp</a></div>
     <div id="fp-gate-legal" style="margin-top:14px;font-size:11px;opacity:0.65;text-align:center;line-height:1.7;">
@@ -226,6 +232,7 @@
     $("fp-row-pwconfirm").style.display = m === "signup" ? "" : "none";
     $("fp-row-terms").style.display = m === "signup" ? "" : "none";
     $("fp-row-forgot").style.display = m === "signup" ? "none" : "";
+    $("fp-row-demo").style.display = m === "signup" ? "" : "none";
     $("fp-gate-btn").textContent = m === "signup" ? "アカウント作成" : "ログイン";
     $("fp-pw-input").setAttribute("autocomplete", m === "signup" ? "new-password" : "current-password");
     $("fp-gate-sub").textContent = $("fp-gate-sub").dataset[m];
@@ -233,6 +240,15 @@
   }
   $("fp-tab-login").addEventListener("click", () => setMode("login"));
   $("fp-tab-signup").addEventListener("click", () => setMode("signup"));
+  // ★ 0円 デモ申込ボタン → フラグ立てて signup フロー (既存の createCheckoutSession 経路) が demo:true を渡す
+  $("fp-demo-signup-btn").addEventListener("click", () => {
+    sessionStorage.setItem('fpDemoSignup', '1');
+    $("fp-gate-btn").click();
+  });
+  // ?demo=1 で来たら自動で signup タブを開く
+  if (new URL(location.href).searchParams.get('demo') === '1') {
+    setMode("signup");
+  }
 
   // パスワードリセット導線
   $("fp-forgot-link").addEventListener("click", async (e) => {
@@ -328,8 +344,12 @@
         // ★ サインアップ成功 → Stripe Checkout へリダイレクト
         msg("ok", "アカウント作成完了。 決済画面に進みます…");
         try {
+          // ★ デモモード: URL に ?demo=1 or sessionStorage に demoSignup=1 があれば 0円フロー
+          const isDemoSignup = new URL(window.location.href).searchParams.get('demo') === '1'
+                            || sessionStorage.getItem('fpDemoSignup') === '1';
           const createSession = httpsCallable(functions, "createCheckoutSession");
-          const result = await createSession({});
+          const result = await createSession({ demo: isDemoSignup });
+          sessionStorage.removeItem('fpDemoSignup');
           if (result.data?.url) {
             window.location.href = result.data.url;
             return;
@@ -1000,7 +1020,7 @@ window.fpReadyAfterAuth = function() {
   ];
   legacyDemoKeys.forEach(k => { try { localStorage.removeItem(k); } catch (_) {} });
 
-  const ver = "20260608U-tag-pill-empty";
+  const ver = "20260608V-demo-checkout";
   const scripts = [
     "life-events.js?v=" + ver,
     "recommender.js?v=" + ver,
@@ -1300,7 +1320,7 @@ window.fpReadyAfterAuth = function() {
 <script>
 (function(){
   // 最新の ver を 1 箇所に集約 (fpReadyAfterAuth 側と一致させる必要あり)
-  const FP_VERSION = "20260608U-tag-pill-empty";
+  const FP_VERSION = "20260608V-demo-checkout";
   const loadTime = new Date();
   const hhmm = String(loadTime.getHours()).padStart(2,'0') + ':' + String(loadTime.getMinutes()).padStart(2,'0');
   const dateLabel = (FP_VERSION.match(/^(\d{4})(\d{2})(\d{2})/) || []).slice(1).join('/').replace(/^(\d{4})\//,'$1/').replace(/\/(\d{2})\/(\d{2})$/,'/$1/$2') || FP_VERSION;
