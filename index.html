@@ -118,7 +118,7 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
   import {
     getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword,
-    onAuthStateChanged, signOut, setPersistence, browserLocalPersistence,
+    onAuthStateChanged, signOut, setPersistence, browserSessionPersistence,
   } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
   import {
     getFirestore, doc, getDoc, setDoc, serverTimestamp, collection, getDocs, addDoc,
@@ -149,7 +149,8 @@
   const auth = getAuth(app);
   const db = getFirestore(app);
   const functions = getFunctions(app, "asia-northeast1");
-  setPersistence(auth, browserLocalPersistence).catch(console.error);
+  // ★ オーナーfb: 「勝手にログインまでしなくていい」 → タブ閉じると自動でログアウト (session 限定)
+  setPersistence(auth, browserSessionPersistence).catch(console.error);
   window.__fp = { auth, db, functions, signOut };
 
   // ===== audit log (重要操作の記録) =====
@@ -1020,7 +1021,7 @@ window.fpReadyAfterAuth = function() {
   ];
   legacyDemoKeys.forEach(k => { try { localStorage.removeItem(k); } catch (_) {} });
 
-  const ver = "20260608V-demo-checkout";
+  const ver = "20260608W-no-auto-login";
   const scripts = [
     "life-events.js?v=" + ver,
     "recommender.js?v=" + ver,
@@ -1320,7 +1321,7 @@ window.fpReadyAfterAuth = function() {
 <script>
 (function(){
   // 最新の ver を 1 箇所に集約 (fpReadyAfterAuth 側と一致させる必要あり)
-  const FP_VERSION = "20260608V-demo-checkout";
+  const FP_VERSION = "20260608W-no-auto-login";
   const loadTime = new Date();
   const hhmm = String(loadTime.getHours()).padStart(2,'0') + ':' + String(loadTime.getMinutes()).padStart(2,'0');
   const dateLabel = (FP_VERSION.match(/^(\d{4})(\d{2})(\d{2})/) || []).slice(1).join('/').replace(/^(\d{4})\//,'$1/').replace(/\/(\d{2})\/(\d{2})$/,'/$1/$2') || FP_VERSION;
