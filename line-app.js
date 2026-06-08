@@ -308,7 +308,13 @@
   function renderDormantInner() {
     const v = document.querySelector('[data-line-view="dormantFollowup"]');
     if (!v) return;
-    const clients = (window.DUMMY_CLIENTS || []).filter(c => c.lineFriendId); // LINE連携客のみ
+    const allClients = (window.DUMMY_CLIENTS || []).filter(c => c.lineFriendId); // LINE連携客のみ
+    // タグフィルタ (state)
+    const tagsMaster = (window.FpApp && window.FpApp.getTagsMaster) ? window.FpApp.getTagsMaster() : [];
+    const activeTagFilter = window._fpDormantTagFilter || null; // null = 全員, 'tag-id' = そのタグ持ち
+    const clients = activeTagFilter
+      ? allClients.filter(c => (window.FpApp.getClientTags(c.id) || []).includes(activeTagFilter))
+      : allClients;
     const enriched = clients.map(c => ({ c, days: daysSinceLastContact(c) })).filter(x => x.days >= 21);
     enriched.sort((a, b) => b.days - a.days);
 
@@ -355,12 +361,26 @@
 
 また落ち着いてお話できる機会、楽しみにしてます ✨`;
 
+    // タグフィルタ UI
+    const tagFilterHtml = tagsMaster.length === 0 ? '' : `
+      <div style="background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <span style="font-size:11px;font-weight:800;color:#475569;letter-spacing:0.06em;">🏷 タグで絞る:</span>
+        <button data-tag-filter="" style="background:${!activeTagFilter ? '#0F172A' : 'transparent'};color:${!activeTagFilter ? '#fff' : '#64748B'};border:1px solid ${!activeTagFilter ? '#0F172A' : '#E2E8F0'};padding:5px 12px;border-radius:999px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">全員 (${allClients.filter(c => daysSinceLastContact(c) >= 21).length})</button>
+        ${tagsMaster.map(t => {
+          const n = allClients.filter(c => (window.FpApp.getClientTags(c.id) || []).includes(t.id) && daysSinceLastContact(c) >= 21).length;
+          const on = activeTagFilter === t.id;
+          return `<button data-tag-filter="${t.id}" style="background:${on ? t.color : t.color+'1A'};color:${on ? '#fff' : t.color};border:1px solid ${t.color}${on ? '' : '55'};padding:5px 12px;border-radius:999px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">${escapeHtml(t.label)} (${n})</button>`;
+        }).join('')}
+      </div>
+    `;
+
     v.innerHTML = `
       <div class="page" style="max-width:920px;">
         <header class="page-head" style="margin-bottom:16px;">
           <h1 class="page-title"><i data-lucide="alarm-clock" style="vertical-align:middle;margin-right:8px;"></i>ご無沙汰フォロー</h1>
-          <p class="page-sub">21日以上 LINE で連絡してない方を期間ごとに表示。テンプレ編集 → 全員に1クリック送信。</p>
+          <p class="page-sub">21日以上 LINE で連絡してない方を期間ごとに表示。テンプレ編集 → 全員に1クリック送信。${activeTagFilter ? `<span style="color:#5B5BF0;font-weight:700;"> · タグ「${escapeHtml((tagsMaster.find(t => t.id === activeTagFilter) || {}).label || '')}」 で絞り込み中</span>` : ''}</p>
         </header>
+        ${tagFilterHtml}
 
         ${enriched.length === 0 ? `
           <div style="background:#F0FDF4;border:1px solid #10B981;color:#065F46;padding:24px;border-radius:10px;text-align:center;font-size:14px;font-weight:600;">
@@ -394,6 +414,15 @@
       </div>
     `;
     if (window.lucide) lucide.createIcons();
+
+    // タグフィルタボタン
+    v.querySelectorAll('[data-tag-filter]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.tagFilter;
+        window._fpDormantTagFilter = id || null;
+        renderDormantInner();
+      });
+    });
 
     if (enriched.length === 0) return;
 

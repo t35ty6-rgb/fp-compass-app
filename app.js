@@ -1870,21 +1870,60 @@
         </div>
       `;
 
-      // 全イベント (面談+タスク) 折り畳み
-      const renderEventRow = (ev) => {
-        const rel = window.LifeEvents.formatRelative(ev.date);
-        return `<div class="cd-tl-row">
-          <span class="cd-tl-dot cd-cat-${ev.cat}${ev.major ? ' major' : ''}"></span>
-          <span class="cd-tl-date">${fmtDate(ev.date)}</span>
-          <span class="cd-tl-label">${escapeHtml(ev.label)}</span>
-          <span class="cd-tl-rel">${rel}</span>
-        </div>`;
+      // ★ オーナーfb: 全体タイムラインと同じカード形式に統一 (月別グループ → カード並び)
+      const allEvents = events.slice(0, 60);
+      const byMonth = {};
+      allEvents.forEach(ev => {
+        const d = ev.date instanceof Date ? ev.date : new Date(ev.date);
+        if (isNaN(d)) return;
+        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        (byMonth[key] = byMonth[key] || []).push({ ...ev, _d: d });
+      });
+      const monthRelLocal = (y, m) => {
+        const target = new Date(y, m - 1, 1);
+        const todayD = window.LifeEvents.TODAY;
+        const cur = new Date(todayD.getFullYear(), todayD.getMonth(), 1);
+        const dm = (target.getFullYear() - cur.getFullYear()) * 12 + (target.getMonth() - cur.getMonth());
+        if (dm === 0) return '今月';
+        if (dm === 1) return '来月';
+        if (dm > 0 && dm < 12) return `${dm}ヶ月後`;
+        if (dm < 0 && dm > -12) return `${-dm}ヶ月前`;
+        if (dm >= 12) return `${(dm/12).toFixed(1)}年後`;
+        return `${(-dm/12).toFixed(1)}年前`;
       };
-      const allEvents = events.slice(0, 30);
+      const monthsHtml = Object.keys(byMonth).sort().map(key => {
+        const [y, m] = key.split('-');
+        const monthEvents = byMonth[key];
+        const cardsHtml = monthEvents.map(ev => `
+          <div style="display:flex;align-items:stretch;gap:0;background:#fff;border:1px solid var(--line);border-radius:8px;margin-bottom:6px;overflow:hidden;">
+            <div style="width:5px;background:${ev.major ? '#DC2626' : (ev.cat === 'finance' ? '#5B5BF0' : ev.cat === 'education' ? '#0EA5E9' : ev.cat === 'retirement' ? '#EA580C' : ev.cat === 'family' ? '#CA8A04' : ev.cat === 'health' ? '#10B981' : '#94A3B8')};flex-shrink:0;"></div>
+            <div style="flex:1;padding:12px 16px;display:flex;align-items:center;gap:14px;min-width:0;">
+              <span style="font-family:'Inter',sans-serif;font-weight:800;font-size:12px;color:#475569;font-variant-numeric:tabular-nums;flex-shrink:0;width:42px;">${ev._d.getMonth()+1}/${ev._d.getDate()}</span>
+              <span style="flex:1;font-size:13.5px;font-weight:700;color:#0F172A;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(ev.label)}${ev.major ? ' <span style="background:#DC2626;color:#fff;font-size:9.5px;font-weight:900;padding:2px 7px;border-radius:8px;letter-spacing:0.06em;margin-left:6px;">重要</span>' : ''}</span>
+              ${ev.who && ev.who !== c.name ? `<span style="font-size:11px;color:#64748B;flex-shrink:0;">対象: ${escapeHtml(ev.who)}</span>` : ''}
+            </div>
+          </div>
+        `).join('');
+        const monthLabel = `${y}年${parseInt(m, 10)}月`;
+        const rel = monthRelLocal(parseInt(y, 10), parseInt(m, 10));
+        return `
+          <div style="margin-bottom:18px;">
+            <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid #E2E8F0;">
+              <span style="font-family:'Noto Serif JP',serif;font-weight:800;font-size:15px;color:#0F172A;letter-spacing:-0.01em;">${monthLabel}</span>
+              <span style="font-size:10.5px;color:#5B5BF0;background:#EEF2FF;padding:2px 8px;border-radius:10px;font-weight:700;">${rel}</span>
+              <span style="margin-left:auto;font-size:11px;color:#94A3B8;font-weight:600;">${monthEvents.length} 件</span>
+            </div>
+            ${cardsHtml}
+          </div>
+        `;
+      }).join('');
       const eventsFold = allEvents.length === 0 ? '' : `
-        <div style="background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-top:8px;">
-          <div style="font-size:12px;color:var(--muted);font-weight:700;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:10px;">📅 タイムライン (面談 + タスク + ライフイベント · ${allEvents.length}件)</div>
-          <div style="position:relative;padding-left:16px;border-left:2px solid var(--line);">${allEvents.map(renderEventRow).join('')}</div>
+        <div style="background:linear-gradient(180deg,#FAFBFC,#F1F5F9);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin-top:8px;">
+          <div style="font-size:11px;color:var(--muted);font-weight:800;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;">
+            <span>📅 ライフイベント・タイムライン</span>
+            <span style="font-family:'Inter',sans-serif;letter-spacing:0.04em;color:#5B5BF0;text-transform:none;font-size:11px;">${allEvents.length} 件 (最大60件)</span>
+          </div>
+          ${monthsHtml}
         </div>
       `;
 
@@ -1998,6 +2037,12 @@
               <dt>家族</dt><dd>${familyShort}</dd>
               ${c.mortgage ? `<dt>住宅ローン</dt><dd>残${c.mortgage.remainingYears}年 / 月¥${c.mortgage.monthly.toLocaleString()}</dd>` : ''}
             </dl>
+          </div>
+
+          <!-- ★ オーナーfb: FPが自由に作るタグ機能 -->
+          <div class="cd-profile-section" id="cd-tags-section" data-client-id="${escapeHtml(c.id)}">
+            <div class="cd-section-label">🏷 タグ <button id="cd-tags-edit" style="margin-left:8px;background:transparent;border:1px solid var(--line);color:var(--muted);font-size:10px;padding:2px 8px;border-radius:5px;cursor:pointer;">+ 追加 / 編集</button></div>
+            <div id="cd-tags-list" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;"></div>
           </div>
 
           <div class="cd-profile-section">
@@ -2165,7 +2210,8 @@
                   <span class="cd-line-stat"><i data-lucide="arrow-down-left"></i>受信 <strong id="cd-line-in">${(c.lineHistory || []).filter(m => m.direction === 'in').length}</strong></span>
                   <span class="cd-line-stat"><i data-lucide="arrow-up-right"></i>送信 <strong id="cd-line-out">${(c.lineHistory || []).filter(m => m.direction === 'out').length}</strong></span>
                 </div>
-                <button class="cd-line-new" data-line-ai="${c.id}"><i data-lucide="wand-2"></i><span>AI下書き</span></button>
+                <button class="cd-line-new" data-line-ai="${c.id}"><i data-lucide="wand-2"></i><span>AI下書き (Jobs提案)</span></button>
+                <button class="cd-line-new" data-line-brief="${c.id}" style="background:#10B981;color:#fff;margin-left:6px;"><i data-lucide="edit-3"></i><span>✍ 伝えたいことから下書き</span></button>
               </div>
               ${(function(){
                 // ★ オーナーfb「客返信に対する AI 生成 ボタンが分かりづらい」: LINE履歴タブ内に大きな AI返信案ボタン
@@ -2287,6 +2333,10 @@
       closeModal();
       openClientForm(c.id);
     });
+    // ★ タグ機能: render + 編集ボタン
+    renderClientTags(c.id);
+    const tagsEditBtn = document.getElementById('cd-tags-edit');
+    if (tagsEditBtn) tagsEditBtn.addEventListener('click', () => openTagEditor(c.id));
     const draftBtn = document.getElementById('modal-draft-btn');
     if (draftBtn) draftBtn.addEventListener('click', () => {
       openDraftReplyModal(c, events, recs);
@@ -2362,6 +2412,10 @@
     // 「AI下書き」 → AI Action Brief を開く
     document.querySelectorAll('[data-line-ai]').forEach(btn => {
       btn.addEventListener('click', () => openDraftReplyModal(c, events, recs));
+    });
+    // ★ 「✍ 伝えたいことから下書き」 → 簡易ブリーフ Modal
+    document.querySelectorAll('[data-line-brief]').forEach(btn => {
+      btn.addEventListener('click', () => openBriefDraftModal(c));
     });
     // ★ AI で返信案 を 1 クリック生成 (textarea に挿入、 編集して送信)
     const aiQuickBtn = document.getElementById('cd-line-ai-quick');
@@ -3901,6 +3955,113 @@
         <textarea style="width:100%;min-height:200px;font-family:'Noto Sans JP',sans-serif;font-size:13px;line-height:1.7;padding:12px;border:1px solid #E2E8F0;border-radius:6px;" placeholder="このお客様向けに作成したい資料の内容を記入..."></textarea>
       </div>
     </div>`;
+  }
+
+  // ============================
+  // ✍ 「伝えたいことから下書き」 — FP が短く意図を書く → AI が LINE 下書きに整える
+  // generateLineReply(hint=brief) を流用
+  // ============================
+  function openBriefDraftModal(client) {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.62);backdrop-filter:blur(4px);z-index:10060;display:flex;align-items:center;justify-content:center;padding:20px;font-family:"Noto Sans JP",sans-serif;';
+    overlay.innerHTML = `
+      <div style="background:#fff;max-width:640px;width:100%;border-radius:14px;box-shadow:0 24px 60px rgba(0,0,0,0.35);overflow:hidden;">
+        <div style="background:linear-gradient(135deg,#10B981,#059669);color:#fff;padding:18px 24px;display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div style="font-size:10px;font-weight:800;letter-spacing:0.22em;opacity:0.85;">FP → CUSTOMER</div>
+            <h3 style="margin:4px 0 0 0;font-size:16px;font-weight:900;">✍ ${escapeHtml(client.name)}様 への LINE 下書き</h3>
+          </div>
+          <button id="fp-brief-close" style="background:rgba(255,255,255,0.2);border:none;color:#fff;width:34px;height:34px;border-radius:6px;cursor:pointer;font-size:18px;">✕</button>
+        </div>
+        <div style="padding:22px 24px;">
+          <div style="font-size:11px;font-weight:800;color:#475569;letter-spacing:0.06em;margin-bottom:8px;">📝 伝えたいことを 1-2 行で書く</div>
+          <textarea id="fp-brief-input" rows="3" placeholder="例: 相続のテーマで来月会いたい / 新NISAの配分見直しを提案したい / お子様の進学費用シミュ作ってある旨を伝えたい" style="width:100%;padding:12px 14px;border:1.5px solid #E2E8F0;border-radius:8px;font-size:13.5px;font-family:inherit;line-height:1.7;resize:vertical;box-sizing:border-box;"></textarea>
+          <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center;gap:10px;">
+            <div style="font-size:10.5px;color:#94A3B8;">AI が ${escapeHtml(client.name)}様の家族構成 / 議事録 / LINE履歴 を踏まえて整える</div>
+            <button id="fp-brief-gen" style="background:linear-gradient(135deg,#10B981,#059669);color:#fff;border:none;padding:11px 22px;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:0.04em;box-shadow:0 4px 14px rgba(16,185,129,0.35);">✨ AI で下書き生成</button>
+          </div>
+
+          <div id="fp-brief-result" style="display:none;margin-top:20px;border-top:1px dashed #E2E8F0;padding-top:18px;">
+            <div style="font-size:11px;font-weight:800;color:#475569;letter-spacing:0.06em;margin-bottom:8px;">✏ 生成された下書き (編集可)</div>
+            <textarea id="fp-brief-output" rows="9" style="width:100%;padding:14px 16px;border:1.5px solid #10B981;border-radius:8px;font-size:13.5px;font-family:inherit;line-height:1.75;resize:vertical;box-sizing:border-box;background:#F0FDF4;"></textarea>
+            <div style="display:flex;gap:8px;margin-top:12px;">
+              <button id="fp-brief-send" style="background:#06C755;color:#fff;border:none;padding:11px 22px;border-radius:6px;font-size:13px;font-weight:900;cursor:pointer;font-family:inherit;letter-spacing:0.04em;flex:1;">📤 LINE 送信</button>
+              <button id="fp-brief-copy" style="background:#fff;color:#0F172A;border:1px solid #E2E8F0;padding:11px 18px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">📋 コピー</button>
+              <button id="fp-brief-regen" style="background:transparent;color:#10B981;border:1px solid #10B981;padding:11px 18px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">🔄 再生成</button>
+            </div>
+            <div id="fp-brief-msg" style="margin-top:10px;font-size:12px;font-weight:700;"></div>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    overlay.querySelector('#fp-brief-close').addEventListener('click', () => overlay.remove());
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+
+    async function generate() {
+      const brief = overlay.querySelector('#fp-brief-input').value.trim();
+      if (!brief) { alert('伝えたいことを入力してください'); return; }
+      const btn = overlay.querySelector('#fp-brief-gen');
+      btn.disabled = true; btn.innerHTML = '生成中...';
+      try {
+        if (!window.__fp?.functions) throw new Error('Cloud Functions 未初期化');
+        const { httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-functions.js');
+        const fn = httpsCallable(window.__fp.functions, 'generateLineReply');
+        const ctxParts = [];
+        if (client.birth) ctxParts.push(`生年: ${client.birth}`);
+        if (client.occupation) ctxParts.push(`職業: ${client.occupation}`);
+        if (client.family?.length) ctxParts.push(`家族: ${client.family.map(f => f.rel + ' ' + (f.name||'')).join(' / ')}`);
+        if (client.aum) ctxParts.push(`AUM: ¥${(client.aum/10000).toFixed(0)}万`);
+        const result = await fn({
+          customerId: client.id,
+          customerName: client.name || 'お客様',
+          customerContext: ctxParts.join(' / '),
+          lineHistory: (client.lineHistory || []).slice(-12),
+          hint: brief,
+        });
+        const reply = result.data?.reply;
+        if (!reply) throw new Error('AI 応答が空です');
+        overlay.querySelector('#fp-brief-output').value = reply;
+        overlay.querySelector('#fp-brief-result').style.display = 'block';
+        overlay.querySelector('#fp-brief-msg').textContent = '';
+        btn.disabled = false; btn.innerHTML = '✨ AI で下書き生成';
+      } catch (e) {
+        overlay.querySelector('#fp-brief-msg').innerHTML = `<span style="color:#DC2626;">❌ ${escapeHtml(e.message || String(e))}</span>`;
+        btn.disabled = false; btn.innerHTML = '✨ AI で下書き生成';
+      }
+    }
+    overlay.querySelector('#fp-brief-gen').addEventListener('click', generate);
+    overlay.querySelector('#fp-brief-regen').addEventListener('click', generate);
+    overlay.querySelector('#fp-brief-copy').addEventListener('click', () => {
+      const text = overlay.querySelector('#fp-brief-output').value;
+      navigator.clipboard.writeText(text);
+      overlay.querySelector('#fp-brief-msg').innerHTML = '<span style="color:#10B981;">✓ クリップボードにコピーしました</span>';
+    });
+    overlay.querySelector('#fp-brief-send').addEventListener('click', async () => {
+      const text = overlay.querySelector('#fp-brief-output').value.trim();
+      if (!text) { alert('送信する文面が空です'); return; }
+      if (!client.lineFriendId) { alert('この顧客は LINE 未連携です'); return; }
+      const btn = overlay.querySelector('#fp-brief-send');
+      btn.disabled = true; btn.textContent = '送信中...';
+      try {
+        const r = await fetch('https://fp-compass-webhook-527726449426.asia-northeast1.run.app/api/send-line', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: client.lineFriendId, text }),
+        });
+        const d = await r.json();
+        if (d.ok) {
+          overlay.querySelector('#fp-brief-msg').innerHTML = '<span style="color:#10B981;">✓ LINE で送信完了</span>';
+          setTimeout(() => overlay.remove(), 1400);
+        } else {
+          overlay.querySelector('#fp-brief-msg').innerHTML = `<span style="color:#DC2626;">❌ 送信失敗: ${escapeHtml(d.error || '')}</span>`;
+          btn.disabled = false; btn.textContent = '📤 LINE 送信';
+        }
+      } catch (e) {
+        overlay.querySelector('#fp-brief-msg').innerHTML = `<span style="color:#DC2626;">❌ ${escapeHtml(e.message)}</span>`;
+        btn.disabled = false; btn.textContent = '📤 LINE 送信';
+      }
+    });
+    setTimeout(() => overlay.querySelector('#fp-brief-input').focus(), 100);
   }
 
   function openDraftReplyModal(client, events, recs) {
@@ -5550,6 +5711,127 @@ ${client.name}さん、ありがとうございます。
   setTimeout(updateRealModeUi, 200);
 
   // ============================
+  // 🏷 タグ機能 (FP自由作成 + 顧客割当)
+  // ============================
+  const TAG_COLORS = ['#5B5BF0', '#10B981', '#F59E0B', '#EC4899', '#06B6D4', '#8B5CF6', '#EF4444', '#84CC16', '#F97316', '#0EA5E9'];
+  function getTagsMaster() {
+    try { return JSON.parse(localStorage.getItem('fp-tags-master') || '[]'); } catch (_) { return []; }
+  }
+  function saveTagsMaster(tags) {
+    localStorage.setItem('fp-tags-master', JSON.stringify(tags));
+  }
+  function getClientTags(clientId) {
+    try { return JSON.parse(localStorage.getItem('fp-client-tags-' + clientId) || '[]'); } catch (_) { return []; }
+  }
+  function saveClientTags(clientId, tagIds) {
+    localStorage.setItem('fp-client-tags-' + clientId, JSON.stringify(tagIds));
+  }
+  function renderClientTags(clientId) {
+    const wrap = document.getElementById('cd-tags-list');
+    if (!wrap) return;
+    const master = getTagsMaster();
+    const myTagIds = getClientTags(clientId);
+    const myTags = myTagIds.map(id => master.find(t => t.id === id)).filter(Boolean);
+    if (myTags.length === 0) {
+      wrap.innerHTML = '<div style="font-size:11px;color:#94A3B8;font-style:italic;">タグなし — 「+ 追加 / 編集」 から付けてみる</div>';
+      return;
+    }
+    wrap.innerHTML = myTags.map(t => `
+      <span style="display:inline-flex;align-items:center;gap:6px;background:${t.color}1A;color:${t.color};border:1px solid ${t.color}55;padding:4px 10px;border-radius:999px;font-size:11.5px;font-weight:700;">
+        ${escapeHtml(t.label)}
+      </span>
+    `).join('');
+  }
+  function openTagEditor(clientId) {
+    const master = getTagsMaster();
+    const myTagIds = getClientTags(clientId);
+    const overlay = document.createElement('div');
+    overlay.id = 'fp-tag-editor-ov';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.62);backdrop-filter:blur(4px);z-index:10050;display:flex;align-items:center;justify-content:center;padding:20px;';
+    const renderModal = () => {
+      const m = getTagsMaster();
+      const mySet = new Set(getClientTags(clientId));
+      overlay.innerHTML = `
+        <div style="background:#fff;max-width:520px;width:100%;border-radius:14px;box-shadow:0 24px 60px rgba(0,0,0,0.35);overflow:hidden;font-family:'Noto Sans JP',sans-serif;">
+          <div style="padding:18px 24px;border-bottom:1px solid #E2E8F0;display:flex;justify-content:space-between;align-items:center;">
+            <h3 style="margin:0;font-size:15px;font-weight:800;color:#0F172A;">🏷 タグの追加 / 編集</h3>
+            <button id="fp-tag-close" style="background:transparent;border:none;cursor:pointer;font-size:20px;color:#94A3B8;">✕</button>
+          </div>
+          <div style="padding:20px 24px;">
+            <div style="font-size:11px;font-weight:800;color:#475569;letter-spacing:0.06em;margin-bottom:10px;">この顧客に付けるタグ (クリックでON/OFF)</div>
+            <div id="fp-tag-list" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px;min-height:24px;">
+              ${m.length === 0 ? '<div style="font-size:11.5px;color:#94A3B8;font-style:italic;">まだタグがありません — 下から作ってください</div>' :
+                m.map(t => {
+                  const on = mySet.has(t.id);
+                  return `<button data-tag="${t.id}" class="fp-tag-toggle" style="background:${on ? t.color : t.color+'1A'};color:${on ? '#fff' : t.color};border:1px solid ${t.color}${on ? '' : '55'};padding:6px 14px;border-radius:999px;font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit;">${on ? '✓ ' : ''}${escapeHtml(t.label)}</button>`;
+                }).join('')}
+            </div>
+
+            <div style="border-top:1px dashed #E2E8F0;padding-top:18px;">
+              <div style="font-size:11px;font-weight:800;color:#475569;letter-spacing:0.06em;margin-bottom:10px;">+ 新しいタグを作る</div>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <input id="fp-tag-new-name" type="text" maxlength="20" placeholder="例: 法人客 / 紹介者 / VIP" style="flex:1;padding:9px 12px;border:1.5px solid #E2E8F0;border-radius:6px;font-size:13px;font-family:inherit;">
+                <button id="fp-tag-create" style="background:#0F172A;color:#fff;border:none;padding:9px 18px;border-radius:6px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;">作成</button>
+              </div>
+
+              ${m.length > 0 ? `<div style="margin-top:14px;font-size:10.5px;color:#94A3B8;">タグを削除: <span style="color:#64748B;">${m.map(t => `<button data-del="${t.id}" class="fp-tag-del" style="background:transparent;border:none;color:#DC2626;cursor:pointer;font-size:10.5px;text-decoration:underline;padding:0 4px;">${escapeHtml(t.label)}</button>`).join(' / ')}</span></div>` : ''}
+            </div>
+          </div>
+          <div style="padding:14px 24px;background:#F8FAFC;border-top:1px solid #E2E8F0;display:flex;justify-content:flex-end;">
+            <button id="fp-tag-done" style="background:#10B981;color:#fff;border:none;padding:10px 24px;border-radius:6px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:0.04em;">✓ 完了</button>
+          </div>
+        </div>
+      `;
+      // バインド
+      overlay.querySelector('#fp-tag-close').addEventListener('click', () => overlay.remove());
+      overlay.querySelector('#fp-tag-done').addEventListener('click', () => { overlay.remove(); renderClientTags(clientId); });
+      overlay.querySelectorAll('.fp-tag-toggle').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = btn.dataset.tag;
+          const cur = getClientTags(clientId);
+          const set = new Set(cur);
+          if (set.has(id)) set.delete(id); else set.add(id);
+          saveClientTags(clientId, Array.from(set));
+          renderModal();
+        });
+      });
+      overlay.querySelector('#fp-tag-create').addEventListener('click', () => {
+        const name = overlay.querySelector('#fp-tag-new-name').value.trim();
+        if (!name) return;
+        const cur = getTagsMaster();
+        if (cur.some(t => t.label === name)) { alert('同名のタグが既にあります'); return; }
+        const id = 't-' + Date.now().toString(36);
+        const color = TAG_COLORS[cur.length % TAG_COLORS.length];
+        cur.push({ id, label: name, color });
+        saveTagsMaster(cur);
+        // 作成直後にこの顧客にも付与
+        const myCur = getClientTags(clientId);
+        myCur.push(id);
+        saveClientTags(clientId, myCur);
+        renderModal();
+      });
+      overlay.querySelectorAll('.fp-tag-del').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = btn.dataset.del;
+          if (!confirm('このタグを削除しますか? (全顧客から外れます)')) return;
+          // master から削除
+          saveTagsMaster(getTagsMaster().filter(t => t.id !== id));
+          // 全 client-tags から該当 id を除去
+          Object.keys(localStorage).filter(k => k.startsWith('fp-client-tags-')).forEach(k => {
+            try {
+              const arr = JSON.parse(localStorage.getItem(k) || '[]').filter(x => x !== id);
+              localStorage.setItem(k, JSON.stringify(arr));
+            } catch (_) {}
+          });
+          renderModal();
+        });
+      });
+    };
+    renderModal();
+    document.body.appendChild(overlay);
+  }
+
+  // ============================
   // util
   // ============================
   function escapeHtml(s) {
@@ -5613,7 +5895,7 @@ ${client.name}さん、ありがとうございます。
     });
 
     // line-app.js から呼び出せるように公開
-    window.FpApp = { openClientModal: openClientModal, openClientForm: openClientForm };
+    window.FpApp = { openClientModal: openClientModal, openClientForm: openClientForm, getTagsMaster: getTagsMaster, getClientTags: getClientTags };
 
     activateTab(state.activeTab);
 
