@@ -4319,6 +4319,96 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
   // ============================
   // 配信ダッシュボード
   // ============================
+  // ★ 今日 送るべきメッセージ案を組み立て (= 承認リスト)
+  // 1) 今日が誕生日のお客様 / 2) 60日以上未接触 / 3) 月1お役立ち(月初) / 4) 季節挨拶日
+  function buildTodayMessageQueue() {
+    const queue = [];
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    const clients = window.DUMMY_CLIENTS || [];
+    const fpName = (window.__fp?.tenantName || 'FP').replace(/ — DEMO ビュー/, '');
+    const skipped = (function(){ try { return JSON.parse(localStorage.getItem('fp-msg-skipped-' + today.toISOString().slice(0,10)) || '[]'); } catch(_) { return []; } })();
+    const sent = (function(){ try { return JSON.parse(localStorage.getItem('fp-msg-sent-' + today.toISOString().slice(0,10)) || '[]'); } catch(_) { return []; } })();
+    const isHandled = (id) => skipped.includes(id) || sent.includes(id);
+
+    // 1) 誕生日 (本人・家族)
+    clients.forEach(c => {
+      if (!c.lineFriendId) return;
+      const targets = [];
+      if (c.birth) {
+        const b = new Date(c.birth);
+        if (b.getMonth() === today.getMonth() && b.getDate() === today.getDate()) {
+          targets.push({ personName: c.name, rel: '本人' });
+        }
+      }
+      (c.family || []).forEach(m => {
+        if (!m.birth) return;
+        const b = new Date(m.birth);
+        if (b.getMonth() === today.getMonth() && b.getDate() === today.getDate()) {
+          targets.push({ personName: m.name, rel: m.rel === 'spouse' ? '奥様' : (m.rel === 'child' ? 'お子様' : 'ご家族') });
+        }
+      });
+      targets.forEach((t, idx) => {
+        const isSelf = t.rel === '本人';
+        const id = 'bday-' + c.id + '-' + idx;
+        if (isHandled(id)) return;
+        const body = isSelf
+          ? `${c.name}さん、お誕生日おめでとうございます 🎂\n\n日頃お任せいただき、 ありがとうございます。\n新しい一年が ${c.name}さんにとって 良い年になりますよう\nお祈りしております。\n— ${fpName}`
+          : `${c.name}さん、いつもお世話になっております。\n\n本日は ${t.personName}様 (${t.rel}) の お誕生日ですね。\n素敵な1日を お過ごしください 🎂\n\n— ${fpName}`;
+        queue.push({
+          id, clientId: c.id, clientName: c.name,
+          icon: '🎂',
+          reason: isSelf ? '本日 お誕生日' : `${t.personName}様 (${t.rel}) のお誕生日`,
+          category: '誕生日',
+          body,
+        });
+      });
+    });
+
+    // 2) 60日以上未接触 (1月のうち 1人につき 1回まで)
+    const dormantMonthKey = 'fp-dormant-sent-' + today.toISOString().slice(0,7);
+    const dormantThisMonth = (function(){ try { return JSON.parse(localStorage.getItem(dormantMonthKey) || '[]'); } catch(_) { return []; } })();
+    clients.forEach(c => {
+      if (!c.lineFriendId || !c.lastContact) return;
+      const days = Math.floor((today - new Date(c.lastContact)) / 86400000);
+      if (days < 60) return;
+      if (dormantThisMonth.includes(c.id)) return;
+      const id = 'dormant-' + c.id;
+      if (isHandled(id)) return;
+      queue.push({
+        id, clientId: c.id, clientName: c.name,
+        icon: '🔔',
+        reason: `${days}日 ご連絡 が空いています`,
+        category: 'ご無沙汰',
+        body: `${c.name}さん、 ご無沙汰しております 😊\n\nお元気でいらっしゃいますか?\n\n最近、 ${c.name}さんに お伝えしたい話題が\nいくつか出てきました。\n\nお時間ある時に 30分の Zoom でも\nお茶でも いかがでしょうか?\n\n候補日 3つ ご返信いただけると 助かります。\n— ${fpName}`,
+      });
+    });
+
+    // 3) 月初 (1日) のお役立ち情報 (月1回 まとめて全LINE連携客 — ただし 1人 1メッセージ案として出す)
+    const monthlyKey = 'fp-monthly-sent-' + today.toISOString().slice(0,7);
+    const monthlySent = (function(){ try { return JSON.parse(localStorage.getItem(monthlyKey) || '[]'); } catch(_) { return []; } })();
+    if (today.getDate() === 1) {
+      const themes = ['新NISA 成長投資枠 の 賢い使い方', 'iDeCo を 始めるなら 知っておきたい3点', '教育費 の準備 シミュレーション', '住宅ローン 金利動向と借換の判断', '保険の見直しチェックリスト', '相続税 改正の影響', 'ふるさと納税 まだ間に合う?', '年末調整 で 損しないコツ', '生活防衛資金 の 適正額', 'NISA / iDeCo / 個別株 の使い分け', 'クレカ積立 の活用法', '年金繰下げ受給の判断'];
+      const monthIdx = today.getMonth();
+      const theme = themes[monthIdx];
+      clients.forEach(c => {
+        if (!c.lineFriendId) return;
+        if (monthlySent.includes(c.id)) return;
+        const id = 'monthly-' + c.id;
+        if (isHandled(id)) return;
+        queue.push({
+          id, clientId: c.id, clientName: c.name,
+          icon: '📰',
+          reason: `${today.getMonth()+1}月の お役立ち情報`,
+          category: '月初配信',
+          body: `${c.name}さん、こんにちは 🌷\n\n今月の お役立ち情報を お届けします。\n\n📌 ${theme}\n→ 3行 で まとめました。\nお時間ある時に ご覧ください 😊\n\n気になる点あれば LINE で お知らせください。\n— ${fpName}`,
+        });
+      });
+    }
+
+    return queue.slice(0, 12); // 1日12件 まで
+  }
+
   function renderLineDashboard() {
     const subscribers = (window.DUMMY_CLIENTS || []).filter(c => c.lineSubscribed).length;
     const enabledSchedules = window.LINE_SCHEDULES.filter(s => s.enabled).length;
@@ -4330,8 +4420,8 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
       .sort((a, b) => a.nextSend.localeCompare(b.nextSend))
       .slice(0, 6);
 
-    // ★ オーナーfb (v AI): 「自動配信設定わかりづらい / 誘導してほしい」 → ガイド型UI に再設計
-    // 状態に応じてヒーロー切替: 初めて(=0本) → 立上げ誘導 / 稼働中 → 状況サマリー
+    // ★ オーナーfb (v AK): 全自動配信は 50代FPに怖い → 「下書き承認制」 にメンタルモデル転換。
+    // 今日送るべき下書きを毎朝AIが作って、FPは1件ずつ「✓送る」 を押す。 自動化は「設定タブ」 に隔離。
     const isFirstTime = enabledSchedules === 0;
 
     // ★ オーナーfb (v AJ): プリセットに「実際の文面」まで含める。何が送られるか一目で分かるように。
@@ -4389,99 +4479,136 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
       return `<div class="fp-cadence-mini" style="font-size:9.5px;">${escapeHtml((cadence || '').slice(0, 8))}</div>`;
     };
 
-    const heroHtml = isFirstTime ? `
+    // ★ 今日 FP が送るべきメッセージ案を組み立てる
+    const todayMessages = buildTodayMessageQueue();
+    const todayDateLabel = (function(){
+      const d = new Date();
+      const weekday = ['日','月','火','水','木','金','土'][d.getDay()];
+      return `${d.getMonth()+1}月${d.getDate()}日 (${weekday})`;
+    })();
+    const fpHandleName = ((window.__fp?.tenantName || '').match(/^[^\s—\-]+/) || ['先生'])[0];
+
+    const heroHtml = todayMessages.length === 0 ? `
       <div class="fp-dist-hero fp-dist-hero-empty">
-        <div class="fp-dist-hero-eyebrow">START HERE</div>
-        <h2 class="fp-dist-hero-title">最初の<span style="color:#C19A3A;">1本</span>を作ろう。</h2>
-        <p class="fp-dist-hero-sub">自動配信は「いつ・誰に・何を」 を 1度組めば あとは LINE が勝手に送り続けてくれます。 まずは下のテンプレから 1つだけ選んでみてください。</p>
-        <div class="fp-dist-hero-arrow">↓ よく使う シナリオから 始める</div>
+        <div class="fp-dist-hero-date">${todayDateLabel}</div>
+        <h2 class="fp-dist-hero-title">今日は ゆっくりで大丈夫です。 🌿</h2>
+        <p class="fp-dist-hero-sub">送る予定のメッセージは ありません。<br>明朝 また 候補をご用意しておきます。</p>
       </div>
     ` : `
-      <div class="fp-dist-hero fp-dist-hero-running">
-        <div class="fp-dist-hero-eyebrow">NOW RUNNING</div>
-        <h2 class="fp-dist-hero-title">いま <span style="color:#C19A3A;">${enabledSchedules}</span> 本の自動配信が動いています。</h2>
-        <p class="fp-dist-hero-sub">今月 ${monthSent} 通 送信 / LINE 友だち ${subscribers} 名 / 今日の誕生日 ${todayBirthdays.length} 名${upcomingScheds.length > 0 ? ' · 次の配信は <strong style="color:#C19A3A;">' + escapeHtml(upcomingScheds[0].nextSend) + '</strong>' : ''}</p>
+      <div class="fp-dist-hero">
+        <div class="fp-dist-hero-date">${todayDateLabel}</div>
+        <h2 class="fp-dist-hero-title">おはようございます、 <span style="color:#C19A3A;">${escapeHtml(fpHandleName)}</span> さん。</h2>
+        <p class="fp-dist-hero-sub">今日 お客様にお送りする メッセージ案 が <strong style="color:#1F1A12;">${todayMessages.length}件</strong> あります。<br>1件ずつ ご確認のうえ 送信してください。</p>
       </div>
     `;
 
     const html = `
       ${heroHtml}
 
-      <!-- KPI 4枚 (sober) -->
-      <div class="fp-dist-kpi-grid">
-        <div class="fp-dist-kpi">
-          <div class="fp-dist-kpi-eyebrow">LINE 友だち</div>
-          <div class="fp-dist-kpi-num">${subscribers}<span class="fp-dist-kpi-unit">名</span></div>
-          <div class="fp-dist-kpi-sub">全顧客の ${window.DUMMY_CLIENTS.length > 0 ? Math.round(subscribers / window.DUMMY_CLIENTS.length * 100) : 0}%</div>
-        </div>
-        <div class="fp-dist-kpi ${enabledSchedules > 0 ? 'fp-dist-kpi-on' : ''}">
-          <div class="fp-dist-kpi-eyebrow">稼働中</div>
-          <div class="fp-dist-kpi-num">${enabledSchedules}<span class="fp-dist-kpi-unit">本</span></div>
-          <div class="fp-dist-kpi-sub">${enabledSchedules === 0 ? 'まだ設定なし' : '自動配信中'}</div>
-        </div>
-        <div class="fp-dist-kpi">
-          <div class="fp-dist-kpi-eyebrow">今月送信</div>
-          <div class="fp-dist-kpi-num">${monthSent}<span class="fp-dist-kpi-unit">通</span></div>
-          <div class="fp-dist-kpi-sub">ログ集計</div>
-        </div>
-        <div class="fp-dist-kpi ${todayBirthdays.length > 0 ? 'fp-dist-kpi-warn' : ''}">
-          <div class="fp-dist-kpi-eyebrow">今日の誕生日</div>
-          <div class="fp-dist-kpi-num">${todayBirthdays.length}<span class="fp-dist-kpi-unit">名</span></div>
-          <div class="fp-dist-kpi-sub">30日以内 ${upcoming.length}名</div>
-        </div>
-      </div>
-
-      <!-- テンプレで始める (誘導の中核) -->
+      <!-- 今日 送るメッセージ案 (承認リスト) -->
+      ${todayMessages.length > 0 ? `
       <div class="fp-dist-section">
-        <div class="fp-dist-section-head">
-          <div>
-            <div class="fp-dist-eyebrow">RECIPES · よく使う配信</div>
-            <h3 class="fp-dist-section-title">テンプレで始める</h3>
-          </div>
-          <p class="fp-dist-section-sub">実際の文面プレビュー付き。 そのまま追加するか、 文面を編集してから追加できる</p>
-        </div>
-        <div class="fp-dist-presets">
-          ${presetScenarios.map((p, i) => `
-            <div class="fp-dist-preset-card" style="animation-delay:${i*60}ms;">
-              <div class="fp-dist-preset-head">
-                <div class="fp-dist-preset-emoji">${p.emoji}</div>
-                <div class="fp-dist-preset-titleblock">
-                  <div class="fp-dist-preset-title">${escapeHtml(p.title)}</div>
-                  <div class="fp-dist-preset-sub">${escapeHtml(p.subtitle)}</div>
+        <div class="fp-today-list">
+          ${todayMessages.map((m, i) => `
+            <article class="fp-today-msg" data-msg-id="${escapeHtml(m.id)}" style="animation-delay:${i*70}ms;">
+              <header class="fp-today-msg-head">
+                <div class="fp-today-avatar" style="background:hsl(${(m.clientName.charCodeAt(0)*7)%360}, 55%, 88%);color:hsl(${(m.clientName.charCodeAt(0)*7)%360}, 60%, 30%);">${escapeHtml(m.clientName.charAt(0))}</div>
+                <div class="fp-today-who">
+                  <div class="fp-today-name">${escapeHtml(m.clientName)} <span class="fp-today-honor">さん</span></div>
+                  <div class="fp-today-reason">${m.icon} ${escapeHtml(m.reason)}</div>
                 </div>
-                <div class="fp-dist-preset-cadence-tag">${escapeHtml(p.cadence)}</div>
+                <span class="fp-today-cat">${escapeHtml(m.category)}</span>
+              </header>
+              <div class="fp-today-bubble-wrap">
+                <div class="fp-today-bubble-tail"></div>
+                <div class="fp-today-bubble">${escapeHtml(m.body).replace(/\n/g, '<br>')}</div>
               </div>
-              <div class="fp-dist-preset-why">${escapeHtml(p.why)}</div>
-
-              <!-- LINE 風プレビュー -->
-              <div class="fp-line-preview">
-                <div class="fp-line-preview-header">
-                  <span class="fp-line-preview-dot"></span>
-                  <span>お客様の LINE に届く本文 (プレビュー)</span>
-                </div>
-                <div class="fp-line-preview-bubble">${escapeHtml(p.sample).replace(/\\n/g, '<br>').replace(/\n/g, '<br>')}</div>
-                ${p.note ? `<div class="fp-line-preview-note">${escapeHtml(p.note)}</div>` : ''}
-              </div>
-
-              <div class="fp-dist-preset-actions">
-                <button class="fp-dist-preset-add" data-preset="${p.id}">+ このまま追加して稼働開始</button>
-                <button class="fp-dist-preset-edit" data-preset-edit="${p.id}">✎ 文面を編集してから</button>
-              </div>
-            </div>
+              <footer class="fp-today-actions">
+                <button class="fp-today-btn fp-today-btn-send" data-send="${escapeHtml(m.id)}">
+                  <span>✓</span> このまま送る
+                </button>
+                <button class="fp-today-btn fp-today-btn-edit" data-edit="${escapeHtml(m.id)}">
+                  <span>✏</span> 直す
+                </button>
+                <button class="fp-today-btn fp-today-btn-skip" data-skip="${escapeHtml(m.id)}">
+                  今回はスキップ
+                </button>
+              </footer>
+            </article>
           `).join('')}
         </div>
-      </div>
-
-      <!-- いま動いてる配信 -->
-      ${enabledSchedules > 0 ? `
-      <div class="fp-dist-section">
-        <div class="fp-dist-section-head">
-          <div>
-            <div class="fp-dist-eyebrow">RUNNING · 稼働中</div>
-            <h3 class="fp-dist-section-title">いま動いてる配信</h3>
+        ${todayMessages.length >= 2 ? `
+          <div class="fp-today-bulk">
+            <div>
+              <strong>${todayMessages.length}件 まとめて 送りますか?</strong>
+              <span>1件ずつ確認したい場合は 上の各カードで操作してください。</span>
+            </div>
+            <button class="fp-today-bulk-btn" id="fp-today-bulk-send">${todayMessages.length}件 すべて送信</button>
           </div>
-          <p class="fp-dist-section-sub">クリックで詳細編集 / トグルで一時停止</p>
+        ` : ''}
+      </div>
+      ` : `
+      <div class="fp-dist-section">
+        <div class="fp-today-empty">
+          <div class="fp-today-empty-mark">○</div>
+          <p>送信予定なし。 お客様との接点は CRM の <strong>顧客台帳</strong> から いつでも 個別に お送りいただけます。</p>
         </div>
+      </div>
+      `}
+
+      <!-- 設定 (折り畳み): よく使うシナリオを いつもの予定として登録 -->
+      <details class="fp-dist-fold">
+        <summary>
+          <span class="fp-dist-fold-icon">⚙</span>
+          <div>
+            <strong>いつも送る予定を 登録する</strong>
+            <span>誕生日や 月1お役立ち など、 毎月決まったタイミングで <br class="fp-dist-fold-br">送る予定を登録しておくと、 朝の承認リストに 自動で並びます。</span>
+          </div>
+          <span class="fp-dist-fold-chev">▾</span>
+        </summary>
+        <div class="fp-dist-fold-body">
+          <div class="fp-dist-presets">
+            ${presetScenarios.map((p, i) => `
+              <div class="fp-dist-preset-card" style="animation-delay:${i*60}ms;">
+                <div class="fp-dist-preset-head">
+                  <div class="fp-dist-preset-emoji">${p.emoji}</div>
+                  <div class="fp-dist-preset-titleblock">
+                    <div class="fp-dist-preset-title">${escapeHtml(p.title)}</div>
+                    <div class="fp-dist-preset-sub">${escapeHtml(p.subtitle)}</div>
+                  </div>
+                  <div class="fp-dist-preset-cadence-tag">${escapeHtml(p.cadence)}</div>
+                </div>
+                <div class="fp-dist-preset-why">${escapeHtml(p.why)}</div>
+                <div class="fp-line-preview">
+                  <div class="fp-line-preview-header">
+                    <span class="fp-line-preview-dot"></span>
+                    <span>お客様の LINE に届く本文 (見本)</span>
+                  </div>
+                  <div class="fp-line-preview-bubble">${escapeHtml(p.sample).replace(/\\n/g, '<br>').replace(/\n/g, '<br>')}</div>
+                  ${p.note ? `<div class="fp-line-preview-note">${escapeHtml(p.note)}</div>` : ''}
+                </div>
+                <div class="fp-dist-preset-actions">
+                  <button class="fp-dist-preset-add" data-preset="${p.id}">この予定を登録する</button>
+                  <button class="fp-dist-preset-edit" data-preset-edit="${p.id}">本文を直してから</button>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </details>
+
+      <!-- いま登録されてる予定 (折り畳み) -->
+      ${enabledSchedules > 0 ? `
+      <details class="fp-dist-fold" open>
+        <summary>
+          <span class="fp-dist-fold-icon">📋</span>
+          <div>
+            <strong>いま登録されてる予定 (${enabledSchedules}件)</strong>
+            <span>毎朝、 ここに登録された予定に従って 承認リストが作られます。</span>
+          </div>
+          <span class="fp-dist-fold-chev">▾</span>
+        </summary>
+        <div class="fp-dist-fold-body">
         <div class="fp-dist-running-grid">
           ${window.LINE_SCHEDULES.filter(s => s.enabled).map(s => {
             const seg = window.SEGMENTS.find(x => x.id === s.segment);
@@ -4499,33 +4626,38 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
             `;
           }).join('')}
         </div>
-      </div>` : ''}
-
-      <!-- 直近1週間の誕生日 (誕生日シナリオが稼働中の時のみ) -->
-      ${upcoming.filter(b => b.daysAhead <= 7).length > 0 ? `
-      <div class="fp-dist-section">
-        <div class="fp-dist-section-head">
-          <div>
-            <div class="fp-dist-eyebrow">UPCOMING · 直近1週間</div>
-            <h3 class="fp-dist-section-title">これから来る誕生日</h3>
-          </div>
         </div>
+      </details>` : ''}
+
+      <!-- 直近1週間の誕生日 (折り畳み: 予告) -->
+      ${upcoming.filter(b => b.daysAhead <= 7 && b.daysAhead > 0).length > 0 ? `
+      <details class="fp-dist-fold">
+        <summary>
+          <span class="fp-dist-fold-icon">🎂</span>
+          <div>
+            <strong>このあと1週間で 誕生日のお客様 (${upcoming.filter(b => b.daysAhead <= 7 && b.daysAhead > 0).length}名)</strong>
+            <span>当日の朝になったら 承認リストに自動で並びます。</span>
+          </div>
+          <span class="fp-dist-fold-chev">▾</span>
+        </summary>
+        <div class="fp-dist-fold-body">
         <div class="fp-dist-bday-list">
-          ${upcoming.filter(b => b.daysAhead <= 7).map(b => `
+          ${upcoming.filter(b => b.daysAhead <= 7 && b.daysAhead > 0).map(b => `
             <div class="fp-dist-bday-row">
               <div class="fp-dist-bday-date">
                 <strong>${(b.date.getMonth() + 1)}/${b.date.getDate()}</strong>
-                <span>${b.daysAhead === 0 ? '本日' : b.daysAhead + '日後'}</span>
+                <span>${b.daysAhead}日後</span>
               </div>
               <div class="fp-dist-bday-main">
                 <strong>${escapeHtml(b.personName)}</strong> <span class="fp-dist-bday-rel">${b.rel}</span>
                 <div>${b.age}歳 / 顧客 ${escapeHtml(b.client.name)}</div>
               </div>
-              <div class="fp-dist-bday-status">${b.daysAhead === 0 ? '<span class="fp-dist-status-on">✓ 朝9:00 送信</span>' : '<span class="fp-dist-status-wait">予約済</span>'}</div>
+              <div class="fp-dist-bday-status"><span class="fp-dist-status-wait">予約済</span></div>
             </div>
           `).join('')}
         </div>
-      </div>` : ''}
+        </div>
+      </details>` : ''}
 
       <style>
       /* === Distribution Dashboard v AI === */
@@ -4750,12 +4882,265 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
       .fp-dist-status-on { background: #ECFDF5; color: #047857; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; letter-spacing: 0.04em; }
       .fp-dist-status-wait { background: #F1ECDF; color: #8B7D5D; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 600; }
 
+      /* ===== 今日 のメッセージ承認リスト (v AK) ===== */
+      .fp-dist-hero-date {
+        font-family: 'Manrope', 'Inter', sans-serif;
+        font-weight: 700; font-size: 10.5px;
+        letter-spacing: 0.18em; text-transform: uppercase;
+        color: #8B7D5D; margin-bottom: 10px;
+      }
+      .fp-today-list { display: grid; gap: 16px; }
+      .fp-today-msg {
+        background: #fff;
+        border: 1px solid #E8E2D4;
+        border-radius: 14px;
+        padding: 22px 24px 18px;
+        animation: fp-today-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+        transition: border-color 0.2s ease, opacity 0.25s ease, transform 0.25s ease;
+      }
+      @keyframes fp-today-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+      .fp-today-msg-head {
+        display: flex; align-items: center; gap: 14px;
+        margin-bottom: 14px;
+      }
+      .fp-today-avatar {
+        width: 46px; height: 46px;
+        border-radius: 50%; flex-shrink: 0;
+        display: flex; align-items: center; justify-content: center;
+        font-family: 'Noto Serif JP', serif;
+        font-weight: 700; font-size: 19px;
+        letter-spacing: -0.02em;
+      }
+      .fp-today-who { flex: 1; min-width: 0; }
+      .fp-today-name {
+        font-family: 'Noto Serif JP', serif;
+        font-weight: 700; font-size: 17px;
+        color: #1F1A12; letter-spacing: -0.008em;
+        line-height: 1.3;
+      }
+      .fp-today-honor {
+        font-size: 12px; color: #8B7D5D;
+        font-weight: 400; margin-left: 2px;
+      }
+      .fp-today-reason {
+        font-size: 12px;
+        color: #5E5648;
+        margin-top: 3px;
+        line-height: 1.5;
+      }
+      .fp-today-cat {
+        flex-shrink: 0;
+        font-family: 'Manrope', 'Noto Sans JP', sans-serif;
+        font-weight: 700; font-size: 10.5px;
+        letter-spacing: 0.06em;
+        color: #C19A3A;
+        background: #FDFBF4;
+        border: 1px solid #E8C56F;
+        padding: 5px 11px;
+        border-radius: 999px;
+      }
+      .fp-today-bubble-wrap {
+        position: relative;
+        background: linear-gradient(180deg, #F1F5F9, #E2E8F0);
+        border-radius: 10px;
+        padding: 12px 14px 12px 18px;
+        margin-bottom: 14px;
+      }
+      .fp-today-bubble {
+        background: #fff;
+        border-radius: 14px 14px 14px 3px;
+        padding: 14px 16px;
+        font-family: 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+        font-size: 13px;
+        line-height: 1.85;
+        color: #1F1A12;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+      }
+      .fp-today-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .fp-today-btn {
+        font-family: 'Manrope', 'Noto Sans JP', sans-serif;
+        font-weight: 700;
+        font-size: 13px;
+        letter-spacing: 0.04em;
+        padding: 12px 18px;
+        border-radius: 9px;
+        cursor: pointer;
+        transition: transform 0.12s ease, box-shadow 0.18s ease, background 0.18s ease;
+        display: inline-flex; align-items: center; gap: 6px;
+      }
+      .fp-today-btn span { font-size: 14px; }
+      .fp-today-btn-send {
+        flex: 1; min-width: 0;
+        color: #fff;
+        background: linear-gradient(135deg, #06C755, #04A847);
+        border: none;
+        font-weight: 800;
+        box-shadow: 0 4px 14px rgba(6,199,85,0.32);
+      }
+      .fp-today-btn-send:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 22px rgba(6,199,85,0.42);
+      }
+      .fp-today-btn-edit {
+        color: #5E5648;
+        background: #fff;
+        border: 1px solid #D6CDB6;
+      }
+      .fp-today-btn-edit:hover {
+        border-color: #C19A3A; color: #C19A3A;
+      }
+      .fp-today-btn-skip {
+        color: #8B7D5D;
+        background: transparent;
+        border: 1px solid transparent;
+        font-size: 12px;
+        margin-left: auto;
+      }
+      .fp-today-btn-skip:hover {
+        color: #5E5648;
+        background: #FDFBF4;
+        border-color: #E8E2D4;
+      }
+      .fp-today-msg-done {
+        opacity: 0.45;
+        background: #FAFAF6;
+        pointer-events: none;
+      }
+      .fp-today-bulk {
+        margin-top: 18px;
+        padding: 18px 22px;
+        background: linear-gradient(135deg, #1F1A12, #2C2419);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        color: #FAF8F1;
+      }
+      .fp-today-bulk strong {
+        font-family: 'Noto Serif JP', serif;
+        font-weight: 700;
+        font-size: 15px;
+        color: #FFE9A8;
+        display: block;
+        margin-bottom: 2px;
+      }
+      .fp-today-bulk span {
+        font-size: 11.5px;
+        color: rgba(250,248,241,0.7);
+        line-height: 1.55;
+      }
+      .fp-today-bulk-btn {
+        margin-left: auto;
+        flex-shrink: 0;
+        font-family: 'Manrope', 'Noto Sans JP', sans-serif;
+        font-weight: 800;
+        font-size: 13px;
+        letter-spacing: 0.06em;
+        color: #1F1A12;
+        background: #FFE9A8;
+        border: none;
+        padding: 13px 22px;
+        border-radius: 9px;
+        cursor: pointer;
+        transition: transform 0.15s ease, box-shadow 0.18s ease;
+      }
+      .fp-today-bulk-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 22px rgba(255,233,168,0.4);
+      }
+      .fp-today-empty {
+        background: #FDFBF4;
+        border: 1px dashed #D6CDB6;
+        border-radius: 12px;
+        padding: 40px 30px;
+        text-align: center;
+        color: #5E5648;
+      }
+      .fp-today-empty-mark {
+        font-size: 30px;
+        color: #C19A3A;
+        margin-bottom: 8px;
+      }
+      .fp-today-empty p {
+        font-size: 13px; line-height: 1.75; margin: 0;
+      }
+
+      /* ===== 折り畳み セクション ===== */
+      .fp-dist-fold {
+        background: #fff;
+        border: 1px solid #E8E2D4;
+        border-radius: 12px;
+        margin-bottom: 14px;
+        overflow: hidden;
+      }
+      .fp-dist-fold > summary {
+        list-style: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 16px 20px;
+        transition: background 0.15s ease;
+      }
+      .fp-dist-fold > summary::-webkit-details-marker { display: none; }
+      .fp-dist-fold > summary:hover { background: #FDFBF4; }
+      .fp-dist-fold-icon {
+        font-size: 20px;
+        flex-shrink: 0;
+        width: 32px; height: 32px;
+        background: #FDFBF4;
+        border-radius: 8px;
+        display: flex; align-items: center; justify-content: center;
+      }
+      .fp-dist-fold > summary > div {
+        flex: 1; min-width: 0;
+      }
+      .fp-dist-fold > summary > div > strong {
+        font-family: 'Noto Serif JP', serif;
+        font-weight: 700;
+        font-size: 14px;
+        color: #1F1A12;
+        display: block;
+        margin-bottom: 2px;
+        letter-spacing: -0.005em;
+      }
+      .fp-dist-fold > summary > div > span {
+        font-size: 11.5px;
+        color: #8B7D5D;
+        line-height: 1.55;
+      }
+      .fp-dist-fold-br { display: none; }
+      .fp-dist-fold-chev {
+        flex-shrink: 0;
+        color: #8B7D5D;
+        font-size: 14px;
+        transition: transform 0.2s ease;
+      }
+      .fp-dist-fold[open] .fp-dist-fold-chev {
+        transform: rotate(180deg);
+      }
+      .fp-dist-fold-body {
+        padding: 4px 20px 20px;
+        border-top: 1px solid #F1ECDF;
+        margin-top: -4px;
+      }
+
       @media (max-width: 800px) {
-        .fp-dist-kpi-grid, .fp-dist-presets, .fp-dist-running-grid { grid-template-columns: 1fr; }
+        .fp-dist-presets, .fp-dist-running-grid { grid-template-columns: 1fr; }
         .fp-dist-hero { padding: 24px 22px; }
         .fp-dist-hero-title { font-size: 22px; }
         .fp-dist-section-head { flex-direction: column; align-items: flex-start; }
         .fp-dist-section-sub { text-align: left; }
+        .fp-today-msg { padding: 18px 18px 14px; }
+        .fp-today-bulk { flex-direction: column; align-items: flex-start; }
+        .fp-today-bulk-btn { margin-left: 0; width: 100%; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .fp-today-msg, .fp-dist-preset-card, .fp-dist-hero-arrow { animation: none; }
       }
       </style>
     `;
@@ -4801,12 +5186,104 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
       renderLineDashboard();
     }
 
-    // 「+ このまま追加」ボタン
+    // ===== 今日のメッセージ承認リスト 操作 =====
+    const todayKey = new Date().toISOString().slice(0,10);
+    const dormantMonthKey = 'fp-dormant-sent-' + new Date().toISOString().slice(0,7);
+    const monthlyKey = 'fp-monthly-sent-' + new Date().toISOString().slice(0,7);
+    function markSent(msgId, clientId) {
+      try {
+        const sent = JSON.parse(localStorage.getItem('fp-msg-sent-' + todayKey) || '[]');
+        sent.push(msgId); localStorage.setItem('fp-msg-sent-' + todayKey, JSON.stringify(sent));
+        if (msgId.startsWith('dormant-')) {
+          const arr = JSON.parse(localStorage.getItem(dormantMonthKey) || '[]');
+          if (!arr.includes(clientId)) { arr.push(clientId); localStorage.setItem(dormantMonthKey, JSON.stringify(arr)); }
+        }
+        if (msgId.startsWith('monthly-')) {
+          const arr = JSON.parse(localStorage.getItem(monthlyKey) || '[]');
+          if (!arr.includes(clientId)) { arr.push(clientId); localStorage.setItem(monthlyKey, JSON.stringify(arr)); }
+        }
+      } catch (_) {}
+    }
+    function markSkipped(msgId) {
+      try {
+        const arr = JSON.parse(localStorage.getItem('fp-msg-skipped-' + todayKey) || '[]');
+        arr.push(msgId); localStorage.setItem('fp-msg-skipped-' + todayKey, JSON.stringify(arr));
+      } catch (_) {}
+    }
+    function toast(text, kind) {
+      const t = document.createElement('div');
+      t.style.cssText = `position:fixed;top:24px;left:50%;transform:translateX(-50%);background:${kind === 'sent' ? '#1F1A12' : '#8B7D5D'};color:#fff;padding:12px 22px;border-radius:8px;font-size:13px;font-weight:700;z-index:99999;box-shadow:0 12px 32px rgba(15,23,42,0.4);font-family:"Noto Sans JP",sans-serif;`;
+      t.textContent = text; document.body.appendChild(t);
+      setTimeout(() => t.remove(), 2200);
+    }
+    async function sendMsg(msg) {
+      const client = (window.DUMMY_CLIENTS || []).find(c => c.id === msg.clientId);
+      if (!client || !client.lineFriendId) { alert('LINE 連携情報が見つかりません'); return false; }
+      try {
+        const r = await fetch(CLOUD_RUN_BASE + '/api/send-line', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: client.lineFriendId, text: msg.body }),
+        });
+        const d = await r.json();
+        if (d.ok) { markSent(msg.id, msg.clientId); return true; }
+        alert('送信失敗: ' + (d.error || '')); return false;
+      } catch (e) { alert('送信失敗: ' + e.message); return false; }
+    }
+
+    document.querySelectorAll('[data-send]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const msg = todayMessages.find(m => m.id === btn.dataset.send);
+        if (!msg) return;
+        btn.disabled = true; btn.innerHTML = '<span>...</span> 送信中';
+        const ok = await sendMsg(msg);
+        if (ok) {
+          const card = btn.closest('.fp-today-msg');
+          if (card) { card.classList.add('fp-today-msg-done'); card.innerHTML = `<div style="padding:18px;text-align:center;color:#5E5648;font-size:13px;">✓ ${escapeHtml(msg.clientName)}さん に 送信しました</div>`; }
+          toast(`✓ ${msg.clientName}さん に 送信しました`, 'sent');
+        } else {
+          btn.disabled = false; btn.innerHTML = '<span>✓</span> このまま送る';
+        }
+      });
+    });
+    document.querySelectorAll('[data-skip]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const msg = todayMessages.find(m => m.id === btn.dataset.skip);
+        if (!msg) return;
+        markSkipped(msg.id);
+        const card = btn.closest('.fp-today-msg');
+        if (card) { card.classList.add('fp-today-msg-done'); card.innerHTML = `<div style="padding:18px;text-align:center;color:#8B7D5D;font-size:13px;">○ ${escapeHtml(msg.clientName)}さん は スキップしました</div>`; }
+        toast(`スキップ: ${msg.clientName}さん`, 'skip');
+      });
+    });
+    document.querySelectorAll('[data-edit]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const msg = todayMessages.find(m => m.id === btn.dataset.edit);
+        if (!msg) return;
+        openTodayMessageEditor(msg, async (updatedBody) => {
+          msg.body = updatedBody;
+          btn.closest('.fp-today-msg').querySelector('.fp-today-bubble').innerHTML = escapeHtml(updatedBody).replace(/\n/g, '<br>');
+        });
+      });
+    });
+    const bulkBtn = document.getElementById('fp-today-bulk-send');
+    if (bulkBtn) bulkBtn.addEventListener('click', async () => {
+      if (!confirm(`${todayMessages.length}件 すべて 送信します。 よろしいですか?`)) return;
+      bulkBtn.disabled = true; bulkBtn.textContent = '送信中...';
+      let ok = 0, ng = 0;
+      for (const m of todayMessages) {
+        const sent = await sendMsg(m); if (sent) ok++; else ng++;
+        await new Promise(r => setTimeout(r, 200));
+      }
+      toast(`✓ 一斉送信 完了: ${ok}件 / 失敗 ${ng}件`, 'sent');
+      setTimeout(() => renderLineDashboard(), 1200);
+    });
+
+    // 「予定を登録する」ボタン (折り畳み内のプリセット)
     document.querySelectorAll('[data-preset]').forEach(btn => {
       btn.addEventListener('click', () => {
         const preset = presetScenarios.find(p => p.id === btn.dataset.preset);
         if (!preset) return;
-        if (!confirm(`「${preset.title}」 を 自動配信に追加します。\n\n配信タイミング: ${preset.cadence}\n対象: ${preset.segment}\n\n配信開始 してよろしいですか?`)) return;
+        if (!confirm(`「${preset.title}」 を 「いつも送る予定」 に登録します。\n\nタイミング: ${preset.cadence}\n対象: ${preset.segment}\n\n登録 してよろしいですか?`)) return;
         addPresetToSchedules(preset, null);
       });
     });
@@ -4974,6 +5451,43 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
       onSave(preset, customBody);
     });
     overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+  }
+
+  // 今日のメッセージ 個別編集モーダル
+  function openTodayMessageEditor(msg, onSave) {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.62);backdrop-filter:blur(4px);z-index:10080;display:flex;align-items:center;justify-content:center;padding:20px;font-family:"Noto Sans JP",sans-serif;';
+    overlay.innerHTML = `
+      <div style="background:#fff;max-width:620px;width:100%;max-height:88vh;border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,0.35);overflow:hidden;display:flex;flex-direction:column;">
+        <div style="background:linear-gradient(135deg,#FDFBF4,#FAF6E8);padding:20px 24px;border-bottom:1px solid #E8E2D4;display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:10.5px;letter-spacing:0.16em;color:#C19A3A;text-transform:uppercase;margin-bottom:4px;">${msg.icon} ${escapeHtml(msg.category)}</div>
+            <h3 style="margin:0;font-family:'Noto Serif JP',serif;font-weight:700;font-size:17px;color:#1F1A12;">${escapeHtml(msg.clientName)}さん への メッセージを直す</h3>
+            <div style="font-size:11.5px;color:#8B7D5D;margin-top:3px;">${escapeHtml(msg.reason)}</div>
+          </div>
+          <button id="fp-tm-close" style="background:transparent;border:none;cursor:pointer;font-size:22px;color:#8B7D5D;">✕</button>
+        </div>
+        <div style="padding:20px 24px;overflow-y:auto;flex:1;">
+          <div style="font-family:'Manrope',sans-serif;font-weight:700;font-size:10.5px;letter-spacing:0.14em;color:#8B7D5D;text-transform:uppercase;margin-bottom:8px;">📝 本文 (お客様にこのまま届きます)</div>
+          <textarea id="fp-tm-textarea" rows="10" style="width:100%;padding:14px 16px;border:1.5px solid #E8E2D4;border-radius:8px;font-size:13px;font-family:'Hiragino Sans','Noto Sans JP',sans-serif;line-height:1.85;resize:vertical;box-sizing:border-box;background:#FDFBF4;">${escapeHtml(msg.body)}</textarea>
+        </div>
+        <div style="padding:14px 24px;background:#FDFBF4;border-top:1px solid #E8E2D4;display:flex;gap:10px;justify-content:flex-end;">
+          <button id="fp-tm-cancel" style="background:#fff;color:#5E5648;border:1px solid #D6CDB6;padding:11px 22px;border-radius:8px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:0.04em;">キャンセル</button>
+          <button id="fp-tm-save" style="background:linear-gradient(135deg,#1F1A12,#2C2419);color:#FFE9A8;border:none;padding:11px 26px;border-radius:8px;font-size:13px;font-weight:900;cursor:pointer;font-family:inherit;letter-spacing:0.06em;">✓ この内容に直す</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    overlay.querySelector('#fp-tm-close').addEventListener('click', () => overlay.remove());
+    overlay.querySelector('#fp-tm-cancel').addEventListener('click', () => overlay.remove());
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+    overlay.querySelector('#fp-tm-save').addEventListener('click', () => {
+      const v = overlay.querySelector('#fp-tm-textarea').value.trim();
+      if (!v) { alert('本文が空です'); return; }
+      overlay.remove();
+      onSave(v);
+    });
+    setTimeout(() => overlay.querySelector('#fp-tm-textarea').focus(), 100);
   }
 
   // ============================
