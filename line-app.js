@@ -1904,13 +1904,15 @@
     if (document.getElementById('fp-fixed-complete')) return;
     const bar = document.createElement('div');
     bar.id = 'fp-fixed-complete';
-    bar.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:linear-gradient(180deg,#1b2845,#0f1729);color:#fff;padding:14px 24px;box-shadow:0 -8px 32px rgba(15,23,41,0.3);z-index:99999;display:flex;align-items:center;justify-content:space-between;gap:16px;font-family:inherit;';
+    // ★ オーナーfb (4回目): Zoom ウィンドウは別OSウィンドウで右側に並ぶ → bar 右端は Zoom に被って隠れる。
+    // 物理対策: ボタンを「左端」に固定 (Zoom がどこにあっても見える)
+    bar.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:linear-gradient(180deg,#1b2845,#0f1729);color:#fff;padding:14px 24px;box-shadow:0 -8px 32px rgba(15,23,41,0.3);z-index:99999;display:flex;align-items:center;justify-content:flex-start;gap:18px;font-family:inherit;';
     bar.innerHTML = `
-      <div style="display:flex;align-items:center;gap:12px;font-size:13px;">
-        <span style="width:10px;height:10px;background:#ff4d6d;border-radius:50%;animation:fp-rec-pulse 1s infinite;"></span>
-        <strong style="letter-spacing:0.04em;">面談中 — 終わったら右のボタンを押してください</strong>
+      <button id="fp-fixed-complete-btn" style="background:#fff;color:#1b2845;border:none;padding:14px 32px;font-size:14px;font-weight:900;letter-spacing:0.12em;text-transform:uppercase;cursor:pointer;font-family:'Inter','Noto Sans JP',sans-serif;box-shadow:0 4px 14px rgba(255,255,255,0.2);flex-shrink:0;">■ 面談を完了する</button>
+      <div style="display:flex;align-items:center;gap:12px;font-size:13px;min-width:0;">
+        <span style="width:10px;height:10px;background:#ff4d6d;border-radius:50%;animation:fp-rec-pulse 1s infinite;flex-shrink:0;"></span>
+        <strong style="letter-spacing:0.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">面談中 — 終わったら左の「■ 面談を完了する」を押す</strong>
       </div>
-      <button id="fp-fixed-complete-btn" style="background:#fff;color:#1b2845;border:none;padding:14px 32px;font-size:14px;font-weight:900;letter-spacing:0.12em;text-transform:uppercase;cursor:pointer;font-family:'Inter','Noto Sans JP',sans-serif;box-shadow:0 4px 14px rgba(255,255,255,0.2);">■ 面談を完了する</button>
     `;
     document.body.appendChild(bar);
     document.getElementById('fp-fixed-complete-btn').addEventListener('click', () => {
@@ -2028,7 +2030,8 @@
         </div>
         <div style="margin-top:8px;font-size:10.5px;color:rgba(255,255,255,0.92);text-align:center;letter-spacing:0.04em;">面談終わったら ■ を押す / Zoom 閉じても自動停止</div>
       `;
-      el.style.cssText = 'position:fixed;top:18px;right:18px;background:linear-gradient(135deg,#d9264c,#b91c3c);color:#fff;padding:14px 18px 12px;border-radius:14px;box-shadow:0 16px 40px rgba(217,38,76,0.45),0 0 0 4px rgba(255,255,255,0.6);z-index:10201;font-size:13.5px;min-width:280px;';
+      // ★ Zoom ウィンドウは右側に並ぶ → 右上配置だと Zoom に被る → 左上に固定 (4回目修正)
+      el.style.cssText = 'position:fixed;top:18px;left:18px;background:linear-gradient(135deg,#d9264c,#b91c3c);color:#fff;padding:14px 18px 12px;border-radius:14px;box-shadow:0 16px 40px rgba(217,38,76,0.45),0 0 0 4px rgba(255,255,255,0.6);z-index:10201;font-size:13.5px;min-width:280px;';
       const style = document.createElement('style');
       style.textContent = '@keyframes fp-rec-pulse{0%,100%{opacity:1}50%{opacity:0.3}}@keyframes fp-spin{to{transform:rotate(360deg)}}';
       document.head.appendChild(style);
