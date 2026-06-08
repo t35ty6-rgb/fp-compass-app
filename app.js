@@ -3577,9 +3577,60 @@
     return pill;
   }
 
+  // ★ Mac mini Claude Code 経由で資料生成 (Firestore deliverable_requests を経由)
+  // 既存の fetch API と 同じ shape ({ ok, html, error }) を返す
+  async function generateDeliverableViaMacMini({ type, client, clientCtx, taskTitle, latestAi, sanitize }) {
+    const { doc, collection, addDoc, serverTimestamp, onSnapshot } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js');
+    const db = window.__fp.db;
+    // 1) リクエスト作成
+    const payload = {
+      status: 'pending',
+      type,
+      clientName: sanitize(client.name),
+      clientCtx: sanitize(clientCtx),
+      summary: sanitize((latestAi && latestAi.summary) || ''),
+      transcript: sanitize((latestAi && latestAi.transcript) || ''),
+      taskTitle: sanitize(taskTitle),
+      fpName: window.__fp.tenantName || 'FP事務所',
+      tenantId: window.__fp.tenantId,
+      requestedBy: window.__fp.userEmail,
+      createdAt: serverTimestamp(),
+    };
+    const docRef = await addDoc(collection(db, 'deliverable_requests'), payload);
+    console.log('[macmini] request submitted:', docRef.id);
+
+    // 2) 完了 or 失敗 まで onSnapshot で待機 (最大 3分)
+    return new Promise((resolve) => {
+      let timeoutId = setTimeout(() => {
+        unsub(); resolve({ json: async () => ({ ok: false, error: 'Mac mini で3分以内に完了しませんでした (Mac mini が起動しているか確認してください)' }) });
+      }, 3 * 60 * 1000);
+      const unsub = onSnapshot(docRef, (snap) => {
+        const data = snap.data();
+        if (!data) return;
+        if (data.status === 'completed') {
+          clearTimeout(timeoutId); unsub();
+          // HTML を読み戻すには Mac mini 上の output ファイルにアクセスする必要があるが、
+          // 現状は driveUrl (Firebase Storage の token URL) を経由する
+          // V1: HTML フィールドが Firestore に書き戻されてれば それを使う、 なければ URL リダイレクト
+          resolve({ json: async () => ({
+            ok: true,
+            html: data.html || `<div style="padding:30px;text-align:center;font-family:'Noto Serif JP',serif;"><h2 style="color:#10B981;">✓ Mac mini で 生成完了</h2><p style="font-size:13px;color:#5E5648;margin-top:12px;">PDF は <code style="background:#F1ECDF;padding:2px 6px;border-radius:4px;">~/.skeleton-fp-deliverable/output/${snap.id}.pdf</code> に保存されました</p>${data.driveUrl ? `<p style="margin-top:18px;"><a href="${data.driveUrl}" target="_blank" style="display:inline-block;background:#06C755;color:#fff;text-decoration:none;padding:11px 22px;border-radius:8px;font-weight:800;font-size:13px;">📎 PDF をダウンロード</a></p>` : ''}</div>`,
+            macMiniReqId: snap.id,
+            driveUrl: data.driveUrl,
+          }) });
+        } else if (data.status === 'failed') {
+          clearTimeout(timeoutId); unsub();
+          resolve({ json: async () => ({ ok: false, error: 'Mac mini 生成失敗: ' + (data.errorMessage || '不明') }) });
+        }
+        // processing 中は 何もしない (subscription 継続)
+      });
+    });
+  }
+
   async function generateDeliverableWithAI(type, taskTitle, client, resultEl) {
     const btn = document.getElementById('fp-deliv-ai');
-    if (btn) { btn.disabled = true; btn.textContent = '✨ Claude 生成中… (30〜60秒)'; }
+    const useMacMini = localStorage.getItem('fp-deliv-via-macmini') !== '0';
+    if (btn) { btn.disabled = true; btn.textContent = useMacMini ? '✨ Mac mini で生成中… (1〜2分)' : '✨ Claude 生成中… (30〜60秒)'; }
     // ★ オーナーfb「生成中ピルが overlay の後ろに隠れて見えない」+ 「緑タップで再生成バグ」
     // → 生成開始と同時にモーダルを即 hide。pill だけ前面に。完了クリックは display:flex で復元のみ (新規生成しない)
     const dModal = document.getElementById('fp-deliv-modal');
@@ -3631,7 +3682,12 @@
         .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, ''); // 非可印字制御文字 (改行/タブは温存)
     };
     try {
-      const r = await fetch('https://fp-compass-webhook-527726449426.asia-northeast1.run.app/api/generate-deliverable', {
+      // ★ オーナーfb (v AO): Mac mini Claude Code 経由で生成 (Anthropic API課金回避)。 失敗時は Cloud Run fallback。
+      const useMacMini = localStorage.getItem('fp-deliv-via-macmini') !== '0'; // default ON
+      const useFirestorePath = useMacMini && window.__fp?.db && window.__fp?.userEmail && window.__fp?.tenantId;
+      const r = useFirestorePath
+        ? await generateDeliverableViaMacMini({ type, client, clientCtx, taskTitle, latestAi, sanitize: sanitizeForJson })
+        : await fetch('https://fp-compass-webhook-527726449426.asia-northeast1.run.app/api/generate-deliverable', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           type,
