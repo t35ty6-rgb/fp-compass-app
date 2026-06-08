@@ -347,6 +347,7 @@
                         <strong style="color:${t.color};">${tagged.length}名</strong> に付与
                         ${tagged.length > 0 ? ` — <span style="color:#64748B;font-size:11px;">${tagged.slice(0,5).map(c => escapeHtml(c.name)).join(' / ')}${tagged.length > 5 ? ` 他${tagged.length-5}名` : ''}</span>` : ''}
                       </span>
+                      <button class="fp-tg-assign" data-id="${t.id}" style="background:${t.color};color:#fff;border:none;padding:5px 14px;border-radius:5px;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:0.04em;">+ 客を選んで付ける</button>
                       <button class="fp-tg-del" data-id="${t.id}" style="background:transparent;color:#DC2626;border:1px solid #FEE2E2;padding:5px 12px;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">削除</button>
                     </div>
                   `;
@@ -382,8 +383,108 @@
           render();
         });
       });
+      // ★ オーナーfb: タグ管理 hub から複数客に一括 ON/OFF
+      v.querySelectorAll('.fp-tg-assign').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const tagId = btn.dataset.id;
+          const tag = getMaster().find(t => t.id === tagId);
+          if (!tag) return;
+          openTagAssignModal(tag, () => render());
+        });
+      });
     }
     render();
+  }
+
+  // タグ管理 hub の「+ 客を選んで付ける」 から開く 一括ON/OFF モーダル
+  function openTagAssignModal(tag, onDone) {
+    const allClients = window.DUMMY_CLIENTS || [];
+    function getClientTagsLocal(cid) { try { return JSON.parse(localStorage.getItem('fp-client-tags-' + cid) || '[]'); } catch(_) { return []; } }
+    function saveClientTagsLocal(cid, ids) { localStorage.setItem('fp-client-tags-' + cid, JSON.stringify(ids)); }
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.62);backdrop-filter:blur(4px);z-index:10070;display:flex;align-items:center;justify-content:center;padding:20px;font-family:"Noto Sans JP",sans-serif;';
+    const initialAssigned = new Set(allClients.filter(c => getClientTagsLocal(c.id).includes(tag.id)).map(c => c.id));
+    const working = new Set(initialAssigned);
+    function paint() {
+      overlay.innerHTML = `
+        <div style="background:#fff;max-width:640px;width:100%;max-height:80vh;border-radius:14px;box-shadow:0 24px 60px rgba(0,0,0,0.35);display:flex;flex-direction:column;overflow:hidden;">
+          <div style="background:${tag.color};color:#fff;padding:16px 22px;display:flex;justify-content:space-between;align-items:center;">
+            <div>
+              <div style="font-size:10px;font-weight:800;letter-spacing:0.22em;opacity:0.85;">TAG ASSIGNMENT</div>
+              <h3 style="margin:4px 0 0 0;font-size:15px;font-weight:900;">🏷 「${escapeHtml(tag.label)}」 を付ける客を選ぶ</h3>
+            </div>
+            <button id="fp-ta-close" style="background:rgba(255,255,255,0.2);border:none;color:#fff;width:32px;height:32px;border-radius:6px;cursor:pointer;font-size:16px;">✕</button>
+          </div>
+          <div style="padding:14px 22px;background:#F8FAFC;border-bottom:1px solid #E2E8F0;display:flex;gap:8px;align-items:center;">
+            <input id="fp-ta-search" type="search" placeholder="名前で絞り込み..." style="flex:1;padding:8px 12px;border:1.5px solid #E2E8F0;border-radius:6px;font-size:12.5px;font-family:inherit;">
+            <button id="fp-ta-all" style="background:#0F172A;color:#fff;border:none;padding:8px 14px;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">全選択/解除</button>
+          </div>
+          <div id="fp-ta-list" style="flex:1;overflow-y:auto;padding:14px 22px;"></div>
+          <div style="padding:14px 22px;background:#F8FAFC;border-top:1px solid #E2E8F0;display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:12px;font-weight:700;color:#475569;">選択 <span id="fp-ta-count" style="color:${tag.color};font-weight:900;">${working.size}</span> 名</span>
+            <button id="fp-ta-save" style="background:${tag.color};color:#fff;border:none;padding:10px 22px;border-radius:6px;font-size:13px;font-weight:900;cursor:pointer;font-family:inherit;letter-spacing:0.04em;">✓ 保存</button>
+          </div>
+        </div>
+      `;
+      paintList();
+      bind();
+    }
+    function paintList() {
+      const q = (overlay.querySelector('#fp-ta-search')?.value || '').toLowerCase().trim();
+      const list = overlay.querySelector('#fp-ta-list');
+      const filtered = allClients.filter(c => !q || (c.name || '').toLowerCase().includes(q) || (c.kana || '').toLowerCase().includes(q));
+      list.innerHTML = filtered.length === 0 ? '<div style="text-align:center;padding:30px;color:#94A3B8;font-size:13px;">該当客なし</div>' :
+        filtered.map(c => {
+          const on = working.has(c.id);
+          return `
+            <label data-cid="${c.id}" class="fp-ta-row" style="display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px solid ${on ? tag.color : '#E2E8F0'};background:${on ? tag.color+'14' : '#fff'};border-radius:7px;margin-bottom:5px;cursor:pointer;">
+              <input type="checkbox" data-cid="${c.id}" ${on ? 'checked' : ''} style="width:17px;height:17px;cursor:pointer;accent-color:${tag.color};">
+              <span style="flex:1;font-size:13px;font-weight:600;color:#0F172A;">${escapeHtml(c.name)} <span style="color:#94A3B8;font-size:11px;font-weight:500;margin-left:5px;">${escapeHtml(c.occupation || '')}</span></span>
+              ${c.lineFriendId ? '<span style="font-size:9px;color:#06C755;background:#DCFCE7;padding:1px 6px;border-radius:6px;font-weight:800;letter-spacing:0.05em;">LINE</span>' : ''}
+            </label>
+          `;
+        }).join('');
+      list.querySelectorAll('input[type=checkbox]').forEach(cb => {
+        cb.addEventListener('change', () => {
+          const cid = cb.dataset.cid;
+          if (cb.checked) working.add(cid); else working.delete(cid);
+          overlay.querySelector('#fp-ta-count').textContent = String(working.size);
+          const row = cb.closest('.fp-ta-row');
+          if (row) { row.style.background = cb.checked ? tag.color+'14' : '#fff'; row.style.borderColor = cb.checked ? tag.color : '#E2E8F0'; }
+        });
+      });
+    }
+    function bind() {
+      overlay.querySelector('#fp-ta-close').addEventListener('click', () => overlay.remove());
+      overlay.querySelector('#fp-ta-search').addEventListener('input', paintList);
+      overlay.querySelector('#fp-ta-all').addEventListener('click', () => {
+        const q = (overlay.querySelector('#fp-ta-search').value || '').toLowerCase().trim();
+        const filtered = allClients.filter(c => !q || (c.name || '').toLowerCase().includes(q));
+        const allOn = filtered.every(c => working.has(c.id));
+        filtered.forEach(c => { if (allOn) working.delete(c.id); else working.add(c.id); });
+        paintList();
+        overlay.querySelector('#fp-ta-count').textContent = String(working.size);
+      });
+      overlay.querySelector('#fp-ta-save').addEventListener('click', () => {
+        let added = 0, removed = 0;
+        allClients.forEach(c => {
+          const cur = getClientTagsLocal(c.id);
+          const has = cur.includes(tag.id);
+          const want = working.has(c.id);
+          if (has && !want) { saveClientTagsLocal(c.id, cur.filter(x => x !== tag.id)); removed++; }
+          else if (!has && want) { saveClientTagsLocal(c.id, cur.concat(tag.id)); added++; }
+        });
+        const toast = document.createElement('div');
+        toast.style.cssText = 'position:fixed;top:24px;left:50%;transform:translateX(-50%);background:#10B981;color:#fff;padding:12px 22px;border-radius:8px;font-size:13px;font-weight:800;z-index:10090;box-shadow:0 12px 32px rgba(16,185,129,0.4);';
+        toast.textContent = `✓ 「${tag.label}」: 追加 ${added}名 / 削除 ${removed}名`;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 2400);
+        overlay.remove();
+        if (onDone) onDone();
+      });
+    }
+    document.body.appendChild(overlay);
+    paint();
   }
 
   // ============================

@@ -5791,8 +5791,11 @@ ${client.name}さん、ありがとうございます。
         </div>
       `;
       // バインド
-      overlay.querySelector('#fp-tag-close').addEventListener('click', () => overlay.remove());
-      overlay.querySelector('#fp-tag-done').addEventListener('click', () => { overlay.remove(); renderClientTags(clientId); });
+      // ★ どの方法で閉じても外の chip を再描画する (✕ / 完了 / 背景クリック)
+      const closeAndRefresh = () => { overlay.remove(); renderClientTags(clientId); };
+      overlay.querySelector('#fp-tag-close').addEventListener('click', closeAndRefresh);
+      overlay.querySelector('#fp-tag-done').addEventListener('click', closeAndRefresh);
+      overlay.addEventListener('click', (e) => { if (e.target === overlay) closeAndRefresh(); });
       overlay.querySelectorAll('.fp-tag-toggle').forEach(btn => {
         btn.addEventListener('click', () => {
           const id = btn.dataset.tag;
@@ -5803,7 +5806,7 @@ ${client.name}さん、ありがとうございます。
           renderModal();
         });
       });
-      overlay.querySelector('#fp-tag-create').addEventListener('click', () => {
+      const createNewTag = () => {
         const name = overlay.querySelector('#fp-tag-new-name').value.trim();
         if (!name) return;
         const cur = getTagsMaster();
@@ -5816,7 +5819,19 @@ ${client.name}さん、ありがとうございます。
         const myCur = getClientTags(clientId);
         myCur.push(id);
         saveClientTags(clientId, myCur);
+        // ★ オーナーfb: 「タグ付いたか分からない」→ 外の chip 即座に更新 + トースト
+        renderClientTags(clientId);
+        const toast = document.createElement('div');
+        toast.style.cssText = 'position:fixed;top:24px;left:50%;transform:translateX(-50%);background:#10B981;color:#fff;padding:12px 22px;border-radius:8px;font-size:13px;font-weight:800;z-index:10080;box-shadow:0 12px 32px rgba(16,185,129,0.4);font-family:"Noto Sans JP",sans-serif;';
+        toast.textContent = `✓ 「${name}」 を 顧客に付与しました`;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 2400);
         renderModal();
+      };
+      overlay.querySelector('#fp-tag-create').addEventListener('click', createNewTag);
+      // Enter キーでも作成
+      overlay.querySelector('#fp-tag-new-name').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); createNewTag(); }
       });
       overlay.querySelectorAll('.fp-tag-del').forEach(btn => {
         btn.addEventListener('click', () => {
