@@ -2195,7 +2195,7 @@
             <div class="cd-flow-reason">${escapeHtml(topRec.reason)}</div>
 
             <div class="cd-flow-steps">
-              <button class="cd-flow-step cd-flow-step-active fp-draft-cta" id="modal-draft-btn" style="background:linear-gradient(135deg,#F97316,#EA580C,#DC2626) !important;background-size:200% 200% !important;border:none !important;color:#fff !important;animation:fp-draft-cta-pulse 2s ease-in-out infinite,fp-draft-cta-gradient 4s ease infinite !important;box-shadow:0 8px 24px rgba(249,115,22,0.55),0 0 0 4px rgba(255,255,255,0.5) !important;">
+              <button class="cd-flow-step cd-flow-step-active fp-draft-cta" id="modal-draft-btn" style="background:linear-gradient(135deg,#F97316,#EA580C,#DC2626) !important;border:none !important;color:#fff !important;box-shadow:0 8px 24px rgba(249,115,22,0.55),0 0 0 4px rgba(255,255,255,0.5) !important;">
                 <span class="cd-flow-step-no" style="background:rgba(255,255,255,0.28) !important;color:#fff !important;border:1px solid rgba(255,255,255,0.4) !important;">1</span>
                 <span class="cd-flow-step-body">
                   <span class="cd-flow-step-label" style="color:#fff !important;font-weight:900 !important;letter-spacing:0.04em !important;">👉 ✨ AI下書きを作る</span>
