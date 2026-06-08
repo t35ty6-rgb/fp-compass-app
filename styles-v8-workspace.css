@@ -1187,17 +1187,17 @@ button.ghost:hover, button.btn-mini:hover {
    Howto banner — collapsed by default + dismissable
    ------------------------------------------------------------------ */
 .howto-banner {
-  background: transparent !important;
-  border: 1px solid var(--hairline) !important;
-  border-radius: 8px !important;
+  background: linear-gradient(135deg, #0F172A, #1E293B) !important;
+  border: 1px solid #1E293B !important;
+  border-radius: 10px !important;
   padding: 0 !important;
   margin-bottom: 16px;
-  box-shadow: none !important;
+  box-shadow: 0 4px 16px rgba(15,23,42,0.18) !important;
   position: relative;
   overflow: hidden;
   transition: border-color .15s, background .15s;
 }
-.howto-banner:hover { border-color: var(--hairline-2) !important; }
+.howto-banner:hover { border-color: #334155 !important; }
 .howto-banner::before { content: none !important; display: none !important; }
 
 /* Collapsed (default) — only header visible, click to expand */
@@ -1225,19 +1225,22 @@ button.ghost:hover, button.btn-mini:hover {
 .howto-banner.is-open .howto-banner-head::after { transform: rotate(180deg); }
 .howto-banner-title {
   font-family: var(--font-body);
-  font-weight: 500;
-  font-size: 12.5px;
-  letter-spacing: 0;
-  color: var(--ink-2);
+  font-weight: 800;
+  font-size: 13.5px;
+  letter-spacing: 0.02em;
+  color: #fff !important;
   display: inline-flex; align-items: center; gap: 6px;
 }
 .howto-banner-title i[data-lucide], .howto-banner-title svg.lucide {
   width: 13px !important; height: 13px !important;
-  color: var(--accent);
+  color: #FFE9A8;
 }
 .howto-banner-subtitle {
   font-family: var(--font-body);
-  color: var(--muted); font-size: 11.5px;
+  color: rgba(255,255,255,0.78) !important; font-size: 11.5px;
+}
+.howto-banner-head::after {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>") !important;
 }
 
 /* Steps — hidden by default */

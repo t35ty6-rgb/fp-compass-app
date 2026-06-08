@@ -3725,15 +3725,9 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
   const LIVE_CACHE_KEY = 'fp-livedata-cache-v1';
 
   async function fetchLiveData() {
-    // ★ オーナーfb: GASは現状テナント分離してない。demo 以外には共有データを混ぜない (新規 FP には完全空台帳)
-    const isSharedDataTenant = (window.__fp && window.__fp.tenantId === 'demo');
-    if (!isSharedDataTenant) {
-      liveData = { users: [], bookings: [], surveys: [], line_messages: [], ai_results: [], ai_tasks: [], step_log: [], calendar_requests: [] };
-      window.LineAppLiveData = liveData;
-      // GASキャッシュも消す (前回テナント時の残骸防止)
-      try { localStorage.removeItem(LIVE_CACHE_KEY); } catch (_) {}
-      return;
-    }
+    // ★ v20260608Y で全 GAS 遮断していたが、オーナーの実予約も消えてしまうので解除。
+    // GAS は ?fpId=xxx で URL レベルで tenant 分離されている (CLOUD_RUN_API)。
+    // demo テナントには dummy-data.js 由来の demo 客が出るのは変わらず (loadTenantData の別経路)。
     // ① キャッシュがあれば即座に画面へ反映 (体感ゼロ秒)
     if (!liveData) {
       try {
