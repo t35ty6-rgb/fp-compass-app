@@ -4610,15 +4610,32 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
           ${window.LINE_SCHEDULES.filter(s => s.enabled).map(s => {
             const seg = window.SEGMENTS.find(x => x.id === s.segment);
             const recipients = seg ? window.LineCRM.evaluateSegment(seg.id).length : (s.segment === 'auto-birthday' ? todayBirthdays.length : 0);
+            // ★ オーナーfb (v AN): 何が送られるか分かるよう 本文プレビューを 表示
+            const tpl = (window.LINE_TEMPLATES || []).find(t => t.id === s.templateId);
+            const bodyText = (s.body || (tpl && tpl.body) || '').replace(/\{\{name\}\}/g, 'お客様').replace(/\{name\}/g, 'お客様').replace(/\{\{fp_name\}\}/g, 'FP').replace(/\{fpName\}/g, 'FP').replace(/\{\{[^}]+\}\}/g, '…');
+            const previewText = bodyText.slice(0, 80).replace(/\n/g, ' / ');
             return `
               <div class="fp-dist-run-card" data-schid-jump="${escapeHtml(s.id)}">
-                ${cadenceVisual(s.schedule)}
-                <div class="fp-dist-run-main">
-                  <div class="fp-dist-run-name">${escapeHtml(s.name)}</div>
-                  <div class="fp-dist-run-meta">${seg ? seg.icon + ' ' + escapeHtml(seg.name) : '🎂 誕生日対象者'} <span class="fp-dist-run-recipients">${recipients}名</span></div>
-                  <div class="fp-dist-run-next">次回: <strong>${escapeHtml(s.nextSend || '—')}</strong></div>
+                <div class="fp-dist-run-top">
+                  ${cadenceVisual(s.schedule)}
+                  <div class="fp-dist-run-main">
+                    <div class="fp-dist-run-name">${escapeHtml(s.name)}</div>
+                    <div class="fp-dist-run-meta">${seg ? seg.icon + ' ' + escapeHtml(seg.name) : '🎂 誕生日対象者'} <span class="fp-dist-run-recipients">${recipients}名</span></div>
+                    <div class="fp-dist-run-next">次回: <strong>${escapeHtml(s.nextSend || '—')}</strong></div>
+                  </div>
+                  <div class="fp-dist-run-toggle">●</div>
                 </div>
-                <div class="fp-dist-run-toggle">●</div>
+                ${bodyText ? `
+                  <div class="fp-dist-run-preview">
+                    <div class="fp-dist-run-preview-label">📝 本文</div>
+                    <div class="fp-dist-run-preview-text">${escapeHtml(previewText)}${bodyText.length > 80 ? '…' : ''}</div>
+                    <button class="fp-dist-run-preview-btn" data-preview-schid="${escapeHtml(s.id)}">全文を見る・編集する →</button>
+                  </div>
+                ` : `
+                  <div class="fp-dist-run-preview fp-dist-run-preview-empty">
+                    ⚠ 本文が未設定です。 編集して本文を入れてください。
+                  </div>
+                `}
               </div>
             `;
           }).join('')}
@@ -4863,12 +4880,48 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
 
       .fp-dist-running-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
       .fp-dist-run-card {
-        display: flex; align-items: center; gap: 14px;
         background: #fff; border: 1px solid #E8E2D4;
         border-radius: 10px; padding: 14px 16px;
-        cursor: pointer; transition: all 0.15s ease;
+        transition: all 0.15s ease;
       }
-      .fp-dist-run-card:hover { border-color: #C19A3A; transform: translateX(2px); }
+      .fp-dist-run-top {
+        display: flex; align-items: center; gap: 14px;
+      }
+      .fp-dist-run-card:hover { border-color: #C19A3A; }
+      .fp-dist-run-preview {
+        margin-top: 12px; padding: 10px 12px;
+        background: #FDFBF4;
+        border: 1px solid #F1ECDF;
+        border-radius: 8px;
+      }
+      .fp-dist-run-preview-label {
+        font-family: 'Manrope', sans-serif;
+        font-weight: 800; font-size: 10px;
+        letter-spacing: 0.16em;
+        color: #8B7D5D; text-transform: uppercase;
+        margin-bottom: 5px;
+      }
+      .fp-dist-run-preview-text {
+        font-family: 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+        font-size: 11.5px; line-height: 1.65;
+        color: #1F1A12; margin-bottom: 7px;
+      }
+      .fp-dist-run-preview-btn {
+        background: transparent; border: none;
+        color: #C19A3A;
+        font-family: 'Manrope', 'Noto Sans JP', sans-serif;
+        font-weight: 700; font-size: 11px;
+        letter-spacing: 0.04em;
+        padding: 0; cursor: pointer;
+        text-decoration: underline;
+      }
+      .fp-dist-run-preview-btn:hover { color: #B8893D; }
+      .fp-dist-run-preview-empty {
+        font-size: 11px; color: #DC2626;
+        font-family: 'Manrope', 'Noto Sans JP', sans-serif;
+        font-weight: 700;
+        background: #FEF2F2; border-color: #FCA5A5;
+      }
       .fp-cadence-mini {
         flex-shrink: 0; width: 56px; height: 56px;
         background: linear-gradient(135deg, #FDFBF4, #FAF6E8);
@@ -5462,10 +5515,19 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
     });
     // 稼働中カードクリック → スケジュール編集
     document.querySelectorAll('[data-schid-jump]').forEach(el => {
-      el.addEventListener('click', () => {
+      el.addEventListener('click', (e) => {
+        // プレビューボタンが押された時は カード遷移しない
+        if (e.target.closest('[data-preview-schid]')) return;
         const id = el.dataset.schidJump;
         document.querySelector('[data-line-sub="schedules"]')?.click();
         setTimeout(() => openScheduleEditor(id), 200);
+      });
+    });
+    // 「全文を見る・編集する」 ボタン → 本文プレビュー&編集モーダル
+    document.querySelectorAll('[data-preview-schid]').forEach(el => {
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openSchedulePreview(el.dataset.previewSchid);
       });
     });
   }
@@ -5751,6 +5813,82 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
     document.body.appendChild(overlay);
   }
 
+  // 「登録されてる予定」 の 本文プレビュー&編集モーダル
+  function openSchedulePreview(schId) {
+    const s = (window.LINE_SCHEDULES || []).find(x => x.id === schId);
+    if (!s) return;
+    const tpl = (window.LINE_TEMPLATES || []).find(t => t.id === s.templateId);
+    const seg = (window.SEGMENTS || []).find(x => x.id === s.segment);
+    const initialBody = s.body || (tpl && tpl.body) || '';
+
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.62);backdrop-filter:blur(4px);z-index:10080;display:flex;align-items:center;justify-content:center;padding:20px;font-family:"Noto Sans JP",sans-serif;';
+    overlay.innerHTML = `
+      <div style="background:#fff;max-width:700px;width:100%;max-height:88vh;border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,0.35);overflow:hidden;display:flex;flex-direction:column;">
+        <div style="background:linear-gradient(135deg,#FDFBF4,#FAF6E8);padding:20px 26px;border-bottom:1px solid #E8E2D4;display:flex;justify-content:space-between;align-items:flex-start;gap:14px;">
+          <div style="flex:1;min-width:0;">
+            <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:10.5px;letter-spacing:0.2em;color:#C19A3A;text-transform:uppercase;margin-bottom:5px;">PREVIEW · 配信される本文</div>
+            <h3 style="margin:0;font-family:'Noto Serif JP',serif;font-weight:700;font-size:18px;color:#1F1A12;letter-spacing:-0.005em;">${escapeHtml(s.name)}</h3>
+            <div style="margin-top:5px;font-size:11.5px;color:#5E5648;line-height:1.6;">
+              ${escapeHtml(s.schedule || '')} · ${seg ? seg.icon + ' ' + escapeHtml(seg.name) : '🎂 誕生日対象者'}
+            </div>
+          </div>
+          <button id="fp-sp-close" style="background:transparent;border:none;cursor:pointer;font-size:22px;color:#8B7D5D;flex-shrink:0;">✕</button>
+        </div>
+        <div style="padding:20px 26px;overflow-y:auto;flex:1;display:grid;grid-template-columns:1fr 1fr;gap:18px;">
+          <div>
+            <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:10.5px;letter-spacing:0.14em;color:#8B7D5D;text-transform:uppercase;margin-bottom:8px;">📝 本文 (編集可)</div>
+            <textarea id="fp-sp-textarea" rows="12" style="width:100%;padding:14px 16px;border:1.5px solid #E8E2D4;border-radius:8px;font-size:13px;font-family:'Hiragino Sans','Noto Sans JP',sans-serif;line-height:1.85;resize:vertical;box-sizing:border-box;background:#FDFBF4;">${escapeHtml(initialBody)}</textarea>
+            <div style="font-size:10.5px;color:#8B7D5D;margin-top:6px;line-height:1.6;">
+              <strong style="color:#C19A3A;">{{name}}</strong> または <strong style="color:#C19A3A;">{name}</strong> = お客様の名前<br>
+              <strong style="color:#C19A3A;">{{fp_name}}</strong> または <strong style="color:#C19A3A;">{fpName}</strong> = 自分の名前<br>
+              送信時に 自動置換します。
+            </div>
+          </div>
+          <div>
+            <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:10.5px;letter-spacing:0.14em;color:#8B7D5D;text-transform:uppercase;margin-bottom:8px;">👁 お客様のLINE プレビュー</div>
+            <div style="background:linear-gradient(180deg,#F1F5F9,#E2E8F0);border-radius:12px;padding:16px;">
+              <div id="fp-sp-preview" style="background:#fff;border-radius:14px 14px 14px 3px;padding:14px 16px;font-family:'Hiragino Sans','Noto Sans JP',sans-serif;font-size:13px;line-height:1.85;color:#0F172A;white-space:pre-wrap;box-shadow:0 1px 3px rgba(0,0,0,0.08);min-height:200px;"></div>
+            </div>
+            <div style="font-size:10.5px;color:#8B7D5D;margin-top:6px;text-align:center;">山田 太郎 さん で 表示しています</div>
+          </div>
+        </div>
+        <div style="padding:16px 26px;background:#FDFBF4;border-top:1px solid #E8E2D4;display:flex;gap:10px;justify-content:flex-end;">
+          <button id="fp-sp-cancel" style="background:#fff;color:#5E5648;border:1px solid #D6CDB6;padding:11px 22px;border-radius:8px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:0.04em;">閉じる</button>
+          <button id="fp-sp-save" style="background:linear-gradient(135deg,#1F1A12,#2C2419);color:#FFE9A8;border:none;padding:11px 26px;border-radius:8px;font-size:13px;font-weight:900;cursor:pointer;font-family:inherit;letter-spacing:0.06em;">✓ この本文で 保存</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    const textarea = overlay.querySelector('#fp-sp-textarea');
+    const preview = overlay.querySelector('#fp-sp-preview');
+    const fpName = (window.__fp?.tenantName || 'FP事務所').replace(/ — DEMO ビュー/, '');
+    function updatePreview() {
+      const text = textarea.value
+        .replace(/\{\{name\}\}/g, '山田 太郎').replace(/\{name\}/g, '山田 太郎')
+        .replace(/\{\{fp_name\}\}/g, fpName).replace(/\{fpName\}/g, fpName)
+        .replace(/\{\{[^}]+\}\}/g, '○○');
+      preview.textContent = text;
+    }
+    textarea.addEventListener('input', updatePreview);
+    updatePreview();
+    overlay.querySelector('#fp-sp-close').addEventListener('click', () => overlay.remove());
+    overlay.querySelector('#fp-sp-cancel').addEventListener('click', () => overlay.remove());
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+    overlay.querySelector('#fp-sp-save').addEventListener('click', () => {
+      const v = textarea.value.trim();
+      if (!v) { alert('本文が空です'); return; }
+      s.body = v; // schedule の body フィールドに保存 (テンプレ独立)
+      overlay.remove();
+      const t = document.createElement('div');
+      t.style.cssText = 'position:fixed;top:24px;left:50%;transform:translateX(-50%);background:#1F1A12;color:#fff;padding:12px 22px;border-radius:8px;font-size:13px;font-weight:700;z-index:99999;box-shadow:0 12px 32px rgba(15,23,42,0.4);font-family:"Noto Sans JP",sans-serif;';
+      t.textContent = `✓ 「${s.name}」 の本文を保存しました`;
+      document.body.appendChild(t); setTimeout(() => t.remove(), 2400);
+      renderLineDashboard();
+    });
+    setTimeout(() => textarea.focus(), 100);
+  }
+
   // 今日のメッセージ 個別編集モーダル
   function openTodayMessageEditor(msg, onSave) {
     const overlay = document.createElement('div');
@@ -5815,6 +5953,7 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
             <th>シナリオ名</th>
             <th>宛先セグメント</th>
             <th>配信タイミング</th>
+            <th>本文プレビュー</th>
             <th>最終送信</th>
             <th>次回</th>
             <th></th>
@@ -5825,12 +5964,22 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
             const seg = window.SEGMENTS.find(x => x.id === s.segment);
             const segLabel = seg ? `${seg.icon} ${seg.name}` : (s.segment === 'auto-birthday' ? '🎂 誕生日対象者' : s.segment);
             const recipients = seg ? window.LineCRM.evaluateSegment(seg.id).length : '-';
+            // ★ オーナーfb (v AN): 何が送られるかわかるよう 本文プレビューを列追加
+            const tpl = (window.LINE_TEMPLATES || []).find(t => t.id === s.templateId);
+            const bodyText = (s.body || (tpl && tpl.body) || '').replace(/\{\{name\}\}/g, 'お客様').replace(/\{name\}/g, 'お客様').replace(/\{\{[^}]+\}\}/g, '…');
+            const previewShort = bodyText.slice(0, 40).replace(/\n/g, ' ');
             return `
               <tr class="${s.enabled ? '' : 'disabled-row'}">
                 <td><label class="toggle-switch"><input type="checkbox" ${s.enabled ? 'checked' : ''} data-schid="${s.id}"><span></span></label></td>
                 <td><strong>${escapeHtml(s.name)}</strong></td>
                 <td>${escapeHtml(segLabel)} <span style="color:var(--muted);">(${recipients}名)</span></td>
                 <td>${escapeHtml(s.schedule)}</td>
+                <td style="max-width:280px;">
+                  ${bodyText ? `
+                    <div style="font-size:11.5px;color:#475569;line-height:1.55;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(previewShort)}${bodyText.length > 40 ? '…' : ''}</div>
+                    <button class="ghost" data-preview-schid="${s.id}" style="font-size:10.5px;color:#C19A3A;background:transparent;border:none;text-decoration:underline;padding:2px 0 0;cursor:pointer;font-family:inherit;">全文を見る</button>
+                  ` : '<span style="color:#DC2626;font-size:11px;font-weight:700;">⚠ 本文未設定</span>'}
+                </td>
                 <td>${s.lastSent || '—'}</td>
                 <td>${escapeHtml(s.nextSend)}</td>
                 <td><button class="ghost" data-schid-edit="${s.id}">編集</button></td>
@@ -5854,6 +6003,10 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
     });
     document.querySelectorAll('[data-schid-edit]').forEach(el => {
       el.addEventListener('click', () => openScheduleEditor(el.dataset.schidEdit));
+    });
+    // ★ スケジュールテーブルの「全文を見る」 ボタン → 本文プレビュー&編集モーダル
+    document.querySelectorAll('[data-preview-schid]').forEach(el => {
+      el.addEventListener('click', (e) => { e.stopPropagation(); openSchedulePreview(el.dataset.previewSchid); });
     });
     document.getElementById('add-sched-btn').addEventListener('click', () => openScheduleEditor(null));
   }
