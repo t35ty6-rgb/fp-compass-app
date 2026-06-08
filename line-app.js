@@ -4560,9 +4560,33 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
                   <div class="fp-line-preview-bubble">${escapeHtml(p.sample).replace(/\\n/g, '<br>').replace(/\n/g, '<br>')}</div>
                   ${p.note ? `<div class="fp-line-preview-note">${escapeHtml(p.note)}</div>` : ''}
                 </div>
+                ${(function(){
+                  // 該当者カウント (今すぐ送れる人数)
+                  const clientList = window.DUMMY_CLIENTS || [];
+                  const today = new Date(); today.setHours(0,0,0,0);
+                  let count = 0;
+                  if (p.id === 'preset-birthday') {
+                    clientList.forEach(c => {
+                      if (!c.lineFriendId) return;
+                      if (c.birth) { const b=new Date(c.birth); if(b.getMonth()===today.getMonth()&&b.getDate()===today.getDate()) count++; }
+                      (c.family||[]).forEach(m => { if(!m.birth) return; const b=new Date(m.birth); if(b.getMonth()===today.getMonth()&&b.getDate()===today.getDate()) count++; });
+                    });
+                  } else if (p.id === 'preset-followup') {
+                    clientList.forEach(c => {
+                      if (!c.lineFriendId || !c.lastContact) return;
+                      const days = Math.floor((today - new Date(c.lastContact)) / 86400000);
+                      if (days >= 60) count++;
+                    });
+                  } else if (p.id === 'preset-monthly') {
+                    count = clientList.filter(c => c.lineFriendId).length;
+                  } else if (p.id === 'preset-newyear') {
+                    count = clientList.filter(c => c.lineFriendId).length;
+                  }
+                  return `<div class="fp-dist-preset-count">現在 <strong>${count}名</strong> が 該当しています</div>`;
+                })()}
                 <div class="fp-dist-preset-actions">
-                  <button class="fp-dist-preset-add" data-preset="${p.id}">この予定を登録する</button>
-                  <button class="fp-dist-preset-edit" data-preset-edit="${p.id}">本文を直してから</button>
+                  <button class="fp-dist-preset-now" data-preset-now="${p.id}">📤 今すぐ 該当者に 送る</button>
+                  <button class="fp-dist-preset-add" data-preset="${p.id}">毎回 自動で やる</button>
                 </div>
               </div>
             `).join('')}
@@ -4788,23 +4812,44 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
         color: #64748B; font-style: italic; line-height: 1.55;
       }
 
+      .fp-dist-preset-count {
+        font-size: 12px; color: #5E5648; margin-bottom: 12px;
+        padding: 10px 12px; background: #FDFBF4;
+        border: 1px solid #E8E2D4; border-radius: 8px;
+        text-align: center;
+      }
+      .fp-dist-preset-count strong {
+        font-family: 'Noto Serif JP', serif;
+        font-size: 16px; color: #C19A3A;
+        font-weight: 700;
+      }
       .fp-dist-preset-actions {
-        display: flex; gap: 8px;
+        display: flex; gap: 8px; flex-direction: column;
+      }
+      .fp-dist-preset-now {
+        width: 100%;
+        font-family: 'Noto Sans JP', 'Manrope', sans-serif;
+        font-weight: 900; font-size: 14px;
+        letter-spacing: 0.04em; color: #fff;
+        background: linear-gradient(135deg, #06C755, #04A847);
+        border: none; padding: 13px 14px; border-radius: 9px;
+        cursor: pointer; transition: all 0.15s ease;
+        box-shadow: 0 4px 14px rgba(6,199,85,0.32);
+      }
+      .fp-dist-preset-now:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 22px rgba(6,199,85,0.45);
       }
       .fp-dist-preset-add {
-        flex: 1;
+        width: 100%;
         font-family: 'Manrope', 'Noto Sans JP', sans-serif;
-        font-weight: 800; font-size: 12px;
-        letter-spacing: 0.04em; color: #fff;
-        background: linear-gradient(135deg, #C19A3A, #B8893D);
-        border: none; padding: 11px 14px; border-radius: 8px;
+        font-weight: 700; font-size: 11.5px;
+        letter-spacing: 0.04em; color: #5E5648;
+        background: #fff; border: 1px solid #D6CDB6;
+        padding: 10px 14px; border-radius: 8px;
         cursor: pointer; transition: all 0.15s ease;
-        box-shadow: 0 4px 12px rgba(193,154,58,0.32);
       }
-      .fp-dist-preset-add:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 8px 20px rgba(193,154,58,0.45);
-      }
+      .fp-dist-preset-add:hover { border-color: #C19A3A; color: #C19A3A; }
       .fp-dist-preset-edit {
         font-family: 'Manrope', 'Noto Sans JP', sans-serif;
         font-weight: 700; font-size: 11.5px;
@@ -5388,13 +5433,22 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
       setTimeout(() => renderLineDashboard(), 1200);
     });
 
-    // 「予定を登録する」ボタン (折り畳み内のプリセット)
+    // 「予定を登録する」ボタン
     document.querySelectorAll('[data-preset]').forEach(btn => {
       btn.addEventListener('click', () => {
         const preset = presetScenarios.find(p => p.id === btn.dataset.preset);
         if (!preset) return;
         if (!confirm(`「${preset.title}」 を 「いつも送る予定」 に登録します。\n\nタイミング: ${preset.cadence}\n対象: ${preset.segment}\n\n登録 してよろしいですか?`)) return;
         addPresetToSchedules(preset, null);
+      });
+    });
+
+    // ★ オーナーfb (v AM): 「今すぐ 該当者に 送る」ボタン → 該当者一覧モーダル
+    document.querySelectorAll('[data-preset-now]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const preset = presetScenarios.find(p => p.id === btn.dataset.presetNow);
+        if (!preset) return;
+        openPresetSendNowModal(preset, sendMsg, () => renderLineDashboard());
       });
     });
 
@@ -5561,6 +5615,140 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
       onSave(preset, customBody);
     });
     overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+  }
+
+  // 「今すぐ 該当者に 送る」 モーダル — プリセットの該当者を一覧で表示・選んで送信
+  function openPresetSendNowModal(preset, sendMsgFn, onDone) {
+    const allClients = window.DUMMY_CLIENTS || [];
+    const today = new Date(); today.setHours(0,0,0,0);
+    const fpName = (window.__fp?.tenantName || 'FP').replace(/ — DEMO ビュー/, '');
+
+    // 該当者抽出
+    const eligible = [];
+    if (preset.id === 'preset-birthday') {
+      allClients.forEach(c => {
+        if (!c.lineFriendId) return;
+        if (c.birth) { const b=new Date(c.birth); if(b.getMonth()===today.getMonth()&&b.getDate()===today.getDate()) eligible.push({ client: c, info: '本日 お誕生日', subjectName: c.name }); }
+        (c.family||[]).forEach(m => { if(!m.birth) return; const b=new Date(m.birth); if(b.getMonth()===today.getMonth()&&b.getDate()===today.getDate()) eligible.push({ client: c, info: `${m.name}様 (${m.rel === 'spouse' ? '奥様' : (m.rel === 'child' ? 'お子様' : 'ご家族')}) のお誕生日`, subjectName: m.name }); });
+      });
+    } else if (preset.id === 'preset-followup') {
+      allClients.forEach(c => {
+        if (!c.lineFriendId || !c.lastContact) return;
+        const days = Math.floor((today - new Date(c.lastContact)) / 86400000);
+        if (days >= 60) eligible.push({ client: c, info: `最終接触 ${days}日前 (${c.lastContact})`, subjectName: c.name });
+      });
+      eligible.sort((a,b) => new Date(a.client.lastContact) - new Date(b.client.lastContact));
+    } else if (preset.id === 'preset-monthly' || preset.id === 'preset-newyear') {
+      allClients.forEach(c => { if (c.lineFriendId) eligible.push({ client: c, info: `LINE連携済`, subjectName: c.name }); });
+    }
+
+    if (eligible.length === 0) {
+      alert(`該当する お客様が いません。\n\n${preset.title} は 該当者が出た時に 自動で 候補リストに 並びます。`);
+      return;
+    }
+
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.62);backdrop-filter:blur(4px);z-index:10080;display:flex;align-items:center;justify-content:center;padding:20px;font-family:"Noto Sans JP",sans-serif;';
+
+    const renderModal = () => {
+      const selected = new Set();
+      eligible.forEach((e, i) => selected.add(i)); // デフォ全選択
+      overlay.innerHTML = `
+        <div style="background:#fff;max-width:760px;width:100%;max-height:88vh;border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,0.35);overflow:hidden;display:flex;flex-direction:column;">
+          <div style="background:linear-gradient(135deg,#FDFBF4,#FAF6E8);padding:22px 26px;border-bottom:1px solid #E8E2D4;display:flex;justify-content:space-between;align-items:flex-start;">
+            <div>
+              <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:10.5px;letter-spacing:0.2em;color:#C19A3A;text-transform:uppercase;margin-bottom:5px;">SEND NOW</div>
+              <h3 style="margin:0;font-family:'Noto Serif JP',serif;font-weight:700;font-size:19px;color:#1F1A12;">${escapeHtml(preset.emoji)} ${escapeHtml(preset.title)} を 今すぐ送る</h3>
+              <p style="margin:5px 0 0;font-size:12px;color:#8B7D5D;line-height:1.6;">該当する お客様 <strong style="color:#C19A3A;">${eligible.length}名</strong> です。 送りたい方を 選んでください。</p>
+            </div>
+            <button id="fp-sn-close" style="background:transparent;border:none;cursor:pointer;font-size:22px;color:#8B7D5D;">✕</button>
+          </div>
+          <div style="padding:20px 26px;overflow-y:auto;flex:1;display:grid;grid-template-columns:1fr 1fr;gap:18px;">
+            <!-- 左: 該当者リスト -->
+            <div>
+              <div style="display:flex;justify-content:space-between;align-items:center;font-family:'Manrope',sans-serif;font-weight:800;font-size:10.5px;letter-spacing:0.14em;color:#8B7D5D;text-transform:uppercase;margin-bottom:10px;">
+                <span>👥 送信先 (該当者一覧)</span>
+                <button id="fp-sn-toggle-all" style="background:transparent;border:1px solid #C19A3A;color:#C19A3A;font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:5px;cursor:pointer;font-family:inherit;letter-spacing:0.04em;">全選択/全解除</button>
+              </div>
+              <div id="fp-sn-list" style="max-height:50vh;overflow-y:auto;display:grid;gap:6px;"></div>
+            </div>
+            <!-- 右: 本文 + プレビュー -->
+            <div>
+              <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:10.5px;letter-spacing:0.14em;color:#8B7D5D;text-transform:uppercase;margin-bottom:10px;">📝 本文 (編集可)</div>
+              <textarea id="fp-sn-textarea" rows="10" style="width:100%;padding:12px 14px;border:1.5px solid #E8E2D4;border-radius:8px;font-size:12.5px;font-family:'Hiragino Sans','Noto Sans JP',sans-serif;line-height:1.85;resize:vertical;box-sizing:border-box;background:#FDFBF4;">${escapeHtml(preset.sample)}</textarea>
+              <div style="font-size:10px;color:#8B7D5D;margin-top:5px;line-height:1.55;">
+                <strong style="color:#C19A3A;">{name}</strong> = お客様の名前 / <strong style="color:#C19A3A;">{fpName}</strong> = 自分の名前。 送信時に置換します。
+              </div>
+            </div>
+          </div>
+          <div style="padding:16px 26px;background:#FDFBF4;border-top:1px solid #E8E2D4;display:flex;justify-content:space-between;align-items:center;gap:12px;">
+            <span style="font-size:12px;color:#5E5648;"><strong id="fp-sn-count" style="color:#C19A3A;font-size:14px;">${eligible.length}</strong>名 に 送信します</span>
+            <div style="display:flex;gap:10px;">
+              <button id="fp-sn-cancel" style="background:#fff;color:#5E5648;border:1px solid #D6CDB6;padding:11px 22px;border-radius:8px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;">キャンセル</button>
+              <button id="fp-sn-send" style="background:linear-gradient(135deg,#06C755,#04A847);color:#fff;border:none;padding:11px 26px;border-radius:8px;font-size:13px;font-weight:900;cursor:pointer;font-family:inherit;letter-spacing:0.06em;box-shadow:0 4px 14px rgba(6,199,85,0.32);">📤 選択した方に 送信</button>
+            </div>
+          </div>
+        </div>
+      `;
+      const listEl = overlay.querySelector('#fp-sn-list');
+      const renderList = () => {
+        listEl.innerHTML = eligible.map((e, i) => {
+          const on = selected.has(i);
+          return `
+            <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:${on ? '#F0FDF4' : '#fff'};border:1px solid ${on ? '#86EFAC' : '#E8E2D4'};border-radius:8px;cursor:pointer;font-family:inherit;">
+              <input type="checkbox" data-idx="${i}" ${on ? 'checked' : ''} style="width:18px;height:18px;cursor:pointer;accent-color:#06C755;">
+              <div style="flex:1;min-width:0;">
+                <div style="font-family:'Noto Serif JP',serif;font-weight:700;font-size:13.5px;color:#1F1A12;">${escapeHtml(e.client.name)} さん</div>
+                <div style="font-size:11px;color:#5E5648;margin-top:2px;">${escapeHtml(e.info)}</div>
+              </div>
+            </label>
+          `;
+        }).join('');
+        listEl.querySelectorAll('input[type=checkbox]').forEach(cb => {
+          cb.addEventListener('change', () => {
+            const i = parseInt(cb.dataset.idx, 10);
+            if (cb.checked) selected.add(i); else selected.delete(i);
+            overlay.querySelector('#fp-sn-count').textContent = String(selected.size);
+            renderList();
+          });
+        });
+      };
+      renderList();
+
+      overlay.querySelector('#fp-sn-close').addEventListener('click', () => overlay.remove());
+      overlay.querySelector('#fp-sn-cancel').addEventListener('click', () => overlay.remove());
+      overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+      overlay.querySelector('#fp-sn-toggle-all').addEventListener('click', () => {
+        if (selected.size === eligible.length) selected.clear();
+        else eligible.forEach((_, i) => selected.add(i));
+        overlay.querySelector('#fp-sn-count').textContent = String(selected.size);
+        renderList();
+      });
+      overlay.querySelector('#fp-sn-send').addEventListener('click', async () => {
+        if (selected.size === 0) { alert('送信先を 1名以上 選んでください'); return; }
+        if (!confirm(`${selected.size}名 に 送信します。 よろしいですか?`)) return;
+        const tpl = overlay.querySelector('#fp-sn-textarea').value;
+        const sendBtn = overlay.querySelector('#fp-sn-send');
+        sendBtn.disabled = true; sendBtn.textContent = '送信中...';
+        let ok = 0, ng = 0;
+        for (const i of Array.from(selected)) {
+          const e = eligible[i];
+          const body = tpl.replace(/\{name\}/g, e.subjectName).replace(/\{fpName\}/g, fpName);
+          const fakeMsg = { id: 'now-' + preset.id + '-' + i, clientId: e.client.id, clientName: e.client.name, body };
+          const sent = await sendMsgFn(fakeMsg);
+          if (sent) ok++; else ng++;
+          await new Promise(r => setTimeout(r, 200));
+        }
+        const t = document.createElement('div');
+        t.style.cssText = 'position:fixed;top:24px;left:50%;transform:translateX(-50%);background:#1F1A12;color:#fff;padding:12px 22px;border-radius:8px;font-size:13px;font-weight:700;z-index:99999;box-shadow:0 12px 32px rgba(15,23,42,0.4);font-family:"Noto Sans JP",sans-serif;';
+        t.textContent = `✓ 送信完了: ${ok}名 / 失敗 ${ng}名`;
+        document.body.appendChild(t); setTimeout(() => t.remove(), 2400);
+        overlay.remove();
+        if (onDone) onDone();
+      });
+    };
+    renderModal();
+    document.body.appendChild(overlay);
   }
 
   // 今日のメッセージ 個別編集モーダル
