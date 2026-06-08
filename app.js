@@ -299,7 +299,37 @@
       .slice(0, 8);
     const list = document.getElementById('action-list');
     if (tops.length === 0) {
-      list.innerHTML = '<div class="empty">今週の重点アクションはありません</div>';
+      // ★ オーナーfb: 空の時の表示を整える (急ぎが無いことを明示 + 次の打ち手の導線)
+      const todayDateE = window.LifeEvents.TODAY;
+      const dormantCount = clients.filter(c => c.lineFriendId && c.lastContact && Math.floor((todayDateE - new Date(c.lastContact)) / 86400000) >= 21).length;
+      const upcomingEvCount = (function(){
+        let n = 0;
+        clients.forEach(c => {
+          (window.LifeEvents.generate(c) || []).forEach(ev => {
+            const d = (ev.date - todayDateE) / 86400000;
+            if (d >= 0 && d <= 30) n++;
+          });
+        });
+        return n;
+      })();
+      list.innerHTML = `
+        <div style="background:linear-gradient(135deg,#F0FDF4,#DCFCE7);border:1px solid #10B981;border-radius:14px;padding:32px 28px;text-align:center;font-family:'Noto Sans JP',sans-serif;">
+          <div style="font-size:42px;margin-bottom:10px;">🌿</div>
+          <h3 style="margin:0 0 8px 0;font-size:20px;font-weight:900;color:#065F46;letter-spacing:-0.01em;">今日は急ぎ対応すべき方はいません</h3>
+          <p style="margin:0 0 22px 0;font-size:13.5px;color:#047857;line-height:1.7;">全 ${clients.length} 名と 直近 21日以内 に接触できています。<br>余裕のあるうちに、次の打ち手をどうぞ。</p>
+          <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+            <button class="fp-empty-cta" data-go="dormantFollowup" style="background:#10B981;color:#fff;border:none;padding:11px 22px;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:0.04em;box-shadow:0 4px 14px rgba(16,185,129,0.35);">🔔 ご無沙汰フォロー${dormantCount > 0 ? ` (${dormantCount}名)` : ''}</button>
+            <button class="fp-empty-cta" data-go="timeline" style="background:#fff;color:#0F172A;border:1px solid #CBD5E1;padding:11px 22px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:0.04em;">📅 ライフイベント先取り${upcomingEvCount > 0 ? ` (${upcomingEvCount}件)` : ''}</button>
+            <button class="fp-empty-cta" data-go="clients" style="background:#fff;color:#0F172A;border:1px solid #CBD5E1;padding:11px 22px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:0.04em;">👥 顧客台帳を見る</button>
+          </div>
+        </div>
+      `;
+      list.querySelectorAll('.fp-empty-cta').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const tab = btn.dataset.go;
+          document.querySelector(`.tab[data-tab="${tab}"]`)?.click();
+        });
+      });
       return;
     }
 
@@ -1982,6 +2012,13 @@
             <div class="cd-profile-pills">
               <span class="status-pill ${c.status}">${statusLabel(c.status)}</span>
               ${c.lineFriendId ? '<span class="cd-line-pill"><i data-lucide="message-circle"></i>LINE連携</span>' : ''}
+              ${(function(){
+                // ★ オーナーfb: ステータスpill 並びにタグも表示
+                const master = getTagsMaster();
+                const myTagIds = getClientTags(c.id);
+                const myTags = myTagIds.map(id => master.find(t => t.id === id)).filter(Boolean);
+                return myTags.map(t => `<span style="display:inline-flex;align-items:center;background:${t.color};color:#fff;padding:4px 12px;border-radius:999px;font-size:11.5px;font-weight:800;letter-spacing:0.04em;line-height:1.4;">${escapeHtml(t.label)}</span>`).join('');
+              })()}
             </div>
           </div>
 
