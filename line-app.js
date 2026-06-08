@@ -4325,87 +4325,372 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
     const monthSent = window.LINE_LOG.reduce((s, l) => s + l.success, 0);
     const upcoming = window.LineCRM.upcomingBirthdays(30);
     const todayBirthdays = upcoming.filter(b => b.daysAhead === 0);
-
-    // 次の配信予定(直近5件)
     const upcomingScheds = window.LINE_SCHEDULES
       .filter(s => s.enabled && s.nextSend && !s.nextSend.startsWith('—'))
       .sort((a, b) => a.nextSend.localeCompare(b.nextSend))
-      .slice(0, 5);
+      .slice(0, 6);
 
-    const html = `
-      <div class="howto-banner">
-        <div class="howto-banner-head">
-          <span class="howto-banner-title">💡 配信ダッシュボード</span>
-          <span class="howto-banner-subtitle">公式LINEの「いま動いてる仕組み」を一望する場所</span>
-        </div>
-        <div class="howto-steps">
-          <div class="howto-step"><div class="howto-step-no">1</div><div>4つの数字: <strong>友だち数 / 稼働シナリオ / 今月送信数 / 今日の誕生日</strong>で全体把握</div></div>
-          <div class="howto-step"><div class="howto-step-no">2</div><div>「今後の自動配信予定」で <strong>明日からどんな配信が出るか</strong> 確認</div></div>
-          <div class="howto-step"><div class="howto-step-no">3</div><div>新規シナリオ追加は「配信スケジュール」サブタブ / 単発配信は右上 <span class="btn-hint">テスト配信</span></div></div>
-        </div>
-      </div>
-      <div class="kpi-row" style="grid-template-columns: repeat(4, 1fr);">
-        <div class="kpi">
-          <div class="kpi-label">LINE友だち数</div>
-          <div class="kpi-value">${subscribers}<span class="unit">名</span></div>
-          <div class="kpi-sub">全顧客の ${Math.round(subscribers / window.DUMMY_CLIENTS.length * 100)}%</div>
-        </div>
-        <div class="kpi good">
-          <div class="kpi-label">稼働中シナリオ</div>
-          <div class="kpi-value">${enabledSchedules}<span class="unit">本</span></div>
-          <div class="kpi-sub">自動配信中</div>
-        </div>
-        <div class="kpi">
-          <div class="kpi-label">今月の送信数</div>
-          <div class="kpi-value">${monthSent}<span class="unit">通</span></div>
-          <div class="kpi-sub">直近のログ集計</div>
-        </div>
-        <div class="kpi ${todayBirthdays.length > 0 ? 'warn' : ''}">
-          <div class="kpi-label">今日の誕生日</div>
-          <div class="kpi-value">${todayBirthdays.length}<span class="unit">名</span></div>
-          <div class="kpi-sub">今後30日: ${upcoming.length}名</div>
-        </div>
-      </div>
+    // ★ オーナーfb (v AI): 「自動配信設定わかりづらい / 誘導してほしい」 → ガイド型UI に再設計
+    // 状態に応じてヒーロー切替: 初めて(=0本) → 立上げ誘導 / 稼働中 → 状況サマリー
+    const isFirstTime = enabledSchedules === 0;
 
-      <div class="section-title" style="margin-top:24px;">今後の自動配信予定</div>
-      <div class="line-card">
-        ${upcomingScheds.length === 0 ? '<div class="empty">予定なし</div>' :
-          upcomingScheds.map(s => {
-            const seg = window.SEGMENTS.find(x => x.id === s.segment);
-            const tpl = window.LINE_TEMPLATES.find(x => x.id === s.templateId);
-            const recipients = seg ? window.LineCRM.evaluateSegment(seg.id).length :
-              (s.segment === 'auto-birthday' ? todayBirthdays.length : 0);
-            return `
-              <div class="sched-row">
-                <div class="sched-icon">📨</div>
-                <div class="sched-main">
-                  <div class="sched-name">${escapeHtml(s.name)}</div>
-                  <div class="sched-meta">${escapeHtml(s.schedule)} → ${seg ? seg.icon + ' ' + escapeHtml(seg.name) : '誕生日対象者'} (${recipients}名)</div>
-                </div>
-                <div class="sched-next">${escapeHtml(s.nextSend)}</div>
-              </div>
-            `;
-          }).join('')
-        }
-      </div>
+    // よく使うプリセット シナリオ (1クリック追加)
+    const presetScenarios = [
+      { id: 'preset-birthday', emoji: '🎂', title: '誕生日メッセージ', subtitle: '当日の朝 9:00 に自動送信', cadence: '誕生日当日', segment: 'auto-birthday', why: 'もっとも返信率が高い接点。「覚えててくれた」 で信頼が育つ。' },
+      { id: 'preset-monthly',  emoji: '📰', title: '月1お役立ち情報', subtitle: '毎月1日10:00 / 全顧客向け', cadence: '毎月 1日 10:00', segment: 'seg-all', why: '黙ってると忘れられる。月1で軽く存在感を保つだけで再接触率2倍。' },
+      { id: 'preset-followup', emoji: '🔔', title: 'ご無沙汰フォロー', subtitle: '60日連絡なしの方に 月1', cadence: '毎月15日 10:00', segment: 'seg-dormant', why: '半年放置は「契約解消への助走」。60日で軽く声かけ → リスク回避。' },
+      { id: 'preset-newyear',  emoji: '🎍', title: '季節のご挨拶', subtitle: '元旦・お盆・年末に', cadence: '季節イベント', segment: 'seg-all', why: '日本人の信頼関係の基本。「年賀状の代わり」 で十分。' },
+    ];
 
-      <div class="section-title" style="margin-top:24px;">今日〜1週間以内の誕生日</div>
-      <div class="line-card">
-        ${upcoming.filter(b => b.daysAhead <= 7).length === 0 ? '<div class="empty">該当なし</div>' :
-          upcoming.filter(b => b.daysAhead <= 7).map(b => `
-            <div class="bday-row">
-              <div class="bday-date">${(b.date.getMonth() + 1)}/${b.date.getDate()}<span class="bday-rel">${b.daysAhead === 0 ? '本日' : b.daysAhead + '日後'}</span></div>
-              <div class="bday-main">
-                <strong>${escapeHtml(b.personName)}</strong> <span class="bday-rel-tag">${b.rel}</span>
-                <div class="bday-meta">${b.age}歳 / 顧客: ${escapeHtml(b.client.name)}</div>
-              </div>
-              <div class="bday-action">${b.daysAhead === 0 ? '<span class="line-status-pill on">✓ 9:00 送信予定</span>' : '<span class="line-status-pill">予約済</span>'}</div>
-            </div>
-          `).join('')
-        }
+    const cadenceVisual = (cadence) => {
+      const m = (cadence || '').match(/毎月\s*(\d+)\s*日/);
+      if (m) return `<div class="fp-cadence-mini">毎月<strong>${m[1]}</strong>日</div>`;
+      if (/毎週/.test(cadence)) return `<div class="fp-cadence-mini">毎週</div>`;
+      if (/誕生日/.test(cadence)) return `<div class="fp-cadence-mini">🎂</div>`;
+      return `<div class="fp-cadence-mini" style="font-size:9.5px;">${escapeHtml((cadence || '').slice(0, 8))}</div>`;
+    };
+
+    const heroHtml = isFirstTime ? `
+      <div class="fp-dist-hero fp-dist-hero-empty">
+        <div class="fp-dist-hero-eyebrow">START HERE</div>
+        <h2 class="fp-dist-hero-title">最初の<span style="color:#C19A3A;">1本</span>を作ろう。</h2>
+        <p class="fp-dist-hero-sub">自動配信は「いつ・誰に・何を」 を 1度組めば あとは LINE が勝手に送り続けてくれます。 まずは下のテンプレから 1つだけ選んでみてください。</p>
+        <div class="fp-dist-hero-arrow">↓ よく使う シナリオから 始める</div>
+      </div>
+    ` : `
+      <div class="fp-dist-hero fp-dist-hero-running">
+        <div class="fp-dist-hero-eyebrow">NOW RUNNING</div>
+        <h2 class="fp-dist-hero-title">いま <span style="color:#C19A3A;">${enabledSchedules}</span> 本の自動配信が動いています。</h2>
+        <p class="fp-dist-hero-sub">今月 ${monthSent} 通 送信 / LINE 友だち ${subscribers} 名 / 今日の誕生日 ${todayBirthdays.length} 名${upcomingScheds.length > 0 ? ' · 次の配信は <strong style="color:#C19A3A;">' + escapeHtml(upcomingScheds[0].nextSend) + '</strong>' : ''}</p>
       </div>
     `;
+
+    const html = `
+      ${heroHtml}
+
+      <!-- KPI 4枚 (sober) -->
+      <div class="fp-dist-kpi-grid">
+        <div class="fp-dist-kpi">
+          <div class="fp-dist-kpi-eyebrow">LINE 友だち</div>
+          <div class="fp-dist-kpi-num">${subscribers}<span class="fp-dist-kpi-unit">名</span></div>
+          <div class="fp-dist-kpi-sub">全顧客の ${window.DUMMY_CLIENTS.length > 0 ? Math.round(subscribers / window.DUMMY_CLIENTS.length * 100) : 0}%</div>
+        </div>
+        <div class="fp-dist-kpi ${enabledSchedules > 0 ? 'fp-dist-kpi-on' : ''}">
+          <div class="fp-dist-kpi-eyebrow">稼働中</div>
+          <div class="fp-dist-kpi-num">${enabledSchedules}<span class="fp-dist-kpi-unit">本</span></div>
+          <div class="fp-dist-kpi-sub">${enabledSchedules === 0 ? 'まだ設定なし' : '自動配信中'}</div>
+        </div>
+        <div class="fp-dist-kpi">
+          <div class="fp-dist-kpi-eyebrow">今月送信</div>
+          <div class="fp-dist-kpi-num">${monthSent}<span class="fp-dist-kpi-unit">通</span></div>
+          <div class="fp-dist-kpi-sub">ログ集計</div>
+        </div>
+        <div class="fp-dist-kpi ${todayBirthdays.length > 0 ? 'fp-dist-kpi-warn' : ''}">
+          <div class="fp-dist-kpi-eyebrow">今日の誕生日</div>
+          <div class="fp-dist-kpi-num">${todayBirthdays.length}<span class="fp-dist-kpi-unit">名</span></div>
+          <div class="fp-dist-kpi-sub">30日以内 ${upcoming.length}名</div>
+        </div>
+      </div>
+
+      <!-- テンプレで始める (誘導の中核) -->
+      <div class="fp-dist-section">
+        <div class="fp-dist-section-head">
+          <div>
+            <div class="fp-dist-eyebrow">RECIPES · よく使う配信</div>
+            <h3 class="fp-dist-section-title">テンプレで始める</h3>
+          </div>
+          <p class="fp-dist-section-sub">クリック1つでシナリオが「稼働中」に。あとから細かい調整は「配信スケジュール」 タブから</p>
+        </div>
+        <div class="fp-dist-presets">
+          ${presetScenarios.map((p, i) => `
+            <button class="fp-dist-preset" data-preset="${p.id}" style="animation-delay:${i*60}ms;">
+              <div class="fp-dist-preset-emoji">${p.emoji}</div>
+              <div class="fp-dist-preset-body">
+                <div class="fp-dist-preset-title">${escapeHtml(p.title)}</div>
+                <div class="fp-dist-preset-sub">${escapeHtml(p.subtitle)}</div>
+                <div class="fp-dist-preset-why">${escapeHtml(p.why)}</div>
+              </div>
+              <div class="fp-dist-preset-cta">+ 追加</div>
+            </button>
+          `).join('')}
+        </div>
+      </div>
+
+      <!-- いま動いてる配信 -->
+      ${enabledSchedules > 0 ? `
+      <div class="fp-dist-section">
+        <div class="fp-dist-section-head">
+          <div>
+            <div class="fp-dist-eyebrow">RUNNING · 稼働中</div>
+            <h3 class="fp-dist-section-title">いま動いてる配信</h3>
+          </div>
+          <p class="fp-dist-section-sub">クリックで詳細編集 / トグルで一時停止</p>
+        </div>
+        <div class="fp-dist-running-grid">
+          ${window.LINE_SCHEDULES.filter(s => s.enabled).map(s => {
+            const seg = window.SEGMENTS.find(x => x.id === s.segment);
+            const recipients = seg ? window.LineCRM.evaluateSegment(seg.id).length : (s.segment === 'auto-birthday' ? todayBirthdays.length : 0);
+            return `
+              <div class="fp-dist-run-card" data-schid-jump="${escapeHtml(s.id)}">
+                ${cadenceVisual(s.schedule)}
+                <div class="fp-dist-run-main">
+                  <div class="fp-dist-run-name">${escapeHtml(s.name)}</div>
+                  <div class="fp-dist-run-meta">${seg ? seg.icon + ' ' + escapeHtml(seg.name) : '🎂 誕生日対象者'} <span class="fp-dist-run-recipients">${recipients}名</span></div>
+                  <div class="fp-dist-run-next">次回: <strong>${escapeHtml(s.nextSend || '—')}</strong></div>
+                </div>
+                <div class="fp-dist-run-toggle">●</div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>` : ''}
+
+      <!-- 直近1週間の誕生日 (誕生日シナリオが稼働中の時のみ) -->
+      ${upcoming.filter(b => b.daysAhead <= 7).length > 0 ? `
+      <div class="fp-dist-section">
+        <div class="fp-dist-section-head">
+          <div>
+            <div class="fp-dist-eyebrow">UPCOMING · 直近1週間</div>
+            <h3 class="fp-dist-section-title">これから来る誕生日</h3>
+          </div>
+        </div>
+        <div class="fp-dist-bday-list">
+          ${upcoming.filter(b => b.daysAhead <= 7).map(b => `
+            <div class="fp-dist-bday-row">
+              <div class="fp-dist-bday-date">
+                <strong>${(b.date.getMonth() + 1)}/${b.date.getDate()}</strong>
+                <span>${b.daysAhead === 0 ? '本日' : b.daysAhead + '日後'}</span>
+              </div>
+              <div class="fp-dist-bday-main">
+                <strong>${escapeHtml(b.personName)}</strong> <span class="fp-dist-bday-rel">${b.rel}</span>
+                <div>${b.age}歳 / 顧客 ${escapeHtml(b.client.name)}</div>
+              </div>
+              <div class="fp-dist-bday-status">${b.daysAhead === 0 ? '<span class="fp-dist-status-on">✓ 朝9:00 送信</span>' : '<span class="fp-dist-status-wait">予約済</span>'}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>` : ''}
+
+      <style>
+      /* === Distribution Dashboard v AI === */
+      .fp-dist-hero {
+        background: linear-gradient(135deg, #FDFBF4 0%, #FAF8F1 100%);
+        border: 1px solid #E8E2D4;
+        border-radius: 14px;
+        padding: 36px 36px 30px;
+        margin-bottom: 22px;
+        position: relative;
+        overflow: hidden;
+      }
+      .fp-dist-hero::before {
+        content: '';
+        position: absolute; top: 0; right: 0;
+        width: 220px; height: 220px;
+        background: radial-gradient(circle at top right, rgba(193,154,58,0.10), transparent 70%);
+        pointer-events: none;
+      }
+      .fp-dist-hero-eyebrow {
+        font-family: 'Manrope', 'Inter', sans-serif;
+        font-weight: 800; font-size: 10.5px;
+        letter-spacing: 0.22em; text-transform: uppercase;
+        color: #C19A3A; margin-bottom: 12px;
+      }
+      .fp-dist-hero-title {
+        font-family: 'Noto Serif JP', serif;
+        font-weight: 700; font-size: 28px;
+        line-height: 1.35; letter-spacing: -0.01em;
+        color: #1F1A12; margin: 0 0 12px 0;
+      }
+      .fp-dist-hero-sub {
+        font-family: 'Noto Sans JP', sans-serif;
+        font-size: 13.5px; line-height: 1.85;
+        color: #5E5648; margin: 0 0 14px 0; max-width: 60ch;
+      }
+      .fp-dist-hero-arrow {
+        font-family: 'Manrope', sans-serif;
+        font-weight: 700; font-size: 12px;
+        letter-spacing: 0.1em; color: #C19A3A;
+        animation: fp-dist-arrow-pulse 1.8s ease-in-out infinite;
+      }
+      @keyframes fp-dist-arrow-pulse { 0%,100%{transform:translateY(0);opacity:0.85} 50%{transform:translateY(4px);opacity:1} }
+
+      .fp-dist-kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 28px; }
+      .fp-dist-kpi {
+        background: #fff; border: 1px solid #E8E2D4;
+        border-radius: 10px; padding: 14px 18px;
+        position: relative; overflow: hidden;
+      }
+      .fp-dist-kpi-on { background: linear-gradient(135deg,#F0FDF4,#FFF); border-color: #86EFAC; }
+      .fp-dist-kpi-warn { background: linear-gradient(135deg,#FFF7ED,#FFF); border-color: #FED7AA; }
+      .fp-dist-kpi-eyebrow {
+        font-family: 'Manrope', sans-serif;
+        font-weight: 700; font-size: 10px;
+        letter-spacing: 0.16em; text-transform: uppercase;
+        color: #8B7D5D; margin-bottom: 6px;
+      }
+      .fp-dist-kpi-num {
+        font-family: 'Noto Serif JP', serif;
+        font-weight: 700; font-size: 28px;
+        color: #1F1A12; letter-spacing: -0.012em;
+        line-height: 1; font-variant-numeric: tabular-nums;
+      }
+      .fp-dist-kpi-unit { font-family: 'Noto Sans JP', sans-serif; font-size: 11px; color: #8B7D5D; font-weight: 600; margin-left: 4px; }
+      .fp-dist-kpi-sub { font-size: 10.5px; color: #8B7D5D; margin-top: 5px; }
+
+      .fp-dist-section { margin-bottom: 32px; }
+      .fp-dist-section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 14px; gap: 16px; }
+      .fp-dist-eyebrow {
+        font-family: 'Manrope', sans-serif;
+        font-weight: 700; font-size: 10.5px;
+        letter-spacing: 0.22em; color: #C19A3A;
+        text-transform: uppercase; margin-bottom: 5px;
+      }
+      .fp-dist-section-title {
+        font-family: 'Noto Serif JP', serif;
+        font-weight: 700; font-size: 19px;
+        color: #1F1A12; margin: 0; letter-spacing: -0.01em;
+      }
+      .fp-dist-section-sub { font-size: 11.5px; color: #8B7D5D; max-width: 38ch; text-align: right; line-height: 1.6; margin: 0; }
+
+      .fp-dist-presets { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+      .fp-dist-preset {
+        display: flex; align-items: flex-start; gap: 14px;
+        background: #fff; border: 1px solid #E8E2D4;
+        border-radius: 12px; padding: 18px 18px 18px 16px;
+        cursor: pointer; transition: all 0.2s ease;
+        text-align: left; font-family: inherit;
+        animation: fp-dist-preset-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+      }
+      @keyframes fp-dist-preset-in { from { opacity:0; transform:translateY(8px) } to { opacity:1; transform:translateY(0) } }
+      .fp-dist-preset:hover {
+        border-color: #C19A3A; background: linear-gradient(135deg,#FDFBF4,#FFF);
+        box-shadow: 0 6px 18px rgba(193,154,58,0.12);
+        transform: translateY(-2px);
+      }
+      .fp-dist-preset-emoji { font-size: 30px; line-height: 1; flex-shrink: 0; margin-top: 2px; }
+      .fp-dist-preset-body { flex: 1; min-width: 0; }
+      .fp-dist-preset-title {
+        font-family: 'Noto Serif JP', serif;
+        font-weight: 700; font-size: 14.5px;
+        color: #1F1A12; letter-spacing: -0.005em;
+        margin-bottom: 3px;
+      }
+      .fp-dist-preset-sub {
+        font-family: 'Manrope', 'Noto Sans JP', sans-serif;
+        font-size: 11px; color: #8B7D5D;
+        font-weight: 600; letter-spacing: 0.02em;
+        margin-bottom: 8px;
+      }
+      .fp-dist-preset-why {
+        font-size: 11.5px; line-height: 1.65;
+        color: #5E5648;
+      }
+      .fp-dist-preset-cta {
+        font-family: 'Manrope', sans-serif;
+        font-weight: 800; font-size: 11px;
+        letter-spacing: 0.1em; color: #C19A3A;
+        background: #FDFBF4; border: 1px solid #C19A3A;
+        padding: 6px 12px; border-radius: 6px;
+        flex-shrink: 0; align-self: flex-start;
+        transition: all 0.15s ease;
+      }
+      .fp-dist-preset:hover .fp-dist-preset-cta {
+        background: #C19A3A; color: #fff;
+      }
+
+      .fp-dist-running-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      .fp-dist-run-card {
+        display: flex; align-items: center; gap: 14px;
+        background: #fff; border: 1px solid #E8E2D4;
+        border-radius: 10px; padding: 14px 16px;
+        cursor: pointer; transition: all 0.15s ease;
+      }
+      .fp-dist-run-card:hover { border-color: #C19A3A; transform: translateX(2px); }
+      .fp-cadence-mini {
+        flex-shrink: 0; width: 56px; height: 56px;
+        background: linear-gradient(135deg, #FDFBF4, #FAF6E8);
+        border: 1px solid #E8E2D4; border-radius: 8px;
+        display: flex; align-items: center; justify-content: center;
+        flex-direction: column; gap: 0;
+        font-family: 'Manrope', sans-serif;
+        font-weight: 700; font-size: 10px;
+        color: #8B7D5D; text-align: center; line-height: 1.2;
+      }
+      .fp-cadence-mini strong { font-family: 'Noto Serif JP', serif; font-size: 19px; color: #C19A3A; font-weight: 700; }
+      .fp-dist-run-main { flex: 1; min-width: 0; }
+      .fp-dist-run-name { font-family: 'Noto Serif JP', serif; font-weight: 700; font-size: 14px; color: #1F1A12; margin-bottom: 4px; }
+      .fp-dist-run-meta { font-size: 11.5px; color: #5E5648; margin-bottom: 4px; }
+      .fp-dist-run-recipients { color: #8B7D5D; font-size: 10.5px; margin-left: 4px; }
+      .fp-dist-run-next { font-size: 11px; color: #8B7D5D; font-family: 'Manrope', sans-serif; font-weight: 600; letter-spacing: 0.02em; }
+      .fp-dist-run-toggle { color: #10B981; font-size: 11px; }
+
+      .fp-dist-bday-list { background: #fff; border: 1px solid #E8E2D4; border-radius: 10px; overflow: hidden; }
+      .fp-dist-bday-row { display: flex; align-items: center; gap: 14px; padding: 14px 18px; border-bottom: 1px solid #F1ECDF; }
+      .fp-dist-bday-row:last-child { border-bottom: 0; }
+      .fp-dist-bday-date { flex-shrink: 0; min-width: 56px; }
+      .fp-dist-bday-date strong { font-family: 'Noto Serif JP', serif; font-weight: 700; font-size: 16px; color: #1F1A12; display: block; line-height: 1.1; }
+      .fp-dist-bday-date span { font-size: 10.5px; color: #C19A3A; font-weight: 700; letter-spacing: 0.04em; }
+      .fp-dist-bday-main { flex: 1; min-width: 0; font-size: 12.5px; }
+      .fp-dist-bday-main strong { font-family: 'Noto Serif JP', serif; font-weight: 700; color: #1F1A12; font-size: 13px; }
+      .fp-dist-bday-rel { font-size: 10.5px; color: #8B7D5D; background: #FDFBF4; padding: 1px 7px; border-radius: 8px; margin-left: 5px; }
+      .fp-dist-bday-main > div { color: #5E5648; margin-top: 2px; font-size: 11.5px; }
+      .fp-dist-status-on { background: #ECFDF5; color: #047857; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; letter-spacing: 0.04em; }
+      .fp-dist-status-wait { background: #F1ECDF; color: #8B7D5D; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 600; }
+
+      @media (max-width: 800px) {
+        .fp-dist-kpi-grid, .fp-dist-presets, .fp-dist-running-grid { grid-template-columns: 1fr; }
+        .fp-dist-hero { padding: 24px 22px; }
+        .fp-dist-hero-title { font-size: 22px; }
+        .fp-dist-section-head { flex-direction: column; align-items: flex-start; }
+        .fp-dist-section-sub { text-align: left; }
+      }
+      </style>
+    `;
     document.querySelector('[data-line-view="dashboard"]').innerHTML = html;
+
+    // プリセット 1クリック追加
+    document.querySelectorAll('[data-preset]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const preset = presetScenarios.find(p => p.id === btn.dataset.preset);
+        if (!preset) return;
+        // 既存に同じプリセットがあれば二重追加防止
+        const dup = window.LINE_SCHEDULES.find(s => s.name === preset.title);
+        if (dup) {
+          if (confirm(`「${preset.title}」 は既にあります。 「配信スケジュール」 タブに移動して編集しますか?`)) {
+            document.querySelector('[data-line-sub="schedules"]')?.click();
+          }
+          return;
+        }
+        if (!confirm(`「${preset.title}」 を 自動配信に追加します。\n\n配信タイミング: ${preset.cadence}\nセグメント: ${preset.segment}\n\nよろしいですか?`)) return;
+        const newSched = {
+          id: 'sch-preset-' + Date.now().toString(36),
+          name: preset.title,
+          segment: preset.segment,
+          templateId: (window.LINE_TEMPLATES && window.LINE_TEMPLATES[0]?.id) || 't1',
+          cadence: preset.cadence.includes('毎月') ? 'monthly' : (preset.cadence.includes('誕生日') ? 'birthday' : 'event'),
+          schedule: preset.cadence,
+          enabled: true,
+          lastSent: null,
+          nextSend: preset.cadence,
+        };
+        window.LINE_SCHEDULES.push(newSched);
+        // トースト
+        const toast = document.createElement('div');
+        toast.style.cssText = 'position:fixed;top:24px;left:50%;transform:translateX(-50%);background:#0F172A;color:#fff;padding:12px 22px;border-radius:8px;font-size:13px;font-weight:700;z-index:99999;box-shadow:0 12px 32px rgba(15,23,42,0.4);font-family:"Noto Sans JP",sans-serif;';
+        toast.innerHTML = `✓ 「${escapeHtml(preset.title)}」 を自動配信に追加しました`;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 2400);
+        renderLineDashboard();
+      });
+    });
+    // 稼働中カードクリック → スケジュール編集
+    document.querySelectorAll('[data-schid-jump]').forEach(el => {
+      el.addEventListener('click', () => {
+        const id = el.dataset.schidJump;
+        document.querySelector('[data-line-sub="schedules"]')?.click();
+        setTimeout(() => openScheduleEditor(id), 200);
+      });
+    });
   }
 
   // ============================
