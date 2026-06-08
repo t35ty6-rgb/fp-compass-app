@@ -1795,16 +1795,12 @@
         if (!ok) { stream.getTracks().forEach(t => t.stop()); return; }
       }
 
-      // ★ オーナーfb: 全体のウィンドウ配置を整理。memo は PiP (always-on-top の小窓) になったので、
-      // Zoom は画面のほぼ全面に大きく開く。CRM 親は裏に回る。PiP memo が右上に浮く。
+      // ★ オーナーfb (v AD): 左メモ(28%) + 右Zoom(72%) の完全側面並列レイアウト。
+      // 画面全幅を 2 ウィンドウで埋める → 重なりゼロ + CRM親窓は裏で見えない → Zoomが裏に行く問題が起きない。
       const sw = window.screen.availWidth || screen.width;
       const sh = window.screen.availHeight || screen.height;
-      // Zoom: 画面の 92% を使う (上下左右に余白 4%) — 大きく快適に
-      const zoomW = Math.floor(sw * 0.92);
-      const zoomH = Math.floor(sh * 0.92);
-      const zoomLeft = Math.floor((sw - zoomW) / 2);
-      const zoomTop = Math.floor((sh - zoomH) / 2);
-      const memoW = 0; // (互換用、 旧 fallback path で使うことがあるので 0 で残す)
+      const memoW = Math.floor(sw * 0.28);  // 左 28% (メモ + 完了ボタン)
+      const zoomW = sw - memoW;              // 右 72% (Zoom)
       const zoomBrowserUrl = (function() {
         try {
           const m = (zoomUrl || '').match(/zoom\.us\/j\/(\d+)(\?.*)?/);
@@ -1813,7 +1809,8 @@
           return `https://${host}/wc/join/${m[1]}${m[2] || ''}`;
         } catch (_) { return zoomUrl; }
       })();
-      const zoomFeatures = `width=${zoomW},height=${zoomH},left=${zoomLeft},top=${zoomTop},toolbar=no,location=no,menubar=no,status=no,scrollbars=yes,resizable=yes`;
+      // Zoom: 右側 (left=memoW から右端まで、上下全画面)
+      const zoomFeatures = `width=${zoomW},height=${sh},left=${memoW},top=0,toolbar=no,location=no,menubar=no,status=no,scrollbars=yes,resizable=yes`;
       const zoomWin = window.open(zoomBrowserUrl, 'fp-zoom-win', zoomFeatures);
       if (!zoomWin) window.open(zoomBrowserUrl, '_blank');
       // Zoom が閉じられたら自動で録画停止 (切り忘れ防止)
@@ -1827,32 +1824,17 @@
       const memoKey = 'fp-memo-' + (bookingTs || '');
       const tasksKey = 'fp-tasks-' + ((booking && booking.userId) || bookingTs);
       const memoQuery = `?v=${Date.now()}&memoKey=${encodeURIComponent(memoKey)}&tasksKey=${encodeURIComponent(tasksKey)}&name=${encodeURIComponent((booking && booking.name) || 'お客様')}&baseDate=${encodeURIComponent((booking && booking.date) || '')}&bookingTs=${encodeURIComponent(bookingTs || '')}`;
-      // 既存メモタブがあれば一旦 close (PiP は既に呼出側で open 済 = preOpenedPipWin)
-      try { if (window._fpMemoWin && window._fpMemoWin !== preOpenedPipWin && !window._fpMemoWin.closed) window._fpMemoWin.close(); } catch (_) {}
+      // 既存メモウィンドウがあれば一旦 close
+      try { if (window._fpMemoWin && !window._fpMemoWin.closed) window._fpMemoWin.close(); } catch (_) {}
 
-      // ★ click 直後に開いた PiP window (user activation 有効時に取得) に memo iframe 流し込む
-      if (preOpenedPipWin && !preOpenedPipWin.closed) {
-        try {
-          const pipWin = preOpenedPipWin;
-          // placeholder を消去
-          pipWin.document.body.style.cssText = 'margin:0;padding:0;height:100vh;overflow:hidden;display:block;background:#fff;';
-          pipWin.document.body.innerHTML = '';
-          const iframe = pipWin.document.createElement('iframe');
-          iframe.src = 'memo-popup.html' + memoQuery;
-          iframe.style.cssText = 'width:100%;height:100%;border:0;display:block;';
-          pipWin.document.body.appendChild(iframe);
-          pipWin.document.title = 'メモ — ' + ((booking && booking.name) || 'お客様');
-          window._fpMemoWin = pipWin; // 既存 finish フローと互換
-          console.log('[memo] PiP に memo-popup を流し込み完了 — Zoom 裏に潜らない');
-        } catch (e) {
-          console.warn('[memo] PiP iframe 流し込み失敗、通常タブ fallback:', e.message);
-          try { preOpenedPipWin.close(); } catch (_) {}
-          window._fpMemoWin = window.open('memo-popup.html' + memoQuery, '_blank');
-        }
-      } else {
-        // PiP 取得失敗 (非対応 or click 前にエラー): 通常タブ fallback
-        window._fpMemoWin = window.open('memo-popup.html' + memoQuery, '_blank');
-      }
+      // ★ メモを 左端 popup window として開く (width=memoW, height=full, left=0, top=0)
+      // Zoom (右側) と完全に隣接、重なりゼロ。
+      const memoFeatures = `width=${memoW},height=${sh},left=0,top=0,toolbar=no,location=no,menubar=no,status=no,scrollbars=yes,resizable=yes`;
+      window._fpMemoWin = window.open('memo-popup.html' + memoQuery, 'fp-memo-win', memoFeatures);
+      // 開いたら Zoom も focus して両方前面に (CRM親窓は裏)
+      try { if (window._fpZoomWin && !window._fpZoomWin.closed) window._fpZoomWin.focus(); } catch (_) {}
+      try { if (window._fpMemoWin && !window._fpMemoWin.closed) window._fpMemoWin.focus(); } catch (_) {}
+      console.log('[layout] 左メモ ' + memoW + 'px + 右Zoom ' + zoomW + 'px = ' + sw + 'px (full width)');
       if (!window._fpMemoWin) {
         // ポップアップブロック時はフォールバックで CRM 内モーダル
         localStorage.setItem('fp-memo-pos', JSON.stringify({ left: 0, top: 0 }));
@@ -1949,8 +1931,6 @@
       // showFixedCompleteButton(); // 旧: 画面下バー廃止 — memo PiP で十分
     } catch (e) {
       hidePickerHint();
-      // キャンセル時は事前に開いた PiP も閉じる
-      try { if (preOpenedPipWin && !preOpenedPipWin.closed) preOpenedPipWin.close(); } catch (_) {}
       // 共有許可キャンセル時: 録画は無理だが Zoom だけ開いて「録画なしで入室」フォールバック
       if (e && e.name === 'NotAllowedError') {
         const sw = window.screen.availWidth || screen.width;
@@ -3279,30 +3259,9 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
       btn.addEventListener('click', async () => {
         const ts = btn.dataset.recStart;
         const zoomUrl = btn.dataset.zoom;
-        // ★ オーナーfb: getDisplayMedia が user activation を消費するので、 PiP は click 直後に予約 open
-        // PiP window だけ先に開いて placeholder を出し、後で memo iframe を流し込む
-        let pipWin = null;
-        if ('documentPictureInPicture' in window) {
-          try {
-            const sw = window.screen.availWidth || screen.width;
-            const sh = window.screen.availHeight || screen.height;
-            const pipW = Math.min(420, Math.floor(sw / 4));
-            const pipH = Math.min(680, Math.floor(sh * 0.7));
-            pipWin = await window.documentPictureInPicture.requestWindow({ width: pipW, height: pipH });
-            pipWin.document.body.style.cssText = 'margin:0;padding:0;height:100vh;overflow:hidden;font-family:"Noto Sans JP",sans-serif;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#fafbfc,#f1f5f9);color:#475569;';
-            pipWin.document.body.innerHTML = '<div style="text-align:center;padding:24px;"><div style="font-size:42px;margin-bottom:14px;">⏳</div><strong style="font-size:14px;color:#0F172A;">準備中...</strong><div style="font-size:11.5px;color:#64748B;margin-top:8px;line-height:1.7;">画面共有ダイアログで<br>「画面全体」+「音声を共有」<br>を選んで「共有」を押す</div></div>';
-            pipWin.document.title = 'メモ — 準備中';
-            window._fpMemoPipWin = pipWin;
-            // PiP が閉じられたら自動で memo win も消す
-            pipWin.addEventListener('pagehide', () => { window._fpMemoPipWin = null; window._fpMemoWin = null; });
-            console.log('[memo] PiP window opened (click 直後 / user activation 消費前)');
-          } catch (e) {
-            console.warn('[memo] PiP click直後でも失敗:', e.message);
-            pipWin = null;
-          }
-        }
-        // PiP window を startScreenRecording に渡す
-        await startScreenRecording(ts, zoomUrl, pipWin);
+        // ★ オーナーfb (v AD): PiP は位置指定不可なので撤回。左メモ + 右Zoom の完全側面並列に戻す。
+        // 重なりゼロで全画面を 2 ウィンドウで埋める → CRM 親は裏に隠れて Zoom が前面に来ない問題が物理的に起きない。
+        await startScreenRecording(ts, zoomUrl, null);
         await fetchLiveData();
         renderLeadHubInner();
       });
