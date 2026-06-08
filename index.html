@@ -493,11 +493,19 @@
 
     const uDoc = await fetchUserDocWithRetry(user.uid, 4);
     if (!uDoc) {
-      msg("err", `${user.email} は登録されていません。`);
+      msg("err", `${user.email} (uid: ${user.uid.slice(0,10)}…) の users/ doc が見つかりません。サインアップ未完了の可能性。`);
+      console.error("[fp diag] user doc not found", { uid: user.uid, email: user.email });
       await signOut(auth);
       return;
     }
     const userData = uDoc.data();
+    // ★ 診断: tenantId が無いと後段で permission denied になるので明示エラー
+    if (!userData.tenantId && userData.role !== "skeleton_admin") {
+      msg("err", `アカウントに tenantId が紐付いていません (uid: ${user.uid.slice(0,10)}…)。support@skeleton-inc.jp までご連絡ください。`);
+      console.error("[fp diag] user doc missing tenantId", { uid: user.uid, userData });
+      await signOut(auth);
+      return;
+    }
     if (userData.role === "skeleton_admin") {
       // skeleton_admin は demo テナントを見せる (商談デモ用)
       window.__fp.tenantId = "demo";
@@ -517,7 +525,9 @@
     msg("ok", `${window.__fp.tenantName} のデータを読み込み中…`);
 
     try {
+      console.log("[fp diag] loadTenantData start", { tenantId: window.__fp.tenantId, uid: user.uid });
       const clients = await loadTenantData(window.__fp.tenantId);
+      console.log("[fp diag] loadTenantData success", { count: clients.length });
       window.DUMMY_CLIENTS = clients;
       window.DUMMY_CLIENTS_VERSION = `firestore-${window.__fp.tenantId}`;
       window.UPCOMING_BOOKINGS = window.UPCOMING_BOOKINGS || [];
@@ -545,8 +555,13 @@
         }
       } catch (_) {}
     } catch (e) {
-      console.error(e);
-      msg("err", "データ取得失敗: " + e.message);
+      console.error("[fp diag] loadTenantData failed:", e);
+      // 詳細なヒントを返す
+      let hint = e.message;
+      if ((e.message || '').includes('permissions')) {
+        hint = `Firestore 読み込み権限がありません。\nテナント ID: ${window.__fp.tenantId}\nUID: ${user.uid.slice(0,10)}…\n\nユーザー doc と tenants/${window.__fp.tenantId} の整合性が崩れている可能性。support@skeleton-inc.jp 宛に この画面のスクショ + コンソール (F12) のログを送ってください。`;
+      }
+      msg("err", "データ取得失敗: " + hint);
     }
   });
 
@@ -1021,7 +1036,7 @@ window.fpReadyAfterAuth = function() {
   ];
   legacyDemoKeys.forEach(k => { try { localStorage.removeItem(k); } catch (_) {} });
 
-  const ver = "20260608W-no-auto-login";
+  const ver = "20260608X-skadmin-rules";
   const scripts = [
     "life-events.js?v=" + ver,
     "recommender.js?v=" + ver,
@@ -1321,7 +1336,7 @@ window.fpReadyAfterAuth = function() {
 <script>
 (function(){
   // 最新の ver を 1 箇所に集約 (fpReadyAfterAuth 側と一致させる必要あり)
-  const FP_VERSION = "20260608W-no-auto-login";
+  const FP_VERSION = "20260608X-skadmin-rules";
   const loadTime = new Date();
   const hhmm = String(loadTime.getHours()).padStart(2,'0') + ':' + String(loadTime.getMinutes()).padStart(2,'0');
   const dateLabel = (FP_VERSION.match(/^(\d{4})(\d{2})(\d{2})/) || []).slice(1).join('/').replace(/^(\d{4})\//,'$1/').replace(/\/(\d{2})\/(\d{2})$/,'/$1/$2') || FP_VERSION;
