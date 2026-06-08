@@ -1353,26 +1353,25 @@
       allFpAi.forEach(k => {
         const arr = JSON.parse(localStorage.getItem(k) || '[]');
         arr.forEach(a => {
-          const match = (a.userId === c.lineFriendId) || (a.customerName === c.name) ||
-                        ((!a.customerName || a.customerName === 'お客様') && c.lineFriendId);
+          // ★ オーナーfb: NEXT ACTION が全顧客で同一に。genericFallback 撤去、厳密一致のみ
+          const match = (a.userId && a.userId === c.lineFriendId) || (a.customerName && a.customerName === c.name);
           if (!match) return;
           if (!latestAi || new Date(a.createdAt || 0) > new Date(latestAi.createdAt || 0)) latestAi = a;
         });
       });
       ((window.LineAppLiveData && window.LineAppLiveData.ai_results) || []).forEach(r => {
-        const match = (r.userId === c.lineFriendId) || (r.customerName === c.name) ||
-                      ((!r.customerName || r.customerName === 'お客様') && c.lineFriendId);
+        const match = (r.userId && r.userId === c.lineFriendId) || (r.customerName && r.customerName === c.name);
         if (!match) return;
         if (!latestAi || new Date(r.ts || r.createdAt || 0) > new Date(latestAi.createdAt || 0)) {
           latestAi = { summary: r.summary, next_meeting_suggestion: r.next_meeting_suggestion, createdAt: r.ts };
         }
       });
       const taskCandidates = [];
+      // ★ オーナーfb: タスク leak 修正。この顧客に紐づく key だけを読む (全 fp-tasks-* スキャンは廃止)
       const tkeys = new Set();
       if (c.lineFriendId) tkeys.add('fp-tasks-' + c.lineFriendId);
       if (c.id) tkeys.add('fp-tasks-' + c.id);
       if (c.name) tkeys.add('fp-tasks-' + c.name);
-      Object.keys(localStorage).filter(k => k.startsWith('fp-tasks-')).forEach(k => tkeys.add(k));
       const seenT = new Set();
       tkeys.forEach(k => {
         try {
@@ -1384,8 +1383,8 @@
         } catch (_) {}
       });
       ((window.LineAppLiveData && window.LineAppLiveData.ai_tasks) || []).forEach(t => {
-        const match = (t.userId === c.lineFriendId) || (t.customerName === c.name) ||
-                      ((!t.customerName || t.customerName === 'お客様') && c.lineFriendId);
+        // ★ オーナーfb: タスク leak 修正、厳密一致のみ
+        const match = (t.userId && t.userId === c.lineFriendId) || (t.customerName && t.customerName === c.name);
         if (!match) return;
         const id = (t.due || '') + '|' + (t.task || '');
         if (seenT.has(id)) return; seenT.add(id);
