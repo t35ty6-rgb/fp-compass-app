@@ -40,6 +40,7 @@
     if (name === 'calendarTab') renderCalendarTab();
     if (name === 'settingsHub') renderSettingsHub();
     if (name === 'dormantFollowup') renderDormantFollowup();
+    if (name === 'tagsHub') renderTagsHub();
   }
 
   // ============================
@@ -285,6 +286,104 @@
         btn.innerHTML = '<i data-lucide="send"></i><span>友だち全員に一斉配信</span>'; if (window.lucide) lucide.createIcons();
       }
     });
+  }
+
+  // ============================
+  // 🏷 タグ管理 ハブ (全タグ一覧 / 作成 / 削除 / どの客に付いてるか)
+  // ============================
+  function renderTagsHub() {
+    const v = document.querySelector('[data-line-view="tagsHub"]');
+    if (!v) return;
+    const allClients = window.DUMMY_CLIENTS || [];
+    const TAG_COLORS = ['#5B5BF0', '#10B981', '#F59E0B', '#EC4899', '#06B6D4', '#8B5CF6', '#EF4444', '#84CC16', '#F97316', '#0EA5E9'];
+
+    function getMaster() { try { return JSON.parse(localStorage.getItem('fp-tags-master') || '[]'); } catch(_) { return []; } }
+    function saveMaster(m) { localStorage.setItem('fp-tags-master', JSON.stringify(m)); }
+    function getClientTagsLocal(cid) { try { return JSON.parse(localStorage.getItem('fp-client-tags-' + cid) || '[]'); } catch(_) { return []; } }
+
+    function tagClients(tagId) {
+      return allClients.filter(c => getClientTagsLocal(c.id).includes(tagId));
+    }
+
+    function render() {
+      const master = getMaster();
+      const totalTagged = new Set(allClients.flatMap(c => getClientTagsLocal(c.id))).size;
+      v.innerHTML = `
+        <div class="page" style="max-width:960px;">
+          <header class="page-head" style="margin-bottom:16px;">
+            <h1 class="page-title"><i data-lucide="tag" style="vertical-align:middle;margin-right:8px;"></i>タグ管理</h1>
+            <p class="page-sub">タグを作って 顧客カードから付与 → 「ご無沙汰フォロー」でタグ絞り込み → 一斉送信できる</p>
+          </header>
+
+          <div style="background:#EEF2FF;border:1px solid #C7D2FE;border-radius:10px;padding:14px 18px;margin-bottom:18px;font-size:13px;color:#1E3A8A;line-height:1.7;">
+            <strong>💡 使い方</strong> ─ ①ここで新規タグを作る → ②顧客カードを開く → 「🏷 タグ」 セクション → 「+ 追加/編集」 から ON/OFF → ③ご無沙汰フォロータブで「タグで絞る」 → ターゲット限定の一斉送信
+          </div>
+
+          <div style="background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:18px;">
+            <div style="font-size:11px;font-weight:800;color:#475569;letter-spacing:0.06em;margin-bottom:10px;">+ 新しいタグを作る</div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <input id="fp-tg-new" type="text" maxlength="20" placeholder="例: 法人客 / 紹介者 / VIP / 教育費相談中" style="flex:1;padding:10px 12px;border:1.5px solid #E2E8F0;border-radius:6px;font-size:13px;font-family:inherit;">
+              <button id="fp-tg-create" style="background:#0F172A;color:#fff;border:none;padding:10px 20px;border-radius:6px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:0.04em;">作成</button>
+            </div>
+          </div>
+
+          <div style="background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px;">
+            <div style="font-size:11px;font-weight:800;color:#475569;letter-spacing:0.06em;margin-bottom:14px;display:flex;justify-content:space-between;">
+              <span>📋 タグ一覧 (${master.length}個 / 計 ${totalTagged}人 にタグ付き)</span>
+            </div>
+            ${master.length === 0 ? `
+              <div style="text-align:center;padding:32px;color:#94A3B8;font-size:13px;">
+                <div style="font-size:24px;margin-bottom:8px;">🏷</div>
+                まだタグがありません。上のフォームから作成してください。
+              </div>
+            ` : `
+              <div style="display:grid;gap:8px;">
+                ${master.map(t => {
+                  const tagged = tagClients(t.id);
+                  return `
+                    <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:${t.color}0A;border:1px solid ${t.color}33;border-radius:8px;">
+                      <span style="background:${t.color};color:#fff;padding:6px 14px;border-radius:999px;font-size:12px;font-weight:800;letter-spacing:0.04em;white-space:nowrap;">${escapeHtml(t.label)}</span>
+                      <span style="flex:1;font-size:12px;color:#475569;">
+                        <strong style="color:${t.color};">${tagged.length}名</strong> に付与
+                        ${tagged.length > 0 ? ` — <span style="color:#64748B;font-size:11px;">${tagged.slice(0,5).map(c => escapeHtml(c.name)).join(' / ')}${tagged.length > 5 ? ` 他${tagged.length-5}名` : ''}</span>` : ''}
+                      </span>
+                      <button class="fp-tg-del" data-id="${t.id}" style="background:transparent;color:#DC2626;border:1px solid #FEE2E2;padding:5px 12px;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">削除</button>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            `}
+          </div>
+        </div>
+      `;
+      if (window.lucide) lucide.createIcons();
+      document.getElementById('fp-tg-create').addEventListener('click', () => {
+        const name = document.getElementById('fp-tg-new').value.trim();
+        if (!name) return;
+        const cur = getMaster();
+        if (cur.some(t => t.label === name)) { alert('同名のタグが既にあります'); return; }
+        const id = 't-' + Date.now().toString(36);
+        const color = TAG_COLORS[cur.length % TAG_COLORS.length];
+        cur.push({ id, label: name, color });
+        saveMaster(cur);
+        render();
+      });
+      v.querySelectorAll('.fp-tg-del').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = btn.dataset.id;
+          if (!confirm('このタグを削除しますか? (全顧客から外れます)')) return;
+          saveMaster(getMaster().filter(t => t.id !== id));
+          Object.keys(localStorage).filter(k => k.startsWith('fp-client-tags-')).forEach(k => {
+            try {
+              const arr = JSON.parse(localStorage.getItem(k) || '[]').filter(x => x !== id);
+              localStorage.setItem(k, JSON.stringify(arr));
+            } catch (_) {}
+          });
+          render();
+        });
+      });
+    }
+    render();
   }
 
   // ============================

@@ -192,7 +192,7 @@
     if (name === 'clients') renderClients();
     if (name === 'timeline') renderGlobalTimeline();
     // LINE系メインタブ昇格
-    if (['leadHub', 'distributionHub', 'birthdayTab', 'calendarTab', 'settingsHub', 'dormantFollowup'].indexOf(name) >= 0) {
+    if (['leadHub', 'distributionHub', 'birthdayTab', 'calendarTab', 'settingsHub', 'dormantFollowup', 'tagsHub'].indexOf(name) >= 0) {
       if (window.LineApp) {
         if (!window._lineInited) {
           window.LineApp.init();
@@ -885,6 +885,13 @@
               <div>
                 <strong>${escapeHtml(c.name)}</strong>${c.lineFriendId ? '<span style="font-size:9.5px;color:#06c755;font-weight:700;margin-left:5px;background:#dcfce7;padding:1px 5px;border-radius:6px;letter-spacing:0.05em;">LINE</span>' : ''}
                 <div style="font-size:11px;color:var(--muted);letter-spacing:0.02em;">${escapeHtml(c.kana)}</div>
+                ${(function(){
+                  const master = getTagsMaster();
+                  const myTagIds = getClientTags(c.id);
+                  if (!myTagIds.length) return '';
+                  const myTags = myTagIds.map(id => master.find(t => t.id === id)).filter(Boolean);
+                  return `<div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:4px;">${myTags.map(t => `<span style="background:${t.color}1A;color:${t.color};border:1px solid ${t.color}55;padding:1px 7px;border-radius:8px;font-size:9.5px;font-weight:700;line-height:1.5;">${escapeHtml(t.label)}</span>`).join('')}</div>`;
+                })()}
               </div>
             </div>
           </td>

@@ -55,10 +55,16 @@
       if (daysToEvent <= leadDays && daysToEvent >= 0) {
         // major イベント、または直近6ヶ月以内のみレコメンド
         if (ev.major || daysToEvent <= 180) {
+          // ★ オーナーfb: 1.8年後の退職イベントに「至急」が付くバグ修正
+          // 時間的に遠いイベントは 至急 にしない (時間に応じた hard cap)
+          let pri = rule.priority + (ev.major ? 10 : 0) + Math.max(0, 30 - Math.floor(daysToEvent / 30));
+          if (daysToEvent > 30)  pri = Math.min(pri, 84);  // 1ヶ月以上先 → 「今週」以下
+          if (daysToEvent > 180) pri = Math.min(pri, 64);  // 6ヶ月以上先 → 「今月」
+          if (daysToEvent > 365) pri = Math.min(pri, 50);  // 1年以上先 → 低
           recs.push({
             action: rule.action,
             reason: `${ev.who} : ${ev.label} (${formatRelative(ev.date)})`,
-            priority: rule.priority + (ev.major ? 10 : 0) + Math.max(0, 30 - Math.floor(daysToEvent / 30)),
+            priority: pri,
             dueDate: ev.date,
             event: ev,
           });

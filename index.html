@@ -621,6 +621,11 @@
           <span>ご無沙汰フォロー</span>
           <span class="nav-count nav-count-alert" id="nav-count-dormant"></span>
         </div>
+        <div class="tab tab-line" data-tab="tagsHub">
+          <i data-lucide="tag"></i>
+          <span>タグ管理</span>
+          <span class="nav-count" id="nav-count-tags"></span>
+        </div>
         <div class="tab tab-line" data-tab="birthdayTab">
           <i data-lucide="cake"></i>
           <span>誕生日</span>
@@ -960,6 +965,11 @@
           <div data-line-view="dormantFollowup"></div>
         </section>
 
+        <!-- ===== タグ管理 ===== -->
+        <section class="view" data-view="tagsHub">
+          <div data-line-view="tagsHub"></div>
+        </section>
+
       </div>
     </main>
   </div>
@@ -995,7 +1005,7 @@ window.fpReadyAfterAuth = function() {
   ];
   legacyDemoKeys.forEach(k => { try { localStorage.removeItem(k); } catch (_) {} });
 
-  const ver = "20260608P-tags-brief";
+  const ver = "20260608Q-priority-tags-hub";
   const scripts = [
     "life-events.js?v=" + ver,
     "recommender.js?v=" + ver,
@@ -1295,7 +1305,7 @@ window.fpReadyAfterAuth = function() {
 <script>
 (function(){
   // 最新の ver を 1 箇所に集約 (fpReadyAfterAuth 側と一致させる必要あり)
-  const FP_VERSION = "20260608P-tags-brief";
+  const FP_VERSION = "20260608Q-priority-tags-hub";
   const loadTime = new Date();
   const hhmm = String(loadTime.getHours()).padStart(2,'0') + ':' + String(loadTime.getMinutes()).padStart(2,'0');
   const dateLabel = (FP_VERSION.match(/^(\d{4})(\d{2})(\d{2})/) || []).slice(1).join('/').replace(/^(\d{4})\//,'$1/').replace(/\/(\d{2})\/(\d{2})$/,'/$1/$2') || FP_VERSION;
