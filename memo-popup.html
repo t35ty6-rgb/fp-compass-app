@@ -70,6 +70,28 @@ try {
   if (existing) document.getElementById('memo').value = existing;
 } catch (e) {}
 
+// ★ オーナーfb: メモ操作時に Zoom が CRM MAIN の下に潜る → memo の click/focus 毎に Zoom を再 raise
+// memo は左 25% / Zoom は右 75% で物理的に重ならないので、Zoom を最前面にしてもメモは見える
+let _fpRaiseTimer = null;
+function raiseZoomKeepMemo() {
+  if (_fpRaiseTimer) return;
+  _fpRaiseTimer = setTimeout(() => {
+    _fpRaiseTimer = null;
+    try {
+      const zw = window.opener && window.opener._fpZoomWin;
+      if (zw && !zw.closed) {
+        zw.focus();
+        // Zoom を最前面化した直後に memo に focus 戻して textarea のカーソル位置維持
+        setTimeout(() => { try { window.focus(); document.getElementById('memo').focus(); } catch (_) {} }, 80);
+      }
+    } catch (e) {}
+  }, 100);
+}
+// ★ focus 時だけ発火 (clickごとに raise すると flicker するので頻度を絞る)
+window.addEventListener('focus', raiseZoomKeepMemo);
+// memo popup を開いた直後に1回 raise (初期状態で Zoom が CRM MAIN の上にいる保証)
+setTimeout(raiseZoomKeepMemo, 300);
+
 // 入力中も自動で localStorage に保存 (×で閉じても消えないように)
 let saveTimer = null;
 document.getElementById('memo').addEventListener('input', () => {
