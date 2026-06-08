@@ -3725,6 +3725,15 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
   const LIVE_CACHE_KEY = 'fp-livedata-cache-v1';
 
   async function fetchLiveData() {
+    // ★ オーナーfb: GASは現状テナント分離してない。demo 以外には共有データを混ぜない (新規 FP には完全空台帳)
+    const isSharedDataTenant = (window.__fp && window.__fp.tenantId === 'demo');
+    if (!isSharedDataTenant) {
+      liveData = { users: [], bookings: [], surveys: [], line_messages: [], ai_results: [], ai_tasks: [], step_log: [], calendar_requests: [] };
+      window.LineAppLiveData = liveData;
+      // GASキャッシュも消す (前回テナント時の残骸防止)
+      try { localStorage.removeItem(LIVE_CACHE_KEY); } catch (_) {}
+      return;
+    }
     // ① キャッシュがあれば即座に画面へ反映 (体感ゼロ秒)
     if (!liveData) {
       try {

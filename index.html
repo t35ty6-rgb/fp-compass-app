@@ -475,12 +475,12 @@
 
   onAuthStateChanged(auth, async (user) => {
     if (!user) { return; }
-    // ★ テナント分離: 別 uid (= 別 FP事務所) が同じブラウザでログインしたら 前のFP の
-    // localStorage キャッシュ (顧客 / タスク / メモ / 既読等) を全消去 → データ leak 防止
+    // ★ テナント分離: uid または tenantId が変わったら localStorage を全消去 (前テナントの顧客/タスク/GASキャッシュ残骸防止)
     try {
       const lastUid = localStorage.getItem("fp-last-uid");
+      // uid 切替 OR ロールチェンジ (skeleton_admin → fp_owner) 両方検知
       if (lastUid && lastUid !== user.uid) {
-        console.log("[fp] テナント切替検知 → localStorage 全クリア:", lastUid, "→", user.uid);
+        console.log("[fp] uid切替検知 → localStorage 全クリア:", lastUid, "→", user.uid);
         const wipeKeys = [];
         for (let i = 0; i < localStorage.length; i++) {
           const k = localStorage.key(i);
@@ -512,6 +512,20 @@
       window.__fp.tenantName = "Skeleton 管理者 — DEMO ビュー";
     } else {
       window.__fp.tenantId = userData.tenantId;
+      // ★ オーナーfb: tenantId 切替時に localStorage 全クリア (前tenantの顧客残骸・GASキャッシュ排除)
+      try {
+        const lastTid = localStorage.getItem("fp-last-tenant");
+        if (lastTid && lastTid !== userData.tenantId) {
+          console.log("[fp] tenantId切替検知 → localStorage 全クリア:", lastTid, "→", userData.tenantId);
+          const wipeKeys = [];
+          for (let i = 0; i < localStorage.length; i++) {
+            const k = localStorage.key(i);
+            if (k && /^fp[-:_]/.test(k) && k !== "fp-last-uid" && k !== "fp-last-tenant") wipeKeys.push(k);
+          }
+          wipeKeys.forEach(k => { try { localStorage.removeItem(k); } catch (_) {} });
+        }
+        localStorage.setItem("fp-last-tenant", userData.tenantId);
+      } catch (_) {}
       const tDoc = await getDoc(doc(db, "tenants", userData.tenantId));
       window.__fp.tenantName = tDoc.exists() ? (tDoc.data().name || userData.tenantId) : userData.tenantId;
       // ★ 決済 ゲート: billing.status='active' 以外は 管理画面 アクセス禁止 (決済バイパス防止)
@@ -1036,7 +1050,7 @@ window.fpReadyAfterAuth = function() {
   ];
   legacyDemoKeys.forEach(k => { try { localStorage.removeItem(k); } catch (_) {} });
 
-  const ver = "20260608X-skadmin-rules";
+  const ver = "20260608Y-empty-tenant";
   const scripts = [
     "life-events.js?v=" + ver,
     "recommender.js?v=" + ver,
@@ -1336,7 +1350,7 @@ window.fpReadyAfterAuth = function() {
 <script>
 (function(){
   // 最新の ver を 1 箇所に集約 (fpReadyAfterAuth 側と一致させる必要あり)
-  const FP_VERSION = "20260608X-skadmin-rules";
+  const FP_VERSION = "20260608Y-empty-tenant";
   const loadTime = new Date();
   const hhmm = String(loadTime.getHours()).padStart(2,'0') + ':' + String(loadTime.getMinutes()).padStart(2,'0');
   const dateLabel = (FP_VERSION.match(/^(\d{4})(\d{2})(\d{2})/) || []).slice(1).join('/').replace(/^(\d{4})\//,'$1/').replace(/\/(\d{2})\/(\d{2})$/,'/$1/$2') || FP_VERSION;
