@@ -1760,7 +1760,10 @@
   }
 
   // 画面録画 → 停止時に Drive の顧客フォルダへ自動アップロード
-  async function startScreenRecording(bookingTs, zoomUrl, preOpenedPipWin) {
+  async function startScreenRecording(bookingTs, zoomUrl, preOpened) {
+    // preOpened = { preMemoWin, preZoomWin } - click 直後に開いた空 popup を引き継ぐ
+    const preMemoWin = preOpened?.preMemoWin || null;
+    const preZoomWin = preOpened?.preZoomWin || null;
     const R = window._fpRecorder;
     // ★ 順序: 共有許可 → 成功時に Zoom + メモ 同時オープン → 録画開始
     // (Zoom を先に開くと画面共有ダイアログが裏に隠れて操作不能になるため)
@@ -1795,12 +1798,12 @@
         if (!ok) { stream.getTracks().forEach(t => t.stop()); return; }
       }
 
-      // ★ オーナーfb (v AD): 左メモ(28%) + 右Zoom(72%) の完全側面並列レイアウト。
-      // 画面全幅を 2 ウィンドウで埋める → 重なりゼロ + CRM親窓は裏で見えない → Zoomが裏に行く問題が起きない。
+      // ★ オーナーfb (v AE): 既に click 直後に空 popup を 2 つ開いてある (preMemoWin / preZoomWin)。
+      // ここでは URL を流し込むだけ。popup blocker に弾かれない。
       const sw = window.screen.availWidth || screen.width;
       const sh = window.screen.availHeight || screen.height;
-      const memoW = Math.floor(sw * 0.28);  // 左 28% (メモ + 完了ボタン)
-      const zoomW = sw - memoW;              // 右 72% (Zoom)
+      const memoW = Math.floor(sw * 0.28);
+      const zoomW = sw - memoW;
       const zoomBrowserUrl = (function() {
         try {
           const m = (zoomUrl || '').match(/zoom\.us\/j\/(\d+)(\?.*)?/);
@@ -1809,10 +1812,16 @@
           return `https://${host}/wc/join/${m[1]}${m[2] || ''}`;
         } catch (_) { return zoomUrl; }
       })();
-      // Zoom: 右側 (left=memoW から右端まで、上下全画面)
-      const zoomFeatures = `width=${zoomW},height=${sh},left=${memoW},top=0,toolbar=no,location=no,menubar=no,status=no,scrollbars=yes,resizable=yes`;
-      const zoomWin = window.open(zoomBrowserUrl, 'fp-zoom-win', zoomFeatures);
-      if (!zoomWin) window.open(zoomBrowserUrl, '_blank');
+      // Zoom: 事前 open 済の popup に URL を流し込む
+      let zoomWin = preZoomWin;
+      if (zoomWin && !zoomWin.closed) {
+        try { zoomWin.location.href = zoomBrowserUrl; } catch (_) { zoomWin = window.open(zoomBrowserUrl, 'fp-zoom-win'); }
+      } else {
+        // fallback (preZoom が無効): 直接 open
+        const zoomFeatures = `width=${zoomW},height=${sh},left=${memoW},top=0,toolbar=no,location=no,menubar=no,status=no,scrollbars=yes,resizable=yes`;
+        zoomWin = window.open(zoomBrowserUrl, 'fp-zoom-win', zoomFeatures);
+        if (!zoomWin) window.open(zoomBrowserUrl, '_blank');
+      }
       // Zoom が閉じられたら自動で録画停止 (切り忘れ防止)
       // ただし最低30秒経過してから (誤検知防止)
       window._fpZoomWin = zoomWin;
@@ -1824,14 +1833,20 @@
       const memoKey = 'fp-memo-' + (bookingTs || '');
       const tasksKey = 'fp-tasks-' + ((booking && booking.userId) || bookingTs);
       const memoQuery = `?v=${Date.now()}&memoKey=${encodeURIComponent(memoKey)}&tasksKey=${encodeURIComponent(tasksKey)}&name=${encodeURIComponent((booking && booking.name) || 'お客様')}&baseDate=${encodeURIComponent((booking && booking.date) || '')}&bookingTs=${encodeURIComponent(bookingTs || '')}`;
-      // 既存メモウィンドウがあれば一旦 close
-      try { if (window._fpMemoWin && !window._fpMemoWin.closed) window._fpMemoWin.close(); } catch (_) {}
+      // 既存メモウィンドウがあれば一旦 close (preMemoWin と別物なら)
+      try { if (window._fpMemoWin && window._fpMemoWin !== preMemoWin && !window._fpMemoWin.closed) window._fpMemoWin.close(); } catch (_) {}
 
-      // ★ メモを 左端 popup window として開く (width=memoW, height=full, left=0, top=0)
-      // Zoom (右側) と完全に隣接、重なりゼロ。
-      const memoFeatures = `width=${memoW},height=${sh},left=0,top=0,toolbar=no,location=no,menubar=no,status=no,scrollbars=yes,resizable=yes`;
-      window._fpMemoWin = window.open('memo-popup.html' + memoQuery, 'fp-memo-win', memoFeatures);
-      // 開いたら Zoom も focus して両方前面に (CRM親窓は裏)
+      // ★ メモ: 事前 open 済 popup に URL 流し込み
+      if (preMemoWin && !preMemoWin.closed) {
+        try { preMemoWin.location.href = 'memo-popup.html' + memoQuery; window._fpMemoWin = preMemoWin; } catch (_) {
+          window._fpMemoWin = window.open('memo-popup.html' + memoQuery, 'fp-memo-win');
+        }
+      } else {
+        // fallback (preMemo が無効): 直接 open
+        const memoFeatures = `width=${memoW},height=${sh},left=0,top=0,toolbar=no,location=no,menubar=no,status=no,scrollbars=yes,resizable=yes`;
+        window._fpMemoWin = window.open('memo-popup.html' + memoQuery, 'fp-memo-win', memoFeatures);
+      }
+      // 両方 focus (CRM親は裏)
       try { if (window._fpZoomWin && !window._fpZoomWin.closed) window._fpZoomWin.focus(); } catch (_) {}
       try { if (window._fpMemoWin && !window._fpMemoWin.closed) window._fpMemoWin.focus(); } catch (_) {}
       console.log('[layout] 左メモ ' + memoW + 'px + 右Zoom ' + zoomW + 'px = ' + sw + 'px (full width)');
@@ -1931,6 +1946,9 @@
       // showFixedCompleteButton(); // 旧: 画面下バー廃止 — memo PiP で十分
     } catch (e) {
       hidePickerHint();
+      // ★ 事前 open 済の空 popup を閉じる
+      try { if (preMemoWin && !preMemoWin.closed) preMemoWin.close(); } catch (_) {}
+      try { if (preZoomWin && !preZoomWin.closed) preZoomWin.close(); } catch (_) {}
       // 共有許可キャンセル時: 録画は無理だが Zoom だけ開いて「録画なしで入室」フォールバック
       if (e && e.name === 'NotAllowedError') {
         const sw = window.screen.availWidth || screen.width;
@@ -3259,9 +3277,24 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
       btn.addEventListener('click', async () => {
         const ts = btn.dataset.recStart;
         const zoomUrl = btn.dataset.zoom;
-        // ★ オーナーfb (v AD): PiP は位置指定不可なので撤回。左メモ + 右Zoom の完全側面並列に戻す。
-        // 重なりゼロで全画面を 2 ウィンドウで埋める → CRM 親は裏に隠れて Zoom が前面に来ない問題が物理的に起きない。
-        await startScreenRecording(ts, zoomUrl, null);
+        // ★ オーナーfb (v AE): 実Chromeでは getDisplayMedia ダイアログのクリックが user activation を消費する。
+        // その後の window.open は popup blocker に弾かれる → ここでウィンドウを「先に空で」 open しておく。
+        // URL は録画開始成功後に流し込む。これで活性消費後でも popup ブロックされない。
+        const sw = window.screen.availWidth || screen.width;
+        const sh = window.screen.availHeight || screen.height;
+        const memoW = Math.floor(sw * 0.28);
+        const zoomW = sw - memoW;
+        // 1. メモ popup を 左端で 先 open (about:blank)
+        const memoFeatures = `width=${memoW},height=${sh},left=0,top=0,toolbar=no,location=no,menubar=no,status=no,scrollbars=yes,resizable=yes`;
+        const preMemoWin = window.open('about:blank', 'fp-memo-win', memoFeatures);
+        // 2. Zoom popup を 右端で 先 open (about:blank)
+        const zoomFeatures = `width=${zoomW},height=${sh},left=${memoW},top=0,toolbar=no,location=no,menubar=no,status=no,scrollbars=yes,resizable=yes`;
+        const preZoomWin = window.open('about:blank', 'fp-zoom-win', zoomFeatures);
+        if (preMemoWin) { try { preMemoWin.document.title = 'メモ — 準備中...'; preMemoWin.document.body.innerHTML = '<div style="font-family:sans-serif;padding:30px;text-align:center;color:#475569;"><div style="font-size:36px;margin-bottom:14px;">⏳</div><strong>準備中...</strong><div style="margin-top:10px;font-size:12px;">画面共有ダイアログで「画面全体」+「音声を共有」を許可してください</div></div>'; } catch (_) {} }
+        if (preZoomWin) { try { preZoomWin.document.title = 'Zoom — 準備中...'; preZoomWin.document.body.innerHTML = '<div style="font-family:sans-serif;padding:30px;text-align:center;color:#475569;background:#0F172A;color:#fff;min-height:100vh;"><div style="font-size:36px;margin-bottom:14px;">⏳</div><strong>Zoom 準備中...</strong></div>'; } catch (_) {} }
+        console.log('[layout] pre-open memo + zoom (user activation 消費前)');
+        // 3. 録画開始 (内部で URL を流し込む)
+        await startScreenRecording(ts, zoomUrl, { preMemoWin, preZoomWin });
         await fetchLiveData();
         renderLeadHubInner();
       });
