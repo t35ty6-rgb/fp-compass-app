@@ -1822,10 +1822,37 @@
       const memoKey = 'fp-memo-' + (bookingTs || '');
       const tasksKey = 'fp-tasks-' + ((booking && booking.userId) || bookingTs);
       const memoQuery = `?v=${Date.now()}&memoKey=${encodeURIComponent(memoKey)}&tasksKey=${encodeURIComponent(tasksKey)}&name=${encodeURIComponent((booking && booking.name) || 'お客様')}&baseDate=${encodeURIComponent((booking && booking.date) || '')}&bookingTs=${encodeURIComponent(bookingTs || '')}`;
-      // 既存メモタブがあれば一旦 close
+      // 既存メモウィンドウ/タブがあれば一旦 close
       try { if (window._fpMemoWin && !window._fpMemoWin.closed) window._fpMemoWin.close(); } catch (_) {}
-      // features 空文字列 = 通常タブとして開く (popup ではなく)
-      window._fpMemoWin = window.open('memo-popup.html' + memoQuery, '_blank');
+      try { if (window._fpMemoPipWin && !window._fpMemoPipWin.closed) window._fpMemoPipWin.close(); } catch (_) {}
+
+      // ★ オーナーfb (Zoom裏に潜るバグ根治): Document Picture-in-Picture API でメモを OS レベル最前面化。
+      // PiP ウィンドウは全アプリの上に浮き続けるので、メモを操作しても Zoom が裏に行かない。
+      // Chrome 116+ 対応。非対応ブラウザは旧来の通常タブ fallback。
+      const hasDocPip = ('documentPictureInPicture' in window);
+      if (hasDocPip) {
+        try {
+          const pipW = Math.min(420, Math.floor(sw / 4));
+          const pipH = Math.min(680, Math.floor(sh * 0.7));
+          const pipWin = await window.documentPictureInPicture.requestWindow({ width: pipW, height: pipH });
+          window._fpMemoPipWin = pipWin;
+          // PiP の中に iframe で memo-popup.html を埋める (既存実装そのまま再利用)
+          const iframe = pipWin.document.createElement('iframe');
+          iframe.src = 'memo-popup.html' + memoQuery;
+          iframe.style.cssText = 'width:100%;height:100%;border:0;display:block;';
+          pipWin.document.body.style.cssText = 'margin:0;padding:0;height:100vh;overflow:hidden;';
+          pipWin.document.body.appendChild(iframe);
+          pipWin.document.title = 'メモ — ' + ((booking && booking.name) || 'お客様');
+          window._fpMemoWin = pipWin; // 既存 finish フローと互換 (close() / postMessage)
+          console.log('[memo] Document PiP で起動 — OS最前面で Zoom が裏に潜らない');
+        } catch (e) {
+          console.warn('[memo] PiP 失敗、通常タブ fallback:', e);
+          window._fpMemoWin = window.open('memo-popup.html' + memoQuery, '_blank');
+        }
+      } else {
+        // 非対応ブラウザ (Safari 等): 通常タブ fallback
+        window._fpMemoWin = window.open('memo-popup.html' + memoQuery, '_blank');
+      }
       if (!window._fpMemoWin) {
         // ポップアップブロック時はフォールバックで CRM 内モーダル
         localStorage.setItem('fp-memo-pos', JSON.stringify({ left: 0, top: 0 }));

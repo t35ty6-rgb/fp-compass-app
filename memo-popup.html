@@ -85,7 +85,12 @@ document.getElementById('memo').addEventListener('input', () => {
 document.getElementById('close-btn').addEventListener('click', () => {
   // 念のため最後の保存
   try { localStorage.setItem(memoKey, document.getElementById('memo').value); } catch (e) {}
-  window.close();
+  // PiP (iframe) の場合は parent を close、通常 popup/tab なら自分を close
+  if (window.parent && window.parent !== window) {
+    try { window.parent.close(); } catch (_) {}
+  } else {
+    window.close();
+  }
 });
 
 // 「面談を完了」 ボタン → CRM(opener) に postMessage で停止指示
@@ -97,10 +102,21 @@ document.getElementById('finish-meeting-btn').addEventListener('click', () => {
   const btn = document.getElementById('finish-meeting-btn');
   btn.disabled = true;
   btn.innerHTML = '<span style="display:flex;align-items:center;gap:10px;"><span style="width:14px;height:14px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;display:inline-block;animation:fp-spin 0.8s linear infinite;"></span><span>処理中... CRM 画面に切替えてください</span></span>';
+  // ★ Document PiP 対応: iframe 内なら window.opener=null。parent.opener 経由で CRM に届ける
   try {
     if (window.opener && !window.opener.closed) {
+      // 通常 popup/tab の場合
       window.opener.postMessage({ type: 'fp-finish-meeting' }, '*');
       window.opener.focus();
+    } else if (window.parent && window.parent !== window) {
+      // iframe (Document PiP) の場合 → parent (PiP window) の opener が CRM
+      try {
+        if (window.parent.opener && !window.parent.opener.closed) {
+          window.parent.opener.postMessage({ type: 'fp-finish-meeting' }, '*');
+          window.parent.opener.focus();
+        }
+      } catch (_) {}
+      window.parent.postMessage({ type: 'fp-finish-meeting' }, '*');
     }
   } catch (e) {}
   // メモウィンドウはCRM 側の処理完了後に自動で閉じる (ここで自動 close しない)
