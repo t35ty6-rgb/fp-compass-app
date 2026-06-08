@@ -4334,12 +4334,51 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
     // 状態に応じてヒーロー切替: 初めて(=0本) → 立上げ誘導 / 稼働中 → 状況サマリー
     const isFirstTime = enabledSchedules === 0;
 
-    // よく使うプリセット シナリオ (1クリック追加)
+    // ★ オーナーfb (v AJ): プリセットに「実際の文面」まで含める。何が送られるか一目で分かるように。
+    // {name}, {fpName} は送信時に自動置換。 月1お役立ちは 12ヶ月分ローテーション。
     const presetScenarios = [
-      { id: 'preset-birthday', emoji: '🎂', title: '誕生日メッセージ', subtitle: '当日の朝 9:00 に自動送信', cadence: '誕生日当日', segment: 'auto-birthday', why: 'もっとも返信率が高い接点。「覚えててくれた」 で信頼が育つ。' },
-      { id: 'preset-monthly',  emoji: '📰', title: '月1お役立ち情報', subtitle: '毎月1日10:00 / 全顧客向け', cadence: '毎月 1日 10:00', segment: 'seg-all', why: '黙ってると忘れられる。月1で軽く存在感を保つだけで再接触率2倍。' },
-      { id: 'preset-followup', emoji: '🔔', title: 'ご無沙汰フォロー', subtitle: '60日連絡なしの方に 月1', cadence: '毎月15日 10:00', segment: 'seg-dormant', why: '半年放置は「契約解消への助走」。60日で軽く声かけ → リスク回避。' },
-      { id: 'preset-newyear',  emoji: '🎍', title: '季節のご挨拶', subtitle: '元旦・お盆・年末に', cadence: '季節イベント', segment: 'seg-all', why: '日本人の信頼関係の基本。「年賀状の代わり」 で十分。' },
+      {
+        id: 'preset-birthday',
+        emoji: '🎂',
+        title: '誕生日メッセージ',
+        subtitle: '当日の朝 9:00 に自動送信',
+        cadence: '誕生日当日 9:00',
+        segment: 'auto-birthday',
+        why: 'もっとも返信率が高い接点。「覚えててくれた」 だけで信頼が育つ。',
+        sample: `{name}さん、お誕生日おめでとうございます 🎂\n\n日頃お任せいただき、本当にありがとうございます。\n新しい一年が、{name}さんにとって 実り多い年に なりますよう お祈りしています。\n\nまた近いうちに 改めて お祝いさせてください ✨\n— {fpName}`,
+      },
+      {
+        id: 'preset-monthly',
+        emoji: '📰',
+        title: '月1お役立ち情報',
+        subtitle: '毎月1日 10:00 / 全顧客向け',
+        cadence: '毎月 1日 10:00',
+        segment: 'seg-all',
+        why: '黙ってると忘れられる。月1で軽く存在感を保つだけで再接触率2倍。',
+        sample: `{name}さん、こんにちは 🌷\n\n今月の お役立ち情報 1本 お届けします!\n\n📌 新NISA 成長投資枠 の 賢い使い方\n→ 240万円の枠を 個別株ではなく 投資信託に\n振り分けるべき理由を 3行で まとめました。\n\nお時間ある時に ご覧ください 😊\n何か気になる事あれば お気軽に LINE まで。\n— {fpName}`,
+        note: '※ 月ごとにテーマ自動ローテーション (NISA / iDeCo / 教育費 / 住宅ローン / 保険 / 相続 / 確定申告 …)',
+      },
+      {
+        id: 'preset-followup',
+        emoji: '🔔',
+        title: 'ご無沙汰フォロー',
+        subtitle: '60日連絡なしの方に 月1',
+        cadence: '毎月15日 10:00',
+        segment: 'seg-dormant',
+        why: '半年放置は「契約解消への助走」。60日で軽く声かけ → リスク回避。',
+        sample: `{name}さん、ご無沙汰しております 😊\n\nお元気でいらっしゃいますか?\n\n最近、相続税の改正や 新NISA の追加情報など、\n{name}さんに お伝えしたいトピックが いくつかございます。\n\nお時間ある時に 30分の Zoom でも、\nお茶でもいかがでしょうか?\n\n候補日3つ ご返信いただけると \nこちらで調整しますね 🗓\n— {fpName}`,
+      },
+      {
+        id: 'preset-newyear',
+        emoji: '🎍',
+        title: '季節のご挨拶',
+        subtitle: '元旦・お盆・年末 の年3回',
+        cadence: '元旦/お盆/年末',
+        segment: 'seg-all',
+        why: '日本人の信頼関係の基本。「年賀状の代わり」 で十分。手軽。',
+        sample: `{name}さん、明けまして おめでとうございます 🎍\n\n旧年中は 大変お世話に なりました。\n本年も {name}さんの 暮らしと家計に\n寄り添える FP でありたいと思います。\n\nどうぞ よろしくお願いいたします。\n\n— {fpName}`,
+        note: '※ 元旦/お盆/年末 で文面が自動切替',
+      },
     ];
 
     const cadenceVisual = (cadence) => {
@@ -4399,19 +4438,36 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
             <div class="fp-dist-eyebrow">RECIPES · よく使う配信</div>
             <h3 class="fp-dist-section-title">テンプレで始める</h3>
           </div>
-          <p class="fp-dist-section-sub">クリック1つでシナリオが「稼働中」に。あとから細かい調整は「配信スケジュール」 タブから</p>
+          <p class="fp-dist-section-sub">実際の文面プレビュー付き。 そのまま追加するか、 文面を編集してから追加できる</p>
         </div>
         <div class="fp-dist-presets">
           ${presetScenarios.map((p, i) => `
-            <button class="fp-dist-preset" data-preset="${p.id}" style="animation-delay:${i*60}ms;">
-              <div class="fp-dist-preset-emoji">${p.emoji}</div>
-              <div class="fp-dist-preset-body">
-                <div class="fp-dist-preset-title">${escapeHtml(p.title)}</div>
-                <div class="fp-dist-preset-sub">${escapeHtml(p.subtitle)}</div>
-                <div class="fp-dist-preset-why">${escapeHtml(p.why)}</div>
+            <div class="fp-dist-preset-card" style="animation-delay:${i*60}ms;">
+              <div class="fp-dist-preset-head">
+                <div class="fp-dist-preset-emoji">${p.emoji}</div>
+                <div class="fp-dist-preset-titleblock">
+                  <div class="fp-dist-preset-title">${escapeHtml(p.title)}</div>
+                  <div class="fp-dist-preset-sub">${escapeHtml(p.subtitle)}</div>
+                </div>
+                <div class="fp-dist-preset-cadence-tag">${escapeHtml(p.cadence)}</div>
               </div>
-              <div class="fp-dist-preset-cta">+ 追加</div>
-            </button>
+              <div class="fp-dist-preset-why">${escapeHtml(p.why)}</div>
+
+              <!-- LINE 風プレビュー -->
+              <div class="fp-line-preview">
+                <div class="fp-line-preview-header">
+                  <span class="fp-line-preview-dot"></span>
+                  <span>お客様の LINE に届く本文 (プレビュー)</span>
+                </div>
+                <div class="fp-line-preview-bubble">${escapeHtml(p.sample).replace(/\\n/g, '<br>').replace(/\n/g, '<br>')}</div>
+                ${p.note ? `<div class="fp-line-preview-note">${escapeHtml(p.note)}</div>` : ''}
+              </div>
+
+              <div class="fp-dist-preset-actions">
+                <button class="fp-dist-preset-add" data-preset="${p.id}">+ このまま追加して稼働開始</button>
+                <button class="fp-dist-preset-edit" data-preset-edit="${p.id}">✎ 文面を編集してから</button>
+              </div>
+            </div>
           `).join('')}
         </div>
       </div>
@@ -4552,26 +4608,31 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
       }
       .fp-dist-section-sub { font-size: 11.5px; color: #8B7D5D; max-width: 38ch; text-align: right; line-height: 1.6; margin: 0; }
 
-      .fp-dist-presets { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-      .fp-dist-preset {
-        display: flex; align-items: flex-start; gap: 14px;
+      .fp-dist-presets { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+      .fp-dist-preset-card {
         background: #fff; border: 1px solid #E8E2D4;
-        border-radius: 12px; padding: 18px 18px 18px 16px;
-        cursor: pointer; transition: all 0.2s ease;
-        text-align: left; font-family: inherit;
-        animation: fp-dist-preset-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+        border-radius: 14px; padding: 22px 22px 18px;
+        transition: all 0.2s ease;
+        font-family: inherit;
+        animation: fp-dist-preset-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+        position: relative; overflow: hidden;
       }
-      @keyframes fp-dist-preset-in { from { opacity:0; transform:translateY(8px) } to { opacity:1; transform:translateY(0) } }
-      .fp-dist-preset:hover {
-        border-color: #C19A3A; background: linear-gradient(135deg,#FDFBF4,#FFF);
-        box-shadow: 0 6px 18px rgba(193,154,58,0.12);
-        transform: translateY(-2px);
+      .fp-dist-preset-card::before {
+        content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+        background: linear-gradient(90deg, #C19A3A, transparent 60%);
+        opacity: 0.5;
       }
-      .fp-dist-preset-emoji { font-size: 30px; line-height: 1; flex-shrink: 0; margin-top: 2px; }
-      .fp-dist-preset-body { flex: 1; min-width: 0; }
+      @keyframes fp-dist-preset-in { from { opacity:0; transform:translateY(10px) } to { opacity:1; transform:translateY(0) } }
+      .fp-dist-preset-card:hover {
+        border-color: #C19A3A;
+        box-shadow: 0 12px 32px rgba(193,154,58,0.12);
+      }
+      .fp-dist-preset-head { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 10px; }
+      .fp-dist-preset-emoji { font-size: 34px; line-height: 1; flex-shrink: 0; }
+      .fp-dist-preset-titleblock { flex: 1; min-width: 0; }
       .fp-dist-preset-title {
         font-family: 'Noto Serif JP', serif;
-        font-weight: 700; font-size: 14.5px;
+        font-weight: 700; font-size: 16px;
         color: #1F1A12; letter-spacing: -0.005em;
         margin-bottom: 3px;
       }
@@ -4579,24 +4640,76 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
         font-family: 'Manrope', 'Noto Sans JP', sans-serif;
         font-size: 11px; color: #8B7D5D;
         font-weight: 600; letter-spacing: 0.02em;
-        margin-bottom: 8px;
+      }
+      .fp-dist-preset-cadence-tag {
+        flex-shrink: 0; font-family: 'Manrope', sans-serif;
+        font-size: 10px; font-weight: 800; letter-spacing: 0.08em;
+        color: #C19A3A; background: #FDFBF4;
+        border: 1px solid #E8C56F; padding: 5px 10px; border-radius: 999px;
       }
       .fp-dist-preset-why {
-        font-size: 11.5px; line-height: 1.65;
-        color: #5E5648;
+        font-size: 12px; line-height: 1.7;
+        color: #5E5648; margin-bottom: 14px;
+        padding-bottom: 14px; border-bottom: 1px dashed #E8E2D4;
       }
-      .fp-dist-preset-cta {
+
+      /* LINE 風プレビュー */
+      .fp-line-preview {
+        background: linear-gradient(180deg, #F1F5F9, #E2E8F0);
+        border-radius: 10px; padding: 14px;
+        margin-bottom: 14px;
+      }
+      .fp-line-preview-header {
+        display: flex; align-items: center; gap: 7px;
         font-family: 'Manrope', sans-serif;
-        font-weight: 800; font-size: 11px;
-        letter-spacing: 0.1em; color: #C19A3A;
-        background: #FDFBF4; border: 1px solid #C19A3A;
-        padding: 6px 12px; border-radius: 6px;
-        flex-shrink: 0; align-self: flex-start;
-        transition: all 0.15s ease;
+        font-weight: 700; font-size: 10px;
+        letter-spacing: 0.1em; color: #475569;
+        text-transform: uppercase; margin-bottom: 10px;
       }
-      .fp-dist-preset:hover .fp-dist-preset-cta {
-        background: #C19A3A; color: #fff;
+      .fp-line-preview-dot {
+        width: 7px; height: 7px; border-radius: 50%;
+        background: #06C755; box-shadow: 0 0 6px rgba(6,199,85,0.5);
       }
+      .fp-line-preview-bubble {
+        background: #fff; border-radius: 14px 14px 14px 3px;
+        padding: 12px 14px;
+        font-family: 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+        font-size: 12.5px; line-height: 1.75;
+        color: #0F172A; white-space: pre-wrap;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      }
+      .fp-line-preview-note {
+        margin-top: 8px; font-size: 10.5px;
+        color: #64748B; font-style: italic; line-height: 1.55;
+      }
+
+      .fp-dist-preset-actions {
+        display: flex; gap: 8px;
+      }
+      .fp-dist-preset-add {
+        flex: 1;
+        font-family: 'Manrope', 'Noto Sans JP', sans-serif;
+        font-weight: 800; font-size: 12px;
+        letter-spacing: 0.04em; color: #fff;
+        background: linear-gradient(135deg, #C19A3A, #B8893D);
+        border: none; padding: 11px 14px; border-radius: 8px;
+        cursor: pointer; transition: all 0.15s ease;
+        box-shadow: 0 4px 12px rgba(193,154,58,0.32);
+      }
+      .fp-dist-preset-add:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 20px rgba(193,154,58,0.45);
+      }
+      .fp-dist-preset-edit {
+        font-family: 'Manrope', 'Noto Sans JP', sans-serif;
+        font-weight: 700; font-size: 11.5px;
+        color: #5E5648;
+        background: #fff; border: 1px solid #D6CDB6;
+        padding: 11px 14px; border-radius: 8px;
+        cursor: pointer; transition: all 0.15s ease;
+        white-space: nowrap;
+      }
+      .fp-dist-preset-edit:hover { border-color: #C19A3A; color: #C19A3A; }
 
       .fp-dist-running-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
       .fp-dist-run-card {
@@ -4648,39 +4761,62 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
     `;
     document.querySelector('[data-line-view="dashboard"]').innerHTML = html;
 
-    // プリセット 1クリック追加
+    // プリセット 1クリック追加 (そのまま追加)
+    function addPresetToSchedules(preset, customBody) {
+      const dup = window.LINE_SCHEDULES.find(s => s.name === preset.title);
+      if (dup) {
+        if (confirm(`「${preset.title}」 は既にあります。 「配信スケジュール」 タブに移動して編集しますか?`)) {
+          document.querySelector('[data-line-sub="schedules"]')?.click();
+        }
+        return;
+      }
+      const tplId = 'tpl-preset-' + Date.now().toString(36);
+      // テンプレ追加
+      if (window.LINE_TEMPLATES) {
+        window.LINE_TEMPLATES.push({
+          id: tplId,
+          name: preset.title + ' (テンプレ)',
+          body: customBody || preset.sample,
+          tags: [preset.id],
+        });
+      }
+      const newSched = {
+        id: 'sch-preset-' + Date.now().toString(36),
+        name: preset.title,
+        segment: preset.segment,
+        templateId: tplId,
+        cadence: preset.cadence.includes('毎月') ? 'monthly' : (preset.cadence.includes('誕生日') ? 'birthday' : 'event'),
+        schedule: preset.cadence,
+        enabled: true,
+        lastSent: null,
+        nextSend: preset.cadence,
+        body: customBody || preset.sample,
+      };
+      window.LINE_SCHEDULES.push(newSched);
+      const toast = document.createElement('div');
+      toast.style.cssText = 'position:fixed;top:24px;left:50%;transform:translateX(-50%);background:#0F172A;color:#fff;padding:12px 22px;border-radius:8px;font-size:13px;font-weight:700;z-index:99999;box-shadow:0 12px 32px rgba(15,23,42,0.4);font-family:"Noto Sans JP",sans-serif;';
+      toast.innerHTML = `✓ 「${escapeHtml(preset.title)}」 を自動配信に追加しました`;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 2400);
+      renderLineDashboard();
+    }
+
+    // 「+ このまま追加」ボタン
     document.querySelectorAll('[data-preset]').forEach(btn => {
       btn.addEventListener('click', () => {
         const preset = presetScenarios.find(p => p.id === btn.dataset.preset);
         if (!preset) return;
-        // 既存に同じプリセットがあれば二重追加防止
-        const dup = window.LINE_SCHEDULES.find(s => s.name === preset.title);
-        if (dup) {
-          if (confirm(`「${preset.title}」 は既にあります。 「配信スケジュール」 タブに移動して編集しますか?`)) {
-            document.querySelector('[data-line-sub="schedules"]')?.click();
-          }
-          return;
-        }
-        if (!confirm(`「${preset.title}」 を 自動配信に追加します。\n\n配信タイミング: ${preset.cadence}\nセグメント: ${preset.segment}\n\nよろしいですか?`)) return;
-        const newSched = {
-          id: 'sch-preset-' + Date.now().toString(36),
-          name: preset.title,
-          segment: preset.segment,
-          templateId: (window.LINE_TEMPLATES && window.LINE_TEMPLATES[0]?.id) || 't1',
-          cadence: preset.cadence.includes('毎月') ? 'monthly' : (preset.cadence.includes('誕生日') ? 'birthday' : 'event'),
-          schedule: preset.cadence,
-          enabled: true,
-          lastSent: null,
-          nextSend: preset.cadence,
-        };
-        window.LINE_SCHEDULES.push(newSched);
-        // トースト
-        const toast = document.createElement('div');
-        toast.style.cssText = 'position:fixed;top:24px;left:50%;transform:translateX(-50%);background:#0F172A;color:#fff;padding:12px 22px;border-radius:8px;font-size:13px;font-weight:700;z-index:99999;box-shadow:0 12px 32px rgba(15,23,42,0.4);font-family:"Noto Sans JP",sans-serif;';
-        toast.innerHTML = `✓ 「${escapeHtml(preset.title)}」 を自動配信に追加しました`;
-        document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 2400);
-        renderLineDashboard();
+        if (!confirm(`「${preset.title}」 を 自動配信に追加します。\n\n配信タイミング: ${preset.cadence}\n対象: ${preset.segment}\n\n配信開始 してよろしいですか?`)) return;
+        addPresetToSchedules(preset, null);
+      });
+    });
+
+    // 「✎ 文面を編集してから」ボタン
+    document.querySelectorAll('[data-preset-edit]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const preset = presetScenarios.find(p => p.id === btn.dataset.presetEdit);
+        if (!preset) return;
+        openPresetEditModal(preset, addPresetToSchedules);
       });
     });
     // 稼働中カードクリック → スケジュール編集
@@ -4776,6 +4912,68 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
     document.getElementById('seg-close-btn').addEventListener('click', () => {
       document.getElementById('modal-overlay').style.display = 'none';
     });
+  }
+
+  // 文面編集モーダル (プリセットを編集してから追加)
+  function openPresetEditModal(preset, onSave) {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.62);backdrop-filter:blur(4px);z-index:10080;display:flex;align-items:center;justify-content:center;padding:20px;font-family:"Noto Sans JP",sans-serif;';
+    overlay.innerHTML = `
+      <div style="background:#fff;max-width:680px;width:100%;max-height:88vh;border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,0.35);overflow:hidden;display:flex;flex-direction:column;">
+        <div style="background:linear-gradient(135deg,#FDFBF4,#FAF6E8);padding:22px 26px;border-bottom:1px solid #E8E2D4;display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:10.5px;letter-spacing:0.22em;color:#C19A3A;text-transform:uppercase;margin-bottom:5px;">EDIT TEMPLATE</div>
+            <h3 style="margin:0;font-family:'Noto Serif JP',serif;font-weight:700;font-size:18px;color:#1F1A12;">${escapeHtml(preset.emoji)} ${escapeHtml(preset.title)} の文面を編集</h3>
+          </div>
+          <button id="fp-preset-close" style="background:transparent;border:none;cursor:pointer;font-size:22px;color:#8B7D5D;">✕</button>
+        </div>
+        <div style="padding:22px 26px;overflow-y:auto;flex:1;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;">
+            <!-- 左: 編集 -->
+            <div>
+              <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:10px;letter-spacing:0.16em;color:#8B7D5D;text-transform:uppercase;margin-bottom:8px;">📝 本文 (編集できます)</div>
+              <textarea id="fp-preset-textarea" rows="12" style="width:100%;padding:14px 16px;border:1.5px solid #E8E2D4;border-radius:8px;font-size:13px;font-family:'Hiragino Sans','Noto Sans JP',sans-serif;line-height:1.85;resize:vertical;box-sizing:border-box;background:#FDFBF4;">${escapeHtml(preset.sample)}</textarea>
+              <div style="font-size:10.5px;color:#8B7D5D;margin-top:6px;line-height:1.6;">
+                <strong style="color:#C19A3A;">{name}</strong> = お客様の名前 / <strong style="color:#C19A3A;">{fpName}</strong> = FP事業者名<br>
+                送信時に自動で置換されます。
+              </div>
+              ${preset.note ? `<div style="margin-top:12px;padding:10px 12px;background:#FFFBEB;border-left:3px solid #C19A3A;border-radius:6px;font-size:11px;color:#5E5648;line-height:1.6;">${escapeHtml(preset.note)}</div>` : ''}
+            </div>
+            <!-- 右: プレビュー -->
+            <div>
+              <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:10px;letter-spacing:0.16em;color:#8B7D5D;text-transform:uppercase;margin-bottom:8px;">👁 お客様の LINE プレビュー</div>
+              <div style="background:linear-gradient(180deg,#F1F5F9,#E2E8F0);border-radius:12px;padding:16px;">
+                <div id="fp-preset-preview" style="background:#fff;border-radius:14px 14px 14px 3px;padding:14px 16px;font-family:'Hiragino Sans','Noto Sans JP',sans-serif;font-size:13px;line-height:1.85;color:#0F172A;white-space:pre-wrap;box-shadow:0 1px 3px rgba(0,0,0,0.08);min-height:200px;"></div>
+              </div>
+              <div style="font-size:10.5px;color:#8B7D5D;margin-top:6px;text-align:center;">山田 太郎 さんで表示</div>
+            </div>
+          </div>
+        </div>
+        <div style="padding:16px 26px;background:#FDFBF4;border-top:1px solid #E8E2D4;display:flex;gap:10px;justify-content:flex-end;">
+          <button id="fp-preset-cancel" style="background:#fff;color:#5E5648;border:1px solid #D6CDB6;padding:11px 22px;border-radius:8px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:0.04em;">キャンセル</button>
+          <button id="fp-preset-save" style="background:linear-gradient(135deg,#C19A3A,#B8893D);color:#fff;border:none;padding:11px 24px;border-radius:8px;font-size:13px;font-weight:900;cursor:pointer;font-family:inherit;letter-spacing:0.06em;box-shadow:0 4px 14px rgba(193,154,58,0.4);">✓ この文面で稼働開始</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    const textarea = overlay.querySelector('#fp-preset-textarea');
+    const preview = overlay.querySelector('#fp-preset-preview');
+    const fpName = (window.__fp?.tenantName || 'FP事務所').replace(/ — DEMO ビュー/, '');
+    function updatePreview() {
+      const text = textarea.value.replace(/\{name\}/g, '山田 太郎').replace(/\{fpName\}/g, fpName);
+      preview.textContent = text;
+    }
+    textarea.addEventListener('input', updatePreview);
+    updatePreview();
+    overlay.querySelector('#fp-preset-close').addEventListener('click', () => overlay.remove());
+    overlay.querySelector('#fp-preset-cancel').addEventListener('click', () => overlay.remove());
+    overlay.querySelector('#fp-preset-save').addEventListener('click', () => {
+      const customBody = textarea.value.trim();
+      if (!customBody) { alert('本文が空です'); return; }
+      overlay.remove();
+      onSave(preset, customBody);
+    });
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
   }
 
   // ============================
