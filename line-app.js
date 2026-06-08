@@ -1972,7 +1972,7 @@
     if (document.getElementById('fp-rec-border')) return;
     const b = document.createElement('div');
     b.id = 'fp-rec-border';
-    b.style.cssText = 'position:fixed;inset:0;border:5px solid #d9264c;border-radius:0;pointer-events:none;z-index:9996;box-shadow:inset 0 0 24px rgba(217,38,76,0.35);animation:fp-rec-border-pulse 1.6s ease-in-out infinite;';
+    b.style.cssText = 'position:fixed;inset:0;border:5px solid #d9264c;border-radius:0;pointer-events:none;z-index:10200;box-shadow:inset 0 0 24px rgba(217,38,76,0.35);animation:fp-rec-border-pulse 1.6s ease-in-out infinite;';
     document.body.appendChild(b);
     if (!document.getElementById('fp-rec-border-style')) {
       const s = document.createElement('style');
@@ -2028,7 +2028,7 @@
         </div>
         <div style="margin-top:8px;font-size:10.5px;color:rgba(255,255,255,0.92);text-align:center;letter-spacing:0.04em;">面談終わったら ■ を押す / Zoom 閉じても自動停止</div>
       `;
-      el.style.cssText = 'position:fixed;top:18px;right:18px;background:linear-gradient(135deg,#d9264c,#b91c3c);color:#fff;padding:14px 18px 12px;border-radius:14px;box-shadow:0 16px 40px rgba(217,38,76,0.45),0 0 0 4px rgba(255,255,255,0.6);z-index:9999;font-size:13.5px;min-width:280px;';
+      el.style.cssText = 'position:fixed;top:18px;right:18px;background:linear-gradient(135deg,#d9264c,#b91c3c);color:#fff;padding:14px 18px 12px;border-radius:14px;box-shadow:0 16px 40px rgba(217,38,76,0.45),0 0 0 4px rgba(255,255,255,0.6);z-index:10201;font-size:13.5px;min-width:280px;';
       const style = document.createElement('style');
       style.textContent = '@keyframes fp-rec-pulse{0%,100%{opacity:1}50%{opacity:0.3}}@keyframes fp-spin{to{transform:rotate(360deg)}}';
       document.head.appendChild(style);
