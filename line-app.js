@@ -4488,73 +4488,46 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
     })();
     const fpHandleName = ((window.__fp?.tenantName || '').match(/^[^\s—\-]+/) || ['先生'])[0];
 
+    // ★ オーナーfb (v AL): もっと簡単に。 ヒーローを 1行 タイトル に縮小。
     const heroHtml = todayMessages.length === 0 ? `
-      <div class="fp-dist-hero fp-dist-hero-empty">
-        <div class="fp-dist-hero-date">${todayDateLabel}</div>
-        <h2 class="fp-dist-hero-title">今日は ゆっくりで大丈夫です。 🌿</h2>
-        <p class="fp-dist-hero-sub">送る予定のメッセージは ありません。<br>明朝 また 候補をご用意しておきます。</p>
+      <div class="fp-dist-simple-empty">
+        <div class="fp-dist-simple-empty-mark">🌿</div>
+        <h2>今日は LINE で 送る方は いません</h2>
+        <p>明日の朝、 また 下書きを ご用意しておきます。</p>
       </div>
     ` : `
-      <div class="fp-dist-hero">
-        <div class="fp-dist-hero-date">${todayDateLabel}</div>
-        <h2 class="fp-dist-hero-title">おはようございます、 <span style="color:#C19A3A;">${escapeHtml(fpHandleName)}</span> さん。</h2>
-        <p class="fp-dist-hero-sub">今日 お客様にお送りする メッセージ案 が <strong style="color:#1F1A12;">${todayMessages.length}件</strong> あります。<br>1件ずつ ご確認のうえ 送信してください。</p>
+      <div class="fp-dist-simple-head">
+        <h1>今日 LINE で 送る お客様 <span class="fp-dist-simple-count">${todayMessages.length}名</span></h1>
+        <p>AI が下書きを 作りました。 確認して 緑のボタンを 押すだけ です。</p>
       </div>
     `;
 
     const html = `
       ${heroHtml}
 
-      <!-- 今日 送るメッセージ案 (承認リスト) -->
+      <!-- 今日 送るメッセージ案 (承認リスト v AL: 簡素化) -->
       ${todayMessages.length > 0 ? `
-      <div class="fp-dist-section">
-        <div class="fp-today-list">
-          ${todayMessages.map((m, i) => `
-            <article class="fp-today-msg" data-msg-id="${escapeHtml(m.id)}" style="animation-delay:${i*70}ms;">
-              <header class="fp-today-msg-head">
-                <div class="fp-today-avatar" style="background:hsl(${(m.clientName.charCodeAt(0)*7)%360}, 55%, 88%);color:hsl(${(m.clientName.charCodeAt(0)*7)%360}, 60%, 30%);">${escapeHtml(m.clientName.charAt(0))}</div>
-                <div class="fp-today-who">
-                  <div class="fp-today-name">${escapeHtml(m.clientName)} <span class="fp-today-honor">さん</span></div>
-                  <div class="fp-today-reason">${m.icon} ${escapeHtml(m.reason)}</div>
-                </div>
-                <span class="fp-today-cat">${escapeHtml(m.category)}</span>
-              </header>
-              <div class="fp-today-bubble-wrap">
-                <div class="fp-today-bubble-tail"></div>
-                <div class="fp-today-bubble">${escapeHtml(m.body).replace(/\n/g, '<br>')}</div>
-              </div>
-              <footer class="fp-today-actions">
-                <button class="fp-today-btn fp-today-btn-send" data-send="${escapeHtml(m.id)}">
-                  <span>✓</span> このまま送る
-                </button>
-                <button class="fp-today-btn fp-today-btn-edit" data-edit="${escapeHtml(m.id)}">
-                  <span>✏</span> 直す
-                </button>
-                <button class="fp-today-btn fp-today-btn-skip" data-skip="${escapeHtml(m.id)}">
-                  今回はスキップ
-                </button>
-              </footer>
-            </article>
-          `).join('')}
-        </div>
-        ${todayMessages.length >= 2 ? `
-          <div class="fp-today-bulk">
-            <div>
-              <strong>${todayMessages.length}件 まとめて 送りますか?</strong>
-              <span>1件ずつ確認したい場合は 上の各カードで操作してください。</span>
+      <div class="fp-today-list">
+        ${todayMessages.map((m, i) => `
+          <article class="fp-today-card-v2" data-msg-id="${escapeHtml(m.id)}" style="animation-delay:${i*70}ms;">
+            <header class="fp-today-v2-head">
+              <div class="fp-today-v2-name">${escapeHtml(m.clientName)} <span>さん</span></div>
+              <div class="fp-today-v2-reason">${m.icon} ${escapeHtml(m.reason)}</div>
+            </header>
+            <div class="fp-today-v2-bubble">${escapeHtml(m.body).replace(/\n/g, '<br>')}</div>
+            <button class="fp-today-v2-send" data-send="${escapeHtml(m.id)}">
+              <span class="fp-today-v2-send-icon">📤</span>
+              <span>このまま LINE で送る</span>
+            </button>
+            <div class="fp-today-v2-sub-actions">
+              <button data-edit="${escapeHtml(m.id)}">✏ 文面を直す</button>
+              <span>・</span>
+              <button data-skip="${escapeHtml(m.id)}">今回はスキップ</button>
             </div>
-            <button class="fp-today-bulk-btn" id="fp-today-bulk-send">${todayMessages.length}件 すべて送信</button>
-          </div>
-        ` : ''}
+          </article>
+        `).join('')}
       </div>
-      ` : `
-      <div class="fp-dist-section">
-        <div class="fp-today-empty">
-          <div class="fp-today-empty-mark">○</div>
-          <p>送信予定なし。 お客様との接点は CRM の <strong>顧客台帳</strong> から いつでも 個別に お送りいただけます。</p>
-        </div>
-      </div>
-      `}
+      ` : ''}
 
       <!-- 設定 (折り畳み): よく使うシナリオを いつもの予定として登録 -->
       <details class="fp-dist-fold">
@@ -4881,6 +4854,141 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
       .fp-dist-bday-main > div { color: #5E5648; margin-top: 2px; font-size: 11.5px; }
       .fp-dist-status-on { background: #ECFDF5; color: #047857; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; letter-spacing: 0.04em; }
       .fp-dist-status-wait { background: #F1ECDF; color: #8B7D5D; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 600; }
+
+      /* ===== v AL シンプル版 ===== */
+      .fp-dist-simple-head {
+        margin-bottom: 22px;
+        padding-bottom: 18px;
+        border-bottom: 1px solid #E8E2D4;
+      }
+      .fp-dist-simple-head h1 {
+        font-family: 'Noto Serif JP', serif;
+        font-weight: 700; font-size: 24px;
+        letter-spacing: -0.012em; color: #1F1A12;
+        margin: 0 0 6px 0; line-height: 1.4;
+      }
+      .fp-dist-simple-count {
+        background: linear-gradient(135deg, #C19A3A, #B8893D);
+        color: #fff;
+        font-family: 'Manrope', sans-serif;
+        font-size: 14px; font-weight: 800;
+        letter-spacing: 0.04em;
+        padding: 4px 12px;
+        border-radius: 999px;
+        margin-left: 8px;
+        vertical-align: middle;
+      }
+      .fp-dist-simple-head p {
+        font-size: 13.5px; color: #5E5648;
+        margin: 0; line-height: 1.7;
+      }
+      .fp-dist-simple-empty {
+        background: linear-gradient(135deg, #F0FDF4, #DCFCE7);
+        border: 1px solid #86EFAC;
+        border-radius: 14px;
+        padding: 50px 30px;
+        text-align: center;
+      }
+      .fp-dist-simple-empty-mark { font-size: 48px; margin-bottom: 10px; }
+      .fp-dist-simple-empty h2 {
+        font-family: 'Noto Serif JP', serif;
+        font-weight: 700; font-size: 20px;
+        color: #065F46; margin: 0 0 8px 0;
+      }
+      .fp-dist-simple-empty p {
+        font-size: 13px; color: #047857;
+        margin: 0; line-height: 1.7;
+      }
+      .fp-today-card-v2 {
+        background: #fff;
+        border: 1px solid #E8E2D4;
+        border-radius: 14px;
+        padding: 22px 24px 18px;
+        margin-bottom: 16px;
+        animation: fp-today-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+        transition: opacity 0.25s ease, transform 0.25s ease;
+      }
+      .fp-today-v2-head { margin-bottom: 14px; }
+      .fp-today-v2-name {
+        font-family: 'Noto Serif JP', serif;
+        font-weight: 700; font-size: 18px;
+        color: #1F1A12; letter-spacing: -0.005em;
+        line-height: 1.3;
+      }
+      .fp-today-v2-name span {
+        font-size: 13px; color: #8B7D5D;
+        font-weight: 400; margin-left: 3px;
+      }
+      .fp-today-v2-reason {
+        font-size: 12.5px; color: #C19A3A;
+        font-weight: 700;
+        background: #FDFBF4;
+        border: 1px solid #E8C56F;
+        display: inline-block;
+        padding: 4px 11px;
+        border-radius: 999px;
+        margin-top: 6px;
+        letter-spacing: 0.02em;
+      }
+      .fp-today-v2-bubble {
+        background: linear-gradient(180deg, #F1F5F9, #E2E8F0);
+        border-radius: 10px;
+        padding: 16px 18px;
+        font-family: 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+        font-size: 13.5px;
+        line-height: 1.95;
+        color: #1F1A12;
+        margin-bottom: 16px;
+        white-space: pre-wrap;
+      }
+      .fp-today-v2-send {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        font-family: 'Noto Sans JP', 'Manrope', sans-serif;
+        font-weight: 900;
+        font-size: 16px;
+        letter-spacing: 0.04em;
+        color: #fff;
+        background: linear-gradient(135deg, #06C755, #04A847);
+        border: none;
+        padding: 16px 22px;
+        border-radius: 11px;
+        cursor: pointer;
+        box-shadow: 0 6px 18px rgba(6,199,85,0.32);
+        transition: transform 0.12s ease, box-shadow 0.18s ease;
+      }
+      .fp-today-v2-send-icon { font-size: 18px; }
+      .fp-today-v2-send:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 28px rgba(6,199,85,0.45);
+      }
+      .fp-today-v2-send:disabled {
+        opacity: 0.6; cursor: wait;
+      }
+      .fp-today-v2-sub-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        justify-content: center;
+        margin-top: 12px;
+        font-size: 11.5px;
+        color: #8B7D5D;
+      }
+      .fp-today-v2-sub-actions button {
+        background: transparent;
+        border: none;
+        color: #5E5648;
+        font-family: inherit;
+        font-size: 11.5px;
+        cursor: pointer;
+        text-decoration: underline;
+        padding: 4px 6px;
+      }
+      .fp-today-v2-sub-actions button:hover { color: #C19A3A; }
+      .fp-today-msg-done.fp-today-card-v2 { opacity: 0.4; pointer-events: none; }
 
       /* ===== 今日 のメッセージ承認リスト (v AK) ===== */
       .fp-dist-hero-date {
@@ -5237,11 +5345,11 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
         btn.disabled = true; btn.innerHTML = '<span>...</span> 送信中';
         const ok = await sendMsg(msg);
         if (ok) {
-          const card = btn.closest('.fp-today-msg');
-          if (card) { card.classList.add('fp-today-msg-done'); card.innerHTML = `<div style="padding:18px;text-align:center;color:#5E5648;font-size:13px;">✓ ${escapeHtml(msg.clientName)}さん に 送信しました</div>`; }
+          const card = btn.closest('.fp-today-card-v2, .fp-today-msg');
+          if (card) { card.classList.add('fp-today-msg-done'); card.innerHTML = `<div style="padding:24px;text-align:center;color:#065F46;font-size:14px;font-family:'Noto Serif JP',serif;font-weight:700;">✓ ${escapeHtml(msg.clientName)}さんに送信しました</div>`; }
           toast(`✓ ${msg.clientName}さん に 送信しました`, 'sent');
         } else {
-          btn.disabled = false; btn.innerHTML = '<span>✓</span> このまま送る';
+          btn.disabled = false; btn.innerHTML = '<span class="fp-today-v2-send-icon">📤</span> <span>このまま LINE で送る</span>';
         }
       });
     });
@@ -5250,8 +5358,8 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
         const msg = todayMessages.find(m => m.id === btn.dataset.skip);
         if (!msg) return;
         markSkipped(msg.id);
-        const card = btn.closest('.fp-today-msg');
-        if (card) { card.classList.add('fp-today-msg-done'); card.innerHTML = `<div style="padding:18px;text-align:center;color:#8B7D5D;font-size:13px;">○ ${escapeHtml(msg.clientName)}さん は スキップしました</div>`; }
+        const card = btn.closest('.fp-today-card-v2, .fp-today-msg');
+        if (card) { card.classList.add('fp-today-msg-done'); card.innerHTML = `<div style="padding:24px;text-align:center;color:#8B7D5D;font-size:13px;">○ ${escapeHtml(msg.clientName)}さんはスキップしました</div>`; }
         toast(`スキップ: ${msg.clientName}さん`, 'skip');
       });
     });
@@ -5261,7 +5369,9 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
         if (!msg) return;
         openTodayMessageEditor(msg, async (updatedBody) => {
           msg.body = updatedBody;
-          btn.closest('.fp-today-msg').querySelector('.fp-today-bubble').innerHTML = escapeHtml(updatedBody).replace(/\n/g, '<br>');
+          const card = btn.closest('.fp-today-card-v2, .fp-today-msg');
+          const bubble = card?.querySelector('.fp-today-v2-bubble, .fp-today-bubble');
+          if (bubble) bubble.innerHTML = escapeHtml(updatedBody).replace(/\n/g, '<br>');
         });
       });
     });

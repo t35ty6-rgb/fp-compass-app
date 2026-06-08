@@ -751,7 +751,7 @@
               <div class="mega-hero-left">
                 <div class="mega-hero-date" id="mega-hero-date">2026年5月27日 水曜日</div>
                 <h1 class="mega-hero-title">
-                  おはよう、<span class="mega-hero-name">Tsukasa</span>.<br>
+                  おはようございます、<span class="mega-hero-name" id="mega-hero-name">先生</span>。<br>
                   今日は <span class="mega-hero-highlight" id="mega-hero-num">—</span> 人のお客様が<br>あなたを必要としています。
                 </h1>
                 <p class="mega-hero-lead" id="mega-hero-lead">優先度の高い順に、AI が次に取るべきアクションをまとめました。</p>
@@ -827,6 +827,9 @@
               <div class="workflow-step-desc">AI返信下書きで LINE 文面を作って送信。次回面談を予約。</div>
             </div>
           </div>
+
+          <!-- ===== 🔥 LINE 要返信 (最優先) ===== -->
+          <div id="home-unread-area"></div>
 
           <!-- ===== ★メイン: 今日やる事 (Senior Cards) ===== -->
           <div class="section-header">
@@ -1050,7 +1053,7 @@ window.fpReadyAfterAuth = function() {
   ];
   legacyDemoKeys.forEach(k => { try { localStorage.removeItem(k); } catch (_) {} });
 
-  const ver = "20260608AK-approve-list";
+  const ver = "20260608AL-simple-name-unread";
   const scripts = [
     "life-events.js?v=" + ver,
     "recommender.js?v=" + ver,
@@ -1262,10 +1265,20 @@ window.fpReadyAfterAuth = function() {
     setText('mh-stat-week', topCount);
     setText('mh-stat-events', count30);
 
-    // Date label
+    // Date label (今日に直す)
     const W = ['日','月','火','水','木','金','土'];
-    const d = today;
+    const d = new Date();
     setText('mega-hero-date', `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日 ${W[d.getDay()]}曜日`);
+
+    // ★ オーナーfb: 「Tsukasa」 ハードコード → ログイン中の FP名 に置換
+    // tenantName は 「Skeleton (オーナー本番)」 等。 先頭の人名/事業所名だけ抽出
+    const tenantName = window.__fp?.tenantName || '';
+    const personName = (function(){
+      // 「Skeleton (オーナー本番)」 → 「Skeleton」 / 「田中FP事務所」 → 「田中FP事務所」
+      const m = tenantName.match(/^([^\s(\[（【]+)/);
+      return m ? m[1] : '先生';
+    })();
+    setText('mega-hero-name', personName);
 
     // Featured card — top 1 client
     if (topCount > 0) {
@@ -1350,7 +1363,7 @@ window.fpReadyAfterAuth = function() {
 <script>
 (function(){
   // 最新の ver を 1 箇所に集約 (fpReadyAfterAuth 側と一致させる必要あり)
-  const FP_VERSION = "20260608AK-approve-list";
+  const FP_VERSION = "20260608AL-simple-name-unread";
   const loadTime = new Date();
   const hhmm = String(loadTime.getHours()).padStart(2,'0') + ':' + String(loadTime.getMinutes()).padStart(2,'0');
   const dateLabel = (FP_VERSION.match(/^(\d{4})(\d{2})(\d{2})/) || []).slice(1).join('/').replace(/^(\d{4})\//,'$1/').replace(/\/(\d{2})\/(\d{2})$/,'/$1/$2') || FP_VERSION;

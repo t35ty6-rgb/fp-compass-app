@@ -206,6 +206,62 @@
   // ============================
   // ダッシュボード
   // ============================
+  // ★ オーナーfb: ホームに「LINE 要返信」 を 大きく表示。顧客台帳の赤バッジより目立つ位置に
+  function renderUnreadLinesOnHome(clients) {
+    const area = document.getElementById('home-unread-area');
+    if (!area) return;
+    const unreadList = [];
+    (clients || []).forEach(c => {
+      const lastRead = parseInt(localStorage.getItem('fp-line-read-' + c.id) || '0', 10);
+      const unread = (c.lineHistory || []).filter(m => {
+        const isUser = (m.from === 'user' || m.direction === 'in');
+        const ts = new Date(m.ts || m.date || 0).getTime();
+        return isUser && ts > lastRead;
+      });
+      if (unread.length > 0) {
+        const latest = unread[unread.length - 1];
+        unreadList.push({
+          client: c,
+          count: unread.length,
+          latestText: (latest.text || '').slice(0, 80),
+          latestTs: latest.ts || latest.date || '',
+        });
+      }
+    });
+    if (unreadList.length === 0) { area.innerHTML = ''; return; }
+    area.innerHTML = `
+      <section class="fp-home-unread" style="background:linear-gradient(135deg,#FEF2F2,#FEE2E2);border:1px solid #FCA5A5;border-radius:14px;padding:22px 26px;margin-bottom:26px;box-shadow:0 8px 24px rgba(220,38,38,0.12);">
+        <header style="display:flex;align-items:baseline;justify-content:space-between;gap:14px;margin-bottom:16px;">
+          <div>
+            <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:10.5px;letter-spacing:0.18em;text-transform:uppercase;color:#DC2626;margin-bottom:5px;">⚠ ACTION REQUIRED</div>
+            <h2 style="font-family:'Noto Serif JP',serif;font-weight:700;font-size:20px;letter-spacing:-0.01em;color:#7F1D1D;margin:0;">LINE で返信を待っている方 <span style="color:#DC2626;">${unreadList.length}名</span></h2>
+          </div>
+          <span style="font-size:11px;color:#991B1B;font-weight:700;">放置すると 信頼を 損ねます</span>
+        </header>
+        <div style="display:grid;gap:8px;">
+          ${unreadList.slice(0, 5).map(u => `
+            <button class="fp-home-unread-row" data-client-id="${escapeHtml(u.client.id)}" style="display:grid;grid-template-columns:auto 1fr auto auto;gap:14px;align-items:center;background:#fff;border:1px solid #FCA5A5;border-radius:10px;padding:12px 16px;cursor:pointer;font-family:inherit;text-align:left;transition:all 0.15s ease;">
+              <div style="width:38px;height:38px;border-radius:50%;background:hsl(${(u.client.name.charCodeAt(0)*7)%360},55%,90%);color:hsl(${(u.client.name.charCodeAt(0)*7)%360},60%,30%);display:flex;align-items:center;justify-content:center;font-family:'Noto Serif JP',serif;font-weight:700;font-size:16px;">${escapeHtml(u.client.name.charAt(0))}</div>
+              <div style="min-width:0;">
+                <div style="font-family:'Noto Serif JP',serif;font-weight:700;font-size:14.5px;color:#1F1A12;line-height:1.3;">${escapeHtml(u.client.name)} <span style="font-size:11px;color:#8B7D5D;font-weight:400;">さん</span></div>
+                <div style="font-size:11.5px;color:#5E5648;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.5;">💬 「${escapeHtml(u.latestText)}${u.latestText.length >= 80 ? '…' : ''}」</div>
+              </div>
+              <span style="background:linear-gradient(135deg,#DC2626,#991B1B);color:#fff;font-size:10.5px;font-weight:900;padding:5px 11px;border-radius:11px;letter-spacing:0.04em;box-shadow:0 4px 10px rgba(220,38,38,0.32);">${u.count}件 未読</span>
+              <span style="font-size:18px;color:#DC2626;font-weight:700;">→</span>
+            </button>
+          `).join('')}
+          ${unreadList.length > 5 ? `<div style="text-align:center;font-size:11px;color:#991B1B;margin-top:6px;">他 ${unreadList.length - 5}名 が返信待ち — 顧客台帳 で全件確認</div>` : ''}
+        </div>
+      </section>
+      <style>
+        .fp-home-unread-row:hover { background:#FFF5F5 !important; border-color:#DC2626 !important; transform:translateX(3px); box-shadow:0 4px 14px rgba(220,38,38,0.15); }
+      </style>
+    `;
+    area.querySelectorAll('.fp-home-unread-row').forEach(row => {
+      row.addEventListener('click', () => openClientModal(row.dataset.clientId));
+    });
+  }
+
   function renderDashboard() {
     const totalClients = clients.length;
     const importantCount = clients.filter(c => c.status === 'important').length;
@@ -292,8 +348,10 @@
     `;
     if (window.FPCharts && window.FPCharts.renderSparklines) window.FPCharts.renderSparklines();
 
+    // ★ オーナーfb (v AL): ホームに「LINE 要返信」 を最上部に出す。緊急度が高いので顧客台帳の赤バッジより前面に
+    renderUnreadLinesOnHome(clients);
+
     // 今日 話すべき客 — priority >= 65 (今週以上) に絞った上で top 8
-    // ★ オーナーfb: 「本当に今日やるべき」 = 至急 / 今週 のみ。今月以下の遠いものは出さない
     const tops = window.Recommender.topAcrossClients(clients, 30)
       .filter(t => t.topAction.priority >= 65)
       .slice(0, 8);
