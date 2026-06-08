@@ -459,6 +459,14 @@
             <div class="senior-card-id">
               <div class="senior-card-name">${escapeHtml(c.name)} <span class="senior-card-honor">様</span></div>
               <div class="senior-card-sub">${age}歳 ・ ${escapeHtml(c.occupation || '—')} ・ AUM ${fmtMoneyAum(c.aum)}</div>
+              ${(function(){
+                // ★ オーナーfb (v AR): ホームの今日のお客様カードでも タグを 表示
+                const master = (typeof getTagsMaster === 'function') ? getTagsMaster() : [];
+                const ids = (typeof getClientTags === 'function') ? getClientTags(c.id) : [];
+                if (!ids.length) return '';
+                const tags = ids.map(id => master.find(t => t.id === id)).filter(Boolean);
+                return `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;">${tags.map(t => `<span style="background:${t.color}1A;color:${t.color};border:1px solid ${t.color}55;padding:1px 8px;border-radius:8px;font-size:10px;font-weight:700;line-height:1.6;">${escapeHtml(t.label)}</span>`).join('')}</div>`;
+              })()}
             </div>
           </div>
 
@@ -2223,7 +2231,7 @@
             </div>
 
             <div style="display:flex;gap:8px;flex-wrap:wrap;">
-              <button id="modal-deliv-btn" style="background:linear-gradient(135deg,#5B5BF0,#6D6DEF);color:#fff;border:none;padding:9px 16px;border-radius:7px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;letter-spacing:0.04em;box-shadow:0 4px 12px rgba(91,91,240,0.32);">📎 資料を作成 (Mac mini)</button>
+              <button id="modal-deliv-btn" style="background:linear-gradient(135deg,#5B5BF0,#6D6DEF);color:#fff;border:none;padding:9px 16px;border-radius:7px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;letter-spacing:0.04em;box-shadow:0 4px 12px rgba(91,91,240,0.32);">📎 資料パッケージを ダウンロード</button>
               <button class="cd-flow-edit ghost-btn" id="modal-edit-btn"><i data-lucide="pencil"></i><span>顧客情報を編集</span></button>
               <button id="modal-delete-btn" style="background:#fff;color:#dc2626;border:1px solid #fecaca;padding:8px 14px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;"><i data-lucide="trash-2" style="width:14px;height:14px;"></i><span>この顧客を削除</span></button>
             </div>
@@ -2243,7 +2251,7 @@
               <style>@keyframes fp-draft-cta-pulse{0%,100%{transform:translateY(0) scale(1);box-shadow:0 8px 24px rgba(249,115,22,0.55),0 0 0 4px rgba(255,255,255,0.5)}50%{transform:translateY(-2.5px) scale(1.025);box-shadow:0 16px 36px rgba(249,115,22,0.72),0 0 0 7px rgba(255,255,255,0.6)}}@keyframes fp-draft-cta-gradient{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}</style>
             </div>
             <div style="display:flex;gap:8px;flex-wrap:wrap;">
-              <button id="modal-deliv-btn" style="background:linear-gradient(135deg,#5B5BF0,#6D6DEF);color:#fff;border:none;padding:9px 16px;border-radius:7px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;letter-spacing:0.04em;box-shadow:0 4px 12px rgba(91,91,240,0.32);">📎 資料を作成 (Mac mini)</button>
+              <button id="modal-deliv-btn" style="background:linear-gradient(135deg,#5B5BF0,#6D6DEF);color:#fff;border:none;padding:9px 16px;border-radius:7px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;letter-spacing:0.04em;box-shadow:0 4px 12px rgba(91,91,240,0.32);">📎 資料パッケージを ダウンロード</button>
               <button class="cd-flow-edit ghost-btn" id="modal-edit-btn"><i data-lucide="pencil"></i><span>顧客情報を編集</span></button>
               <button id="modal-delete-btn" style="background:#fff;color:#dc2626;border:1px solid #fecaca;padding:8px 14px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;"><i data-lucide="trash-2" style="width:14px;height:14px;"></i><span>この顧客を削除</span></button>
             </div>
@@ -3600,7 +3608,7 @@
           <div>
             <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:10.5px;letter-spacing:0.2em;opacity:0.88;text-transform:uppercase;margin-bottom:5px;">📎 DELIVERABLE</div>
             <h3 style="margin:0;font-family:'Noto Serif JP',serif;font-weight:700;font-size:18px;">${escapeHtml(client.name)} さん の 資料を 作成</h3>
-            <p style="margin:6px 0 0;font-size:11.5px;opacity:0.88;line-height:1.6;">Mac mini で Claude Code が PDF を 作ります (1〜2分 / コスト $0)</p>
+            <p style="margin:6px 0 0;font-size:11.5px;opacity:0.88;line-height:1.6;">JSON + プロンプト の 2ファイル を ダウンロード → 自分の Claude Code で 生成 (コスト $0)</p>
           </div>
           <button id="fp-qdp-close" style="background:rgba(255,255,255,0.2);border:none;color:#fff;width:32px;height:32px;border-radius:6px;cursor:pointer;font-size:18px;">✕</button>
         </div>
@@ -3652,8 +3660,147 @@
     });
   }
 
-  // 進捗トースト + 完了通知
+  // ★ オーナーfb (v AR): Mac mini 経由廃止 → JSON + プロンプト の 2 ファイル DL のみ。
+  // FP事業者 が 自分の Claude Code に 貼り付けて生成する流れに変更
   async function triggerDeliverable(client, type, taskTitle) {
+    // データ収集
+    const age = window.LifeEvents.currentAge(client);
+    const family = (client.family || []).map(m => {
+      const r = m.rel === 'spouse' ? '配偶者' : (m.rel === 'child' ? 'お子様' : m.rel);
+      return { relation: r, name: m.name, age: window.LifeEvents.currentAge({ birth: m.birth }), birth: m.birth };
+    });
+    let latestAi = null;
+    ((window.LineAppLiveData && window.LineAppLiveData.ai_results) || []).forEach(r => {
+      const match = (r.userId && r.userId === client.lineFriendId) || (r.customerName && r.customerName === client.name);
+      if (!match) return;
+      if (!latestAi || (r.ts || '') > (latestAi.createdAt || '')) latestAi = { summary: r.summary, transcript: r.transcript, createdAt: r.ts };
+    });
+    const fpName = (window.__fp?.tenantName || 'FP事務所').replace(/ — DEMO ビュー/, '');
+
+    // JSON ペイロード
+    const jsonPayload = {
+      meta: {
+        generatedAt: new Date().toISOString(),
+        fpName,
+        deliverableType: type,
+        taskTitle,
+      },
+      customer: {
+        name: client.name,
+        kana: client.kana || '',
+        age,
+        gender: client.gender === 'F' ? '女性' : (client.gender === 'M' ? '男性' : '不明'),
+        occupation: client.occupation || '',
+        family,
+        aum: client.aum || 0,
+        mortgage: client.mortgage || null,
+        source: client.source || '',
+        status: client.status || '',
+        lastContact: client.lastContact || '',
+      },
+      meetingNotes: latestAi ? {
+        summary: latestAi.summary || '',
+        transcript: latestAi.transcript || '',
+        recordedAt: latestAi.createdAt || '',
+      } : null,
+      proposals: (client.proposals || []).map(p => ({ date: p.date, title: p.title, result: p.result })),
+      lineHistoryRecent: (client.lineHistory || []).slice(-10).map(m => ({ direction: m.direction || m.from, ts: m.ts, text: (m.text || '').slice(0, 200) })),
+    };
+
+    // プロンプト (Claude Code に貼る用)
+    const typeGuides = {
+      cashflow: '60歳までのキャッシュフロー表 (5年刻み + 60-90歳)。 収入/支出/貯蓄残高 を可視化。',
+      education: 'お子様の進路別 (公立/私立/医学部) 教育費試算 A4 1枚。',
+      retire: '退職金受取シミュレーション。 一時金 vs 年金型 の手取り比較。',
+      insurance: '保険見直し提案。 現状の保険料 vs 削減提案。',
+      inherit: '相続対策の基礎。 暦年贈与・生前対策の効果額試算。',
+      custom: `「${taskTitle || '依頼内容'}」 に対する 個別資料。`,
+    };
+    const guide = typeGuides[type] || typeGuides.custom;
+    const prompt = `添付の JSON ファイル (customer-data.json) は お客様の情報です。 これを元に A4 1枚 の HTML 資料を 作ってください。
+
+【依頼内容】 ${guide}
+
+【絶対遵守 — A4 1ページ 厳守】
+A4 297mm × 210mm に **必ず** 1ページ で収まる量。 はみ出し 禁止。
+
+具体的な目安:
+- **タイトル**: 14pt 1行 (10mm)
+- **本文セクション**: 11pt × 3〜4ブロック (各 50〜60mm)
+- **数表**: 4行×3列 が上限
+- **末尾「次回確認したい点」**: 10pt × 3項目 (30mm)
+
+【絶対ルール — CSS】
+<style> 内 必ず:
+- @page { size: A4 portrait; margin: 15mm; }
+- html, body { font-family: 'Noto Serif JP', serif; font-size: 11pt; line-height: 1.5; }
+- body { width: 180mm; height: 267mm; overflow: hidden; page-break-inside: avoid; }
+
+【絶対ルール — 内容】
+- 完全な HTML文書 (<!DOCTYPE html>...) で 出力
+- code fence や 前置き 一切 不要、 HTML本体だけ
+- お客様の名前 (JSON の customer.name) を 1〜2箇所 入れる
+- 具体的な 数字 / 試算 / 比較表 を 含める (一般論禁止)
+- セクション 3〜4 つまで
+- 末尾に「次の打ち合わせで 一緒に確認したい点」 3項目
+- JSON の meetingNotes (議事録) の中身を 必ず反映する
+
+それでは 作成してください。`;
+
+    // 2 ファイル DL
+    const customerSlug = (client.name || 'customer').replace(/[\/\\\s]+/g, '_');
+    const stamp = new Date().toISOString().slice(0, 10);
+    downloadAsFile(`${customerSlug}_${type}_${stamp}.json`, JSON.stringify(jsonPayload, null, 2), 'application/json');
+    downloadAsFile(`${customerSlug}_${type}_${stamp}_prompt.txt`, prompt, 'text/plain');
+
+    // 完了モーダル
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.62);backdrop-filter:blur(4px);z-index:10080;display:flex;align-items:center;justify-content:center;padding:20px;font-family:"Noto Sans JP",sans-serif;';
+    overlay.innerHTML = `
+      <div style="background:#fff;max-width:560px;width:100%;border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,0.35);overflow:hidden;">
+        <div style="background:linear-gradient(135deg,#10B981,#059669);color:#fff;padding:22px 26px;">
+          <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:10.5px;letter-spacing:0.2em;opacity:0.88;text-transform:uppercase;margin-bottom:5px;">DOWNLOAD READY</div>
+          <h3 style="margin:0;font-family:'Noto Serif JP',serif;font-weight:700;font-size:18px;">✓ 2ファイルを ダウンロードしました</h3>
+        </div>
+        <div style="padding:22px 26px;">
+          <div style="background:#F0FDF4;border:1px solid #86EFAC;border-radius:8px;padding:14px;margin-bottom:14px;">
+            <div style="font-size:11.5px;font-weight:800;color:#065F46;margin-bottom:8px;">📦 ダウンロードされたファイル</div>
+            <div style="font-family:Menlo,monospace;font-size:11.5px;color:#1F1A12;line-height:1.8;">
+              📄 ${escapeHtml(customerSlug)}_${type}_${stamp}.json<br>
+              📝 ${escapeHtml(customerSlug)}_${type}_${stamp}_prompt.txt
+            </div>
+          </div>
+          <div style="font-size:12.5px;color:#1F1A12;line-height:1.85;">
+            <strong style="font-family:'Noto Serif JP',serif;color:#1F1A12;">使い方</strong>
+            <ol style="margin:8px 0 0 0;padding-left:20px;color:#5E5648;">
+              <li>ターミナル (or Claude Code アプリ) を 開く</li>
+              <li>2 ファイルを Claude Code に <strong>ドラッグ&ドロップ</strong></li>
+              <li>「<code style="background:#F1ECDF;padding:1px 5px;border-radius:3px;font-size:11px;">prompt.txt の内容で 資料を作って</code>」 と 送信</li>
+              <li>1〜2 分で HTML ができる → <code style="background:#F1ECDF;padding:1px 5px;border-radius:3px;font-size:11px;">.html</code> に保存 → Chromeで開いて 印刷 → PDF 保存</li>
+            </ol>
+          </div>
+        </div>
+        <div style="padding:14px 26px;background:#FDFBF4;border-top:1px solid #E8E2D4;display:flex;justify-content:flex-end;">
+          <button id="fp-dl-done" style="background:linear-gradient(135deg,#1F1A12,#2C2419);color:#FFE9A8;border:none;padding:11px 26px;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:0.06em;">了解</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    overlay.querySelector('#fp-dl-done').addEventListener('click', () => overlay.remove());
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+  }
+
+  function downloadAsFile(filename, content, mimeType) {
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click();
+    setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
+  }
+
+  // (旧版 進捗トースト + Mac mini 経由 — v AR で廃止、 参考のため remained as comment)
+  async function _oldTriggerDeliverable(client, type, taskTitle) {
     // 進捗トースト (右下に常駐)
     const toast = document.createElement('div');
     toast.id = 'fp-deliv-toast-' + Date.now();
