@@ -1760,7 +1760,7 @@
   }
 
   // 画面録画 → 停止時に Drive の顧客フォルダへ自動アップロード
-  async function startScreenRecording(bookingTs, zoomUrl) {
+  async function startScreenRecording(bookingTs, zoomUrl, preOpenedPipWin) {
     const R = window._fpRecorder;
     // ★ 順序: 共有許可 → 成功時に Zoom + メモ 同時オープン → 録画開始
     // (Zoom を先に開くと画面共有ダイアログが裏に隠れて操作不能になるため)
@@ -1822,35 +1822,30 @@
       const memoKey = 'fp-memo-' + (bookingTs || '');
       const tasksKey = 'fp-tasks-' + ((booking && booking.userId) || bookingTs);
       const memoQuery = `?v=${Date.now()}&memoKey=${encodeURIComponent(memoKey)}&tasksKey=${encodeURIComponent(tasksKey)}&name=${encodeURIComponent((booking && booking.name) || 'お客様')}&baseDate=${encodeURIComponent((booking && booking.date) || '')}&bookingTs=${encodeURIComponent(bookingTs || '')}`;
-      // 既存メモウィンドウ/タブがあれば一旦 close
-      try { if (window._fpMemoWin && !window._fpMemoWin.closed) window._fpMemoWin.close(); } catch (_) {}
-      try { if (window._fpMemoPipWin && !window._fpMemoPipWin.closed) window._fpMemoPipWin.close(); } catch (_) {}
+      // 既存メモタブがあれば一旦 close (PiP は既に呼出側で open 済 = preOpenedPipWin)
+      try { if (window._fpMemoWin && window._fpMemoWin !== preOpenedPipWin && !window._fpMemoWin.closed) window._fpMemoWin.close(); } catch (_) {}
 
-      // ★ オーナーfb (Zoom裏に潜るバグ根治): Document Picture-in-Picture API でメモを OS レベル最前面化。
-      // PiP ウィンドウは全アプリの上に浮き続けるので、メモを操作しても Zoom が裏に行かない。
-      // Chrome 116+ 対応。非対応ブラウザは旧来の通常タブ fallback。
-      const hasDocPip = ('documentPictureInPicture' in window);
-      if (hasDocPip) {
+      // ★ click 直後に開いた PiP window (user activation 有効時に取得) に memo iframe 流し込む
+      if (preOpenedPipWin && !preOpenedPipWin.closed) {
         try {
-          const pipW = Math.min(420, Math.floor(sw / 4));
-          const pipH = Math.min(680, Math.floor(sh * 0.7));
-          const pipWin = await window.documentPictureInPicture.requestWindow({ width: pipW, height: pipH });
-          window._fpMemoPipWin = pipWin;
-          // PiP の中に iframe で memo-popup.html を埋める (既存実装そのまま再利用)
+          const pipWin = preOpenedPipWin;
+          // placeholder を消去
+          pipWin.document.body.style.cssText = 'margin:0;padding:0;height:100vh;overflow:hidden;display:block;background:#fff;';
+          pipWin.document.body.innerHTML = '';
           const iframe = pipWin.document.createElement('iframe');
           iframe.src = 'memo-popup.html' + memoQuery;
           iframe.style.cssText = 'width:100%;height:100%;border:0;display:block;';
-          pipWin.document.body.style.cssText = 'margin:0;padding:0;height:100vh;overflow:hidden;';
           pipWin.document.body.appendChild(iframe);
           pipWin.document.title = 'メモ — ' + ((booking && booking.name) || 'お客様');
-          window._fpMemoWin = pipWin; // 既存 finish フローと互換 (close() / postMessage)
-          console.log('[memo] Document PiP で起動 — OS最前面で Zoom が裏に潜らない');
+          window._fpMemoWin = pipWin; // 既存 finish フローと互換
+          console.log('[memo] PiP に memo-popup を流し込み完了 — Zoom 裏に潜らない');
         } catch (e) {
-          console.warn('[memo] PiP 失敗、通常タブ fallback:', e);
+          console.warn('[memo] PiP iframe 流し込み失敗、通常タブ fallback:', e.message);
+          try { preOpenedPipWin.close(); } catch (_) {}
           window._fpMemoWin = window.open('memo-popup.html' + memoQuery, '_blank');
         }
       } else {
-        // 非対応ブラウザ (Safari 等): 通常タブ fallback
+        // PiP 取得失敗 (非対応 or click 前にエラー): 通常タブ fallback
         window._fpMemoWin = window.open('memo-popup.html' + memoQuery, '_blank');
       }
       if (!window._fpMemoWin) {
@@ -1947,6 +1942,8 @@
       showFixedCompleteButton(); // 画面下に常時表示の完了ボタン
     } catch (e) {
       hidePickerHint();
+      // キャンセル時は事前に開いた PiP も閉じる
+      try { if (preOpenedPipWin && !preOpenedPipWin.closed) preOpenedPipWin.close(); } catch (_) {}
       // 共有許可キャンセル時: 録画は無理だが Zoom だけ開いて「録画なしで入室」フォールバック
       if (e && e.name === 'NotAllowedError') {
         const sw = window.screen.availWidth || screen.width;
@@ -3275,7 +3272,30 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
       btn.addEventListener('click', async () => {
         const ts = btn.dataset.recStart;
         const zoomUrl = btn.dataset.zoom;
-        await startScreenRecording(ts, zoomUrl);
+        // ★ オーナーfb: getDisplayMedia が user activation を消費するので、 PiP は click 直後に予約 open
+        // PiP window だけ先に開いて placeholder を出し、後で memo iframe を流し込む
+        let pipWin = null;
+        if ('documentPictureInPicture' in window) {
+          try {
+            const sw = window.screen.availWidth || screen.width;
+            const sh = window.screen.availHeight || screen.height;
+            const pipW = Math.min(420, Math.floor(sw / 4));
+            const pipH = Math.min(680, Math.floor(sh * 0.7));
+            pipWin = await window.documentPictureInPicture.requestWindow({ width: pipW, height: pipH });
+            pipWin.document.body.style.cssText = 'margin:0;padding:0;height:100vh;overflow:hidden;font-family:"Noto Sans JP",sans-serif;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#fafbfc,#f1f5f9);color:#475569;';
+            pipWin.document.body.innerHTML = '<div style="text-align:center;padding:24px;"><div style="font-size:42px;margin-bottom:14px;">⏳</div><strong style="font-size:14px;color:#0F172A;">準備中...</strong><div style="font-size:11.5px;color:#64748B;margin-top:8px;line-height:1.7;">画面共有ダイアログで<br>「画面全体」+「音声を共有」<br>を選んで「共有」を押す</div></div>';
+            pipWin.document.title = 'メモ — 準備中';
+            window._fpMemoPipWin = pipWin;
+            // PiP が閉じられたら自動で memo win も消す
+            pipWin.addEventListener('pagehide', () => { window._fpMemoPipWin = null; window._fpMemoWin = null; });
+            console.log('[memo] PiP window opened (click 直後 / user activation 消費前)');
+          } catch (e) {
+            console.warn('[memo] PiP click直後でも失敗:', e.message);
+            pipWin = null;
+          }
+        }
+        // PiP window を startScreenRecording に渡す
+        await startScreenRecording(ts, zoomUrl, pipWin);
         await fetchLiveData();
         renderLeadHubInner();
       });
