@@ -1027,10 +1027,10 @@ body, table, .kpi-value, .num, .funnel-value, .task-count,
   display: inline-flex; align-items: center; line-height: 1.4;
 }
 .status-pill.important {
-  background: var(--accent-soft) !important;
-  color: var(--accent-2) !important;
-  border-color: #C7CDF5 !important;
-  font-weight: 600 !important; animation: none !important;
+  background: var(--vv-red) !important;
+  color: #fff !important;
+  border-color: transparent !important;
+  font-weight: 800 !important; animation: none !important;
 }
 .status-pill.active {
   background: var(--surface-2) !important;

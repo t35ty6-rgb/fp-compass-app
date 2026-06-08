@@ -292,8 +292,11 @@
     `;
     if (window.FPCharts && window.FPCharts.renderSparklines) window.FPCharts.renderSparklines();
 
-    // 今週話すべき客 (top 8) — シニア向け統一カード (KPIバッジ + やる事 + 2ボタン)
-    const tops = window.Recommender.topAcrossClients(clients, 8);
+    // 今日 話すべき客 — priority >= 65 (今週以上) に絞った上で top 8
+    // ★ オーナーfb: 「本当に今日やるべき」 = 至急 / 今週 のみ。今月以下の遠いものは出さない
+    const tops = window.Recommender.topAcrossClients(clients, 30)
+      .filter(t => t.topAction.priority >= 65)
+      .slice(0, 8);
     const list = document.getElementById('action-list');
     if (tops.length === 0) {
       list.innerHTML = '<div class="empty">今週の重点アクションはありません</div>';

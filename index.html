@@ -593,11 +593,6 @@
           <i data-lucide="git-commit-horizontal"></i>
           <span>ライフイベント</span>
         </div>
-        <div class="tab" data-tab="kpi">
-          <i data-lucide="target"></i>
-          <span>KPI / 目標</span>
-          <span class="nav-count nav-count-alert" id="nav-count-kpi"></span>
-        </div>
       </nav>
     </div>
 
@@ -1005,7 +1000,7 @@ window.fpReadyAfterAuth = function() {
   ];
   legacyDemoKeys.forEach(k => { try { localStorage.removeItem(k); } catch (_) {} });
 
-  const ver = "20260608S-tag-assign";
+  const ver = "20260608T-pill-kpi-today";
   const scripts = [
     "life-events.js?v=" + ver,
     "recommender.js?v=" + ver,
@@ -1305,7 +1300,7 @@ window.fpReadyAfterAuth = function() {
 <script>
 (function(){
   // 最新の ver を 1 箇所に集約 (fpReadyAfterAuth 側と一致させる必要あり)
-  const FP_VERSION = "20260608S-tag-assign";
+  const FP_VERSION = "20260608T-pill-kpi-today";
   const loadTime = new Date();
   const hhmm = String(loadTime.getHours()).padStart(2,'0') + ':' + String(loadTime.getMinutes()).padStart(2,'0');
   const dateLabel = (FP_VERSION.match(/^(\d{4})(\d{2})(\d{2})/) || []).slice(1).join('/').replace(/^(\d{4})\//,'$1/').replace(/\/(\d{2})\/(\d{2})$/,'/$1/$2') || FP_VERSION;
