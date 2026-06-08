@@ -2223,6 +2223,7 @@
             </div>
 
             <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <button id="modal-deliv-btn" style="background:linear-gradient(135deg,#5B5BF0,#6D6DEF);color:#fff;border:none;padding:9px 16px;border-radius:7px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;letter-spacing:0.04em;box-shadow:0 4px 12px rgba(91,91,240,0.32);">📎 資料を作成 (Mac mini)</button>
               <button class="cd-flow-edit ghost-btn" id="modal-edit-btn"><i data-lucide="pencil"></i><span>顧客情報を編集</span></button>
               <button id="modal-delete-btn" style="background:#fff;color:#dc2626;border:1px solid #fecaca;padding:8px 14px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;"><i data-lucide="trash-2" style="width:14px;height:14px;"></i><span>この顧客を削除</span></button>
             </div>
@@ -2242,6 +2243,7 @@
               <style>@keyframes fp-draft-cta-pulse{0%,100%{transform:translateY(0) scale(1);box-shadow:0 8px 24px rgba(249,115,22,0.55),0 0 0 4px rgba(255,255,255,0.5)}50%{transform:translateY(-2.5px) scale(1.025);box-shadow:0 16px 36px rgba(249,115,22,0.72),0 0 0 7px rgba(255,255,255,0.6)}}@keyframes fp-draft-cta-gradient{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}</style>
             </div>
             <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <button id="modal-deliv-btn" style="background:linear-gradient(135deg,#5B5BF0,#6D6DEF);color:#fff;border:none;padding:9px 16px;border-radius:7px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;letter-spacing:0.04em;box-shadow:0 4px 12px rgba(91,91,240,0.32);">📎 資料を作成 (Mac mini)</button>
               <button class="cd-flow-edit ghost-btn" id="modal-edit-btn"><i data-lucide="pencil"></i><span>顧客情報を編集</span></button>
               <button id="modal-delete-btn" style="background:#fff;color:#dc2626;border:1px solid #fecaca;padding:8px 14px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;"><i data-lucide="trash-2" style="width:14px;height:14px;"></i><span>この顧客を削除</span></button>
             </div>
@@ -2439,6 +2441,9 @@
       closeModal();
       openClientForm(c.id);
     });
+    // ★ オーナーfb (v AP): 「📎 資料を作成」 ボタンを常に表示 (NEXT ACTIONなくても押せる)
+    const delivBtnHeader = document.getElementById('modal-deliv-btn');
+    if (delivBtnHeader) delivBtnHeader.addEventListener('click', () => openQuickDeliverablePicker(c));
     // ★ タグ機能: render + 編集ボタン
     renderClientTags(c.id);
     const tagsEditBtn = document.getElementById('cd-tags-edit');
@@ -3575,6 +3580,148 @@
       }
     };
     return pill;
+  }
+
+  // ★ 「📎 資料を作成」 ヘッダーボタン → 資料タイプ選択モーダル
+  function openQuickDeliverablePicker(client) {
+    const types = [
+      { id: 'cashflow', emoji: '📊', title: 'キャッシュフロー表', sub: '60歳まで 5年刻み / 収入支出貯蓄' },
+      { id: 'education', emoji: '🎓', title: '教育費シミュレーション', sub: '公立/私立/医学部 別 試算' },
+      { id: 'retire', emoji: '🏖', title: '退職金 受取シミュ', sub: '一時金 vs 年金型 比較' },
+      { id: 'insurance', emoji: '🛡', title: '保険見直し 提案', sub: '現状 vs 削減提案' },
+      { id: 'inherit', emoji: '👵', title: '相続対策 基礎', sub: '暦年贈与 / 生前対策 効果額' },
+      { id: 'custom', emoji: '✏', title: 'その他 (自由記述)', sub: '依頼内容を 自分で書く' },
+    ];
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.62);backdrop-filter:blur(4px);z-index:10080;display:flex;align-items:center;justify-content:center;padding:20px;font-family:"Noto Sans JP",sans-serif;';
+    overlay.innerHTML = `
+      <div style="background:#fff;max-width:580px;width:100%;border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,0.35);overflow:hidden;">
+        <div style="background:linear-gradient(135deg,#5B5BF0,#6D6DEF);color:#fff;padding:22px 26px;display:flex;justify-content:space-between;align-items:flex-start;">
+          <div>
+            <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:10.5px;letter-spacing:0.2em;opacity:0.88;text-transform:uppercase;margin-bottom:5px;">📎 DELIVERABLE</div>
+            <h3 style="margin:0;font-family:'Noto Serif JP',serif;font-weight:700;font-size:18px;">${escapeHtml(client.name)} さん の 資料を 作成</h3>
+            <p style="margin:6px 0 0;font-size:11.5px;opacity:0.88;line-height:1.6;">Mac mini で Claude Code が PDF を 作ります (1〜2分 / コスト $0)</p>
+          </div>
+          <button id="fp-qdp-close" style="background:rgba(255,255,255,0.2);border:none;color:#fff;width:32px;height:32px;border-radius:6px;cursor:pointer;font-size:18px;">✕</button>
+        </div>
+        <div style="padding:22px 26px;">
+          <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:10.5px;letter-spacing:0.14em;color:#8B7D5D;text-transform:uppercase;margin-bottom:12px;">タイプを選ぶ</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            ${types.map(t => `
+              <button class="fp-qdp-type" data-type="${t.id}" style="display:flex;align-items:flex-start;gap:12px;background:#fff;border:1.5px solid #E8E2D4;border-radius:10px;padding:14px;cursor:pointer;text-align:left;font-family:inherit;transition:all 0.15s ease;">
+                <div style="font-size:24px;line-height:1;flex-shrink:0;">${t.emoji}</div>
+                <div style="flex:1;min-width:0;">
+                  <div style="font-family:'Noto Serif JP',serif;font-weight:700;font-size:13.5px;color:#1F1A12;margin-bottom:3px;">${escapeHtml(t.title)}</div>
+                  <div style="font-size:11px;color:#8B7D5D;line-height:1.5;">${escapeHtml(t.sub)}</div>
+                </div>
+              </button>
+            `).join('')}
+          </div>
+          <div id="fp-qdp-custom-wrap" style="display:none;margin-top:18px;padding-top:18px;border-top:1px dashed #E8E2D4;">
+            <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:10.5px;letter-spacing:0.14em;color:#8B7D5D;text-transform:uppercase;margin-bottom:8px;">どんな資料?</div>
+            <input id="fp-qdp-custom" type="text" placeholder="例: 新NISA配分の説明資料" style="width:100%;padding:12px 14px;border:1.5px solid #E8E2D4;border-radius:8px;font-size:13px;font-family:inherit;box-sizing:border-box;">
+            <button id="fp-qdp-custom-go" style="margin-top:10px;background:linear-gradient(135deg,#5B5BF0,#6D6DEF);color:#fff;border:none;padding:11px 22px;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:0.04em;">この内容で 作成 →</button>
+          </div>
+        </div>
+      </div>
+      <style>
+        .fp-qdp-type:hover { border-color:#5B5BF0 !important; background:linear-gradient(135deg,#EEF1FE,#fff) !important; transform:translateY(-2px); box-shadow:0 6px 16px rgba(91,91,240,0.18); }
+      </style>
+    `;
+    document.body.appendChild(overlay);
+    overlay.querySelector('#fp-qdp-close').addEventListener('click', () => overlay.remove());
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+    overlay.querySelectorAll('.fp-qdp-type').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const type = btn.dataset.type;
+        if (type === 'custom') {
+          overlay.querySelector('#fp-qdp-custom-wrap').style.display = 'block';
+          overlay.querySelector('#fp-qdp-custom').focus();
+          return;
+        }
+        overlay.remove();
+        const titleMap = { cashflow: 'キャッシュフロー表', education: '教育費シミュレーション', retire: '退職金受取シミュ', insurance: '保険見直し提案', inherit: '相続対策の基礎' };
+        triggerDeliverable(client, type, titleMap[type] || type);
+      });
+    });
+    overlay.querySelector('#fp-qdp-custom-go').addEventListener('click', () => {
+      const taskTitle = overlay.querySelector('#fp-qdp-custom').value.trim();
+      if (!taskTitle) { alert('依頼内容を 入力してください'); return; }
+      overlay.remove();
+      triggerDeliverable(client, 'custom', taskTitle);
+    });
+  }
+
+  // 進捗トースト + 完了通知
+  async function triggerDeliverable(client, type, taskTitle) {
+    // 進捗トースト (右下に常駐)
+    const toast = document.createElement('div');
+    toast.id = 'fp-deliv-toast-' + Date.now();
+    toast.style.cssText = 'position:fixed;bottom:24px;right:24px;background:linear-gradient(135deg,#5B5BF0,#6D6DEF);color:#fff;padding:18px 22px;border-radius:12px;box-shadow:0 16px 40px rgba(91,91,240,0.4);z-index:10200;font-family:"Noto Sans JP",sans-serif;min-width:320px;';
+    toast.innerHTML = `
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="width:32px;height:32px;border:3px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:fp-deliv-spin 0.9s linear infinite;"></div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:10px;letter-spacing:0.18em;opacity:0.85;">📎 ${escapeHtml(taskTitle)}</div>
+          <div style="font-size:13px;font-weight:800;margin-top:2px;">${escapeHtml(client.name)}さん の 資料を 作成中</div>
+          <div style="font-size:11px;opacity:0.85;margin-top:2px;">Mac mini で生成中... <span class="fp-deliv-timer" style="font-variant-numeric:tabular-nums;">0</span>秒</div>
+        </div>
+      </div>
+    `;
+    if (!document.getElementById('fp-deliv-spin-style')) {
+      const s = document.createElement('style'); s.id = 'fp-deliv-spin-style';
+      s.textContent = '@keyframes fp-deliv-spin{to{transform:rotate(360deg)}}';
+      document.head.appendChild(s);
+    }
+    document.body.appendChild(toast);
+    const startMs = Date.now();
+    const timer = setInterval(() => {
+      const t = toast.querySelector('.fp-deliv-timer'); if (t) t.textContent = String(Math.floor((Date.now() - startMs) / 1000));
+    }, 500);
+
+    // 議事録+台帳データ集める
+    const age = window.LifeEvents.currentAge(client);
+    const family = (client.family || []).map(m => {
+      const r = m.rel === 'spouse' ? '配偶者' : (m.rel === 'child' ? 'お子様' : m.rel);
+      return `${r}${m.name}(${window.LifeEvents.currentAge({ birth: m.birth })}歳)`;
+    }).join('/') || '単身';
+    const clientCtx = `${age}歳 / ${client.occupation || '職業不明'} / 家族: ${family} / 管理資産¥${(client.aum || 0).toLocaleString()}`;
+    let latestAi = null;
+    ((window.LineAppLiveData && window.LineAppLiveData.ai_results) || []).forEach(r => {
+      const match = (r.userId && r.userId === client.lineFriendId) || (r.customerName && r.customerName === client.name);
+      if (!match) return;
+      if (!latestAi || (r.ts || '') > (latestAi.createdAt || '')) latestAi = { summary: r.summary, transcript: r.transcript, createdAt: r.ts };
+    });
+    const sanitize = (s) => typeof s !== 'string' ? s : s.replace(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])/g, '').replace(/(^|[^\uD800-\uDBFF])([\uDC00-\uDFFF])/g, '$1').replace(/[ --]/g, '');
+
+    try {
+      const result = await generateDeliverableViaMacMini({ type, client, clientCtx, taskTitle, latestAi, sanitize });
+      const d = await result.json();
+      clearInterval(timer);
+      if (d.ok) {
+        toast.style.background = 'linear-gradient(135deg,#10B981,#059669)';
+        toast.innerHTML = `
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="width:32px;height:32px;background:rgba(255,255,255,0.22);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;">✓</div>
+            <div style="flex:1;">
+              <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:10px;letter-spacing:0.18em;opacity:0.92;">DELIVERABLE READY</div>
+              <div style="font-size:13px;font-weight:800;margin-top:2px;">${escapeHtml(client.name)}さん 資料完成</div>
+              ${d.driveUrl ? `<a href="${d.driveUrl}" target="_blank" style="display:inline-block;margin-top:6px;background:#fff;color:#065F46;text-decoration:none;padding:6px 14px;border-radius:6px;font-size:11px;font-weight:800;">📎 PDF を開く</a>` : `<div style="font-size:11px;opacity:0.92;margin-top:2px;">Mac mini の ~/.skeleton-fp-deliverable/output/${d.macMiniReqId}.pdf</div>`}
+            </div>
+            <button onclick="this.parentElement.parentElement.remove()" style="background:rgba(255,255,255,0.2);border:none;color:#fff;width:26px;height:26px;border-radius:5px;cursor:pointer;">✕</button>
+          </div>
+        `;
+        setTimeout(() => toast.remove(), 60 * 1000);
+      } else {
+        toast.style.background = 'linear-gradient(135deg,#DC2626,#991B1B)';
+        toast.innerHTML = `<div style="font-size:13px;font-weight:700;">❌ 失敗: ${escapeHtml(d.error || '不明')}</div><button onclick="this.parentElement.remove()" style="margin-top:8px;background:rgba(255,255,255,0.2);border:none;color:#fff;padding:5px 12px;border-radius:5px;cursor:pointer;font-size:11px;">閉じる</button>`;
+      }
+    } catch (e) {
+      clearInterval(timer);
+      toast.style.background = 'linear-gradient(135deg,#DC2626,#991B1B)';
+      toast.innerHTML = `<div style="font-size:13px;">❌ ${escapeHtml(e.message)}</div>`;
+      setTimeout(() => toast.remove(), 8000);
+    }
   }
 
   // ★ Mac mini Claude Code 経由で資料生成 (Firestore deliverable_requests を経由)
