@@ -1810,7 +1810,13 @@
       })();
       let zoomWin = preZoomWin;
       if (zoomWin && !zoomWin.closed) {
-        try { zoomWin.location.href = zoomBrowserUrl; } catch (_) { zoomWin = window.open(zoomBrowserUrl, 'fp-zoom-win'); }
+        try {
+          // ★ 画面共有許可されたので Zoom popup を全画面に resize+move して URL 流し込み
+          zoomWin.moveTo(0, 0);
+          zoomWin.resizeTo(sw, sh);
+          zoomWin.location.href = zoomBrowserUrl;
+          zoomWin.focus();
+        } catch (_) { zoomWin = window.open(zoomBrowserUrl, 'fp-zoom-win'); }
       } else {
         // fallback (preZoom 無効): 直接 open
         const zoomFeatures = `width=${sw},height=${sh},left=0,top=0,toolbar=no,location=no,menubar=no,status=no,scrollbars=yes,resizable=yes`;
@@ -3250,16 +3256,23 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
       btn.addEventListener('click', async () => {
         const ts = btn.dataset.recStart;
         const zoomUrl = btn.dataset.zoom;
-        // ★ オーナーfb (v AF): メモ画面廃止 → Zoom popup を 全画面で 1 つだけ開く。
-        // 完了ボタンは CRM 下バー (showFixedCompleteButton) と REC ピル に集約。
-        // 録画停止: Chrome の「停止」 バー (画面下) or CRM タブの完了ボタンで停止。
+        // ★ オーナーfb (v AG): 前回 全画面で Zoom popup 開いてたら 画面共有ダイアログを覆って選択不可になってた。
+        // 修正: pre-open は 小さく 隅に置く → CRM に focus 戻す → ダイアログ見える状態に → 後で 全画面 resize+move
         const sw = window.screen.availWidth || screen.width;
         const sh = window.screen.availHeight || screen.height;
-        const zoomFeatures = `width=${sw},height=${sh},left=0,top=0,toolbar=no,location=no,menubar=no,status=no,scrollbars=yes,resizable=yes`;
-        // user activation 消費前に Zoom を空で先 open
-        const preZoomWin = window.open('about:blank', 'fp-zoom-win', zoomFeatures);
-        if (preZoomWin) { try { preZoomWin.document.title = 'Zoom — 準備中...'; preZoomWin.document.body.innerHTML = '<div style="font-family:sans-serif;padding:60px 30px;text-align:center;background:#0F172A;color:#fff;min-height:100vh;"><div style="font-size:48px;margin-bottom:18px;">⏳</div><strong style="font-size:20px;">Zoom 準備中...</strong><div style="margin-top:14px;font-size:13px;opacity:0.8;">画面共有ダイアログで「画面全体」+「音声を共有」を許可してください</div></div>'; } catch (_) {} }
-        console.log('[layout] pre-open zoom (メモ画面廃止 / user activation 消費前)');
+        // 小窓: 右上隅、 400x300。 ダイアログを覆わない
+        const preW = 400, preH = 300;
+        const preZoomFeatures = `width=${preW},height=${preH},left=${sw - preW - 20},top=20,toolbar=no,location=no,menubar=no,status=no,scrollbars=yes,resizable=yes`;
+        const preZoomWin = window.open('about:blank', 'fp-zoom-win', preZoomFeatures);
+        if (preZoomWin) {
+          try {
+            preZoomWin.document.title = 'Zoom — 準備中...';
+            preZoomWin.document.body.innerHTML = '<div style="font-family:sans-serif;padding:30px 20px;text-align:center;background:#0F172A;color:#fff;min-height:100vh;box-sizing:border-box;"><div style="font-size:32px;margin-bottom:10px;">⏳</div><strong style="font-size:15px;">Zoom 準備中</strong><div style="margin-top:10px;font-size:11px;opacity:0.85;line-height:1.6;">↙ 左下の画面共有<br>ダイアログを許可</div></div>';
+          } catch (_) {}
+        }
+        // CRM に focus 戻す → getDisplayMedia ダイアログが見える状態に
+        try { window.focus(); } catch (_) {}
+        console.log('[layout] pre-open zoom 小窓(右上 ' + preW + 'x' + preH + ') / CRM focus 戻し済');
         await startScreenRecording(ts, zoomUrl, { preZoomWin });
         await fetchLiveData();
         renderLeadHubInner();
