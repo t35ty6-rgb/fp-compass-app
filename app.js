@@ -881,6 +881,20 @@
     });
   }
 
+  // ★ 王道金融商品 マスタ (CRM全体で共通利用)
+  window.FP_PRODUCTS_DEF = [
+    { key: 'NISA',      short: 'NISA',     pattern: /NISA/i },
+    { key: 'iDeCo',     short: 'iDeCo',    pattern: /iDeCo|企業型|個人型|DC/i },
+    { key: '投資信託',  short: '投信',     pattern: /投信|投資信託/ },
+    { key: '個別株',    short: '株',       pattern: /個別株|株式|個株/ },
+    { key: '定期預金',  short: '預金',     pattern: /定期預金|預金/ },
+    { key: '生命保険',  short: '生保',     pattern: /生命保険|終身|定期保険|学資/ },
+    { key: '医療保険',  short: '医療',     pattern: /医療保険|がん保険|共済/ },
+    { key: '不動産',    short: '不動産',   pattern: /不動産/ },
+    { key: '住宅ローン', short: '住宅',    pattern: /住宅ローン|住宅ロ|住宅L/ },
+    { key: '個人年金',  short: '個人年金', pattern: /個人年金/ },
+  ];
+
   // ★ 列カスタマイズ: localStorage 保存式
   const COL_PREF_KEY = 'fp-crm-cols-v1';
   const COL_DEFS = [
@@ -1069,26 +1083,18 @@
             const urgencyTxt = s.q15_緊急度 || '';
             const urgencyBg = /すぐ/.test(urgencyTxt) ? '#fee2e2' : /数ヶ月/.test(urgencyTxt) ? '#fef3c7' : /情報/.test(urgencyTxt) ? '#e0e7ff' : '#f3f4f6';
             const urgencyFg = /すぐ/.test(urgencyTxt) ? '#991b1b' : /数ヶ月/.test(urgencyTxt) ? '#92400e' : /情報/.test(urgencyTxt) ? '#3730a3' : '#6b7280';
-            // 保有商品: q7_保有 (アンケート) + q14_既存商品 (自由記述) を統合
-            // 王道商品の固定リストで ✓ / – を出すと「これは持ってない=提案チャンス」が即分かる
-            const PRODUCTS = [
-              { key: 'NISA',    short: 'NISA',  pattern: /NISA/i },
-              { key: 'iDeCo',   short: 'iDeCo', pattern: /iDeCo|企業型|個人型|DC/i },
-              { key: '投資信託', short: '投信', pattern: /投信|投資信託/ },
-              { key: '個別株',   short: '株',   pattern: /個別株|株式|個株/ },
-              { key: '定期預金', short: '預金', pattern: /定期預金|預金/ },
-              { key: '生命保険', short: '生保', pattern: /生命保険|終身|定期保険|学資/ },
-              { key: '医療保険', short: '医療', pattern: /医療保険|がん保険|共済/ },
-              { key: '不動産',   short: '不動産', pattern: /不動産/ },
-              { key: '住宅ローン', short: '住宅', pattern: /住宅ローン|住宅ロ|住宅L/ },
-              { key: '個人年金', short: '個人年金', pattern: /個人年金/ },
-            ];
-            const owned = String(s.q7_保有 || '') + ' ' + String(s.q14_既存商品 || '') + ' ' + (c.mortgage ? '住宅ローン' : '');
+            // 保有商品: q7_保有 (アンケート) + q14_既存商品 (自由記述) + FP手動追加 を統合
+            // クリックでON/OFFトグル可能 → c.productsManual[] に保存
+            const PRODUCTS = window.FP_PRODUCTS_DEF;
+            const ownedRaw = String(s.q7_保有 || '') + ' ' + String(s.q14_既存商品 || '') + ' ' + (c.mortgage ? '住宅ローン' : '');
+            const manualSet = new Set(c.productsManual || []);
+            const removedSet = new Set(c.productsRemoved || []);
             const productChips = PRODUCTS.map(p => {
-              const has = p.pattern.test(owned);
-              return `<span title="${p.key} ${has ? '加入済' : '未加入'}" style="display:inline-block;font-size:9.5px;font-weight:${has ? 800 : 600};padding:2px 6px;border-radius:8px;letter-spacing:0.02em;background:${has ? '#dcfce7' : '#f3f4f6'};color:${has ? '#166534' : '#9ca3af'};border:1px solid ${has ? '#86efac' : '#e5e7eb'};margin:1px 2px 1px 0;">${has ? '✓' : '–'} ${p.short}</span>`;
+              const fromSurvey = p.pattern.test(ownedRaw);
+              const has = (fromSurvey || manualSet.has(p.key)) && !removedSet.has(p.key);
+              return `<span data-prod-toggle="${escapeHtml(c.id)}" data-prod-key="${escapeHtml(p.key)}" title="クリックで ${has ? '未加入' : '加入済'} に変更" style="display:inline-block;font-size:9.5px;font-weight:${has ? 800 : 600};padding:2px 6px;border-radius:8px;letter-spacing:0.02em;background:${has ? '#dcfce7' : '#f3f4f6'};color:${has ? '#166534' : '#9ca3af'};border:1px solid ${has ? '#86efac' : '#e5e7eb'};margin:1px 2px 1px 0;cursor:pointer;user-select:none;">${has ? '✓' : '–'} ${p.short}</span>`;
             }).join('');
-            const hasAnyData = !!(s.q7_保有 || s.q14_既存商品 || c.mortgage);
+            const hasAnyData = !!(s.q7_保有 || s.q14_既存商品 || c.mortgage || (c.productsManual && c.productsManual.length));
             return `
               <td class="col-urgency" style="display:none;">${urgencyTxt ? `<span style="background:${urgencyBg};color:${urgencyFg};padding:3px 9px;border-radius:11px;font-size:11px;font-weight:700;letter-spacing:0.02em;white-space:nowrap;">${escapeHtml(trim(urgencyTxt, 12))}</span>` : '<span style="color:var(--muted);font-size:11px;">-</span>'}</td>
               <td class="col-worry" style="display:none;font-size:12px;color:var(--ink-2);max-width:240px;">${s.q9_悩み ? escapeHtml(trim(s.q9_悩み, 60)) : '<span style="color:var(--muted);">-</span>'}</td>
@@ -1124,6 +1130,39 @@
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
         openTasksListModal(btn.dataset.taskCid, btn.dataset.taskName);
+      });
+    });
+    // ★ 保有商品チップ クリックトグル
+    tbody.querySelectorAll('[data-prod-toggle]').forEach(chip => {
+      chip.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const cid = chip.dataset.prodToggle;
+        const key = chip.dataset.prodKey;
+        const target = clients.find(x => x.id === cid);
+        if (!target) return;
+        const surveys = (window.LineAppLiveData && window.LineAppLiveData.survey_answers) || [];
+        const sv = surveys.find(x => (x.userId && x.userId === target.lineFriendId) || (x.name && x.name === target.name)) || {};
+        const ownedRaw = String(sv.q7_保有 || '') + ' ' + String(sv.q14_既存商品 || '') + ' ' + (target.mortgage ? '住宅ローン' : '');
+        const PRODUCTS = window.FP_PRODUCTS_DEF;
+        const def = PRODUCTS.find(p => p.key === key);
+        if (!def) return;
+        const fromSurvey = def.pattern.test(ownedRaw);
+        target.productsManual = Array.isArray(target.productsManual) ? target.productsManual : [];
+        target.productsRemoved = Array.isArray(target.productsRemoved) ? target.productsRemoved : [];
+        const inManual = target.productsManual.includes(key);
+        const inRemoved = target.productsRemoved.includes(key);
+        const currentlyHas = (fromSurvey || inManual) && !inRemoved;
+        if (currentlyHas) {
+          // 加入済 → 未加入 にする
+          target.productsManual = target.productsManual.filter(k => k !== key);
+          if (fromSurvey && !inRemoved) target.productsRemoved.push(key);
+        } else {
+          // 未加入 → 加入済 にする
+          target.productsRemoved = target.productsRemoved.filter(k => k !== key);
+          if (!fromSurvey && !inManual) target.productsManual.push(key);
+        }
+        try { localStorage.setItem('fp-crm-clients-v1', JSON.stringify(clients)); } catch (_) {}
+        renderClients();
       });
     });
     // 列カスタマイズボタン (一度だけバインド) + 初期適用
