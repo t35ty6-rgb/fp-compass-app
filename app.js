@@ -201,7 +201,6 @@
         window.LineApp.activateSubview(name);
       }
     }
-    if (name === 'surveyHub') renderSurveyHub();
   }
 
   // ============================
@@ -1074,104 +1073,6 @@
 
   // ============================
   // 全体タイムライン (月別グループ縦リスト)
-  // ============================
-  // ============================
-  // 事前アンケート Hub — お客様への配布URL/QR + 回答一覧
-  // ============================
-  function renderSurveyHub() {
-    const root = document.getElementById('survey-hub');
-    if (!root) return;
-    const tenantId = (window.__fp && window.__fp.tenantId) || 'demo-tenant';
-    const fpName = (window.__fp && window.__fp.tenantName) || 'FP事務所';
-    const baseUrl = location.origin + '/survey.html';
-    const surveyUrl = `${baseUrl}?t=${encodeURIComponent(tenantId)}`;
-    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=10&data=${encodeURIComponent(surveyUrl)}`;
-
-    const liveAnswers = ((window.LineAppLiveData && window.LineAppLiveData.survey_answers) || [])
-      .slice().sort((a,b) => (b.ts || '').localeCompare(a.ts || ''));
-
-    function field(k, v){
-      if (!v) return '';
-      return `<div style="display:flex;gap:8px;font-size:12.5px;margin:3px 0;"><span style="color:var(--muted);min-width:84px;">${k}</span><span style="color:var(--ink);">${escapeHtml(String(v))}</span></div>`;
-    }
-
-    const answersHtml = liveAnswers.length === 0
-      ? `<div style="background:var(--surface);border:1px dashed var(--line);border-radius:10px;padding:30px;text-align:center;color:var(--muted);font-size:13px;">まだ回答がありません。<br><span style="font-size:11.5px;">上記URL/QRをお客様に共有して下さい。</span></div>`
-      : liveAnswers.map(s => {
-          const tagsNew = ['q9_職業','q10_住居','q11_生年月日','q12_理想','q13_緊急度','q14_既存商品'].some(k => s[k]);
-          return `
-          <div style="background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:10px;">
-            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;">
-              <div style="font-weight:700;font-size:14px;">${escapeHtml(s.displayName || s.name || ('お客様 ' + (s.userId||'').slice(0,8)))} 様</div>
-              <div style="font-size:11px;color:var(--muted);">${escapeHtml((s.ts || '').slice(0,16).replace('T',' '))}${tagsNew ? ' <span style="background:#1B3A5C;color:#fff;padding:1px 6px;border-radius:99px;font-size:9.5px;margin-left:6px;letter-spacing:0.08em;font-weight:600;">NEW項目あり</span>' : ''}</div>
-            </div>
-            ${field('相談テーマ', s.q1_テーマ)}
-            ${field('年代', s.q2_年代)}
-            ${field('家族構成', s.q3_家族)}
-            ${field('世帯年収', s.q4_年収)}
-            ${field('一番の悩み', s.q5_悩み)}
-            ${field('候補1', s.q6_候補1)}
-            ${field('候補2', s.q7_候補2)}
-            ${field('候補3', s.q8_候補3)}
-            ${tagsNew ? '<div style="border-top:1px dashed var(--line);margin-top:8px;padding-top:8px;"></div>' : ''}
-            ${field('ご職業', s.q9_職業)}
-            ${field('住居', s.q10_住居)}
-            ${field('生年月日', s.q11_生年月日)}
-            ${field('5-10年後の希望', s.q12_理想)}
-            ${field('緊急度', s.q13_緊急度)}
-            ${field('既存商品', s.q14_既存商品)}
-          </div>`;
-        }).join('');
-
-    root.innerHTML = `
-      <div style="padding:24px 28px;">
-        <div style="margin-bottom:24px;">
-          <h2 style="font-size:21px;font-weight:800;margin:0 0 6px;letter-spacing:0.01em;">📝 事前アンケート</h2>
-          <p style="color:var(--muted);font-size:13px;margin:0;line-height:1.7;">公式LINEから配布する事前アンケートのURL/QRと、回答結果の一覧です。生年月日 / 5-10年後の希望 / 緊急度 / 既存商品 等の項目を収集できます。</p>
-        </div>
-
-        <div style="display:grid;grid-template-columns:1fr 240px;gap:24px;background:linear-gradient(135deg,#fafbfd,#fff);border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin-bottom:28px;">
-          <div>
-            <div style="font-size:12px;color:#B68A3E;font-weight:700;letter-spacing:0.1em;margin-bottom:6px;">SURVEY URL</div>
-            <div style="font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12.5px;background:#fff;border:1px solid var(--line);border-radius:7px;padding:10px 12px;word-break:break-all;color:#1B3A5C;margin-bottom:14px;" id="survey-url-box">${surveyUrl}</div>
-            <div style="display:flex;gap:8px;flex-wrap:wrap;">
-              <button id="survey-copy-btn" style="background:#1B3A5C;color:#fff;border:none;padding:9px 16px;border-radius:7px;font-size:12.5px;font-weight:700;cursor:pointer;letter-spacing:0.04em;">URLをコピー</button>
-              <a href="${surveyUrl}" target="_blank" rel="noopener" style="background:#fff;color:#1B3A5C;border:1.5px solid #1B3A5C;padding:8px 16px;border-radius:7px;font-size:12.5px;font-weight:700;cursor:pointer;letter-spacing:0.04em;text-decoration:none;display:inline-flex;align-items:center;gap:6px;">↗ プレビュー</a>
-              <button id="survey-line-btn" style="background:#06C755;color:#fff;border:none;padding:9px 16px;border-radius:7px;font-size:12.5px;font-weight:700;cursor:pointer;letter-spacing:0.04em;">LINEで送信用文言</button>
-            </div>
-            <div style="margin-top:18px;padding-top:14px;border-top:1px dashed var(--line);font-size:11.5px;color:var(--muted);line-height:1.7;">
-              <strong style="color:var(--ink);">使い方:</strong> このURLを公式LINEのリッチメニュー「事前アンケート」ボタンに設定するか、個別チャットで案内文と一緒にお送りください。回答は自動で下記一覧に並びます。
-            </div>
-          </div>
-          <div style="text-align:center;">
-            <div style="background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px;display:inline-block;">
-              <img src="${qrUrl}" alt="アンケートQR" width="220" height="220" style="display:block;border-radius:4px;">
-            </div>
-            <div style="font-size:10.5px;color:var(--muted);margin-top:8px;letter-spacing:0.06em;">配布用QRコード</div>
-          </div>
-        </div>
-
-        <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px;">
-          <h3 style="font-size:16px;font-weight:700;margin:0;">回答一覧 <span style="color:var(--muted);font-size:13px;font-weight:500;">(${liveAnswers.length})</span></h3>
-          <div style="font-size:11.5px;color:var(--muted);">最新の回答が上に表示されます</div>
-        </div>
-        <div>${answersHtml}</div>
-      </div>
-    `;
-
-    const copyBtn = document.getElementById('survey-copy-btn');
-    if (copyBtn) copyBtn.addEventListener('click', async () => {
-      try { await navigator.clipboard.writeText(surveyUrl); copyBtn.textContent = '✓ コピー完了'; setTimeout(() => copyBtn.textContent = 'URLをコピー', 1500); }
-      catch (_) { alert(surveyUrl); }
-    });
-    const lineBtn = document.getElementById('survey-line-btn');
-    if (lineBtn) lineBtn.addEventListener('click', async () => {
-      const tmpl = `お問い合わせありがとうございます。${fpName} です。\n\n面談前の事前アンケート(約5分)をお願いいたします。お客様のご状況・ご希望をお聞かせいただくことで、当日のご提案がより的確になります。\n\n${surveyUrl}\n\nご回答お待ちしております。`;
-      try { await navigator.clipboard.writeText(tmpl); lineBtn.textContent = '✓ 文言コピー完了'; setTimeout(() => lineBtn.textContent = 'LINEで送信用文言', 1800); }
-      catch (_) { alert(tmpl); }
-    });
-  }
-
   function renderGlobalTimeline() {
     const rangeOpt = state.timelineRange || '12m';
     const catOpt = state.timelineCat || 'all';
