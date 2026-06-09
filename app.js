@@ -2123,6 +2123,10 @@
             </div>
           </details>
 
+          <div style="margin:14px 0 8px;display:flex;gap:8px;flex-wrap:wrap;">
+            <button data-open-hearing="${escapeHtml(c.id)}" style="background:linear-gradient(135deg,#1B3A5C,#284f7d);color:#fff;border:none;padding:9px 16px;border-radius:7px;font-size:12.5px;font-weight:700;cursor:pointer;letter-spacing:0.04em;display:inline-flex;align-items:center;gap:6px;box-shadow:0 2px 6px rgba(27,58,92,0.18);">📋 アンケート回答 / ヒアリングシート</button>
+          </div>
+
           <div class="cd-profile-stats">
             <div class="cd-stat">
               <div class="cd-stat-label">管理資産</div>
