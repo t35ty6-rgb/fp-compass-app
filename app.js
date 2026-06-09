@@ -45,16 +45,14 @@
       }
     }
   } catch (e) {}
-  // ★ オーナーfb「全員41歳」 birth='1985-01-01' (LINE経由クライアント生成のデフォルト) を空に migration
+  // ★ オーナーfb「全員41歳」 birth='1985-01-01' (LINE経由クライアント生成のデフォルト) を空に
+  //   注: localStorage ゲートは廃止 (新規LINE客が追加される度に必ず実行) — オーナー再発防止
   try {
-    if (!localStorage.getItem('fp-birth-migrated-v1')) {
-      let changed = 0;
-      clients.forEach(c => { if (c.birth === '1985-01-01') { c.birth = ''; changed++; } });
-      if (changed > 0) {
-        try { localStorage.setItem('fp-crm-clients-v1', JSON.stringify(clients)); } catch (_) {}
-        console.log('[migration] cleared default birth on', changed, 'clients');
-      }
-      localStorage.setItem('fp-birth-migrated-v1', '1');
+    let changed = 0;
+    clients.forEach(c => { if (c.birth === '1985-01-01') { c.birth = ''; changed++; } });
+    if (changed > 0) {
+      try { localStorage.setItem('fp-crm-clients-v1', JSON.stringify(clients)); } catch (_) {}
+      console.log('[birth-clean] cleared default 1985-01-01 on', changed, 'clients');
     }
   } catch (e) {}
 
@@ -820,7 +818,7 @@
         id: 'c-line-' + u.userId.slice(1, 9),
         name: name || ('LINE友だち ' + u.userId.slice(1, 7)),
         kana: '',
-        birth: '1985-01-01',  // 不明 → 仮40歳
+        birth: '',  // ★ 全員41歳問題の元凶。 アンケート q10_生年月日 受信時に自動補完
         gender: 'O',
         occupation: '',
         family: [],

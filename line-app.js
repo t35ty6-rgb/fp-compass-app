@@ -3842,8 +3842,8 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
             const c = window.DUMMY_CLIENTS.find(x => x.lineFriendId === s.userId);
             if (!c) return;
             let changed = false;
-            // 生年月日 (NEW項目)
-            if (!c.birth && s.q10_生年月日) {
+            // 生年月日 (NEW項目) — '1985-01-01' 旧デフォルトも空扱い
+            if ((!c.birth || c.birth === '1985-01-01') && s.q10_生年月日) {
               c.birth = s.q10_生年月日;
               changed = true;
             }
