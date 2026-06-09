@@ -57,7 +57,10 @@
 
   function generateEvents(client) {
     const events = [];
-    const horizonYears = 30;
+    // ★ オーナーfb「29歳客で2件しか出ない」: 30年固定 → 「82歳到達まで」 動的化
+    //   何歳の客でも 50/55/60/65/70/75/80 節目 全部 + 子の進学 全部 が必ず表示される
+    const myAge = client.birth ? age(client.birth, TODAY) : 40;
+    const horizonYears = Math.max(30, 82 - myAge); // 最低30年、 上は82歳まで
     const horizonDate = new Date(TODAY);
     horizonDate.setFullYear(TODAY.getFullYear() + horizonYears);
 
