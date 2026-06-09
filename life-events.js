@@ -7,15 +7,44 @@
   // 過去ハードコード '2026-05-27' が原因 → 動的に「今日」を取得
   const TODAY = new Date(); TODAY.setHours(0, 0, 0, 0);
 
-  // 年齢別のライフイベントテンプレ
+  // ★ 顧客が 「商品/属性 を 持ってるか」 判定 (アンケート q7_保有 + q14_既存商品 + productsManual − productsRemoved)
+  function clientHas(client, pattern) {
+    const surveys = (window.LineAppLiveData && window.LineAppLiveData.survey_answers) || [];
+    const s = surveys.find(x =>
+      (x.userId && client.lineFriendId && x.userId === client.lineFriendId) ||
+      (x.name && client.name && x.name === client.name)
+    ) || {};
+    const raw = String(s.q7_保有 || '') + ' ' + String(s.q14_既存商品 || '');
+    const fromSurvey = pattern.test(raw);
+    const inManual = (client.productsManual || []).some(k => pattern.test(k));
+    const inRemoved = (client.productsRemoved || []).some(k => pattern.test(k));
+    return (fromSurvey || inManual) && !inRemoved;
+  }
+  function clientOccMatches(client, pattern) {
+    const surveys = (window.LineAppLiveData && window.LineAppLiveData.survey_answers) || [];
+    const s = surveys.find(x =>
+      (x.userId && client.lineFriendId && x.userId === client.lineFriendId) ||
+      (x.name && client.name && x.name === client.name)
+    ) || {};
+    return pattern.test(client.occupation || '') || pattern.test(s.q2_職業 || '') || pattern.test(s.q9_職業 || '');
+  }
+
+  // ★ 顧客の 属性/商品 に応じた 条件付き ライフイベント (cond 関数 で 適用判定)
+  //   cond なし = 全員に適用 (年金/後期高齢/相続 等)
   const SELF_EVENTS = [
-    { age: 50, label: '住宅ローン総点検', cat: 'finance' },
-    { age: 55, label: '退職金準備強化期', cat: 'retirement' },
-    { age: 60, label: '定年・退職金受取検討', cat: 'retirement', major: true },
-    { age: 65, label: '年金受給開始 / 繰下げ判定', cat: 'retirement', major: true },
-    { age: 70, label: 'NISA出口戦略', cat: 'finance' },
-    { age: 75, label: '後期高齢者医療制度', cat: 'health', major: true },
-    { age: 80, label: '相続対策最終調整', cat: 'inherit' },
+    { age: 50, label: '住宅ローン総点検', cat: 'finance',
+      cond: c => !!(c.mortgage) || clientHas(c, /住宅ローン|住宅ロ|住宅L/) },
+    { age: 55, label: '退職金準備強化期', cat: 'retirement',
+      cond: c => clientOccMatches(c, /会社員|公務員|専門職/) },
+    { age: 60, label: '定年・退職金受取検討', cat: 'retirement', major: true,
+      cond: c => clientOccMatches(c, /会社員|公務員|専門職/) },
+    { age: 65, label: '年金受給開始 / 繰下げ判定', cat: 'retirement', major: true }, // 全員
+    { age: 70, label: 'NISA出口戦略', cat: 'finance',
+      cond: c => clientHas(c, /NISA/i) },
+    { age: 70, label: 'iDeCo 出口戦略', cat: 'finance',
+      cond: c => clientHas(c, /iDeCo|企業型|個人型|DC/i) },
+    { age: 75, label: '後期高齢者医療制度', cat: 'health', major: true }, // 全員
+    { age: 80, label: '相続対策最終調整', cat: 'inherit' }, // 全員
   ];
 
   const CHILD_EVENTS = [
@@ -64,8 +93,9 @@
     const horizonDate = new Date(TODAY);
     horizonDate.setFullYear(TODAY.getFullYear() + horizonYears);
 
-    // 本人イベント
+    // 本人イベント (条件付きテンプレ — 持ってない商品/該当しない職業 は スキップ)
     SELF_EVENTS.forEach(tpl => {
+      if (tpl.cond && !tpl.cond(client)) return; // 条件不一致なら スキップ
       const d = eventDate(client.birth, tpl.age);
       if (d >= TODAY && d <= horizonDate) {
         events.push({
