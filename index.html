@@ -657,6 +657,11 @@
           <span class="nav-count nav-count-alert" id="nav-count-lead"></span>
         </div>
 
+        <div class="tab tab-line" data-tab="surveyHub">
+          <i data-lucide="clipboard-list"></i>
+          <span>アンケート</span>
+        </div>
+
         <div class="tab tab-line" data-tab="distributionHub">
           <i data-lucide="send"></i>
           <span>配信</span>
@@ -988,6 +993,11 @@
           <div data-line-view="leadHub"></div>
         </section>
 
+        <!-- ===== 事前アンケート (お客様配布用) ===== -->
+        <section class="view" data-view="surveyHub">
+          <div id="survey-hub"></div>
+        </section>
+
         <!-- ===== LINE配信 ===== -->
         <section class="view" data-view="distributionHub">
           <div data-line-view="distributionHub"></div>
@@ -1053,7 +1063,7 @@ window.fpReadyAfterAuth = function() {
   ];
   legacyDemoKeys.forEach(k => { try { localStorage.removeItem(k); } catch (_) {} });
 
-  const ver = "20260609D-multi-meeting";
+  const ver = "20260609E-survey-hub";
   const scripts = [
     "life-events.js?v=" + ver,
     "recommender.js?v=" + ver,
@@ -1363,7 +1373,7 @@ window.fpReadyAfterAuth = function() {
 <script>
 (function(){
   // 最新の ver を 1 箇所に集約 (fpReadyAfterAuth 側と一致させる必要あり)
-  const FP_VERSION = "20260609D-multi-meeting";
+  const FP_VERSION = "20260609E-survey-hub";
   const loadTime = new Date();
   const hhmm = String(loadTime.getHours()).padStart(2,'0') + ':' + String(loadTime.getMinutes()).padStart(2,'0');
   const dateLabel = (FP_VERSION.match(/^(\d{4})(\d{2})(\d{2})/) || []).slice(1).join('/').replace(/^(\d{4})\//,'$1/').replace(/\/(\d{2})\/(\d{2})$/,'/$1/$2') || FP_VERSION;

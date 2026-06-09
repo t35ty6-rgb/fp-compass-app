@@ -54,7 +54,6 @@
   .q-label{display:block;font-size:14px;font-weight:600;color:var(--ink);margin-bottom:8px;letter-spacing:0.01em;}
   .q-label .req{color:var(--gold);font-size:11px;margin-left:6px;font-weight:600;vertical-align:1px;}
   .q-hint{font-size:12px;color:var(--muted);margin-top:-4px;margin-bottom:8px;line-height:1.5;}
-  .q-key{font-family:'Inter',monospace;font-size:10px;color:#A8AEBC;margin-left:6px;letter-spacing:0;}
 
   input[type=text],input[type=date],input[type=number],input[type=email],textarea,select{
     width:100%;padding:13px 14px;background:var(--line-soft);border:1.5px solid transparent;border-radius:8px;font-size:15px;
@@ -137,39 +136,45 @@
 
   <form id="surv" autocomplete="off">
 
-    <!-- ============================================== -->
-    <!-- ① 基本情報 (LSTEP 既存 q1〜q5) -->
-    <!-- ============================================== -->
     <section class="s">
       <div class="s-head"><span class="s-num">01</span><span class="s-title">基本情報</span></div>
 
       <div class="q">
-        <label class="q-label">年代<span class="req">必須</span><span class="q-key">q1_年代</span></label>
+        <label class="q-label">ご相談したいテーマ<span class="req">必須</span></label>
         <div class="opts grid">
-          <label class="opt"><input type="radio" name="q1_年代" value="20代"><span class="mark"></span>20代</label>
-          <label class="opt"><input type="radio" name="q1_年代" value="30代"><span class="mark"></span>30代</label>
-          <label class="opt"><input type="radio" name="q1_年代" value="40代"><span class="mark"></span>40代</label>
-          <label class="opt"><input type="radio" name="q1_年代" value="50代"><span class="mark"></span>50代</label>
-          <label class="opt"><input type="radio" name="q1_年代" value="60代"><span class="mark"></span>60代</label>
-          <label class="opt"><input type="radio" name="q1_年代" value="70代以上"><span class="mark"></span>70代以上</label>
+          <label class="opt"><input type="radio" name="q1_テーマ" value="教育費・学資" required><span class="mark"></span>教育費・学資</label>
+          <label class="opt"><input type="radio" name="q1_テーマ" value="老後資金"><span class="mark"></span>老後資金</label>
+          <label class="opt"><input type="radio" name="q1_テーマ" value="保険見直し"><span class="mark"></span>保険見直し</label>
+          <label class="opt"><input type="radio" name="q1_テーマ" value="住宅購入・ローン"><span class="mark"></span>住宅購入・ローン</label>
+          <label class="opt"><input type="radio" name="q1_テーマ" value="資産運用"><span class="mark"></span>資産運用</label>
+          <label class="opt"><input type="radio" name="q1_テーマ" value="相続・贈与"><span class="mark"></span>相続・贈与</label>
+          <label class="opt"><input type="radio" name="q1_テーマ" value="家計改善"><span class="mark"></span>家計改善</label>
+          <label class="opt"><input type="radio" name="q1_テーマ" value="まだ決まっていない"><span class="mark"></span>まだ決まっていない</label>
         </div>
       </div>
 
       <div class="q">
-        <label class="q-label">ご職業<span class="req">必須</span><span class="q-key">q2_職業</span></label>
-        <input type="text" name="q2_職業" placeholder="例:会社員(製造業) / 公務員 / 自営業" required>
-      </div>
-
-      <div class="q">
-        <label class="q-label">ご家族構成<span class="q-key">q3_家族</span></label>
-        <div class="q-hint">配偶者・お子様の有無、お子様がいらっしゃればおおよその年齢もお書きください。</div>
-        <textarea name="q3_家族" placeholder="例:配偶者+子2人(8歳/5歳)"></textarea>
-      </div>
-
-      <div class="q">
-        <label class="q-label">世帯年収(税込)<span class="req">必須</span><span class="q-key">q4_年収</span></label>
+        <label class="q-label">年代<span class="req">必須</span></label>
         <div class="opts grid">
-          <label class="opt"><input type="radio" name="q4_年収" value="〜400万"><span class="mark"></span>〜400万円</label>
+          <label class="opt"><input type="radio" name="q2_年代" value="20代" required><span class="mark"></span>20代</label>
+          <label class="opt"><input type="radio" name="q2_年代" value="30代"><span class="mark"></span>30代</label>
+          <label class="opt"><input type="radio" name="q2_年代" value="40代"><span class="mark"></span>40代</label>
+          <label class="opt"><input type="radio" name="q2_年代" value="50代"><span class="mark"></span>50代</label>
+          <label class="opt"><input type="radio" name="q2_年代" value="60代"><span class="mark"></span>60代</label>
+          <label class="opt"><input type="radio" name="q2_年代" value="70代以上"><span class="mark"></span>70代以上</label>
+        </div>
+      </div>
+
+      <div class="q">
+        <label class="q-label">ご家族構成</label>
+        <div class="q-hint">配偶者・お子様の有無、お子様がいらっしゃればおおよその年齢もお書きください。</div>
+        <textarea name="q3_家族" placeholder="例:夫婦+子2人(8歳/5歳)"></textarea>
+      </div>
+
+      <div class="q">
+        <label class="q-label">世帯年収(税込)<span class="req">必須</span></label>
+        <div class="opts grid">
+          <label class="opt"><input type="radio" name="q4_年収" value="〜400万" required><span class="mark"></span>〜400万円</label>
           <label class="opt"><input type="radio" name="q4_年収" value="400〜700万"><span class="mark"></span>400〜700万円</label>
           <label class="opt"><input type="radio" name="q4_年収" value="700〜1000万"><span class="mark"></span>700〜1,000万円</label>
           <label class="opt"><input type="radio" name="q4_年収" value="1000〜1500万"><span class="mark"></span>1,000〜1,500万円</label>
@@ -179,70 +184,60 @@
       </div>
 
       <div class="q">
-        <label class="q-label">住居形態<span class="q-key">q5_住居</span></label>
-        <div class="opts grid">
-          <label class="opt"><input type="radio" name="q5_住居" value="持家(ローン有)"><span class="mark"></span>持家(ローン有)</label>
-          <label class="opt"><input type="radio" name="q5_住居" value="持家(完済)"><span class="mark"></span>持家(完済)</label>
-          <label class="opt"><input type="radio" name="q5_住居" value="賃貸"><span class="mark"></span>賃貸</label>
-          <label class="opt"><input type="radio" name="q5_住居" value="社宅・実家"><span class="mark"></span>社宅・実家</label>
-        </div>
+        <label class="q-label">いま一番気になっている / 不安なこと<span class="req">必須</span></label>
+        <div class="q-hint">率直なお気持ちで結構です。「なんとなく」「漠然と」でも構いません。</div>
+        <textarea name="q5_悩み" placeholder="例:子供の大学進学の費用が貯められるか不安。住宅ローンと教育費が重なる時期が心配。" required></textarea>
       </div>
     </section>
 
-    <!-- ============================================== -->
-    <!-- ② 面談候補日 (LSTEP 既存 q6〜q8) -->
-    <!-- ============================================== -->
     <section class="s">
       <div class="s-head"><span class="s-num">02</span><span class="s-title">ご面談の候補日時</span></div>
 
       <div class="q-hint" style="margin-bottom:14px;">オンライン(Zoom)面談、初回 60 分。ご都合のよい候補を 3 つお選びください。</div>
 
       <div class="slot">
-        <div class="slot-head">第 1 希望 <span style="color:#A8AEBC;font-weight:400;">/ q6_候補1</span></div>
+        <div class="slot-head">第 1 希望</div>
         <div class="slot-row">
           <input type="date" name="q6_候補1_date" required>
           <select name="q6_候補1_time" required>
             <option value="">時間帯</option>
-            <option>10:00-11:00</option><option>11:00-12:00</option>
-            <option>13:00-14:00</option><option>14:00-15:00</option>
-            <option>15:00-16:00</option><option>16:00-17:00</option>
-            <option>19:00-20:00</option><option>20:00-21:00</option>
+            <option>午前 10:00</option><option>午前 11:00</option>
+            <option>午後 13:00</option><option>午後 14:00</option>
+            <option>午後 15:00</option><option>午後 16:00</option>
+            <option>夜 19:00</option><option>夜 20:00</option>
           </select>
         </div>
       </div>
 
       <div class="slot">
-        <div class="slot-head">第 2 希望 <span style="color:#A8AEBC;font-weight:400;">/ q7_候補2</span></div>
+        <div class="slot-head">第 2 希望</div>
         <div class="slot-row">
           <input type="date" name="q7_候補2_date" required>
           <select name="q7_候補2_time" required>
             <option value="">時間帯</option>
-            <option>10:00-11:00</option><option>11:00-12:00</option>
-            <option>13:00-14:00</option><option>14:00-15:00</option>
-            <option>15:00-16:00</option><option>16:00-17:00</option>
-            <option>19:00-20:00</option><option>20:00-21:00</option>
+            <option>午前 10:00</option><option>午前 11:00</option>
+            <option>午後 13:00</option><option>午後 14:00</option>
+            <option>午後 15:00</option><option>午後 16:00</option>
+            <option>夜 19:00</option><option>夜 20:00</option>
           </select>
         </div>
       </div>
 
       <div class="slot">
-        <div class="slot-head">第 3 希望 <span style="color:#A8AEBC;font-weight:400;">/ q8_候補3</span></div>
+        <div class="slot-head">第 3 希望</div>
         <div class="slot-row">
           <input type="date" name="q8_候補3_date" required>
           <select name="q8_候補3_time" required>
             <option value="">時間帯</option>
-            <option>10:00-11:00</option><option>11:00-12:00</option>
-            <option>13:00-14:00</option><option>14:00-15:00</option>
-            <option>15:00-16:00</option><option>16:00-17:00</option>
-            <option>19:00-20:00</option><option>20:00-21:00</option>
+            <option>午前 10:00</option><option>午前 11:00</option>
+            <option>午後 13:00</option><option>午後 14:00</option>
+            <option>午後 15:00</option><option>午後 16:00</option>
+            <option>夜 19:00</option><option>夜 20:00</option>
           </select>
         </div>
       </div>
     </section>
 
-    <!-- ============================================== -->
-    <!-- ③ ご希望・ご状況 (今回追加 q9〜q14) -->
-    <!-- ============================================== -->
     <section class="s">
       <div class="s-head">
         <span class="s-num">03</span>
@@ -251,48 +246,43 @@
       </div>
 
       <div class="q">
-        <label class="q-label">生年月日<span class="req">必須</span><span class="q-key">q9_生年月日</span></label>
-        <div class="q-hint">キャッシュフロー試算・お子様の進学費用試算等に使用いたします。</div>
-        <input type="date" name="q9_生年月日" required>
+        <label class="q-label">ご職業</label>
+        <input type="text" name="q9_職業" placeholder="例:会社員(製造業) / 公務員 / 自営業">
       </div>
 
       <div class="q">
-        <label class="q-label">気になっているテーマ<span class="req">複数可</span><span class="q-key">q10_相談テーマ</span></label>
+        <label class="q-label">住居形態</label>
         <div class="opts grid">
-          <label class="opt cb"><input type="checkbox" name="q10_相談テーマ" value="教育費"><span class="mark"></span>お子様の教育費</label>
-          <label class="opt cb"><input type="checkbox" name="q10_相談テーマ" value="老後資金"><span class="mark"></span>老後の資金準備</label>
-          <label class="opt cb"><input type="checkbox" name="q10_相談テーマ" value="保険見直し"><span class="mark"></span>保険の見直し</label>
-          <label class="opt cb"><input type="checkbox" name="q10_相談テーマ" value="住宅ローン"><span class="mark"></span>住宅ローン</label>
-          <label class="opt cb"><input type="checkbox" name="q10_相談テーマ" value="資産運用"><span class="mark"></span>資産運用(NISA/iDeCo等)</label>
-          <label class="opt cb"><input type="checkbox" name="q10_相談テーマ" value="相続・贈与"><span class="mark"></span>相続・贈与</label>
-          <label class="opt cb"><input type="checkbox" name="q10_相談テーマ" value="家計改善"><span class="mark"></span>家計の改善</label>
-          <label class="opt cb"><input type="checkbox" name="q10_相談テーマ" value="節税"><span class="mark"></span>節税</label>
+          <label class="opt"><input type="radio" name="q10_住居" value="持家(ローン有)"><span class="mark"></span>持家(ローン有)</label>
+          <label class="opt"><input type="radio" name="q10_住居" value="持家(完済)"><span class="mark"></span>持家(完済)</label>
+          <label class="opt"><input type="radio" name="q10_住居" value="賃貸"><span class="mark"></span>賃貸</label>
+          <label class="opt"><input type="radio" name="q10_住居" value="社宅・実家"><span class="mark"></span>社宅・実家</label>
         </div>
       </div>
 
       <div class="q">
-        <label class="q-label">いま一番気になっている / 不安に感じていること<span class="req">必須</span><span class="q-key">q11_悩み</span></label>
-        <div class="q-hint">率直なお気持ちで結構です。「なんとなく」「漠然と」でも構いません。</div>
-        <textarea name="q11_悩み" placeholder="例:子供の大学進学の費用が貯められるか不安。住宅ローンと教育費が重なる時期が心配。" required></textarea>
+        <label class="q-label">生年月日</label>
+        <div class="q-hint">キャッシュフロー試算・お子様の進学時期試算に使用いたします (任意)。</div>
+        <input type="date" name="q11_生年月日">
       </div>
 
       <div class="q">
-        <label class="q-label">5〜10年後、こうなっていたい というご希望<span class="q-key">q12_理想</span></label>
+        <label class="q-label">5〜10年後、こうなっていたい というご希望</label>
         <div class="q-hint">ゴールから逆算してご提案するため、できるだけ具体的にお聞かせください。</div>
         <textarea name="q12_理想" placeholder="例:子供が大学に入る頃までに 1,000 万円の教育資金。60歳で住宅ローンを完済して、年に2回家族で旅行できる暮らし。"></textarea>
       </div>
 
       <div class="q">
-        <label class="q-label">ご相談の緊急度<span class="req">必須</span><span class="q-key">q13_緊急度</span></label>
+        <label class="q-label">ご相談の緊急度<span class="req">必須</span></label>
         <div class="opts">
-          <label class="opt"><input type="radio" name="q13_緊急度" value="すぐに相談したい"><span class="mark"></span>すぐに相談したい(1ヶ月以内に方向性を決めたい)</label>
+          <label class="opt"><input type="radio" name="q13_緊急度" value="すぐに相談したい" required><span class="mark"></span>すぐに相談したい(1ヶ月以内に方向性を決めたい)</label>
           <label class="opt"><input type="radio" name="q13_緊急度" value="数ヶ月以内に動きたい"><span class="mark"></span>数ヶ月以内に動きたい</label>
           <label class="opt"><input type="radio" name="q13_緊急度" value="情報収集中"><span class="mark"></span>まずは情報収集中</label>
         </div>
       </div>
 
       <div class="q">
-        <label class="q-label">既にご加入の保険 / 運用されている商品<span class="q-key">q14_既存商品</span></label>
+        <label class="q-label">既にご加入の保険 / 運用商品</label>
         <div class="q-hint">商品名がご不明の場合は「生命保険(月◯円)」「証券口座あり」程度で構いません。</div>
         <textarea name="q14_既存商品" placeholder="例:終身保険(月15,000円)、新NISA(月50,000円)、医療保険(共済)"></textarea>
       </div>
@@ -322,24 +312,46 @@
   <p style="margin-top:18px;font-size:13px;color:var(--muted);">このページはそのまま閉じていただいて結構です。</p>
 </div>
 
-<script>
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js';
+  import { getFirestore, collection, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js';
+
+  const firebaseConfig = {
+    apiKey: 'AIzaSyBpkAfvmqKx_GU7QcCfZ4_xa2Z_FN3sCBs',
+    authDomain: 'skeleton-fp-compass-632026.firebaseapp.com',
+    projectId: 'skeleton-fp-compass-632026',
+    storageBucket: 'skeleton-fp-compass-632026.firebasestorage.app',
+    messagingSenderId: '551717557632',
+    appId: '1:551717557632:web:0c6e8e4f3aebd56b18a2a3'
+  };
+  let db = null;
+  try {
+    const app = initializeApp(firebaseConfig);
+    db = getFirestore(app);
+  } catch (e) {
+    console.warn('[survey] firebase init skipped:', e.message);
+  }
+
   const form = document.getElementById('surv');
   const pf = document.getElementById('pf');
   const pp = document.getElementById('pp');
-  const requiredRadios = ['q1_年代','q4_年収','q13_緊急度'];
+  const requiredRadios = ['q1_テーマ','q2_年代','q4_年収','q13_緊急度'];
 
   function updateProgress(){
     const txt = form.querySelectorAll('input[type=text][required], input[type=date][required], textarea[required], select[required]');
     let done = 0, total = 0;
     txt.forEach(i => { total++; if (i.value && i.value.trim()) done++; });
     requiredRadios.forEach(n => { total++; if (form.querySelector(`input[name="${n}"]:checked`)) done++; });
-    total++; if (form.querySelectorAll('input[name="q10_相談テーマ"]:checked').length > 0) done++;
-    const pct = Math.round(done / total * 100);
+    const pct = total === 0 ? 0 : Math.round(done / total * 100);
     pf.style.width = pct + '%';
     pp.textContent = pct + '%';
   }
   form.addEventListener('input', updateProgress);
   form.addEventListener('change', updateProgress);
+
+  function getURLParam(name){
+    return new URLSearchParams(location.search).get(name) || '';
+  }
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -347,21 +359,33 @@
     btn.disabled = true; btn.textContent = '送信中…';
 
     const fd = new FormData(form);
-    const payload = { meta: { submittedAt: new Date().toISOString(), source: 'survey.html (preview)' } };
+    const payload = {};
     for (const [k,v] of fd.entries()){
-      if (k === 'q10_相談テーマ'){ payload[k] = payload[k] || []; payload[k].push(v); }
-      else if (/_date$/.test(k)){
-        const base = k.replace(/_date$/, '');
+      if (/_date$/.test(k) || /_time$/.test(k)){
+        const base = k.replace(/_(date|time)$/, '');
         payload[base] = (payload[base] ? payload[base] + ' ' : '') + v;
-      } else if (/_time$/.test(k)){
-        const base = k.replace(/_time$/, '');
-        payload[base] = (payload[base] ? payload[base] + ' ' : '') + v;
-      } else payload[k] = v;
+      } else {
+        payload[k] = v;
+      }
     }
+    payload.userId = getURLParam('uid') || ('Upreview' + Math.random().toString(36).slice(2,18));
+    payload.tenantId = getURLParam('t') || 'demo-tenant';
+    payload.displayName = getURLParam('n') || '';
+    payload.ts = new Date().toISOString();
+    payload.source = 'survey.html';
+
     try { localStorage.setItem('fp-survey-last', JSON.stringify(payload)); } catch(_){}
     console.log('[survey] payload:', payload);
 
-    await new Promise(r => setTimeout(r, 700));
+    if (db) {
+      try {
+        const { addDoc, collection, serverTimestamp } = await import('https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js');
+        await addDoc(collection(db, 'survey_answers'), { ...payload, createdAt: serverTimestamp() });
+        console.log('[survey] saved to Firestore');
+      } catch (e) {
+        console.warn('[survey] Firestore save failed:', e.message);
+      }
+    }
 
     document.getElementById('form-wrap').style.display = 'none';
     document.getElementById('done-wrap').classList.add('show');
