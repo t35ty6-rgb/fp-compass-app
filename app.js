@@ -4209,8 +4209,15 @@ table tbody tr:nth-child(even) { background: #F7F5EE; }
         .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, ''); // 非可印字制御文字 (改行/タブは温存)
     };
     try {
-      // ★ オーナーfb (v AO): Mac mini Claude Code 経由で生成 (Anthropic API課金回避)。 失敗時は Cloud Run fallback。
-      const useMacMini = localStorage.getItem('fp-deliv-via-macmini') !== '0'; // default ON
+      // ★ オーナー方針 (v BG): 資料作成はデフォルトで Anthropic 有料API を一切使わず、
+      //   常に triggerDeliverable (JSON + プロンプト DL + clipboard + claude.ai/new) で
+      //   FP事業者自身の Claude Code 購読版に流す。
+      if (progressPill && progressPill._fpDone) progressPill._fpDone(true, '📋 プロンプトをコピーしてClaude起動');
+      try { triggerDeliverable(client, type, taskTitle); }
+      catch (e) { console.warn('triggerDeliverable fail:', e); }
+      return;
+      // ↓ 旧: Anthropic API 直叩きパス (温存だけ、 実行されない)
+      const useMacMini = localStorage.getItem('fp-deliv-via-macmini') !== '0';
       const useFirestorePath = useMacMini && window.__fp?.db && window.__fp?.userEmail && window.__fp?.tenantId;
       const r = useFirestorePath
         ? await generateDeliverableViaMacMini({ type, client, clientCtx, taskTitle, latestAi, sanitize: sanitizeForJson })
@@ -4226,14 +4233,6 @@ table tbody tr:nth-child(even) { background: #F7F5EE; }
         }),
       });
       const d = await r.json();
-      // ★ 残高/billing/API key 失敗時 → triggerDeliverable (JSON+プロンプトDL) に自動フォールバック
-      if (!d.ok && /credit balance|billing|low|api key|not_found_error|401|403|429/i.test(d.error || '')) {
-        if (progressPill && progressPill._fpDone) progressPill._fpDone(false, '残高不足 → JSON+プロンプトDLに切替');
-        try {
-          triggerDeliverable(client, type, taskTitle);
-        } catch (e) { console.warn('fallback triggerDeliverable fail:', e); }
-        return;
-      }
       if (progressPill && progressPill._fpDone) progressPill._fpDone(d.ok && d.html, d.ok ? null : (d.error || '生成失敗'));
       if (d.ok && d.html) {
         // ★ AI下書きフェーズ2の並列生成完了 → グローバルに格納して送信時に自動添付
