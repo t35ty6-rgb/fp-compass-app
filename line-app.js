@@ -3826,6 +3826,63 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
           }
         }
       } catch (mergeErr) { console.warn('line_messages merge fail:', mergeErr); }
+
+      // ★ アンケート→顧客カード 自動反映 (空欄のみ埋める / 既存値は壊さない)
+      //   proxy/index.js 本番スキーマ: q1_年代/q2_職業/q3_家族/q10_生年月日/q15_緊急度
+      try {
+        const surveys = liveData.survey_answers || [];
+        if (surveys.length > 0 && window.DUMMY_CLIENTS) {
+          let mergedCount = 0;
+          // userId 最新順に並べて顧客毎の最新サーベイを取る
+          const latestByUid = {};
+          surveys.slice().sort((a,b) => (a.ts || '').localeCompare(b.ts || ''))
+            .forEach(s => { if (s.userId) latestByUid[s.userId] = s; });
+
+          Object.values(latestByUid).forEach(s => {
+            const c = window.DUMMY_CLIENTS.find(x => x.lineFriendId === s.userId);
+            if (!c) return;
+            let changed = false;
+            // 生年月日 (NEW項目)
+            if (!c.birth && s.q10_生年月日) {
+              c.birth = s.q10_生年月日;
+              changed = true;
+            }
+            // 職業
+            if (!c.occupation && s.q2_職業) {
+              c.occupation = s.q2_職業;
+              changed = true;
+            }
+            // 緊急度 → タグ自動付与 (緊急度が「すぐに」系なら 🔥緊急 タグ)
+            if (s.q15_緊急度 && /すぐ/.test(s.q15_緊急度)) {
+              if (!Array.isArray(c.tags)) c.tags = [];
+              if (!c.tags.includes('🔥緊急')) {
+                c.tags.push('🔥緊急');
+                changed = true;
+              }
+            }
+            // 相談テーマ → タグ (q8_テーマ 複数可・「, 」結合済)
+            if (s.q8_テーマ) {
+              const themes = String(s.q8_テーマ).split(/[,、]\s*/).filter(Boolean);
+              if (!Array.isArray(c.tags)) c.tags = [];
+              themes.forEach(t => {
+                const tag = '💬' + t;
+                if (!c.tags.includes(tag)) { c.tags.push(tag); changed = true; }
+              });
+            }
+            // 家族構成 (textだけ反映、 c.family 配列は手入力ベースのまま不変)
+            if (!c.familyText && s.q3_家族) {
+              c.familyText = s.q3_家族;
+              changed = true;
+            }
+            if (changed) mergedCount++;
+          });
+          if (mergedCount > 0) {
+            localStorage.setItem('fp-crm-clients-v1', JSON.stringify(window.DUMMY_CLIENTS));
+            console.log('[survey→client] auto-filled', mergedCount, 'clients (birth/occupation/tags 等の空欄のみ)');
+          }
+        }
+      } catch (sErr) { console.warn('survey→client merge fail:', sErr); }
+
       const detail = (liveData.users ? liveData.users.length + 'ユーザー' : '') +
                      (liveData.bookings ? ' / ' + liveData.bookings.length + '予約' : '');
       showSyncIndicator('done', detail);
