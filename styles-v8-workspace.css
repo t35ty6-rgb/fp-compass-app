@@ -6219,7 +6219,7 @@ button.fp-draft-cta {
   background-size: 200% 200% !important;
   color: #fff !important;
   border: none !important;
-  animation: fp-draft-cta-pulse 1.6s ease-in-out infinite, fp-draft-cta-gradient 2.5s linear infinite !important;
+  animation: none !important;
   box-shadow: 0 8px 24px rgba(249,115,22,0.55), 0 0 0 4px rgba(255,255,255,0.5) !important;
 }
 .fp-draft-cta#modal-draft-btn .cd-flow-step-label,
