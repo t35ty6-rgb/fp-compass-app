@@ -1437,6 +1437,7 @@
     ensureLineHistory_(c);
     console.log('[client modal]', c.id, c.name, 'lineHistory:', (c.lineHistory || []).length, 'DUMMY_CLIENTS_VERSION:', window.DUMMY_CLIENTS_VERSION || '(missing)');
     let events = window.LifeEvents.generate(c);
+    const pureLifeEventCount = events.length; // ★ CTA条件 用: 議事録 events 追加前 の 純粋ライフイベント数
     // 面談AI議事録をタイムラインに追加 (localStorage + GAS 両方)
     try {
       const liveBks = (window.LineAppLiveData && window.LineAppLiveData.bookings) || [];
@@ -1829,12 +1830,11 @@
         `).join('');
 
     // ★ ライフイベント 空状態 CTA: 生年月日+配偶者+子の生年月日 を即入力 → 30年タイムライン自動展開
+    //   議事録 events が 入った後の events.length ではなく、 純粋ライフイベント数 で判定
     const needsBirth = !c.birth || c.birth === '1985-01-01';
     const needsFamily = !((c.family || []).length);
-    const showLifeCta = events.length === 0 && (needsBirth || needsFamily);
-    const timelineHtml = events.length === 0
-      ? (showLifeCta
-        ? `
+    const showLifeCta = pureLifeEventCount === 0 && (needsBirth || needsFamily);
+    const lifeCtaCard = showLifeCta ? `
         <div style="background:linear-gradient(135deg,#faf5ff,#fff);border:2px solid #c084fc;border-radius:14px;padding:22px 24px;margin:6px 0;box-shadow:0 4px 12px rgba(192,132,252,0.15);">
           <div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:14px;">
             <div style="font-size:30px;line-height:1;">🗓️</div>
@@ -1862,8 +1862,9 @@
               <button type="button" id="life-cta-save" style="background:linear-gradient(135deg,#9333ea,#7c3aed);color:#fff;border:none;padding:9px 22px;border-radius:7px;font-size:12.5px;font-weight:800;cursor:pointer;letter-spacing:0.04em;font-family:inherit;box-shadow:0 3px 10px rgba(124,58,237,0.3);">💫 タイムラインを展開する</button>
             </div>
           </div>
-        </div>`
-        : '<div class="empty">向こう30年に予測イベントなし</div>')
+        </div>` : '';
+    const timelineHtml = lifeCtaCard + (events.length === 0
+      ? (showLifeCta ? '' : '<div class="empty">向こう30年に予測イベントなし</div>')
       : events.map(ev => `
           <div class="client-timeline-item">
             <div class="when">${fmtDate(ev.date)}<span class="relative">${window.LifeEvents.formatRelative(ev.date)}</span></div>
@@ -1872,7 +1873,7 @@
               <span class="ev-who">${escapeHtml(ev.who)}</span>
             </div>
           </div>
-        `).join('');
+        `).join(''));
 
     const actionsHtml = recs.length === 0
       ? '<div class="empty">直近の推奨アクションなし</div>'
