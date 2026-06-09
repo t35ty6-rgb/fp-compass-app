@@ -884,12 +884,13 @@
   // ★ 列カスタマイズ: localStorage 保存式
   const COL_PREF_KEY = 'fp-crm-cols-v1';
   const COL_DEFS = [
-    { id: 'col-occ',     label: '職業',         default: true },
-    { id: 'col-family',  label: '家族',         default: true },
-    { id: 'col-urgency', label: '緊急度',       default: true },
-    { id: 'col-worry',   label: '一番の悩み',   default: false },
-    { id: 'col-goal',    label: '5-10年後の希望', default: false },
-    { id: 'col-aum',     label: '管理資産',     default: true },
+    { id: 'col-occ',      label: '職業',           default: true },
+    { id: 'col-family',   label: '家族',           default: true },
+    { id: 'col-urgency',  label: '緊急度',         default: true },
+    { id: 'col-worry',    label: '一番の悩み',     default: false },
+    { id: 'col-goal',     label: '5-10年後の希望', default: false },
+    { id: 'col-products', label: '保有商品 (NISA/iDeCo/保険等)', default: true },
+    { id: 'col-aum',      label: '管理資産',       default: true },
   ];
   function getColPrefs() {
     try {
@@ -1068,10 +1069,31 @@
             const urgencyTxt = s.q15_緊急度 || '';
             const urgencyBg = /すぐ/.test(urgencyTxt) ? '#fee2e2' : /数ヶ月/.test(urgencyTxt) ? '#fef3c7' : /情報/.test(urgencyTxt) ? '#e0e7ff' : '#f3f4f6';
             const urgencyFg = /すぐ/.test(urgencyTxt) ? '#991b1b' : /数ヶ月/.test(urgencyTxt) ? '#92400e' : /情報/.test(urgencyTxt) ? '#3730a3' : '#6b7280';
+            // 保有商品: q7_保有 (アンケート) + q14_既存商品 (自由記述) を統合
+            // 王道商品の固定リストで ✓ / – を出すと「これは持ってない=提案チャンス」が即分かる
+            const PRODUCTS = [
+              { key: 'NISA',    short: 'NISA',  pattern: /NISA/i },
+              { key: 'iDeCo',   short: 'iDeCo', pattern: /iDeCo|企業型|個人型|DC/i },
+              { key: '投資信託', short: '投信', pattern: /投信|投資信託/ },
+              { key: '個別株',   short: '株',   pattern: /個別株|株式|個株/ },
+              { key: '定期預金', short: '預金', pattern: /定期預金|預金/ },
+              { key: '生命保険', short: '生保', pattern: /生命保険|終身|定期保険|学資/ },
+              { key: '医療保険', short: '医療', pattern: /医療保険|がん保険|共済/ },
+              { key: '不動産',   short: '不動産', pattern: /不動産/ },
+              { key: '住宅ローン', short: '住宅', pattern: /住宅ローン|住宅ロ|住宅L/ },
+              { key: '個人年金', short: '個人年金', pattern: /個人年金/ },
+            ];
+            const owned = String(s.q7_保有 || '') + ' ' + String(s.q14_既存商品 || '') + ' ' + (c.mortgage ? '住宅ローン' : '');
+            const productChips = PRODUCTS.map(p => {
+              const has = p.pattern.test(owned);
+              return `<span title="${p.key} ${has ? '加入済' : '未加入'}" style="display:inline-block;font-size:9.5px;font-weight:${has ? 800 : 600};padding:2px 6px;border-radius:8px;letter-spacing:0.02em;background:${has ? '#dcfce7' : '#f3f4f6'};color:${has ? '#166534' : '#9ca3af'};border:1px solid ${has ? '#86efac' : '#e5e7eb'};margin:1px 2px 1px 0;">${has ? '✓' : '–'} ${p.short}</span>`;
+            }).join('');
+            const hasAnyData = !!(s.q7_保有 || s.q14_既存商品 || c.mortgage);
             return `
               <td class="col-urgency" style="display:none;">${urgencyTxt ? `<span style="background:${urgencyBg};color:${urgencyFg};padding:3px 9px;border-radius:11px;font-size:11px;font-weight:700;letter-spacing:0.02em;white-space:nowrap;">${escapeHtml(trim(urgencyTxt, 12))}</span>` : '<span style="color:var(--muted);font-size:11px;">-</span>'}</td>
               <td class="col-worry" style="display:none;font-size:12px;color:var(--ink-2);max-width:240px;">${s.q9_悩み ? escapeHtml(trim(s.q9_悩み, 60)) : '<span style="color:var(--muted);">-</span>'}</td>
               <td class="col-goal" style="display:none;font-size:12px;color:var(--ink-2);max-width:240px;">${s.q14_理想 ? escapeHtml(trim(s.q14_理想, 60)) : '<span style="color:var(--muted);">-</span>'}</td>
+              <td class="col-products" style="display:none;max-width:320px;">${hasAnyData ? `<div style="display:flex;flex-wrap:wrap;align-items:center;gap:0;line-height:1.6;">${productChips}</div>` : '<span style="color:var(--muted);font-size:11px;">アンケート未回答</span>'}</td>
             `;
           })()}
           <td>${(function(){
