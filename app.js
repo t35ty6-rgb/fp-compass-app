@@ -3670,12 +3670,19 @@
       const r = m.rel === 'spouse' ? '配偶者' : (m.rel === 'child' ? 'お子様' : m.rel);
       return { relation: r, name: m.name, age: window.LifeEvents.currentAge({ birth: m.birth }), birth: m.birth };
     });
-    let latestAi = null;
-    ((window.LineAppLiveData && window.LineAppLiveData.ai_results) || []).forEach(r => {
-      const match = (r.userId && r.userId === client.lineFriendId) || (r.customerName && r.customerName === client.name);
-      if (!match) return;
-      if (!latestAi || (r.ts || '') > (latestAi.createdAt || '')) latestAi = { summary: r.summary, transcript: r.transcript, createdAt: r.ts };
-    });
+    // ★ オーナーfb (v AU): Zoom 複数回 対応 — 過去 全 議事録 (最大 5回 / 古い順) を JSON に入れる
+    const allMeetings = ((window.LineAppLiveData && window.LineAppLiveData.ai_results) || [])
+      .filter(r => (r.userId && r.userId === client.lineFriendId) || (r.customerName && r.customerName === client.name))
+      .sort((a, b) => (a.ts || '').localeCompare(b.ts || ''))
+      .slice(-5)
+      .map((r, idx, arr) => ({
+        meetingNumber: idx + 1,
+        totalMeetings: arr.length,
+        recordedAt: r.ts || '',
+        date: r.ts ? r.ts.slice(0, 10) : '',
+        summary: r.summary || '',
+        transcript: r.transcript || '',
+      }));
     const fpName = (window.__fp?.tenantName || 'FP事務所').replace(/ — DEMO ビュー/, '');
 
     // JSON ペイロード
@@ -3699,11 +3706,7 @@
         status: client.status || '',
         lastContact: client.lastContact || '',
       },
-      meetingNotes: latestAi ? {
-        summary: latestAi.summary || '',
-        transcript: latestAi.transcript || '',
-        recordedAt: latestAi.createdAt || '',
-      } : null,
+      meetingNotes: allMeetings,
       proposals: (client.proposals || []).map(p => ({ date: p.date, title: p.title, result: p.result })),
       lineHistoryRecent: (client.lineHistory || []).slice(-10).map(m => ({ direction: m.direction || m.from, ts: m.ts, text: (m.text || '').slice(0, 200) })),
     };
@@ -3727,7 +3730,9 @@ ${JSON.stringify(jsonPayload, null, 2)}
 - meta.deliverableType: 何を作るか (cashflow / education / retire / insurance / inherit / custom)
 - meta.taskTitle: タイトル として 使う候補
 - customer: 年齢 / 職業 / 家族構成 / AUM / 住宅ローン / ステータス
-- meetingNotes.summary + transcript: 面談で何を 話したか (★ 必ず反映)
+- meetingNotes: 過去の議事録 配列 (古い順、 最大 5 回)。 各要素に summary / transcript / date / meetingNumber。
+  **必ず 全 議事録 を 読み 流れ を 把握** して 反映。 最新だけでなく 過去の発言の継続/変化 も 拾う。
+  例: 「初回 (1回目) に お話頂いた『教育費の不安』 → 3回目で『プラン定まってきた』 と 進展」
 - proposals: 過去の提案履歴 (重複しないよう 配慮)
 - lineHistoryRecent: 直近 LINE のやりとり
 
