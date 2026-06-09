@@ -1226,7 +1226,7 @@
       '12m': 365 * 86400 * 1000,
       '36m': 365 * 86400 * 1000 * 3,
       '120m': 365 * 86400 * 1000 * 10,
-      'all': 365 * 86400 * 1000 * 30,
+      'all': 365 * 86400 * 1000 * 60, // ★ 30年→60年 (29歳客でも 80歳節目まで 全部出るように)
     };
     const horizonMs = RANGE_MS[rangeOpt] || RANGE_MS['12m'];
     const horizonDate = new Date(TODAY.getTime() + horizonMs);
