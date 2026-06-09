@@ -3843,8 +3843,11 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
             if (!c) return;
             let changed = false;
             // 生年月日 (NEW項目) — '1985-01-01' 旧デフォルトも空扱い
+            // Sheets で ISO timestamp 化 (例 1985-04-11T15:00:00.000Z) されるので YYYY-MM-DD に正規化
             if ((!c.birth || c.birth === '1985-01-01') && s.q10_生年月日) {
-              c.birth = s.q10_生年月日;
+              const raw = String(s.q10_生年月日);
+              const birthYmd = /^\d{4}-\d{2}-\d{2}T/.test(raw) ? new Date(raw).toISOString().slice(0,10) : raw.slice(0,10);
+              c.birth = birthYmd;
               changed = true;
             }
             // 職業
