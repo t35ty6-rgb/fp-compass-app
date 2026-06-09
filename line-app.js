@@ -2555,17 +2555,26 @@
       if (idx >= 0) currentIdx = idx;
     }
 
-    const initialDate = (pendingByCustomer[currentIdx] && pendingByCustomer[currentIdx].candidates[0]) ? pendingByCustomer[currentIdx].candidates[0].dateStr.replace(/-/g, '') : '';
-    const calSrc = 'https://calendar.google.com/calendar/u/0/embed?mode=WEEK&showTitle=0&showPrint=0&showCalendars=1&showTabs=1&showNav=1&wkst=2&ctz=Asia%2FTokyo' + (initialDate ? '&dates=' + initialDate + '/' + initialDate : '');
+    // 起点日(候補日1つ目)の週初め (月曜) を計算
+    const startDate = pendingByCustomer[currentIdx] && pendingByCustomer[currentIdx].candidates[0]
+      ? new Date(pendingByCustomer[currentIdx].candidates[0].dateStr)
+      : new Date();
+    const dow = startDate.getDay();
+    const monOffset = (dow === 0 ? -6 : 1 - dow);
+    const weekStart = new Date(startDate); weekStart.setDate(startDate.getDate() + monOffset); weekStart.setHours(0,0,0,0);
+    panel.dataset.weekStart = weekStart.toISOString().slice(0,10);
+
     panel.innerHTML = `
       <div id="fp-cal-resize-v3" style="position:absolute;top:0;bottom:0;left:0;width:6px;cursor:ew-resize;z-index:2;background:transparent;"></div>
       <div style="padding:10px 14px;border-bottom:1px solid #e5e7eb;background:#fafbfc;display:flex;align-items:center;gap:8px;">
-        <strong style="flex:1;font-size:12.5px;">🗓 Google カレンダー (週表示)</strong>
-        <button id="fp-cal-popup-v3" title="別ウィンドウで開く" style="font-size:11px;padding:5px 10px;background:#fff;border:1px solid #e5e7eb;border-radius:6px;cursor:pointer;color:#374151;font-weight:600;font-family:inherit;">↗ 別窓</button>
+        <strong style="flex:1;font-size:12.5px;">🗓 自分のカレンダー (FP)</strong>
+        <button id="fp-cal-prev-v3" title="前週" style="font-size:13px;width:26px;height:26px;background:#fff;border:1px solid #e5e7eb;border-radius:6px;cursor:pointer;color:#374151;font-family:inherit;">‹</button>
+        <button id="fp-cal-today-v3" title="今週へ" style="font-size:11px;padding:5px 10px;background:#fff;border:1px solid #e5e7eb;border-radius:6px;cursor:pointer;color:#374151;font-weight:600;font-family:inherit;">今週</button>
+        <button id="fp-cal-next-v3" title="次週" style="font-size:13px;width:26px;height:26px;background:#fff;border:1px solid #e5e7eb;border-radius:6px;cursor:pointer;color:#374151;font-family:inherit;">›</button>
         <button id="fp-cal-close-v3" style="font-size:13px;width:26px;height:26px;background:#fff;border:1px solid #e5e7eb;border-radius:6px;cursor:pointer;color:#6b7280;font-family:inherit;">✕</button>
       </div>
       <div id="fp-cal-focus-section"></div>
-      <iframe id="fp-cal-iframe-v3" src="${calSrc}" style="flex:1;width:100%;border:none;display:block;background:#f8fafc;" referrerpolicy="no-referrer-when-downgrade"></iframe>
+      <div id="fp-cal-week-v3" style="flex:1;overflow-y:auto;background:#fff;padding:6px 4px 14px;"></div>
     `;
     document.body.appendChild(panel);
     document.body.style.paddingRight = width + 'px';
@@ -2573,13 +2582,93 @@
     if (btn) btn.textContent = '✕ カレンダーを閉じる';
 
     document.getElementById('fp-cal-close-v3').addEventListener('click', toggleCalendarSidePanel);
-    document.getElementById('fp-cal-popup-v3').addEventListener('click', () => {
-      const sw = window.screen.availWidth || screen.width;
-      const sh = window.screen.availHeight || screen.height;
-      const pw = Math.floor(sw / 2);
-      const ph = sh - 60;
-      window.open('https://calendar.google.com/calendar/u/0/r/week', 'fp-cal-popup', `width=${pw},height=${ph},left=${sw-pw},top=20,toolbar=no`);
+
+    // ★ 自前の週ビュー: GAS から FP カレンダー予定を fetch して描画
+    async function renderWeekView() {
+      const root = document.getElementById('fp-cal-week-v3');
+      if (!root) return;
+      const ws = new Date(panel.dataset.weekStart + 'T00:00:00');
+      const we = new Date(ws); we.setDate(ws.getDate() + 6); we.setHours(23,59,59,999);
+      const fromStr = ws.toISOString().slice(0,10);
+      const toStr = we.toISOString().slice(0,10);
+      const wkLabel = `${ws.getMonth()+1}月${ws.getDate()}日 〜 ${we.getMonth()+1}月${we.getDate()}日`;
+      root.innerHTML = `<div style="text-align:center;padding:8px;font-size:12px;color:#6b7280;font-weight:600;letter-spacing:0.04em;">${wkLabel}<span style="margin-left:8px;color:#9ca3af;font-weight:400;">読み込み中…</span></div>`;
+      try {
+        const r = await fetch(CLOUD_RUN_BASE + '/api/fp-events?from=' + fromStr + '&to=' + toStr);
+        const data = await r.json();
+        if (!data.ok) { root.innerHTML = `<div style="padding:24px;text-align:center;color:#dc2626;font-size:12px;">予定取得失敗: ${data.error||'unknown'}</div>`; return; }
+        // 候補日 (赤枠で強調)
+        const focused = pendingByCustomer[currentIdx];
+        const candidates = focused ? focused.candidates : [];
+        const candidateSet = new Set(candidates.map(c => c.dateStr));
+        // 7列 (月〜日)
+        const days = [];
+        for (let i = 0; i < 7; i++) {
+          const d = new Date(ws); d.setDate(ws.getDate() + i);
+          days.push(d);
+        }
+        const wdLabel = ['月','火','水','木','金','土','日'];
+        const today = new Date(); today.setHours(0,0,0,0);
+        const eventsByDay = days.map(d => {
+          const dKey = d.toISOString().slice(0,10);
+          return (data.events || []).filter(ev => {
+            const evDate = new Date(ev.start).toISOString().slice(0,10);
+            return evDate === dKey;
+          });
+        });
+        let html = '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;padding:0 6px 14px;">';
+        days.forEach((d, i) => {
+          const dKey = d.toISOString().slice(0,10);
+          const isToday = d.getTime() === today.getTime();
+          const isCandidate = candidateSet.has(dKey);
+          const evs = eventsByDay[i];
+          const headerBg = isCandidate ? 'linear-gradient(135deg,#fef3c7,#fde68a)' : (isToday ? '#dbeafe' : '#f3f4f6');
+          const headerColor = isCandidate ? '#92400e' : (isToday ? '#1e40af' : '#374151');
+          html += `
+            <div style="background:#fff;border:1.5px solid ${isCandidate ? '#f59e0b' : (isToday ? '#3b82f6' : '#e5e7eb')};border-radius:6px;min-height:240px;display:flex;flex-direction:column;">
+              <div style="background:${headerBg};color:${headerColor};padding:6px 4px;text-align:center;border-radius:4px 4px 0 0;font-size:10.5px;font-weight:700;letter-spacing:0.04em;">
+                ${wdLabel[i]} ${d.getMonth()+1}/${d.getDate()}
+                ${isCandidate ? '<div style="font-size:9.5px;margin-top:2px;font-weight:800;">候補日</div>' : ''}
+              </div>
+              <div style="padding:4px 3px;flex:1;display:flex;flex-direction:column;gap:2px;">
+                ${evs.length === 0 ? '<div style="text-align:center;font-size:10px;color:#cbd5e1;padding:8px 0;">予定なし</div>' : evs.slice(0,8).map(ev => {
+                  const st = new Date(ev.start);
+                  const tm = ev.allDay ? '終日' : String(st.getHours()).padStart(2,'0') + ':' + String(st.getMinutes()).padStart(2,'0');
+                  return `<div title="${escapeHtml(ev.title)} (${escapeHtml(ev.calendarName||'')})" style="background:#eff6ff;border-left:2px solid #3b82f6;padding:3px 5px;font-size:10px;color:#1e40af;border-radius:2px;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><span style="font-weight:700;">${tm}</span> ${escapeHtml(ev.title||'(無題)')}</div>`;
+                }).join('')}
+                ${evs.length > 8 ? `<div style="font-size:9px;color:#6b7280;text-align:center;">+${evs.length-8} 件</div>` : ''}
+              </div>
+            </div>
+          `;
+        });
+        html += '</div>';
+        html += '<div style="padding:8px 14px;font-size:10.5px;color:#6b7280;display:flex;gap:14px;flex-wrap:wrap;"><span style="display:inline-flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;background:#fde68a;border:1.5px solid #f59e0b;border-radius:2px;"></span>お客様候補日</span><span style="display:inline-flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;background:#dbeafe;border:1.5px solid #3b82f6;border-radius:2px;"></span>今日</span><span style="display:inline-flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;background:#eff6ff;border-left:2px solid #3b82f6;"></span>FP予定</span></div>';
+        root.innerHTML = html;
+      } catch (e) {
+        root.innerHTML = `<div style="padding:24px;text-align:center;color:#dc2626;font-size:12px;">通信失敗: ${e.message}</div>`;
+      }
+    }
+    document.getElementById('fp-cal-prev-v3').addEventListener('click', () => {
+      const d = new Date(panel.dataset.weekStart + 'T00:00:00');
+      d.setDate(d.getDate() - 7);
+      panel.dataset.weekStart = d.toISOString().slice(0,10);
+      renderWeekView();
     });
+    document.getElementById('fp-cal-next-v3').addEventListener('click', () => {
+      const d = new Date(panel.dataset.weekStart + 'T00:00:00');
+      d.setDate(d.getDate() + 7);
+      panel.dataset.weekStart = d.toISOString().slice(0,10);
+      renderWeekView();
+    });
+    document.getElementById('fp-cal-today-v3').addEventListener('click', () => {
+      const t = new Date(); t.setHours(0,0,0,0);
+      const dow = t.getDay();
+      const monOff = (dow === 0 ? -6 : 1 - dow);
+      t.setDate(t.getDate() + monOff);
+      panel.dataset.weekStart = t.toISOString().slice(0,10);
+      renderWeekView();
+    });
+    renderWeekView();
 
     // 顧客フォーカス枠を再描画 (1人ずつ集中モード)
     function renderFocusSection() {
@@ -2652,10 +2741,13 @@
     }
     function jumpIframeTo(customer) {
       if (!customer || !customer.candidates[0]) return;
-      const dateOnly = customer.candidates[0].dateStr.replace(/-/g, '');
-      const newSrc = 'https://calendar.google.com/calendar/embed?mode=WEEK&showTitle=0&showPrint=0&showCalendars=0&showTabs=1&showNav=1&wkst=2&ctz=Asia%2FTokyo&dates=' + dateOnly + '/' + dateOnly;
-      const iframe = document.getElementById('fp-cal-iframe-v3');
-      if (iframe) iframe.src = newSrc;
+      // 候補日の週へ ジャンプ (自前 週ビュー)
+      const d = new Date(customer.candidates[0].dateStr);
+      const dow = d.getDay();
+      const monOffset = (dow === 0 ? -6 : 1 - dow);
+      d.setDate(d.getDate() + monOffset); d.setHours(0,0,0,0);
+      panel.dataset.weekStart = d.toISOString().slice(0,10);
+      if (typeof renderWeekView === 'function') renderWeekView();
     }
     function bindCandidateRows() {
       const cur = pendingByCustomer[currentIdx];
@@ -2668,10 +2760,13 @@
         // 日付タップ → iframe ジャンプ + ハイライト
         const jumpBtn = row.querySelector('.fp-cand-jump');
         jumpBtn.addEventListener('click', () => {
-          const dateOnly = dateStr.replace(/-/g, '');
-          const newSrc = 'https://calendar.google.com/calendar/embed?mode=WEEK&showTitle=0&showPrint=0&showCalendars=0&showTabs=1&showNav=1&wkst=2&ctz=Asia%2FTokyo&dates=' + dateOnly + '/' + dateOnly;
-          const iframe = document.getElementById('fp-cal-iframe-v3');
-          if (iframe) iframe.src = newSrc;
+          // 候補日の週へ ジャンプ (自前 週ビュー)
+          const d = new Date(dateStr);
+          const dow = d.getDay();
+          const monOffset = (dow === 0 ? -6 : 1 - dow);
+          d.setDate(d.getDate() + monOffset); d.setHours(0,0,0,0);
+          panel.dataset.weekStart = d.toISOString().slice(0,10);
+          if (typeof renderWeekView === 'function') renderWeekView();
           panel.querySelectorAll('[data-cand-row]').forEach(c => { c.style.background = '#fff'; c.style.boxShadow = ''; });
           row.style.background = '#fef2f2';
           row.style.boxShadow = '0 0 0 3px #fca5a5';
@@ -2760,23 +2855,7 @@
     };
     renderFocusSection();
 
-    // 4秒後に iframe ロード成否を確認 (cross-originなのでアクセスはできないが幅でestimate)
-    setTimeout(() => {
-      const iframe = document.getElementById('fp-cal-iframe-v3');
-      if (!iframe) return;
-      try {
-        const ok = iframe.contentWindow && iframe.contentWindow.length > 0;
-        // 万一空白なら自動で別窓フォールバック
-        if (!ok && iframe.offsetHeight > 200) {
-          // 念のため画面に小さなヘルプを上に貼る
-          const helper = document.createElement('div');
-          helper.style.cssText = 'position:absolute;top:50px;left:14px;right:14px;background:#fffbf2;border:1px solid #f0d36b;border-radius:8px;padding:10px 14px;font-size:11.5px;color:#5e4d1a;z-index:3;line-height:1.5;';
-          helper.innerHTML = 'カレンダーが空白の場合: 上の <strong>↗ 別窓</strong> ボタンで別ウィンドウで開いてください。';
-          panel.appendChild(helper);
-          setTimeout(() => helper.remove(), 8000);
-        }
-      } catch (_) { /* cross-origin = normal */ }
-    }, 5000);
+    // ★ 自前 週ビュー化により iframe フォールバック helper は撤去
 
     // リサイズ
     const handle = document.getElementById('fp-cal-resize-v3');
