@@ -3708,11 +3708,18 @@
       lineHistoryRecent: (client.lineHistory || []).slice(-10).map(m => ({ direction: m.direction || m.from, ts: m.ts, text: (m.text || '').slice(0, 200) })),
     };
 
-    // ★ オーナーfb (v AS): タイプ別プロンプト廃止 → 1 つのマスタープロンプト で全タイプ対応
-    // (JSON.meta.deliverableType + taskTitle で 何を作るかは伝わる)
+    // ★ オーナーfb (v AT): prompt.txt 単体で完結するよう JSON を 中に 埋め込む。
+    // (FP事業者 が ファイル を Claude Code に渡すだけで そのまま動く)
     const prompt = `あなたは 経験豊富な FP (ファイナンシャル・プランナー) 兼 編集デザイナー です。
-添付の customer-data.json には お客様の情報・面談議事録・提案履歴 が 入っています。
-このデータ を 元に お客様 1人 だけ のために 作り込んだ A4 1枚 の HTML 資料 を 作成してください。
+下記 「顧客データ JSON」 を 元に お客様 1人 だけ のために 作り込んだ A4 1枚 の HTML 資料 を 作成してください。
+
+═══════════════════════════════════════════════
+【顧客データ JSON】
+═══════════════════════════════════════════════
+\`\`\`json
+${JSON.stringify(jsonPayload, null, 2)}
+\`\`\`
+═══════════════════════════════════════════════
 
 ═══════════════════════════════════════════════
 【STEP 1 — JSON を よく 読む】
@@ -3786,11 +3793,12 @@ table tbody tr:nth-child(even) { background: #F7F5EE; }
 
 それでは 作成してください。`;
 
-    // 2 ファイル DL
+    // ★ JSON は prompt 内に 埋め込み済 → ファイルは 1つだけ。 prompt.txt を 落とせば 完結
     const customerSlug = (client.name || 'customer').replace(/[\/\\\s]+/g, '_');
     const stamp = new Date().toISOString().slice(0, 10);
-    downloadAsFile(`${customerSlug}_${type}_${stamp}.json`, JSON.stringify(jsonPayload, null, 2), 'application/json');
     downloadAsFile(`${customerSlug}_${type}_${stamp}_prompt.txt`, prompt, 'text/plain');
+    // バックアップとして JSON 単体も同時に DL (検証/編集 したい人用)
+    downloadAsFile(`${customerSlug}_${type}_${stamp}_data.json`, JSON.stringify(jsonPayload, null, 2), 'application/json');
 
     // 完了モーダル
     const overlay = document.createElement('div');
@@ -3803,20 +3811,22 @@ table tbody tr:nth-child(even) { background: #F7F5EE; }
         </div>
         <div style="padding:22px 26px;">
           <div style="background:#F0FDF4;border:1px solid #86EFAC;border-radius:8px;padding:14px;margin-bottom:14px;">
-            <div style="font-size:11.5px;font-weight:800;color:#065F46;margin-bottom:8px;">📦 ダウンロードされたファイル</div>
+            <div style="font-size:11.5px;font-weight:800;color:#065F46;margin-bottom:8px;">📦 ダウンロードされたファイル (2件)</div>
             <div style="font-family:Menlo,monospace;font-size:11.5px;color:#1F1A12;line-height:1.8;">
-              📄 ${escapeHtml(customerSlug)}_${type}_${stamp}.json<br>
-              📝 ${escapeHtml(customerSlug)}_${type}_${stamp}_prompt.txt
+              📝 ${escapeHtml(customerSlug)}_${type}_${stamp}_prompt.txt ← <strong style="color:#065F46;">これだけ 使えば OK</strong><br>
+              📄 ${escapeHtml(customerSlug)}_${type}_${stamp}_data.json <span style="color:#8B7D5D;">(バックアップ / 中身は prompt に 同梱済)</span>
             </div>
           </div>
           <div style="font-size:12.5px;color:#1F1A12;line-height:1.85;">
-            <strong style="font-family:'Noto Serif JP',serif;color:#1F1A12;">使い方</strong>
+            <strong style="font-family:'Noto Serif JP',serif;color:#1F1A12;">使い方 (超シンプル)</strong>
             <ol style="margin:8px 0 0 0;padding-left:20px;color:#5E5648;">
-              <li>ターミナル (or Claude Code アプリ) を 開く</li>
-              <li>2 ファイルを Claude Code に <strong>ドラッグ&ドロップ</strong></li>
-              <li>「<code style="background:#F1ECDF;padding:1px 5px;border-radius:3px;font-size:11px;">prompt.txt の内容で 資料を作って</code>」 と 送信</li>
-              <li>1〜2 分で HTML ができる → <code style="background:#F1ECDF;padding:1px 5px;border-radius:3px;font-size:11px;">.html</code> に保存 → Chromeで開いて 印刷 → PDF 保存</li>
+              <li><code style="background:#F1ECDF;padding:1px 5px;border-radius:3px;font-size:11px;">prompt.txt</code> をエディタで開いて 全文 コピー</li>
+              <li>Claude Code (or claude.ai / Anthropic Console) に そのまま 貼り付けて送信</li>
+              <li>1〜2 分で HTML ができる → <code style="background:#F1ECDF;padding:1px 5px;border-radius:3px;font-size:11px;">.html</code> で 保存 → Chrome で開いて 印刷 → PDF 保存</li>
             </ol>
+            <div style="margin-top:10px;padding:8px 12px;background:#FFFBEB;border-left:3px solid #C19A3A;border-radius:6px;font-size:11.5px;color:#5E4D1A;line-height:1.7;">
+              💡 prompt.txt の中に お客様データ (JSON) が 全部 埋まってます。 これ 1 つで 完結。
+            </div>
           </div>
         </div>
         <div style="padding:14px 26px;background:#FDFBF4;border-top:1px solid #E8E2D4;display:flex;justify-content:flex-end;">
