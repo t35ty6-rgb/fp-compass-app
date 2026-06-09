@@ -2554,6 +2554,7 @@
 
             <!-- TIMELINE -->
             <div class="cd-tabpanel" data-cdpanel="timeline" hidden>
+              ${lifeCtaCard}
               <div class="cd-tl-list">${timelineHtml2}</div>
               ${events.length > 12 ? `<div class="cd-tl-more">他 ${events.length - 12} 件...</div>` : ''}
             </div>
