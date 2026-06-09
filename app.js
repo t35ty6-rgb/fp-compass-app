@@ -3158,20 +3158,21 @@
           <table style="width:100%;border-collapse:collapse;border-top:1px solid #E2E8F0;">
             <tbody>
               ${row('お名前', escapeHtml(client.name) + ' 様')}
-              ${row('ご相談テーマ', escapeHtml(s.q1_テーマ || ''))}
-              ${row('年代', escapeHtml(s.q2_年代 || ''))}
+              ${row('年代', escapeHtml(s.q1_年代 || ''))}
+              ${row('ご職業', escapeHtml(s.q2_職業 || client.occupation || ''))}
               ${row('ご家族構成', escapeHtml(s.q3_家族 || familyTxt))}
               ${row('世帯年収', escapeHtml(s.q4_年収 || ''))}
-              ${row('一番気になっている / 不安なこと', escapeHtml(s.q5_悩み || ''))}
-              ${row('面談候補日 ①', escapeHtml(s.q6_候補1 || ''))}
-              ${row('面談候補日 ②', escapeHtml(s.q7_候補2 || ''))}
-              ${row('面談候補日 ③', escapeHtml(s.q8_候補3 || ''))}
-              ${s.q9_職業 ? row('ご職業', escapeHtml(s.q9_職業)) : ''}
-              ${s.q10_住居 ? row('住居形態', escapeHtml(s.q10_住居)) : ''}
-              ${s.q11_生年月日 ? row('生年月日', escapeHtml(s.q11_生年月日)) : ''}
-              ${s.q12_理想 ? row('5〜10年後のご希望', escapeHtml(s.q12_理想)) : ''}
-              ${s.q13_緊急度 ? row('ご相談の緊急度', escapeHtml(s.q13_緊急度)) : ''}
-              ${s.q14_既存商品 ? row('既にご加入の保険 / 運用商品', escapeHtml(s.q14_既存商品)) : ''}
+              ${row('住居形態', escapeHtml(s.q5_住居 || ''))}
+              ${row('金融資産', escapeHtml(s.q6_資産 || ''))}
+              ${row('保有商品', escapeHtml(s.q7_保有 || ''))}
+              ${row('相談テーマ', escapeHtml(s.q8_テーマ || ''))}
+              ${row('具体的な相談内容', escapeHtml(s.q9_悩み || ''))}
+              ${s.q10_生年月日 ? row('生年月日', escapeHtml(s.q10_生年月日)) : ''}
+              ${s.q14_理想 ? row('5〜10年後のご希望', escapeHtml(s.q14_理想)) : ''}
+              ${s.q15_緊急度 ? row('ご相談の緊急度', escapeHtml(s.q15_緊急度)) : ''}
+              ${row('面談候補日 ①', escapeHtml(s.q11_候補1 || ''))}
+              ${row('面談候補日 ②', escapeHtml(s.q12_候補2 || ''))}
+              ${row('面談候補日 ③', escapeHtml(s.q13_候補3 || ''))}
             </tbody>
           </table>
           <div style="margin-top:18px;font-size:11px;color:#94A3B8;text-align:right;">© Skeleton Inc. / FP Compass</div>
@@ -3688,23 +3689,24 @@
       }));
     const fpName = (window.__fp?.tenantName || 'FP事務所').replace(/ — DEMO ビュー/, '');
 
-    // ★ v AV: 事前アンケート (LSTEP q1〜q14) を JSON に埋め込み
+    // ★ 事前アンケート (proxy/index.js 本番スキーマ q1_年代〜q15_緊急度) を JSON に埋め込み
     const surveys = ((window.LineAppLiveData && window.LineAppLiveData.survey_answers) || [])
       .filter(s => (s.userId && s.userId === client.lineFriendId) || (s.displayName && s.displayName === client.name) || (s.name && s.name === client.name))
       .sort((a, b) => (b.ts || '').localeCompare(a.ts || ''));
     const latestSurvey = surveys[0] || null;
     const surveyAnswers = latestSurvey ? {
-      テーマ: latestSurvey.q1_テーマ || '',
-      年代: latestSurvey.q2_年代 || '',
+      年代: latestSurvey.q1_年代 || '',
+      職業: latestSurvey.q2_職業 || client.occupation || '',
       家族構成: latestSurvey.q3_家族 || '',
       世帯年収: latestSurvey.q4_年収 || '',
-      一番の悩み: latestSurvey.q5_悩み || '',
-      ご職業: latestSurvey.q9_職業 || client.occupation || '',
-      住居形態: latestSurvey.q10_住居 || '',
-      生年月日: latestSurvey.q11_生年月日 || client.birth || '',
-      'こうなりたい(5-10年後)': latestSurvey.q12_理想 || '',
-      緊急度: latestSurvey.q13_緊急度 || '',
-      既存商品: latestSurvey.q14_既存商品 || '',
+      住居形態: latestSurvey.q5_住居 || '',
+      金融資産: latestSurvey.q6_資産 || '',
+      保有商品: latestSurvey.q7_保有 || '',
+      相談テーマ: latestSurvey.q8_テーマ || '',
+      具体的悩み: latestSurvey.q9_悩み || '',
+      生年月日: latestSurvey.q10_生年月日 || client.birth || '',
+      'こうなりたい(5-10年後)': latestSurvey.q14_理想 || '',
+      緊急度: latestSurvey.q15_緊急度 || '',
     } : null;
 
     // JSON ペイロード
