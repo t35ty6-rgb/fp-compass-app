@@ -4226,6 +4226,14 @@ table tbody tr:nth-child(even) { background: #F7F5EE; }
         }),
       });
       const d = await r.json();
+      // ★ 残高/billing/API key 失敗時 → triggerDeliverable (JSON+プロンプトDL) に自動フォールバック
+      if (!d.ok && /credit balance|billing|low|api key|not_found_error|401|403|429/i.test(d.error || '')) {
+        if (progressPill && progressPill._fpDone) progressPill._fpDone(false, '残高不足 → JSON+プロンプトDLに切替');
+        try {
+          triggerDeliverable(client, type, taskTitle);
+        } catch (e) { console.warn('fallback triggerDeliverable fail:', e); }
+        return;
+      }
       if (progressPill && progressPill._fpDone) progressPill._fpDone(d.ok && d.html, d.ok ? null : (d.error || '生成失敗'));
       if (d.ok && d.html) {
         // ★ AI下書きフェーズ2の並列生成完了 → グローバルに格納して送信時に自動添付
@@ -4332,7 +4340,12 @@ table tbody tr:nth-child(even) { background: #F7F5EE; }
                 }),
               });
               const dd = await rr.json();
-              if (dd.ok && dd.html) {
+              // ★ 残高/billing 切れ時 → 修正指示+現HTML を clipboard コピーして 自身の Claude Code 案内
+              if (!dd.ok && /credit balance|billing|low|api key|not_found_error|401|403|429/i.test(dd.error || '')) {
+                const promptTxt = '以下のHTML資料を、 指示に従って 修正してください。 修正後のHTML全文 (前置きや説明は不要、 HTMLのみ) を 返してください。\n\n【修正指示】\n' + instr + '\n\n【元の成果物HTML】\n' + currentHtml;
+                try { await navigator.clipboard.writeText(promptTxt); } catch (_) {}
+                alert('Anthropic API 残高切れのため、 修正指示+元HTML を クリップボードに コピーしました。\nご自身の Claude Code (claude.ai/new) に貼り付けて 修正版を 取得し、 編集枠に 貼り戻して下さい。');
+              } else if (dd.ok && dd.html) {
                 const w2 = document.createElement('div'); w2.innerHTML = dd.html;
                 const nc = w2.querySelector('.fp-deliv-content') || w2;
                 if (editable) {
@@ -5409,6 +5422,13 @@ ${client.name}さん、ありがとうございます。
         const d = await r.json();
         overlay.style.display = 'none';
         btn.disabled = false; btn.style.opacity = '1';
+        // ★ 残高/billing 切れ時 → プロンプト+顧客情報 を clipboard コピー
+        if (!d.ok && /credit balance|billing|low|api key|not_found_error|401|403|429/i.test(d.error || '')) {
+          const promptTxt = (typeof aiCtx === 'string' ? aiCtx : '') + '\n\n--- 元タスク ---\n' + (taskTitle || '');
+          try { await navigator.clipboard.writeText(promptTxt); } catch (_) {}
+          alert('Anthropic API 残高切れ。 \n下書き生成プロンプトを クリップボードに コピーしました。\nご自身の Claude Code に貼り付けて 返信下書きを 作成してください。');
+          return;
+        }
         if (d.ok && d.html) {
           // ★ オーナーfb「HTMLタグがそのまま出る」: Claude の返答から JSON 抽出
           let parsed = null;
