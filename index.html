@@ -939,16 +939,20 @@
               <option value="event-near">直近ライフイベント 順</option>
             </select>
             <span class="count" id="client-count">—</span>
+            <button id="client-col-config" title="列の表示/非表示" style="margin-left:auto;background:#fff;border:1.5px solid #e3e7ee;color:#1B3A5C;padding:6px 12px;border-radius:7px;font-size:12.5px;font-weight:600;cursor:pointer;letter-spacing:0.04em;display:inline-flex;align-items:center;gap:4px;">⚙ 列</button>
           </div>
           <table class="clients">
-            <thead>
+            <thead id="client-thead">
               <tr>
                 <th>顧客</th>
                 <th>年齢</th>
-                <th class="hide-mobile">職業</th>
-                <th>家族</th>
+                <th class="hide-mobile col-occ">職業</th>
+                <th class="col-family">家族</th>
+                <th class="col-urgency" style="display:none;">緊急度</th>
+                <th class="col-worry" style="display:none;">一番の悩み</th>
+                <th class="col-goal" style="display:none;">5-10年後の希望</th>
                 <th>状態</th>
-                <th style="text-align:right;">管理資産</th>
+                <th class="col-aum" style="text-align:right;">管理資産</th>
                 <th>最終接触</th>
               </tr>
             </thead>
@@ -1053,7 +1057,7 @@ window.fpReadyAfterAuth = function() {
   ];
   legacyDemoKeys.forEach(k => { try { localStorage.removeItem(k); } catch (_) {} });
 
-  const ver = "20260609K-hearing-always-visible";
+  const ver = "20260609L-cols-and-calendar";
   const scripts = [
     "life-events.js?v=" + ver,
     "recommender.js?v=" + ver,
@@ -1369,7 +1373,7 @@ window.fpReadyAfterAuth = function() {
 <script>
 (function(){
   // 最新の ver を 1 箇所に集約 (fpReadyAfterAuth 側と一致させる必要あり)
-  const FP_VERSION = "20260609K-hearing-always-visible";
+  const FP_VERSION = "20260609L-cols-and-calendar";
   const loadTime = new Date();
   const hhmm = String(loadTime.getHours()).padStart(2,'0') + ':' + String(loadTime.getMinutes()).padStart(2,'0');
   const dateLabel = (FP_VERSION.match(/^(\d{4})(\d{2})(\d{2})/) || []).slice(1).join('/').replace(/^(\d{4})\//,'$1/').replace(/\/(\d{2})\/(\d{2})$/,'/$1/$2') || FP_VERSION;

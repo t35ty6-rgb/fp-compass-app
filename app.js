@@ -881,6 +881,70 @@
     });
   }
 
+  // ★ 列カスタマイズ: localStorage 保存式
+  const COL_PREF_KEY = 'fp-crm-cols-v1';
+  const COL_DEFS = [
+    { id: 'col-occ',     label: '職業',         default: true },
+    { id: 'col-family',  label: '家族',         default: true },
+    { id: 'col-urgency', label: '緊急度',       default: true },
+    { id: 'col-worry',   label: '一番の悩み',   default: false },
+    { id: 'col-goal',    label: '5-10年後の希望', default: false },
+    { id: 'col-aum',     label: '管理資産',     default: true },
+  ];
+  function getColPrefs() {
+    try {
+      const stored = JSON.parse(localStorage.getItem(COL_PREF_KEY) || '{}');
+      const merged = {};
+      COL_DEFS.forEach(c => { merged[c.id] = stored[c.id] !== undefined ? stored[c.id] : c.default; });
+      return merged;
+    } catch (_) { return Object.fromEntries(COL_DEFS.map(c => [c.id, c.default])); }
+  }
+  function saveColPrefs(prefs) { try { localStorage.setItem(COL_PREF_KEY, JSON.stringify(prefs)); } catch (_) {} }
+  function applyColPrefs() {
+    const prefs = getColPrefs();
+    COL_DEFS.forEach(c => {
+      document.querySelectorAll('.' + c.id).forEach(el => {
+        el.style.display = prefs[c.id] ? '' : 'none';
+      });
+    });
+  }
+  function openColConfigPopover(anchor) {
+    const existing = document.getElementById('col-config-pop');
+    if (existing) { existing.remove(); return; }
+    const prefs = getColPrefs();
+    const rect = anchor.getBoundingClientRect();
+    const pop = document.createElement('div');
+    pop.id = 'col-config-pop';
+    pop.style.cssText = `position:fixed;top:${rect.bottom + 6}px;right:${window.innerWidth - rect.right}px;background:#fff;border:1px solid #e3e7ee;border-radius:10px;box-shadow:0 12px 32px rgba(0,0,0,0.18);padding:12px 14px;z-index:10010;min-width:220px;font-family:inherit;`;
+    pop.innerHTML = `
+      <div style="font-size:11.5px;color:#7b8499;font-weight:700;letter-spacing:0.08em;margin-bottom:8px;">列の表示</div>
+      ${COL_DEFS.map(c => `
+        <label style="display:flex;align-items:center;gap:8px;padding:6px 4px;cursor:pointer;font-size:13px;">
+          <input type="checkbox" data-col="${c.id}" ${prefs[c.id] ? 'checked' : ''} style="width:16px;height:16px;cursor:pointer;accent-color:#1B3A5C;">
+          ${c.label}
+        </label>
+      `).join('')}
+      <div style="margin-top:8px;padding-top:8px;border-top:1px solid #f0f2f7;font-size:10.5px;color:#7b8499;">アンケート回答が無いお客様は「-」表示</div>
+    `;
+    document.body.appendChild(pop);
+    pop.querySelectorAll('input[data-col]').forEach(cb => {
+      cb.addEventListener('change', () => {
+        const p = getColPrefs();
+        p[cb.dataset.col] = cb.checked;
+        saveColPrefs(p);
+        applyColPrefs();
+      });
+    });
+    setTimeout(() => {
+      document.addEventListener('click', function onOut(e) {
+        if (!pop.contains(e.target) && e.target !== anchor) {
+          pop.remove();
+          document.removeEventListener('click', onOut);
+        }
+      });
+    }, 0);
+  }
+
   function renderClients() {
     const searchEl = document.getElementById('client-search');
     const filterEl = document.getElementById('status-filter');
@@ -994,8 +1058,22 @@
             </div>
           </td>
           <td>${window.LifeEvents.currentAge(c) ?? '<span style="color:var(--muted);">-</span>'}</td>
-          <td class="hide-mobile">${escapeHtml(c.occupation)}</td>
-          <td>${familyTxt}</td>
+          <td class="hide-mobile col-occ">${escapeHtml(c.occupation)}</td>
+          <td class="col-family">${familyTxt}</td>
+          ${(function(){
+            // ★ アンケート q15_緊急度 / q9_悩み / q14_理想 を列挿入 (列設定でON時のみ表示)
+            const surveys = (window.LineAppLiveData && window.LineAppLiveData.survey_answers) || [];
+            const s = surveys.find(x => (x.userId && x.userId === c.lineFriendId) || (x.name && x.name === c.name)) || {};
+            const trim = (v, n) => { v = String(v || '').trim(); return v.length > n ? v.slice(0, n) + '…' : v; };
+            const urgencyTxt = s.q15_緊急度 || '';
+            const urgencyBg = /すぐ/.test(urgencyTxt) ? '#fee2e2' : /数ヶ月/.test(urgencyTxt) ? '#fef3c7' : /情報/.test(urgencyTxt) ? '#e0e7ff' : '#f3f4f6';
+            const urgencyFg = /すぐ/.test(urgencyTxt) ? '#991b1b' : /数ヶ月/.test(urgencyTxt) ? '#92400e' : /情報/.test(urgencyTxt) ? '#3730a3' : '#6b7280';
+            return `
+              <td class="col-urgency" style="display:none;">${urgencyTxt ? `<span style="background:${urgencyBg};color:${urgencyFg};padding:3px 9px;border-radius:11px;font-size:11px;font-weight:700;letter-spacing:0.02em;white-space:nowrap;">${escapeHtml(trim(urgencyTxt, 12))}</span>` : '<span style="color:var(--muted);font-size:11px;">-</span>'}</td>
+              <td class="col-worry" style="display:none;font-size:12px;color:var(--ink-2);max-width:240px;">${s.q9_悩み ? escapeHtml(trim(s.q9_悩み, 60)) : '<span style="color:var(--muted);">-</span>'}</td>
+              <td class="col-goal" style="display:none;font-size:12px;color:var(--ink-2);max-width:240px;">${s.q14_理想 ? escapeHtml(trim(s.q14_理想, 60)) : '<span style="color:var(--muted);">-</span>'}</td>
+            `;
+          })()}
           <td>${(function(){
             // ★ オーナーfb「客返信あったら赤バッジ」: 未読カウント
             const lastRead = parseInt(localStorage.getItem('fp-line-read-' + c.id) || '0', 10);
@@ -1026,6 +1104,13 @@
         openTasksListModal(btn.dataset.taskCid, btn.dataset.taskName);
       });
     });
+    // 列カスタマイズボタン (一度だけバインド) + 初期適用
+    const colBtn = document.getElementById('client-col-config');
+    if (colBtn && !colBtn._bound) {
+      colBtn._bound = true;
+      colBtn.addEventListener('click', (e) => { e.stopPropagation(); openColConfigPopover(colBtn); });
+    }
+    applyColPrefs();
   }
 
   // 顧客のタスク一覧を表示

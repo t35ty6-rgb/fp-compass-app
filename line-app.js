@@ -2556,7 +2556,7 @@
     }
 
     const initialDate = (pendingByCustomer[currentIdx] && pendingByCustomer[currentIdx].candidates[0]) ? pendingByCustomer[currentIdx].candidates[0].dateStr.replace(/-/g, '') : '';
-    const calSrc = 'https://calendar.google.com/calendar/embed?mode=WEEK&showTitle=0&showPrint=0&showCalendars=0&showTabs=1&showNav=1&wkst=2&ctz=Asia%2FTokyo' + (initialDate ? '&dates=' + initialDate + '/' + initialDate : '');
+    const calSrc = 'https://calendar.google.com/calendar/u/0/embed?mode=WEEK&showTitle=0&showPrint=0&showCalendars=1&showTabs=1&showNav=1&wkst=2&ctz=Asia%2FTokyo' + (initialDate ? '&dates=' + initialDate + '/' + initialDate : '');
     panel.innerHTML = `
       <div id="fp-cal-resize-v3" style="position:absolute;top:0;bottom:0;left:0;width:6px;cursor:ew-resize;z-index:2;background:transparent;"></div>
       <div style="padding:10px 14px;border-bottom:1px solid #e5e7eb;background:#fafbfc;display:flex;align-items:center;gap:8px;">
