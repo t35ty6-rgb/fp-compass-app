@@ -3793,48 +3793,51 @@ table tbody tr:nth-child(even) { background: #F7F5EE; }
 
 それでは 作成してください。`;
 
-    // ★ JSON は prompt 内に 埋め込み済 → ファイルは 1つだけ。 prompt.txt を 落とせば 完結
+    // ★ オーナーfb (v AT): クリップボードに自動コピー + claude.ai 新タブで開く で「貼り付けるだけ」 にする
+    let copied = false;
+    try { await navigator.clipboard.writeText(prompt); copied = true; } catch (_) {}
+
+    // バックアップ DL (上級者用)
     const customerSlug = (client.name || 'customer').replace(/[\/\\\s]+/g, '_');
     const stamp = new Date().toISOString().slice(0, 10);
     downloadAsFile(`${customerSlug}_${type}_${stamp}_prompt.txt`, prompt, 'text/plain');
-    // バックアップとして JSON 単体も同時に DL (検証/編集 したい人用)
-    downloadAsFile(`${customerSlug}_${type}_${stamp}_data.json`, JSON.stringify(jsonPayload, null, 2), 'application/json');
 
-    // 完了モーダル
+    // 完了モーダル — 超シンプル 1ステップ
     const overlay = document.createElement('div');
-    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.62);backdrop-filter:blur(4px);z-index:10080;display:flex;align-items:center;justify-content:center;padding:20px;font-family:"Noto Sans JP",sans-serif;';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.7);backdrop-filter:blur(6px);z-index:10080;display:flex;align-items:center;justify-content:center;padding:20px;font-family:"Noto Sans JP",sans-serif;';
     overlay.innerHTML = `
-      <div style="background:#fff;max-width:560px;width:100%;border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,0.35);overflow:hidden;">
-        <div style="background:linear-gradient(135deg,#10B981,#059669);color:#fff;padding:22px 26px;">
-          <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:10.5px;letter-spacing:0.2em;opacity:0.88;text-transform:uppercase;margin-bottom:5px;">DOWNLOAD READY</div>
-          <h3 style="margin:0;font-family:'Noto Serif JP',serif;font-weight:700;font-size:18px;">✓ 2ファイルを ダウンロードしました</h3>
+      <div style="background:#fff;max-width:520px;width:100%;border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,0.35);overflow:hidden;">
+        <div style="background:linear-gradient(135deg,#10B981,#059669);color:#fff;padding:26px 28px;text-align:center;">
+          <div style="font-size:42px;margin-bottom:6px;">✓</div>
+          <h3 style="margin:0;font-family:'Noto Serif JP',serif;font-weight:700;font-size:20px;">${copied ? '指示文を コピーしました' : 'ダウンロード しました'}</h3>
+          <p style="margin:6px 0 0;font-size:12.5px;opacity:0.92;line-height:1.6;">この後、 やることは <strong>2つだけ</strong></p>
         </div>
-        <div style="padding:22px 26px;">
-          <div style="background:#F0FDF4;border:1px solid #86EFAC;border-radius:8px;padding:14px;margin-bottom:14px;">
-            <div style="font-size:11.5px;font-weight:800;color:#065F46;margin-bottom:8px;">📦 ダウンロードされたファイル (2件)</div>
-            <div style="font-family:Menlo,monospace;font-size:11.5px;color:#1F1A12;line-height:1.8;">
-              📝 ${escapeHtml(customerSlug)}_${type}_${stamp}_prompt.txt ← <strong style="color:#065F46;">これだけ 使えば OK</strong><br>
-              📄 ${escapeHtml(customerSlug)}_${type}_${stamp}_data.json <span style="color:#8B7D5D;">(バックアップ / 中身は prompt に 同梱済)</span>
-            </div>
+        <div style="padding:24px 28px;">
+          <div style="background:linear-gradient(135deg,#FDFBF4,#FAF6E8);border:1px solid #E8C56F;border-radius:10px;padding:18px;margin-bottom:14px;">
+            <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:10.5px;letter-spacing:0.16em;color:#C19A3A;margin-bottom:8px;">STEP 1</div>
+            <p style="margin:0;font-size:14px;font-weight:700;color:#1F1A12;line-height:1.65;">下のボタンを 押す → Claude が 開きます</p>
+            <button id="fp-open-claude" style="margin-top:12px;width:100%;background:#1F1A12;color:#FFE9A8;border:none;padding:14px;border-radius:8px;font-size:14px;font-weight:900;cursor:pointer;font-family:inherit;letter-spacing:0.06em;">🌐 Claude を 開く →</button>
           </div>
-          <div style="font-size:12.5px;color:#1F1A12;line-height:1.85;">
-            <strong style="font-family:'Noto Serif JP',serif;color:#1F1A12;">使い方 (超シンプル)</strong>
-            <ol style="margin:8px 0 0 0;padding-left:20px;color:#5E5648;">
-              <li><code style="background:#F1ECDF;padding:1px 5px;border-radius:3px;font-size:11px;">prompt.txt</code> をエディタで開いて 全文 コピー</li>
-              <li>Claude Code (or claude.ai / Anthropic Console) に そのまま 貼り付けて送信</li>
-              <li>1〜2 分で HTML ができる → <code style="background:#F1ECDF;padding:1px 5px;border-radius:3px;font-size:11px;">.html</code> で 保存 → Chrome で開いて 印刷 → PDF 保存</li>
-            </ol>
-            <div style="margin-top:10px;padding:8px 12px;background:#FFFBEB;border-left:3px solid #C19A3A;border-radius:6px;font-size:11.5px;color:#5E4D1A;line-height:1.7;">
-              💡 prompt.txt の中に お客様データ (JSON) が 全部 埋まってます。 これ 1 つで 完結。
-            </div>
+          <div style="background:linear-gradient(135deg,#FDFBF4,#FAF6E8);border:1px solid #E8C56F;border-radius:10px;padding:18px;">
+            <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:10.5px;letter-spacing:0.16em;color:#C19A3A;margin-bottom:8px;">STEP 2</div>
+            <p style="margin:0;font-size:14px;font-weight:700;color:#1F1A12;line-height:1.65;">Claude の 入力欄で <strong style="background:#1F1A12;color:#FFE9A8;padding:2px 8px;border-radius:4px;">Cmd + V</strong> を 押して 貼り付け → Enter</p>
+            <p style="margin:8px 0 0;font-size:11.5px;color:#5E5648;line-height:1.7;">(指示文は すでに クリップボードに 入っています)</p>
+          </div>
+          <div style="margin-top:14px;padding:10px 14px;background:#F8FAFC;border-radius:8px;font-size:11.5px;color:#5E5648;line-height:1.7;">
+            💡 1〜2分で HTML が 出来上がります。 そのまま Chrome で 印刷 → PDF 保存 で 完成。
           </div>
         </div>
-        <div style="padding:14px 26px;background:#FDFBF4;border-top:1px solid #E8E2D4;display:flex;justify-content:flex-end;">
-          <button id="fp-dl-done" style="background:linear-gradient(135deg,#1F1A12,#2C2419);color:#FFE9A8;border:none;padding:11px 26px;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:0.06em;">了解</button>
+        <div style="padding:12px 28px;background:#FDFBF4;border-top:1px solid #E8E2D4;display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:10.5px;color:#8B7D5D;">バックアップで .txt ファイルも DL 済み</span>
+          <button id="fp-dl-done" style="background:transparent;color:#8B7D5D;border:1px solid #D6CDB6;padding:8px 18px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">閉じる</button>
         </div>
       </div>
     `;
     document.body.appendChild(overlay);
+    overlay.querySelector('#fp-open-claude').addEventListener('click', () => {
+      // claude.ai を 新タブで開く (オーナーが Claude Code 使ってる場合は そっち、 ない場合は claude.ai)
+      window.open('https://claude.ai/new', '_blank');
+    });
     overlay.querySelector('#fp-dl-done').addEventListener('click', () => overlay.remove());
     overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
   }
