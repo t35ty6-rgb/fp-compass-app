@@ -1053,7 +1053,7 @@ window.fpReadyAfterAuth = function() {
   ];
   legacyDemoKeys.forEach(k => { try { localStorage.removeItem(k); } catch (_) {} });
 
-  const ver = "20260609H-survey-auto-merge";
+  const ver = "20260609I-lead-badge-fix";
   const scripts = [
     "life-events.js?v=" + ver,
     "recommender.js?v=" + ver,
@@ -1227,7 +1227,13 @@ window.fpReadyAfterAuth = function() {
       if (dsl >= 30 && c.status !== 'dormant') { kpiAlert++; }
     });
     setText('nav-count-kpi', kpiAlert);
-    setText('nav-count-lead', clients.length > 0 ? Math.min(4, clients.length) : '');
+    // 新規相談バッジ: 候補日確定待ち (アンケート回答+候補日3つ届いたが未確定) の実件数のみ
+    try {
+      const surveys = (window.LineAppLiveData && window.LineAppLiveData.survey_answers) || [];
+      const isRealUid = (uid) => /^U[a-f0-9]{32}$/i.test(String(uid || ''));
+      const pendingConfirm = surveys.filter(s => !s.confirmedSlot && (s.q6_候補1 || s.q7_候補2 || s.q8_候補3 || s.q11_候補1) && isRealUid(s.userId)).length;
+      setText('nav-count-lead', pendingConfirm > 0 ? pendingConfirm : '');
+    } catch (_) { setText('nav-count-lead', ''); }
     const m = today.getMonth() + 1;
     const bdayCount = clients.filter(c => c.birth && (new Date(c.birth).getMonth() + 1) === m).length;
     setText('nav-count-bday', bdayCount);
@@ -1363,7 +1369,7 @@ window.fpReadyAfterAuth = function() {
 <script>
 (function(){
   // 最新の ver を 1 箇所に集約 (fpReadyAfterAuth 側と一致させる必要あり)
-  const FP_VERSION = "20260609H-survey-auto-merge";
+  const FP_VERSION = "20260609I-lead-badge-fix";
   const loadTime = new Date();
   const hhmm = String(loadTime.getHours()).padStart(2,'0') + ':' + String(loadTime.getMinutes()).padStart(2,'0');
   const dateLabel = (FP_VERSION.match(/^(\d{4})(\d{2})(\d{2})/) || []).slice(1).join('/').replace(/^(\d{4})\//,'$1/').replace(/\/(\d{2})\/(\d{2})$/,'/$1/$2') || FP_VERSION;
