@@ -1828,8 +1828,42 @@
           </li>
         `).join('');
 
+    // ★ ライフイベント 空状態 CTA: 生年月日+配偶者+子の生年月日 を即入力 → 30年タイムライン自動展開
+    const needsBirth = !c.birth || c.birth === '1985-01-01';
+    const needsFamily = !((c.family || []).length);
+    const showLifeCta = events.length === 0 && (needsBirth || needsFamily);
     const timelineHtml = events.length === 0
-      ? '<div class="empty">向こう30年に予測イベントなし</div>'
+      ? (showLifeCta
+        ? `
+        <div style="background:linear-gradient(135deg,#faf5ff,#fff);border:2px solid #c084fc;border-radius:14px;padding:22px 24px;margin:6px 0;box-shadow:0 4px 12px rgba(192,132,252,0.15);">
+          <div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:14px;">
+            <div style="font-size:30px;line-height:1;">🗓️</div>
+            <div style="flex:1;">
+              <div style="font-size:15px;font-weight:800;color:#581c87;letter-spacing:0.02em;margin-bottom:4px;">この方の30年タイムラインを 今すぐ展開</div>
+              <div style="font-size:12.5px;color:#6b21a8;line-height:1.6;">下記3項目を埋めると、 退職金準備期 (55歳) / 定年 (60歳) / 年金受給開始 (65歳) / お子様の進学費用ピーク (18歳) 等の節目が 自動で表示されます。</div>
+            </div>
+          </div>
+          <div id="life-cta-form" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;background:#fff;border-radius:10px;padding:14px 16px;border:1px solid #e9d5ff;">
+            <div>
+              <label style="display:block;font-size:11px;color:#7b8499;font-weight:700;margin-bottom:4px;letter-spacing:0.06em;">本人 生年月日 ★</label>
+              <input type="date" id="life-cta-birth" value="${escapeHtml(needsBirth ? '' : c.birth)}" style="width:100%;padding:9px 11px;border:1.5px solid #e3e7ee;border-radius:7px;font-size:14px;font-family:inherit;">
+            </div>
+            <div>
+              <label style="display:block;font-size:11px;color:#7b8499;font-weight:700;margin-bottom:4px;letter-spacing:0.06em;">配偶者 生年月日 (任意)</label>
+              <input type="date" id="life-cta-spouse-birth" style="width:100%;padding:9px 11px;border:1.5px solid #e3e7ee;border-radius:7px;font-size:14px;font-family:inherit;">
+            </div>
+            <div style="grid-column:1 / -1;">
+              <label style="display:block;font-size:11px;color:#7b8499;font-weight:700;margin-bottom:4px;letter-spacing:0.06em;">お子様 生年月日 (複数可・任意)</label>
+              <div id="life-cta-children" style="display:flex;flex-direction:column;gap:6px;"></div>
+              <button type="button" id="life-cta-add-child" style="margin-top:6px;background:#fff;color:#7c3aed;border:1.5px dashed #c4b5fd;padding:7px 12px;border-radius:6px;font-size:11.5px;font-weight:700;cursor:pointer;letter-spacing:0.04em;font-family:inherit;">+ お子様を追加</button>
+            </div>
+            <div style="grid-column:1 / -1;display:flex;justify-content:flex-end;gap:8px;margin-top:4px;">
+              <button type="button" id="life-cta-cancel" style="background:#fff;color:#6b7280;border:1px solid #e5e7eb;padding:9px 18px;border-radius:7px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;">あとで</button>
+              <button type="button" id="life-cta-save" style="background:linear-gradient(135deg,#9333ea,#7c3aed);color:#fff;border:none;padding:9px 22px;border-radius:7px;font-size:12.5px;font-weight:800;cursor:pointer;letter-spacing:0.04em;font-family:inherit;box-shadow:0 3px 10px rgba(124,58,237,0.3);">💫 タイムラインを展開する</button>
+            </div>
+          </div>
+        </div>`
+        : '<div class="empty">向こう30年に予測イベントなし</div>')
       : events.map(ev => `
           <div class="client-timeline-item">
             <div class="when">${fmtDate(ev.date)}<span class="relative">${window.LifeEvents.formatRelative(ev.date)}</span></div>
@@ -2644,6 +2678,62 @@
     document.querySelectorAll('[data-open-hearing]').forEach(btn => {
       btn.addEventListener('click', () => openHearingSheetModal(c));
     });
+    // ★ ライフイベント空状態 CTA ウィザード
+    if (document.getElementById('life-cta-form')) {
+      const childrenWrap = document.getElementById('life-cta-children');
+      // 既存 family[child] あれば 初期表示
+      let childInputs = (c.family || []).filter(m => m.rel === 'child').map(m => ({ name: m.name || '', birth: m.birth || '' }));
+      if (childInputs.length === 0) childInputs = [{ name: '', birth: '' }]; // 初期1行
+      function renderChildren() {
+        childrenWrap.innerHTML = childInputs.map((ch, i) => `
+          <div style="display:grid;grid-template-columns:1fr 1fr 36px;gap:6px;align-items:center;">
+            <input type="text" placeholder="お子様 お名前 (任意)" value="${escapeHtml(ch.name || '')}" data-child-idx="${i}" data-child-field="name" style="padding:8px 10px;border:1.5px solid #e3e7ee;border-radius:6px;font-size:13px;font-family:inherit;">
+            <input type="date" value="${escapeHtml(ch.birth || '')}" data-child-idx="${i}" data-child-field="birth" style="padding:8px 10px;border:1.5px solid #e3e7ee;border-radius:6px;font-size:13px;font-family:inherit;">
+            <button type="button" data-child-rm="${i}" title="削除" style="background:#fff;border:1.5px solid #fecaca;color:#dc2626;border-radius:6px;cursor:pointer;font-size:14px;font-weight:700;font-family:inherit;">×</button>
+          </div>
+        `).join('');
+        childrenWrap.querySelectorAll('input').forEach(inp => inp.addEventListener('input', () => {
+          const i = parseInt(inp.dataset.childIdx, 10);
+          const f = inp.dataset.childField;
+          childInputs[i][f] = inp.value;
+        }));
+        childrenWrap.querySelectorAll('[data-child-rm]').forEach(btn => btn.addEventListener('click', () => {
+          const i = parseInt(btn.dataset.childRm, 10);
+          childInputs.splice(i, 1);
+          renderChildren();
+        }));
+      }
+      renderChildren();
+      document.getElementById('life-cta-add-child').addEventListener('click', () => {
+        childInputs.push({ name: '', birth: '' });
+        renderChildren();
+      });
+      document.getElementById('life-cta-cancel').addEventListener('click', () => {
+        const f = document.getElementById('life-cta-form');
+        if (f) f.parentElement.style.display = 'none';
+      });
+      document.getElementById('life-cta-save').addEventListener('click', () => {
+        const birthVal = document.getElementById('life-cta-birth').value;
+        const spouseBirth = document.getElementById('life-cta-spouse-birth').value;
+        if (!birthVal) { alert('本人 生年月日 は必須です'); return; }
+        // 既存 family を保持しつつ 更新
+        const existing = Array.isArray(c.family) ? c.family.slice() : [];
+        // 配偶者 update or push
+        if (spouseBirth) {
+          const sp = existing.find(m => m.rel === 'spouse');
+          if (sp) sp.birth = spouseBirth;
+          else existing.push({ rel: 'spouse', name: '', birth: spouseBirth });
+        }
+        // 既存の child 全削除 → 入力分で置換 (空欄はスキップ)
+        const others = existing.filter(m => m.rel !== 'child');
+        const newChildren = childInputs.filter(ch => ch.birth).map(ch => ({ rel: 'child', name: ch.name || '', birth: ch.birth }));
+        c.birth = birthVal;
+        c.family = others.concat(newChildren);
+        try { localStorage.setItem('fp-crm-clients-v1', JSON.stringify(clients)); } catch (_) {}
+        // モーダル再描画 (ライフイベント自動展開を見せる)
+        openClientModal(c.id);
+      });
+    }
     // Tab switching inside new modal
     document.querySelectorAll('.cd-tab').forEach(btn => {
       btn.addEventListener('click', () => {
