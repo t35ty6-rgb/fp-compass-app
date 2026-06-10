@@ -6142,20 +6142,19 @@ ${client.name}さん、ありがとうございます。
       if (window.lucide) window.lucide.createIcons({ attrs: { 'stroke-width': '1.6' } });
     }
     document.getElementById('aib-cal-regen')?.addEventListener('click', () => {
-      // Take next 3 free slots after current selection
-      const all = weekData.flatMap(d => d.slots);
-      const usedKeys = new Set(slotsData.map(s => `${s.iso}::${s.start}`));
-      const next = all.filter(s => !usedKeys.has(`${s.iso}::${s.start}`)).slice(0, 3);
-      if (next.length >= 3) {
-        slotsData = next.map(s => ({
-          id: `s-${s.iso}-${s.startH}`,
-          month: s.month, day: s.day, wday: s.wday,
-          time: s.time, icon: s.icon, iso: s.iso, start: s.start,
-        }));
-        renderOwnerWeek();
-        renderCalendarSlots();
-        renderPreview();
-      }
+      // ★ オーナーfb「履歴ゼロ顧客で別の3つボタン動かない」: weekData が空でも
+      //   pickSlots(slotPoolOffset) で 純粋生成して 必ず 3つ提示する
+      slotPoolOffset += 3;
+      // ローテーション: 4週分回ったら 戻す
+      if (slotPoolOffset > 21) slotPoolOffset = 2;
+      slotsData = pickSlots(slotPoolOffset);
+      try { renderOwnerWeek(); } catch (_) {}
+      try { renderCalendarSlots(); } catch (_) {}
+      try { renderPreview(); } catch (_) {}
+    });
+    // ★ オーナーfb「Google Calendar を開く ボタン押しても動かない」: handler 未実装だった
+    document.getElementById('aib-gcal-toggle')?.addEventListener('click', () => {
+      window.open('https://calendar.google.com/calendar/u/0/r/week', '_blank');
     });
     document.getElementById('aib-cal-add')?.addEventListener('click', () => {
       openManualPickerModal();
