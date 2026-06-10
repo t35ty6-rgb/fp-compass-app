@@ -2601,6 +2601,7 @@
             </div>
 
             <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <button class="modal-brief-btn" data-line-brief="${c.id}" style="background:linear-gradient(135deg,#10B981,#059669);color:#fff;border:none;padding:9px 16px;border-radius:7px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;letter-spacing:0.04em;box-shadow:0 4px 12px rgba(16,185,129,0.32);">✍ 伝えたいことから 下書き</button>
               <button id="modal-deliv-btn" style="background:linear-gradient(135deg,#5B5BF0,#6D6DEF);color:#fff;border:none;padding:9px 16px;border-radius:7px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;letter-spacing:0.04em;box-shadow:0 4px 12px rgba(91,91,240,0.32);">📎 資料パッケージを ダウンロード</button>
               <button class="cd-flow-edit ghost-btn" id="modal-edit-btn"><i data-lucide="pencil"></i><span>顧客情報を編集</span></button>
               <button id="modal-delete-btn" style="background:#fff;color:#dc2626;border:1px solid #fecaca;padding:8px 14px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;"><i data-lucide="trash-2" style="width:14px;height:14px;"></i><span>この顧客を削除</span></button>
@@ -2621,6 +2622,7 @@
               <style>@keyframes fp-draft-cta-pulse{0%,100%{transform:translateY(0) scale(1);box-shadow:0 8px 24px rgba(249,115,22,0.55),0 0 0 4px rgba(255,255,255,0.5)}50%{transform:translateY(-2.5px) scale(1.025);box-shadow:0 16px 36px rgba(249,115,22,0.72),0 0 0 7px rgba(255,255,255,0.6)}}@keyframes fp-draft-cta-gradient{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}</style>
             </div>
             <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <button class="modal-brief-btn" data-line-brief="${c.id}" style="background:linear-gradient(135deg,#10B981,#059669);color:#fff;border:none;padding:9px 16px;border-radius:7px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;letter-spacing:0.04em;box-shadow:0 4px 12px rgba(16,185,129,0.32);">✍ 伝えたいことから 下書き</button>
               <button id="modal-deliv-btn" style="background:linear-gradient(135deg,#5B5BF0,#6D6DEF);color:#fff;border:none;padding:9px 16px;border-radius:7px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;letter-spacing:0.04em;box-shadow:0 4px 12px rgba(91,91,240,0.32);">📎 資料パッケージを ダウンロード</button>
               <button class="cd-flow-edit ghost-btn" id="modal-edit-btn"><i data-lucide="pencil"></i><span>顧客情報を編集</span></button>
               <button id="modal-delete-btn" style="background:#fff;color:#dc2626;border:1px solid #fecaca;padding:8px 14px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;"><i data-lucide="trash-2" style="width:14px;height:14px;"></i><span>この顧客を削除</span></button>
