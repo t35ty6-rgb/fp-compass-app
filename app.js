@@ -3026,7 +3026,21 @@
           if (status) { status.className = 'cd-line-msg-status ok'; status.textContent = '✓ AI 返信案を生成しました (編集して送信してください)'; }
         } catch (e) {
           console.error('[generateLineReply]', e);
-          if (status) { status.className = 'cd-line-msg-status err'; status.textContent = '生成失敗: ' + (e.message || e.code); }
+          // ★ 残高切れ等 paid API 失敗時 → 簡易プロンプト clipboard コピー + Claude Code 案内
+          const msg = String(e.message || e.code || '');
+          if (/credit balance|billing|low|api key|not_found_error|401|403|429|insufficient/i.test(msg)) {
+            const ctxParts = [];
+            if (c.birth) ctxParts.push(`生年: ${c.birth}`);
+            if (c.occupation) ctxParts.push(`職業: ${c.occupation}`);
+            if (c.family?.length) ctxParts.push(`家族: ${c.family.map(f => f.rel + ' ' + (f.name||'')).join(' / ')}`);
+            const hist = (c.lineHistory || []).slice(-12).map(m => `[${m.direction === 'in' ? '客' : 'FP'}] ${m.text}`).join('\n');
+            const hintTxt = (tArea && tArea.value.trim()) || '';
+            const prompt = `あなたは FP の文章コーチです。下記の LINE やりとり履歴 と 顧客情報 を 踏まえて、 FP から ${c.name || 'お客様'} 様への 自然な LINE 返信を 1通 (200-400字、 文面のみ、 前置き不要) で 作成してください。\n\n【顧客情報】\n${ctxParts.join(' / ')}\n\n【直近 LINE 履歴 (古→新)】\n${hist}\n\n${hintTxt ? `【FP の意図】\n${hintTxt}\n\n` : ''}LINE 文面 のみ 出力してください。`;
+            try { await navigator.clipboard.writeText(prompt); } catch (_) {}
+            if (status) { status.className = 'cd-line-msg-status err'; status.innerHTML = '⚠ 残高切れ — プロンプトをコピー済。 <a href="https://claude.ai/new" target="_blank" style="color:#4338CA;font-weight:700;">claude.ai で生成 →</a> 戻って textarea に貼付け'; }
+          } else {
+            if (status) { status.className = 'cd-line-msg-status err'; status.textContent = '生成失敗: ' + msg; }
+          }
         } finally {
           aiQuickBtn.disabled = false;
           aiQuickBtn.innerHTML = origLabel;
@@ -4531,187 +4545,13 @@ STEP C: 結果報告
         .replace(/(^|[^\uD800-\uDBFF])([\uDC00-\uDFFF])/g, '$1') // lone low surrogate
         .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, ''); // 非可印字制御文字 (改行/タブは温存)
     };
-    try {
-      // ★ オーナー方針 (v BG): 資料作成はデフォルトで Anthropic 有料API を一切使わず、
-      //   常に triggerDeliverable (JSON + プロンプト DL + clipboard + claude.ai/new) で
-      //   FP事業者自身の Claude Code 購読版に流す。
-      if (progressPill && progressPill._fpDone) progressPill._fpDone(true, '📋 プロンプトをコピーしてClaude起動');
-      try { triggerDeliverable(client, type, taskTitle); }
-      catch (e) { console.warn('triggerDeliverable fail:', e); }
-      return;
-      // ↓ 旧: Anthropic API 直叩きパス (温存だけ、 実行されない)
-      const useMacMini = localStorage.getItem('fp-deliv-via-macmini') !== '0';
-      const useFirestorePath = useMacMini && window.__fp?.db && window.__fp?.userEmail && window.__fp?.tenantId;
-      const r = useFirestorePath
-        ? await generateDeliverableViaMacMini({ type, client, clientCtx, taskTitle, latestAi, sanitize: sanitizeForJson })
-        : await fetch('https://fp-compass-webhook-527726449426.asia-northeast1.run.app/api/generate-deliverable', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type,
-          clientName: sanitizeForJson(client.name),
-          clientCtx: sanitizeForJson(clientCtx),
-          summary: sanitizeForJson((latestAi && latestAi.summary) || ''),
-          transcript: sanitizeForJson((latestAi && latestAi.transcript) || ''),
-          taskTitle: sanitizeForJson(taskTitle),
-        }),
-      });
-      const d = await r.json();
-      if (progressPill && progressPill._fpDone) progressPill._fpDone(d.ok && d.html, d.ok ? null : (d.error || '生成失敗'));
-      if (d.ok && d.html) {
-        // ★ AI下書きフェーズ2の並列生成完了 → グローバルに格納して送信時に自動添付
-        try {
-          window._fpReadyDeliverable = { html: d.html, type, taskTitle, clientId: client.id, customerName: client.name };
-          // AI BRIEF が開いてれば draft-text の上に「✅ 資料準備完了」表示
-          const draftWrap = document.querySelector('.aib-textarea-wrap');
-          if (draftWrap && !document.getElementById('fp-auto-deliv-ready')) {
-            const readyEl = document.createElement('div');
-            readyEl.id = 'fp-auto-deliv-ready';
-            readyEl.style.cssText = 'margin:8px 0 10px;padding:10px 14px;background:linear-gradient(135deg,#10B981,#059669);color:#fff;border-radius:8px;font-size:12px;font-weight:700;display:flex;align-items:center;gap:8px;';
-            readyEl.innerHTML = `<span style="font-size:18px;">📎</span><div style="flex:1;">✅ 資料を作成完了 — 送信時に自動添付されます (${(d.html.length/1024).toFixed(1)}KB)</div>`;
-            draftWrap.parentElement.insertBefore(readyEl, draftWrap);
-          }
-        } catch (_) {}
-        // 既存テンプレを AI 生成版で置換
-        const old = resultEl.querySelector('.fp-deliv-content');
-        if (old) {
-          const wrap = document.createElement('div');
-          wrap.innerHTML = d.html;
-          // 編集状態保存キー (顧客×type×task 単位)
-          const editKey = `fp-deliv-edit-${client.id || client.lineFriendId || client.name}-${type}-${(taskTitle || '').slice(0, 20)}`;
-          const newContent = wrap.querySelector('.fp-deliv-content') || wrap;
-          newContent.classList.add('fp-deliv-content');
-          // ★ オーナーfb「Jobs が作ったやつを元に編集できる」
-          // 既存保存内容あれば優先復元、無ければ AI生成版
-          let restoredHtml = newContent.outerHTML;
-          try {
-            const saved = localStorage.getItem(editKey);
-            if (saved && saved.length > 100) restoredHtml = saved;
-          } catch (_) {}
-          const header = `<div style="background:linear-gradient(135deg,#5B5BF0,#6D6DEF);color:#fff;padding:12px 16px;border-radius:8px 8px 0 0;">
-            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
-              <div><strong style="font-size:13px;letter-spacing:0.04em;">✨ AI個別生成 — ${escapeHtml(client.name)}様 専用</strong><div style="font-size:11px;opacity:0.85;margin-top:2px;">議事録+台帳データから ${new Date().toLocaleString('ja-JP')} 生成 · <span data-deliv-save-status style="color:#A7F3D0;font-weight:700;">✓ 編集保存済</span></div></div>
-              <div style="display:flex;gap:6px;flex-wrap:wrap;">
-                <button data-deliv-ai-edit style="background:rgba(255,255,255,0.22);border:1px solid rgba(255,255,255,0.4);color:#fff;padding:5px 12px;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer;">✨ AI修正指示</button>
-                <button data-deliv-reset style="background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.3);color:#fff;padding:5px 10px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;">↩ AI版に戻す</button>
-                <button data-deliv-print style="background:rgba(255,255,255,0.22);border:1px solid rgba(255,255,255,0.4);color:#fff;padding:5px 10px;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer;">🖨 印刷/PDF</button>
-                <button data-deliv-send style="background:#06C755;border:1px solid #06C755;color:#fff;padding:5px 14px;border-radius:5px;font-size:11px;font-weight:800;cursor:pointer;">📤 編集後 LINE送信</button>
-              </div>
-            </div>
-            <div style="margin-top:8px;padding:6px 10px;background:rgba(255,255,255,0.12);border-radius:5px;font-size:10.5px;letter-spacing:0.04em;">📝 表のセル・数値・文章を直接クリックで編集可。変更は自動保存され、LINE送信時はこの最終版が送られます</div>
-          </div>`;
-          // contenteditable 化: AI生成HTML をラップして直編集可能に
-          old.outerHTML = '<div class="fp-deliv-content" style="border:1px solid #E2E8F0;border-radius:8px;overflow:hidden;">' + header
-            + '<div data-deliv-editable contenteditable="true" spellcheck="false" style="padding:24px 30px;outline:2px dashed #C7D2FE;outline-offset:-8px;min-height:500px;background:#fff;cursor:text;border-radius:8px;font-size:14px;line-height:1.7;" title="クリックで編集モード。表のセル・数値・文字を直接書き換え可能">'
-            + (restoredHtml.includes('fp-deliv-content') ? wrap.innerHTML : restoredHtml)
-            + '</div></div>';
-
-          // 自動保存 (input 1500ms debounce) — オーナーfb「カクつく」対策で軽量化
-          // ① 全要素 contenteditable 再帰 setAttribute → 削除 (親 div の contenteditable=true は子に継承される)
-          // ② focus/blur 背景色変更 → 削除 (capture true で何百回も発火していた)
-          // ③ click 強制focus → 削除 (ブラウザ標準で十分)
-          // ④ debounce 300→1500ms (キータイプ毎の localStorage.setItem を抑制)
-          const editable = resultEl.querySelector('[data-deliv-editable]');
-          const statusEl = resultEl.querySelector('[data-deliv-save-status]');
-          let saveTimer = null;
-          if (editable) {
-            editable.addEventListener('input', () => {
-              clearTimeout(saveTimer);
-              if (statusEl) statusEl.textContent = '… 保存中';
-              saveTimer = setTimeout(() => {
-                try { localStorage.setItem(editKey, editable.innerHTML); } catch (_) {}
-                if (statusEl) statusEl.textContent = '✓ 編集保存済 ' + new Date().toLocaleTimeString('ja-JP', {hour:'2-digit',minute:'2-digit'});
-              }, 1500);
-            });
-          }
-
-          // 印刷
-          const printBtn = resultEl.querySelector('[data-deliv-print]');
-          if (printBtn) printBtn.addEventListener('click', () => {
-            const h = editable ? editable.innerHTML : resultEl.querySelector('.fp-deliv-content').outerHTML;
-            const w = window.open('', '_blank');
-            w.document.write(`<!doctype html><html><head><title>${escapeHtml(taskTitle)} - ${escapeHtml(client.name)}</title><style>body{font-family:'Noto Sans JP',sans-serif;padding:30px;color:#0F172A;}table{border-collapse:collapse;width:100%;}th,td{padding:8px 12px;border:1px solid #E2E8F0;font-size:12px;text-align:left;}th{background:#F8FAFC;}</style></head><body>${h}</body></html>`);
-            w.document.close();
-            setTimeout(() => w.print(), 300);
-          });
-
-          // LINE送信 (編集後 HTML を渡す)
-          const sendBtn = resultEl.querySelector('[data-deliv-send]');
-          if (sendBtn) sendBtn.addEventListener('click', () => {
-            const finalHtml = editable ? editable.innerHTML : '';
-            try { localStorage.setItem(editKey, finalHtml); } catch (_) {}
-            openDeliverableSendModal(client, type, taskTitle, finalHtml);
-          });
-
-          // AI 修正指示
-          const aiEditBtn = resultEl.querySelector('[data-deliv-ai-edit]');
-          if (aiEditBtn) aiEditBtn.addEventListener('click', async () => {
-            const instr = prompt('Claude にどう修正させたいか指示してください:\n\n例:\n・もっと保守的なシミュに\n・教育費の表に大学院の費用も追加\n・全体的にもう少しシンプルに\n・金額は税込みで表示\n・お子様の年齢を強調');
-            if (!instr || !instr.trim()) return;
-            aiEditBtn.disabled = true; aiEditBtn.textContent = '✨ AI修正中…';
-            try {
-              const currentHtml = editable ? editable.innerHTML : '';
-              const rr = await fetch('https://fp-compass-webhook-527726449426.asia-northeast1.run.app/api/generate-deliverable', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  type: 'custom',
-                  clientName: client.name,
-                  clientCtx,
-                  summary: (latestAi && latestAi.summary) || '',
-                  transcript: (latestAi && latestAi.transcript) || '',
-                  taskTitle: '【修正指示】' + instr + '\n\n【元の成果物HTML】\n' + currentHtml.slice(0, 8000),
-                }),
-              });
-              const dd = await rr.json();
-              // ★ 残高/billing 切れ時 → 修正指示+現HTML を clipboard コピーして 自身の Claude Code 案内
-              if (!dd.ok && /credit balance|billing|low|api key|not_found_error|401|403|429/i.test(dd.error || '')) {
-                const promptTxt = '以下のHTML資料を、 指示に従って 修正してください。 修正後のHTML全文 (前置きや説明は不要、 HTMLのみ) を 返してください。\n\n【修正指示】\n' + instr + '\n\n【元の成果物HTML】\n' + currentHtml;
-                try { await navigator.clipboard.writeText(promptTxt); } catch (_) {}
-                alert('Anthropic API 残高切れのため、 修正指示+元HTML を クリップボードに コピーしました。\nご自身の Claude Code (claude.ai/new) に貼り付けて 修正版を 取得し、 編集枠に 貼り戻して下さい。');
-              } else if (dd.ok && dd.html) {
-                const w2 = document.createElement('div'); w2.innerHTML = dd.html;
-                const nc = w2.querySelector('.fp-deliv-content') || w2;
-                if (editable) {
-                  editable.innerHTML = nc.innerHTML;
-                  try { localStorage.setItem(editKey, editable.innerHTML); } catch (_) {}
-                  if (statusEl) statusEl.textContent = '✓ AI修正反映済';
-                }
-              } else {
-                alert('AI修正失敗: ' + (dd.error || '不明'));
-              }
-            } catch (e) {
-              alert('通信失敗: ' + e.message);
-            }
-            aiEditBtn.disabled = false; aiEditBtn.textContent = '✨ AI修正指示';
-          });
-
-          // リセット (AI元版に戻す)
-          const resetBtn = resultEl.querySelector('[data-deliv-reset]');
-          if (resetBtn) resetBtn.addEventListener('click', () => {
-            if (!confirm('編集内容を破棄し、最初のAI生成版に戻しますか?')) return;
-            try { localStorage.removeItem(editKey); } catch (_) {}
-            if (editable) editable.innerHTML = wrap.innerHTML;
-            if (statusEl) statusEl.textContent = '↩ AI版に戻しました';
-          });
-
-          // 成功トースト
-          const t = document.createElement('div');
-          t.style.cssText = 'position:fixed;top:18px;left:50%;transform:translateX(-50%);background:#fff;border-left:5px solid #5B5BF0;border-radius:10px;padding:14px 22px;box-shadow:0 12px 36px rgba(0,0,0,0.2);z-index:10030;font-family:inherit;';
-          t.innerHTML = `<strong style="font-size:14px;">✨ AI個別生成完了 — 編集モード ON</strong><br><span style="font-size:12px;color:#6b7280;">表のセルや数値を直接クリックで編集可・自動保存・LINE送信は編集後の最終版</span>`;
-          document.body.appendChild(t);
-          setTimeout(() => t.remove(), 5000);
-        }
-        // ai-bar 撤去
-        const aiBar = resultEl.querySelector('#fp-deliv-ai')?.parentElement;
-        if (aiBar) aiBar.remove();
-      } else {
-        alert('AI生成失敗: ' + (d.error || '不明'));
-        if (btn) { btn.disabled = false; btn.textContent = '✨ AIで個別作成'; }
-      }
-    } catch (e) {
-      if (progressPill && progressPill._fpDone) progressPill._fpDone(false, e.message);
-      console.error('AI deliv comm fail:', e);
-      if (btn) { btn.disabled = false; btn.textContent = '✨ AIで個別作成'; }
-    }
+    // ★ v BG (20260610C): 資料作成は デフォルトで Anthropic 有料API を 一切 使わず、
+    //   triggerDeliverable (JSON + プロンプト DL + clipboard + claude.ai/new) で
+    //   FP事業者自身の Claude Code 購読版に流す。
+    if (progressPill && progressPill._fpDone) progressPill._fpDone(true, '📋 プロンプトをコピーしてClaude起動');
+    try { triggerDeliverable(client, type, taskTitle); }
+    catch (e) { console.warn('triggerDeliverable fail:', e); }
+    return;
   }
 
   // 16種テンプレ メニュー (6カテゴリ)
