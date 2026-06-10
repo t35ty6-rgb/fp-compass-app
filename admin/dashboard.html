@@ -1,0 +1,436 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Skeleton Owner Dashboard | FP Compass</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink:#0F172A;
+    --ink-2:#334155;
+    --muted:#64748B;
+    --line:#E2E8F0;
+    --line-soft:#F1F5F9;
+    --bg:#F8FAFC;
+    --accent:#1B3A5C;
+    --gold:#B68A3E;
+    --gold-soft:#F4ECDA;
+    --good:#10B981;
+    --warn:#F59E0B;
+    --bad:#DC2626;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:'Hiragino Sans',-apple-system,BlinkMacSystemFont,sans-serif;font-size:14px;}
+  .topbar{background:linear-gradient(135deg,#0F172A,#1E293B);color:#fff;padding:14px 28px;display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid var(--gold);}
+  .topbar h1{margin:0;font-family:'Noto Serif JP',serif;font-size:18px;letter-spacing:0.04em;font-weight:700;}
+  .topbar .eyebrow{font-family:'Inter',sans-serif;font-size:10px;letter-spacing:0.24em;color:var(--gold);font-weight:700;margin-bottom:2px;}
+  .topbar .right{display:flex;gap:14px;align-items:center;font-size:12px;color:#cbd5e1;}
+  .topbar a{color:#cbd5e1;text-decoration:none;border-bottom:1px dotted transparent;padding-bottom:2px;}
+  .topbar a:hover{border-bottom-color:#cbd5e1;}
+  .wrap{max-width:1280px;margin:0 auto;padding:28px 28px 80px;}
+  .kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;}
+  .kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px 20px;box-shadow:0 1px 2px rgba(15,23,42,0.04);}
+  .kpi-label{font-family:'Inter',sans-serif;font-size:10px;letter-spacing:0.14em;color:var(--muted);font-weight:600;margin-bottom:6px;text-transform:uppercase;}
+  .kpi-value{font-family:'JetBrains Mono',monospace;font-size:30px;font-weight:700;color:var(--ink);line-height:1.1;}
+  .kpi-unit{font-size:13px;font-weight:500;color:var(--muted);margin-left:4px;}
+  .kpi-sub{font-size:11.5px;color:var(--muted);margin-top:6px;line-height:1.5;}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:12px;padding:20px 22px;margin-bottom:18px;box-shadow:0 1px 2px rgba(15,23,42,0.04);}
+  .panel-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--line-soft);}
+  .panel-title{font-family:'Noto Serif JP',serif;font-size:16px;font-weight:700;letter-spacing:0.02em;color:var(--ink);}
+  .panel-sub{font-size:11.5px;color:var(--muted);}
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  th{font-family:'Inter',sans-serif;font-size:10.5px;letter-spacing:0.08em;color:var(--muted);font-weight:600;text-transform:uppercase;text-align:left;padding:10px 12px;background:#F8FAFC;border-bottom:1px solid var(--line);}
+  th:last-child,td:last-child{text-align:right;}
+  th.num,td.num{text-align:right;font-family:'JetBrains Mono',monospace;}
+  td{padding:11px 12px;border-bottom:1px solid var(--line-soft);vertical-align:middle;}
+  tbody tr:hover{background:#FAFBFC;}
+  .pill{display:inline-block;padding:2px 9px;border-radius:99px;font-size:10.5px;font-weight:700;letter-spacing:0.04em;}
+  .pill-active{background:#DCFCE7;color:#15803D;}
+  .pill-trial{background:#FEF3C7;color:#92400E;}
+  .pill-past_due{background:#FED7AA;color:#9A3412;}
+  .pill-canceled{background:#FEE2E2;color:#991B1B;}
+  .pill-pending{background:#E0E7FF;color:#3730A3;}
+  .empty{text-align:center;padding:40px 20px;color:var(--muted);font-size:12.5px;}
+  .empty .icon{font-size:32px;margin-bottom:8px;opacity:0.5;}
+  .btn{background:#1B3A5C;color:#fff;border:none;padding:8px 16px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;letter-spacing:0.04em;font-family:inherit;}
+  .btn:hover{background:#284f7d;}
+  .btn-ghost{background:#fff;border:1.5px solid var(--line);color:var(--ink);}
+  .btn-ghost:hover{background:#F8FAFC;}
+  .btn-danger{background:#DC2626;}
+  .small-mono{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);}
+  .ref-arrow{color:var(--muted);font-size:12px;margin:0 4px;}
+  .login-gate{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0F172A,#1E293B);}
+  .login-card{background:#fff;border-radius:14px;padding:36px 40px;max-width:380px;width:100%;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,0.3);}
+  .login-card h2{margin:0 0 10px;font-family:'Noto Serif JP',serif;font-size:20px;}
+  .login-card input{width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:7px;font-size:13.5px;font-family:inherit;margin-top:8px;box-sizing:border-box;}
+  .toast{position:fixed;bottom:24px;right:24px;background:#0F172A;color:#fff;padding:12px 20px;border-radius:8px;font-size:12.5px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,0.3);opacity:0;transition:opacity 0.25s;z-index:9999;}
+  .toast.show{opacity:1;}
+  .toast.success{background:#10B981;}
+  .toast.error{background:#DC2626;}
+  .net-tree{font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.85;color:var(--ink-2);background:#F8FAFC;border:1px solid var(--line);border-radius:8px;padding:14px 18px;max-height:240px;overflow:auto;}
+  .net-line{padding:2px 0;}
+  .net-line strong{color:var(--accent);}
+</style>
+</head>
+<body>
+
+<!-- ログイン ゲート -->
+<div id="gate" class="login-gate" style="display:none;">
+  <div class="login-card">
+    <div style="font-family:'Inter',sans-serif;font-size:10px;letter-spacing:0.22em;color:var(--gold);font-weight:700;margin-bottom:8px;">SKELETON INC. INTERNAL</div>
+    <h2>オーナー ダッシュボード</h2>
+    <p style="color:var(--muted);font-size:12px;line-height:1.6;margin:6px 0 18px;">オーナー Email でログインしてください</p>
+    <input type="email" id="email" placeholder="t3.5ty6@gmail.com">
+    <input type="password" id="pw" placeholder="パスワード" style="margin-top:8px;">
+    <button class="btn" id="loginBtn" style="margin-top:14px;width:100%;padding:11px;font-size:13px;">ログイン</button>
+    <div id="loginErr" style="color:#DC2626;font-size:11px;margin-top:10px;display:none;"></div>
+  </div>
+</div>
+
+<!-- メイン -->
+<div id="app" style="display:none;">
+  <div class="topbar">
+    <div>
+      <div class="eyebrow">SKELETON INC. — INTERNAL DASHBOARD</div>
+      <h1>FP Compass オーナー管理</h1>
+    </div>
+    <div class="right">
+      <span id="loggedAs">—</span>
+      <a href="https://dashboard.stripe.com/" target="_blank" rel="noopener">↗ Stripe Dashboard</a>
+      <a href="../">↗ CRM</a>
+      <a href="#" id="logoutBtn">ログアウト</a>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <!-- KPI -->
+    <div class="kpi-row">
+      <div class="kpi">
+        <div class="kpi-label">契約 FP 数</div>
+        <div><span class="kpi-value" id="kpi-fp">—</span><span class="kpi-unit">名</span></div>
+        <div class="kpi-sub">active + trial</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">月次 MRR</div>
+        <div><span class="kpi-unit">¥</span><span class="kpi-value" id="kpi-mrr">—</span></div>
+        <div class="kpi-sub" id="kpi-mrr-sub">割引適用後</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">累計 紹介</div>
+        <div><span class="kpi-value" id="kpi-ref">—</span><span class="kpi-unit">件</span></div>
+        <div class="kpi-sub" id="kpi-ref-sub">active 紹介関係</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">解約済</div>
+        <div><span class="kpi-value" id="kpi-canceled">—</span><span class="kpi-unit">名</span></div>
+        <div class="kpi-sub">累計</div>
+      </div>
+    </div>
+
+    <!-- 契約 FP 一覧 -->
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <div class="panel-title">契約 FP 一覧</div>
+          <div class="panel-sub">tenants コレクションから リアルタイム取得</div>
+        </div>
+        <button class="btn btn-ghost" id="refreshBtn">↻ 再読み込み</button>
+      </div>
+      <div id="fpListWrap">
+        <div class="empty"><div class="icon">⏳</div>読み込み中…</div>
+      </div>
+    </div>
+
+    <!-- 紹介ネットワーク -->
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <div class="panel-title">紹介ネットワーク</div>
+          <div class="panel-sub">誰が誰を紹介したか (referral_ledger)</div>
+        </div>
+      </div>
+      <div id="refNetwork">
+        <div class="empty"><div class="icon">🔗</div>紹介関係 はまだ ありません</div>
+      </div>
+    </div>
+
+    <!-- 解約一覧 -->
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <div class="panel-title">解約 FP 一覧</div>
+          <div class="panel-sub">status = canceled</div>
+        </div>
+      </div>
+      <div id="canceledListWrap">
+        <div class="empty"><div class="icon">✓</div>解約は ありません</div>
+      </div>
+    </div>
+
+    <!-- 運用ツール -->
+    <div class="panel" style="border-top:3px solid var(--gold-soft);">
+      <div class="panel-head">
+        <div>
+          <div class="panel-title">運用ツール</div>
+          <div class="panel-sub">通常 自動実行されるが 手動でも 起動可能</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;">
+        <button class="btn" id="reconcileBtn" style="background:linear-gradient(135deg,#10B981,#059669);box-shadow:0 4px 12px rgba(16,185,129,0.3);padding:11px 22px;">
+          ⚙ 紹介割引 を 今すぐ 反映 (monthlyReconcile)
+        </button>
+        <div style="font-size:11.5px;color:var(--muted);align-self:center;line-height:1.55;">
+          ※ 通常 毎月1日 9時(JST) に 自動実行<br>
+          ※ デモ/テスト時 は 即時反映 したい時に 押す
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut, browserLocalPersistence, setPersistence } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
+  import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+  import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-functions.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAmVAEe9l9e1Yo_dzzJdbTVU35wWKd2sH4",
+    authDomain: "skeleton-fp-compass-632026.firebaseapp.com",
+    projectId: "skeleton-fp-compass-632026",
+    storageBucket: "skeleton-fp-compass-632026.firebasestorage.app",
+    messagingSenderId: "833972948597",
+    appId: "1:833972948597:web:b7310cc22ce41d9738f23c",
+  };
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  const functions = getFunctions(app, 'asia-northeast1');
+  await setPersistence(auth, browserLocalPersistence);
+
+  const OWNER_EMAILS = ['t3.5ty6@gmail.com']; // オーナー Email allowlist
+
+  const $ = (id) => document.getElementById(id);
+  function toast(msg, kind) {
+    const el = $('toast');
+    el.textContent = msg;
+    el.className = 'toast show ' + (kind || '');
+    setTimeout(() => { el.className = 'toast'; }, 3200);
+  }
+
+  // ============================
+  // 認証ゲート
+  // ============================
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) { $('gate').style.display = 'flex'; $('app').style.display = 'none'; return; }
+    if (!OWNER_EMAILS.includes(user.email)) {
+      await signOut(auth);
+      $('loginErr').textContent = 'このアカウントは オーナー権限がありません';
+      $('loginErr').style.display = 'block';
+      return;
+    }
+    $('gate').style.display = 'none';
+    $('app').style.display = 'block';
+    $('loggedAs').textContent = user.email;
+    await loadAll();
+  });
+
+  $('loginBtn').addEventListener('click', async () => {
+    $('loginErr').style.display = 'none';
+    try {
+      await signInWithEmailAndPassword(auth, $('email').value.trim(), $('pw').value);
+    } catch (e) {
+      $('loginErr').textContent = 'ログイン失敗: ' + (e.code || e.message);
+      $('loginErr').style.display = 'block';
+    }
+  });
+  $('pw').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('loginBtn').click(); });
+
+  $('logoutBtn').addEventListener('click', async (e) => {
+    e.preventDefault();
+    await signOut(auth);
+  });
+
+  // ============================
+  // データ取得 + 描画
+  // ============================
+  async function loadAll() {
+    try {
+      const [tenantsSnap, refSnap] = await Promise.all([
+        getDocs(collection(db, 'tenants')),
+        getDocs(collection(db, 'referral_ledger')),
+      ]);
+      const tenants = tenantsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const refs = refSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+      // ── KPI 計算 ──
+      const activeOrTrial = tenants.filter(t => t.billing?.status === 'active' || t.billing?.status === 'trial');
+      const canceled = tenants.filter(t => t.billing?.status === 'canceled');
+      const mrr = activeOrTrial.reduce((sum, t) => {
+        const base = 19800;
+        const discount = t.billing?.currentDiscount || 0;
+        return sum + Math.max(0, base - discount);
+      }, 0);
+      const activeRefs = refs.filter(r => r.status === 'active');
+
+      $('kpi-fp').textContent = activeOrTrial.length;
+      $('kpi-mrr').textContent = mrr.toLocaleString();
+      $('kpi-ref').textContent = activeRefs.length;
+      $('kpi-canceled').textContent = canceled.length;
+      const baseMrr = activeOrTrial.length * 19800;
+      const discounted = baseMrr - mrr;
+      $('kpi-mrr-sub').textContent = `定価 ¥${baseMrr.toLocaleString()} − 割引 ¥${discounted.toLocaleString()}`;
+      $('kpi-ref-sub').textContent = `pending ${refs.filter(r => r.status === 'pending').length} / active ${activeRefs.length} / canceled ${refs.filter(r => r.status === 'canceled').length}`;
+
+      // ── 契約 FP 一覧 ──
+      renderFpList(tenants, refs);
+      // ── 紹介ネットワーク ──
+      renderRefNetwork(tenants, refs);
+      // ── 解約 ──
+      renderCanceledList(canceled);
+    } catch (e) {
+      console.error('loadAll fail:', e);
+      toast('データ取得失敗: ' + (e.message || e), 'error');
+    }
+  }
+
+  function safeEsc(s) { return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+  function renderFpList(tenants, refs) {
+    const wrap = $('fpListWrap');
+    if (tenants.length === 0) {
+      wrap.innerHTML = '<div class="empty"><div class="icon">📋</div>契約 FP は まだ いません</div>';
+      return;
+    }
+    // 紹介関係 lookup
+    const refByReferred = {};
+    refs.forEach(r => {
+      if (r.referredTenantId) refByReferred[r.referredTenantId] = r;
+    });
+    const referredCountByReferrer = {};
+    refs.filter(r => r.status === 'active').forEach(r => {
+      if (r.referrerTenantId) referredCountByReferrer[r.referrerTenantId] = (referredCountByReferrer[r.referrerTenantId] || 0) + 1;
+    });
+
+    const rows = tenants
+      .sort((a, b) => {
+        const ta = a.createdAt?.seconds || 0;
+        const tb = b.createdAt?.seconds || 0;
+        return tb - ta;
+      })
+      .map(t => {
+        const status = t.billing?.status || 'unknown';
+        const baseAmount = 19800;
+        const discount = t.billing?.currentDiscount || 0;
+        const next = Math.max(0, baseAmount - discount);
+        const referredBy = refByReferred[t.id];
+        const referrerName = referredBy ? (tenants.find(x => x.id === referredBy.referrerTenantId)?.name || '?') : null;
+        const refCount = referredCountByReferrer[t.id] || 0;
+        const created = t.createdAt?.seconds ? new Date(t.createdAt.seconds * 1000).toLocaleDateString('ja-JP') : '—';
+        const stripeUrl = t.billing?.stripeCustomerId ? `https://dashboard.stripe.com/customers/${t.billing.stripeCustomerId}` : null;
+        return `
+          <tr>
+            <td>
+              <div style="font-weight:700;">${safeEsc(t.name || t.email || t.id)}</div>
+              <div style="font-size:11px;color:var(--muted);">${safeEsc(t.email || '')}</div>
+            </td>
+            <td><span class="pill pill-${status}">${safeEsc(status)}</span></td>
+            <td class="num">${created}</td>
+            <td class="num">¥${next.toLocaleString()}${discount > 0 ? `<div style="font-size:10.5px;color:var(--good);">割引 ¥${discount.toLocaleString()}</div>` : ''}</td>
+            <td>${referrerName ? `<span class="small-mono">${safeEsc(referrerName)}</span>` : '<span style="color:var(--muted);">—</span>'}</td>
+            <td class="num">${refCount > 0 ? `<strong style="color:var(--gold);">${refCount}名</strong>` : '<span style="color:var(--muted);">0</span>'}</td>
+            <td class="num">${stripeUrl ? `<a href="${stripeUrl}" target="_blank" rel="noopener" style="font-size:11px;color:var(--accent);text-decoration:none;border-bottom:1px dotted;">↗ Stripe</a>` : '<span style="color:var(--muted);">—</span>'}</td>
+          </tr>
+        `;
+      }).join('');
+
+    wrap.innerHTML = `
+      <table>
+        <thead><tr>
+          <th>FP事業者</th><th>状態</th><th>入会日</th><th>翌月請求</th><th>紹介者</th><th>被紹介</th><th></th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+  }
+
+  function renderRefNetwork(tenants, refs) {
+    const wrap = $('refNetwork');
+    const activeRefs = refs.filter(r => r.status === 'active' && r.referrerTenantId && r.referredTenantId);
+    if (activeRefs.length === 0) {
+      wrap.innerHTML = '<div class="empty"><div class="icon">🔗</div>紹介関係 はまだ ありません</div>';
+      return;
+    }
+    const nameById = Object.fromEntries(tenants.map(t => [t.id, t.name || t.email || t.id.slice(0,8)]));
+    const groupedByReferrer = {};
+    activeRefs.forEach(r => {
+      if (!groupedByReferrer[r.referrerTenantId]) groupedByReferrer[r.referrerTenantId] = [];
+      groupedByReferrer[r.referrerTenantId].push(r.referredTenantId);
+    });
+    const lines = Object.entries(groupedByReferrer).map(([referrerId, referredIds]) => {
+      const referrer = nameById[referrerId] || referrerId.slice(0,8);
+      const items = referredIds.map(id => nameById[id] || id.slice(0,8)).join('  ');
+      return `<div class="net-line">📣 <strong>${safeEsc(referrer)}</strong> <span class="ref-arrow">─→</span> ${safeEsc(items)} <span style="color:var(--muted);font-size:10.5px;">(${referredIds.length}名)</span></div>`;
+    }).join('');
+    wrap.innerHTML = `<div class="net-tree">${lines}</div>`;
+  }
+
+  function renderCanceledList(canceled) {
+    const wrap = $('canceledListWrap');
+    if (canceled.length === 0) {
+      wrap.innerHTML = '<div class="empty"><div class="icon">✓</div>解約は ありません</div>';
+      return;
+    }
+    const rows = canceled.map(t => {
+      const cancelDate = t.billing?.canceledAt?.seconds ? new Date(t.billing.canceledAt.seconds * 1000).toLocaleDateString('ja-JP') : '—';
+      return `
+        <tr>
+          <td>
+            <div style="font-weight:700;">${safeEsc(t.name || t.email || t.id)}</div>
+            <div style="font-size:11px;color:var(--muted);">${safeEsc(t.email || '')}</div>
+          </td>
+          <td class="num">${cancelDate}</td>
+        </tr>
+      `;
+    }).join('');
+    wrap.innerHTML = `
+      <table>
+        <thead><tr><th>FP事業者</th><th>解約日</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+  }
+
+  // ── 再読込 ──
+  $('refreshBtn').addEventListener('click', async () => {
+    $('refreshBtn').disabled = true; $('refreshBtn').textContent = '読み込み中…';
+    await loadAll();
+    $('refreshBtn').disabled = false; $('refreshBtn').textContent = '↻ 再読み込み';
+    toast('再読み込み 完了', 'success');
+  });
+
+  // ── 手動 reconcile ──
+  $('reconcileBtn').addEventListener('click', async () => {
+    if (!confirm('紹介割引を 今すぐ 全FP に 反映します。 Stripe で 実際に subscription が 書き換わります。 続けますか?')) return;
+    const btn = $('reconcileBtn');
+    btn.disabled = true; btn.textContent = '⏳ 実行中…';
+    try {
+      const fn = httpsCallable(functions, 'adminTriggerReconcile');
+      const result = await fn({});
+      toast(`✓ reconcile 完了 — 処理 ${result.data?.processed || '?'}件 / 更新 ${result.data?.updated || '?'}件`, 'success');
+      await loadAll();
+    } catch (e) {
+      console.error(e);
+      toast('reconcile 失敗: ' + (e.message || e.code), 'error');
+    } finally {
+      btn.disabled = false; btn.textContent = '⚙ 紹介割引 を 今すぐ 反映 (monthlyReconcile)';
+    }
+  });
+</script>
+</body>
+</html>
