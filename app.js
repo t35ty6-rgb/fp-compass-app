@@ -4269,12 +4269,31 @@ table th, table td { padding: 4px 8px; border-bottom: 1px solid #E8E2D4; }
 table tbody tr:nth-child(even) { background: #F7F5EE; }
 
 ═══════════════════════════════════════════════
-【出力フォーマット 厳守】
+【出力フォーマット 厳守 — PDFファイル を 直接 作る】
 ═══════════════════════════════════════════════
-- 完全な HTML 文書 (<!DOCTYPE html> から </html> まで) のみ
-- code fence (\`\`\`html ... \`\`\`) 禁止
-- 前置きの文 一切 不要
-- HTML本体 だけ そのまま 出力
+**最終成果物は HTML ではなく PDF ファイル**。 以下 3ステップを 全て あなた (Claude Code) が 実行してください:
+
+STEP A: HTML 文書 を 一時ファイル として 書き出し
+  - ファイル名: \`/tmp/${(client.name||'customer').replace(/[\/\\\\\s]+/g, '_')}_${type}_${new Date().toISOString().slice(0,10)}.html\`
+  - 内容: 上記 STEP1〜6 に従って 作った 完全な HTML (<!DOCTYPE html> から </html>)
+
+STEP B: HTML → PDF 変換 (どちらか 使えるもの で)
+  オプション1 (推奨): Chrome headless
+    \`/Applications/Google\\ Chrome.app/Contents/MacOS/Google\\ Chrome --headless --disable-gpu --no-pdf-header-footer --print-to-pdf="<同名 .pdf>" "<同 .html>"\`
+  オプション2: wkhtmltopdf があれば
+    \`wkhtmltopdf --enable-local-file-access "<.html>" "<.pdf>"\`
+  オプション3: weasyprint があれば
+    \`weasyprint "<.html>" "<.pdf>"\`
+
+STEP C: 結果報告
+  - 生成された PDF の パス を 1行 で 報告
+  - 例: \`✓ 生成完了: /tmp/田中健一_cashflow_2026-06-10.pdf\`
+  - その後、 \`open "<PDFパス>"\` で FP のマシン で 自動表示
+
+【注意】
+- HTML を そのまま テキストで 返さない (FP は PDFしか欲しくない)
+- code fence で コードブロック 出さない
+- 説明文 不要、 ファイル生成と PDF 変換 を 実行 → パス報告 のみ
 
 それでは 作成してください。`;
 
