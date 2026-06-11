@@ -278,7 +278,7 @@
       msg("err", `${user.email} は登録されていません。`); await signOut(auth); return;
     }
     const userData = uDoc.data();
-    if (userData.role !== "fp_owner") {
+    if (userData.role !== "fp_owner" && userData.role !== "skeleton_admin") {
       msg("err", `FP アカウントでログインしてください (現在: ${userData.role})。`); await signOut(auth); return;
     }
     const tenantId = userData.tenantId;

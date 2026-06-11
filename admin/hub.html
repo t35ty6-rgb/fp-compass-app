@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Skeleton Hub | 司令室</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@600;700;800&family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0F172A;
+    --bg-2:#1E293B;
+    --card:#fff;
+    --ink:#0F172A;
+    --ink-2:#475569;
+    --muted:#94A3B8;
+    --line:#E2E8F0;
+    --gold:#B68A3E;
+    --gold-soft:#FFE9A8;
+    --accent:#1B3A5C;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;font-family:'Hiragino Sans',-apple-system,sans-serif;background:linear-gradient(180deg,#0F172A 0%,#1E293B 100%);min-height:100vh;color:#0F172A;}
+  body{padding:32px 24px 80px;}
+  .wrap{max-width:1180px;margin:0 auto;}
+  header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:36px;padding-bottom:20px;border-bottom:1px solid rgba(182,138,62,0.3);}
+  .brand{color:#fff;}
+  .eyebrow{font-family:'Inter',sans-serif;font-size:11px;letter-spacing:0.32em;color:var(--gold);font-weight:700;margin-bottom:4px;}
+  h1{font-family:'Noto Serif JP',serif;font-size:30px;font-weight:700;letter-spacing:0.06em;margin:0;color:#fff;}
+  .sub{font-size:13px;color:#cbd5e1;margin-top:6px;line-height:1.6;}
+  .clock{font-family:'JetBrains Mono',monospace;color:#cbd5e1;font-size:13px;text-align:right;}
+  .clock-time{font-size:26px;color:#fff;font-weight:600;margin-top:2px;}
+  .quick{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px;}
+  .quick a{background:linear-gradient(135deg,#FFE9A8,#F4C77A);color:#1F1A12;text-decoration:none;padding:16px 18px;border-radius:12px;display:flex;flex-direction:column;justify-content:space-between;min-height:78px;box-shadow:0 8px 24px rgba(244,199,122,0.22);transition:transform 0.18s,box-shadow 0.18s;}
+  .quick a:hover{transform:translateY(-2px);box-shadow:0 14px 32px rgba(244,199,122,0.35);}
+  .quick-label{font-family:'Inter',sans-serif;font-size:9.5px;letter-spacing:0.22em;font-weight:700;opacity:0.65;text-transform:uppercase;}
+  .quick-title{font-family:'Noto Serif JP',serif;font-size:15.5px;font-weight:700;letter-spacing:0.02em;margin-top:6px;}
+  .quick-arrow{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;margin-top:4px;}
+  section{background:rgba(255,255,255,0.96);border-radius:14px;padding:22px 24px;margin-bottom:18px;box-shadow:0 4px 14px rgba(0,0,0,0.08);}
+  .sec-head{display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--line);}
+  .sec-icon{font-size:20px;}
+  .sec-title{font-family:'Noto Serif JP',serif;font-size:17px;font-weight:700;color:var(--accent);letter-spacing:0.02em;}
+  .sec-sub{font-size:11.5px;color:var(--muted);margin-left:auto;}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+  .grid.cols-2{grid-template-columns:repeat(2,1fr);}
+  .grid.cols-4{grid-template-columns:repeat(4,1fr);}
+  .link-card{background:#F8FAFC;border:1px solid var(--line);border-radius:9px;padding:13px 14px;text-decoration:none;color:var(--ink);display:flex;flex-direction:column;gap:3px;transition:all 0.15s;}
+  .link-card:hover{background:#fff;border-color:var(--accent);transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,0.06);}
+  .link-card .label{font-family:'Inter',sans-serif;font-size:9.5px;letter-spacing:0.14em;color:var(--muted);font-weight:600;text-transform:uppercase;}
+  .link-card .title{font-size:13.5px;font-weight:700;letter-spacing:0.01em;}
+  .link-card .desc{font-size:11px;color:var(--ink-2);line-height:1.5;}
+  .link-card .badge{display:inline-block;font-size:9.5px;font-weight:700;padding:1px 7px;border-radius:99px;letter-spacing:0.04em;margin-left:4px;vertical-align:1px;}
+  .badge-live{background:#DCFCE7;color:#15803D;}
+  .badge-stg{background:#FEF3C7;color:#92400E;}
+  .badge-int{background:#E0E7FF;color:#3730A3;}
+  .footer{color:#94A3B8;font-size:11px;margin-top:30px;text-align:center;letter-spacing:0.04em;font-family:'Inter',sans-serif;}
+  .footer code{background:rgba(255,255,255,0.08);padding:2px 7px;border-radius:4px;color:#cbd5e1;}
+  @media (max-width:760px){
+    .quick,.grid,.grid.cols-2,.grid.cols-4{grid-template-columns:1fr 1fr;}
+    h1{font-size:22px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand">
+      <div class="eyebrow">SKELETON INC. — COMMAND CENTER</div>
+      <h1>司令室 / Hub</h1>
+      <div class="sub">全システム・管理画面・運用ツール を 1 つから ワンクリック</div>
+    </div>
+    <div class="clock">
+      <div id="clock-date">—</div>
+      <div class="clock-time" id="clock-time">—:—</div>
+    </div>
+  </header>
+
+  <!-- 🔥 最重要 (毎日見る) -->
+  <div class="quick">
+    <a href="/admin/dashboard.html" target="_blank" rel="noopener">
+      <span class="quick-label">FP Compass</span>
+      <span class="quick-title">📊 オーナー ダッシュボード</span>
+      <span class="quick-arrow">契約FP一覧 / MRR / 紹介 →</span>
+    </a>
+    <a href="https://dashboard.stripe.com/" target="_blank" rel="noopener">
+      <span class="quick-label">課金</span>
+      <span class="quick-title">💳 Stripe Dashboard</span>
+      <span class="quick-arrow">入金 / 失敗 / Coupon →</span>
+    </a>
+    <a href="https://console.firebase.google.com/project/skeleton-fp-compass-632026" target="_blank" rel="noopener">
+      <span class="quick-label">バックエンド</span>
+      <span class="quick-title">🔥 Firebase Console</span>
+      <span class="quick-arrow">Firestore / Functions →</span>
+    </a>
+    <a href="https://console.anthropic.com/settings/billing" target="_blank" rel="noopener">
+      <span class="quick-label">残高</span>
+      <span class="quick-title">🤖 Anthropic 残高</span>
+      <span class="quick-arrow">API クレジット →</span>
+    </a>
+  </div>
+
+  <!-- ━━━ FP Compass ━━━ -->
+  <section>
+    <div class="sec-head">
+      <div class="sec-icon">📘</div>
+      <div class="sec-title">FP Compass</div>
+      <div class="sec-sub">主力 SaaS / 月 ¥19,800</div>
+    </div>
+    <div class="grid">
+      <a class="link-card" href="https://app.skeleton-inc.jp/" target="_blank" rel="noopener">
+        <div class="label">CRM 本番 <span class="badge badge-live">LIVE</span></div>
+        <div class="title">app.skeleton-inc.jp</div>
+        <div class="desc">FP 事業者 が 使う 顧客管理 画面</div>
+      </a>
+      <a class="link-card" href="https://stg.app.skeleton-inc.jp/" target="_blank" rel="noopener">
+        <div class="label">CRM staging <span class="badge badge-stg">STG</span></div>
+        <div class="title">stg.app.skeleton-inc.jp</div>
+        <div class="desc">Jobs が触る 検証環境 (本番反映前)</div>
+      </a>
+      <a class="link-card" href="https://app.skeleton-inc.jp/admin/dashboard.html" target="_blank" rel="noopener">
+        <div class="label">管理 <span class="badge badge-int">INT</span></div>
+        <div class="title">オーナー ダッシュボード</div>
+        <div class="desc">全FP一覧 / MRR / 紹介ネットワーク</div>
+      </a>
+      <a class="link-card" href="https://fp-compass.skeleton-inc.jp/" target="_blank" rel="noopener">
+        <div class="label">公式 LP</div>
+        <div class="title">fp-compass.skeleton-inc.jp</div>
+        <div class="desc">FP事業者 集客 LP / 申込導線</div>
+      </a>
+      <a class="link-card" href="https://github.com/t35ty6-rgb/fp-compass-app" target="_blank" rel="noopener">
+        <div class="label">ソース 本番</div>
+        <div class="title">GitHub 本番リポ</div>
+        <div class="desc">app.skeleton-inc.jp の ソース</div>
+      </a>
+      <a class="link-card" href="https://github.com/t35ty6-rgb/fp-compass-app-staging" target="_blank" rel="noopener">
+        <div class="label">ソース staging</div>
+        <div class="title">GitHub staging リポ</div>
+        <div class="desc">stg.app.skeleton-inc.jp の ソース</div>
+      </a>
+    </div>
+  </section>
+
+  <!-- ━━━ 課金・決済 ━━━ -->
+  <section>
+    <div class="sec-head">
+      <div class="sec-icon">💳</div>
+      <div class="sec-title">課金 / 決済</div>
+      <div class="sec-sub">Stripe Live mode</div>
+    </div>
+    <div class="grid">
+      <a class="link-card" href="https://dashboard.stripe.com/customers" target="_blank" rel="noopener">
+        <div class="label">顧客</div>
+        <div class="title">Customers</div>
+        <div class="desc">契約FPの Stripe 顧客一覧</div>
+      </a>
+      <a class="link-card" href="https://dashboard.stripe.com/subscriptions" target="_blank" rel="noopener">
+        <div class="label">継続契約</div>
+        <div class="title">Subscriptions</div>
+        <div class="desc">月額 サブスクの 状態 (active/past_due)</div>
+      </a>
+      <a class="link-card" href="https://dashboard.stripe.com/invoices" target="_blank" rel="noopener">
+        <div class="label">請求</div>
+        <div class="title">Invoices</div>
+        <div class="desc">月次請求書 / 失敗 / 再試行</div>
+      </a>
+      <a class="link-card" href="https://dashboard.stripe.com/coupons" target="_blank" rel="noopener">
+        <div class="label">割引</div>
+        <div class="title">Coupons</div>
+        <div class="desc">紹介で 自動 発行された クーポン</div>
+      </a>
+      <a class="link-card" href="https://dashboard.stripe.com/webhooks" target="_blank" rel="noopener">
+        <div class="label">通知</div>
+        <div class="title">Webhooks</div>
+        <div class="desc">Stripe → Cloud Functions 連携 状態</div>
+      </a>
+      <a class="link-card" href="https://dashboard.stripe.com/payments" target="_blank" rel="noopener">
+        <div class="label">入金</div>
+        <div class="title">Payments</div>
+        <div class="desc">クレカ決済 履歴</div>
+      </a>
+    </div>
+  </section>
+
+  <!-- ━━━ Firebase / Cloud ━━━ -->
+  <section>
+    <div class="sec-head">
+      <div class="sec-icon">☁️</div>
+      <div class="sec-title">Firebase / Cloud Run / GCP</div>
+      <div class="sec-sub">バックエンド インフラ</div>
+    </div>
+    <div class="grid">
+      <a class="link-card" href="https://console.firebase.google.com/project/skeleton-fp-compass-632026/firestore" target="_blank" rel="noopener">
+        <div class="label">DB</div>
+        <div class="title">Firestore</div>
+        <div class="desc">tenants / referral_ledger / customers</div>
+      </a>
+      <a class="link-card" href="https://console.firebase.google.com/project/skeleton-fp-compass-632026/functions" target="_blank" rel="noopener">
+        <div class="label">関数</div>
+        <div class="title">Cloud Functions</div>
+        <div class="desc">webhook / monthlyReconcile / generateLineReply</div>
+      </a>
+      <a class="link-card" href="https://console.firebase.google.com/project/skeleton-fp-compass-632026/authentication/users" target="_blank" rel="noopener">
+        <div class="label">認証</div>
+        <div class="title">Authentication</div>
+        <div class="desc">FP 事業者 アカウント 一覧</div>
+      </a>
+      <a class="link-card" href="https://console.cloud.google.com/run?project=skeleton-pricer-130118" target="_blank" rel="noopener">
+        <div class="label">サーバ</div>
+        <div class="title">Cloud Run (proxy)</div>
+        <div class="desc">アンケート LIFF / Webhook proxy</div>
+      </a>
+      <a class="link-card" href="https://console.cloud.google.com/security/secret-manager?project=skeleton-fp-compass-632026" target="_blank" rel="noopener">
+        <div class="label">機密</div>
+        <div class="title">Secret Manager</div>
+        <div class="desc">Stripe key / Anthropic key 等</div>
+      </a>
+      <a class="link-card" href="https://console.firebase.google.com/project/skeleton-fp-compass-632026/storage" target="_blank" rel="noopener">
+        <div class="label">ストレージ</div>
+        <div class="title">Firebase Storage</div>
+        <div class="desc">PDF / 添付 / 録画</div>
+      </a>
+    </div>
+  </section>
+
+  <!-- ━━━ LINE / GAS / カレンダー ━━━ -->
+  <section>
+    <div class="sec-head">
+      <div class="sec-icon">📱</div>
+      <div class="sec-title">LINE / GAS / カレンダー</div>
+      <div class="sec-sub">通信・連携</div>
+    </div>
+    <div class="grid">
+      <a class="link-card" href="https://developers.line.biz/console/" target="_blank" rel="noopener">
+        <div class="label">LINE</div>
+        <div class="title">LINE Developers</div>
+        <div class="desc">Messaging API / LIFF 設定</div>
+      </a>
+      <a class="link-card" href="https://manager.line.biz/" target="_blank" rel="noopener">
+        <div class="label">LINE</div>
+        <div class="title">LINE 公式アカウント Manager</div>
+        <div class="desc">リッチメニュー / 配信</div>
+      </a>
+      <a class="link-card" href="https://script.google.com/home" target="_blank" rel="noopener">
+        <div class="label">スクリプト</div>
+        <div class="title">Google Apps Script</div>
+        <div class="desc">アンケート保存 / Webhook 中継</div>
+      </a>
+      <a class="link-card" href="https://calendar.google.com/calendar/u/0/r/week" target="_blank" rel="noopener">
+        <div class="label">予定</div>
+        <div class="title">Google Calendar</div>
+        <div class="desc">FP事業者の 面談 予定</div>
+      </a>
+      <a class="link-card" href="https://navi.onamae.com/dns" target="_blank" rel="noopener">
+        <div class="label">DNS</div>
+        <div class="title">お名前.com</div>
+        <div class="desc">ドメイン / DNS 設定</div>
+      </a>
+      <a class="link-card" href="https://docs.google.com/spreadsheets/" target="_blank" rel="noopener">
+        <div class="label">表計算</div>
+        <div class="title">Google Sheets</div>
+        <div class="desc">アンケート回答 / 経理</div>
+      </a>
+    </div>
+  </section>
+
+  <!-- ━━━ 他の事業 ━━━ -->
+  <section>
+    <div class="sec-head">
+      <div class="sec-icon">🏢</div>
+      <div class="sec-title">他の事業</div>
+      <div class="sec-sub">Skeleton Inc. ポートフォリオ</div>
+    </div>
+    <div class="grid cols-4">
+      <a class="link-card" href="https://skeleton-inc.jp" target="_blank" rel="noopener">
+        <div class="label">公式</div>
+        <div class="title">Skeleton Inc.</div>
+        <div class="desc">コーポレートサイト</div>
+      </a>
+      <a class="link-card" href="https://t35ty6-rgb.github.io/skeleton-demos/" target="_blank" rel="noopener">
+        <div class="label">デモ集</div>
+        <div class="title">skeleton-demos</div>
+        <div class="desc">過去デモ / LP 雛形</div>
+      </a>
+      <a class="link-card" href="https://github.com/t35ty6-rgb" target="_blank" rel="noopener">
+        <div class="label">ソース</div>
+        <div class="title">GitHub アカウント</div>
+        <div class="desc">全リポ一覧</div>
+      </a>
+      <a class="link-card" href="https://dashboard.stripe.com/dashboard" target="_blank" rel="noopener">
+        <div class="label">資金</div>
+        <div class="title">Stripe ホーム</div>
+        <div class="desc">残高 / 入出金</div>
+      </a>
+    </div>
+  </section>
+
+  <!-- ━━━ Jobs 運用メモ ━━━ -->
+  <section>
+    <div class="sec-head">
+      <div class="sec-icon">🧰</div>
+      <div class="sec-title">Jobs 運用 コマンド</div>
+      <div class="sec-sub">オーナー が 直接 叩く 場面 は ほぼ無し</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;font-family:'JetBrains Mono',monospace;font-size:11.5px;line-height:1.7;background:#F8FAFC;padding:14px 18px;border-radius:9px;color:var(--ink-2);">
+      <div>📦 <strong>staging 反映</strong> (Jobs 自動): <code>~/.skeleton-fp-compass-ops/deploy-staging.sh</code></div>
+      <div>🚀 <strong>本番反映</strong> (オーナー OK 後): <code>~/.skeleton-fp-compass-ops/promote.sh</code></div>
+      <div>↩ <strong>本番 ロールバック</strong> (緊急時): <code>~/.skeleton-fp-compass-ops/rollback.sh</code></div>
+    </div>
+  </section>
+
+  <div class="footer">
+    Skeleton Inc. Command Center · 編集: <code>fp-compass-app/admin/hub.html</code> · ver 1.0
+  </div>
+</div>
+
+<script>
+  function tick(){
+    const d = new Date();
+    const w = ['日','月','火','水','木','金','土'][d.getDay()];
+    document.getElementById('clock-date').textContent = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} (${w})`;
+    document.getElementById('clock-time').textContent = `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+  }
+  tick(); setInterval(tick, 30000);
+</script>
+</body>
+</html>

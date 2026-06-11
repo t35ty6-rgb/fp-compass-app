@@ -2066,8 +2066,39 @@
       transcript_summary: result.transcript_summary || '',
       key_concerns: result.key_concerns || [],
       next_meeting_suggestion: result.next_meeting_suggestion || '',
+      lifeEventCandidates: result.lifeEventCandidates || [],
       createdAt: new Date().toISOString(),
     };
+    // ★ ライフイベント自動抽出: 抽出された 候補 を 該当顧客の customEvents[] に積む
+    try {
+      const cands = Array.isArray(result.lifeEventCandidates) ? result.lifeEventCandidates : [];
+      if (cands.length > 0 && window.DUMMY_CLIENTS) {
+        const c = window.DUMMY_CLIENTS.find(x =>
+          (x.lineFriendId && x.lineFriendId === userId) ||
+          (x.name && (x.name === nameKey || x.name === customerName))
+        );
+        if (c) {
+          if (!Array.isArray(c.customEvents)) c.customEvents = [];
+          const sourceTag = 'Zoom ' + (booking?.date || new Date().toISOString().slice(0,10));
+          cands.forEach(ev => {
+            // 重複防止: date + label 一致は skip
+            const key = (ev.date || '') + '|' + (ev.label || '');
+            if (c.customEvents.some(x => (x.date || '') + '|' + (x.label || '') === key)) return;
+            c.customEvents.push({
+              date: ev.date || '',
+              label: ev.label || '',
+              who: ev.who || c.name,
+              cat: ev.cat || 'family',
+              source: sourceTag,
+              confidence: ev.confidence || 0.5,
+              addedAt: new Date().toISOString(),
+            });
+          });
+          try { localStorage.setItem('fp-crm-clients-v1', JSON.stringify(window.DUMMY_CLIENTS)); } catch (_) {}
+          console.log('[lifeEvent抽出]', cands.length, 'candidates → customEvents on', c.name);
+        }
+      }
+    } catch (e) { console.warn('lifeEventCandidates merge fail:', e); }
     // GAS シート 一次保存 (成功すれば fetchLiveData で全ブラウザ反映)
     fetch(CLOUD_RUN_BASE + '/api/save-ai-result', {
       method: 'POST',

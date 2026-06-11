@@ -155,6 +155,28 @@
       }
     }
 
+    // ★ Zoom議事録から AI 抽出された 個別ライフイベント (client.customEvents[])
+    (client.customEvents || []).forEach(ev => {
+      if (!ev || !ev.date) return;
+      // 'YYYY-MM' を 'YYYY-MM-01' に補完、 'YYYY' を 'YYYY-06-01' に補完
+      let dStr = String(ev.date);
+      if (/^\d{4}$/.test(dStr)) dStr += '-06-01';
+      else if (/^\d{4}-\d{2}$/.test(dStr)) dStr += '-01';
+      const d = new Date(dStr);
+      if (isNaN(d.getTime())) return;
+      if (d >= TODAY && d <= horizonDate) {
+        events.push({
+          date: d,
+          who: ev.who || client.name,
+          label: '🎙 ' + (ev.label || '面談で言及'),
+          cat: ev.cat || 'family',
+          major: (ev.confidence || 0) >= 0.8,
+          source: ev.source || 'AI抽出',
+          confidence: ev.confidence,
+        });
+      }
+    });
+
     events.sort((a, b) => a.date - b.date);
     return events;
   }
