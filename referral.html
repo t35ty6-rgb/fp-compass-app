@@ -209,7 +209,33 @@
       </div>
       <div class="kpi-card ok">
         <div class="kpi-num" id="kpi-next">¥19,800</div>
-        <div class="kpi-lbl">来月の請求額</div>
+        <div class="kpi-lbl" id="kpi-next-lbl">来月の請求額</div>
+        <div class="kpi-sub" id="kpi-next-date" style="display:none;font-size:11.5px;color:#065F46;margin-top:6px;line-height:1.45;font-weight:700;letter-spacing:0.01em;"></div>
+        <div class="kpi-sub" id="kpi-projection" style="display:none;font-size:11.5px;color:#10B981;margin-top:6px;line-height:1.45;font-weight:600;letter-spacing:0.01em;"></div>
+      </div>
+    </div>
+
+    <!-- 割引早見表 -->
+    <div class="panel" style="margin-top:16px;">
+      <div class="panel-h"><h2>紹介人数 × 月額 早見表</h2></div>
+      <div style="padding:8px 18px 18px;font-size:13px;color:#0F172A;">
+        <table style="width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;">
+          <thead><tr style="color:#64748B;font-weight:600;text-align:left;border-bottom:1px solid #E5E7EB;">
+            <th style="padding:8px 0;">有料化済 紹介</th><th>割引</th><th>月額</th><th></th>
+          </tr></thead>
+          <tbody id="discount-tier"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Stripe 実状態 確認パネル -->
+    <div class="panel" id="stripe-panel" style="margin-top:18px;">
+      <div class="panel-h">
+        <h2>Stripe 請求の実際の状態</h2>
+        <button id="refresh-stripe" style="background:#fff;color:#0E1116;border:1px solid #E5E7EB;padding:6px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">↻ Stripe API から再取得</button>
+      </div>
+      <div id="stripe-body" style="padding:14px 18px;font-size:13px;color:#475569;line-height:1.7;">
+        Stripe API に問い合わせ中…
       </div>
     </div>
 
@@ -242,6 +268,7 @@
   import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut,
     setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
   import { getFirestore, doc, getDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+  import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-functions.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyAmVAEe9l9e1Yo_dzzJdbTVU35wWKd2sH4",
@@ -297,6 +324,69 @@
     const items = []; snap.forEach(d => items.push({ id: d.id, ...d.data() }));
     render(items);
 
+    // ★ 早見表 (紹介人数 × 月額)
+    const tierBody = $("discount-tier");
+    if (tierBody) {
+      const currentActive = items.filter(x => x.status === "active").length;
+      const rows = [];
+      for (let i = 0; i <= 6; i++) {
+        const disc = Math.min(i * 3500, 19800);
+        const amt = 19800 - disc;
+        const mark = i === currentActive ? '<span style="background:#10B981;color:#fff;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:700;letter-spacing:0.05em;">← 今ここ</span>' : '';
+        rows.push(`<tr style="border-bottom:1px solid #F1F5F9;">
+          <td style="padding:7px 0;">${i}人</td>
+          <td style="color:#DC2626;font-weight:600;">${disc>0?'-¥'+disc.toLocaleString():'—'}</td>
+          <td style="font-weight:700;">¥${amt.toLocaleString()}${amt===0?' 🎉':''}</td>
+          <td>${mark}</td>
+        </tr>`);
+      }
+      tierBody.innerHTML = rows.join('');
+    }
+
+    // ★ Stripe API 上の 実状態 取得
+    const functions = getFunctions(app, "asia-northeast1");
+    async function refreshStripe() {
+      $("stripe-body").innerHTML = '<span style="opacity:0.6;">Stripe API に問い合わせ中…</span>';
+      try {
+        const fn = httpsCallable(functions, "getMyBilling");
+        const res = await fn({});
+        const d = res.data;
+        if (!d.hasSubscription) {
+          $("stripe-body").innerHTML = `<div style="color:#92400E;">Stripe サブスクリプション 未登録 (basic: ¥${(d.baseMonthly||19800).toLocaleString()})</div>`;
+          return;
+        }
+        const upcoming = d.upcomingAmount != null ? `¥${d.upcomingAmount.toLocaleString()}` : "未確定 (トライアル中)";
+        const upcomingDate = d.upcomingDate ? new Date(d.upcomingDate * 1000).toLocaleDateString("ja-JP") : "—";
+        // ★ KPI card 上に 「次回 ○月○日 請求 から ¥XX,XXX」 を 強調表示
+        if (d.upcomingAmount != null && d.upcomingDate) {
+          const dateStr = new Date(d.upcomingDate * 1000).toLocaleDateString("ja-JP",{month:"numeric",day:"numeric"});
+          $("kpi-next").textContent = `¥${d.upcomingAmount.toLocaleString()}`;
+          $("kpi-next-lbl").textContent = `${dateStr} の 請求から`;
+          const nextDateEl = $("kpi-next-date");
+          nextDateEl.style.display = "block";
+          nextDateEl.innerHTML = `✓ Stripe API 確認済 (live mode)`;
+        }
+        const coupon = d.currentCoupon
+          ? `<span style="color:#065F46;font-weight:700;">${d.currentCoupon.name || d.currentCoupon.id} (${d.currentCoupon.amountOff ? `-¥${(d.currentCoupon.amountOff).toLocaleString()}` : `${d.currentCoupon.percentOff}%`})</span>`
+          : `<span style="color:#6B7280;">なし (有料化済紹介 ゼロ)</span>`;
+        const trialEnd = d.trialEnd ? new Date(d.trialEnd * 1000).toLocaleDateString("ja-JP") : null;
+        $("stripe-body").innerHTML = `
+          <div style="display:grid;grid-template-columns:140px 1fr;gap:6px 16px;">
+            <div style="color:#94A3B8;">サブスク状態</div><div><strong>${d.status}</strong>${trialEnd ? ` <small style="opacity:0.7;">/ トライアル終了 ${trialEnd}</small>` : ''}</div>
+            <div style="color:#94A3B8;">適用 クーポン</div><div>${coupon}</div>
+            <div style="color:#94A3B8;">次回 請求額</div><div><strong style="font-size:16px;color:#0F172A;">${upcoming}</strong> <small style="opacity:0.7;">${upcomingDate}</small></div>
+            <div style="color:#94A3B8;">Firestore 上の予測</div><div>¥${(d.firestoreNextMonthAmount||19800).toLocaleString()}</div>
+          </div>
+          <div style="margin-top:12px;padding:10px 12px;background:#F8FAFC;border-radius:6px;font-size:12px;color:#64748B;line-height:1.6;">
+            紹介された方が <strong>トライアル → 有料</strong> に切替わると 翌月の自動再計算 で クーポン が 適用 → 上の 「次回 請求額」 が ¥3,500 ずつ 下がっていきます。
+          </div>`;
+      } catch (e) {
+        $("stripe-body").innerHTML = `<div style="color:#B91C1C;">取得失敗: ${e.message}</div>`;
+      }
+    }
+    $("refresh-stripe").addEventListener("click", refreshStripe);
+    refreshStripe();
+
     // ボタン
     $("copy-btn").addEventListener("click", async () => {
       await navigator.clipboard.writeText(refUrl);
@@ -327,6 +417,15 @@
     const discount = Math.min(n, 6) * 3500;
     const next = Math.max(0, 19800 - discount);
     $("kpi-next").textContent = `¥${next.toLocaleString()}`;
+    // ★ トライアル全員 有料化したら 来月いくらか projection
+    const proj = $("kpi-projection");
+    if (trial.length > 0) {
+      const potential = Math.max(0, 19800 - Math.min(n + trial.length, 6) * 3500);
+      proj.style.display = "block";
+      proj.innerHTML = `トライアル ${trial.length}人 が 有料化したら → <strong>¥${potential.toLocaleString()}</strong>`;
+    } else {
+      proj.style.display = "none";
+    }
     $("left-count").textContent = Math.max(0, 6 - n);
     $("bar-fill").style.width = `${Math.min(100, (n / 6) * 100)}%`;
     $("count").textContent = `${items.length} 件`;
