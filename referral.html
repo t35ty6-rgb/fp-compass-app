@@ -357,14 +357,24 @@
         }
         const upcoming = d.upcomingAmount != null ? `¥${d.upcomingAmount.toLocaleString()}` : "未確定 (トライアル中)";
         const upcomingDate = d.upcomingDate ? new Date(d.upcomingDate * 1000).toLocaleDateString("ja-JP") : "—";
-        // ★ KPI card 上に 「次回 ○月○日 請求 から ¥XX,XXX」 を 強調表示
-        if (d.upcomingAmount != null && d.upcomingDate) {
+        // ★ demo 100% OFF クーポン 適用中 は KPI を 上書きしない (¥0 表示で 誤解を招く ため)
+        //   通常FP は Stripe実値、 demo は 紹介数×3500 ベース で 「本来の予測額」 を 維持
+        const isDemo = d.currentCoupon?.percentOff === 100;
+        if (!isDemo && d.upcomingAmount != null && d.upcomingDate) {
           const dateStr = new Date(d.upcomingDate * 1000).toLocaleDateString("ja-JP",{month:"numeric",day:"numeric"});
           $("kpi-next").textContent = `¥${d.upcomingAmount.toLocaleString()}`;
           $("kpi-next-lbl").textContent = `${dateStr} の 請求から`;
           const nextDateEl = $("kpi-next-date");
           nextDateEl.style.display = "block";
           nextDateEl.innerHTML = `✓ Stripe API 確認済 (live mode)`;
+        } else if (isDemo && d.upcomingDate) {
+          // demo: KPI の数字は render() の 紹介ベース予測 を維持 / ラベルだけ 日付を 入れる
+          const dateStr = new Date(d.upcomingDate * 1000).toLocaleDateString("ja-JP",{month:"numeric",day:"numeric"});
+          $("kpi-next-lbl").textContent = `${dateStr} の 請求から (本来の予測)`;
+          const nextDateEl = $("kpi-next-date");
+          nextDateEl.style.display = "block";
+          nextDateEl.innerHTML = `🎭 デモアカウント (100% OFFクーポン 適用中 / 実請求 ¥0)`;
+          nextDateEl.style.color = "#9333EA";
         }
         const coupon = d.currentCoupon
           ? `<span style="color:#065F46;font-weight:700;">${d.currentCoupon.name || d.currentCoupon.id} (${d.currentCoupon.amountOff ? `-¥${(d.currentCoupon.amountOff).toLocaleString()}` : `${d.currentCoupon.percentOff}%`})</span>`
