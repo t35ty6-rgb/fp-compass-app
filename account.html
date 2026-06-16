@@ -194,6 +194,42 @@
       </div>
     </div>
 
+    <!-- LINE 連携 設定 -->
+    <div class="section">
+      <div class="section-h">
+        <div class="section-title">公式LINE 連携</div>
+        <p class="section-sub">あなたの LINE 公式アカウント を 接続 → アンケート / 友だち追加QR が 自動 で セットアップ されます</p>
+      </div>
+      <div class="section-body">
+        <div id="line-status" style="margin-bottom:18px;"></div>
+        <label class="lbl" style="font-size:12px;font-weight:700;margin-bottom:6px;display:block;">
+          ① Channel access token (長期)
+          <span style="font-weight:400;color:var(--ink-3);font-size:11px;">— LINE Developers から コピー した 200文字 以上の 文字列</span>
+        </label>
+        <textarea id="line-token" rows="3" placeholder="qwerty12345... (200文字以上)" style="width:100%;padding:12px 14px;font-size:12px;font-family:'JetBrains Mono',monospace;border:1.5px solid var(--line);border-radius:10px;resize:vertical;"></textarea>
+
+        <label class="lbl" style="font-size:12px;font-weight:700;margin-top:14px;margin-bottom:6px;display:block;">
+          ② Channel secret
+          <span style="font-weight:400;color:var(--ink-3);font-size:11px;">— 32文字 の 英数字</span>
+        </label>
+        <input id="line-secret" placeholder="a1b2c3d4e5f6... (32文字)" style="width:100%;padding:12px 14px;font-size:12px;font-family:'JetBrains Mono',monospace;border:1.5px solid var(--line);border-radius:10px;">
+
+        <button id="line-save-btn" class="btn primary" style="margin-top:18px;padding:14px 28px;font-size:14px;font-weight:700;background:#06C755;color:#fff;border:none;border-radius:8px;cursor:pointer;">
+          🔗 接続テスト + 保存 (自動セットアップ)
+        </button>
+
+        <div id="line-result" style="margin-top:16px;"></div>
+
+        <details style="margin-top:18px;background:#F8FAFC;padding:14px 18px;border-radius:8px;font-size:12.5px;color:var(--ink-2);">
+          <summary style="cursor:pointer;font-weight:700;color:var(--ink);">💡 鍵 の 取得 方法 が わからない → ガイド を 開く</summary>
+          <p style="margin-top:10px;line-height:1.85;">
+            LINE Developers Console から Provider 作成 → Messaging API チャネル 作成 → ① と ② を コピー する 手順を 全章 解説:<br>
+            <a href="https://t35ty6-rgb.github.io/skeleton-demos/fp-compass-line-setup/" target="_blank" style="color:#06C755;font-weight:700;">→ 公式LINE 接続ガイド (新タブで開く)</a>
+          </p>
+        </details>
+      </div>
+    </div>
+
     <!-- パスワード変更 (将来) -->
     <div class="section">
       <div class="section-h">
@@ -405,6 +441,79 @@
     } catch (e) {
       console.error(e);
       msg("dl-msg", "err", "ダウンロード失敗: " + e.message);
+    }
+  });
+
+  // ==== LINE 連携 設定 ====
+  async function loadLineStatus() {
+    if (!currentTenantId) return;
+    try {
+      const { getFirestore, doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js');
+      const db = getFirestore(app);
+      const tSnap = await getDoc(doc(db, 'tenants', currentTenantId));
+      const tdata = tSnap.exists() ? tSnap.data() : {};
+      const line = tdata.line || {};
+      const statusEl = document.getElementById('line-status');
+      if (line.channelAccessToken && line.basicId) {
+        statusEl.innerHTML = `<div style="background:#F0FDF4;border:1px solid #06C755;padding:14px 18px;border-radius:10px;font-size:13px;color:#065F46;line-height:1.85;">
+          <strong style="color:#065F46;">✓ 接続済</strong>: ${line.displayName||''} (<code style="background:#fff;padding:2px 7px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:11.5px;">${line.basicId||'?'}</code>)<br>
+          <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+            ${line.surveyUrl ? `<a href="${line.surveyUrl}" target="_blank" style="color:#06C755;font-weight:700;">→ アンケート URL を確認</a>` : ''}
+            ${line.basicId ? `<a href="https://line.me/R/ti/p/${encodeURIComponent(line.basicId.replace(/^@/,'@'))}" target="_blank" style="color:#06C755;font-weight:700;">→ 友だち追加 LINE URL</a>` : ''}
+          </div>
+        </div>`;
+        document.getElementById('line-token').value = '••• 保存済 (再入力すると 上書き) •••';
+        document.getElementById('line-secret').value = '••• 保存済 •••';
+      } else {
+        statusEl.innerHTML = `<div style="background:#FEF3C7;border:1px solid #F59E0B;padding:14px 18px;border-radius:10px;font-size:13px;color:#92400E;">まだ LINE は 接続されていません。 下に Token と Secret を 入力 してください。</div>`;
+      }
+    } catch (e) { console.warn('load line:', e); }
+  }
+  setTimeout(() => { if (currentTenantId) loadLineStatus(); }, 1500);
+
+  $("line-save-btn").addEventListener("click", async () => {
+    const tokenEl = document.getElementById('line-token');
+    const secretEl = document.getElementById('line-secret');
+    const resultEl = document.getElementById('line-result');
+    const token = tokenEl.value.trim();
+    const secret = secretEl.value.trim();
+    if (token.startsWith('•••') || secret.startsWith('•••')) {
+      resultEl.innerHTML = '<div style="color:#92400E;font-size:13px;">既に 接続済 です。 上書き したい場合 は ① と ② を 両方 再入力 してください。</div>';
+      return;
+    }
+    if (!token || token.length < 50) { resultEl.innerHTML = '<div style="color:#B91C1C;font-size:13px;">① Channel access token を 入れてください (200文字以上)</div>'; return; }
+    if (!secret || secret.length < 16) { resultEl.innerHTML = '<div style="color:#B91C1C;font-size:13px;">② Channel secret を 入れてください (32文字)</div>'; return; }
+    const btn = document.getElementById('line-save-btn');
+    btn.disabled = true; btn.textContent = '⏳ 接続中… (30秒程度)';
+    resultEl.innerHTML = '';
+    try {
+      const fn = httpsCallable(functions, "saveLineCredentials");
+      const res = await fn({ channelAccessToken: token, channelSecret: secret });
+      const d = res.data;
+      let qrHtml = '';
+      if (d.qrImgUrl) {
+        qrHtml = `<div style="margin-top:12px;padding:14px;background:#fff;border:1px solid #E2E8F0;border-radius:10px;text-align:center;">
+          <div style="font-size:12px;color:#525252;margin-bottom:8px;">お客様 に 配布する 友だち追加 QR</div>
+          <img src="${d.qrImgUrl}" alt="QR" style="width:200px;height:200px;">
+          <div style="margin-top:8px;font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#0A0A0A;">${d.addFriendUrl}</div>
+        </div>`;
+      }
+      resultEl.innerHTML = `<div style="background:#F0FDF4;border:2px solid #06C755;padding:16px 20px;border-radius:10px;font-size:13px;color:#065F46;line-height:1.85;">
+        <strong>✓ 接続完了 / 自動セットアップ済</strong><br>
+        ・LINE bot ID: <code style="background:#fff;padding:2px 7px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:11px;">${d.basicId}</code><br>
+        ・リッチメニュー 作成: <code style="background:#fff;padding:2px 7px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:11px;">${d.richMenuId.slice(0,20)}…</code><br>
+        ・アンケートURL: <a href="${d.surveyUrl}" target="_blank" style="color:#06C755;font-weight:700;">${d.surveyUrl}</a>
+        ${qrHtml}
+      </div>`;
+      setTimeout(loadLineStatus, 1500);
+    } catch (e) {
+      console.error('LINE save:', e);
+      resultEl.innerHTML = `<div style="background:#FEE2E2;border:2px solid #DC2626;padding:14px 18px;border-radius:10px;font-size:13px;color:#7F1D1D;">
+        ✗ 失敗: ${e.message || e.code || '不明'}<br>
+        <small>token / secret を 確認 して 再試行 してください。</small>
+      </div>`;
+    } finally {
+      btn.disabled = false; btn.textContent = '🔗 接続テスト + 保存 (自動セットアップ)';
     }
   });
 
