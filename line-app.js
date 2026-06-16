@@ -6409,26 +6409,22 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
     const html = `
       <div style="max-width:640px;">
         <div class="section-title">LINE公式アカウント接続</div>
-        <div class="line-card">
-          <div class="settings-row">
-            <label>チャネルID</label>
-            <input type="text" id="set-channel-id" value="${escapeHtml(settings.channelId)}" placeholder="2001234567">
+        <div class="line-card" style="background:linear-gradient(135deg,#F0FDF4,#ECFDF5);border:2px solid #06C755;padding:24px 28px;">
+          <div style="font-size:15px;font-weight:700;color:#065F46;margin-bottom:10px;line-height:1.6;">
+            🔗 LINE 公式アカウント の 接続 は <strong>「アカウント設定」 → 「公式LINE 連携」</strong> から 行います。
           </div>
-          <div class="settings-row">
-            <label>チャネルアクセストークン</label>
-            <input type="password" id="set-channel-token" value="${escapeHtml(settings.channelToken)}" placeholder="長いトークン文字列">
-            <div style="font-size:11px;color:var(--muted);margin-top:3px;">LINE Developers Console → Messaging API → チャネルアクセストークン(長期)</div>
+          <div style="font-size:12.5px;color:#525252;line-height:1.85;margin-bottom:18px;">
+            鍵 ① ② を 貼るだけで <strong>リッチメニュー / Webhook / 自動応答OFF まで 全部 自動セット</strong>。
+            手動で URL を コピペ する 必要 は ありません。
           </div>
-          <div class="settings-row">
-            <label>Webhook URL (お客様のLINE→FPへの返信を受ける)</label>
-            <input type="text" value="https://fp-compass.app/webhook/line/{fp_id}" readonly style="background:#f5f6f8;">
-            <div style="font-size:11px;color:var(--muted);margin-top:3px;">このURLをLINE Developers Consoleの「Webhook URL」に登録してください</div>
-          </div>
-          <div style="display:flex;gap:8px;margin-top:14px;">
-            <button class="primary" id="set-save-btn">保存</button>
-            <button id="set-test-btn">接続テスト</button>
-            <span id="set-test-result" style="font-size:12px;align-self:center;"></span>
-          </div>
+          <a href="/account.html#line" class="primary" style="display:inline-block;background:#06C755;color:#fff;padding:12px 22px;border-radius:8px;font-weight:700;text-decoration:none;font-size:14px;">→ アカウント設定 で LINE 接続 する</a>
+          <details style="margin-top:18px;font-size:12px;color:var(--muted);">
+            <summary style="cursor:pointer;">設定 方法 が わからない (ガイド を 見る)</summary>
+            <p style="margin-top:10px;line-height:1.85;">
+              全10ステップ の 設定ガイド (実画面 + 矢印付き):<br>
+              <a href="https://t35ty6-rgb.github.io/skeleton-demos/fp-compass-line-setup/" target="_blank" style="color:#06C755;font-weight:700;">→ 公式LINE 接続ガイド を 開く</a>
+            </p>
+          </details>
         </div>
 
         <div class="section-title" style="margin-top:24px;">FP情報 (テンプレ署名で使用)</div>
@@ -6459,31 +6455,19 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
     `;
     document.querySelector('[data-line-view="settings"]').innerHTML = html;
 
-    document.getElementById('set-save-btn').addEventListener('click', () => {
+    // FP表示名 / レポートURL / カレンダー / マスター稼働 は 残ってる
+    const saveBtnEl = document.getElementById('set-save-btn');
+    if (saveBtnEl) saveBtnEl.addEventListener('click', () => {
+      const existing = loadSettings();
       const s = {
-        channelId: document.getElementById('set-channel-id').value,
-        channelToken: document.getElementById('set-channel-token').value,
-        fpName: document.getElementById('set-fp-name').value,
-        reportUrl: document.getElementById('set-report-url').value,
-        calendarUrl: document.getElementById('set-calendar-url').value,
-        masterEnabled: document.getElementById('set-master-enabled').checked,
+        ...existing,
+        fpName: (document.getElementById('set-fp-name')||{}).value || existing.fpName,
+        reportUrl: (document.getElementById('set-report-url')||{}).value || existing.reportUrl,
+        calendarUrl: (document.getElementById('set-calendar-url')||{}).value || existing.calendarUrl,
+        masterEnabled: (document.getElementById('set-master-enabled')||{}).checked ?? existing.masterEnabled,
       };
       saveSettings(s);
-      const result = document.getElementById('set-test-result');
-      result.textContent = '✓ 保存しました';
-      result.style.color = 'var(--green)';
-      setTimeout(() => { result.textContent = ''; }, 2500);
       updateHeroStatus();
-    });
-
-    document.getElementById('set-test-btn').addEventListener('click', () => {
-      const result = document.getElementById('set-test-result');
-      result.textContent = '接続確認中...';
-      result.style.color = 'var(--muted)';
-      setTimeout(() => {
-        result.textContent = '✓ LINE Messaging API 接続OK (デモ)';
-        result.style.color = 'var(--green)';
-      }, 800);
     });
 
     document.getElementById('set-master-enabled').addEventListener('change', e => {
