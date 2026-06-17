@@ -3,389 +3,591 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>事前 アンケート — FP Compass</title>
-<link rel="icon" type="image/svg+xml" href="../favicon.svg">
-<meta name="theme-color" content="#06C755">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<title>FP相談 事前ヒアリング | FP Compass</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  *{box-sizing:border-box;margin:0;padding:0;-webkit-font-smoothing:antialiased}
-  body{font-family:'Noto Sans JP',sans-serif;background:#F5F7FA;color:#0F172A;line-height:1.7;padding:20px 14px 80px;min-height:100vh;font-feature-settings:"palt"}
-  .wrap{max-width:560px;margin:0 auto}
+  :root{
+    --bg:#F7F7F5; --paper:#FFFFFF; --surface-2:#FAFAF9;
+    --ink:#0A0A0A; --ink-2:#3F3F46; --ink-3:#6B6B6B; --muted:#9A9A9A;
+    --accent:#5B5BF0; --accent-2:#4242C9; --accent-3:#7878F5;
+    --accent-soft:#EEF1FE; --accent-faint:#F5F7FF;
+    --line:#ECECEA; --line-2:#DCDCD8;
+    --ok:#047647; --ok-soft:#ECFDF3;
+    --warn:#B5530F; --warn-soft:#FFF6E5;
+    --green:#06c755;
+    --font-display:"Manrope","Noto Sans JP",-apple-system,sans-serif;
+    --font-body:"Noto Sans JP","Manrope",-apple-system,sans-serif;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-body);line-height:1.6;font-feature-settings:"palt" 1;-webkit-font-smoothing:antialiased;letter-spacing:0}
+  .wrap{max-width:560px;margin:0 auto;padding:28px 18px 80px}
+  .header{display:flex;align-items:center;gap:11px;margin-bottom:24px;padding-bottom:18px;border-bottom:1px solid var(--line)}
+  .logo{width:36px;height:36px;background:var(--accent);color:#fff;font-family:var(--font-display);font-weight:800;font-size:13px;border-radius:9px;display:flex;align-items:center;justify-content:center;letter-spacing:-0.02em;box-shadow:0 4px 12px rgba(91,91,240,0.30)}
+  .brand{font-family:var(--font-display);font-weight:700;font-size:15px;letter-spacing:-0.012em;line-height:1.2}
+  .brand small{color:var(--ink-3);font-weight:500;display:block;font-size:11px;margin-top:2px;font-family:var(--font-body)}
+  h1{font-family:var(--font-display);font-size:24px;font-weight:800;letter-spacing:-0.028em;margin:0 0 8px;color:var(--ink);line-height:1.2}
+  .lead{color:var(--ink-3);font-size:13.5px;margin-bottom:22px;line-height:1.6}
+  .lead strong{color:var(--accent);font-weight:700}
 
-  .hero{background:linear-gradient(135deg,#06C755,#04a045);color:#fff;padding:32px 28px;border-radius:18px;margin-bottom:20px;position:relative;overflow:hidden}
-  .hero::before{content:'';position:absolute;top:-40px;right:-40px;width:180px;height:180px;background:radial-gradient(circle,rgba(255,255,255,0.15) 0%,transparent 65%)}
-  .hero .for{font-size:11px;letter-spacing:0.18em;font-weight:700;opacity:0.85;margin-bottom:6px;font-family:'Noto Sans JP',sans-serif}
-  .hero h1{font-family:'Noto Serif JP',serif;font-size:24px;font-weight:700;line-height:1.4;margin-bottom:10px}
-  .hero .lead{font-size:13.5px;line-height:1.85;opacity:0.95}
-  .hero .fp-name{margin-top:14px;padding:10px 14px;background:rgba(255,255,255,0.15);border-radius:8px;font-size:13px;font-weight:700;display:none}
-  .hero .fp-name.show{display:block}
+  .progress-wrap{margin:0 0 24px;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px 16px}
+  .progress-label{display:flex;justify-content:space-between;font-family:var(--font-display);font-size:11.5px;font-weight:600;color:var(--ink-3);letter-spacing:0.04em;text-transform:uppercase;margin-bottom:6px}
+  .progress-label .pct{color:var(--accent-2);font-weight:800}
+  .progress-bar{height:5px;background:var(--line);border-radius:100px;overflow:hidden}
+  .progress-bar-fill{height:100%;background-image:linear-gradient(90deg,var(--accent-3),var(--accent));border-radius:100px;transition:width .25s}
 
-  .card{background:#fff;border-radius:14px;padding:24px 26px;margin-bottom:14px;box-shadow:0 2px 12px rgba(15,23,42,0.04)}
-  .q-num{font-size:11.5px;font-weight:700;color:#06C755;letter-spacing:0.18em;margin-bottom:6px}
-  .q-title{font-family:'Noto Serif JP',serif;font-size:16px;font-weight:700;margin-bottom:14px;color:#0F172A;line-height:1.45}
-  .q-title .req{color:#DC2626;margin-left:4px}
+  .section{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-bottom:14px;box-shadow:0 1px 0 rgba(16,24,40,.04)}
+  .section-head{display:flex;align-items:center;gap:8px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+  .section-eyebrow{font-family:var(--font-display);font-size:10.5px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);background:var(--accent-soft);border:1px solid #DDE1FB;padding:3px 9px;border-radius:100px;flex-shrink:0}
+  .section-title{font-family:var(--font-display);font-weight:700;font-size:15px;letter-spacing:-0.012em;color:var(--ink)}
 
-  .opts{display:flex;flex-direction:column;gap:8px}
-  .opt{display:flex;align-items:center;gap:10px;padding:11px 14px;border:1.5px solid #E2E8F0;border-radius:10px;cursor:pointer;font-size:14px;transition:all 0.15s;background:#fff}
-  .opt:hover{border-color:#06C755;background:#F0FDF4}
-  .opt input{width:18px;height:18px;accent-color:#06C755}
-  .opt input:checked + span{font-weight:700;color:#0F172A}
-  .opt:has(input:checked){border-color:#06C755;background:#F0FDF4;box-shadow:0 0 0 3px rgba(6,199,85,0.1)}
+  .card{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:22px 20px;margin-bottom:14px;box-shadow:0 1px 0 rgba(16,24,40,.04)}
+  .q{margin-bottom:18px}
+  .q:last-child{margin-bottom:0}
+  .q-label{display:block;font-family:var(--font-display);font-weight:700;font-size:13.5px;margin-bottom:10px;color:var(--ink);letter-spacing:-0.005em}
+  .q-label .q-no{font-family:var(--font-display);font-size:10px;font-weight:700;background:var(--accent);color:#fff;padding:2px 7px;border-radius:4px;margin-right:8px;letter-spacing:0.06em;vertical-align:1px}
+  .q-sub{font-size:11.5px;color:var(--ink-3);margin-top:-4px;margin-bottom:10px;line-height:1.5;font-style:normal}
 
-  textarea, input[type=text], input[type=date]{width:100%;padding:12px 14px;border:1.5px solid #E2E8F0;border-radius:10px;font-size:14px;font-family:inherit;background:#fff;resize:vertical}
-  textarea:focus, input[type=text]:focus, input[type=date]:focus{outline:none;border-color:#06C755;box-shadow:0 0 0 4px rgba(6,199,85,0.12)}
+  .opts{display:grid;gap:7px}
+  .opts.opts-2col{grid-template-columns:1fr 1fr}
+  .opts.opts-3col{grid-template-columns:repeat(3,1fr)}
+  .opt{display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--surface-2);border:1px solid var(--line);border-radius:9px;cursor:pointer;transition:all .12s;font-size:13.5px;color:var(--ink-2)}
+  .opt:hover{border-color:var(--accent-3);background:var(--accent-faint)}
+  .opt input{accent-color:var(--accent);flex-shrink:0;width:16px;height:16px}
+  .opt input:checked + span{color:var(--ink);font-weight:600}
+  .opt:has(input:checked){border-color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 3px rgba(91,91,240,0.10)}
 
-  .submit-area{position:sticky;bottom:14px;background:linear-gradient(180deg,transparent,#F5F7FA 30%);padding:30px 0 0;margin-top:20px}
-  .submit{width:100%;padding:18px;background:#0F172A;color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;letter-spacing:0.06em;transition:all 0.15s;display:flex;align-items:center;justify-content:center;gap:10px}
-  .submit:hover{background:#06C755;transform:translateY(-1px);box-shadow:0 12px 32px rgba(6,199,85,0.3)}
-  .submit:disabled{background:#94A3B8;cursor:wait}
-  .progress{height:6px;background:#E2E8F0;border-radius:99px;overflow:hidden;margin-bottom:14px;position:sticky;top:14px;z-index:5}
-  .progress-fill{height:100%;background:linear-gradient(90deg,#06C755,#A7F3D0);transition:width 0.3s;width:0%}
+  input[type=text],input[type=tel],input[type=number],textarea,select{width:100%;font:inherit;padding:11px 13px;border:1px solid var(--line-2);border-radius:9px;background:var(--paper);font-size:14px;color:var(--ink);transition:border-color .12s,box-shadow .12s}
+  input[type=text]:focus,input[type=tel]:focus,input[type=number]:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(91,91,240,0.16)}
+  textarea{resize:vertical;min-height:88px;font-family:var(--font-body);line-height:1.55}
 
-  .err{background:#FEE2E2;border:2px solid #DC2626;color:#7F1D1D;padding:12px 16px;border-radius:10px;margin:14px 0;font-size:13px;display:none}
-  .err.show{display:block}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:14px 22px;background:var(--accent);background-image:linear-gradient(180deg,var(--accent-3),var(--accent));color:#fff;border:1px solid var(--accent-2);border-radius:11px;font-family:var(--font-display);font-weight:700;font-size:14.5px;letter-spacing:0;cursor:pointer;transition:transform .12s,box-shadow .12s;box-shadow:0 1px 0 rgba(255,255,255,.18) inset,0 6px 18px rgba(91,91,240,.30)}
+  .btn:hover{transform:translateY(-1px);box-shadow:0 1px 0 rgba(255,255,255,.18) inset,0 10px 24px rgba(91,91,240,.40)}
+  .btn:disabled{background:var(--muted);background-image:none;cursor:not-allowed;transform:none;box-shadow:none}
 
-  .done{background:linear-gradient(135deg,#065F46,#047857);color:#fff;padding:40px 28px;border-radius:18px;text-align:center;display:none}
-  .done.show{display:block}
-  .done h2{font-family:'Noto Serif JP',serif;font-size:26px;margin-bottom:14px}
-  .done p{font-size:14px;line-height:1.85;opacity:0.95;margin-bottom:14px}
-  .done .ic{font-size:54px;margin-bottom:14px}
+  .ok{background:var(--ok-soft);color:var(--ok);border:1px solid #ABEFC6;padding:18px 20px;border-radius:14px;margin-bottom:14px}
+  .ok h2{margin:0 0 6px;font-family:var(--font-display);font-size:18px;font-weight:800;letter-spacing:-0.018em}
+  .meta-row{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid var(--line);font-size:13.5px}
+  .meta-row:last-child{border-bottom:none}
+  .meta-row .k{color:var(--ink-3);font-family:var(--font-display);font-weight:600;font-size:11px;letter-spacing:0.04em;text-transform:uppercase}
+  .meta-row .v{font-family:var(--font-display);font-weight:700;color:var(--ink)}
 
-  .loading{text-align:center;padding:60px 20px;font-size:14px;color:#64748B}
-  .loading-spinner{display:inline-block;width:36px;height:36px;border:4px solid #E2E8F0;border-top-color:#06C755;border-radius:50%;animation:spin 0.8s linear infinite;margin-bottom:14px}
-  @keyframes spin{to{transform:rotate(360deg)}}
+  /* Date grid + time chips for booking */
+  .date-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px}
+  .date-cell{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:10px 4px;text-align:center;cursor:pointer;transition:all .12s;position:relative}
+  .date-cell:hover{border-color:var(--accent-3);background:var(--accent-faint)}
+  .date-cell input{display:none}
+  .date-cell.sel{background:var(--accent);background-image:linear-gradient(180deg,var(--accent-3),var(--accent));border-color:var(--accent-2);color:#fff;box-shadow:0 4px 12px rgba(91,91,240,.30)}
+  .date-cell.weekend .date-wday{color:#E11D48}
+  .date-cell.sel .date-wday{color:rgba(255,255,255,.85)}
+  .date-mon{font-family:var(--font-body);font-size:10.5px;color:var(--ink-3);font-weight:500}
+  .date-num{font-family:var(--font-display);font-weight:800;font-size:18px;letter-spacing:-0.025em;color:var(--ink);line-height:1}
+  .date-cell.sel .date-num{color:#fff}
+  .date-cell.sel .date-mon{color:rgba(255,255,255,.75)}
+  .date-wday{font-family:var(--font-body);font-size:10.5px;color:var(--ink-3);margin-top:2px}
+
+  .time-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
+  .time-chip{background:var(--paper);border:1px solid var(--line);border-radius:9px;padding:11px 8px;text-align:center;cursor:pointer;transition:all .12s;font-family:var(--font-display);font-weight:600;font-size:13.5px;color:var(--ink-2)}
+  .time-chip input{display:none}
+  .time-chip:hover{border-color:var(--accent-3);background:var(--accent-faint);color:var(--ink)}
+  .time-chip.sel{background:var(--accent);background-image:linear-gradient(180deg,var(--accent-3),var(--accent));border-color:var(--accent-2);color:#fff}
+
+  /* Multi-slot summary box */
+  .slot-summary{background:var(--accent-faint);border:1px solid #DDE1FB;border-radius:10px;padding:12px 14px;margin-top:8px;display:flex;flex-direction:column;gap:6px}
+  .slot-summary-empty{color:var(--ink-3);font-style:italic;font-size:12.5px}
+  .slot-item{display:flex;align-items:center;gap:8px;background:var(--paper);border:1px solid #DDE1FB;border-radius:8px;padding:8px 12px;font-size:13px}
+  .slot-item-num{font-family:var(--font-display);font-size:10px;font-weight:700;background:var(--accent);color:#fff;padding:2px 7px;border-radius:4px;letter-spacing:0.06em}
+  .slot-item-date{font-family:var(--font-display);font-weight:700;color:var(--ink)}
+  .slot-item-time{margin-left:auto;font-family:var(--font-body);color:var(--ink-3);font-size:12px}
+  .slot-item-x{background:transparent;border:none;color:var(--ink-3);cursor:pointer;font-size:14px;padding:2px 6px;border-radius:4px}
+  .slot-item-x:hover{background:var(--surface-2);color:#DC2B2B}
+
+  .wizard-nav{display:grid;grid-template-columns:1fr 2fr;gap:10px;margin-top:18px}
+  .btn-ghost{display:inline-flex;align-items:center;justify-content:center;padding:14px 18px;background:var(--paper);border:1px solid var(--line-2);color:var(--ink-2);font-family:var(--font-display);font-weight:600;font-size:13.5px;border-radius:11px;cursor:pointer;transition:all .12s}
+  .btn-ghost:hover{background:var(--surface-2);border-color:var(--ink-3)}
+  .btn-ghost:disabled{opacity:.4;cursor:not-allowed}
+  .step{animation:slideIn .25s cubic-bezier(.2,.7,.2,1)}
+  @keyframes slideIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+  .hint{background:var(--warn-soft);border:1px solid #F7D8AE;color:var(--warn);border-radius:10px;padding:10px 14px;margin:14px 0 0;font-size:12.5px;line-height:1.6}
+  .hint strong{font-weight:700}
+
+  .footer{text-align:center;font-size:11px;color:var(--muted);margin-top:32px;font-family:var(--font-body)}
+  .fp-name-badge{margin-top:14px;padding:10px 14px;background:linear-gradient(135deg,#F0FDF4,#ECFDF5);border:1px solid #06C755;border-radius:8px;font-size:13px;font-weight:700;color:#065F46;display:none}
+  .fp-name-badge.show{display:block}
 </style>
 </head>
 <body>
-<div class="wrap">
-
-  <div class="progress"><div class="progress-fill" id="pfill"></div></div>
-
-  <div class="hero">
-    <div class="for">FOR YOU · ご記入 ありがとうございます</div>
-    <h1>事前 アンケート</h1>
-    <div class="lead">面談 前 に いくつか 教えてください。 約3〜5分 で 完了 します。</div>
-    <div class="fp-name" id="fp-name"></div>
-  </div>
-
-  <div id="loading" class="loading">
-    <div class="loading-spinner"></div>
-    <div>準備 しています…</div>
-  </div>
-
-  <form id="survey-form" style="display:none;">
-    <!-- Q1 年代 -->
-    <div class="card" data-q="q1">
-      <div class="q-num">Q 1 / 15</div>
-      <div class="q-title">ご年代<span class="req">*</span></div>
-      <div class="opts">
-        <label class="opt"><input type="radio" name="q1_年代" value="20代"><span>20代</span></label>
-        <label class="opt"><input type="radio" name="q1_年代" value="30代"><span>30代</span></label>
-        <label class="opt"><input type="radio" name="q1_年代" value="40代"><span>40代</span></label>
-        <label class="opt"><input type="radio" name="q1_年代" value="50代"><span>50代</span></label>
-        <label class="opt"><input type="radio" name="q1_年代" value="60代"><span>60代</span></label>
-        <label class="opt"><input type="radio" name="q1_年代" value="70代以上"><span>70代以上</span></label>
-      </div>
+  <div class="wrap">
+    <div class="header">
+      <div class="logo">FP</div>
+      <div class="brand">FP Compass<small>Skeleton Inc.</small></div>
     </div>
-
-    <!-- Q2 職業 -->
-    <div class="card" data-q="q2">
-      <div class="q-num">Q 2 / 15</div>
-      <div class="q-title">ご職業<span class="req">*</span></div>
-      <div class="opts">
-        <label class="opt"><input type="radio" name="q2_職業" value="会社員"><span>会社員</span></label>
-        <label class="opt"><input type="radio" name="q2_職業" value="公務員"><span>公務員</span></label>
-        <label class="opt"><input type="radio" name="q2_職業" value="自営業・フリーランス"><span>自営業・フリーランス</span></label>
-        <label class="opt"><input type="radio" name="q2_職業" value="専門職"><span>専門職 (医師・士業 等)</span></label>
-        <label class="opt"><input type="radio" name="q2_職業" value="主婦・主夫"><span>主婦・主夫</span></label>
-        <label class="opt"><input type="radio" name="q2_職業" value="退職済"><span>退職済</span></label>
-        <label class="opt"><input type="radio" name="q2_職業" value="その他"><span>その他</span></label>
-      </div>
-    </div>
-
-    <!-- Q3 家族構成 -->
-    <div class="card" data-q="q3">
-      <div class="q-num">Q 3 / 15</div>
-      <div class="q-title">ご家族構成<span class="req">*</span></div>
-      <div class="opts">
-        <label class="opt"><input type="radio" name="q3_家族" value="独身"><span>独身</span></label>
-        <label class="opt"><input type="radio" name="q3_家族" value="夫婦のみ"><span>夫婦のみ</span></label>
-        <label class="opt"><input type="radio" name="q3_家族" value="夫婦+子ども"><span>夫婦 + 子ども</span></label>
-        <label class="opt"><input type="radio" name="q3_家族" value="ひとり親+子ども"><span>ひとり親 + 子ども</span></label>
-        <label class="opt"><input type="radio" name="q3_家族" value="その他"><span>その他</span></label>
-      </div>
-    </div>
-
-    <!-- Q4 世帯年収 -->
-    <div class="card" data-q="q4">
-      <div class="q-num">Q 4 / 15</div>
-      <div class="q-title">世帯 年収<span class="req">*</span></div>
-      <div class="opts">
-        <label class="opt"><input type="radio" name="q4_年収" value="〜300万"><span>〜 300万円</span></label>
-        <label class="opt"><input type="radio" name="q4_年収" value="300-500万"><span>300〜500万円</span></label>
-        <label class="opt"><input type="radio" name="q4_年収" value="500-700万"><span>500〜700万円</span></label>
-        <label class="opt"><input type="radio" name="q4_年収" value="700-1000万"><span>700〜1,000万円</span></label>
-        <label class="opt"><input type="radio" name="q4_年収" value="1000-1500万"><span>1,000〜1,500万円</span></label>
-        <label class="opt"><input type="radio" name="q4_年収" value="1500-2000万"><span>1,500〜2,000万円</span></label>
-        <label class="opt"><input type="radio" name="q4_年収" value="2000万+"><span>2,000万円 以上</span></label>
-      </div>
-    </div>
-
-    <!-- Q5 住居形態 -->
-    <div class="card" data-q="q5">
-      <div class="q-num">Q 5 / 15</div>
-      <div class="q-title">住居 形態<span class="req">*</span></div>
-      <div class="opts">
-        <label class="opt"><input type="radio" name="q5_住居" value="持ち家・住宅ローンあり"><span>持ち家 (住宅ローン あり)</span></label>
-        <label class="opt"><input type="radio" name="q5_住居" value="持ち家・住宅ローンなし"><span>持ち家 (住宅ローン なし)</span></label>
-        <label class="opt"><input type="radio" name="q5_住居" value="賃貸"><span>賃貸</span></label>
-        <label class="opt"><input type="radio" name="q5_住居" value="社宅・寮"><span>社宅・寮</span></label>
-        <label class="opt"><input type="radio" name="q5_住居" value="実家"><span>実家</span></label>
-      </div>
-    </div>
-
-    <!-- Q6 金融資産 -->
-    <div class="card" data-q="q6">
-      <div class="q-num">Q 6 / 15</div>
-      <div class="q-title">金融資産 額 (おおよそ)<span class="req">*</span></div>
-      <div class="opts">
-        <label class="opt"><input type="radio" name="q6_資産" value="100万未満"><span>100万円 未満</span></label>
-        <label class="opt"><input type="radio" name="q6_資産" value="100-500万"><span>100〜500万円</span></label>
-        <label class="opt"><input type="radio" name="q6_資産" value="500-1000万"><span>500〜1,000万円</span></label>
-        <label class="opt"><input type="radio" name="q6_資産" value="1000-3000万"><span>1,000〜3,000万円</span></label>
-        <label class="opt"><input type="radio" name="q6_資産" value="3000万+"><span>3,000万円 以上</span></label>
-      </div>
-    </div>
-
-    <!-- Q7 保有商品 (複数選択) -->
-    <div class="card" data-q="q7">
-      <div class="q-num">Q 7 / 15</div>
-      <div class="q-title">現在 保有 している 金融商品 (複数選択 可)</div>
-      <div class="opts">
-        <label class="opt"><input type="checkbox" name="q7_保有" value="NISA"><span>NISA</span></label>
-        <label class="opt"><input type="checkbox" name="q7_保有" value="iDeCo・企業型DC"><span>iDeCo / 企業型DC</span></label>
-        <label class="opt"><input type="checkbox" name="q7_保有" value="生命保険"><span>生命保険</span></label>
-        <label class="opt"><input type="checkbox" name="q7_保有" value="医療保険"><span>医療保険</span></label>
-        <label class="opt"><input type="checkbox" name="q7_保有" value="住宅ローン"><span>住宅ローン</span></label>
-        <label class="opt"><input type="checkbox" name="q7_保有" value="株式・投資信託"><span>株式 / 投資信託</span></label>
-        <label class="opt"><input type="checkbox" name="q7_保有" value="預貯金のみ"><span>預貯金 のみ</span></label>
-        <label class="opt"><input type="checkbox" name="q7_保有" value="特になし"><span>特に なし</span></label>
-      </div>
-    </div>
-
-    <!-- Q8 相談したい テーマ (複数選択) -->
-    <div class="card" data-q="q8">
-      <div class="q-num">Q 8 / 15</div>
-      <div class="q-title">相談したい テーマ (複数選択 可)<span class="req">*</span></div>
-      <div class="opts">
-        <label class="opt"><input type="checkbox" name="q8_テーマ" value="資産運用"><span>資産運用</span></label>
-        <label class="opt"><input type="checkbox" name="q8_テーマ" value="老後資金"><span>老後資金</span></label>
-        <label class="opt"><input type="checkbox" name="q8_テーマ" value="教育費"><span>教育費</span></label>
-        <label class="opt"><input type="checkbox" name="q8_テーマ" value="住宅購入"><span>住宅購入</span></label>
-        <label class="opt"><input type="checkbox" name="q8_テーマ" value="保険見直し"><span>保険見直し</span></label>
-        <label class="opt"><input type="checkbox" name="q8_テーマ" value="相続・贈与"><span>相続・贈与</span></label>
-        <label class="opt"><input type="checkbox" name="q8_テーマ" value="ライフプラン"><span>ライフプラン全般</span></label>
-        <label class="opt"><input type="checkbox" name="q8_テーマ" value="その他"><span>その他</span></label>
-      </div>
-    </div>
-
-    <!-- Q9 悩み 自由記述 -->
-    <div class="card" data-q="q9">
-      <div class="q-num">Q 9 / 15</div>
-      <div class="q-title">具体的な お悩み・ご質問 (任意)</div>
-      <textarea name="q9_悩み" rows="4" placeholder="例: 子どもが2人いて 教育費 が 心配。 住宅ローン と 並行して どう貯めれば 良いか 知りたい。"></textarea>
-    </div>
-
-    <!-- Q10 生年月日 -->
-    <div class="card" data-q="q10">
-      <div class="q-num">Q 10 / 15</div>
-      <div class="q-title">生年月日<span class="req">*</span></div>
-      <input type="date" name="q10_生年月日" min="1925-01-01" max="2010-12-31">
-      <div style="font-size:11px;color:#64748B;margin-top:6px;">ライフプラン 計算 に 使用 します。 個人を 特定 する 目的 で は 使用 しません。</div>
-    </div>
-
-    <!-- Q11-13 面談希望日 -->
-    <div class="card" data-q="q11">
-      <div class="q-num">Q 11 / 15</div>
-      <div class="q-title">面談 第一希望 日時<span class="req">*</span></div>
-      <input type="text" name="q11_候補1" placeholder="例: 5/15 10:00〜">
-    </div>
-    <div class="card" data-q="q12">
-      <div class="q-num">Q 12 / 15</div>
-      <div class="q-title">面談 第二希望 日時</div>
-      <input type="text" name="q12_候補2" placeholder="例: 5/17 14:00〜">
-    </div>
-    <div class="card" data-q="q13">
-      <div class="q-num">Q 13 / 15</div>
-      <div class="q-title">面談 第三希望 日時</div>
-      <input type="text" name="q13_候補3" placeholder="例: 5/20 19:00〜">
-    </div>
-
-    <!-- Q14 理想 -->
-    <div class="card" data-q="q14">
-      <div class="q-num">Q 14 / 15</div>
-      <div class="q-title">理想 の 未来 / 達成したい こと (任意)</div>
-      <textarea name="q14_理想" rows="4" placeholder="例: 子ども 全員 を 大学 まで 進学 させて、 60歳 で セミリタイア したい"></textarea>
-    </div>
-
-    <!-- Q15 緊急度 -->
-    <div class="card" data-q="q15">
-      <div class="q-num">Q 15 / 15</div>
-      <div class="q-title">ご相談 の 緊急度<span class="req">*</span></div>
-      <div class="opts">
-        <label class="opt"><input type="radio" name="q15_緊急度" value="すぐ"><span>すぐに 解決したい</span></label>
-        <label class="opt"><input type="radio" name="q15_緊急度" value="半年以内"><span>半年 以内</span></label>
-        <label class="opt"><input type="radio" name="q15_緊急度" value="1年以内"><span>1年 以内</span></label>
-        <label class="opt"><input type="radio" name="q15_緊急度" value="じっくり"><span>じっくり 考えたい</span></label>
-      </div>
-    </div>
-
-    <!-- お名前 -->
-    <div class="card" data-q="name">
-      <div class="q-num">最後 に</div>
-      <div class="q-title">お名前<span class="req">*</span></div>
-      <input type="text" name="name" placeholder="山田 太郎">
-    </div>
-
-    <div class="err" id="err"></div>
-
-    <div class="submit-area">
-      <button class="submit" type="submit">回答 を 送信</button>
-    </div>
-  </form>
-
-  <div class="done" id="done">
-    <div class="ic">🎉</div>
-    <h2>ご回答 ありがとうございます</h2>
-    <p>面談 の 日程 が 確定 し 次第、 LINE で ご連絡 いたします。</p>
-    <p style="font-size:12px;opacity:0.8;">この画面 は 閉じて いただいて OK です。</p>
-  </div>
-
-</div>
-
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
-import { getFirestore, doc, getDoc, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
-import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-functions.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyAmVAEe9l9e1Yo_dzzJdbTVU35wWKd2sH4",
-  authDomain: "skeleton-fp-compass-632026.firebaseapp.com",
-  projectId: "skeleton-fp-compass-632026",
-  storageBucket: "skeleton-fp-compass-632026.firebasestorage.app",
-  messagingSenderId: "991197809601",
-  appId: "1:991197809601:web:9b9d49aa1c1c1f0d0d9c0d"
-};
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const functions = getFunctions(app, "asia-northeast1");
-
-// ?tenant=xxx から テナント ID 取得
-const urlParams = new URLSearchParams(location.search);
-const tenantId = urlParams.get('tenant') || urlParams.get('t');
-
-if (!tenantId) {
-  document.getElementById('loading').innerHTML = '<div style="color:#DC2626;font-weight:700;">URL に tenant パラメータ が ありません。</div><div style="margin-top:10px;font-size:12px;color:#64748B;">FP から 送られた リンク を そのまま 開いてください。</div>';
-} else {
-  // FP名 lookup は 認証不要 callable (getReferrerName) を 流用
-  (async () => {
-    try {
-      const fn = httpsCallable(functions, 'getReferrerName');
-      const res = await fn({ code: tenantId });
-      const fpName = res?.data?.name;
-      if (!fpName) {
-        document.getElementById('loading').innerHTML = '<div style="color:#DC2626;font-weight:700;">FP が 見つかりません。</div><div style="margin-top:10px;font-size:12px;color:#64748B;">URL を 再度 確認 してください。</div>';
-        return;
+    
+    <style>
+      .slot-row { margin-top: 14px; }
+      .slot-row-label {
+        font-family: var(--font-display);
+        font-size: 13px; font-weight: 700;
+        color: var(--accent);
+        letter-spacing: .03em;
+        margin-bottom: 6px;
       }
-      const fpEl = document.getElementById('fp-name');
-      fpEl.textContent = '📩 ' + fpName + ' へ 送信されます';
-      fpEl.classList.add('show');
-      document.getElementById('loading').style.display = 'none';
-      document.getElementById('survey-form').style.display = 'block';
-    } catch (e) {
-      console.error(e);
-      // lookup 失敗 でも form は出す (送信時 に tenant 検証 で 弾かれる)
-      document.getElementById('loading').style.display = 'none';
-      document.getElementById('survey-form').style.display = 'block';
+      .slot-row-selects {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      .bf-select {
+        width: 100%;
+        font-size: 15px;
+        padding: 14px 12px;
+        border: 1.5px solid #DDE1EC;
+        border-radius: 10px;
+        background: #fff;
+        font-family: inherit;
+        color: var(--ink-1);
+        appearance: none;
+        -webkit-appearance: none;
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path fill='%235B5BF0' d='M6 8L0 0h12z'/></svg>");
+        background-repeat: no-repeat;
+        background-position: right 14px center;
+        padding-right: 36px;
+        transition: border-color .15s;
+      }
+      .bf-select:focus { outline: none; border-color: var(--accent); }
+      .bf-select.has-value { border-color: var(--accent); background-color: var(--accent-faint); }
+      @media (max-width: 420px) { .slot-row-selects { grid-template-columns: 1fr; gap: 8px; } }
+    </style>
+
+    <h1>FP相談 事前ヒアリング</h1>
+    <div class="lead"><strong>13問</strong>に答えるだけ (約4分)。1問ずつ表示されます。</div>
+    <div class="fp-name-badge" id="fp-name-badge"></div>
+
+    <div class="progress-wrap">
+      <div class="progress-label"><span>Q<span id="curNo">1</span> / 13</span><span class="pct" id="pct">8%</span></div>
+      <div class="progress-bar"><div class="progress-bar-fill" id="bar" style="width:8%"></div></div>
+    </div>
+
+    <form method="post" id="surveyForm" class="card">
+      
+    <div class="step" data-step="1" data-field="q1_年代" data-multi="" data-text="" data-slots="" style="display:block;">
+      <div class="q-label"><span class="q-no">Q1</span>ご年齢</div>
+      
+      <div class="opts opts-3col"><label class="opt"><input type="radio" name="q1_年代" value="20代"><span>20代</span></label><label class="opt"><input type="radio" name="q1_年代" value="30代"><span>30代</span></label><label class="opt"><input type="radio" name="q1_年代" value="40代"><span>40代</span></label><label class="opt"><input type="radio" name="q1_年代" value="50代"><span>50代</span></label><label class="opt"><input type="radio" name="q1_年代" value="60代"><span>60代</span></label><label class="opt"><input type="radio" name="q1_年代" value="70代以上"><span>70代以上</span></label></div>
+    </div>
+      
+    <div class="step" data-step="2" data-field="q2_職業" data-multi="" data-text="" data-slots="" style="display:none;">
+      <div class="q-label"><span class="q-no">Q2</span>ご職業</div>
+      
+      <div class="opts opts-2col"><label class="opt"><input type="radio" name="q2_職業" value="会社員"><span>会社員</span></label><label class="opt"><input type="radio" name="q2_職業" value="公務員"><span>公務員</span></label><label class="opt"><input type="radio" name="q2_職業" value="自営業・フリーランス"><span>自営業・フリーランス</span></label><label class="opt"><input type="radio" name="q2_職業" value="専門職 (医師・士業など)"><span>専門職 (医師・士業など)</span></label><label class="opt"><input type="radio" name="q2_職業" value="主婦・主夫"><span>主婦・主夫</span></label><label class="opt"><input type="radio" name="q2_職業" value="退職済"><span>退職済</span></label><label class="opt"><input type="radio" name="q2_職業" value="その他"><span>その他</span></label></div>
+    </div>
+      
+    <div class="step" data-step="3" data-field="q3_家族" data-multi="" data-text="" data-slots="" style="display:none;">
+      <div class="q-label"><span class="q-no">Q3</span>ご家族構成</div>
+      <div class="q-sub">教育費・相続のシミュレーションに使います。</div>
+      <div class="opts opts-2col"><label class="opt"><input type="radio" name="q3_家族" value="独身"><span>独身</span></label><label class="opt"><input type="radio" name="q3_家族" value="夫婦のみ"><span>夫婦のみ</span></label><label class="opt"><input type="radio" name="q3_家族" value="夫婦+子供 1人"><span>夫婦+子供 1人</span></label><label class="opt"><input type="radio" name="q3_家族" value="夫婦+子供 2人"><span>夫婦+子供 2人</span></label><label class="opt"><input type="radio" name="q3_家族" value="夫婦+子供 3人以上"><span>夫婦+子供 3人以上</span></label><label class="opt"><input type="radio" name="q3_家族" value="シングル+子供"><span>シングル+子供</span></label><label class="opt"><input type="radio" name="q3_家族" value="その他"><span>その他</span></label></div>
+    </div>
+      
+    <div class="step" data-step="4" data-field="q4_年収" data-multi="" data-text="" data-slots="" style="display:none;">
+      <div class="q-label"><span class="q-no">Q4</span>世帯年収 (おおまかで OK)</div>
+      
+      <div class="opts opts-3col"><label class="opt"><input type="radio" name="q4_年収" value="〜400万"><span>〜400万</span></label><label class="opt"><input type="radio" name="q4_年収" value="400〜700万"><span>400〜700万</span></label><label class="opt"><input type="radio" name="q4_年収" value="700〜1,000万"><span>700〜1,000万</span></label><label class="opt"><input type="radio" name="q4_年収" value="1,000〜1,500万"><span>1,000〜1,500万</span></label><label class="opt"><input type="radio" name="q4_年収" value="1,500万〜"><span>1,500万〜</span></label><label class="opt"><input type="radio" name="q4_年収" value="答えたくない"><span>答えたくない</span></label></div>
+    </div>
+      
+    <div class="step" data-step="5" data-field="q5_住居" data-multi="" data-text="" data-slots="" style="display:none;">
+      <div class="q-label"><span class="q-no">Q5</span>住居形態</div>
+      
+      <div class="opts opts-2col"><label class="opt"><input type="radio" name="q5_住居" value="持家 (ローン返済中)"><span>持家 (ローン返済中)</span></label><label class="opt"><input type="radio" name="q5_住居" value="持家 (完済)"><span>持家 (完済)</span></label><label class="opt"><input type="radio" name="q5_住居" value="賃貸"><span>賃貸</span></label><label class="opt"><input type="radio" name="q5_住居" value="社宅・寮"><span>社宅・寮</span></label><label class="opt"><input type="radio" name="q5_住居" value="その他"><span>その他</span></label></div>
+    </div>
+      
+    <div class="step" data-step="6" data-field="q6_資産" data-multi="" data-text="" data-slots="" style="display:none;">
+      <div class="q-label"><span class="q-no">Q6</span>金融資産の目安</div>
+      <div class="q-sub">ご家族 (配偶者含む) の総額でお答えください。</div>
+      <div class="opts opts-3col"><label class="opt"><input type="radio" name="q6_資産" value="100万円未満"><span>100万円未満</span></label><label class="opt"><input type="radio" name="q6_資産" value="100〜500万円"><span>100〜500万円</span></label><label class="opt"><input type="radio" name="q6_資産" value="500〜1,000万円"><span>500〜1,000万円</span></label><label class="opt"><input type="radio" name="q6_資産" value="1,000〜3,000万円"><span>1,000〜3,000万円</span></label><label class="opt"><input type="radio" name="q6_資産" value="3,000〜5,000万円"><span>3,000〜5,000万円</span></label><label class="opt"><input type="radio" name="q6_資産" value="5,000万円〜"><span>5,000万円〜</span></label><label class="opt"><input type="radio" name="q6_資産" value="答えたくない"><span>答えたくない</span></label></div>
+    </div>
+      
+    <div class="step" data-step="7" data-field="q7_保有" data-multi="1" data-text="" data-slots="" style="display:none;">
+      <div class="q-label"><span class="q-no">Q7</span>すでに保有している商品</div>
+      <div class="q-sub">複数選択 OK・あてはまるもの全部チェックしてください。</div>
+      <div class="opts opts-2col"><label class="opt"><input type="checkbox" name="q7_保有" value="定期預金"><span>定期預金</span></label><label class="opt"><input type="checkbox" name="q7_保有" value="投資信託"><span>投資信託</span></label><label class="opt"><input type="checkbox" name="q7_保有" value="個別株"><span>個別株</span></label><label class="opt"><input type="checkbox" name="q7_保有" value="NISA"><span>NISA</span></label><label class="opt"><input type="checkbox" name="q7_保有" value="iDeCo / 企業型 DC"><span>iDeCo / 企業型 DC</span></label><label class="opt"><input type="checkbox" name="q7_保有" value="生命保険・医療保険"><span>生命保険・医療保険</span></label><label class="opt"><input type="checkbox" name="q7_保有" value="不動産投資"><span>不動産投資</span></label><label class="opt"><input type="checkbox" name="q7_保有" value="なし"><span>なし</span></label></div>
+    </div>
+      
+    <div class="step" data-step="8" data-field="q8_テーマ" data-multi="1" data-text="" data-slots="" style="display:none;">
+      <div class="q-label"><span class="q-no">Q8</span>相談したいテーマ</div>
+      <div class="q-sub">複数選択 OK・気になるものを全部選んでください。</div>
+      <div class="opts opts-2col"><label class="opt"><input type="checkbox" name="q8_テーマ" value="老後資金"><span>老後資金</span></label><label class="opt"><input type="checkbox" name="q8_テーマ" value="教育費・学資"><span>教育費・学資</span></label><label class="opt"><input type="checkbox" name="q8_テーマ" value="住宅購入・ローン"><span>住宅購入・ローン</span></label><label class="opt"><input type="checkbox" name="q8_テーマ" value="保険の見直し"><span>保険の見直し</span></label><label class="opt"><input type="checkbox" name="q8_テーマ" value="資産運用 / 投資"><span>資産運用 / 投資</span></label><label class="opt"><input type="checkbox" name="q8_テーマ" value="NISA・iDeCo 活用"><span>NISA・iDeCo 活用</span></label><label class="opt"><input type="checkbox" name="q8_テーマ" value="相続・贈与"><span>相続・贈与</span></label><label class="opt"><input type="checkbox" name="q8_テーマ" value="節税"><span>節税</span></label><label class="opt"><input type="checkbox" name="q8_テーマ" value="家計改善"><span>家計改善</span></label><label class="opt"><input type="checkbox" name="q8_テーマ" value="その他"><span>その他</span></label></div>
+    </div>
+      
+    <div class="step" data-step="9" data-field="q9_悩み" data-multi="" data-text="1" data-slots="" style="display:none;">
+      <div class="q-label"><span class="q-no">Q9</span>具体的に気になっていること</div>
+      <div class="q-sub">一言だけで OK です。当日ここを中心にお話します。</div>
+      <textarea name="q9_悩み" placeholder="例: 子供2人の大学資金で月いくら積み立てれば良いか知りたい"></textarea>
+    </div>
+      
+    <div class="step" data-step="10" data-field="q10_生年月日" data-multi="" data-text="1" data-slots="" style="display:none;">
+      <div class="q-label"><span class="q-no">Q10</span>生年月日</div>
+      <div class="q-sub">キャッシュフロー試算 や お子様の進学時期 算出 に使用いたします。</div>
+      <input type="date" name="q10_生年月日" max="2026-06-09" style="width:100%;padding:13px 14px;font-size:16px;border:1.5px solid #E2E8F0;border-radius:10px;background:#fff;">
+    </div>
+      
+    <div class="step" data-step="11" data-field="q14_理想" data-multi="" data-text="1" data-slots="" style="display:none;">
+      <div class="q-label"><span class="q-no">Q11</span>5〜10年後、こうなっていたい というご希望</div>
+      <div class="q-sub">ゴールから逆算してご提案するため、できるだけ具体的にお聞かせください。</div>
+      <textarea name="q14_理想" placeholder="例: 子供が大学に入る頃までに1,000万円の教育資金。60歳で住宅ローンを完済して年2回家族旅行できる暮らし。"></textarea>
+    </div>
+      
+    <div class="step" data-step="12" data-field="q15_緊急度" data-multi="" data-text="" data-slots="" style="display:none;">
+      <div class="q-label"><span class="q-no">Q12</span>ご相談の緊急度</div>
+      
+      <div class="opts"><label class="opt"><input type="radio" name="q15_緊急度" value="すぐに相談したい (1ヶ月以内)"><span>すぐに相談したい (1ヶ月以内)</span></label><label class="opt"><input type="radio" name="q15_緊急度" value="数ヶ月以内に動きたい"><span>数ヶ月以内に動きたい</span></label><label class="opt"><input type="radio" name="q15_緊急度" value="まずは情報収集中"><span>まずは情報収集中</span></label></div>
+    </div>
+      
+    <div class="step" data-step="13" data-field="q11_候補1" data-multi="" data-text="" data-slots="1" style="display:none;">
+      <div class="q-label"><span class="q-no">Q13</span>Zoom 面談 ご希望日 3 つ</div>
+      <div class="q-sub">上から第1〜第3希望の順でお選びください。FPが1つを確定し Zoom URL を LINE でお送りします。</div>
+      
+    
+    <div class="slot-row">
+      <div class="slot-row-label">第1希望</div>
+      <div class="slot-row-selects">
+        <select name="d1" class="bf-select" required>
+          <option value="">日付を選ぶ</option>
+          <option value="2026-06-18">6月18日 (木)</option><option value="2026-06-19">6月19日 (金)</option><option value="2026-06-20">6月20日 (土)</option><option value="2026-06-21">6月21日 (日)</option><option value="2026-06-22">6月22日 (月)</option><option value="2026-06-23">6月23日 (火)</option><option value="2026-06-24">6月24日 (水)</option><option value="2026-06-25">6月25日 (木)</option><option value="2026-06-26">6月26日 (金)</option><option value="2026-06-27">6月27日 (土)</option><option value="2026-06-28">6月28日 (日)</option><option value="2026-06-29">6月29日 (月)</option><option value="2026-06-30">6月30日 (火)</option><option value="2026-07-01">7月1日 (水)</option>
+        </select>
+        <select name="t1" class="bf-select" required>
+          <option value="">時間を選ぶ</option>
+          <option value="10:00">10:00</option><option value="11:00">11:00</option><option value="13:00">13:00</option><option value="14:00">14:00</option><option value="15:00">15:00</option><option value="16:00">16:00</option><option value="17:00">17:00</option><option value="19:00">19:00</option><option value="20:00">20:00</option>
+        </select>
+      </div>
+    </div>
+  
+    
+    <div class="slot-row">
+      <div class="slot-row-label">第2希望</div>
+      <div class="slot-row-selects">
+        <select name="d2" class="bf-select" required>
+          <option value="">日付を選ぶ</option>
+          <option value="2026-06-18">6月18日 (木)</option><option value="2026-06-19">6月19日 (金)</option><option value="2026-06-20">6月20日 (土)</option><option value="2026-06-21">6月21日 (日)</option><option value="2026-06-22">6月22日 (月)</option><option value="2026-06-23">6月23日 (火)</option><option value="2026-06-24">6月24日 (水)</option><option value="2026-06-25">6月25日 (木)</option><option value="2026-06-26">6月26日 (金)</option><option value="2026-06-27">6月27日 (土)</option><option value="2026-06-28">6月28日 (日)</option><option value="2026-06-29">6月29日 (月)</option><option value="2026-06-30">6月30日 (火)</option><option value="2026-07-01">7月1日 (水)</option>
+        </select>
+        <select name="t2" class="bf-select" required>
+          <option value="">時間を選ぶ</option>
+          <option value="10:00">10:00</option><option value="11:00">11:00</option><option value="13:00">13:00</option><option value="14:00">14:00</option><option value="15:00">15:00</option><option value="16:00">16:00</option><option value="17:00">17:00</option><option value="19:00">19:00</option><option value="20:00">20:00</option>
+        </select>
+      </div>
+    </div>
+  
+    
+    <div class="slot-row">
+      <div class="slot-row-label">第3希望</div>
+      <div class="slot-row-selects">
+        <select name="d3" class="bf-select" required>
+          <option value="">日付を選ぶ</option>
+          <option value="2026-06-18">6月18日 (木)</option><option value="2026-06-19">6月19日 (金)</option><option value="2026-06-20">6月20日 (土)</option><option value="2026-06-21">6月21日 (日)</option><option value="2026-06-22">6月22日 (月)</option><option value="2026-06-23">6月23日 (火)</option><option value="2026-06-24">6月24日 (水)</option><option value="2026-06-25">6月25日 (木)</option><option value="2026-06-26">6月26日 (金)</option><option value="2026-06-27">6月27日 (土)</option><option value="2026-06-28">6月28日 (日)</option><option value="2026-06-29">6月29日 (月)</option><option value="2026-06-30">6月30日 (火)</option><option value="2026-07-01">7月1日 (水)</option>
+        </select>
+        <select name="t3" class="bf-select" required>
+          <option value="">時間を選ぶ</option>
+          <option value="10:00">10:00</option><option value="11:00">11:00</option><option value="13:00">13:00</option><option value="14:00">14:00</option><option value="15:00">15:00</option><option value="16:00">16:00</option><option value="17:00">17:00</option><option value="19:00">19:00</option><option value="20:00">20:00</option>
+        </select>
+      </div>
+    </div>
+  
+    <div class="bf-error" id="slotsErr" style="color:#DC2B2B;font-size:13px;margin-top:12px;display:none;"></div>
+    <input type="hidden" name="q11_候補1" id="hidden_q11" value="">
+    <input type="hidden" name="q12_候補2" id="hidden_q12" value="">
+    <input type="hidden" name="q13_候補3" id="hidden_q13" value="">
+    <input type="hidden" name="q6_候補1" id="hidden_q6_compat" value="">
+    <input type="hidden" name="q7_候補2" id="hidden_q7_compat" value="">
+    <input type="hidden" name="q8_候補3" id="hidden_q8_compat" value="">
+  
+    </div>
+
+      <div class="wizard-nav">
+        <button type="button" class="btn-ghost" id="prevBtn" disabled>← 戻る</button>
+        <button type="button" class="btn" id="nextBtn" disabled>次へ →</button>
+      </div>
+    </form>
+
+    <!-- Done overlay (即時表示用) -->
+    <div id="doneOverlay" style="display:none;">
+      <div class="ok"><h2>✓ ご回答ありがとうございました</h2>
+        <div style="line-height:1.7;">FP がご回答と<strong>候補日3つ</strong>を確認し、確定日時と Zoom URL を LINE でお送りします (通常 1〜2 時間以内)。</div>
+      </div>
+      <div class="card" id="doneSummary"></div>
+      <p class="lead" style="text-align:center;margin-top:18px;">LINE のトーク画面に戻ってお待ちください 🙏</p>
+    </div>
+
+    <script>
+    (function(){
+      const form = document.getElementById('surveyForm');
+      const bar = document.getElementById('bar');
+      const pct = document.getElementById('pct');
+      const curNo = document.getElementById('curNo');
+      const prevBtn = document.getElementById('prevBtn');
+      const nextBtn = document.getElementById('nextBtn');
+      const total = 13;
+      let cur = 1;
+
+      // Slots step: highlight selects + clear error
+      form.querySelectorAll('.bf-select').forEach(sel => sel.addEventListener('change', () => {
+        sel.classList.toggle('has-value', !!sel.value);
+        const err = document.getElementById('slotsErr');
+        if (err) err.style.display = 'none';
+        nextBtn.disabled = !isStepValid(cur);
+      }));
+
+      function getStep(n) { return form.querySelector('.step[data-step="' + n + '"]'); }
+      function getSlotPairs() {
+        const out = [];
+        for (let n = 1; n <= 3; n++) {
+          const d = form.querySelector('select[name="d' + n + '"]').value;
+          const t = form.querySelector('select[name="t' + n + '"]').value;
+          out.push({ d, t });
+        }
+        return out;
+      }
+      function slotsValid() {
+        const ps = getSlotPairs();
+        if (ps.some(p => !p.d || !p.t)) return false;
+        const combos = ps.map(p => p.d + '|' + p.t);
+        return new Set(combos).size === 3;
+      }
+      function isStepValid(n) {
+        const s = getStep(n);
+        if (!s) return false;
+        if (s.dataset.slots === '1') return slotsValid();
+        const field = s.dataset.field;
+        const isMulti = s.dataset.multi === '1';
+        const isText = s.dataset.text === '1';
+        if (isText) {
+          const ta = s.querySelector('textarea[name="' + field + '"], input[name="' + field + '"]');
+          return ta && ta.value.trim().length > 0;
+        }
+        if (isMulti) {
+          return form.querySelectorAll('[name="' + field + '"]:checked').length > 0;
+        }
+        return !!form.querySelector('[name="' + field + '"]:checked');
+      }
+      function showStep(n) {
+        for (let i = 1; i <= total; i++) {
+          const s = getStep(i);
+          if (s) s.style.display = (i === n ? 'block' : 'none');
+        }
+        cur = n;
+        curNo.textContent = n;
+        const p = Math.round(n / total * 100);
+        bar.style.width = p + '%';
+        pct.textContent = p + '%';
+        prevBtn.disabled = (n === 1);
+        nextBtn.disabled = !isStepValid(n);
+        nextBtn.textContent = (n === total ? '回答を送信' : '次へ →');
+        // Auto focus textarea
+        const ta = getStep(n).querySelector('textarea');
+        if (ta) setTimeout(()=>ta.focus(), 50);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+      function fmtSlotLabel(d, t) {
+        const [, mm, dd] = d.split('-');
+        return parseInt(mm) + '月' + parseInt(dd) + '日 ' + t;
+      }
+      form.addEventListener('change', () => { nextBtn.disabled = !isStepValid(cur); });
+      form.addEventListener('input',  () => { nextBtn.disabled = !isStepValid(cur); });
+      prevBtn.addEventListener('click', () => { if (cur > 1) showStep(cur - 1); });
+      nextBtn.addEventListener('click', () => {
+        if (cur < total) {
+          if (isStepValid(cur)) showStep(cur + 1);
+          return;
+        }
+        // 最終ステップ (Q10 候補日) → バリデーション + 送信
+        const ps = getSlotPairs();
+        if (ps.some(p => !p.d || !p.t)) {
+          const err = document.getElementById('slotsErr');
+          err.textContent = '第1〜第3希望すべて日付と時間をお選びください。';
+          err.style.display = 'block';
+          return;
+        }
+        const combos = ps.map(p => p.d + '|' + p.t);
+        if (new Set(combos).size < 3) {
+          const err = document.getElementById('slotsErr');
+          err.textContent = '同じ日時が含まれています。3つとも別の日時をお選びください。';
+          err.style.display = 'block';
+          return;
+        }
+        // hidden へ転記 (新スキーマ + 旧スキーマ互換両方)
+        for (let n = 1; n <= 3; n++) {
+          const val = ps[n-1].d + ' ' + ps[n-1].t;
+          document.getElementById('hidden_q' + (10+n)).value = val;
+          document.getElementById('hidden_q' + (5+n) + '_compat').value = val;
+        }
+
+        nextBtn.disabled = true;
+        nextBtn.textContent = '送信中…';
+        // ★ Firebase Cloud Function (submitSurveyAnswer) 経由 で 各FPテナント に 保存
+        const tenantId = new URLSearchParams(location.search).get('tenant') || new URLSearchParams(location.search).get('t');
+        if (!tenantId) {
+          alert('URL に tenant パラメータ が ありません。 FP から 配布された QR を 開き直して ください。');
+          nextBtn.disabled = false; nextBtn.textContent = '次へ →';
+          return;
+        }
+        const fields = {};
+        new FormData(form).forEach((v, k) => {
+          if (fields[k]) { if (Array.isArray(fields[k])) fields[k].push(v); else fields[k] = [fields[k], v]; }
+          else fields[k] = v;
+        });
+        (async () => {
+          try {
+            const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js');
+            const { getFunctions, httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-functions.js');
+            const app = initializeApp({
+              apiKey: 'AIzaSyAmVAEe9l9e1Yo_dzzJdbTVU35wWKd2sH4',
+              authDomain: 'skeleton-fp-compass-632026.firebaseapp.com',
+              projectId: 'skeleton-fp-compass-632026',
+              storageBucket: 'skeleton-fp-compass-632026.firebasestorage.app',
+              messagingSenderId: '991197809601',
+              appId: '1:991197809601:web:9b9d49aa1c1c1f0d0d9c0d'
+            });
+            const fn = httpsCallable(getFunctions(app, 'asia-northeast1'), 'submitSurveyAnswer');
+            await fn({ tenantId, answers: fields, submittedAt: new Date().toISOString() });
+          } catch (e) { console.error('送信失敗:', e); }
+        })();
+        setTimeout(() => {
+          form.style.display = 'none';
+          document.querySelectorAll('.progress-wrap').forEach(el => el.style.display = 'none');
+          const sum = document.getElementById('doneSummary');
+          sum.innerHTML = ps.map((p, i) =>
+            '<div class="meta-row"><span class="k">第' + (i+1) + '希望</span><span class="v">' + fmtSlotLabel(p.d, p.t) + '</span></div>'
+          ).join('') +
+          '<div class="meta-row"><span class="k">面談時間</span><span class="v">60 分 (Zoom)</span></div>' +
+          '<div class="meta-row"><span class="k">確定連絡</span><span class="v">通常 1〜2 時間以内に LINE</span></div>';
+          document.getElementById('doneOverlay').style.display = 'block';
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }, 250);
+      });
+      // Allow Enter on radio to advance
+      form.addEventListener('click', (e) => {
+        const opt = e.target.closest('label.opt');
+        if (opt && cur < total) {
+          // Single-select の場合は次へ自動進行
+          const s = getStep(cur);
+          if (s && !s.dataset.multi) setTimeout(() => { if (isStepValid(cur)) showStep(cur + 1); }, 180);
+        }
+      });
+      showStep(1);
+
+      // ★ FP名 lookup (?tenant=xxx)
+      (async () => {
+        const tid = new URLSearchParams(location.search).get('tenant') || new URLSearchParams(location.search).get('t');
+        if (!tid) return;
+        try {
+          const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js');
+          const { getFunctions, httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-functions.js');
+          const app = initializeApp({
+            apiKey: 'AIzaSyAmVAEe9l9e1Yo_dzzJdbTVU35wWKd2sH4',
+            authDomain: 'skeleton-fp-compass-632026.firebaseapp.com',
+            projectId: 'skeleton-fp-compass-632026',
+            storageBucket: 'skeleton-fp-compass-632026.firebasestorage.app',
+            messagingSenderId: '991197809601',
+            appId: '1:991197809601:web:9b9d49aa1c1c1f0d0d9c0d'
+          });
+          const fn = httpsCallable(getFunctions(app, 'asia-northeast1'), 'getReferrerName');
+          const res = await fn({ code: tid });
+          const fpName = res?.data?.name;
+          if (fpName) {
+            const el = document.getElementById('fp-name-badge');
+            el.textContent = '📩 ' + fpName + ' へ 送信されます';
+            el.classList.add('show');
+          }
+        } catch (e) { console.warn('fp name lookup fail', e); }
+      })();
+    })();
+    </script>
+  
+    <div class="footer">© Skeleton Inc.</div>
+  </div>
+  <!-- LIFF (LINE Front-end Framework) — LIFF URL (liff.line.me/<id>) 経由で開かれると
+       LINE が ?liff.state=... を endpoint URL に付与してくる。これか ?liff=<id> の
+       どちらかがあれば動作。liff.getProfile() で userId/displayName/pictureUrl 自動取得 →
+       フォームの hidden 上書きしてから送信できる。 -->
+  <script>
+  (function(){
+    var qs = new URLSearchParams(location.search);
+    var explicitId = qs.get('liff');
+    // LIFF 経由判定: liff.state クエリ / LINE UA / hash access_token / cookie いずれか
+    // ⚠ /Line//i だとテンプレートリテラル展開で / が消えて JS syntax error になるので
+    //   indexOf で代替 (これが旧版で LIFF が動かなかった原因)
+    var ua = navigator.userAgent || '';
+    var viaLiff = qs.has('liff.state')
+      || ua.indexOf('Line/') >= 0
+      || ua.indexOf('LIFF') >= 0
+      || location.hash.indexOf('access_token') >= 0
+      || document.cookie.indexOf('liffLogged=1') >= 0;
+    // FP Compass デフォルト LIFF アプリ ID (LINE Login Channel: FP Compass LIFF)
+    var DEFAULT_LIFF_ID = '2010266648-iX5kooZe';
+    var liffId = explicitId || (viaLiff ? DEFAULT_LIFF_ID : null);
+    if (!liffId) {
+      // デバッグ用バナー (LIFF 動作してない時に視覚化)
+      var dbg = document.createElement('div');
+      dbg.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#fef3c7;color:#78350f;padding:6px 12px;font-size:11px;text-align:center;z-index:9999;font-family:sans-serif;border-top:1px solid #fbbf24;';
+      dbg.textContent = '⚠ LIFF未起動 (UA=' + (navigator.userAgent || '').slice(0,40) + ') — LINE内ブラウザで開いてください';
+      document.body.appendChild(dbg);
+      setTimeout(function(){ dbg.style.opacity='0.5'; }, 4000);
+      return;
     }
+    var s = document.createElement('script');
+    s.src = 'https://static.line-scdn.net/liff/edge/2/sdk.js';
+    s.async = true;
+    s.onload = function(){
+      try {
+        liff.init({ liffId: liffId }).then(function(){
+          if (!liff.isLoggedIn()) {
+            liff.login({ redirectUri: location.href });
+            return;
+          }
+          return liff.getProfile();
+        }).then(function(profile){
+          if (!profile) return;
+          // form 内の userId / name フィールドを LIFF 経由の正値で上書き
+          var forms = document.querySelectorAll('form');
+          forms.forEach(function(f){
+            var uidInput = f.querySelector('input[name="userId"]');
+            if (uidInput) {
+              uidInput.value = profile.userId;
+            } else {
+              // hidden 追加
+              var h = document.createElement('input');
+              h.type = 'hidden'; h.name = 'userId'; h.value = profile.userId;
+              f.appendChild(h);
+            }
+            var nameInput = f.querySelector('input[name="name"]');
+            if (nameInput && !nameInput.value) nameInput.value = profile.displayName || '';
+            // pictureUrl は別 hidden で送信
+            var picInput = f.querySelector('input[name="pictureUrl"]');
+            if (!picInput) {
+              var pi = document.createElement('input');
+              pi.type = 'hidden'; pi.name = 'pictureUrl'; pi.value = profile.pictureUrl || '';
+              f.appendChild(pi);
+            }
+            // displayName も送る (Storage.gs が name 列に書ける)
+            if (profile.displayName) {
+              var dn = f.querySelector('input[name="displayName"]');
+              if (!dn) {
+                var di = document.createElement('input');
+                di.type = 'hidden'; di.name = 'displayName'; di.value = profile.displayName;
+                f.appendChild(di);
+              }
+            }
+          });
+          // 画面上部に確認バナー (デバッグ用)
+          var b = document.createElement('div');
+          b.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#06c755;color:#fff;padding:6px 12px;font-size:11.5px;text-align:center;z-index:9999;font-family:sans-serif;';
+          b.textContent = '✓ LINE 連携済 ('+ (profile.displayName||'') +')';
+          document.body.appendChild(b);
+          setTimeout(function(){ b.style.opacity='0.5'; }, 3000);
+        }).catch(function(err){ console.error('LIFF error', err); });
+      } catch(e){ console.error('LIFF init failed', e); }
+    };
+    document.head.appendChild(s);
   })();
-}
-
-// 進捗バー
-function updateProgress() {
-  const form = document.getElementById('survey-form');
-  if (!form) return;
-  const cards = form.querySelectorAll('.card');
-  let filled = 0;
-  cards.forEach(c => {
-    const q = c.dataset.q;
-    const inputs = c.querySelectorAll('input,textarea');
-    let answered = false;
-    inputs.forEach(i => {
-      if (i.type === 'checkbox' || i.type === 'radio') {
-        if (i.checked) answered = true;
-      } else if (i.value.trim()) {
-        answered = true;
-      }
-    });
-    if (answered) filled++;
-  });
-  const pct = (filled / cards.length * 100).toFixed(0);
-  document.getElementById('pfill').style.width = pct + '%';
-}
-document.addEventListener('change', updateProgress);
-document.addEventListener('input', updateProgress);
-
-// 送信
-document.getElementById('survey-form').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const form = e.target;
-  const errEl = document.getElementById('err');
-  errEl.classList.remove('show');
-
-  // 必須チェック
-  const required = ['q1_年代','q2_職業','q3_家族','q4_年収','q5_住居','q6_資産','q10_生年月日','q11_候補1','q15_緊急度','name'];
-  const formData = new FormData(form);
-  const data = {};
-  for (const k of Object.keys(form.elements)) {
-    const el = form.elements[k];
-    if (!el || !el.name) continue;
-  }
-  // FormData から まとめる (checkbox 複数値 含む)
-  const fields = {};
-  for (const [k, v] of formData.entries()) {
-    if (fields[k]) {
-      if (Array.isArray(fields[k])) fields[k].push(v);
-      else fields[k] = [fields[k], v];
-    } else fields[k] = v;
-  }
-  // q8 が 必須
-  const q8 = fields['q8_テーマ'];
-  const missing = required.filter(k => !fields[k] || String(fields[k]).trim() === '');
-  if (!q8) missing.push('q8_テーマ');
-  if (missing.length > 0) {
-    errEl.textContent = '必須項目 が 未回答 です: ' + missing.join(', ');
-    errEl.classList.add('show');
-    errEl.scrollIntoView({behavior:'smooth',block:'center'});
-    return;
-  }
-
-  // 送信
-  const btn = form.querySelector('.submit');
-  btn.disabled = true; btn.textContent = '⏳ 送信中…';
-  try {
-    const fn = httpsCallable(functions, 'submitSurveyAnswer');
-    await fn({ tenantId, answers: fields, submittedAt: new Date().toISOString() });
-    form.style.display = 'none';
-    document.getElementById('done').classList.add('show');
-    window.scrollTo({top:0,behavior:'smooth'});
-  } catch (e) {
-    console.error(e);
-    errEl.textContent = '送信失敗: ' + (e.message || e.code || '不明');
-    errEl.classList.add('show');
-    btn.disabled = false; btn.textContent = '回答 を 送信';
-  }
-});
-</script>
+  </script>
 </body>
 </html>
