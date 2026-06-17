@@ -287,16 +287,16 @@ const tenantId = urlParams.get('tenant') || urlParams.get('t');
 if (!tenantId) {
   document.getElementById('loading').innerHTML = '<div style="color:#DC2626;font-weight:700;">URL に tenant パラメータ が ありません。</div><div style="margin-top:10px;font-size:12px;color:#64748B;">FP から 送られた リンク を そのまま 開いてください。</div>';
 } else {
-  // テナント情報 を 読み込み (FP名 表示)
+  // FP名 lookup は 認証不要 callable (getReferrerName) を 流用
   (async () => {
     try {
-      const tSnap = await getDoc(doc(db, 'tenants', tenantId));
-      if (!tSnap.exists()) {
+      const fn = httpsCallable(functions, 'getReferrerName');
+      const res = await fn({ code: tenantId });
+      const fpName = res?.data?.name;
+      if (!fpName) {
         document.getElementById('loading').innerHTML = '<div style="color:#DC2626;font-weight:700;">FP が 見つかりません。</div><div style="margin-top:10px;font-size:12px;color:#64748B;">URL を 再度 確認 してください。</div>';
         return;
       }
-      const td = tSnap.data();
-      const fpName = td.name || 'FP';
       const fpEl = document.getElementById('fp-name');
       fpEl.textContent = '📩 ' + fpName + ' へ 送信されます';
       fpEl.classList.add('show');
@@ -304,7 +304,9 @@ if (!tenantId) {
       document.getElementById('survey-form').style.display = 'block';
     } catch (e) {
       console.error(e);
-      document.getElementById('loading').innerHTML = '<div style="color:#DC2626;font-weight:700;">読込 失敗: ' + e.message + '</div>';
+      // lookup 失敗 でも form は出す (送信時 に tenant 検証 で 弾かれる)
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('survey-form').style.display = 'block';
     }
   })();
 }
