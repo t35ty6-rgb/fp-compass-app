@@ -170,7 +170,14 @@
     </div>
 
     <form method="post" id="surveyForm" class="card">
-      
+
+    <!-- お名前 (常時表示 / wizard 外) -->
+    <div class="q" style="margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid var(--line);">
+      <div class="q-label"><span class="q-no">名前</span>お名前 <span style="color:#DC2B2B;font-weight:700;">*</span></div>
+      <div class="q-sub">面談時 にFP が お声がけ する 用 です。</div>
+      <input type="text" name="name" id="customer-name" placeholder="例: 山田 太郎" autocomplete="name" required>
+    </div>
+
     <div class="step" data-step="1" data-field="q1_年代" data-multi="" data-text="" data-slots="" style="display:block;">
       <div class="q-label"><span class="q-no">Q1</span>ご年齢</div>
       
@@ -420,6 +427,14 @@
           document.getElementById('hidden_q' + (5+n) + '_compat').value = val;
         }
 
+        // お名前 必須チェック
+        const nameInput = document.getElementById('customer-name');
+        if (!nameInput || !nameInput.value.trim()) {
+          alert('お名前 を 入力 してください (画面 上部 の 「お名前」 欄)');
+          nameInput?.scrollIntoView({behavior:'smooth',block:'center'});
+          nameInput?.focus();
+          return;
+        }
         nextBtn.disabled = true;
         nextBtn.textContent = '送信中…';
         // ★ Firebase Cloud Function (submitSurveyAnswer) 経由 で 各FPテナント に 保存
