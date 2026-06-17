@@ -2650,6 +2650,33 @@
             <!-- OVERVIEW -->
             <div class="cd-tabpanel" data-cdpanel="overview">
               ${window._fpNextActionHtml || ''}
+              ${(c.meetingCandidates && c.meetingCandidates.length > 0 && !c.confirmedSlot) ? `
+              <div class="cd-card" style="background:linear-gradient(135deg,#FEF3C7,#FDE68A);border:2px solid #F59E0B;margin-bottom:14px;">
+                <div class="cd-card-head" style="background:transparent;"><i data-lucide="calendar-check"></i><span style="color:#78350F;font-weight:700;">面談 日程 確定 → LINE 送信</span></div>
+                <div class="cd-card-body" style="padding:14px 18px;">
+                  <div style="font-size:12.5px;color:#78350F;margin-bottom:10px;font-weight:600;">候補日 3つ から 1つ 選んで Zoom URL を 入れて 送信:</div>
+                  <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;" id="zoom-slot-${c.id}">
+                    ${c.meetingCandidates.map((s, i) => `
+                      <label style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:#fff;border:1.5px solid #FBBF24;border-radius:8px;font-size:13px;cursor:pointer;">
+                        <input type="radio" name="zoom-slot-${c.id}-radio" value="${escapeHtml(s)}" style="accent-color:#F59E0B;">
+                        <span style="font-weight:600;color:#78350F;">第${i+1}希望:</span>
+                        <span>${escapeHtml(s)}</span>
+                      </label>
+                    `).join('')}
+                  </div>
+                  <input type="text" id="zoom-url-${c.id}" placeholder="Zoom URL を 貼り付け (例: https://us02web.zoom.us/j/...)" style="width:100%;padding:10px 12px;border:1.5px solid #FBBF24;border-radius:8px;font-size:13px;margin-bottom:10px;">
+                  <button id="zoom-send-${c.id}" data-customer-id="${c.id}" data-customer-name="${escapeHtml(c.name)}" style="width:100%;padding:12px;background:#F59E0B;color:#fff;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;">📩 確定日時 + Zoom URL を LINE で 送る</button>
+                  <div id="zoom-result-${c.id}" style="margin-top:8px;font-size:12px;text-align:center;"></div>
+                </div>
+              </div>` : ''}
+              ${(c.confirmedSlot) ? `
+              <div class="cd-card" style="background:#F0FDF4;border:2px solid #06C755;margin-bottom:14px;">
+                <div class="cd-card-head" style="background:transparent;"><i data-lucide="check-circle"></i><span style="color:#065F46;font-weight:700;">面談 確定済</span></div>
+                <div class="cd-card-body" style="padding:14px 18px;font-size:13px;color:#065F46;">
+                  <div><strong>日時:</strong> ${escapeHtml(c.confirmedSlot)}</div>
+                  ${c.zoomUrl ? `<div style="margin-top:6px;"><strong>Zoom:</strong> <a href="${escapeHtml(c.zoomUrl)}" target="_blank" style="color:#065F46;font-weight:700;text-decoration:underline;">${escapeHtml(c.zoomUrl)}</a></div>` : ''}
+                </div>
+              </div>` : ''}
               <div class="cd-overview-grid">
                 <div class="cd-card">
                   <div class="cd-card-head"><i data-lucide="alert-circle"></i><span>次にやること</span><span class="cd-card-badge">${Math.min(recs.length, 4)}</span></div>
@@ -2948,6 +2975,42 @@
         openClientModal(c.id);
       });
     }
+    // ★ Zoom URL 確定送信 ボタン (面談 候補日 → LINE)
+    const zoomBtn = document.getElementById('zoom-send-' + c.id);
+    if (zoomBtn) {
+      zoomBtn.addEventListener('click', async () => {
+        const slotInput = document.querySelector('#zoom-slot-' + c.id + ' input[name="zoom-slot-' + c.id + '-radio"]:checked');
+        const urlInput = document.getElementById('zoom-url-' + c.id);
+        const resultEl = document.getElementById('zoom-result-' + c.id);
+        if (!slotInput) { resultEl.style.color = '#DC2626'; resultEl.textContent = '⚠ 候補日 を 1つ 選んでください'; return; }
+        if (!urlInput || !urlInput.value.trim()) { resultEl.style.color = '#DC2626'; resultEl.textContent = '⚠ Zoom URL を 貼り付けてください'; return; }
+        zoomBtn.disabled = true; zoomBtn.textContent = '⏳ 送信中…';
+        try {
+          const { httpsCallable, getFunctions } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-functions.js');
+          const { initializeApp, getApps } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js');
+          const app = getApps()[0] || initializeApp({
+            apiKey: 'AIzaSyAmVAEe9l9e1Yo_dzzJdbTVU35wWKd2sH4',
+            authDomain: 'skeleton-fp-compass-632026.firebaseapp.com',
+            projectId: 'skeleton-fp-compass-632026',
+          });
+          const fn = httpsCallable(getFunctions(app, 'asia-northeast1'), 'sendZoomConfirmation');
+          await fn({
+            customerId: c.id,
+            customerName: c.name,
+            confirmedSlot: slotInput.value,
+            zoomUrl: urlInput.value.trim(),
+          });
+          resultEl.style.color = '#065F46';
+          resultEl.textContent = '✓ LINE 送信完了';
+          setTimeout(() => location.reload(), 1500);
+        } catch (e) {
+          resultEl.style.color = '#DC2626';
+          resultEl.textContent = '✗ 送信失敗: ' + (e.message || e.code || '');
+          zoomBtn.disabled = false; zoomBtn.textContent = '📩 確定日時 + Zoom URL を LINE で 送る';
+        }
+      });
+    }
+
     // Tab switching inside new modal
     document.querySelectorAll('.cd-tab').forEach(btn => {
       btn.addEventListener('click', () => {
