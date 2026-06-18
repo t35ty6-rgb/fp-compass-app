@@ -602,12 +602,9 @@
     const stgBtn = document.getElementById('line-regen-stg-btn');
     const btn = useStg ? stgBtn : prodBtn;
     const origText = btn.textContent;
-    const confirmMsg = useStg
-      ? '🧪 stg試験向け リッチメニュー を 生成します。\nお客様の LINE 公式から アンケート開くと stg版 アンケート が出ます。\n本番リリース前のテスト専用 → OK?'
-      : '本番向け リッチメニュー を 再生成 します。 (アンケート は 本番版を 開く) OK?';
-    if (!confirm(confirmMsg)) return;
-    btn.disabled = true; btn.textContent = '⏳ 生成中…';
-    resultEl.innerHTML = '';
+    // ★ confirm dialog 撤去 (system dialog が 一瞬で 消える 環境ある) → 即実行 + 結果 inline 表示
+    btn.disabled = true; btn.textContent = '⏳ 生成中… (30秒程度)';
+    resultEl.innerHTML = `<div style="background:#F0F9FF;border:1px solid #3B82F6;padding:14px 18px;border-radius:10px;font-size:13px;color:#1E40AF;"><strong>⏳ ${useStg ? 'stg試験用' : '本番向け'} リッチメニュー を 生成中…</strong> LINE API と 通信中、 少々お待ちください</div>`;
     try {
       const fn = httpsCallable(functions, "regenerateRichMenu");
       const res = await fn({ stg: useStg });
