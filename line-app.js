@@ -986,13 +986,60 @@
     return { dateStr, slotStr, display: str };
   }
 
+  // ★ Firestore tenants/{tid}/customers から 候補日確定待ち を 取得 (多テナント対応)
+  async function refreshFirestoreCustomers() {
+    try {
+      const tenantId = (window.AccountInfo && window.AccountInfo.tenantId) || localStorage.getItem('fp-tenantId');
+      if (!tenantId) return;
+      const { getFirestore, collection, getDocs, query, where } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js');
+      const { initializeApp, getApps } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js');
+      const app = getApps()[0] || initializeApp({
+        apiKey: 'AIzaSyAmVAEe9l9e1Yo_dzzJdbTVU35wWKd2sH4',
+        authDomain: 'skeleton-fp-compass-632026.firebaseapp.com',
+        projectId: 'skeleton-fp-compass-632026',
+      });
+      const db = getFirestore(app);
+      const snap = await getDocs(collection(db, 'tenants', tenantId, 'customers'));
+      const pendingFs = [];
+      snap.forEach(d => {
+        const c = d.data();
+        if (c.source === 'line_survey' && (c.meetingCandidates||[]).length > 0 && !c.confirmedSlot) {
+          pendingFs.push({ docId: d.id, ...c });
+        }
+      });
+      window._fpFirestoreCustomers = pendingFs;
+      try { if (currentSubview === 'leadHub') renderLeadHubInner(); } catch(_) {}
+    } catch (e) { console.warn('refreshFirestoreCustomers:', e); }
+  }
+  window.refreshFirestoreCustomers = refreshFirestoreCustomers;
+  if (!window._fpFirestoreInterval) {
+    window._fpFirestoreInterval = setInterval(refreshFirestoreCustomers, 20000);
+    refreshFirestoreCustomers();
+  }
+
   function fillConfirmList() {
     const target = document.getElementById('confirm-list');
     if (!target) return;
     let surveys = (liveData && liveData.survey_answers) || [];
     // 本物 LINE userId (U + 32hex) でない古いテストデータ (uid=lf, SMOKE_*, anon-*) は除外
     const isRealLineUid = (uid) => /^U[a-f0-9]{32}$/i.test(String(uid || ''));
-    const pending = surveys.filter(s => !s.confirmedSlot && (s.q6_候補1 || s.q7_候補2 || s.q8_候補3) && isRealLineUid(s.userId));
+    const pendingLegacy = surveys.filter(s => !s.confirmedSlot && (s.q6_候補1 || s.q7_候補2 || s.q8_候補3) && isRealLineUid(s.userId));
+    // ★ Firestore 顧客 を 既存 survey 形式 に 変換
+    const fsCustomers = window._fpFirestoreCustomers || [];
+    const pendingFs = fsCustomers.map(c => ({
+      _fsCustomerId: c.docId,
+      userId: 'fs:' + c.docId,
+      name: c.name,
+      q2_年代: c.surveyAnswers?.q1_年代,
+      q3_家族: c.surveyAnswers?.q3_家族,
+      q4_年収: c.surveyAnswers?.q4_年収,
+      q5_悩み: c.concerns || c.surveyAnswers?.q9_悩み,
+      q6_候補1: (c.meetingCandidates||[])[0],
+      q7_候補2: (c.meetingCandidates||[])[1],
+      q8_候補3: (c.meetingCandidates||[])[2],
+      ts: c.createdAt?.toDate?.()?.toISOString?.() || null,
+    }));
+    const pending = pendingLegacy.concat(pendingFs);
     if (pending.length === 0) {
       target.innerHTML = '<div style="background:var(--surface);border:1px dashed var(--line);border-radius:10px;padding:30px;text-align:center;color:var(--muted);font-size:13px;">候補日確定待ちのお客様はいません。<br><span style="font-size:11.5px;">LINEからアンケート + 候補日3つに回答するとここに並びます。</span></div>';
       return;
@@ -1041,6 +1088,7 @@
             ${slots.map((slot, idx) => {
               const parsed = parseSlotString(slot);
               return `<button class="slot-confirm-btn" data-slot-confirm
+                data-fs-customer="${escapeHtml(s._fsCustomerId || '')}"
                 data-uid="${escapeHtml(s.userId)}" data-date="${escapeHtml(parsed.dateStr)}" data-slot="${escapeHtml(parsed.slotStr)}"
                 style="text-align:left;padding:12px 16px;background:#fff;border:2px solid var(--line);border-radius:8px;cursor:pointer;font-size:14px;display:flex;justify-content:space-between;align-items:center;font-family:inherit;transition:all 0.15s;">
                 <span><strong style="color:var(--accent);margin-right:10px;">第${idx + 1}希望</strong>${escapeHtml(parsed.display)}</span>
@@ -1400,6 +1448,30 @@
             }
             renderLeadHubInner();
           }, 600);
+          return;
+        }
+
+        // ─── Firestore 顧客 (多テナント) → confirmSlotMultiTenant Cloud Function ───
+        const fsCustomerId = btn.dataset.fsCustomer;
+        if (fsCustomerId) {
+          try {
+            const { initializeApp, getApps } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js');
+            const { getFunctions, httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-functions.js');
+            const app = getApps()[0] || initializeApp({
+              apiKey: 'AIzaSyAmVAEe9l9e1Yo_dzzJdbTVU35wWKd2sH4',
+              authDomain: 'skeleton-fp-compass-632026.firebaseapp.com',
+              projectId: 'skeleton-fp-compass-632026',
+            });
+            const fn = httpsCallable(getFunctions(app, 'asia-northeast1'), 'confirmSlotMultiTenant');
+            const res = await fn({ customerId: fsCustomerId, confirmedSlot: `${dateStr} ${slotStr}` });
+            alert('✅ 確定\n\nZoom URL: ' + res.data.zoomUrl + '\nお客様 に LINE カード 自動送信済');
+            if (window.refreshFirestoreCustomers) window.refreshFirestoreCustomers();
+            renderLeadHubInner();
+          } catch (e) {
+            alert('失敗: ' + (e.message || e.code || '不明'));
+            btn.disabled = false;
+            if (inner) inner.textContent = 'この日で確定 →';
+          }
           return;
         }
 

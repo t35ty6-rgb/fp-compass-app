@@ -267,6 +267,10 @@ onAuthStateChanged(auth, async (user) => {
   const userData = userDoc.data();
   const tenantId = userData.tenantId;
 
+  // ★ line-app.js / app.js から 参照する ため グローバル expose
+  window.AccountInfo = { tenantId, uid: user.uid, email: user.email, role: userData.role };
+  try { localStorage.setItem('fp-tenantId', tenantId); } catch(_) {}
+
   loginEl.style.display = "none";
   appEl.style.display = "block";
 

@@ -230,6 +230,40 @@
       </div>
     </div>
 
+    <!-- Zoom 連携 -->
+    <div class="section">
+      <div class="section-h">
+        <div class="section-title">Zoom 連携 (Server-to-Server OAuth)</div>
+        <p class="section-sub">面談 日程 確定 → Zoom URL 自動発行 + LINE通知 を 1クリック化 する ために 必要</p>
+      </div>
+      <div class="section-body">
+        <div id="zoom-status" style="margin-bottom:18px;"></div>
+        <label class="lbl" style="font-size:12px;font-weight:700;margin-bottom:6px;display:block;">
+          Account ID
+          <span style="font-weight:400;color:var(--ink-3);font-size:11px;">— Zoom Marketplace で 取得</span>
+        </label>
+        <input id="zoom-account-id" placeholder="例: abc123XYZ" style="width:100%;padding:12px 14px;font-size:13px;font-family:'JetBrains Mono',monospace;border:1.5px solid var(--line);border-radius:10px;">
+        <label class="lbl" style="font-size:12px;font-weight:700;margin-top:12px;margin-bottom:6px;display:block;">Client ID</label>
+        <input id="zoom-client-id" placeholder="例: abc123XYZ" style="width:100%;padding:12px 14px;font-size:13px;font-family:'JetBrains Mono',monospace;border:1.5px solid var(--line);border-radius:10px;">
+        <label class="lbl" style="font-size:12px;font-weight:700;margin-top:12px;margin-bottom:6px;display:block;">Client Secret</label>
+        <input id="zoom-client-secret" placeholder="例: abc123..." style="width:100%;padding:12px 14px;font-size:13px;font-family:'JetBrains Mono',monospace;border:1.5px solid var(--line);border-radius:10px;">
+        <button id="zoom-save-btn" style="margin-top:18px;padding:14px 28px;font-size:14px;font-weight:700;background:#2D8CFF;color:#fff;border:none;border-radius:8px;cursor:pointer;">
+          🔗 Zoom 接続テスト + 保存
+        </button>
+        <div id="zoom-result" style="margin-top:16px;"></div>
+        <details style="margin-top:18px;background:#F8FAFC;padding:14px 18px;border-radius:8px;font-size:12.5px;color:var(--ink-2);">
+          <summary style="cursor:pointer;font-weight:700;color:var(--ink);">💡 Zoom credentials の 取得方法</summary>
+          <p style="margin-top:10px;line-height:1.85;">
+            1. <a href="https://marketplace.zoom.us/develop/create" target="_blank" style="color:#2D8CFF;font-weight:700;">Zoom Marketplace</a> を開く → 「Server-to-Server OAuth」 アプリ を 新規作成<br>
+            2. 「App Credentials」 タブ で <strong>Account ID / Client ID / Client Secret</strong> 取得<br>
+            3. 「Scopes」 タブ で <strong>meeting:write:meeting:admin</strong> 等の Meeting 系 scope 追加<br>
+            4. 「Activation」 タブ で アプリ Activate<br>
+            5. この画面 に 3つ 貼り付け → 保存
+          </p>
+        </details>
+      </div>
+    </div>
+
     <!-- パスワード変更 (将来) -->
     <div class="section">
       <div class="section-h">
@@ -514,6 +548,54 @@
       </div>`;
     } finally {
       btn.disabled = false; btn.textContent = '🔗 接続テスト + 保存 (自動セットアップ)';
+    }
+  });
+
+  // ==== Zoom 連携 ====
+  async function loadZoomStatus() {
+    if (!currentTenantId) return;
+    try {
+      const { getFirestore, doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js');
+      const db = getFirestore(app);
+      const tSnap = await getDoc(doc(db, 'tenants', currentTenantId));
+      const z = tSnap.exists() ? (tSnap.data().zoom || {}) : {};
+      const statusEl = document.getElementById('zoom-status');
+      if (z.accountId && z.clientId) {
+        statusEl.innerHTML = `<div style="background:#EFF6FF;border:1px solid #2D8CFF;padding:14px 18px;border-radius:10px;font-size:13px;color:#1E40AF;line-height:1.85;">
+          <strong>✓ Zoom 接続済</strong> (Account ID: ${z.accountId.slice(0,8)}…)
+        </div>`;
+        document.getElementById('zoom-account-id').value = z.accountId;
+        document.getElementById('zoom-client-id').value = z.clientId;
+        document.getElementById('zoom-client-secret').value = '••• 保存済 •••';
+      } else {
+        statusEl.innerHTML = `<div style="background:#FEF3C7;border:1px solid #F59E0B;padding:14px 18px;border-radius:10px;font-size:13px;color:#92400E;">Zoom 未連携。 下の 3項目 を 入力 してください。</div>`;
+      }
+    } catch (e) { console.warn('load zoom:', e); }
+  }
+  setTimeout(() => { if (currentTenantId) loadZoomStatus(); }, 1500);
+
+  $("zoom-save-btn").addEventListener("click", async () => {
+    const accountId = document.getElementById('zoom-account-id').value.trim();
+    const clientId = document.getElementById('zoom-client-id').value.trim();
+    let clientSecret = document.getElementById('zoom-client-secret').value.trim();
+    const resultEl = document.getElementById('zoom-result');
+    if (!accountId || !clientId) { resultEl.innerHTML = '<div style="color:#B91C1C;font-size:13px;">3項目 すべて 必須</div>'; return; }
+    if (clientSecret.startsWith('•••')) { resultEl.innerHTML = '<div style="color:#92400E;font-size:13px;">Client Secret を 再入力 してください (保存済の値 は 編集不可)</div>'; return; }
+    const btn = document.getElementById('zoom-save-btn');
+    btn.disabled = true; btn.textContent = '⏳ 接続中…';
+    resultEl.innerHTML = '';
+    try {
+      const fn = httpsCallable(functions, "saveZoomCredentials");
+      const res = await fn({ accountId, clientId, clientSecret });
+      resultEl.innerHTML = `<div style="background:#EFF6FF;border:2px solid #2D8CFF;padding:14px 18px;border-radius:10px;font-size:13px;color:#1E40AF;">
+        <strong>✓ Zoom 接続成功</strong><br>
+        <small>scope: ${res.data?.scope || '?'}</small>
+      </div>`;
+      setTimeout(loadZoomStatus, 1500);
+    } catch (e) {
+      resultEl.innerHTML = `<div style="background:#FEE2E2;border:2px solid #DC2626;padding:14px 18px;border-radius:10px;font-size:13px;color:#7F1D1D;">✗ 失敗: ${e.message || e.code}</div>`;
+    } finally {
+      btn.disabled = false; btn.textContent = '🔗 Zoom 接続テスト + 保存';
     }
   });
 
