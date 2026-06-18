@@ -700,12 +700,18 @@
     if (!v) return;
     const today = new Date('2026-05-28').toISOString().slice(0, 10);
     let surveys = (liveData && liveData.survey_answers) || [];
-    const bookings = (liveData && liveData.bookings) || [];
+    // ★ Firestore 多テナント 確定済 を bookings に 合流
+    const fsConfirmedHero = (window._fpFirestoreConfirmed || []).map(c => {
+      const [d, t] = String(c.confirmedSlot || '').split(' ');
+      return { _fsCustomerId: c.docId, userId: 'fs:'+c.docId, name: c.name, date: d || '', time: t || '', zoomUrl: c.zoomUrl, ts: c.confirmedAt?.toDate?.()?.toISOString?.() || '', status: 'confirmed' };
+    });
+    const bookings = ((liveData && liveData.bookings) || []).concat(fsConfirmedHero);
+    const fsPendingHeroCount = (window._fpFirestoreCustomers || []).length;
     // デモfallback無効化 — オーナーがLINE実機テストする時のためにLIVEデータだけ表示
     let isDemo = false;
 
     const isRealLineUidHero = (uid) => /^U[a-f0-9]{32}$/i.test(String(uid || ''));
-    const pendingConfirm = surveys.filter(s => !s.confirmedSlot && (s.q6_候補1 || s.q7_候補2 || s.q8_候補3) && isRealLineUidHero(s.userId)).length;
+    const pendingConfirm = surveys.filter(s => !s.confirmedSlot && (s.q6_候補1 || s.q7_候補2 || s.q8_候補3) && isRealLineUidHero(s.userId)).length + fsPendingHeroCount;
     const recPending = bookings.filter(b => b.recordingStatus === 'saved' && !b.transcript).length;
     const recordingNow = bookings.filter(b => b.recordingStatus === 'recording').length;
     const totalNewLeads = surveys.length;
@@ -990,17 +996,24 @@
     return { dateStr, slotStr, display: str };
   }
 
-  // ★ Firestore tenants/{tid}/customers から 候補日確定待ち を 取得 (多テナント対応)
+  // ★ Firestore tenants/{tid}/customers から 候補日確定待ち + 確定済 を 取得 (多テナント対応)
   //   優先1: window.DUMMY_CLIENTS (loadTenantData が 既に ロード済 / 重複fetch 防止)
   //   優先2: 直接 Firestore fetch (DUMMY_CLIENTS 未ロード時の fallback)
   async function refreshFirestoreCustomers() {
     try {
       // 優先1: 既ロード DUMMY_CLIENTS を 使う
       if (Array.isArray(window.DUMMY_CLIENTS) && window.DUMMY_CLIENTS.length > 0) {
-        const pendingFs = window.DUMMY_CLIENTS
-          .filter(c => c.source === 'line_survey' && (c.meetingCandidates||[]).length > 0 && !c.confirmedSlot)
+        const lineSurvey = window.DUMMY_CLIENTS.filter(c => c.source === 'line_survey');
+        // 候補日待ち
+        const pendingFs = lineSurvey
+          .filter(c => (c.meetingCandidates||[]).length > 0 && !c.confirmedSlot)
+          .map(c => ({ docId: c.id, ...c }));
+        // 確定済 (Zoom打ち合わせ 待ち)
+        const confirmedFs = lineSurvey
+          .filter(c => c.confirmedSlot && c.zoomUrl)
           .map(c => ({ docId: c.id, ...c }));
         window._fpFirestoreCustomers = pendingFs;
+        window._fpFirestoreConfirmed = confirmedFs;
         try { if (currentSubview === 'leadHub') renderLeadHubInner(); } catch(_) {}
         return;
       }
@@ -1019,13 +1032,19 @@
       const db = getFirestore(app);
       const snap = await getDocs(collection(db, 'tenants', tenantId, 'customers'));
       const pendingFs = [];
+      const confirmedFs = [];
       snap.forEach(d => {
         const c = d.data();
-        if (c.source === 'line_survey' && (c.meetingCandidates||[]).length > 0 && !c.confirmedSlot) {
+        if (c.source !== 'line_survey') return;
+        if ((c.meetingCandidates||[]).length > 0 && !c.confirmedSlot) {
           pendingFs.push({ docId: d.id, ...c });
+        }
+        if (c.confirmedSlot && c.zoomUrl) {
+          confirmedFs.push({ docId: d.id, ...c });
         }
       });
       window._fpFirestoreCustomers = pendingFs;
+      window._fpFirestoreConfirmed = confirmedFs;
       try { if (currentSubview === 'leadHub') renderLeadHubInner(); } catch(_) {}
     } catch (e) { console.warn('refreshFirestoreCustomers:', e); }
   }
@@ -1174,7 +1193,22 @@
       'created-desc': (a, b) => String(b.ts || '').localeCompare(String(a.ts || '')),
       'name': (a, b) => String(a.name || '').localeCompare(String(b.name || ''), 'ja'),
     }[sortMode] || ((a, b) => 0);
-    const allBookings = ((liveData && liveData.bookings) || []).slice().sort(cmp);
+    // ★ legacy proxy bookings + Firestore (多テナント) 確定済 を 合流
+    const fsConfirmed = (window._fpFirestoreConfirmed || []).map(c => {
+      const [d, t] = String(c.confirmedSlot || '').split(' ');
+      return {
+        _fsCustomerId: c.docId,
+        userId: 'fs:' + c.docId,
+        name: c.name,
+        date: d || '',
+        time: t || '',
+        zoomUrl: c.zoomUrl,
+        ts: c.confirmedAt?.toDate?.()?.toISOString?.() || c.createdAt?.toDate?.()?.toISOString?.() || '',
+        status: 'confirmed',
+        recordingStatus: null,
+      };
+    });
+    const allBookings = (((liveData && liveData.bookings) || []).concat(fsConfirmed)).slice().sort(cmp);
     const bookings = allBookings.filter(b => !archived.has(b.ts)).slice(0, 8);
     const archivedCount = allBookings.filter(b => archived.has(b.ts)).length;
     // セレクトに現状値反映 + イベント
@@ -1799,6 +1833,29 @@
           alert('[デモモード] 再調整依頼を送信 (本番では LINE 送信)');
           return;
         }
+        // ★ Firestore 多テナント 顧客: requestReschedule Cloud Function
+        if (uid.startsWith('fs:')) {
+          const fsCustomerId = uid.slice(3);
+          const { initializeApp, getApps } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js');
+          const { getFunctions, httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-functions.js');
+          const app = getApps()[0] || initializeApp({
+            apiKey: 'AIzaSyAmVAEe9l9e1Yo_dzzJdbTVU35wWKd2sH4',
+            authDomain: 'skeleton-fp-compass-632026.firebaseapp.com',
+            projectId: 'skeleton-fp-compass-632026',
+          });
+          const fn = httpsCallable(getFunctions(app, 'asia-northeast1'), 'requestReschedule');
+          await fn({ customerId: fsCustomerId, message: msg });
+          overlay.remove();
+          const t = document.createElement('div');
+          t.style.cssText = 'position:fixed;top:18px;left:50%;transform:translateX(-50%);background:#fff;border-left:5px solid #f59e0b;border-radius:12px;padding:14px 22px;box-shadow:0 12px 36px rgba(0,0,0,0.2);z-index:10010;font-family:inherit;';
+          t.innerHTML = `<strong style="font-size:14px;">↩ ${escapeHtml(name)} 様 再調整依頼を送信</strong><br><span style="font-size:12px;color:#6b7280;">LINE送信完了 / 候補日3つを無効化</span>`;
+          document.body.appendChild(t);
+          setTimeout(() => t.remove(), 6000);
+          if (window.refreshFirestoreCustomers) await window.refreshFirestoreCustomers();
+          if (typeof renderLeadHubInner === 'function') renderLeadHubInner();
+          return;
+        }
+        // legacy proxy
         const r = await fetch(CLOUD_RUN_BASE + '/api/request-reschedule', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ userId: uid, name: name, fullMessage: msg }),
