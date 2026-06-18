@@ -680,6 +680,10 @@
   // 🆕 新規相談ハブ (アクションカード型)
   // ============================
   function renderLeadHub() {
+    // ★ Firestore 顧客 を 即時 反映
+    if (window.refreshFirestoreCustomers) {
+      try { window.refreshFirestoreCustomers(); } catch (_) {}
+    }
     fetchLiveData().then(() => { if (currentSubview === 'leadHub') renderLeadHubInner(); });
     if (!window._leadHubInterval) {
       window._leadHubInterval = setInterval(() => {
@@ -987,11 +991,25 @@
   }
 
   // ★ Firestore tenants/{tid}/customers から 候補日確定待ち を 取得 (多テナント対応)
+  //   優先1: window.DUMMY_CLIENTS (loadTenantData が 既に ロード済 / 重複fetch 防止)
+  //   優先2: 直接 Firestore fetch (DUMMY_CLIENTS 未ロード時の fallback)
   async function refreshFirestoreCustomers() {
     try {
-      const tenantId = (window.AccountInfo && window.AccountInfo.tenantId) || localStorage.getItem('fp-tenantId');
+      // 優先1: 既ロード DUMMY_CLIENTS を 使う
+      if (Array.isArray(window.DUMMY_CLIENTS) && window.DUMMY_CLIENTS.length > 0) {
+        const pendingFs = window.DUMMY_CLIENTS
+          .filter(c => c.source === 'line_survey' && (c.meetingCandidates||[]).length > 0 && !c.confirmedSlot)
+          .map(c => ({ docId: c.id, ...c }));
+        window._fpFirestoreCustomers = pendingFs;
+        try { if (currentSubview === 'leadHub') renderLeadHubInner(); } catch(_) {}
+        return;
+      }
+      // 優先2: tenantId 各所から 取得 + 直接 fetch
+      const tenantId = (window.__fp && window.__fp.tenantId)
+        || (window.AccountInfo && window.AccountInfo.tenantId)
+        || localStorage.getItem('fp-tenantId');
       if (!tenantId) return;
-      const { getFirestore, collection, getDocs, query, where } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js');
+      const { getFirestore, collection, getDocs } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js');
       const { initializeApp, getApps } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js');
       const app = getApps()[0] || initializeApp({
         apiKey: 'AIzaSyAmVAEe9l9e1Yo_dzzJdbTVU35wWKd2sH4',

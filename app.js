@@ -842,7 +842,13 @@
   // 顧客一覧
   // ============================
   // line-app.js から呼ばれる: 顧客台帳の再描画
-  window.FPCrmRefreshClients = function() { renderClients(); };
+  window.FPCrmRefreshClients = function() {
+    renderClients();
+    // ★ Firestore 顧客 (line_survey + 候補日待ち) を line-app の lead hub に 反映
+    if (window.refreshFirestoreCustomers) {
+      try { window.refreshFirestoreCustomers(); } catch (_) {}
+    }
+  };
 
   function renderContactFilterTabs(buckets) {
     let bar = document.getElementById('contact-filter-bar');
