@@ -2637,12 +2637,13 @@
     panel.id = 'fp-cal-side-v3';
     panel.style.cssText = `position:fixed;top:0;right:0;bottom:0;width:${width}px;z-index:9997;background:#fff;border-left:1px solid #e5e7eb;box-shadow:-4px 0 24px rgba(0,0,0,0.08);display:flex;flex-direction:column;`;
     // 確定待ちを顧客単位でグルーピング (1人ずつ集中モード)
+    //   legacy proxy survey_answers + Firestore tenants/{tid}/customers 両方 統合
     function buildPendingByCustomer() {
       const usersByUid = {};
       ((liveData && liveData.users) || []).forEach(u => { if (u.userId) usersByUid[u.userId] = u; });
       const isRealLineUid = (uid) => /^U[a-f0-9]{32}$/i.test(String(uid || ''));
       const pendingSurveys = ((liveData && liveData.survey_answers) || []).filter(s => !s.confirmedSlot && (s.q6_候補1 || s.q7_候補2 || s.q8_候補3) && isRealLineUid(s.userId));
-      return pendingSurveys.map(s => {
+      const legacy = pendingSurveys.map(s => {
         const candidates = [s.q6_候補1, s.q7_候補2, s.q8_候補3].map((slot, idx) => {
           if (!slot) return null;
           const parsed = parseSlotString(slot);
@@ -2666,6 +2667,32 @@
           candidates: candidates,
         };
       }).filter(p => p.candidates.length > 0);
+
+      // ★ Firestore tenants/{tid}/customers (多テナント) を 合流
+      const fsCustomers = window._fpFirestoreCustomers || [];
+      const fs = fsCustomers.map(c => {
+        const candidates = (c.meetingCandidates || []).map((slot, idx) => {
+          if (!slot) return null;
+          const parsed = parseSlotString(slot);
+          if (!parsed.dateStr) return null;
+          return { dateStr: parsed.dateStr, slotStr: parsed.slotStr, rank: idx + 1 };
+        }).filter(Boolean);
+        return {
+          userId: 'fs:' + c.docId,
+          _fsCustomerId: c.docId,
+          customerName: c.name || 'お客様',
+          pictureUrl: '',
+          age: c.surveyAnswers?.q1_年代 || '',
+          family: c.surveyAnswers?.q3_家族 || '',
+          income: c.surveyAnswers?.q4_年収 || '',
+          theme: Array.isArray(c.themes) ? c.themes.join('・') : (c.surveyAnswers?.q8_テーマ || ''),
+          worry: c.concerns || c.surveyAnswers?.q9_悩み || '',
+          ts: c.createdAt?.toDate?.()?.toISOString?.() || null,
+          candidates: candidates,
+        };
+      }).filter(p => p.candidates.length > 0);
+
+      return legacy.concat(fs);
     }
     let pendingByCustomer = buildPendingByCustomer();
     // 直前にどの顧客にフォーカスしてたか復元 (確定後の自動次へで使う)
@@ -2892,13 +2919,14 @@
           row.style.background = '#fef2f2';
           row.style.boxShadow = '0 0 0 3px #fca5a5';
         });
-        // 確定 → /api/confirm-slot → 確定後は次の顧客へ自動移動
+        // 確定 → Firestore 顧客 or /api/confirm-slot → 確定後は次の顧客へ自動移動
         const confirmBtn = row.querySelector('.fp-cand-confirm');
         confirmBtn.addEventListener('click', async () => {
           if (!confirm(`${name} 様 の予約を ${dateStr} ${slotStr} で確定します。\n\n• Zoom URL 自動発行\n• お客様の LINE に通知\n• Google カレンダーに登録\n\n進めますか?`)) return;
           confirmBtn.disabled = true;
           confirmBtn.textContent = '...';
           const isDemo = userId && userId.indexOf('Udemo') === 0;
+          const fsCustomerId = cur._fsCustomerId; // Firestore (多テナント) 顧客 か?
           try {
             if (isDemo) {
               await new Promise(r => setTimeout(r, 800));
@@ -2907,6 +2935,31 @@
               confirmBtn.style.background = '#94a3b8';
               return;
             }
+            // ★ Firestore 多テナント 顧客 → confirmSlotMultiTenant Cloud Function
+            if (fsCustomerId) {
+              const { initializeApp, getApps } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js');
+              const { getFunctions, httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-functions.js');
+              const app = getApps()[0] || initializeApp({
+                apiKey: 'AIzaSyAmVAEe9l9e1Yo_dzzJdbTVU35wWKd2sH4',
+                authDomain: 'skeleton-fp-compass-632026.firebaseapp.com',
+                projectId: 'skeleton-fp-compass-632026',
+              });
+              const fn = httpsCallable(getFunctions(app, 'asia-northeast1'), 'confirmSlotMultiTenant');
+              const res = await fn({ customerId: fsCustomerId, confirmedSlot: `${dateStr} ${slotStr}` });
+              const t = document.createElement('div');
+              t.style.cssText = 'position:fixed;top:18px;left:50%;transform:translateX(-50%);background:#fff;border-left:5px solid #06c755;border-radius:12px;padding:14px 22px;box-shadow:0 12px 36px rgba(0,0,0,0.2);z-index:10003;font-family:inherit;';
+              t.innerHTML = `<strong style="font-size:14px;">✅ ${escapeHtml(name)} 様 予約確定</strong><br><span style="font-size:12px;color:#6b7280;">${escapeHtml(dateStr)} ${escapeHtml(slotStr)} — Zoom + LINE 通知済</span><br><a href="${escapeHtml(res.data.googleCalendarAddUrl)}" target="_blank" style="display:inline-block;margin-top:8px;padding:8px 14px;background:#16A34A;color:#fff;text-decoration:none;border-radius:6px;font-size:12px;font-weight:700;">📅 Google カレンダー に追加</a>`;
+              document.body.appendChild(t);
+              setTimeout(() => t.remove(), 12000);
+              if (window.refreshFirestoreCustomers) await window.refreshFirestoreCustomers();
+              pendingByCustomer = buildPendingByCustomer();
+              window._fpCalFocusUid = (pendingByCustomer[currentIdx] && pendingByCustomer[currentIdx].userId) || null;
+              renderFocusSection();
+              if (pendingByCustomer[currentIdx]) jumpIframeTo(pendingByCustomer[currentIdx]);
+              renderLeadHubInner();
+              return;
+            }
+            // legacy proxy 顧客
             const r = await fetch(CLOUD_RUN_BASE + '/api/confirm-slot', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
