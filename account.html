@@ -489,13 +489,51 @@
       const line = tdata.line || {};
       const statusEl = document.getElementById('line-status');
       if (line.channelAccessToken && line.basicId) {
-        statusEl.innerHTML = `<div style="background:#F0FDF4;border:1px solid #06C755;padding:14px 18px;border-radius:10px;font-size:13px;color:#065F46;line-height:1.85;">
-          <strong style="color:#065F46;">✓ 接続済</strong>: ${line.displayName||''} (<code style="background:#fff;padding:2px 7px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:11.5px;">${line.basicId||'?'}</code>)<br>
-          <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
-            ${line.surveyUrl ? `<a href="${line.surveyUrl}" target="_blank" style="color:#06C755;font-weight:700;">→ アンケート URL を確認</a>` : ''}
-            ${line.basicId ? `<a href="https://line.me/R/ti/p/${encodeURIComponent(line.basicId.replace(/^@/,'@'))}" target="_blank" style="color:#06C755;font-weight:700;">→ 友だち追加 LINE URL</a>` : ''}
+        const surveyUrl = line.surveyUrl || `https://app.skeleton-inc.jp/survey/index.html?tenant=${currentTenantId}`;
+        const friendUrl = line.basicId ? `https://line.me/R/ti/p/${encodeURIComponent(line.basicId.replace(/^@/,'@'))}` : '';
+        statusEl.innerHTML = `
+        <div style="background:#F0FDF4;border:1px solid #06C755;padding:14px 18px;border-radius:10px;font-size:13px;color:#065F46;line-height:1.7;margin-bottom:14px;">
+          <strong style="color:#065F46;">✓ LINE 接続済</strong>: ${line.displayName||''} (<code style="background:#fff;padding:2px 7px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:11.5px;">${line.basicId||'?'}</code>)
+        </div>
+
+        <!-- あなた専用 アンケート URL -->
+        <div style="background:#fff;border:2px solid #06C755;border-radius:10px;padding:16px 20px;margin-bottom:10px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap;">
+            <div>
+              <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:10.5px;letter-spacing:0.16em;color:#065F46;text-transform:uppercase;">あなた専用 アンケート URL</div>
+              <div style="font-size:11.5px;color:var(--ink-3);margin-top:2px;">お客様 へ 共有 (メール / 名刺 / Webサイト 等)</div>
+            </div>
+            <span style="font-size:10.5px;color:#065F46;background:#ECFDF5;padding:3px 9px;border-radius:99px;font-weight:700;letter-spacing:0.04em;">FP 専用</span>
           </div>
-        </div>`;
+          <div style="display:flex;gap:8px;align-items:stretch;flex-wrap:wrap;margin-top:8px;">
+            <code id="line-survey-url" style="flex:1;min-width:200px;background:#F0FDF4;padding:10px 14px;border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#065F46;word-break:break-all;line-height:1.5;">${surveyUrl}</code>
+            <button id="copy-survey-url-btn" data-copy-target="line-survey-url" class="btn primary" style="padding:9px 18px;font-size:12.5px;background:#06C755;color:#fff;border:none;border-radius:6px;font-weight:700;cursor:pointer;">コピー</button>
+          </div>
+        </div>
+
+        ${friendUrl ? `
+        <!-- 友だち追加 LINE URL -->
+        <div style="background:#fff;border:1px solid var(--line);border-radius:10px;padding:16px 20px;">
+          <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:10.5px;letter-spacing:0.16em;color:var(--ink-3);text-transform:uppercase;margin-bottom:8px;">友だち追加 LINE URL</div>
+          <div style="display:flex;gap:8px;align-items:stretch;flex-wrap:wrap;">
+            <code id="line-friend-url" style="flex:1;min-width:200px;background:#F8FAFC;padding:10px 14px;border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:11.5px;word-break:break-all;line-height:1.5;">${friendUrl}</code>
+            <button data-copy-target="line-friend-url" class="btn" style="padding:9px 18px;font-size:12.5px;background:#0F172A;color:#fff;border:none;border-radius:6px;font-weight:700;cursor:pointer;">コピー</button>
+          </div>
+        </div>` : ''}
+        `;
+        // コピーボタン バインド
+        statusEl.querySelectorAll('[data-copy-target]').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const el = document.getElementById(btn.dataset.copyTarget);
+            if (!el) return;
+            try {
+              await navigator.clipboard.writeText(el.textContent.trim());
+              const orig = btn.textContent;
+              btn.textContent = '✓ コピー済'; btn.style.background = '#FFD700'; btn.style.color = '#0A0A0A';
+              setTimeout(() => { btn.textContent = orig; btn.style.background = ''; btn.style.color = ''; }, 1500);
+            } catch (e) { alert('コピー失敗: ' + e.message); }
+          });
+        });
         document.getElementById('line-token').value = '••• 保存済 (再入力すると 上書き) •••';
         document.getElementById('line-secret').value = '••• 保存済 •••';
       } else {
