@@ -1157,7 +1157,7 @@ window.fpReadyAfterAuth = function() {
     });
   })();
 
-  const ver = "20260618H-reschedule-and-zoom-list-fix";
+  const ver = "20260619AL-stg-richmenu-switcher";
   const scripts = [
     "life-events.js?v=" + ver,
     "recommender.js?v=" + ver,
@@ -1199,6 +1199,27 @@ window.fpReadyAfterAuth = function() {
   document.addEventListener('DOMContentLoaded', () => {
     hydrateIcons();
     setInterval(hydrateIcons, 1200);
+    // ★ legacy ゴミ議事録 cleanup (customerName='お客様' / 空 = booking 紐付け失敗 残骸)
+    //   1回だけ走る (フラグ立てる)
+    try {
+      if (!localStorage.getItem('fp-ai-legacy-cleanup-v1')) {
+        let removed = 0;
+        Object.keys(localStorage).filter(k => k.startsWith('fp-ai-')).forEach(k => {
+          try {
+            const raw = JSON.parse(localStorage.getItem(k) || 'null');
+            const entries = Array.isArray(raw) ? raw : (raw && raw.entry ? [raw.entry] : (raw && (raw.summary || raw.key_concerns) ? [raw] : []));
+            if (entries.length === 0) return;
+            const allTrash = entries.every(e => {
+              const n = (e.customerName || '').trim();
+              return (n === 'お客様' || n === '' || n === '匿名') && (!e.summary || e.summary.length < 30);
+            });
+            if (allTrash) { localStorage.removeItem(k); removed++; }
+          } catch (_) {}
+        });
+        localStorage.setItem('fp-ai-legacy-cleanup-v1', new Date().toISOString());
+        if (removed > 0) console.log('[cleanup] legacy 議事録 残骸 削除:', removed, '件');
+      }
+    } catch (e) { console.warn('cleanup fail:', e); }
   });
 
   // Howto banner: collapse by default + dismissible + persisted
@@ -1473,7 +1494,7 @@ window.fpReadyAfterAuth = function() {
 <script>
 (function(){
   // 最新の ver を 1 箇所に集約 (fpReadyAfterAuth 側と一致させる必要あり)
-  const FP_VERSION = "20260618H-reschedule-and-zoom-list-fix";
+  const FP_VERSION = "20260619AL-stg-richmenu-switcher";
   const loadTime = new Date();
   const hhmm = String(loadTime.getHours()).padStart(2,'0') + ':' + String(loadTime.getMinutes()).padStart(2,'0');
   const dateLabel = (FP_VERSION.match(/^(\d{4})(\d{2})(\d{2})/) || []).slice(1).join('/').replace(/^(\d{4})\//,'$1/').replace(/\/(\d{2})\/(\d{2})$/,'/$1/$2') || FP_VERSION;

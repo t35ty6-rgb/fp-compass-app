@@ -217,6 +217,12 @@
         <button id="line-save-btn" class="btn primary" style="margin-top:18px;padding:14px 28px;font-size:14px;font-weight:700;background:#06C755;color:#fff;border:none;border-radius:8px;cursor:pointer;">
           🔗 接続テスト + 保存 (自動セットアップ)
         </button>
+        <button id="line-regen-btn" style="margin-top:10px;margin-left:8px;padding:13px 22px;font-size:13px;font-weight:700;background:#fff;color:#06C755;border:1.5px solid #06C755;border-radius:8px;cursor:pointer;">
+          ↻ リッチメニュー だけ 再生成 (本番向け)
+        </button>
+        <button id="line-regen-stg-btn" style="margin-top:10px;margin-left:8px;padding:13px 22px;font-size:13px;font-weight:700;background:#fff;color:#1E40AF;border:1.5px dashed #3B82F6;border-radius:8px;cursor:pointer;">
+          🧪 stg試験用 リッチメニュー (アンケート開くと stg版)
+        </button>
 
         <div id="line-result" style="margin-top:16px;"></div>
 
@@ -588,6 +594,44 @@
       btn.disabled = false; btn.textContent = '🔗 接続テスト + 保存 (自動セットアップ)';
     }
   });
+
+  // ↻ リッチメニュー だけ 再生成 (本番 / stg共通の handler)
+  async function regenerateRichMenu(useStg) {
+    const resultEl = document.getElementById('line-result');
+    const prodBtn = document.getElementById('line-regen-btn');
+    const stgBtn = document.getElementById('line-regen-stg-btn');
+    const btn = useStg ? stgBtn : prodBtn;
+    const origText = btn.textContent;
+    const confirmMsg = useStg
+      ? '🧪 stg試験向け リッチメニュー を 生成します。\nお客様の LINE 公式から アンケート開くと stg版 アンケート が出ます。\n本番リリース前のテスト専用 → OK?'
+      : '本番向け リッチメニュー を 再生成 します。 (アンケート は 本番版を 開く) OK?';
+    if (!confirm(confirmMsg)) return;
+    btn.disabled = true; btn.textContent = '⏳ 生成中…';
+    resultEl.innerHTML = '';
+    try {
+      const fn = httpsCallable(functions, "regenerateRichMenu");
+      const res = await fn({ stg: useStg });
+      const d = res.data;
+      const colorBg = useStg ? '#EFF6FF' : '#F0FDF4';
+      const colorBorder = useStg ? '#3B82F6' : '#06C755';
+      const colorText = useStg ? '#1E40AF' : '#065F46';
+      resultEl.innerHTML = `<div style="background:${colorBg};border:2px solid ${colorBorder};padding:16px 20px;border-radius:10px;font-size:13px;color:${colorText};line-height:1.85;">
+        <strong>✓ ${useStg ? '🧪 stg試験用' : '本番向け'} リッチメニュー 生成完了</strong><br>
+        ・新 リッチメニューID: <code style="background:#fff;padding:2px 7px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:11px;">${d.richMenuId.slice(0,20)}…</code><br>
+        ・新 アンケートURL: <a href="${d.surveyUrl}" target="_blank" style="color:${colorBorder};font-weight:700;">${d.surveyUrl}</a><br>
+        ${useStg ? '<strong style="color:#1E40AF;">⚠ stg試験中: 本番リリース前に「↻ リッチメニュー だけ 再生成 (本番向け)」 を 押して 元に戻すこと</strong><br>' : ''}
+        <small style="opacity:0.8;">スマホ で LINE 公式アカウント を 開き直すと 新メニュー が 反映されます (LINE側 キャッシュで 数分かかる場合あり)</small>
+      </div>`;
+      setTimeout(loadLineStatus, 1500);
+    } catch (e) {
+      console.error('regen:', e);
+      resultEl.innerHTML = `<div style="background:#FEE2E2;border:2px solid #DC2626;padding:14px 18px;border-radius:10px;font-size:13px;color:#7F1D1D;">✗ 生成失敗: ${e.message || e.code || '不明'}</div>`;
+    } finally {
+      btn.disabled = false; btn.textContent = origText;
+    }
+  }
+  $("line-regen-btn").addEventListener("click", () => regenerateRichMenu(false));
+  $("line-regen-stg-btn").addEventListener("click", () => regenerateRichMenu(true));
 
   // ==== Zoom 連携 ====
   async function loadZoomStatus() {

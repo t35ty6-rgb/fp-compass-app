@@ -4,6 +4,18 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>FP相談 事前ヒアリング | FP Compass</title>
+<!-- ★ ?stg=1 が付いてたら stg.app.skeleton-inc.jp/survey/index.html に redirect (本番LIFF endpoint固定問題の解決) -->
+<script>
+(function(){
+  const p = new URLSearchParams(location.search);
+  if (p.get('stg') === '1' && location.host !== 'stg.app.skeleton-inc.jp') {
+    p.delete('stg');
+    location.replace('https://stg.app.skeleton-inc.jp/survey/index.html?' + p.toString());
+  }
+})();
+</script>
+<!-- ★ LIFF SDK: お客様 の LINE userId を 自動取得 → customer doc に lineFriendId 自動セット -->
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -171,12 +183,43 @@
 
     <form method="post" id="surveyForm" class="card">
 
-    <!-- お名前 (常時表示 / wizard 外) -->
-    <div class="q" style="margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid var(--line);">
+    <!-- お名前 (入力後 自動 collapse / Q1以降は 隠す) -->
+    <div class="q" id="name-section" style="margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid var(--line);">
       <div class="q-label"><span class="q-no">名前</span>お名前 <span style="color:#DC2B2B;font-weight:700;">*</span></div>
       <div class="q-sub">面談時 にFP が お声がけ する 用 です。</div>
       <input type="text" name="name" id="customer-name" placeholder="例: 山田 太郎" autocomplete="name" required>
     </div>
+    <!-- 入力済 サマリ (collapse 後 表示) -->
+    <div id="name-collapsed" style="display:none;margin-bottom:16px;padding:8px 14px;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;font-size:12.5px;color:#065F46;cursor:pointer;display:none;">
+      ✓ <strong id="name-collapsed-text"></strong> さん で送信します <span style="color:#94a3b8;margin-left:6px;">(タップで 修正)</span>
+    </div>
+    <script>
+    (function(){
+      const sec = document.getElementById('name-section');
+      const input = document.getElementById('customer-name');
+      const collapsed = document.getElementById('name-collapsed');
+      const collapsedTxt = document.getElementById('name-collapsed-text');
+      function tryCollapse() {
+        const v = input.value.trim();
+        if (v) {
+          sec.style.display = 'none';
+          collapsed.style.display = 'block';
+          collapsedTxt.textContent = v;
+        }
+      }
+      input.addEventListener('blur', tryCollapse);
+      collapsed.addEventListener('click', () => {
+        sec.style.display = 'block';
+        collapsed.style.display = 'none';
+        input.focus();
+      });
+      // LIFF が 名前 自動入力 した時 も 自動 collapse
+      const checkLiff = setInterval(() => {
+        if (input.value.trim()) { tryCollapse(); clearInterval(checkLiff); }
+      }, 500);
+      setTimeout(() => clearInterval(checkLiff), 5000);
+    })();
+    </script>
 
     <div class="step" data-step="1" data-field="q1_年代" data-multi="" data-text="" data-slots="" style="display:block;">
       <div class="q-label"><span class="q-no">Q1</span>ご年齢</div>
@@ -325,6 +368,32 @@
     </div>
 
     <script>
+    // ★ LIFF 初期化: アンケート 起動時 に LINE Login → userId 自動取得
+    (function initLiff(){
+      window._fpLiffUserId = '';
+      window._fpLiffDisplayName = '';
+      // LIFF ID は ?liffId= query で 上書き可。 デフォは memory:reference_fp_compass_liff.md の ID
+      const params = new URLSearchParams(location.search);
+      const liffId = params.get('liffId') || '2010438953-T33xTMVb';
+      if (typeof liff === 'undefined') { console.warn('[liff] SDK 読込失敗'); return; }
+      liff.init({ liffId })
+        .then(() => {
+          if (!liff.isLoggedIn()) { liff.login(); return; }
+          return liff.getProfile();
+        })
+        .then(profile => {
+          if (profile) {
+            window._fpLiffUserId = profile.userId || '';
+            window._fpLiffDisplayName = profile.displayName || '';
+            console.log('[liff] userId 取得:', profile.userId, '/ name:', profile.displayName);
+            // 名前 input に displayName を 初期値で 入れる (空なら)
+            const nameIn = document.querySelector('#nameInput, [name="name"]');
+            if (nameIn && !nameIn.value) nameIn.value = profile.displayName || '';
+          }
+        })
+        .catch(e => console.warn('[liff] init/profile 失敗:', e.message));
+    })();
+
     (function(){
       const form = document.getElementById('surveyForm');
       const bar = document.getElementById('bar');
@@ -462,7 +531,10 @@
               appId: '1:991197809601:web:9b9d49aa1c1c1f0d0d9c0d'
             });
             const fn = httpsCallable(getFunctions(app, 'asia-northeast1'), 'submitSurveyAnswer');
-            await fn({ tenantId, answers: fields, submittedAt: new Date().toISOString() });
+            // ★ LIFF から userId 取得 (取れなくても submit は続行)
+            const lineUserId = window._fpLiffUserId || '';
+            const lineDisplayName = window._fpLiffDisplayName || '';
+            await fn({ tenantId, answers: fields, submittedAt: new Date().toISOString(), lineUserId, lineDisplayName });
           } catch (e) { console.error('送信失敗:', e); }
         })();
         setTimeout(() => {
