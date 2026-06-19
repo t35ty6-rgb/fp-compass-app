@@ -3420,8 +3420,16 @@
           if (Math.abs(rMs - confirmedMs) > 6 * 60 * 60 * 1000) return; // ±6h
           let kc = r.key_concerns;
           if (typeof kc === 'string') { try { kc = JSON.parse(kc); } catch (_) { kc = []; } }
+          // ★ 救済議事録 の bookingTs を 該当 booking (= 同じ confirmedSlot の myBookings entry) の ts に揃える
+          //   → 上のMEETING RECORD カードに 直接 表示 → 議事録 だけの「録画ベース」 別カードが 出ない (1枚統合)
+          const matchedBk = myBookings.find(b => {
+            const bDt = String(b.date || '') + 'T' + String(b.time || '00:00');
+            const bMs = new Date(bDt).getTime();
+            return !isNaN(bMs) && Math.abs(bMs - confirmedMs) < 60 * 60 * 1000;
+          });
+          const rescueBookingTs = (matchedBk && matchedBk.ts) || r.bookingTs || ('rescue-' + rTsStr);
           aiResults.push({
-            bookingTs: r.bookingTs || ('rescue-' + rTsStr),
+            bookingTs: rescueBookingTs,
             userId: client.lineFriendId,
             customerName: client.name,
             date: r.date || String(rTsStr).slice(0,10),
