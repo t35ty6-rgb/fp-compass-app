@@ -1156,7 +1156,14 @@ window.fpReadyAfterAuth = function() {
       const r = e?.reason; const msg = String(r?.message || r || '');
       if (/AbortError|NetworkError when attempting/i.test(msg)) return;
       console.error('[errorBoundary] unhandled rejection:', r);
-      setTimeout(() => { if (!document.querySelector('.tab')) showRecoveryScreen(); }, 2000);
+      // ★ 緩和 (オーナーfb): 2秒→15秒 + 「.tab も #login も 両方無い」 = 本当に 画面真っ白 時のみ
+      //   従来は チャットbot fetch失敗 / Firebase load遅延 で すぐ 復旧画面 = 誤検知
+      setTimeout(() => {
+        const hasTabs = !!document.querySelector('.tab');
+        const hasLogin = !!document.querySelector('input[type="email"], #login, .login-card');
+        const hasMainContent = !!document.querySelector('.main, main, #app, .client-card, .sidebar');
+        if (!hasTabs && !hasLogin && !hasMainContent) showRecoveryScreen();
+      }, 15000);
     });
   })();
 
