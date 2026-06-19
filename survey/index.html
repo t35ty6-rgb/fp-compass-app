@@ -6,6 +6,7 @@
 <title>FP相談 事前ヒアリング | FP Compass</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <style>
   :root{
     --bg:#F7F7F5; --paper:#FFFFFF; --surface-2:#FAFAF9;
@@ -325,6 +326,35 @@
     </div>
 
     <script>
+    // ★ LIFF 早期 init — tenant の liffId を Cloud Function で取得 → liff.init → profile取得
+    //   リッチメニュー など URLに ?uid= 無くても LINE内ブラウザなら userId/displayName/pictureUrl が拾える
+    (async function initLiff(){
+      try {
+        const tid = new URLSearchParams(location.search).get('tenant') || new URLSearchParams(location.search).get('t');
+        if (!tid) return;
+        const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js');
+        const { getFunctions, httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-functions.js');
+        const app = initializeApp({
+          apiKey: 'AIzaSyAmVAEe9l9e1Yo_dzzJdbTVU35wWKd2sH4',
+          authDomain: 'skeleton-fp-compass-632026.firebaseapp.com',
+          projectId: 'skeleton-fp-compass-632026',
+        }, 'liff-init-app');
+        const fn = httpsCallable(getFunctions(app, 'asia-northeast1'), 'getReferrerName');
+        const r = await fn({ code: tid });
+        const liffId = r?.data?.liffId;
+        if (!liffId || !window.liff) return;
+        window._fpLiffId = liffId;
+        await window.liff.init({ liffId });
+        window._fpLiffInited = true;
+        if (window.liff.isLoggedIn && window.liff.isLoggedIn()) {
+          const prof = await window.liff.getProfile();
+          if (prof) {
+            window._fpLiffProfile = prof;
+            console.log('[LIFF] profile:', prof.displayName, prof.userId.slice(0,12));
+          }
+        }
+      } catch (e) { console.warn('[LIFF] init skip:', e.message); }
+    })();
     (function(){
       const form = document.getElementById('surveyForm');
       const bar = document.getElementById('bar');
@@ -463,8 +493,18 @@
             });
             const fn = httpsCallable(getFunctions(app, 'asia-northeast1'), 'submitSurveyAnswer');
             const qs = new URLSearchParams(location.search);
-            const lineUserId = qs.get('uid') || qs.get('lineUserId') || '';
-            await fn({ tenantId, answers: fields, submittedAt: new Date().toISOString(), lineUserId });
+            // 1) URL query 経由 (welcome message からの ?uid=)
+            let lineUserId = qs.get('uid') || qs.get('lineUserId') || '';
+            let lineDisplayName = '';
+            let linePictureUrl = '';
+            // 2) 早期 init で取得済の LIFF profile を採用 (リッチメニュー / LINE内ブラウザ 経由 用)
+            const prof = window._fpLiffProfile;
+            if (prof) {
+              if (!lineUserId) lineUserId = prof.userId || '';
+              lineDisplayName = prof.displayName || '';
+              linePictureUrl = prof.pictureUrl || '';
+            }
+            await fn({ tenantId, answers: fields, submittedAt: new Date().toISOString(), lineUserId, lineDisplayName, linePictureUrl });
           } catch (e) { console.error('送信失敗:', e); }
         })();
         setTimeout(() => {
