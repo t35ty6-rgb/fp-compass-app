@@ -299,7 +299,9 @@
     $("fp-row-pwconfirm").style.display = m === "signup" ? "" : "none";
     $("fp-row-terms").style.display = m === "signup" ? "" : "none";
     $("fp-row-forgot").style.display = m === "signup" ? "none" : "";
-    $("fp-row-demo").style.display = m === "signup" ? "" : "none";
+    // ★ 本番では ¥0デモボタン 完全非表示 (オーナーfb: 本番=¥19,800一律、デモはクーポンコード DEMOFREE/DEMO9800 で対応)
+    const _hideDemoBtn = location.host === 'app.skeleton-inc.jp';
+    $("fp-row-demo").style.display = (m === "signup" && !_hideDemoBtn) ? "" : "none";
     $("fp-gate-btn").textContent = m === "signup" ? "アカウント作成" : "ログイン";
     $("fp-pw-input").setAttribute("autocomplete", m === "signup" ? "new-password" : "current-password");
     $("fp-gate-sub").textContent = $("fp-gate-sub").dataset[m];
@@ -1513,8 +1515,12 @@ window.fpReadyAfterAuth = function() {
     document.body.appendChild(d);
     setTimeout(() => d.remove(), 12000);
   });
-  document.addEventListener('DOMContentLoaded', () => document.body.appendChild(badge));
-  if (document.readyState !== 'loading') document.body.appendChild(badge);
+  // ★ 本番では バッジ非表示 (stg のみ)。 オーナーfb: 「お客様 見える 場所 に Jobs の内部情報 出さない」
+  const isProd = location.host === 'app.skeleton-inc.jp';
+  if (!isProd) {
+    document.addEventListener('DOMContentLoaded', () => document.body.appendChild(badge));
+    if (document.readyState !== 'loading') document.body.appendChild(badge);
+  }
 })();
 </script>
 
