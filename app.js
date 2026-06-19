@@ -1796,10 +1796,11 @@
     } catch (e) { console.warn('meeting events skipped:', e); }
 
     // ③ 「次の一手」ブロック用データ抽出 (最新 AI 議事録 + 未完了タスク 上位3件)
+    // ★ latestAi は try ブロック外でも使う (line 1950 等) → block scope 罠回避のため 外に宣言
+    let latestAi = null;
     let nextActionHtml = '';
     try {
       const allFpAi = Object.keys(localStorage).filter(k => k.startsWith('fp-ai-'));
-      let latestAi = null;
       allFpAi.forEach(k => {
         const arr = JSON.parse(localStorage.getItem(k) || '[]');
         arr.forEach(a => {
@@ -3273,7 +3274,21 @@
   function renderMeetingRecordsBlock(client) {
     // この顧客に関連する bookings を liveData から探す
     const liveBookings = (window.LineAppLiveData && window.LineAppLiveData.bookings) || [];
-    const myBookings = liveBookings.filter(b => b.userId === client.lineFriendId || b.name === client.name);
+    // ★ multi-tenant Firestore 確定済 顧客 を bookings 同等 で 追加
+    //   (legacy のみ だと 「お」 等 Firestore 顧客 は myBookings 0件 → 早期 return → 面談記録 セクション 出ない)
+    const fsMyBookings = (window._fpFirestoreConfirmed || [])
+      .filter(c => c.docId === client._fsCustomerId
+                  || (c.lineFriendId && c.lineFriendId === client.lineFriendId)
+                  || (c.name && c.name === client.name))
+      .map(c => ({
+        ts: c.confirmedAt?.toDate?.()?.toISOString?.() || '',
+        date: String(c.confirmedSlot || '').split(' ')[0] || '',
+        time: String(c.confirmedSlot || '').split(' ')[1] || '',
+        name: c.name,
+        userId: c.lineFriendId || ('fs:' + c.docId),
+        zoomUrl: c.zoomUrl,
+      }));
+    const myBookings = liveBookings.filter(b => b.userId === client.lineFriendId || b.name === client.name).concat(fsMyBookings);
 
     // localStorage から この顧客のメモ + タスクを取得
     // タスクも localStorage + GAS の両方から集約
