@@ -557,14 +557,17 @@
     const resultEl = document.getElementById('line-result');
     const token = tokenEl.value.trim();
     const secret = secretEl.value.trim();
-    const liffId = (liffEl?.value || '').trim();
+    let liffId = (liffEl?.value || '').trim();
+    // ★ URL 貼付 OK: https://liff.line.me/XXX → XXX に正規化
+    const liffMatch = liffId.match(/(\d{9,11}-[A-Za-z0-9]+)/);
+    if (liffMatch) liffId = liffMatch[1];
     if (token.startsWith('•••') || secret.startsWith('•••')) {
       resultEl.innerHTML = '<div style="color:#92400E;font-size:13px;">既に 接続済 です。 上書き したい場合 は ① と ② を 両方 再入力 してください。</div>';
       return;
     }
     if (!token || token.length < 50) { resultEl.innerHTML = '<div style="color:#B91C1C;font-size:13px;">① Channel access token を 入れてください (200文字以上)</div>'; return; }
     if (!secret || secret.length < 16) { resultEl.innerHTML = '<div style="color:#B91C1C;font-size:13px;">② Channel secret を 入れてください (32文字)</div>'; return; }
-    if (liffId && !/^[0-9]{10}-[A-Za-z0-9]+$/.test(liffId)) { resultEl.innerHTML = '<div style="color:#B91C1C;font-size:13px;">③ LIFF ID 形式 不正 (例: 2010438953-T33xTMVb)</div>'; return; }
+    if (liffId && !/^\d{9,11}-[A-Za-z0-9]+$/.test(liffId)) { resultEl.innerHTML = '<div style="color:#B91C1C;font-size:13px;">③ LIFF ID 形式 不正 (例: 2010438953-T33xTMVb / URL も OK)</div>'; return; }
     const btn = document.getElementById('line-save-btn');
     btn.disabled = true; btn.textContent = '⏳ 接続中… (30秒程度)';
     resultEl.innerHTML = '';
