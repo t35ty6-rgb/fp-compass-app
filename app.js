@@ -3387,6 +3387,39 @@
         next_meeting_suggestion: r.next_meeting_suggestion || '',
       });
     });
+    // ★ 救済 lookup: customerName='お客様' / userId 空 の orphan ai_result を
+    //   client.confirmedSlot ± 6h以内 の time-window マッチ で 救済表示
+    //   (旧 ver で booking lookup 失敗時 'お客様' default で 保存された 議事録 を 救済)
+    //   退化リスク: 同FP同時刻 別顧客 確定時の 混入 → multi-tenant SaaS 性質上 低リスク + dedupe seenTs で重複弾く
+    if (client.confirmedSlot) {
+      const confirmedMs = new Date(String(client.confirmedSlot).replace(' ', 'T')).getTime();
+      if (!isNaN(confirmedMs)) {
+        liveAiResults.forEach(r => {
+          const noName = !r.customerName || r.customerName === 'お客様';
+          const noUid = !r.userId;
+          if (!(noName && noUid)) return; // 完全orphan のみ救済対象
+          const rTsStr = r.ts || r.createdAt || r.bookingTs;
+          if (!rTsStr) return;
+          const rMs = new Date(String(rTsStr).replace(' ', 'T')).getTime();
+          if (isNaN(rMs)) return;
+          if (Math.abs(rMs - confirmedMs) > 6 * 60 * 60 * 1000) return; // ±6h
+          let kc = r.key_concerns;
+          if (typeof kc === 'string') { try { kc = JSON.parse(kc); } catch (_) { kc = []; } }
+          aiResults.push({
+            bookingTs: r.bookingTs || ('rescue-' + rTsStr),
+            userId: client.lineFriendId,
+            customerName: client.name,
+            date: r.date || String(rTsStr).slice(0,10),
+            transcript: r.transcript || '',
+            summary: r.summary || '',
+            transcript_summary: r.transcript_summary || '',
+            key_concerns: kc || [],
+            next_meeting_suggestion: r.next_meeting_suggestion || '',
+            rescued: true,
+          });
+        });
+      }
+    }
     // 同 bookingTs の重複を排除 (後者で上書き)
     const seenTs = new Set();
     aiResults = aiResults.filter(a => {

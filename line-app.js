@@ -2744,6 +2744,17 @@
       .find(b => String(b.ts).slice(0, 19) === String(bookingTs).slice(0, 19));
     // 録画完了の小さなトースト + ダウンロード/メモ動線
     showRecordingDoneToast(booking, blob, blobUrl, bookingTs);
+    // ★ Zoom 待ち リスト から 自動 archive (録画完了 = 面談完了 とみなす)
+    //   legacy 「完了」 ボタン path は data-complete-booking で archived set に push → 同じ機構を 自動発火
+    //   booking.ts は legacy ISO / Firestore confirmedAt ISO どちらも archive 対象
+    if (booking && booking.ts) {
+      try {
+        const set = new Set(JSON.parse(localStorage.getItem('fp-booking-archived') || '[]'));
+        set.add(booking.ts);
+        localStorage.setItem('fp-booking-archived', JSON.stringify([...set]));
+        console.log('[recording-complete] auto-archived booking:', booking.ts, booking.name);
+      } catch (e) { console.warn('auto-archive fail:', e); }
+    }
     // サーバー側にも保存通知
     try { await fetch(CLOUD_RUN_BASE + '/api/recording/stop?ts=' + encodeURIComponent(bookingTs), { method: 'POST' }); } catch (_) {}
     await fetchLiveData();
