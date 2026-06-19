@@ -3629,11 +3629,13 @@
         });
       }
     }
-    // 同 bookingTs の重複を排除 (後者で上書き)
+    // ★ 同 bookingTs+録画時刻ts で 区別 (同 confirmedSlot で 複数録画 した時 別entry として 残す)
+    //   旧コード: bookingTs だけで dedup → 同 confirmedSlot の2回目 録画 が 消えてた
     const seenTs = new Set();
     aiResults = aiResults.filter(a => {
-      if (seenTs.has(a.bookingTs)) return false;
-      seenTs.add(a.bookingTs);
+      const key = (a.bookingTs || '') + '|' + (a.ts || a.createdAt || '');
+      if (seenTs.has(key)) return false;
+      seenTs.add(key);
       return true;
     });
 
