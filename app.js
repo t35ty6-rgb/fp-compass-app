@@ -3160,17 +3160,18 @@
     // ★ 家系図 タブ: AI 抽出 / 追加 / 編集 / 保存
     function persistFamily() {
       try { localStorage.setItem('fp-crm-clients-v1', JSON.stringify(window.DUMMY_CLIENTS || [])); } catch (_) {}
-      // Firestore 顧客 なら family も sync (window.__fp.db を 使う = signed in auth 付き)
-      if (c._fsCustomerId && window.__fp?.db && window.__fp?.tenantId) {
+      // ★ Firestore docId は 20文字 英数字。 c._fsCustomerId or c.id (Firestore docId format) で fallback
+      const fsDocId = c._fsCustomerId || (typeof c.id === 'string' && /^[A-Za-z0-9]{20}$/.test(c.id) ? c.id : null);
+      if (fsDocId && window.__fp?.db && window.__fp?.tenantId) {
         (async () => {
           try {
             const { doc, updateDoc } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js');
-            await updateDoc(doc(window.__fp.db, 'tenants', window.__fp.tenantId, 'customers', c._fsCustomerId), { family: c.family || [] });
-            console.log('[persistFamily] Firestore 同期 OK', c.family?.length, '名');
+            await updateDoc(doc(window.__fp.db, 'tenants', window.__fp.tenantId, 'customers', fsDocId), { family: c.family || [] });
+            console.log('[persistFamily] Firestore 同期 OK', c.family?.length, '名 docId=', fsDocId);
           } catch (e) { console.warn('[persistFamily] Firestore sync fail:', e.message, e.code); }
         })();
       } else {
-        console.log('[persistFamily] localStorage only (no fs sync)', { hasFsId: !!c._fsCustomerId, hasDb: !!window.__fp?.db, hasTid: !!window.__fp?.tenantId });
+        console.log('[persistFamily] localStorage only', { fsDocId, hasDb: !!window.__fp?.db, hasTid: !!window.__fp?.tenantId, cid: c.id });
       }
     }
     function refreshFamilyPanel() {
@@ -3856,6 +3857,8 @@ ${ctxText}${surveyTxt}`;
       if (!bookingTs) bookingTs = 'gas-' + (r.ts || r.createdAt || Date.now());
       aiResults.push({
         bookingTs,
+        ts: r.ts || r.createdAt || '', // ★ 録画時刻 を 保持 (dedup/orphan filter用)
+        createdAt: r.createdAt || r.ts || '',
         userId: r.userId || client.lineFriendId,
         customerName: r.customerName || client.name,
         date: r.date || (r.ts || '').slice(0,10),
@@ -3894,6 +3897,8 @@ ${ctxText}${surveyTxt}`;
           const rescueBookingTs = (matchedBk && matchedBk.ts) || r.bookingTs || ('rescue-' + rTsStr);
           aiResults.push({
             bookingTs: rescueBookingTs,
+            ts: r.ts || r.createdAt || rTsStr, // ★ 録画時刻 を 保持 (dedup/orphan filter用)
+            createdAt: r.createdAt || r.ts || rTsStr,
             userId: client.lineFriendId,
             customerName: client.name,
             date: r.date || String(rTsStr).slice(0,10),
