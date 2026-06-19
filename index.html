@@ -1503,5 +1503,191 @@ window.fpReadyAfterAuth = function() {
   if (document.readyState !== 'loading') document.body.appendChild(badge);
 })();
 </script>
+
+<!-- ====================================================== -->
+<!-- 🌱 芽吹くん チャットボット (右下フローティング) v1.0     -->
+<!-- ====================================================== -->
+<style>
+  .mb-fab{position:fixed;right:24px;bottom:24px;z-index:9990;cursor:pointer;display:flex;flex-direction:column;align-items:center;user-select:none;animation:mbFabFloat 3s ease-in-out infinite;}
+  @keyframes mbFabFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+  .mb-fab-avatar{position:relative;width:96px;height:96px;background:radial-gradient(ellipse at 50% 60%, #fff 0%, #ECFEFF 70%, #CFFAFE 100%);border-radius:50%;box-shadow:0 10px 28px rgba(20,184,166,0.30),0 4px 10px rgba(15,23,42,0.20),inset 0 -4px 8px rgba(20,184,166,0.10);display:flex;align-items:center;justify-content:center;overflow:visible;border:3px solid #14B8A6;}
+  .mb-fab-img{width:80px;height:80px;object-fit:contain;border-radius:50%;display:block;}
+  .mb-fab-pulse{position:absolute;inset:-8px;border:3px solid #14B8A6;border-radius:50%;opacity:0;animation:mbPulse 2.2s ease-out infinite;pointer-events:none;}
+  @keyframes mbPulse{0%{transform:scale(0.85);opacity:0.7}100%{transform:scale(1.4);opacity:0}}
+  .mb-fab-badge{position:absolute;top:-4px;right:6px;width:26px;height:26px;background:#FBBF24;color:#0F172A;border:2px solid #fff;border-radius:50%;font-weight:900;font-size:15px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.30);animation:mbBadgePop 1.6s ease-in-out infinite;z-index:1;}
+  @keyframes mbBadgePop{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}
+  .mb-fab-label{margin-top:6px;background:#0F766E;color:#ECFEFF;padding:4px 10px;border-radius:12px;font-size:10.5px;font-weight:800;letter-spacing:0.08em;box-shadow:0 4px 12px rgba(15,23,42,0.30);}
+  .mb-fab-hint{position:absolute;right:114px;top:18px;background:#FBBF24;color:#0F172A;padding:10px 14px;border-radius:14px;font-size:12px;font-weight:800;line-height:1.35;box-shadow:0 6px 18px rgba(15,23,42,0.25);white-space:nowrap;animation:mbHintWiggle 2.8s ease-in-out infinite;}
+  @keyframes mbHintWiggle{0%,100%{transform:rotate(-1.5deg)}50%{transform:rotate(1.5deg)}}
+  .mb-fab-hint::after{content:'';position:absolute;right:-10px;top:50%;transform:translateY(-50%);width:0;height:0;border-left:12px solid #FBBF24;border-top:10px solid transparent;border-bottom:10px solid transparent;}
+  .mb-fab.hidden{display:none;}
+  @media (max-width:600px){
+    .mb-fab{right:14px;bottom:14px;}
+    .mb-fab-avatar{width:76px;height:76px;border-width:2px;}
+    .mb-fab-img{width:62px;height:62px;}
+    .mb-fab-badge{width:22px;height:22px;font-size:12px;}
+    .mb-fab-hint{display:none;}
+  }
+  .mb-panel{position:fixed;right:24px;bottom:24px;z-index:9995;width:420px;max-width:calc(100vw - 32px);max-height:78vh;background:#fff;border-radius:14px;box-shadow:0 20px 60px rgba(15,23,42,0.40),0 0 0 1px rgba(20,184,166,0.20);display:none;flex-direction:column;overflow:hidden;animation:mbPanelIn .22s cubic-bezier(.34,1.6,.64,1) both;font-family:'Noto Sans JP',sans-serif;}
+  @keyframes mbPanelIn{from{opacity:0;transform:scale(0.85) translateY(20px)}to{opacity:1;transform:scale(1) translateY(0)}}
+  .mb-panel.open{display:flex;}
+  @media (max-width:600px){.mb-panel{right:8px;bottom:8px;width:calc(100vw - 16px);max-height:85vh;}}
+  .mb-head{display:flex;align-items:center;gap:12px;padding:12px 16px;background:linear-gradient(135deg,#0F766E 0%,#0E7490 100%);color:#F0FDFA;border-bottom:1px solid #14B8A6;}
+  .mb-head-avatar{position:relative;width:42px;height:42px;background:radial-gradient(ellipse at 50% 60%, #fff 0%, #CFFAFE 100%);border:2px solid #14B8A6;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;}
+  .mb-head-img{width:36px;height:36px;object-fit:contain;display:block;}
+  .mb-title-wrap{flex:1;min-width:0;}
+  .mb-title{font-size:14px;font-weight:800;letter-spacing:0.02em;color:#F0FDFA;display:block;}
+  .mb-sub{font-size:10.5px;color:#A7F3D0;margin-top:2px;font-family:'JetBrains Mono',monospace;display:block;}
+  .mb-status-dot{display:inline-block;width:7px;height:7px;background:#34D399;border-radius:50%;margin-right:6px;box-shadow:0 0 0 3px rgba(52,211,153,0.20);}
+  .mb-close{width:30px;height:30px;background:transparent;color:#A7F3D0;border:1px solid #115E59;border-radius:6px;font-size:16px;cursor:pointer;font-family:inherit;}
+  .mb-close:hover{background:#DC2626;color:#fff;border-color:#DC2626;}
+  .mb-messages{padding:14px 16px;height:380px;overflow-y:auto;background:#FAFAFA;display:flex;flex-direction:column;gap:10px;}
+  .mb-msg{max-width:92%;animation:mbIn .25s ease-out both;}
+  @keyframes mbIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+  .mb-msg-bot{margin-right:auto;}
+  .mb-msg-user{margin-left:auto;}
+  .mb-bubble{padding:10px 14px;border-radius:10px;font-size:13px;line-height:1.65;color:#1F2937;white-space:pre-wrap;}
+  .mb-msg-bot .mb-bubble{background:#fff;border:1px solid #E5E7EB;border-left:3px solid #14B8A6;}
+  .mb-msg-user .mb-bubble{background:#0F766E;color:#F0FDFA;text-align:right;}
+  .mb-typing{display:inline-flex;gap:4px;padding:4px 0;}
+  .mb-typing span{width:6px;height:6px;background:#14B8A6;border-radius:50%;animation:mbBounce 1.2s ease-in-out infinite;}
+  .mb-typing span:nth-child(2){animation-delay:0.15s;}
+  .mb-typing span:nth-child(3){animation-delay:0.3s;}
+  @keyframes mbBounce{0%,80%,100%{transform:translateY(0);opacity:0.4}40%{transform:translateY(-4px);opacity:1}}
+  .mb-quick{display:flex;flex-wrap:wrap;gap:6px;padding:8px 12px;background:#fff;border-top:1px dashed #E5E7EB;}
+  .mb-q{padding:6px 10px;background:#ECFEFF;border:1px solid #67E8F9;color:#0E7490;border-radius:99px;font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;}
+  .mb-q:hover{background:#14B8A6;color:#fff;border-color:#14B8A6;}
+  .mb-input-row{display:flex;gap:8px;padding:10px 12px;background:#fff;border-top:1px solid #E5E7EB;}
+  .mb-input{flex:1;min-height:38px;max-height:120px;padding:8px 12px;border:1px solid #D1D5DB;border-radius:6px;font-size:13px;font-family:inherit;resize:vertical;}
+  .mb-input:focus{outline:0;border-color:#14B8A6;box-shadow:0 0 0 2px rgba(20,184,166,0.15);}
+  .mb-send{padding:0 18px;height:38px;background:#14B8A6;color:#fff;border:0;border-radius:6px;font-weight:800;font-size:13px;cursor:pointer;letter-spacing:0.04em;font-family:inherit;}
+  .mb-send:hover{background:#0F766E;}
+  .mb-send:disabled{background:#9CA3AF;cursor:not-allowed;}
+</style>
+
+<div class="mb-fab" id="mbFab" title="芽吹くん に 業務相談 する">
+  <div class="mb-fab-hint" id="mbFabHint"><span>業務のこと<br>何でも聞いて！</span></div>
+  <div class="mb-fab-avatar">
+    <img class="mb-fab-img" src="/img/mebuki-kun-400.jpg" alt="芽吹くん">
+    <span class="mb-fab-pulse"></span>
+    <span class="mb-fab-badge">?</span>
+  </div>
+  <span class="mb-fab-label">芽吹くん</span>
+</div>
+
+<div class="mb-panel" id="mbPanel">
+  <div class="mb-head">
+    <div class="mb-head-avatar"><img class="mb-head-img" src="/img/mebuki-kun-400.jpg" alt="芽吹くん"></div>
+    <div class="mb-title-wrap">
+      <span class="mb-title">芽吹くん</span>
+      <span class="mb-sub"><span class="mb-status-dot"></span>オンライン / FP業務 全部 把握</span>
+    </div>
+    <button class="mb-close" id="mbClose" title="閉じる">×</button>
+  </div>
+  <div class="mb-messages" id="mbMessages">
+    <div class="mb-msg mb-msg-bot">
+      <div class="mb-bubble">こんにちは、 芽吹くん だよ 🌱
+FP業務 で 困った時 は 何でも 聞いてね。 お客様 説明用 の 文言 そのまま 出すよ。
+
+<b>こういう質問 ↓</b>
+・「40代主婦 教育費 提案 どうする?」
+・「新NISA 配分 (30代会社員)」
+・「保険見直し 切返し 文言」</div>
+    </div>
+  </div>
+  <div class="mb-quick">
+    <button class="mb-q" data-q="40代主婦・子供2人 (中学生・小学生) の 教育費 提案 のポイント を 3つ">教育費 40代</button>
+    <button class="mb-q" data-q="新NISA の 配分 を 30代会社員 (年収600万) の 場合 で 教えて">NISA 30代</button>
+    <button class="mb-q" data-q="50代経営者 に iDeCo を 勧めるべき? 切返し 文言">iDeCo 50代</button>
+    <button class="mb-q" data-q="保険見直し で 「今のままで いいや」 と 言う お客様 への 切返し">保険 切返し</button>
+  </div>
+  <div class="mb-input-row">
+    <textarea class="mb-input" id="mbInput" placeholder="聞きたいこと を 入力 (Cmd+Enter で 送信)" rows="1"></textarea>
+    <button class="mb-send" id="mbSend">▶ 送る</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  const CF_URL = 'https://asia-northeast1-skeleton-fp-compass-632026.cloudfunctions.net/chatFpCounselor';
+  const fab = document.getElementById('mbFab');
+  const hint = document.getElementById('mbFabHint');
+  const panel = document.getElementById('mbPanel');
+  const closeBtn = document.getElementById('mbClose');
+  const messages = document.getElementById('mbMessages');
+  const input = document.getElementById('mbInput');
+  const send = document.getElementById('mbSend');
+  const history = [];
+
+  fab.addEventListener('click', () => {
+    panel.classList.add('open');
+    fab.classList.add('hidden');
+    setTimeout(() => input.focus(), 100);
+  });
+  closeBtn.addEventListener('click', () => {
+    panel.classList.remove('open');
+    fab.classList.remove('hidden');
+  });
+  // ヒント 自動消去 (5秒後)
+  setTimeout(() => { if (hint) hint.style.display = 'none'; }, 5000);
+
+  document.querySelectorAll('.mb-q').forEach(b => {
+    b.addEventListener('click', () => {
+      input.value = b.dataset.q;
+      doSend();
+    });
+  });
+
+  send.addEventListener('click', doSend);
+  input.addEventListener('keydown', e => {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); doSend(); }
+  });
+
+  function addMsg(role, text, isTyping) {
+    const wrap = document.createElement('div');
+    wrap.className = 'mb-msg ' + (role === 'user' ? 'mb-msg-user' : 'mb-msg-bot');
+    const bubble = document.createElement('div');
+    bubble.className = 'mb-bubble';
+    if (isTyping) bubble.innerHTML = '<span class="mb-typing"><span></span><span></span><span></span></span>';
+    else bubble.textContent = text;
+    wrap.appendChild(bubble);
+    messages.appendChild(wrap);
+    messages.scrollTop = messages.scrollHeight;
+    return bubble;
+  }
+
+  async function doSend() {
+    const q = input.value.trim();
+    if (!q) return;
+    addMsg('user', q);
+    history.push({ role: 'user', content: q });
+    input.value = '';
+    send.disabled = true;
+    const bubble = addMsg('bot', '', true);
+    try {
+      const res = await fetch(CF_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ data: { message: q, history: history.slice(-11, -1) } }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json?.result?.ok) {
+        throw new Error(json?.error?.message || json?.result?.error || res.status);
+      }
+      const reply = json.result.reply || '(空の返答)';
+      bubble.textContent = reply;
+      history.push({ role: 'assistant', content: reply });
+    } catch (e) {
+      bubble.innerHTML = '<span style="color:#DC2626;">⚠ エラー: ' + (e.message || e) + '</span>';
+      history.pop();
+    } finally {
+      send.disabled = false;
+      input.focus();
+    }
+  }
+})();
+</script>
+<!-- ====== /芽吹くん チャットボット ====== -->
+
 </body>
 </html>
