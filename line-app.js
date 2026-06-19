@@ -2249,36 +2249,43 @@
     }
   }
 
-  // ★ 画面中央 ポップアップ (議事録生成中 / 反映完了 を 大きく 通知)
+  // ★ 画面中央 大型 ポップアップ (議事録生成中 / 反映完了 を 視認性最大で 通知)
+  //   tone='progress' (生成中) はスピナー + 自動消えない、 tone='success' (反映済) は ✕閉じ付
   function showCenterToast(title, sub, opts) {
     opts = opts || {};
-    const dur = opts.duration || 6000;
-    const tone = opts.tone || 'success'; // 'success' | 'progress'
-    // 既存の center toast あれば 上書き (進行中→完了 等)
+    const tone = opts.tone || 'success';
+    const dur = opts.duration != null ? opts.duration : (tone === 'progress' ? 0 : 0); // 自動消失なし default
     const old = document.getElementById('fp-center-toast');
     if (old) old.remove();
+    if (!document.getElementById('fp-center-toast-spin-style')) {
+      const st = document.createElement('style');
+      st.id = 'fp-center-toast-spin-style';
+      st.textContent = '@keyframes fp-spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}@keyframes fp-pulse-ring{0%{box-shadow:0 0 0 0 rgba(59,130,246,0.5)}100%{box-shadow:0 0 0 28px rgba(59,130,246,0)}}';
+      document.head.appendChild(st);
+    }
     const bg = tone === 'progress'
-      ? 'linear-gradient(135deg,#EFF6FF,#fff)'
-      : 'linear-gradient(135deg,#ECFDF5,#fff)';
+      ? 'linear-gradient(135deg,#EFF6FF,#DBEAFE)'
+      : 'linear-gradient(135deg,#ECFDF5,#D1FAE5)';
     const accent = tone === 'progress' ? '#3B82F6' : '#059669';
-    const icon = tone === 'progress' ? '⏳' : '✅';
     const t = document.createElement('div');
     t.id = 'fp-center-toast';
-    t.style.cssText = `position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:${bg};border:2px solid ${accent}55;border-left:6px solid ${accent};border-radius:16px;padding:26px 38px;box-shadow:0 24px 60px rgba(0,0,0,0.25),0 0 0 12px rgba(255,255,255,0.4);z-index:10080;font-family:'Noto Sans JP',sans-serif;text-align:center;max-width:480px;width:90%;`;
+    t.style.cssText = `position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:${bg};border:3px solid ${accent};border-radius:20px;padding:32px 44px;box-shadow:0 32px 80px rgba(0,0,0,0.32),0 0 0 16px rgba(255,255,255,0.6);z-index:10090;font-family:'Noto Sans JP',sans-serif;text-align:center;max-width:520px;width:92%;animation:${tone === 'progress' ? 'fp-pulse-ring 1.8s infinite' : 'none'};`;
+    const iconHtml = tone === 'progress'
+      ? `<div style="width:74px;height:74px;border:6px solid ${accent}33;border-top-color:${accent};border-radius:50%;margin:0 auto 14px;animation:fp-spin 1s linear infinite;"></div>`
+      : `<div style="font-size:64px;margin-bottom:10px;line-height:1;">✅</div>`;
+    const closeHtml = tone === 'progress'
+      ? ''
+      : `<button id="fp-toast-close" style="margin-top:18px;background:#fff;border:1.5px solid ${accent};color:${accent};padding:10px 22px;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:0.04em;">確認しました ✓</button>`;
     t.innerHTML = `
-      <div style="font-size:54px;margin-bottom:8px;">${icon}</div>
-      <div style="font-size:17px;font-weight:900;color:${accent};letter-spacing:-0.01em;line-height:1.4;margin-bottom:6px;">${escapeHtml(title)}</div>
-      <div style="font-size:12.5px;color:#475569;line-height:1.65;">${escapeHtml(sub || '')}</div>`;
+      ${iconHtml}
+      <div style="font-size:19px;font-weight:900;color:${accent};letter-spacing:-0.01em;line-height:1.4;margin-bottom:8px;">${escapeHtml(title)}</div>
+      <div style="font-size:13px;color:#334155;line-height:1.7;font-weight:500;">${escapeHtml(sub || '')}</div>
+      ${closeHtml}`;
     document.body.appendChild(t);
+    const closeBtn = t.querySelector('#fp-toast-close');
+    if (closeBtn) closeBtn.addEventListener('click', () => t.remove());
     if (dur > 0) {
-      setTimeout(() => {
-        if (t.parentNode) {
-          t.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
-          t.style.opacity = '0';
-          t.style.transform = 'translate(-50%,-50%) scale(0.96)';
-          setTimeout(() => t.remove(), 400);
-        }
-      }, dur);
+      setTimeout(() => { if (t.parentNode) t.remove(); }, dur);
     }
     return t;
   }
@@ -2303,8 +2310,7 @@
         <button id="fp-show-result" style="font-size:13px;padding:11px;background:linear-gradient(135deg,#06c755,#04a045);color:#fff;border:none;border-radius:7px;cursor:pointer;font-weight:800;font-family:inherit;letter-spacing:0.04em;">📋 AI議事録を見る</button>
         <button id="fp-progress-close" style="font-size:12px;padding:9px;background:#1b2845;color:#fff;border:none;border-radius:7px;cursor:pointer;font-weight:800;font-family:inherit;letter-spacing:0.08em;text-transform:uppercase;">閉じる</button>
       </div>`;
-    // ★ 加えて 画面中央 に 大きな 「議事録 反映済」 トースト
-    showCenterToast('議事録 を 反映しました', `${customerName} 様 の 顧客カード → 面談録 に 自動 追加されました`);
+    // ★ 反映完了 toast は autoSaveAIResult の GAS保存完了 .then で 出す (showProgressDoneAction は ここでは 出さない、 二重表示防止)
     document.getElementById('fp-show-result').addEventListener('click', () => {
       const r = window._fpAIResult;
       if (r) showAIResultModal(r.result, r.customerName, r.booking);
@@ -2382,21 +2388,23 @@
     }).then(r => r.json()).then(d => {
       if (d.ok) {
         console.log('[autoSaveAIResult] GAS 保存 OK');
-        // 成功時のみ localStorage に最低限の backup (1キー = bookingTs単位)
         try {
           const k = 'fp-ai-backup-' + (bookingTs || userId || nameKey || Date.now());
           localStorage.setItem(k, JSON.stringify({ entry, tasks: newTasks }));
         } catch (_) {}
         // 顧客台帳再描画 (GAS から取り直す)
         fetchLiveData().catch(() => {});
+        // ★ 中央 ポップアップ「顧客カード 反映完了」 を 明示 (✕で閉じるまで残る)
+        try { showCenterToast('議事録 を ' + (nameKey || 'お客様') + ' 様 の 顧客カード に 反映 しました', '顧客台帳 → ' + (nameKey || 'お客様') + ' 様 → 📹 Zoom議事録 タブ で 確認できます', { tone: 'success' }); } catch (_) {}
       } else {
-        // GAS 失敗時のみ localStorage に多重保存 (オフライン耐性)
         console.warn('[autoSaveAIResult] GAS 失敗→localStorage backup', d);
         saveAIToLocalBackup(entry, newTasks);
+        try { showCenterToast('議事録 保存 一時失敗', 'ローカル保存しました。 再接続時に 自動 同期します (' + ((d && d.error) || '原因不明').slice(0,60) + ')', { tone: 'success' }); } catch (_) {}
       }
     }).catch(e => {
       console.warn('[autoSaveAIResult] network失敗→localStorage backup', e);
       saveAIToLocalBackup(entry, newTasks);
+      try { showCenterToast('議事録 保存 一時失敗', 'ローカル保存しました。 再接続時に 自動 同期します (' + (e.message || e).slice(0,60) + ')', { tone: 'success' }); } catch (_) {}
     });
   }
 
