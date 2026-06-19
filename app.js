@@ -3160,24 +3160,17 @@
     // ★ 家系図 タブ: AI 抽出 / 追加 / 編集 / 保存
     function persistFamily() {
       try { localStorage.setItem('fp-crm-clients-v1', JSON.stringify(window.DUMMY_CLIENTS || [])); } catch (_) {}
-      // Firestore 顧客 なら family も sync
-      if (c._fsCustomerId) {
+      // Firestore 顧客 なら family も sync (window.__fp.db を 使う = signed in auth 付き)
+      if (c._fsCustomerId && window.__fp?.db && window.__fp?.tenantId) {
         (async () => {
           try {
-            const { initializeApp, getApps } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js');
-            const { getFirestore, doc, updateDoc } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js');
-            const app = getApps()[0] || initializeApp({
-              apiKey: 'AIzaSyAmVAEe9l9e1Yo_dzzJdbTVU35wWKd2sH4',
-              authDomain: 'skeleton-fp-compass-632026.firebaseapp.com',
-              projectId: 'skeleton-fp-compass-632026',
-            });
-            const db = getFirestore(app);
-            const tenantId = (window.__fp && window.__fp.tenantId) || localStorage.getItem('fp-tenantId');
-            if (tenantId) {
-              await updateDoc(doc(db, 'tenants', tenantId, 'customers', c._fsCustomerId), { family: c.family || [] });
-            }
-          } catch (e) { console.warn('Firestore family sync fail:', e.message); }
+            const { doc, updateDoc } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js');
+            await updateDoc(doc(window.__fp.db, 'tenants', window.__fp.tenantId, 'customers', c._fsCustomerId), { family: c.family || [] });
+            console.log('[persistFamily] Firestore 同期 OK', c.family?.length, '名');
+          } catch (e) { console.warn('[persistFamily] Firestore sync fail:', e.message, e.code); }
         })();
+      } else {
+        console.log('[persistFamily] localStorage only (no fs sync)', { hasFsId: !!c._fsCustomerId, hasDb: !!window.__fp?.db, hasTid: !!window.__fp?.tenantId });
       }
     }
     function refreshFamilyPanel() {
@@ -4017,17 +4010,38 @@ ${ctxText}${surveyTxt}`;
         }
 
         ${(() => {
-          // bookings に紐付かない AI 議事録 (録画 ts が一致しない、別経路で保存された分) を 別ブロックで表示
-          const usedTs = new Set(bookingsWithMemo.map(b => b.ts));
-          // bookingTs 空でも summary/transcript/key_concerns があれば表示する
-          const orphan = aiResults.filter(a => !usedTs.has(a.bookingTs) && (a.summary || a.transcript || (a.key_concerns||[]).length));
+          // ★ 同 bookingTs に 複数 ai_result (2回目以降 録画) を 別カードで 表示
+          //   メインカード で 紐付けたのは booking別 に 1件のみ (時系列で最古の ai_result)
+          //   残り ai_result は orphan として 別カード表示 (タブcount=ai_result数と整合)
+          const usedKey = new Set();
+          bookingsWithMemo.forEach(b => {
+            const hit = aiResults.find(a => a.bookingTs === b.ts);
+            if (hit) usedKey.add((hit.bookingTs || '') + '|' + (hit.ts || hit.createdAt || ''));
+          });
+          // 旧仕様 (bookingTs だけで「使用済」 マークしてた) を 置き換え
+          const orphan = aiResults.filter(a => {
+            const key = (a.bookingTs || '') + '|' + (a.ts || a.createdAt || '');
+            if (usedKey.has(key)) return false;
+            return (a.summary || a.transcript || (a.key_concerns||[]).length);
+          });
           if (orphan.length === 0) return '';
+          // ★ 全 ai_results (メイン紐付け済 + orphan) を 時系列 で 「Zoom N回目」 連番
+          //   メインカード で「Zoom 1回目」 既に使ってる → orphan は「Zoom 2回目」 から始める
+          const allChronological = aiResults.slice().sort((a, b) => String(a.ts || a.createdAt || '').localeCompare(String(b.ts || b.createdAt || '')));
+          const aiZoomIdx = new Map();
+          allChronological.forEach((a, i) => {
+            const key = (a.bookingTs || '') + '|' + (a.ts || a.createdAt || '');
+            aiZoomIdx.set(key, i + 1);
+          });
           return '<div style="display:grid;gap:14px;margin-bottom:18px;">' +
-            orphan.slice().reverse().map(a => `
+            orphan.slice().reverse().map(a => {
+              const zKey = (a.bookingTs || '') + '|' + (a.ts || a.createdAt || '');
+              const zN = aiZoomIdx.get(zKey) || '?';
+              return `
               <div class="fp-meeting-card fp-meeting-card-orphan">
                 <div class="fp-meeting-card-head">
                   <div>
-                    <div class="fp-meeting-card-eyebrow">AI 議事録 (録画ベース)</div>
+                    <div class="fp-meeting-card-eyebrow" style="font-size:11.5px !important;font-weight:900 !important;color:#1B3A5C !important;letter-spacing:0 !important;">📹 Zoom ${zN}回目</div>
                     <div class="fp-meeting-card-date">${escapeHtml(fmtDateRobust(a.date) || String(a.bookingTs || a.createdAt || '').slice(0,10))} 面談</div>
                   </div>
                 </div>
@@ -4052,7 +4066,8 @@ ${ctxText}${surveyTxt}`;
                     </div>
                   </div>` : ''}
               </div>
-            `).join('') + '</div>';
+            `;
+            }).join('') + '</div>';
         })()}
 
         ${(function(){
