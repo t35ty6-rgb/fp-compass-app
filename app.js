@@ -973,6 +973,8 @@
     if (filterEl.value !== state.statusFilter) filterEl.value = state.statusFilter;
 
     mergeLineActivity();
+    // ★ 全 client に 議事録 自動タグ を 一括 反映 (顧客一覧でも 出るように)
+    try { autoTagAllClients(); } catch (e) { console.warn('autoTagAllClients:', e); }
     const q = state.search.trim().toLowerCase();
     let list = clients.slice();
     if (state.statusFilter !== 'all') {
@@ -1070,10 +1072,16 @@
                 ${(function(){
                   const master = getTagsMaster();
                   const myTagIds = getClientTags(c.id);
-                  if (!myTagIds.length) return '';
                   const myTags = myTagIds.map(id => master.find(t => t.id === id)).filter(Boolean);
-                  // ★ オーナーfb (v AS): 客一覧でタグを 明確に見分けられるよう 濃色solid + 白文字 + サイズUP
-                  return `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;">${myTags.map(t => `<span style="background:${t.color};color:#fff;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:800;line-height:1.4;letter-spacing:0.03em;box-shadow:0 2px 6px ${t.color}66;">${escapeHtml(t.label)}</span>`).join('')}</div>`;
+                  // ★ 議事録から AI が拾った 自動タグ (NISA/iDeCo/保険 等) を 末尾に 出す
+                  const autoTags = Array.isArray(c.autoTags) ? c.autoTags : [];
+                  if (myTags.length === 0 && autoTags.length === 0) return '';
+                  // 重複除去 (label一致)
+                  const seenLabels = new Set(myTags.map(t => t.label));
+                  const autoUniq = autoTags.filter(t => !seenLabels.has(t.label));
+                  const manualHtml = myTags.map(t => `<span style="background:${t.color};color:#fff;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:800;line-height:1.4;letter-spacing:0.03em;box-shadow:0 2px 6px ${t.color}66;">${escapeHtml(t.label)}</span>`).join('');
+                  const autoHtml = autoUniq.map(t => `<span title="議事録から AI 自動抽出" style="background:${t.color}1A;color:${t.color};border:1.5px dashed ${t.color}80;padding:2px 9px;border-radius:999px;font-size:10.5px;font-weight:800;line-height:1.4;letter-spacing:0.03em;">${escapeHtml(t.label)}<span style="font-size:8px;margin-left:3px;opacity:0.7;">AI</span></span>`).join('');
+                  return `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;">${manualHtml}${autoHtml}</div>`;
                 })()}
               </div>
             </div>
@@ -1637,6 +1645,42 @@
     // AI BRIEF で拡大した modal-content の幅を通常に戻す
     try { document.getElementById('modal-content').style.maxWidth = ''; } catch (_) {}
     ensureLineHistory_(c);
+    // ★ 議事録 → 自動タグ抽出 (NISA/iDeCo/保険/相続 等を 議事録本文から regex で キャッチ → c.autoTags)
+    try {
+      const liveAi2 = (window.LineAppLiveData && window.LineAppLiveData.ai_results) || [];
+      const productPatterns = [
+        { key: 'nisa',        re: /NISA|ニーサ|つみたて/i,                              label: 'NISA',     color: '#3B82F6' },
+        { key: 'ideco',       re: /iDeCo|イデコ|個人型確定拠出/i,                       label: 'iDeCo',    color: '#6366F1' },
+        { key: 'life_ins',    re: /生命保険|終身保険|定期保険|死亡保険/,               label: '生命保険',  color: '#EF4444' },
+        { key: 'med_ins',     re: /医療保険|がん保険|ガン保険|入院保険/,               label: '医療保険',  color: '#F59E0B' },
+        { key: 'mortgage',    re: /住宅ローン|フラット35|変動金利|固定金利/,           label: '住宅ローン', color: '#84CC16' },
+        { key: 'inheritance', re: /相続|遺言|信託|生前贈与/,                           label: '相続',     color: '#A855F7' },
+        { key: 'edu_fund',    re: /教育(資金|費)|学資保険|大学費用|進学費/,           label: '教育資金',  color: '#06B6D4' },
+        { key: 'business',    re: /開業|起業|個人事業主|法人化/,                       label: '開業',     color: '#EC4899' },
+        { key: 'retire_fund', re: /老後資金|退職金|年金繰下げ|繰り上げ返済/,           label: '老後資金',  color: '#0EA5E9' },
+        { key: 'real_estate', re: /不動産投資|マンション投資|REIT/,                    label: '不動産',   color: '#14B8A6' },
+        { key: 'stock',       re: /個別株|株式投資|高配当株/,                          label: '株式',     color: '#EAB308' },
+        { key: 'fx',          re: /FX|外貨預金|外貨建て/,                              label: '外貨',     color: '#F97316' },
+      ];
+      const cConfMs2 = c.confirmedSlot ? new Date(String(c.confirmedSlot).replace(' ', 'T')).getTime() : NaN;
+      const detected = new Set();
+      liveAi2.forEach(r => {
+        const strictMatch = (r.userId && c.lineFriendId && r.userId === c.lineFriendId)
+                         || (r.customerName && r.customerName !== 'お客様' && r.customerName === c.name);
+        let rescued = false;
+        if (!strictMatch && !isNaN(cConfMs2) && (!r.customerName || r.customerName === 'お客様') && !r.userId) {
+          const rMs = new Date(String(r.ts || r.createdAt || r.bookingTs || '').replace(' ', 'T')).getTime();
+          if (!isNaN(rMs) && Math.abs(rMs - cConfMs2) < 6 * 60 * 60 * 1000) rescued = true;
+        }
+        if (!strictMatch && !rescued) return;
+        const text = String(r.summary || '') + '\n' + String(r.transcript || '') + '\n' + (Array.isArray(r.key_concerns) ? r.key_concerns.join(' ') : String(r.key_concerns || ''));
+        productPatterns.forEach(p => { if (p.re.test(text)) detected.add(p.key); });
+      });
+      if (detected.size > 0) {
+        c.autoTags = Array.from(detected).map(k => productPatterns.find(p => p.key === k)).filter(Boolean);
+        console.log('[autoTag]', c.name, ':', c.autoTags.map(t => t.label).join(', '));
+      }
+    } catch (e) { console.warn('autoTag fail:', e); }
     // ★ 議事録 → タイムライン 自動キャッチアップ
     //   録画時 autoSaveAIResult が走った時 client が未sync なら lifeEventCandidates の customEvents merge を 取りこぼす
     //   モーダル開く度に GAS ai_results + localStorage fp-ai-backup 両方 走査して 救済 merge
@@ -4977,7 +5021,7 @@ STEP C: 結果報告
             <textarea id="fp-brief-input" rows="3" placeholder="例: 相続のテーマで来月会いたい / 新NISAの配分見直しを提案したい / お子様の進学費用シミュ作ってある旨を伝えたい" style="width:100%;padding:12px 14px;border:1.5px solid #E2E8F0;border-radius:8px;font-size:13.5px;font-family:inherit;line-height:1.7;resize:vertical;box-sizing:border-box;"></textarea>
             <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center;gap:10px;">
               <div style="font-size:10.5px;color:#94A3B8;">${escapeHtml(client.name)}様の 家族 / 議事録 / LINE履歴 / アンケート回答 を Claude が 踏まえて 整えます</div>
-              <button id="fp-brief-gen" style="background:linear-gradient(135deg,#10B981,#059669);color:#fff;border:none;padding:11px 22px;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:0.04em;box-shadow:0 4px 14px rgba(16,185,129,0.35);">✨ Claude Code で下書き作る</button>
+              <button id="fp-brief-gen" style="background:linear-gradient(135deg,#10B981,#059669);color:#fff;border:none;padding:11px 22px;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:0.04em;box-shadow:0 4px 14px rgba(16,185,129,0.35);">✨ AI で 下書き 生成</button>
             </div>
           </div>
 
@@ -5087,13 +5131,72 @@ ${JSON.stringify(jsonPayload, null, 2)}
     overlay.querySelector('#fp-brief-gen').addEventListener('click', async () => {
       const brief = overlay.querySelector('#fp-brief-input').value.trim();
       if (!brief) { alert('伝えたいこと を 入力してください'); return; }
+      const genBtn = overlay.querySelector('#fp-brief-gen');
+      const origLabel = genBtn.innerHTML;
+      genBtn.disabled = true;
+      genBtn.innerHTML = '✨ AI 生成中…';
       const prompt = buildBriefPrompt(client, brief);
-      try { await navigator.clipboard.writeText(prompt); } catch (e) { console.warn('clipboard fail:', e.message); }
-      const customerSlug = String(client.name || 'customer').replace(/[\/\\\s]+/g, '_');
-      const stamp = new Date().toISOString().slice(0, 10);
-      downloadAsFile(`${customerSlug}_brief-prompt_${stamp}.txt`, prompt, 'text/plain');
-      overlay.querySelector('#fp-brief-step1').style.display = 'none';
-      overlay.querySelector('#fp-brief-after').style.display = 'block';
+      try {
+        if (!window.__fp?.functions) throw new Error('functions 未初期化');
+        const { httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-functions.js');
+        const fn = httpsCallable(window.__fp.functions, 'generateBriefDraft');
+        const res = await fn({ prompt });
+        const reply = (res.data && res.data.reply) || '';
+        if (!reply) throw new Error('AI 応答 が 空');
+        // 結果表示UIに 差し替え
+        overlay.querySelector('#fp-brief-step1').style.display = 'none';
+        const after = overlay.querySelector('#fp-brief-after');
+        after.style.display = 'block';
+        after.innerHTML = `
+          <div style="background:linear-gradient(135deg,#F0FDF4,#fff);border:1px solid #BBF7D0;border-radius:10px;padding:14px 16px;margin-bottom:14px;font-size:12.5px;color:#065F46;font-weight:700;">✅ AI下書き 生成 完了 (Claude Haiku)</div>
+          <div style="background:#fff;border:1.5px solid #BBF7D0;border-radius:12px;padding:18px 20px;margin-bottom:14px;">
+            <div style="font-family:'Inter',sans-serif;font-size:10px;letter-spacing:0.18em;color:#059669;font-weight:800;margin-bottom:8px;">📝 LINE 下書き 案</div>
+            <textarea id="fp-brief-result" rows="10" style="width:100%;padding:12px 14px;border:1px solid #E2E8F0;border-radius:8px;font-size:13.5px;font-family:inherit;line-height:1.85;resize:vertical;box-sizing:border-box;">${escapeHtml(reply)}</textarea>
+          </div>
+          <div style="display:flex;gap:8px;justify-content:flex-end;">
+            <button id="fp-brief-back" style="background:#fff;border:1px solid #E2E8F0;color:#475569;padding:10px 18px;border-radius:8px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;">← もう一度</button>
+            <button id="fp-brief-copy" style="background:#fff;border:1px solid #10B981;color:#059669;padding:10px 18px;border-radius:8px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit;">📋 コピー</button>
+            <button id="fp-brief-set-line" style="background:linear-gradient(135deg,#10B981,#059669);color:#fff;border:none;padding:10px 22px;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 4px 12px rgba(16,185,129,0.35);">LINE送信欄に セット →</button>
+          </div>
+          <div id="fp-brief-msg" style="margin-top:10px;font-size:11.5px;font-weight:700;text-align:center;color:#059669;"></div>`;
+        after.querySelector('#fp-brief-back').addEventListener('click', () => {
+          overlay.querySelector('#fp-brief-step1').style.display = 'block';
+          after.style.display = 'none';
+          genBtn.disabled = false;
+          genBtn.innerHTML = origLabel;
+        });
+        after.querySelector('#fp-brief-copy').addEventListener('click', async () => {
+          const t = after.querySelector('#fp-brief-result').value;
+          try { await navigator.clipboard.writeText(t); after.querySelector('#fp-brief-msg').textContent = '✓ コピー しました'; } catch (_) {}
+        });
+        after.querySelector('#fp-brief-set-line').addEventListener('click', () => {
+          const t = after.querySelector('#fp-brief-result').value;
+          const tArea = document.getElementById('cd-line-input');
+          if (tArea) { tArea.value = t; tArea.focus(); }
+          overlay.remove();
+        });
+      } catch (e) {
+        console.error('[generateBriefDraft]', e);
+        // フォールバック: 残高切れ等 paid API 失敗時 → 旧 prompt copy + claude.ai UX
+        try { await navigator.clipboard.writeText(prompt); } catch (_) {}
+        const customerSlug = String(client.name || 'customer').replace(/[\/\\\s]+/g, '_');
+        const stamp = new Date().toISOString().slice(0, 10);
+        downloadAsFile(`${customerSlug}_brief-prompt_${stamp}.txt`, prompt, 'text/plain');
+        overlay.querySelector('#fp-brief-step1').style.display = 'none';
+        overlay.querySelector('#fp-brief-after').style.display = 'block';
+        const errMsg = String(e.message || e);
+        const msgEl = overlay.querySelector('#fp-brief-msg');
+        if (msgEl) {
+          msgEl.style.color = '#B91C1C';
+          msgEl.textContent = '⚠ AI生成失敗 (' + errMsg.slice(0,80) + ')。 プロンプトをクリップボードに コピー しました → Claude を開いて 貼り付けて下さい';
+        }
+      } finally {
+        // 成功時は new UI に置き換え済 → ボタン状態 戻すのは fallback path のみ
+        if (overlay.querySelector('#fp-brief-step1') && overlay.querySelector('#fp-brief-step1').style.display !== 'none') {
+          genBtn.disabled = false;
+          genBtn.innerHTML = origLabel;
+        }
+      }
     });
     overlay.querySelector('#fp-brief-after').addEventListener('click', (e) => {
       if (e.target.closest('#fp-brief-open-claude')) {
@@ -6759,6 +6862,52 @@ ${client.name}さん、ありがとうございます。
   // 🏷 タグ機能 (FP自由作成 + 顧客割当)
   // ============================
   const TAG_COLORS = ['#5B5BF0', '#10B981', '#F59E0B', '#EC4899', '#06B6D4', '#8B5CF6', '#EF4444', '#84CC16', '#F97316', '#0EA5E9'];
+  // ★ 議事録 から 全 client に AI自動タグ を 一括反映 (renderClients から call)
+  //   商品キーワード regex 抽出 → c.autoTags に set。 既存マニュアルタグとは別軸 (AI badge付き chip)
+  const FP_PRODUCT_AUTOTAG_PATTERNS = [
+    { key: 'nisa',        re: /NISA|ニーサ|つみたて/i,                              label: 'NISA',     color: '#3B82F6' },
+    { key: 'ideco',       re: /iDeCo|イデコ|個人型確定拠出/i,                       label: 'iDeCo',    color: '#6366F1' },
+    { key: 'life_ins',    re: /生命保険|終身保険|定期保険|死亡保険/,               label: '生命保険',  color: '#EF4444' },
+    { key: 'med_ins',     re: /医療保険|がん保険|ガン保険|入院保険/,               label: '医療保険',  color: '#F59E0B' },
+    { key: 'mortgage',    re: /住宅ローン|フラット35|変動金利|固定金利/,           label: '住宅ローン', color: '#84CC16' },
+    { key: 'inheritance', re: /相続|遺言|信託|生前贈与/,                           label: '相続',     color: '#A855F7' },
+    { key: 'edu_fund',    re: /教育(資金|費)|学資保険|大学費用|進学費/,           label: '教育資金',  color: '#06B6D4' },
+    { key: 'business',    re: /開業|起業|個人事業主|法人化/,                       label: '開業',     color: '#EC4899' },
+    { key: 'retire_fund', re: /老後資金|退職金|年金繰下げ|繰り上げ返済/,           label: '老後資金',  color: '#0EA5E9' },
+    { key: 'real_estate', re: /不動産投資|マンション投資|REIT/,                    label: '不動産',   color: '#14B8A6' },
+    { key: 'stock',       re: /個別株|株式投資|高配当株/,                          label: '株式',     color: '#EAB308' },
+    { key: 'fx',          re: /FX|外貨預金|外貨建て/,                              label: '外貨',     color: '#F97316' },
+  ];
+  function autoTagAllClients() {
+    if (!Array.isArray(window.DUMMY_CLIENTS)) return;
+    const liveAi = (window.LineAppLiveData && window.LineAppLiveData.ai_results) || [];
+    if (liveAi.length === 0) return;
+    let changed = 0;
+    window.DUMMY_CLIENTS.forEach(c => {
+      const cConfMs = c.confirmedSlot ? new Date(String(c.confirmedSlot).replace(' ', 'T')).getTime() : NaN;
+      const detected = new Set();
+      liveAi.forEach(r => {
+        const strictMatch = (r.userId && c.lineFriendId && r.userId === c.lineFriendId)
+                         || (r.customerName && r.customerName !== 'お客様' && r.customerName === c.name);
+        let rescued = false;
+        if (!strictMatch && !isNaN(cConfMs) && (!r.customerName || r.customerName === 'お客様') && !r.userId) {
+          const rMs = new Date(String(r.ts || r.createdAt || r.bookingTs || '').replace(' ', 'T')).getTime();
+          if (!isNaN(rMs) && Math.abs(rMs - cConfMs) < 6 * 60 * 60 * 1000) rescued = true;
+        }
+        if (!strictMatch && !rescued) return;
+        const text = String(r.summary || '') + '\n' + String(r.transcript || '') + '\n' + (Array.isArray(r.key_concerns) ? r.key_concerns.join(' ') : String(r.key_concerns || ''));
+        FP_PRODUCT_AUTOTAG_PATTERNS.forEach(p => { if (p.re.test(text)) detected.add(p.key); });
+      });
+      const newTags = Array.from(detected).map(k => FP_PRODUCT_AUTOTAG_PATTERNS.find(p => p.key === k)).filter(Boolean);
+      const oldKeys = (c.autoTags || []).map(t => t.key).sort().join(',');
+      const newKeys = newTags.map(t => t.key).sort().join(',');
+      if (oldKeys !== newKeys) { c.autoTags = newTags; changed++; }
+    });
+    if (changed > 0) {
+      try { localStorage.setItem('fp-crm-clients-v1', JSON.stringify(window.DUMMY_CLIENTS)); } catch (_) {}
+      console.log('[autoTagAll] updated', changed, 'clients');
+    }
+  }
   function getTagsMaster() {
     try { return JSON.parse(localStorage.getItem('fp-tags-master') || '[]'); } catch (_) { return []; }
   }
