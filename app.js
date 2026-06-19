@@ -610,13 +610,7 @@
         <div class="form-section">
           <h3>LINE公式連携</h3>
           <div class="form-grid">
-            <div class="form-row">
-              <label>LINE friend ID</label>
-              <input type="text" id="f-line-id" value="${escapeHtml(c.lineFriendId || c.userId || '')}" placeholder="Uxxxxxxxxxxxxxxxxxxxxxxxxxxxxx (LINE 公式アカウント 友だち一覧 から コピー)">
-              <div style="font-size:11px;color:#64748b;line-height:1.7;margin-top:6px;padding:8px 12px;background:#f1f5f9;border-radius:6px;">
-                📍 取得方法: <strong>LINE Official Account Manager</strong> (manager.line.biz) → 友だち一覧 → 該当のお客様 → 詳細 (User ID 欄) → Uから始まる 32桁を コピー
-              </div>
-            </div>
+            <div class="form-row"><label>LINE friend ID</label><input type="text" id="f-line-id" value="${escapeHtml(c.lineFriendId || '')}" placeholder="Uxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"></div>
             <div class="form-row"><label>連携状態</label>
               <label class="toggle-switch" style="margin-top:4px;">
                 <input type="checkbox" id="f-line-sub" ${c.lineSubscribed ? 'checked' : ''}><span></span>
@@ -631,10 +625,9 @@
           <textarea id="f-note" rows="3" style="width:100%;resize:vertical;">${escapeHtml(c.note || '')}</textarea>
         </div>
 
-        <div style="display:flex;gap:8px;margin-top:18px;align-items:center;">
+        <div style="display:flex;gap:8px;margin-top:18px;">
           <button class="primary" id="form-save-btn">${isNew ? '登録' : '保存'}</button>
           <button id="form-cancel-btn">キャンセル</button>
-          ${!isNew ? `<button id="form-delete-btn" style="background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;padding:8px 16px;border-radius:6px;font-weight:700;cursor:pointer;margin-left:auto;font-family:inherit;">🗑 この顧客を削除</button>` : ''}
           ${!isNew ? '<button id="form-delete-btn" style="margin-left:auto;border-color:var(--red);color:var(--red);">削除</button>' : ''}
         </div>
       </div>
@@ -673,55 +666,8 @@
     function close() { document.getElementById('form-overlay').style.display = 'none'; }
     document.getElementById('form-close-btn').addEventListener('click', close);
     document.getElementById('form-cancel-btn').addEventListener('click', close);
-    // ★ 削除ボタン (新規時 出ない)
-    const deleteBtn = document.getElementById('form-delete-btn');
-    if (deleteBtn) {
-      deleteBtn.addEventListener('click', async () => {
-        if (!confirm(`「${c.name}」 さんを 完全に削除します。\n戻せません。 本当に削除しますか?\n\n(議事録 / LINE履歴 / 確定済予約 含めて 全部 消えます)`)) return;
-        deleteBtn.disabled = true; deleteBtn.textContent = '⏳ 削除中...';
-        try {
-          // Firestore customer (multi-tenant) の場合
-          const tenantId = window.__fp && window.__fp.tenantId;
-          const fsDocId = c._fsCustomerId || (c.source === 'line_survey' || c.source === 'line_follow' ? c.id : null);
-          if (tenantId && fsDocId && tenantId !== 'demo') {
-            const { getApps, initializeApp } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js');
-            const { getFunctions, httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-functions.js');
-            const app = getApps()[0] || initializeApp({ apiKey: 'AIzaSyAmVAEe9l9e1Yo_dzzJdbTVU35wWKd2sH4', authDomain: 'skeleton-fp-compass-632026.firebaseapp.com', projectId: 'skeleton-fp-compass-632026' });
-            await httpsCallable(getFunctions(app, 'asia-northeast1'), 'deleteCustomer')({ customerId: fsDocId });
-          }
-          // localStorage (DUMMY_CLIENTS) からも削除
-          if (window.DUMMY_CLIENTS) {
-            const idx = window.DUMMY_CLIENTS.findIndex(x => x.id === c.id);
-            if (idx >= 0) window.DUMMY_CLIENTS.splice(idx, 1);
-            try { localStorage.setItem('fp-crm-clients-v1', JSON.stringify(window.DUMMY_CLIENTS)); } catch (_) {}
-          }
-          // 議事録 backup も 削除 (customerName 一致)
-          Object.keys(localStorage).filter(k => k.startsWith('fp-ai-')).forEach(k => {
-            try {
-              const raw = JSON.parse(localStorage.getItem(k) || 'null');
-              const entries = Array.isArray(raw) ? raw : (raw && raw.entry ? [raw.entry] : []);
-              if (entries.some(e => e.customerName === c.name || e.userId === c.lineFriendId)) {
-                localStorage.removeItem(k);
-              }
-            } catch (_) {}
-          });
-          close();
-          document.getElementById('modal-overlay').style.display = 'none';
-          activateTab(state.activeTab);
-          // トースト
-          const t = document.createElement('div');
-          t.style.cssText = 'position:fixed;top:18px;right:18px;background:#fff;border-left:5px solid #06c755;border-radius:10px;padding:14px 20px;box-shadow:0 12px 32px rgba(0,0,0,0.18);z-index:10010;font-family:inherit;';
-          t.innerHTML = `<strong style="font-size:14px;color:#0a0a0a;">🗑 削除完了</strong><div style="font-size:12px;color:#475569;margin-top:4px;">${escapeHtml(c.name)} さんを 完全に削除しました</div>`;
-          document.body.appendChild(t);
-          setTimeout(() => t.remove(), 5000);
-        } catch (e) {
-          alert('削除失敗: ' + (e.message || e));
-          deleteBtn.disabled = false; deleteBtn.textContent = '🗑 この顧客を削除';
-        }
-      });
-    }
 
-    document.getElementById('form-save-btn').addEventListener('click', async () => {
+    document.getElementById('form-save-btn').addEventListener('click', () => {
       const name = document.getElementById('f-name').value.trim();
       const birth = document.getElementById('f-birth').value;
       if (!name || !birth) {
@@ -756,30 +702,6 @@
         if (idx >= 0) clients[idx] = c;
       }
       saveClientsToLS();
-      // ★ Firestore 多テナント customer (source==='line_survey' or _fsCustomerId付き) は Firestore も更新
-      try {
-        const tenantId = window.__fp && window.__fp.tenantId;
-        const fsDocId = c._fsCustomerId || (c.source === 'line_survey' ? c.id : null);
-        if (tenantId && fsDocId && tenantId !== 'demo') {
-          const { getFirestore, doc, updateDoc } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js');
-          const { getApps } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js');
-          const app = getApps()[0];
-          if (app) {
-            await updateDoc(doc(getFirestore(app), 'tenants', tenantId, 'customers', fsDocId), {
-              lineFriendId: c.lineFriendId || '',
-              userId: c.lineFriendId || '',
-              name: c.name,
-              birth: c.birth,
-              occupation: c.occupation,
-              note: c.note,
-              aum: c.aum,
-              lastContact: c.lastContact,
-              family: c.family || [],
-            });
-            console.log('[customer edit] Firestore 更新 OK', fsDocId);
-          }
-        }
-      } catch (e) { console.warn('[customer edit] Firestore update fail:', e); }
       close();
       // モーダルが開いていれば閉じる
       document.getElementById('modal-overlay').style.display = 'none';
@@ -1711,17 +1633,8 @@
     const pureLifeEventCount = events.length; // ★ CTA条件 用: 議事録 events 追加前 の 純粋ライフイベント数
     // 面談AI議事録をタイムラインに追加 (localStorage + GAS 両方)
     try {
-      // ★ legacy bookings + Firestore confirmed 合流 (Firestore customer の議事録反映漏れ防止)
       const liveBks = (window.LineAppLiveData && window.LineAppLiveData.bookings) || [];
-      const fsBks = (window._fpFirestoreConfirmed || []).map(fc => {
-        const [_d, _t] = String(fc.confirmedSlot || '').split(' ');
-        return { _fsCustomerId: fc.docId, userId: 'fs:'+fc.docId, name: fc.name, date: _d||'', time: _t||'', ts: fc.confirmedAt?.toDate?.()?.toISOString?.() || fc.createdAt?.toDate?.()?.toISOString?.() || '' };
-      });
-      const myBks = liveBks.concat(fsBks).filter(b =>
-        (b.userId && b.userId === c.lineFriendId) ||
-        (b.name && b.name === c.name) ||
-        (b._fsCustomerId && b._fsCustomerId === c.id)
-      );
+      const myBks = liveBks.filter(b => b.userId === c.lineFriendId || b.name === c.name);
       const aiKeys = new Set();
       if (c.lineFriendId) aiKeys.add('fp-ai-' + c.lineFriendId);
       if (c.id)           aiKeys.add('fp-ai-' + c.id);
@@ -1747,24 +1660,16 @@
           major: true,
         });
       };
-      // ★ localStorage payload は 2形式混在: 配列 [...] と wrapped {entry, tasks} (autoSaveAIResult が wrap で保存)
-      const flattenAi = (raw) => {
-        if (!raw) return [];
-        if (Array.isArray(raw)) return raw;
-        if (raw.entry) return [raw.entry];
-        if (raw.summary || raw.key_concerns) return [raw]; // 直書き 1件
-        return [];
-      };
       // 1) localStorage 全 fp-ai-* から徳佐拓朗系を吸う
       aiKeys.forEach(k => {
-        try { flattenAi(JSON.parse(localStorage.getItem(k) || 'null')).forEach(collectFromEntry); } catch (_) {}
+        try { JSON.parse(localStorage.getItem(k) || '[]').forEach(collectFromEntry); } catch (_) {}
       });
       // さらに 全 fp-ai-* キー走査 (★ genericFallback 撤去 — 厳密一致のみ)
       const allLsKeys = Object.keys(localStorage).filter(k => k.startsWith('fp-ai-'));
       allLsKeys.forEach(k => {
         if (aiKeys.has(k)) return;
         try {
-          flattenAi(JSON.parse(localStorage.getItem(k) || 'null')).forEach(a => {
+          JSON.parse(localStorage.getItem(k) || '[]').forEach(a => {
             const ownMatch = (a.userId && a.userId === c.lineFriendId) || (a.customerName && a.customerName === c.name);
             if (ownMatch) collectFromEntry(a);
           });
@@ -1883,12 +1788,11 @@
 
     // ③ 「次の一手」ブロック用データ抽出 (最新 AI 議事録 + 未完了タスク 上位3件)
     let nextActionHtml = '';
-    let latestAi = null;
     try {
       const allFpAi = Object.keys(localStorage).filter(k => k.startsWith('fp-ai-'));
-      const _flatAi = (raw) => Array.isArray(raw) ? raw : (raw && raw.entry ? [raw.entry] : (raw && (raw.summary || raw.key_concerns) ? [raw] : []));
+      let latestAi = null;
       allFpAi.forEach(k => {
-        const arr = _flatAi(JSON.parse(localStorage.getItem(k) || 'null'));
+        const arr = JSON.parse(localStorage.getItem(k) || '[]');
         arr.forEach(a => {
           // ★ オーナーfb: NEXT ACTION が全顧客で同一に。genericFallback 撤去、厳密一致のみ
           const match = (a.userId && a.userId === c.lineFriendId) || (a.customerName && a.customerName === c.name);
@@ -2856,7 +2760,7 @@
               <div class="cd-line-composer">
                 <textarea id="cd-line-input" placeholder="メッセージを入力... (Cmd+Enter で送信)"></textarea>
                 <div class="cd-line-composer-foot">
-                  ${c.lineFriendId ? '<span class="cd-line-composer-meta">✓ LINE連携済</span>' : `<button class="cd-line-composer-meta" id="cd-line-fix-friendid" style="background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;padding:5px 12px;border-radius:6px;font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit;">⚠ LINE friend ID 未登録 — タップで 登録 →</button>`}
+                  <span class="cd-line-composer-meta">${c.lineFriendId ? '✓ LINE連携済' : '⚠ LINE friend ID 未登録'}</span>
                   <button class="cd-line-ai-quick" id="cd-line-ai-quick" data-cid="${escapeHtml(c.id)}" title="AI が直近の履歴から返信案を生成 → textarea に挿入 → 編集して送信" style="background:linear-gradient(135deg,#6366F1,#4338CA);color:#fff;border:none;padding:8px 14px;border-radius:6px;font-weight:800;cursor:pointer;font-size:12.5px;font-family:inherit;letter-spacing:0.04em;margin-right:8px;">✨ AI で返信案</button>
                   <button class="cd-line-send-btn" id="cd-line-send"${c.lineFriendId ? '' : ' disabled'}>
                     <i data-lucide="send"></i><span>送信</span>
@@ -3156,24 +3060,6 @@
     const input = document.getElementById('cd-line-input');
     const statusEl = document.getElementById('cd-line-msg');
     const chatEl = document.getElementById('cd-line-chat');
-    // ★ 「LINE friend ID 未登録」 タップ → 編集モーダル 即open
-    const fixIdBtn = document.getElementById('cd-line-fix-friendid');
-    if (fixIdBtn) {
-      fixIdBtn.addEventListener('click', () => {
-        const editBtn = document.getElementById('modal-edit-btn');
-        if (editBtn) {
-          editBtn.click();
-          setTimeout(() => {
-            const lineIdInput = document.getElementById('f-line-id');
-            if (lineIdInput) {
-              lineIdInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-              lineIdInput.focus();
-              lineIdInput.style.boxShadow = '0 0 0 3px #fbbf24';
-            }
-          }, 400);
-        }
-      });
-    }
     function appendLocalMessage(text) {
       const ts = new Date();
       const tsStr = ts.getFullYear() + '-' + String(ts.getMonth()+1).padStart(2,'0') + '-' + String(ts.getDate()).padStart(2,'0') + ' ' + String(ts.getHours()).padStart(2,'0') + ':' + String(ts.getMinutes()).padStart(2,'0');
@@ -3206,41 +3092,20 @@
         sendBtn.innerHTML = '<span>送信中...</span>';
         statusEl.textContent = '';
         try {
-          // ★ Firestore customer or multi-tenant 環境 → Cloud Function sendLineMessage 経由
-          //   legacy customer (lineFriendId 設定済 で source !== 'line_survey') → 既存 GAS proxy
-          const isFsCustomer = c.source === 'line_survey' || c._fsCustomerId;
-          if (isFsCustomer || (window.__fp && window.__fp.tenantId && window.__fp.tenantId !== 'demo')) {
-            const { getApps, initializeApp } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js');
-            const { getFunctions, httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-functions.js');
-            const app = getApps()[0] || initializeApp({ apiKey: 'AIzaSyAmVAEe9l9e1Yo_dzzJdbTVU35wWKd2sH4', authDomain: 'skeleton-fp-compass-632026.firebaseapp.com', projectId: 'skeleton-fp-compass-632026' });
-            const fn = httpsCallable(getFunctions(app, 'asia-northeast1'), 'sendLineMessage');
-            const res = await fn({ customerId: c._fsCustomerId || c.id, text, lineFriendId: userId });
-            if (res.data?.ok) {
-              statusEl.textContent = '✓ 送信完了 (multi-tenant Cloud Function)';
-              statusEl.style.color = 'var(--positive)';
-              appendLocalMessage(text);
-              input.value = '';
-            } else {
-              statusEl.textContent = '✕ 送信失敗';
-              statusEl.style.color = 'var(--critical)';
-            }
+          const r = await fetch('https://fp-compass-webhook-527726449426.asia-northeast1.run.app/api/line/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId, text }),
+          });
+          const data = await r.json().catch(() => ({}));
+          if (data.ok) {
+            statusEl.textContent = '✓ 送信完了';
+            statusEl.style.color = 'var(--positive)';
+            appendLocalMessage(text);
+            input.value = '';
           } else {
-            // legacy single-tenant proxy
-            const r = await fetch('https://fp-compass-webhook-527726449426.asia-northeast1.run.app/api/line/send', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ userId, text }),
-            });
-            const data = await r.json().catch(() => ({}));
-            if (data.ok) {
-              statusEl.textContent = '✓ 送信完了';
-              statusEl.style.color = 'var(--positive)';
-              appendLocalMessage(text);
-              input.value = '';
-            } else {
-              statusEl.textContent = '✕ 送信失敗: ' + (data.error || '不明なエラー');
-              statusEl.style.color = 'var(--critical)';
-            }
+            statusEl.textContent = '✕ 送信失敗: ' + (data.error || '不明なエラー');
+            statusEl.style.color = 'var(--critical)';
           }
         } catch (e) {
           statusEl.textContent = '✕ 通信エラー: ' + e.message;
@@ -3389,26 +3254,9 @@
   // 面談記録ブロック (顧客詳細モーダル内 / 録画URL + メモ + タスク)
   // ============================
   function renderMeetingRecordsBlock(client) {
-    // この顧客に関連する bookings を liveData + Firestore 確定済 両方から探す
+    // この顧客に関連する bookings を liveData から探す
     const liveBookings = (window.LineAppLiveData && window.LineAppLiveData.bookings) || [];
-    // ★ Firestore 多テナント 確定済 booking も合流 (これ無いと Firestore customer で 議事録 反映なし)
-    const fsBookings = (window._fpFirestoreConfirmed || []).map(c => {
-      const [d, t] = String(c.confirmedSlot || '').split(' ');
-      return {
-        _fsCustomerId: c.docId,
-        userId: 'fs:' + c.docId,
-        name: c.name,
-        date: d || '',
-        time: t || '',
-        ts: c.confirmedAt?.toDate?.()?.toISOString?.() || c.createdAt?.toDate?.()?.toISOString?.() || '',
-      };
-    });
-    const allBookings = liveBookings.concat(fsBookings);
-    const myBookings = allBookings.filter(b =>
-      (b.userId && b.userId === client.lineFriendId) ||
-      (b.name && b.name === client.name) ||
-      (b._fsCustomerId && b._fsCustomerId === client.id) // Firestore docId 直接マッチ
-    );
+    const myBookings = liveBookings.filter(b => b.userId === client.lineFriendId || b.name === client.name);
 
     // localStorage から この顧客のメモ + タスクを取得
     // タスクも localStorage + GAS の両方から集約
@@ -3453,8 +3301,7 @@
       return { ...b, memo };
     });
 
-    // ★ 早期 return は aiResults も無い時のみ (orphan議事録 が ある時は セクション描画 必要)
-    // bookingsWithMemo 空でも aiResults > 0 なら orphan として 表示
+    if (bookingsWithMemo.length === 0 && tasks.length === 0) return ''; // 何もない時は表示しない
 
     // AI 議事録データ (localStorage + GAS 永続化シートの両方から集約)
     const aiCandidateKeys = new Set();
@@ -3466,15 +3313,9 @@
       if (b.ts)     aiCandidateKeys.add('fp-ai-' + b.ts);
       if (b.name)   aiCandidateKeys.add('fp-ai-' + b.name);
     });
-    // ★ localStorage payload は 2形式: 配列 [...] と wrapped {entry, tasks}
-    const _flatAiPayload = (raw) => Array.isArray(raw) ? raw : (raw && raw.entry ? [raw.entry] : (raw && (raw.summary || raw.key_concerns) ? [raw] : []));
     let aiResults = [];
     aiCandidateKeys.forEach(k => {
-      try {
-        const arr = _flatAiPayload(JSON.parse(localStorage.getItem(k) || 'null'));
-        arr.forEach(a => { a._storageKey = k; });
-        aiResults = aiResults.concat(arr);
-      } catch (_) {}
+      try { aiResults = aiResults.concat(JSON.parse(localStorage.getItem(k) || '[]')); } catch (_) {}
     });
     // 全 localStorage の fp-ai-* を走査し、エントリ内 userId / customerName / bookingTs が
     // この顧客にマッチするものを吸収 (キー名が予期せぬ形式でも救済)
@@ -3488,9 +3329,8 @@
     allKeys.forEach(k => {
       if (aiCandidateKeys.has(k)) return;  // 既出
       try {
-        const arr = _flatAiPayload(JSON.parse(localStorage.getItem(k) || 'null'));
+        const arr = JSON.parse(localStorage.getItem(k) || '[]');
         arr.forEach(a => {
-          a._storageKey = k;
           const matchUser = a.userId       && myUids.has(a.userId);
           const matchTs   = a.bookingTs    && myTs.has(a.bookingTs);
           const matchName = a.customerName && a.customerName !== 'お客様' && myNames.has(a.customerName);
@@ -3530,28 +3370,17 @@
         next_meeting_suggestion: r.next_meeting_suggestion || '',
       });
     });
-    // ★ オーナーfb: 同じ booking で 2回 録画 = 2本残す
-    // dedupe キーを bookingTs + createdAt (or summary 先頭) で 厳密化
+    // 同 bookingTs の重複を排除 (後者で上書き)
     const seenTs = new Set();
     aiResults = aiResults.filter(a => {
-      const k = (a.bookingTs || '') + '|' + (a.createdAt || (a.summary || '').slice(0, 50));
-      if (seenTs.has(k)) return false;
-      seenTs.add(k);
+      if (seenTs.has(a.bookingTs)) return false;
+      seenTs.add(a.bookingTs);
       return true;
     });
 
-    // ★ 件数 内訳 (オーナーfb: 「議事録 何件溜まってるか分かるように」)
-    const aiCount = aiResults.filter(a => a.summary || a.transcript || (a.key_concerns||[]).length).length;
-    const memoCount = bookingsWithMemo.filter(b => b.memo).length;
-    // ★ 3つとも 0なら 非表示 (旧 早期return は aiResults 計算前で 誤検知してたので 移動)
-    if (bookingsWithMemo.length === 0 && tasks.length === 0 && aiCount === 0) return '';
     return `
       <div class="detail-section">
-        <h3>面談記録 <span class="count-badge">${bookingsWithMemo.length} 件</span>
-          <span style="font-size:11.5px;font-weight:600;color:#64748b;margin-left:8px;letter-spacing:0.04em;">
-            📋 AI議事録 ${aiCount}件 ${memoCount > 0 ? ` / ✍ 手書きメモ ${memoCount}件` : ''}
-          </span>
-        </h3>
+        <h3>面談記録・AI議事録 <span class="count-badge">${bookingsWithMemo.length} 回</span></h3>
         ${window.FP_DEBUG ? `
         <details style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-family:Menlo,monospace;font-size:11px;">
           <summary style="cursor:pointer;color:#475569;font-weight:700;font-family:inherit;">🔧 デバッグ (AI議事録 lookup)</summary>
@@ -3580,78 +3409,44 @@
         ${bookingsWithMemo.length === 0 ? '' :
           '<div style="display:grid;gap:14px;margin-bottom:18px;">' +
           bookingsWithMemo.slice().reverse().map(b => {
-            // ★ オーナーfb: 同じ booking で 2回 録画 → 2件 残るように find→filter
-            const aiList = aiResults
-              .filter(a => a.bookingTs === b.ts)
-              .sort((x, y) => String(x.createdAt || '').localeCompare(String(y.createdAt || '')));
-            // ★ 当時年齢計算 (オーナーfb: 「誰々が何歳の時 みたいに 分かりやすく」)
-            let ageLabel = '';
-            try {
-              if (client.birth && b.date) {
-                const birthDt = new Date(client.birth);
-                const meetDt = new Date(b.date);
-                if (!isNaN(birthDt) && !isNaN(meetDt)) {
-                  let age = meetDt.getFullYear() - birthDt.getFullYear();
-                  const m = meetDt.getMonth() - birthDt.getMonth();
-                  if (m < 0 || (m === 0 && meetDt.getDate() < birthDt.getDate())) age--;
-                  if (age >= 0 && age < 120) ageLabel = `${age}歳`;
-                }
-              }
-            } catch (_) {}
+            const aiData = aiResults.find(a => a.bookingTs === b.ts) || {};
             return `
             <div class="fp-meeting-card">
               <div class="fp-meeting-card-head">
                 <div>
                   <div class="fp-meeting-card-eyebrow">Meeting Record</div>
-                  <div class="fp-meeting-card-date">
-                    <strong>${escapeHtml(client.name || 'お客様')}</strong> さん
-                    ${ageLabel ? `<span style="font-size:12.5px;color:#92400e;background:#FEF3C7;padding:2px 8px;border-radius:9999px;margin-left:6px;font-weight:700;">${ageLabel}</span>` : ''}
-                    <span style="display:inline-block;margin-left:8px;font-size:12.5px;color:#475569;font-weight:600;">
-                      ${escapeHtml(fmtDateRobust(b.date))} ${escapeHtml(fmtTimeRobust(b.time))} 面談
-                    </span>
-                    ${aiList.length > 1 ? `<span style="display:inline-block;margin-left:8px;font-size:11px;color:#1E40AF;background:#DBEAFE;padding:2px 8px;border-radius:9999px;font-weight:700;">議事録 ${aiList.length}本</span>` : ''}
-                  </div>
+                  <div class="fp-meeting-card-date">${escapeHtml(fmtDateRobust(b.date))} ${escapeHtml(fmtTimeRobust(b.time))} 面談</div>
                 </div>
                 <div class="fp-meeting-card-actions">
                   ${b.driveUrl ? `<a href="${escapeHtml(b.driveUrl)}" target="_blank" class="fp-btn fp-btn-sm fp-btn-gold">🎥 録画を見る</a>` : ''}
                 </div>
               </div>
-              ${aiList.map((aiData, idx) => `
-                ${aiList.length > 1 ? `<div style="font-size:11px;color:#475569;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin:14px 0 6px;padding-top:10px;border-top:1px solid var(--fp-line);">📋 議事録 ${idx + 1} 本目 ${aiData.createdAt ? `<span style="font-weight:500;color:#94a3b8;margin-left:6px;">${escapeHtml(String(aiData.createdAt).slice(0, 16).replace('T', ' '))}</span>` : ''}</div>` : ''}
-                ${aiData.transcript ? `
-                  <div class="fp-meeting-block">
-                    <div class="fp-meeting-block-label">AI 文字起こし (Whisper)</div>
-                    <details style="background:#fff;border:1px solid var(--fp-line);">
-                      <summary style="padding:11px 16px;cursor:pointer;font-size:12px;color:var(--fp-ink);font-weight:700;background:var(--fp-paper);border-bottom:1px solid var(--fp-line);font-family:Manrope,sans-serif;letter-spacing:0.04em;">全文を見る (${(aiData.transcript||'').length}文字)</summary>
-                      <div style="padding:14px 18px;font-size:12.5px;line-height:1.95;white-space:pre-wrap;max-height:320px;overflow-y:auto;color:var(--fp-ink);">${escapeHtml(aiData.transcript)}</div>
-                    </details>
-                  </div>` : ''}
-                ${aiData.summary ? `
-                  <div class="fp-meeting-block" data-minutes-block="${escapeHtml(aiData.bookingTs || '')}-${idx}">
-                    <div class="fp-meeting-block-label" style="display:flex;justify-content:space-between;align-items:center;">
-                      <span>AI 議事録 (Claude)</span>
-                      <div style="display:flex;gap:6px;">
-                        <button class="fp-edit-minutes-btn" data-edit-minutes-key="${escapeHtml(aiData._storageKey || '')}" data-booking-ts="${escapeHtml(aiData.bookingTs || '')}" data-created-at="${escapeHtml(aiData.createdAt || '')}" style="background:#fef3c7;color:#92400e;border:1px solid #fde68a;padding:3px 10px;border-radius:6px;font-size:10.5px;font-weight:700;cursor:pointer;font-family:inherit;">✏ 編集</button>
-                        <button class="fp-delete-minutes-btn" data-delete-minutes-key="${escapeHtml(aiData._storageKey || '')}" data-booking-ts="${escapeHtml(aiData.bookingTs || '')}" data-created-at="${escapeHtml(aiData.createdAt || '')}" style="background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;padding:3px 10px;border-radius:6px;font-size:10.5px;font-weight:700;cursor:pointer;font-family:inherit;">🗑</button>
-                      </div>
-                    </div>
-                    <div class="fp-meeting-body fp-minutes-display">${escapeHtml(aiData.summary)}</div>
-                  </div>` : ''}
-                ${aiData.key_concerns && aiData.key_concerns.length > 0 ? `
-                  <div class="fp-meeting-block">
-                    <div class="fp-meeting-block-label">お客様の関心事</div>
-                    <div style="display:flex;gap:6px;flex-wrap:wrap;">
-                      ${aiData.key_concerns.map(k => `<span class="fp-concern-chip">${escapeHtml(k)}</span>`).join('')}
-                    </div>
-                  </div>` : ''}
-              `).join('')}
-              ${aiList.length === 0 ? '' : ''}
+              ${aiData.transcript ? `
+                <div class="fp-meeting-block">
+                  <div class="fp-meeting-block-label">AI 文字起こし (Whisper)</div>
+                  <details style="background:#fff;border:1px solid var(--fp-line);">
+                    <summary style="padding:11px 16px;cursor:pointer;font-size:12px;color:var(--fp-ink);font-weight:700;background:var(--fp-paper);border-bottom:1px solid var(--fp-line);font-family:Manrope,sans-serif;letter-spacing:0.04em;">全文を見る (${(aiData.transcript||'').length}文字)</summary>
+                    <div style="padding:14px 18px;font-size:12.5px;line-height:1.95;white-space:pre-wrap;max-height:320px;overflow-y:auto;color:var(--fp-ink);">${escapeHtml(aiData.transcript)}</div>
+                  </details>
+                </div>` : ''}
+              ${aiData.summary ? `
+                <div class="fp-meeting-block">
+                  <div class="fp-meeting-block-label">AI 議事録 (Claude)</div>
+                  <div class="fp-meeting-body">${escapeHtml(aiData.summary)}</div>
+                </div>` : ''}
+              ${aiData.key_concerns && aiData.key_concerns.length > 0 ? `
+                <div class="fp-meeting-block">
+                  <div class="fp-meeting-block-label">お客様の関心事</div>
+                  <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                    ${aiData.key_concerns.map(k => `<span class="fp-concern-chip">${escapeHtml(k)}</span>`).join('')}
+                  </div>
+                </div>` : ''}
               ${b.memo ? `
                 <div class="fp-meeting-block">
                   <div class="fp-meeting-block-label">手書きメモ</div>
                   <div class="fp-meeting-body">${escapeHtml(b.memo)}</div>
                 </div>` : ''}
-              ${aiList.length === 0 && !b.memo ? '<div style="font-size:12px;color:var(--fp-ink-3);font-style:italic;text-align:center;padding:18px;font-family:Noto Sans JP,sans-serif;">録画 + AI処理 もしくは 面談メモがまだ追加されていません</div>' : ''}
+              ${!aiData.transcript && !aiData.summary && !b.memo ? '<div style="font-size:12px;color:var(--fp-ink-3);font-style:italic;text-align:center;padding:18px;font-family:Noto Sans JP,sans-serif;">録画 + AI処理 もしくは 面談メモがまだ追加されていません</div>' : ''}
             </div>
           `;
           }).join('') + '</div>'
@@ -3681,15 +3476,9 @@
                     </details>
                   </div>` : ''}
                 ${a.summary ? `
-                  <div class="fp-meeting-block" data-minutes-block="orphan-${escapeHtml(a.bookingTs || '')}">
-                    <div class="fp-meeting-block-label" style="display:flex;justify-content:space-between;align-items:center;">
-                      <span>AI 議事録 (Claude)</span>
-                      <div style="display:flex;gap:6px;">
-                        <button class="fp-edit-minutes-btn" data-edit-minutes-key="${escapeHtml(a._storageKey || '')}" data-booking-ts="${escapeHtml(a.bookingTs || '')}" data-created-at="${escapeHtml(a.createdAt || '')}" style="background:#fef3c7;color:#92400e;border:1px solid #fde68a;padding:3px 10px;border-radius:6px;font-size:10.5px;font-weight:700;cursor:pointer;font-family:inherit;">✏ 編集</button>
-                        <button class="fp-delete-minutes-btn" data-delete-minutes-key="${escapeHtml(a._storageKey || '')}" data-booking-ts="${escapeHtml(a.bookingTs || '')}" data-created-at="${escapeHtml(a.createdAt || '')}" style="background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;padding:3px 10px;border-radius:6px;font-size:10.5px;font-weight:700;cursor:pointer;font-family:inherit;">🗑</button>
-                      </div>
-                    </div>
-                    <div class="fp-meeting-body fp-minutes-display">${escapeHtml(a.summary)}</div>
+                  <div class="fp-meeting-block">
+                    <div class="fp-meeting-block-label">AI 議事録 (Claude)</div>
+                    <div class="fp-meeting-body">${escapeHtml(a.summary)}</div>
                   </div>` : ''}
                 ${a.key_concerns && a.key_concerns.length > 0 ? `
                   <div class="fp-meeting-block">
@@ -4726,17 +4515,8 @@ STEP C: 結果報告
         setTimeout(() => { try { resultEl.scrollIntoView({behavior:'smooth', block:'start'}); } catch(_){} }, 100);
       }
     });
-    // 議事録+台帳データ集める (Firestore confirmed も合流)
-    const _liveBks0 = (window.LineAppLiveData && window.LineAppLiveData.bookings) || [];
-    const _fsBks0 = (window._fpFirestoreConfirmed || []).map(fc => {
-      const [_d, _t] = String(fc.confirmedSlot || '').split(' ');
-      return { _fsCustomerId: fc.docId, userId: 'fs:'+fc.docId, name: fc.name, date: _d||'', time: _t||'', ts: fc.confirmedAt?.toDate?.()?.toISOString?.() || fc.createdAt?.toDate?.()?.toISOString?.() || '' };
-    });
-    const myBks = _liveBks0.concat(_fsBks0).filter(b =>
-      (b.userId && b.userId === client.lineFriendId) ||
-      (b.name && b.name === client.name) ||
-      (b._fsCustomerId && b._fsCustomerId === client.id)
-    );
+    // 議事録+台帳データ集める
+    const myBks = ((window.LineAppLiveData && window.LineAppLiveData.bookings) || []).filter(b => b.userId === client.lineFriendId || b.name === client.name);
     let latestAi = null;
     const allKeys = Object.keys(localStorage).filter(k => k.startsWith('fp-ai-'));
     allKeys.forEach(k => {
@@ -5062,7 +4842,7 @@ STEP C: 結果報告
         <div style="background:linear-gradient(135deg,#10B981,#059669);color:#fff;padding:18px 24px;display:flex;justify-content:space-between;align-items:center;">
           <div>
             <div style="font-size:10px;font-weight:800;letter-spacing:0.22em;opacity:0.85;">FP → CUSTOMER</div>
-            <h3 style="margin:4px 0 0 0;font-size:16px;font-weight:900;">✍ ${escapeHtml(client.name)}様 への LINE 下書き (AI 自動生成)</h3>
+            <h3 style="margin:4px 0 0 0;font-size:16px;font-weight:900;">✍ ${escapeHtml(client.name)}様 への LINE 下書き (Claude Code)</h3>
           </div>
           <button id="fp-brief-close" style="background:rgba(255,255,255,0.2);border:none;color:#fff;width:34px;height:34px;border-radius:6px;cursor:pointer;font-size:18px;">✕</button>
         </div>
@@ -5072,11 +4852,31 @@ STEP C: 結果報告
             <textarea id="fp-brief-input" rows="3" placeholder="例: 相続のテーマで来月会いたい / 新NISAの配分見直しを提案したい / お子様の進学費用シミュ作ってある旨を伝えたい" style="width:100%;padding:12px 14px;border:1.5px solid #E2E8F0;border-radius:8px;font-size:13.5px;font-family:inherit;line-height:1.7;resize:vertical;box-sizing:border-box;"></textarea>
             <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center;gap:10px;">
               <div style="font-size:10.5px;color:#94A3B8;">${escapeHtml(client.name)}様の 家族 / 議事録 / LINE履歴 / アンケート回答 を Claude が 踏まえて 整えます</div>
-              <button id="fp-brief-gen" style="background:linear-gradient(135deg,#10B981,#059669);color:#fff;border:none;padding:11px 22px;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:0.04em;box-shadow:0 4px 14px rgba(16,185,129,0.35);">✨ AI で 下書き 生成</button>
+              <button id="fp-brief-gen" style="background:linear-gradient(135deg,#10B981,#059669);color:#fff;border:none;padding:11px 22px;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:0.04em;box-shadow:0 4px 14px rgba(16,185,129,0.35);">✨ Claude Code で下書き作る</button>
             </div>
           </div>
 
-          <div id="fp-brief-after" style="display:none;"></div>
+          <div id="fp-brief-after" style="display:none;">
+            <div style="background:linear-gradient(135deg,#F0FDF4,#fff);border:1px solid #BBF7D0;border-radius:10px;padding:14px 16px;margin-bottom:12px;font-size:12.5px;color:#065F46;">
+              ✅ プロンプトを <strong>クリップボードに自動コピー</strong> しました。 prompt.txt も 念のため ダウンロード済。
+            </div>
+            <div style="background:#1F1A12;color:#FFE9A8;border-radius:10px;padding:18px;margin-bottom:10px;">
+              <div style="font-family:'Inter',sans-serif;font-size:10px;letter-spacing:0.22em;color:#C5A268;font-weight:700;margin-bottom:4px;">STEP 1</div>
+              <div style="font-family:'Noto Serif JP',serif;font-size:15px;font-weight:700;margin-bottom:10px;">Claude を開きます</div>
+              <button id="fp-brief-open-claude" style="background:#FFE9A8;color:#1F1A12;border:none;padding:11px 22px;border-radius:7px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:0.04em;">🌐 Claude を開く</button>
+            </div>
+            <div style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;padding:16px;margin-bottom:10px;">
+              <div style="font-family:'Inter',sans-serif;font-size:10px;letter-spacing:0.22em;color:#94A3B8;font-weight:700;margin-bottom:4px;">STEP 2</div>
+              <div style="font-family:'Noto Serif JP',serif;font-size:15px;font-weight:700;color:#1F1A12;margin-bottom:6px;">Cmd + V → Enter</div>
+              <div style="font-size:12px;color:#475569;line-height:1.7;">Claude の 入力欄 に 貼り付け (Cmd+V) → Enter で 送信。 <strong>${escapeHtml(client.name)}様 専用</strong> の 自然な LINE 文面 が 出ます。</div>
+            </div>
+            <div style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;padding:16px;">
+              <div style="font-family:'Inter',sans-serif;font-size:10px;letter-spacing:0.22em;color:#94A3B8;font-weight:700;margin-bottom:4px;">STEP 3</div>
+              <div style="font-family:'Noto Serif JP',serif;font-size:15px;font-weight:700;color:#1F1A12;margin-bottom:6px;">Claude の 出力 を コピー → LINE に 貼って 送信</div>
+              <div style="font-size:12px;color:#475569;line-height:1.7;">Claude が 出した 文面 を コピー → このモーダルを閉じて、 LINE 履歴 タブの 下の <strong>送信欄</strong> に 貼って 「送信」 ボタンで お送り下さい。</div>
+            </div>
+            <div id="fp-brief-msg" style="margin-top:10px;font-size:12px;font-weight:700;text-align:center;"></div>
+          </div>
         </div>
       </div>
     `;
@@ -5162,79 +4962,17 @@ ${JSON.stringify(jsonPayload, null, 2)}
     overlay.querySelector('#fp-brief-gen').addEventListener('click', async () => {
       const brief = overlay.querySelector('#fp-brief-input').value.trim();
       if (!brief) { alert('伝えたいこと を 入力してください'); return; }
-      const genBtn = overlay.querySelector('#fp-brief-gen');
-      const origText = genBtn.textContent;
-      genBtn.disabled = true;
-      genBtn.textContent = '✨ AI が 下書き中...';
       const prompt = buildBriefPrompt(client, brief);
-      try {
-        // ★ Anthropic API 直接呼出 (Cloud Function: generateBriefDraft)
-        const { getApps, initializeApp } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js');
-        const { getFunctions, httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-functions.js');
-        const app = getApps()[0] || initializeApp({
-          apiKey: 'AIzaSyAmVAEe9l9e1Yo_dzzJdbTVU35wWKd2sH4',
-          authDomain: 'skeleton-fp-compass-632026.firebaseapp.com',
-          projectId: 'skeleton-fp-compass-632026',
-        });
-        const fn = httpsCallable(getFunctions(app, 'asia-northeast1'), 'generateBriefDraft');
-        const res = await fn({ prompt });
-        const reply = (res.data && res.data.reply) || '';
-        if (!reply) throw new Error('空 reply');
-        // step1 隠して 結果表示
-        overlay.querySelector('#fp-brief-step1').style.display = 'none';
-        overlay.querySelector('#fp-brief-after').innerHTML = `
-          <div style="background:linear-gradient(135deg,#F0FDF4,#fff);border:1px solid #BBF7D0;border-radius:10px;padding:14px 16px;margin-bottom:14px;font-size:12.5px;color:#065F46;">
-            ✨ <strong>Jobs (AI) が ${escapeHtml(client.name)}様 専用 の LINE 下書き を 作成しました</strong>
-          </div>
-          <div style="background:#fff;border:2px solid #10B981;border-radius:10px;padding:18px 22px;margin-bottom:12px;">
-            <div style="font-family:'Inter',sans-serif;font-size:10px;letter-spacing:0.22em;color:#059669;font-weight:800;margin-bottom:10px;">📝 LINE 下書き</div>
-            <textarea id="fp-brief-result" rows="9" style="width:100%;border:1px solid #E2E8F0;border-radius:6px;padding:12px 14px;font-size:13.5px;font-family:inherit;line-height:1.85;resize:vertical;box-sizing:border-box;color:#0F172A;">${escapeHtml(reply)}</textarea>
-          </div>
-          <div style="display:flex;gap:10px;justify-content:flex-end;">
-            <button id="fp-brief-regen" style="background:#fff;border:1px solid #E2E8F0;color:#475569;padding:10px 18px;border-radius:7px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;">↻ もう一度 生成</button>
-            <button id="fp-brief-copy" style="background:#1F1A12;color:#FFE9A8;border:none;padding:10px 18px;border-radius:7px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:0.04em;">📋 コピー</button>
-            <button id="fp-brief-tosend" style="background:linear-gradient(135deg,#10B981,#059669);color:#fff;border:none;padding:11px 22px;border-radius:7px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:0.04em;box-shadow:0 4px 14px rgba(16,185,129,0.35);">→ LINE 送信欄に セット</button>
-          </div>
-          <div id="fp-brief-msg" style="margin-top:10px;font-size:12px;font-weight:700;text-align:center;"></div>
-        `;
-        overlay.querySelector('#fp-brief-after').style.display = 'block';
-        // 再生成
-        overlay.querySelector('#fp-brief-regen').addEventListener('click', () => {
-          overlay.querySelector('#fp-brief-step1').style.display = 'block';
-          overlay.querySelector('#fp-brief-after').style.display = 'none';
-          genBtn.disabled = false;
-          genBtn.textContent = origText;
-        });
-        // コピー
-        overlay.querySelector('#fp-brief-copy').addEventListener('click', async () => {
-          const text = overlay.querySelector('#fp-brief-result').value;
-          try { await navigator.clipboard.writeText(text); overlay.querySelector('#fp-brief-msg').textContent = '✅ クリップボードに コピー しました'; overlay.querySelector('#fp-brief-msg').style.color = '#059669'; } catch (_) {}
-        });
-        // LINE 送信欄に セット
-        overlay.querySelector('#fp-brief-tosend').addEventListener('click', () => {
-          const text = overlay.querySelector('#fp-brief-result').value;
-          const lineInput = document.getElementById('cd-line-input');
-          if (lineInput) {
-            lineInput.value = text;
-            lineInput.dispatchEvent(new Event('input', { bubbles: true }));
-            overlay.remove();
-            // LINE タブ に スクロール + 送信ボタン ハイライト
-            const lineTab = document.querySelector('[data-cdtab="line"]');
-            if (lineTab) lineTab.click();
-            setTimeout(() => {
-              lineInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-              lineInput.focus();
-            }, 300);
-          } else {
-            overlay.querySelector('#fp-brief-msg').textContent = '⚠ LINE送信欄が見つかりません。 LINE履歴 タブ を 開いてから 試してください';
-            overlay.querySelector('#fp-brief-msg').style.color = '#dc2626';
-          }
-        });
-      } catch (e) {
-        console.error('[generateBriefDraft] err:', e);
-        genBtn.disabled = false;
-        genBtn.textContent = origText;
-        alert('AI 生成失敗: ' + (e.message || e));
+      try { await navigator.clipboard.writeText(prompt); } catch (e) { console.warn('clipboard fail:', e.message); }
+      const customerSlug = String(client.name || 'customer').replace(/[\/\\\s]+/g, '_');
+      const stamp = new Date().toISOString().slice(0, 10);
+      downloadAsFile(`${customerSlug}_brief-prompt_${stamp}.txt`, prompt, 'text/plain');
+      overlay.querySelector('#fp-brief-step1').style.display = 'none';
+      overlay.querySelector('#fp-brief-after').style.display = 'block';
+    });
+    overlay.querySelector('#fp-brief-after').addEventListener('click', (e) => {
+      if (e.target.closest('#fp-brief-open-claude')) {
+        window.open('https://claude.ai/new', '_blank');
       }
     });
     setTimeout(() => overlay.querySelector('#fp-brief-input').focus(), 100);
@@ -5453,17 +5191,8 @@ ${JSON.stringify(jsonPayload, null, 2)}
       const body = document.getElementById('aib-minutes-body');
       if (!body) return;
       const myUids = new Set([client.lineFriendId].filter(Boolean));
-      // ★ legacy + Firestore confirmed 合流
-      const _liveBks1 = (window.LineAppLiveData && window.LineAppLiveData.bookings) || [];
-      const _fsBks1 = (window._fpFirestoreConfirmed || []).map(fc => {
-        const [_d, _t] = String(fc.confirmedSlot || '').split(' ');
-        return { _fsCustomerId: fc.docId, userId: 'fs:'+fc.docId, name: fc.name, ts: fc.confirmedAt?.toDate?.()?.toISOString?.() || fc.createdAt?.toDate?.()?.toISOString?.() || '' };
-      });
-      const myBks = _liveBks1.concat(_fsBks1).filter(b =>
-        (b.userId && b.userId === client.lineFriendId) ||
-        (b.name && b.name === client.name) ||
-        (b._fsCustomerId && b._fsCustomerId === client.id)
-      );
+      const myBks = ((window.LineAppLiveData && window.LineAppLiveData.bookings) || [])
+        .filter(b => (b.userId && b.userId === client.lineFriendId) || (b.name && b.name === client.name));
       myBks.forEach(b => { if (b.userId) myUids.add(b.userId); });
       const myTs = new Set(myBks.map(b => b.ts).filter(Boolean));
       const myNames = new Set([client.name].concat(myBks.map(b => b.name).filter(Boolean)));
@@ -5482,11 +5211,7 @@ ${JSON.stringify(jsonPayload, null, 2)}
         }
       };
       Object.keys(localStorage).filter(k => k.startsWith('fp-ai-')).forEach(k => {
-        try {
-          const raw = JSON.parse(localStorage.getItem(k) || 'null');
-          const arr = Array.isArray(raw) ? raw : (raw && raw.entry ? [raw.entry] : (raw && (raw.summary || raw.key_concerns) ? [raw] : []));
-          arr.forEach(a => consider(a, k));
-        } catch (_) {}
+        try { JSON.parse(localStorage.getItem(k) || '[]').forEach(a => consider(a, k)); } catch (_) {}
       });
       ((window.LineAppLiveData && window.LineAppLiveData.ai_results) || []).forEach(r => consider(r, 'GAS:ai_results'));
       // 重複除去 + 最新順
@@ -6769,88 +6494,6 @@ ${client.name}さん、ありがとうございます。
   document.addEventListener('click', (e) => {
     const t = e.target.closest('.tab[data-tab="kpi"]');
     if (t) setTimeout(renderKpiBoard, 80);
-
-    // ★ 議事録 削除 ボタン (delegated)
-    const delMinutesBtn = e.target.closest('.fp-delete-minutes-btn');
-    if (delMinutesBtn) {
-      if (!confirm('この 議事録 1本を 削除します。 戻せません。 OK?')) return;
-      const storageKey = delMinutesBtn.dataset.deleteMinutesKey;
-      const bookingTs = delMinutesBtn.dataset.bookingTs;
-      const createdAt = delMinutesBtn.dataset.createdAt;
-      try {
-        const raw = JSON.parse(localStorage.getItem(storageKey) || 'null');
-        if (Array.isArray(raw)) {
-          const filtered = raw.filter(a => !(a.bookingTs === bookingTs && (a.createdAt || '') === createdAt));
-          if (filtered.length === 0) localStorage.removeItem(storageKey);
-          else localStorage.setItem(storageKey, JSON.stringify(filtered));
-        } else if (raw && (raw.entry || raw.summary)) {
-          // wrapped or 単体 → key自体 削除
-          localStorage.removeItem(storageKey);
-        }
-        // 再描画
-        const closeBtn = document.querySelector('.cd-modal .cd-close, .modal-overlay .cd-close');
-        const lastId = window._fpCurrentClient?.id;
-        if (closeBtn) closeBtn.click();
-        setTimeout(() => { if (lastId) document.querySelector(`[data-customer-id="${lastId}"], [data-client-id="${lastId}"]`)?.click(); }, 300);
-      } catch (err) { alert('削除失敗: ' + err.message); }
-      return;
-    }
-    // ★ 議事録 編集 ボタン (delegated)
-    const editBtn = e.target.closest('.fp-edit-minutes-btn');
-    if (editBtn) {
-      const storageKey = editBtn.dataset.editMinutesKey;
-      const bookingTs = editBtn.dataset.bookingTs;
-      const createdAt = editBtn.dataset.createdAt;
-      const block = editBtn.closest('[data-minutes-block]');
-      const displayDiv = block?.querySelector('.fp-minutes-display');
-      if (!displayDiv) return;
-      const currentText = displayDiv.textContent || '';
-      // 編集 textarea に置換
-      const editId = 'fp-mins-edit-' + Date.now();
-      displayDiv.outerHTML = `
-        <textarea id="${editId}" rows="6" style="width:100%;padding:12px 14px;font-size:13px;font-family:inherit;line-height:1.85;border:1.5px solid #fbbf24;border-radius:6px;box-sizing:border-box;background:#fffbeb;">${escapeHtml(currentText)}</textarea>
-        <div style="display:flex;gap:8px;margin-top:8px;justify-content:flex-end;">
-          <button id="${editId}-cancel" style="background:#fff;border:1px solid #e5e7eb;color:#475569;padding:6px 14px;border-radius:5px;font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit;">キャンセル</button>
-          <button id="${editId}-save" style="background:linear-gradient(135deg,#06c755,#04a045);border:none;color:#fff;padding:7px 16px;border-radius:5px;font-size:11.5px;font-weight:800;cursor:pointer;font-family:inherit;">✓ 保存</button>
-        </div>
-      `;
-      editBtn.style.display = 'none';
-      document.getElementById(editId).focus();
-      // キャンセル → reload
-      document.getElementById(editId + '-cancel').addEventListener('click', () => {
-        // モーダル再描画
-        const closeBtn = document.querySelector('.cd-modal .cd-close, .modal-overlay .cd-close');
-        if (closeBtn) { closeBtn.click(); setTimeout(() => {
-          const lastId = window._fpCurrentClient?.id;
-          if (lastId) document.querySelector(`[data-customer-id="${lastId}"], [data-client-id="${lastId}"]`)?.click();
-        }, 300); }
-      });
-      // 保存
-      document.getElementById(editId + '-save').addEventListener('click', () => {
-        const newText = document.getElementById(editId).value;
-        try {
-          const raw = JSON.parse(localStorage.getItem(storageKey) || 'null');
-          if (Array.isArray(raw)) {
-            const targetIdx = raw.findIndex(a => a.bookingTs === bookingTs && (a.createdAt || '') === createdAt);
-            if (targetIdx >= 0) { raw[targetIdx].summary = newText; raw[targetIdx].editedAt = new Date().toISOString(); }
-            localStorage.setItem(storageKey, JSON.stringify(raw));
-          } else if (raw && raw.entry) {
-            raw.entry.summary = newText;
-            raw.entry.editedAt = new Date().toISOString();
-            localStorage.setItem(storageKey, JSON.stringify(raw));
-          } else if (raw && (raw.summary || raw.key_concerns)) {
-            raw.summary = newText; raw.editedAt = new Date().toISOString();
-            localStorage.setItem(storageKey, JSON.stringify(raw));
-          }
-          // モーダル再描画
-          const closeBtn = document.querySelector('.cd-modal .cd-close, .modal-overlay .cd-close');
-          if (closeBtn) { closeBtn.click(); setTimeout(() => {
-            const lastId = window._fpCurrentClient?.id;
-            if (lastId) document.querySelector(`[data-customer-id="${lastId}"], [data-client-id="${lastId}"]`)?.click();
-          }, 300); }
-        } catch (err) { alert('保存失敗: ' + err.message); }
-      });
-    }
   });
   setTimeout(renderKpiBoard, 1000);
 

@@ -685,9 +685,13 @@
       try { window.refreshFirestoreCustomers(); } catch (_) {}
     }
     fetchLiveData().then(() => { if (currentSubview === 'leadHub') renderLeadHubInner(); });
-    // ★ オーナーfb「ボタン押そうとすると 一瞬で消える」 = 15秒 setInterval の renderLeadHubInner が click を 奪う
-    // → 自動 polling 撤去。 タブ切替 / Firestore 操作 後のみ 手動 再描画
-    if (window._leadHubInterval) { clearInterval(window._leadHubInterval); window._leadHubInterval = null; }
+    if (!window._leadHubInterval) {
+      window._leadHubInterval = setInterval(() => {
+        if (currentSubview === 'leadHub') {
+          fetchLiveData().then(() => renderLeadHubInner());
+        }
+      }, 15000);
+    }
     renderLeadHubInner();
   }
 
@@ -697,10 +701,9 @@
     const today = new Date('2026-05-28').toISOString().slice(0, 10);
     let surveys = (liveData && liveData.survey_answers) || [];
     // ★ Firestore 多テナント 確定済 を bookings に 合流
-    // ホスト権限 で 開く ため hostZoomUrl (start_url) 優先、 無ければ legacy zoomUrl (join_url) fallback
     const fsConfirmedHero = (window._fpFirestoreConfirmed || []).map(c => {
       const [d, t] = String(c.confirmedSlot || '').split(' ');
-      return { _fsCustomerId: c.docId, userId: 'fs:'+c.docId, name: c.name, date: d || '', time: t || '', zoomUrl: c.hostZoomUrl || c.zoomUrl, ts: c.confirmedAt?.toDate?.()?.toISOString?.() || '', status: 'confirmed' };
+      return { _fsCustomerId: c.docId, userId: 'fs:'+c.docId, name: c.name, date: d || '', time: t || '', zoomUrl: c.zoomUrl, ts: c.confirmedAt?.toDate?.()?.toISOString?.() || '', status: 'confirmed' };
     });
     const bookings = ((liveData && liveData.bookings) || []).concat(fsConfirmedHero);
     const fsPendingHeroCount = (window._fpFirestoreCustomers || []).length;
@@ -1199,7 +1202,7 @@
         name: c.name,
         date: d || '',
         time: t || '',
-        zoomUrl: c.hostZoomUrl || c.zoomUrl, // FP は host で 入る (start_url 優先)
+        zoomUrl: c.zoomUrl,
         ts: c.confirmedAt?.toDate?.()?.toISOString?.() || c.createdAt?.toDate?.()?.toISOString?.() || '',
         status: 'confirmed',
         recordingStatus: null,
@@ -1972,18 +1975,7 @@
       window._fpZoomWin = zoomWin;
       // ※ Zoom popup が閉じても自動停止しない (誤検知防止のため監視機能を撤廃)
       // 停止は「Chrome 共有を停止」 or 「メモの完了ボタン」 でのみ実行
-      // ★ multi-tenant: legacy bookings + Firestore 確定済 を 横断検索 (customerName='お客様' 化 防止)
-      let booking = ((liveData && liveData.bookings) || []).find(b => String(b.ts).slice(0,19) === String(bookingTs).slice(0,19));
-      if (!booking) {
-        const _fs = (window._fpFirestoreConfirmed || []).find(c => {
-          const cts = c.confirmedAt?.toDate?.()?.toISOString?.() || c.createdAt?.toDate?.()?.toISOString?.() || '';
-          return String(cts).slice(0,19) === String(bookingTs).slice(0,19);
-        });
-        if (_fs) {
-          const [_d, _t] = String(_fs.confirmedSlot || '').split(' ');
-          booking = { _fsCustomerId: _fs.docId, userId: 'fs:'+_fs.docId, name: _fs.name, date: _d||'', time: _t||'', zoomUrl: _fs.hostZoomUrl || _fs.zoomUrl, ts: bookingTs };
-        }
-      }
+      const booking = ((liveData && liveData.bookings) || []).find(b => String(b.ts).slice(0,19) === String(bookingTs).slice(0,19));
       // ★ オーナーfb: popup ウィンドウだと Zoom と z-order 競合で潜る。物理タブ (同じ Chrome ウィンドウ内の新タブ) に変更。
       // tab だと Chrome のタブストリップから手動で切り替え or ドラッグでウィンドウ分離可能。CRM 親と同じウィンドウなので focus 問題ゼロ。
       const memoKey = 'fp-memo-' + (bookingTs || '');
@@ -2249,48 +2241,8 @@
               addedAt: new Date().toISOString(),
             });
           });
-          // ★ 議事録 summary/transcript から 家族構成 自動抽出 → c.family 更新
-          //   (オーナーfb: 「夫が60歳の時 / 妻が何歳の時 / 子供が中学校入学の時 みたいに 家族イベントを 議事録 から 自動更新」)
-          try {
-            const blob = String(entry.summary || '') + '\n' + String(entry.transcript || '');
-            const currentYear = new Date().getFullYear();
-            const ensureMember = (rel, label) => {
-              if (!Array.isArray(c.family)) c.family = [];
-              let m = c.family.find(x => x.rel === rel);
-              if (!m) { m = { rel, name: label, birth: null }; c.family.push(m); }
-              return m;
-            };
-            // 配偶者 年齢抽出 (「妻 50歳」「夫45歳」「配偶者 N歳」)
-            const spouseAge = (blob.match(/(?:妻|夫|配偶者|奥さん|旦那)[\s、，は が](\d{1,2})歳/) || [])[1];
-            if (spouseAge) {
-              const m = ensureMember('spouse', '配偶者');
-              const newBirth = `${currentYear - parseInt(spouseAge)}-06-15`;
-              if (!m.birth || m.birth.length < 4) m.birth = newBirth;
-            }
-            // 子供 抽出 (「子供 N歳」「長男 N歳」「長女 N歳」「次男/次女」)
-            const childPatterns = [
-              { regex: /(?:長男|長女)[\s、，は が]*(\d{1,2})歳/g, name: '長子' },
-              { regex: /(?:次男|次女)[\s、，は が]*(\d{1,2})歳/g, name: '次子' },
-              { regex: /(?:子供|子ども|お子さん|お子様)[\s、，は が]*(\d{1,2})歳/g, name: 'お子様' },
-            ];
-            childPatterns.forEach(p => {
-              let mt;
-              let idx = 0;
-              while ((mt = p.regex.exec(blob)) !== null) {
-                idx++;
-                const age = parseInt(mt[1]);
-                if (!Array.isArray(c.family)) c.family = [];
-                // child rel + name で 一意
-                const childName = p.name + (idx > 1 ? idx : '');
-                let m = c.family.find(x => x.rel === 'child' && x.name === childName);
-                if (!m) { m = { rel: 'child', name: childName, birth: null }; c.family.push(m); }
-                const newBirth = `${currentYear - age}-06-15`;
-                if (!m.birth) m.birth = newBirth;
-              }
-            });
-          } catch (e) { console.warn('family 自動抽出 fail:', e); }
           try { localStorage.setItem('fp-crm-clients-v1', JSON.stringify(window.DUMMY_CLIENTS)); } catch (_) {}
-          console.log('[lifeEvent抽出]', cands.length, 'candidates → customEvents on', c.name, '/ family:', c.family);
+          console.log('[lifeEvent抽出]', cands.length, 'candidates → customEvents on', c.name);
         }
       }
     } catch (e) { console.warn('lifeEventCandidates merge fail:', e); }
@@ -2304,9 +2256,7 @@
         console.log('[autoSaveAIResult] GAS 保存 OK');
         // 成功時のみ localStorage に最低限の backup (1キー = bookingTs単位)
         try {
-          // ★ key を 時刻ベース ユニーク化 (オーナーfb: 2回目録画で 1回目 上書きされて 2件残らない 修正)
-          //   entry.bookingTs / entry.createdAt は 検索 / 紐付け 用に保持、 keyは単に コリジョン避け
-          const k = 'fp-ai-backup-' + Date.now() + '-' + (bookingTs || userId || nameKey || 'na');
+          const k = 'fp-ai-backup-' + (bookingTs || userId || nameKey || Date.now());
           localStorage.setItem(k, JSON.stringify({ entry, tasks: newTasks }));
         } catch (_) {}
         // 顧客台帳再描画 (GAS から取り直す)
@@ -2328,8 +2278,8 @@
       const pending = JSON.parse(localStorage.getItem('fp-ai-pending-sync') || '[]');
       pending.push({ entry, tasks, queuedAt: new Date().toISOString() });
       localStorage.setItem('fp-ai-pending-sync', JSON.stringify(pending));
-      // 表示用backup も (時刻ベース ユニーク化)
-      const k = 'fp-ai-backup-' + Date.now() + '-' + (entry.bookingTs || entry.userId || 'na');
+      // 表示用backup も
+      const k = 'fp-ai-backup-' + (entry.bookingTs || entry.userId || Date.now());
       localStorage.setItem(k, JSON.stringify({ entry, tasks }));
     } catch (_) {}
   }
@@ -3614,9 +3564,7 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
   function bindBookingsButtons() {
     document.querySelectorAll('[data-rec-start]').forEach(btn => {
       btn.addEventListener('click', async () => {
-        // ★ tsEnc は fillBookingsList で encodeURIComponent されて 属性セット → ここで decode 統一
-        //   (decode しないと 議事録 entry.bookingTs が encoded → renderMeetingRecordsBlock の b.ts と 紐付け失敗 で「議事録 内容 出ない」)
-        const ts = decodeURIComponent(btn.dataset.recStart || '');
+        const ts = btn.dataset.recStart;
         const zoomUrl = btn.dataset.zoom;
         // ★ オーナーfb (v AH): Zoom pre-open popup が画面共有ダイアログを覆ってた。
         // 修正: pre-open は 画面外/極小 で 開いて 即 blur + CRM focus 戻し。 ユーザには見えないように。
@@ -4548,9 +4496,7 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
     // Zoom録画開始
     document.querySelectorAll('[data-rec-start]').forEach(btn => {
       btn.addEventListener('click', async () => {
-        // ★ tsEnc は fillBookingsList で encodeURIComponent されて 属性セット → ここで decode 統一
-        //   (decode しないと 議事録 entry.bookingTs が encoded → renderMeetingRecordsBlock の b.ts と 紐付け失敗 で「議事録 内容 出ない」)
-        const ts = decodeURIComponent(btn.dataset.recStart || '');
+        const ts = btn.dataset.recStart;
         const zoomUrl = btn.dataset.zoom;
         btn.disabled = true;
         btn.textContent = '...';

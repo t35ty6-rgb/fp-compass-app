@@ -217,25 +217,8 @@
         <button id="line-save-btn" class="btn primary" style="margin-top:18px;padding:14px 28px;font-size:14px;font-weight:700;background:#06C755;color:#fff;border:none;border-radius:8px;cursor:pointer;">
           🔗 接続テスト + 保存 (自動セットアップ)
         </button>
-        <button id="line-regen-btn" style="margin-top:10px;margin-left:8px;padding:13px 22px;font-size:13px;font-weight:700;background:#fff;color:#06C755;border:1.5px solid #06C755;border-radius:8px;cursor:pointer;">
-          ↻ リッチメニュー だけ 再生成 (本番向け)
-        </button>
-        <button id="line-regen-stg-btn" style="margin-top:10px;margin-left:8px;padding:13px 22px;font-size:13px;font-weight:700;background:#fff;color:#1E40AF;border:1.5px dashed #3B82F6;border-radius:8px;cursor:pointer;">
-          🧪 stg試験用 リッチメニュー (アンケート開くと stg版)
-        </button>
 
         <div id="line-result" style="margin-top:16px;"></div>
-
-        <!-- ★ 試験中 全 localStorage クリーンアップ (stg のみ表示 / 本番では非表示) -->
-        <div id="clear-cache-section" style="display:none;margin-top:20px;padding:14px 18px;background:#FEF2F2;border:1px dashed #FCA5A5;border-radius:10px;">
-          <div style="font-weight:800;color:#991B1B;margin-bottom:6px;font-size:13px;">🧹 試験データ 全クリーンアップ (ブラウザ側)</div>
-          <div style="font-size:11.5px;color:#7F1D1D;margin-bottom:10px;line-height:1.6;">
-            ブラウザの localStorage / IndexedDB / Cookie を 全削除して 真の 0 状態に戻します。<br>
-            (Firestore クラウド側は 別途 削除済 / これは ブラウザ側 残骸 のみ クリア)
-          </div>
-          <button id="clear-local-cache-btn" style="background:#DC2626;color:#fff;border:none;padding:10px 20px;border-radius:7px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit;">🗑 ブラウザ 全削除 + リロード</button>
-          <div id="clear-cache-inline-result" style="display:none;margin-top:12px;padding:14px 18px;background:#F0FDF4;border:2px solid #06C755;border-radius:10px;font-size:14px;color:#065F46;font-weight:800;">✓ 削除完了 → 自動リロード中…</div>
-        </div>
 
         <details style="margin-top:18px;background:#F8FAFC;padding:14px 18px;border-radius:8px;font-size:12.5px;color:var(--ink-2);">
           <summary style="cursor:pointer;font-weight:700;color:var(--ink);">💡 鍵 の 取得 方法 が わからない → ガイド を 開く</summary>
@@ -604,61 +587,6 @@
     } finally {
       btn.disabled = false; btn.textContent = '🔗 接続テスト + 保存 (自動セットアップ)';
     }
-  });
-
-  // ↻ リッチメニュー だけ 再生成 (本番 / stg共通の handler)
-  async function regenerateRichMenu(useStg) {
-    const resultEl = document.getElementById('line-result');
-    const prodBtn = document.getElementById('line-regen-btn');
-    const stgBtn = document.getElementById('line-regen-stg-btn');
-    const btn = useStg ? stgBtn : prodBtn;
-    const origText = btn.textContent;
-    // ★ confirm dialog 撤去 (system dialog が 一瞬で 消える 環境ある) → 即実行 + 結果 inline 表示
-    btn.disabled = true; btn.textContent = '⏳ 生成中… (30秒程度)';
-    resultEl.innerHTML = `<div style="background:#F0F9FF;border:1px solid #3B82F6;padding:14px 18px;border-radius:10px;font-size:13px;color:#1E40AF;"><strong>⏳ ${useStg ? 'stg試験用' : '本番向け'} リッチメニュー を 生成中…</strong> LINE API と 通信中、 少々お待ちください</div>`;
-    try {
-      const fn = httpsCallable(functions, "regenerateRichMenu");
-      const res = await fn({ stg: useStg });
-      const d = res.data;
-      const colorBg = useStg ? '#EFF6FF' : '#F0FDF4';
-      const colorBorder = useStg ? '#3B82F6' : '#06C755';
-      const colorText = useStg ? '#1E40AF' : '#065F46';
-      resultEl.innerHTML = `<div style="background:${colorBg};border:2px solid ${colorBorder};padding:16px 20px;border-radius:10px;font-size:13px;color:${colorText};line-height:1.85;">
-        <strong>✓ ${useStg ? '🧪 stg試験用' : '本番向け'} リッチメニュー 生成完了</strong><br>
-        ・新 リッチメニューID: <code style="background:#fff;padding:2px 7px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:11px;">${d.richMenuId.slice(0,20)}…</code><br>
-        ・新 アンケートURL: <a href="${d.surveyUrl}" target="_blank" style="color:${colorBorder};font-weight:700;">${d.surveyUrl}</a><br>
-        ${useStg ? '<strong style="color:#1E40AF;">⚠ stg試験中: 本番リリース前に「↻ リッチメニュー だけ 再生成 (本番向け)」 を 押して 元に戻すこと</strong><br>' : ''}
-        <small style="opacity:0.8;">スマホ で LINE 公式アカウント を 開き直すと 新メニュー が 反映されます (LINE側 キャッシュで 数分かかる場合あり)</small>
-      </div>`;
-      setTimeout(loadLineStatus, 1500);
-    } catch (e) {
-      console.error('regen:', e);
-      resultEl.innerHTML = `<div style="background:#FEE2E2;border:2px solid #DC2626;padding:14px 18px;border-radius:10px;font-size:13px;color:#7F1D1D;">✗ 生成失敗: ${e.message || e.code || '不明'}</div>`;
-    } finally {
-      btn.disabled = false; btn.textContent = origText;
-    }
-  }
-  $("line-regen-btn").addEventListener("click", () => regenerateRichMenu(false));
-  $("line-regen-stg-btn").addEventListener("click", () => regenerateRichMenu(true));
-
-  // ★ stg のみ 削除ボタンセクション 表示 (本番では非表示 = FP事業者の誤クリック防止)
-  if (location.hostname === 'stg.app.skeleton-inc.jp' || location.hostname === 'localhost' || location.hostname.startsWith('127.0.0.1')) {
-    const sec = document.getElementById('clear-cache-section');
-    if (sec) sec.style.display = 'block';
-  }
-  // ★ 全 localStorage クリア + 即リロード (ボタン直下に inline feedback)
-  $("clear-local-cache-btn").addEventListener("click", async () => {
-    const btn = document.getElementById('clear-local-cache-btn');
-    const inline = document.getElementById('clear-cache-inline-result');
-    btn.disabled = true; btn.textContent = '⏳ 削除中...';
-    try { localStorage.clear(); } catch (_) {}
-    try { sessionStorage.clear(); } catch (_) {}
-    try { if (window.indexedDB?.databases) { const dbs = await indexedDB.databases(); for (const d of dbs) { if (d.name) try { indexedDB.deleteDatabase(d.name); } catch (_) {} } } } catch (_) {}
-    try { if (navigator.serviceWorker) { const regs = await navigator.serviceWorker.getRegistrations(); for (const r of regs) try { await r.unregister(); } catch (_) {} } } catch (_) {}
-    try { document.cookie.split(';').forEach(c => { const eq = c.indexOf('='); const name = eq > -1 ? c.substr(0, eq).trim() : c.trim(); document.cookie = name + '=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/'; }); } catch (_) {}
-    if (inline) { inline.style.display = 'block'; inline.innerHTML = '✓ 削除完了 → 1秒後 自動リロード中…'; }
-    btn.textContent = '✓ 削除完了';
-    setTimeout(() => { try { window.location.replace('/'); } catch (_) { window.location.href = '/'; } }, 1000);
   });
 
   // ==== Zoom 連携 ====

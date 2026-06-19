@@ -1157,7 +1157,7 @@ window.fpReadyAfterAuth = function() {
     });
   })();
 
-  const ver = "20260619AS-clear-cache-stg-only";
+  const ver = "20260618H-reschedule-and-zoom-list-fix";
   const scripts = [
     "life-events.js?v=" + ver,
     "recommender.js?v=" + ver,
@@ -1196,87 +1196,9 @@ window.fpReadyAfterAuth = function() {
       window.lucide.createIcons({ attrs: { 'stroke-width': '1.6' } });
     }
   }
-  // ★ window.confirm を 即true に override
-  //   オーナー環境 で system confirm dialog が 「一瞬で消える」 (Chrome設定 等)
-  //   → 全 confirm を skip して 直接実行。 結果は inline toast / banner で feedback (実装側で対応済)
-  //   誤クリック リスク低い (取り消し可能な操作のみ confirm 使ってる前提)
-  window.confirm = msg => { try { console.log('[confirm bypass]', String(msg).slice(0, 80)); } catch (_) {} return true; };
-
-  // ★ 観測性: オーナー実機 の 状態 / 操作 / エラー を Firestore に push (Jobs が リアルタイム把握用)
-  window._fpObsBuffer = [];
-  window._fpObsLog = function(type, payload) {
-    try {
-      window._fpObsBuffer.push({ ts: new Date().toISOString(), type, payload, url: location.href.slice(0, 120) });
-      if (window._fpObsBuffer.length > 80) window._fpObsBuffer.shift();
-    } catch (_) {}
-  };
-  window.addEventListener('error', e => window._fpObsLog('error', { msg: e.message, file: e.filename, line: e.lineno }));
-  window.addEventListener('unhandledrejection', e => window._fpObsLog('unhandled-rejection', { msg: String(e.reason).slice(0, 200) }));
-  document.addEventListener('click', e => {
-    const t = e.target.closest('button, [data-tab], [data-cdtab], [data-customer-id], [data-line-brief], [data-rec-start], [data-rec-stop], [data-complete-booking]');
-    if (t) {
-      window._fpObsLog('click', {
-        text: (t.textContent || '').trim().slice(0, 40), id: t.id || null,
-        cls: (t.className || '').slice(0, 60),
-        dataset: Object.fromEntries(Object.entries(t.dataset || {}).slice(0, 5)),
-      });
-    }
-  }, true);
-  const origErr = console.error, origWarn = console.warn;
-  console.error = function() { try { window._fpObsLog('console-error', { msg: Array.from(arguments).map(a => String(a).slice(0, 200)).join(' ').slice(0, 400) }); } catch (_) {} origErr.apply(console, arguments); };
-  console.warn  = function() { try { window._fpObsLog('console-warn',  { msg: Array.from(arguments).map(a => String(a).slice(0, 200)).join(' ').slice(0, 400) }); } catch (_) {} origWarn.apply(console, arguments); };
-  async function flushObservability() {
-    try {
-      const tenantId = window.__fp && window.__fp.tenantId;
-      const uid = window.__fp && window.__fp.uid;
-      if (!tenantId || tenantId === 'demo' || !uid) return;
-      if (!window._fpObsBuffer.length) return;
-      const { getApps } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js');
-      const { getFirestore, doc, setDoc } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js');
-      const app = getApps()[0]; if (!app) return;
-      await setDoc(doc(getFirestore(app), 'tenants', tenantId, 'debug', 'observability'), {
-        url: location.href.slice(0, 200),
-        version: typeof FP_VERSION !== 'undefined' ? FP_VERSION : null,
-        tenantId, uid,
-        clientsCount: (window.DUMMY_CLIENTS || []).length,
-        fsConfirmedCount: (window._fpFirestoreConfirmed || []).length,
-        fsCustomersCount: (window._fpFirestoreCustomers || []).length,
-        lsKeys: Object.keys(localStorage).filter(k => k.startsWith('fp-')).length,
-        userAgent: navigator.userAgent.slice(0, 200),
-        lastUpdated: new Date().toISOString(),
-        recentEvents: window._fpObsBuffer.slice(-30),
-      });
-    } catch (_) {}
-  }
-  setInterval(flushObservability, 30000);
-  document.addEventListener('click', () => { setTimeout(flushObservability, 800); }, true);
-  window.addEventListener('beforeunload', flushObservability);
-  setTimeout(flushObservability, 5000);
-
   document.addEventListener('DOMContentLoaded', () => {
     hydrateIcons();
     setInterval(hydrateIcons, 1200);
-    // ★ legacy ゴミ議事録 cleanup (customerName='お客様' / 空 = booking 紐付け失敗 残骸)
-    //   1回だけ走る (フラグ立てる)
-    try {
-      if (!localStorage.getItem('fp-ai-legacy-cleanup-v1')) {
-        let removed = 0;
-        Object.keys(localStorage).filter(k => k.startsWith('fp-ai-')).forEach(k => {
-          try {
-            const raw = JSON.parse(localStorage.getItem(k) || 'null');
-            const entries = Array.isArray(raw) ? raw : (raw && raw.entry ? [raw.entry] : (raw && (raw.summary || raw.key_concerns) ? [raw] : []));
-            if (entries.length === 0) return;
-            const allTrash = entries.every(e => {
-              const n = (e.customerName || '').trim();
-              return (n === 'お客様' || n === '' || n === '匿名') && (!e.summary || e.summary.length < 30);
-            });
-            if (allTrash) { localStorage.removeItem(k); removed++; }
-          } catch (_) {}
-        });
-        localStorage.setItem('fp-ai-legacy-cleanup-v1', new Date().toISOString());
-        if (removed > 0) console.log('[cleanup] legacy 議事録 残骸 削除:', removed, '件');
-      }
-    } catch (e) { console.warn('cleanup fail:', e); }
   });
 
   // Howto banner: collapse by default + dismissible + persisted
@@ -1551,7 +1473,7 @@ window.fpReadyAfterAuth = function() {
 <script>
 (function(){
   // 最新の ver を 1 箇所に集約 (fpReadyAfterAuth 側と一致させる必要あり)
-  const FP_VERSION = "20260619AS-clear-cache-stg-only";
+  const FP_VERSION = "20260618H-reschedule-and-zoom-list-fix";
   const loadTime = new Date();
   const hhmm = String(loadTime.getHours()).padStart(2,'0') + ':' + String(loadTime.getMinutes()).padStart(2,'0');
   const dateLabel = (FP_VERSION.match(/^(\d{4})(\d{2})(\d{2})/) || []).slice(1).join('/').replace(/^(\d{4})\//,'$1/').replace(/\/(\d{2})\/(\d{2})$/,'/$1/$2') || FP_VERSION;
