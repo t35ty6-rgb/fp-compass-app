@@ -1975,7 +1975,21 @@
       window._fpZoomWin = zoomWin;
       // ※ Zoom popup が閉じても自動停止しない (誤検知防止のため監視機能を撤廃)
       // 停止は「Chrome 共有を停止」 or 「メモの完了ボタン」 でのみ実行
-      const booking = ((liveData && liveData.bookings) || []).find(b => String(b.ts).slice(0,19) === String(bookingTs).slice(0,19));
+      // ★ legacy proxy bookings + Firestore 多テナント confirmed customer の 両方 から lookup
+      //   (multi-tenant 顧客で booking が legacy にない時 議事録 が customerName='お客様' で保存され 顧客カードと紐付かないバグ 修正)
+      const bookingTsKey = String(bookingTs).slice(0,19);
+      const fsConfirmedAsBookings = (window._fpFirestoreConfirmed || []).map(c => ({
+        _fsCustomerId: c.docId,
+        userId: 'fs:' + c.docId,
+        name: c.name,
+        date: String(c.confirmedSlot || '').split(' ')[0] || '',
+        time: String(c.confirmedSlot || '').split(' ')[1] || '',
+        zoomUrl: c.zoomUrl,
+        ts: c.confirmedAt?.toDate?.()?.toISOString?.() || '',
+        lineFriendId: c.lineFriendId || c.userId || null,
+      }));
+      const allBookingsForLookup = ((liveData && liveData.bookings) || []).concat(fsConfirmedAsBookings);
+      const booking = allBookingsForLookup.find(b => String(b.ts).slice(0,19) === bookingTsKey);
       // ★ オーナーfb: popup ウィンドウだと Zoom と z-order 競合で潜る。物理タブ (同じ Chrome ウィンドウ内の新タブ) に変更。
       // tab だと Chrome のタブストリップから手動で切り替え or ドラッグでウィンドウ分離可能。CRM 親と同じウィンドウなので focus 問題ゼロ。
       const memoKey = 'fp-memo-' + (bookingTs || '');
@@ -2639,7 +2653,19 @@
   }
 
   async function onRecordingComplete(bookingTs, blob, blobUrl) {
-    const booking = ((liveData && liveData.bookings) || []).find(b => String(b.ts).slice(0, 19) === String(bookingTs).slice(0, 19));
+    // ★ multi-tenant Firestore 顧客 も lookup 対象に (startScreenRecording と同じ理由)
+    const fsAsBookings = (window._fpFirestoreConfirmed || []).map(c => ({
+      _fsCustomerId: c.docId,
+      userId: 'fs:' + c.docId,
+      name: c.name,
+      date: String(c.confirmedSlot || '').split(' ')[0] || '',
+      time: String(c.confirmedSlot || '').split(' ')[1] || '',
+      zoomUrl: c.zoomUrl,
+      ts: c.confirmedAt?.toDate?.()?.toISOString?.() || '',
+      lineFriendId: c.lineFriendId || c.userId || null,
+    }));
+    const booking = (((liveData && liveData.bookings) || []).concat(fsAsBookings))
+      .find(b => String(b.ts).slice(0, 19) === String(bookingTs).slice(0, 19));
     // 録画完了の小さなトースト + ダウンロード/メモ動線
     showRecordingDoneToast(booking, blob, blobUrl, bookingTs);
     // サーバー側にも保存通知
