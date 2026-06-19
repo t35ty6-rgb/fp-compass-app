@@ -1150,7 +1150,14 @@ window.fpReadyAfterAuth = function() {
       const msg = String(e?.message || '');
       if (/ResizeObserver|Loading.*chunk|Loading CSS chunk|Script error\.?$/i.test(msg)) return;
       console.error('[errorBoundary]', e);
-      showRecoveryScreen();
+      // ★ 緩和: window.error 即発火 → 復旧画面 だと チャットbot等で 軽微エラー あっただけで 落ちる
+      //   3秒待って 画面要素 (ログイン/メイン) どっちも 無ければ 発火 (= 本当に 真っ白 時のみ)
+      setTimeout(() => {
+        const hasTabs = !!document.querySelector('.tab');
+        const hasLogin = !!document.querySelector('input[type="email"], #login, .login-card');
+        const hasMainContent = !!document.querySelector('.main, main, #app, .client-card, .sidebar');
+        if (!hasTabs && !hasLogin && !hasMainContent) showRecoveryScreen();
+      }, 3000);
     });
     window.addEventListener('unhandledrejection', (e) => {
       const r = e?.reason; const msg = String(r?.message || r || '');
@@ -1616,6 +1623,7 @@ FP業務 で 困った時 は 何でも 聞いてね。 お客様 説明用 の 
 
 <script>
 (function () {
+  try {
   const CF_URL = 'https://asia-northeast1-skeleton-fp-compass-632026.cloudfunctions.net/chatFpCounselor';
   const fab = document.getElementById('mbFab');
   const hint = document.getElementById('mbFabHint');
@@ -1624,6 +1632,10 @@ FP業務 で 困った時 は 何でも 聞いてね。 お客様 説明用 の 
   const messages = document.getElementById('mbMessages');
   const input = document.getElementById('mbInput');
   const send = document.getElementById('mbSend');
+  if (!fab || !panel || !messages || !input || !send) {
+    console.warn('[mebuki] elements not found, skip init');
+    return;
+  }
   const history = [];
 
   fab.addEventListener('click', () => {
@@ -1691,6 +1703,10 @@ FP業務 で 困った時 は 何でも 聞いてね。 お客様 説明用 の 
       send.disabled = false;
       input.focus();
     }
+  }
+  } catch (e) {
+    // ★ チャットbot 内 エラー は 親 ページ に 伝播させない (errorBoundary 巻添え 防止)
+    console.error('[mebuki] init failed (chatbot disabled):', e);
   }
 })();
 </script>
