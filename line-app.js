@@ -2385,42 +2385,90 @@
         }
       }
     } catch (e) { console.warn('lifeEventCandidates merge fail:', e); }
-    // GAS シート 一次保存 (成功すれば fetchLiveData で全ブラウザ反映)
-    fetch(CLOUD_RUN_BASE + '/api/save-ai-result', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ entry, tasks: newTasks }),
-    }).then(r => r.json()).then(d => {
+    // ★ 「録画されてない可能性」 を 構造的に 排除:
+    //   1. 最初に localStorage backup を 確実に保存 (POST失敗しても データ消えない)
+    //   2. GAS POST を 3回 retry (3s/6s/12s)
+    //   3. 失敗時 pending-sync 蓄積 → 起動時 自動再送
+    const persistKey = 'fp-ai-backup-' + (bookingTs || userId || nameKey || Date.now()) + '-' + Date.now();
+    try { localStorage.setItem(persistKey, JSON.stringify({ entry, tasks: newTasks })); } catch (_) {}
+    async function saveWithRetry(maxRetries) {
+      const delays = [3000, 6000, 12000];
+      for (let attempt = 0; attempt <= maxRetries; attempt++) {
+        try {
+          const r = await fetch(CLOUD_RUN_BASE + '/api/save-ai-result', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ entry, tasks: newTasks }),
+          });
+          const d = await r.json();
+          if (d && d.ok) return { ok: true };
+          if (attempt < maxRetries) await new Promise(rs => setTimeout(rs, delays[attempt] || 12000));
+          else return { ok: false, error: (d && d.error) || 'unknown' };
+        } catch (e) {
+          if (attempt < maxRetries) await new Promise(rs => setTimeout(rs, delays[attempt] || 12000));
+          else return { ok: false, error: e.message };
+        }
+      }
+      return { ok: false, error: 'retries exhausted' };
+    }
+    saveWithRetry(3).then(d => {
       if (d.ok) {
         console.log('[autoSaveAIResult] GAS 保存 OK');
+        // 成功 → pending-sync から persistKey 削除 (まだ蓄積してなくても無害)
         try {
-          const k = 'fp-ai-backup-' + (bookingTs || userId || nameKey || Date.now());
-          localStorage.setItem(k, JSON.stringify({ entry, tasks: newTasks }));
+          const pending = JSON.parse(localStorage.getItem('fp-ai-pending-sync') || '[]');
+          const filtered = pending.filter(p => p.persistKey !== persistKey);
+          if (filtered.length !== pending.length) localStorage.setItem('fp-ai-pending-sync', JSON.stringify(filtered));
         } catch (_) {}
         // 顧客台帳再描画 (GAS から取り直す)
         fetchLiveData().catch(() => {});
         // ★ 中央 ポップアップ「顧客カード 反映完了」 を 明示 (✕で閉じるまで残る)
         try { showCenterToast('議事録 を ' + (nameKey || 'お客様') + ' 様 の 顧客カード に 反映 しました', '顧客台帳 → ' + (nameKey || 'お客様') + ' 様 → 📹 Zoom議事録 タブ で 確認できます', { tone: 'success' }); } catch (_) {}
       } else {
-        console.warn('[autoSaveAIResult] GAS 失敗→localStorage backup', d);
-        saveAIToLocalBackup(entry, newTasks);
-        try { showCenterToast('議事録 保存 一時失敗', 'ローカル保存しました。 再接続時に 自動 同期します (' + ((d && d.error) || '原因不明').slice(0,60) + ')', { tone: 'success' }); } catch (_) {}
+        console.warn('[autoSaveAIResult] GAS 4回retry失敗→pending-sync 蓄積', d);
+        saveAIToLocalBackup(entry, newTasks, persistKey);
+        try { showCenterToast('議事録 保存 一時失敗', 'ローカル保存しました。 5分毎に 自動再送 します (' + (d.error || '原因不明').slice(0,60) + ')', { tone: 'success' }); } catch (_) {}
       }
-    }).catch(e => {
-      console.warn('[autoSaveAIResult] network失敗→localStorage backup', e);
-      saveAIToLocalBackup(entry, newTasks);
-      try { showCenterToast('議事録 保存 一時失敗', 'ローカル保存しました。 再接続時に 自動 同期します (' + (e.message || e).slice(0,60) + ')', { tone: 'success' }); } catch (_) {}
     });
   }
+  // ★ 起動時 + 5分毎 に pending-sync の 未送信 entry を 自動再送
+  async function flushPendingAiSync() {
+    let pending;
+    try { pending = JSON.parse(localStorage.getItem('fp-ai-pending-sync') || '[]'); } catch (_) { pending = []; }
+    if (!Array.isArray(pending) || pending.length === 0) return;
+    console.log('[pending-sync] flush', pending.length, 'entries');
+    const remaining = [];
+    for (const p of pending) {
+      try {
+        const r = await fetch(CLOUD_RUN_BASE + '/api/save-ai-result', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ entry: p.entry, tasks: p.tasks || [] }),
+        });
+        const d = await r.json();
+        if (!d || !d.ok) remaining.push(p);
+      } catch (_) { remaining.push(p); }
+    }
+    try { localStorage.setItem('fp-ai-pending-sync', JSON.stringify(remaining)); } catch (_) {}
+    if (remaining.length < pending.length) {
+      console.log('[pending-sync] flushed', pending.length - remaining.length, 'remaining', remaining.length);
+      try { fetchLiveData(); } catch (_) {}
+    }
+  }
+  if (!window._fpPendingSyncInterval) {
+    window._fpPendingSyncInterval = setInterval(flushPendingAiSync, 5 * 60 * 1000);
+    // 起動時 5秒後 (LiveData load 後) に 1回
+    setTimeout(flushPendingAiSync, 5000);
+  }
 
-  // GAS到達不能時の localStorage backup (network回復時に再送する未来用)
-  function saveAIToLocalBackup(entry, tasks) {
+  // GAS到達不能時の localStorage backup (5分毎 自動再送)
+  function saveAIToLocalBackup(entry, tasks, persistKey) {
     try {
       const pending = JSON.parse(localStorage.getItem('fp-ai-pending-sync') || '[]');
-      pending.push({ entry, tasks, queuedAt: new Date().toISOString() });
+      pending.push({ entry, tasks, persistKey, queuedAt: new Date().toISOString() });
       localStorage.setItem('fp-ai-pending-sync', JSON.stringify(pending));
-      // 表示用backup も
-      const k = 'fp-ai-backup-' + (entry.bookingTs || entry.userId || Date.now());
+      // 表示用 backup も
+      const k = persistKey || ('fp-ai-backup-' + (entry.bookingTs || entry.userId || Date.now()));
       localStorage.setItem(k, JSON.stringify({ entry, tasks }));
     } catch (_) {}
   }
