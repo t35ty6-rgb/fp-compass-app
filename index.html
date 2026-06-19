@@ -1523,6 +1523,29 @@ window.fpReadyAfterAuth = function() {
 <!-- ====================================================== -->
 <style>
   .mb-fab{position:fixed;right:24px;bottom:24px;z-index:9990;cursor:pointer;display:flex;flex-direction:column;align-items:center;user-select:none;animation:mbFabFloat 3s ease-in-out infinite;}
+  /* マークダウン 装飾 */
+  .mb-bubble strong, .mb-bubble b{color:#DC2626;font-weight:900;}
+  .mb-bubble em, .mb-bubble i{color:#0F766E;font-style:normal;font-weight:700;background:linear-gradient(transparent 60%, rgba(20,184,166,0.18) 60%);padding:0 2px;}
+  .mb-bubble h1,.mb-bubble h2,.mb-bubble h3{font-size:14.5px;font-weight:900;margin:10px 0 6px;color:#0F172A;border-left:4px solid #14B8A6;padding-left:8px;line-height:1.4;}
+  .mb-bubble h1{font-size:15.5px;color:#0F766E;}
+  .mb-bubble h2{font-size:14.5px;}
+  .mb-bubble h3{font-size:13.5px;border-left-color:#34D399;}
+  .mb-bubble ul,.mb-bubble ol{margin:6px 0 8px 22px;padding:0;}
+  .mb-bubble li{margin:4px 0;line-height:1.7;}
+  .mb-bubble ul li::marker{color:#14B8A6;font-weight:900;}
+  .mb-bubble ol li::marker{color:#DC2626;font-weight:900;}
+  .mb-bubble hr{margin:10px 0;border:0;border-top:2px dashed #CFFAFE;}
+  .mb-bubble code{background:#F1F5F9;padding:2px 6px;border-radius:4px;font-size:12px;color:#0F766E;font-family:'JetBrains Mono',monospace;}
+  .mb-bubble blockquote{margin:8px 0;padding:8px 14px;background:#FEF3C7;border-left:4px solid #F59E0B;color:#78350F;border-radius:0 6px 6px 0;font-weight:600;}
+  .mb-bubble p{margin:6px 0;line-height:1.75;}
+  .mb-bubble p:first-child{margin-top:0;}
+  .mb-bubble p:last-child{margin-bottom:0;}
+  .mb-bubble .hl-key{background:#FEF3C7;padding:1px 6px;border-radius:4px;font-weight:800;color:#92400E;}
+  .mb-bubble .hl-num{color:#DC2626;font-weight:900;font-size:14px;}
+  /* リサイズ ハンドル */
+  .mb-resize{position:absolute;top:-3px;left:-3px;width:18px;height:18px;cursor:nwse-resize;z-index:10;background:linear-gradient(135deg,#14B8A6 0%,#14B8A6 30%,transparent 30%,transparent 50%,#14B8A6 50%,#14B8A6 60%,transparent 60%);opacity:0.7;border-radius:4px 0 0 0;}
+  .mb-resize:hover{opacity:1;}
+  .mb-panel.resizing{user-select:none;}
   @keyframes mbFabFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
   .mb-fab-avatar{position:relative;width:96px;height:96px;background:radial-gradient(ellipse at 50% 60%, #fff 0%, #ECFEFF 70%, #CFFAFE 100%);border-radius:50%;box-shadow:0 10px 28px rgba(20,184,166,0.30),0 4px 10px rgba(15,23,42,0.20),inset 0 -4px 8px rgba(20,184,166,0.10);display:flex;align-items:center;justify-content:center;overflow:visible;border:3px solid #14B8A6;}
   .mb-fab-img{width:80px;height:80px;object-fit:contain;border-radius:50%;display:block;}
@@ -1542,7 +1565,7 @@ window.fpReadyAfterAuth = function() {
     .mb-fab-badge{width:22px;height:22px;font-size:12px;}
     .mb-fab-hint{display:none;}
   }
-  .mb-panel{position:fixed;right:24px;bottom:24px;z-index:9995;width:420px;max-width:calc(100vw - 32px);max-height:78vh;background:#fff;border-radius:14px;box-shadow:0 20px 60px rgba(15,23,42,0.40),0 0 0 1px rgba(20,184,166,0.20);display:none;flex-direction:column;overflow:hidden;animation:mbPanelIn .22s cubic-bezier(.34,1.6,.64,1) both;font-family:'Noto Sans JP',sans-serif;}
+  .mb-panel{position:fixed;right:24px;bottom:24px;z-index:9995;width:460px;min-width:320px;max-width:calc(100vw - 32px);height:600px;min-height:400px;max-height:calc(100vh - 32px);background:#fff;border-radius:14px;box-shadow:0 20px 60px rgba(15,23,42,0.40),0 0 0 1px rgba(20,184,166,0.20);display:none;flex-direction:column;overflow:hidden;animation:mbPanelIn .22s cubic-bezier(.34,1.6,.64,1) both;font-family:'Noto Sans JP',sans-serif;}
   @keyframes mbPanelIn{from{opacity:0;transform:scale(0.85) translateY(20px)}to{opacity:1;transform:scale(1) translateY(0)}}
   .mb-panel.open{display:flex;}
   @media (max-width:600px){.mb-panel{right:8px;bottom:8px;width:calc(100vw - 16px);max-height:85vh;}}
@@ -1555,7 +1578,7 @@ window.fpReadyAfterAuth = function() {
   .mb-status-dot{display:inline-block;width:7px;height:7px;background:#34D399;border-radius:50%;margin-right:6px;box-shadow:0 0 0 3px rgba(52,211,153,0.20);}
   .mb-close{width:30px;height:30px;background:transparent;color:#A7F3D0;border:1px solid #115E59;border-radius:6px;font-size:16px;cursor:pointer;font-family:inherit;}
   .mb-close:hover{background:#DC2626;color:#fff;border-color:#DC2626;}
-  .mb-messages{padding:14px 16px;height:380px;overflow-y:auto;background:#FAFAFA;display:flex;flex-direction:column;gap:10px;}
+  .mb-messages{padding:14px 16px;flex:1;overflow-y:auto;background:#FAFAFA;display:flex;flex-direction:column;gap:10px;}
   .mb-msg{max-width:92%;animation:mbIn .25s ease-out both;}
   @keyframes mbIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
   .mb-msg-bot{margin-right:auto;}
@@ -1579,34 +1602,29 @@ window.fpReadyAfterAuth = function() {
   .mb-send:disabled{background:#9CA3AF;cursor:not-allowed;}
 </style>
 
-<div class="mb-fab" id="mbFab" title="芽吹くん に 業務相談 する">
-  <div class="mb-fab-hint" id="mbFabHint"><span>業務のこと<br>何でも聞いて！</span></div>
+<div class="mb-fab" id="mbFab" title="コンパちゃん に 業務相談 する">
+  <div class="mb-fab-hint" id="mbFabHint"><span>業務のこと<br>何でも聞いてね♪</span></div>
   <div class="mb-fab-avatar">
-    <img class="mb-fab-img" src="/img/mebuki-kun-400.jpg" alt="芽吹くん">
+    <img class="mb-fab-img" src="/img/mebuki-kun-400.jpg" alt="コンパちゃん">
     <span class="mb-fab-pulse"></span>
     <span class="mb-fab-badge">?</span>
   </div>
-  <span class="mb-fab-label">芽吹くん</span>
+  <span class="mb-fab-label">コンパちゃん</span>
 </div>
 
 <div class="mb-panel" id="mbPanel">
+  <div class="mb-resize" id="mbResize" title="ドラッグで サイズ変更"></div>
   <div class="mb-head">
-    <div class="mb-head-avatar"><img class="mb-head-img" src="/img/mebuki-kun-400.jpg" alt="芽吹くん"></div>
+    <div class="mb-head-avatar"><img class="mb-head-img" src="/img/mebuki-kun-400.jpg" alt="コンパちゃん"></div>
     <div class="mb-title-wrap">
-      <span class="mb-title">芽吹くん</span>
-      <span class="mb-sub"><span class="mb-status-dot"></span>オンライン / FP業務 全部 把握</span>
+      <span class="mb-title">コンパちゃん</span>
+      <span class="mb-sub"><span class="mb-status-dot"></span>オンライン / FP業務 全部 把握 🌱</span>
     </div>
     <button class="mb-close" id="mbClose" title="閉じる">×</button>
   </div>
   <div class="mb-messages" id="mbMessages">
     <div class="mb-msg mb-msg-bot">
-      <div class="mb-bubble">こんにちは、 芽吹くん だよ 🌱
-FP業務 で 困った時 は 何でも 聞いてね。 お客様 説明用 の 文言 そのまま 出すよ。
-
-<b>こういう質問 ↓</b>
-・「40代主婦 教育費 提案 どうする?」
-・「新NISA 配分 (30代会社員)」
-・「保険見直し 切返し 文言」</div>
+      <div class="mb-bubble">こんにちは、 <strong>コンパちゃん</strong> だよ 🌱<br><br>FP業務 で 困った時 は 何でも 聞いてね。 お客様 説明用 の 文言 そのまま 出すよ ♪<br><br><b>こういう質問 ↓</b><br>・「40代主婦 教育費 提案 どうする?」<br>・「新NISA 配分 (30代会社員)」<br>・「保険見直し 切返し 文言」</div>
     </div>
   </div>
   <div class="mb-quick">
@@ -1647,6 +1665,79 @@ FP業務 で 困った時 は 何でも 聞いてね。 お客様 説明用 の 
     panel.classList.remove('open');
     fab.classList.remove('hidden');
   });
+
+  // ★ リサイズ ハンドル (左上 ドラッグ で 拡縮)
+  const resize = document.getElementById('mbResize');
+  if (resize) {
+    let drag = null;
+    resize.addEventListener('mousedown', (e) => {
+      drag = { x: e.clientX, y: e.clientY, w: panel.offsetWidth, h: panel.offsetHeight, l: panel.offsetLeft, t: panel.offsetTop };
+      panel.classList.add('resizing');
+      e.preventDefault();
+    });
+    window.addEventListener('mousemove', (e) => {
+      if (!drag) return;
+      const dx = e.clientX - drag.x;
+      const dy = e.clientY - drag.y;
+      const newW = Math.max(320, Math.min(window.innerWidth - 16, drag.w - dx));
+      const newH = Math.max(400, Math.min(window.innerHeight - 16, drag.h - dy));
+      panel.style.width = newW + 'px';
+      panel.style.height = newH + 'px';
+    });
+    window.addEventListener('mouseup', () => {
+      if (!drag) return;
+      panel.classList.remove('resizing');
+      try { localStorage.setItem('mb-panel-size', JSON.stringify({ w: panel.offsetWidth, h: panel.offsetHeight })); } catch (_) {}
+      drag = null;
+    });
+    // 復元
+    try {
+      const saved = JSON.parse(localStorage.getItem('mb-panel-size') || 'null');
+      if (saved && saved.w && saved.h) {
+        panel.style.width = saved.w + 'px';
+        panel.style.height = saved.h + 'px';
+      }
+    } catch (_) {}
+  }
+
+  // ★ 簡易 マークダウン パーサ (太字 / 見出し / リスト / コード / blockquote / 強調)
+  function escapeHtml(s) { return s.replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
+  function md2html(text) {
+    let s = escapeHtml(String(text || ''));
+    // 見出し (###, ##, #)
+    s = s.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+    s = s.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+    s = s.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+    // 引用 (>)
+    s = s.replace(/^&gt; (.+)$/gm, '<blockquote>$1</blockquote>');
+    // 水平線 (---)
+    s = s.replace(/^---+$/gm, '<hr>');
+    // コード (`xxx`)
+    s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
+    // 太字 (**xxx** or __xxx__) — 赤くする
+    s = s.replace(/\*\*([^\*]+)\*\*/g, '<strong>$1</strong>');
+    s = s.replace(/__([^_]+)__/g, '<strong>$1</strong>');
+    // 斜体 (*xxx* or _xxx_) — 緑マーカー
+    s = s.replace(/(^|[^\*])\*([^\*\n]+)\*(?!\*)/g, '$1<em>$2</em>');
+    // 数字+万円/円 → 赤強調 (FP特有)
+    s = s.replace(/(\d{1,3}(?:,\d{3})*(?:\.\d+)?(?:万円|億|万|円|％|%))/g, '<span class="hl-num">$1</span>');
+    // 順序リスト (1. 2. 3.)
+    s = s.replace(/^(?:\d+\.\s+(.+)(?:\n|$))+/gm, function(block) {
+      const items = block.trim().split(/\n/).map(l => l.replace(/^\d+\.\s+/, '<li>') + '</li>').join('');
+      return '<ol>' + items + '</ol>';
+    });
+    // 箇条書き (- xxx, ・xxx)
+    s = s.replace(/^(?:[-・]\s+(.+)(?:\n|$))+/gm, function(block) {
+      const items = block.trim().split(/\n/).map(l => l.replace(/^[-・]\s+/, '<li>') + '</li>').join('');
+      return '<ul>' + items + '</ul>';
+    });
+    // 段落 (連続改行 → <p>)
+    s = s.split(/\n\n+/).map(p => {
+      if (/^<(h\d|ul|ol|hr|blockquote)/.test(p.trim())) return p;
+      return '<p>' + p.replace(/\n/g, '<br>') + '</p>';
+    }).join('');
+    return s;
+  }
   // ヒント 自動消去 (5秒後)
   setTimeout(() => { if (hint) hint.style.display = 'none'; }, 5000);
 
@@ -1668,6 +1759,7 @@ FP業務 で 困った時 は 何でも 聞いてね。 お客様 説明用 の 
     const bubble = document.createElement('div');
     bubble.className = 'mb-bubble';
     if (isTyping) bubble.innerHTML = '<span class="mb-typing"><span></span><span></span><span></span></span>';
+    else if (role === 'bot') bubble.innerHTML = md2html(text);
     else bubble.textContent = text;
     wrap.appendChild(bubble);
     messages.appendChild(wrap);
@@ -1694,7 +1786,7 @@ FP業務 で 困った時 は 何でも 聞いてね。 お客様 説明用 の 
         throw new Error(json?.error?.message || json?.result?.error || res.status);
       }
       const reply = json.result.reply || '(空の返答)';
-      bubble.textContent = reply;
+      bubble.innerHTML = md2html(reply);
       history.push({ role: 'assistant', content: reply });
     } catch (e) {
       bubble.innerHTML = '<span style="color:#DC2626;">⚠ エラー: ' + (e.message || e) + '</span>';
