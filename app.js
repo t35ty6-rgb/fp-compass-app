@@ -1486,7 +1486,16 @@
   }
 
   function renderTimelineEntry(entry) {
-    const ts = (entry.ts || '').slice(0, 19).replace('T', ' ');
+    // ★ entry.ts は string | Firestore Timestamp ({seconds, nanoseconds}) | Date のいずれか — 全部 string に正規化
+    function tsToStr(t) {
+      if (!t) return '';
+      if (typeof t === 'string') return t;
+      if (t instanceof Date) return t.toISOString();
+      if (typeof t.toDate === 'function') { try { return t.toDate().toISOString(); } catch (_) {} }
+      if (typeof t.seconds === 'number') return new Date(t.seconds * 1000 + (t.nanoseconds || 0) / 1e6).toISOString();
+      try { return String(t); } catch (_) { return ''; }
+    }
+    const ts = tsToStr(entry.ts).slice(0, 19).replace('T', ' ');
     const safeTs = escapeHtml(ts);
     if (entry.type === 'line') {
       const cls = entry.direction === 'in' ? 'cd-line-in' : 'cd-line-out';
