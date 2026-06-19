@@ -1045,8 +1045,55 @@
       });
       window._fpFirestoreCustomers = pendingFs;
       window._fpFirestoreConfirmed = confirmedFs;
+      // ★ Firestore 多テナント顧客 を CRM顧客台帳 (DUMMY_CLIENTS) に 自動同期
+      //   未同期だと openClientModal('fs-xxx') が clients.find undefined で early return = 「クリックで何も起きない」
+      try { syncFirestoreCustomersToClients(pendingFs.concat(confirmedFs)); } catch (e) { console.warn('syncFirestoreCustomersToClients:', e); }
       try { if (currentSubview === 'leadHub') renderLeadHubInner(); } catch(_) {}
     } catch (e) { console.warn('refreshFirestoreCustomers:', e); }
+  }
+  // Firestore customer → DUMMY_CLIENTS 同期 (顧客台帳クリック→モーダル開く ために必須)
+  function syncFirestoreCustomersToClients(fsList) {
+    if (!Array.isArray(fsList) || fsList.length === 0) return;
+    if (!Array.isArray(window.DUMMY_CLIENTS)) return;
+    const knownIds = new Set(window.DUMMY_CLIENTS.map(c => c.id));
+    const knownUids = new Set(window.DUMMY_CLIENTS.map(c => c.lineFriendId).filter(Boolean));
+    let added = 0;
+    fsList.forEach(c => {
+      const fsClientId = 'fs-' + c.docId;
+      if (knownIds.has(fsClientId)) return;
+      // lineFriendId が 既存 clients と 一致 → 同人扱い (重複防止)
+      if (c.lineFriendId && knownUids.has(c.lineFriendId)) return;
+      const newC = {
+        id: fsClientId,
+        _fsCustomerId: c.docId,
+        name: c.name || 'お客様',
+        kana: '',
+        birth: c.birth || '',
+        gender: 'O',
+        occupation: c.occupation || '',
+        family: c.family || [],
+        proposals: [],
+        source: 'line_survey',
+        status: c.confirmedSlot ? 'active' : 'new',
+        aum: c.aum || 0,
+        lineFriendId: c.lineFriendId || c.userId || '',
+        linePictureUrl: c.pictureUrl || c.linePictureUrl || '',
+        lastContact: (c.lastContactAt?.toDate?.()?.toISOString?.() || c.confirmedAt?.toDate?.()?.toISOString?.() || c.createdAt?.toDate?.()?.toISOString?.() || new Date().toISOString()).slice(0,10),
+        confirmedSlot: c.confirmedSlot || null,
+        zoomUrl: c.zoomUrl || null,
+        hostZoomUrl: c.hostZoomUrl || null,
+        autoFromFirestore: true,
+      };
+      window.DUMMY_CLIENTS.push(newC);
+      knownIds.add(newC.id);
+      if (newC.lineFriendId) knownUids.add(newC.lineFriendId);
+      added++;
+    });
+    if (added > 0) {
+      try { localStorage.setItem('fp-crm-clients-v1', JSON.stringify(window.DUMMY_CLIENTS)); } catch (_) {}
+      console.log('[fsSync] +', added, 'firestore customers → DUMMY_CLIENTS');
+      if (window.FPCrmRefreshClients) window.FPCrmRefreshClients();
+    }
   }
   window.refreshFirestoreCustomers = refreshFirestoreCustomers;
   if (!window._fpFirestoreInterval) {
