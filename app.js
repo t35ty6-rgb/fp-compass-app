@@ -2626,7 +2626,7 @@
           </details>
 
           <div style="margin:14px 0 8px;display:flex;gap:8px;flex-wrap:wrap;">
-            <button data-open-hearing="${escapeHtml(c.id)}" style="background:linear-gradient(135deg,#1B3A5C,#284f7d);color:#fff;border:none;padding:9px 16px;border-radius:7px;font-size:12.5px;font-weight:700;cursor:pointer;letter-spacing:0.04em;display:inline-flex;align-items:center;gap:6px;box-shadow:0 2px 6px rgba(27,58,92,0.18);">📋 アンケート回答 / ヒアリングシート</button>
+            <button data-open-hearing="${escapeHtml(c.id)}" style="background:#1B3A5C;color:#fff;border:none;padding:11px 18px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;">📋 アンケート</button>
           </div>
 
           <div class="cd-profile-stats">
@@ -2716,29 +2716,12 @@
                 <i data-lucide="wand-2" class="cd-flow-step-icon" style="color:#fff !important;flex-shrink:0 !important;"></i>
               </button>
               <style>@keyframes fp-draft-cta-pulse{0%,100%{transform:translateY(0) scale(1);box-shadow:0 8px 24px rgba(249,115,22,0.55),0 0 0 4px rgba(255,255,255,0.5)}50%{transform:translateY(-2.5px) scale(1.025);box-shadow:0 16px 36px rgba(249,115,22,0.72),0 0 0 7px rgba(255,255,255,0.6)}}@keyframes fp-draft-cta-gradient{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}</style>
-              <i data-lucide="chevron-right" class="cd-flow-arrow"></i>
-              <div class="cd-flow-step cd-flow-step-next">
-                <span class="cd-flow-step-no">2</span>
-                <span class="cd-flow-step-body">
-                  <span class="cd-flow-step-label">確認 / 編集</span>
-                  <span class="cd-flow-step-sub">必要なら手直し</span>
-                </span>
-              </div>
-              <i data-lucide="chevron-right" class="cd-flow-arrow"></i>
-              <div class="cd-flow-step cd-flow-step-next">
-                <span class="cd-flow-step-no">3</span>
-                <span class="cd-flow-step-body">
-                  <span class="cd-flow-step-label">LINE 送信</span>
-                  <span class="cd-flow-step-sub">ワンクリックで送付</span>
-                </span>
-              </div>
             </div>
 
-            <div style="display:flex;gap:8px;flex-wrap:wrap;">
-              <button class="modal-brief-btn" data-line-brief="${c.id}" style="background:linear-gradient(135deg,#10B981,#059669);color:#fff;border:none;padding:9px 16px;border-radius:7px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;letter-spacing:0.04em;box-shadow:0 4px 12px rgba(16,185,129,0.32);">✍ 伝えたいことから 下書き</button>
-              <button id="modal-deliv-btn" style="background:linear-gradient(135deg,#5B5BF0,#6D6DEF);color:#fff;border:none;padding:9px 16px;border-radius:7px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;letter-spacing:0.04em;box-shadow:0 4px 12px rgba(91,91,240,0.32);">📎 資料パッケージを ダウンロード</button>
-              <button class="cd-flow-edit ghost-btn" id="modal-edit-btn"><i data-lucide="pencil"></i><span>顧客情報を編集</span></button>
-              <button id="modal-delete-btn" style="background:#fff;color:#dc2626;border:1px solid #fecaca;padding:8px 14px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;"><i data-lucide="trash-2" style="width:14px;height:14px;"></i><span>この顧客を削除</span></button>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;">
+              <button class="modal-brief-btn" data-line-brief="${c.id}" style="background:#fff;color:#059669;border:1.5px solid #10B981;padding:11px 18px;border-radius:8px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">✍ 自分で書く</button>
+              <button class="cd-flow-edit" id="modal-edit-btn" style="background:#fff;color:#475569;border:1.5px solid #E2E8F0;padding:11px 18px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">✏ 顧客情報</button>
+              <button id="modal-delete-btn" style="background:transparent;color:#94A3B8;border:none;padding:11px 8px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;text-decoration:underline;">削除</button>
             </div>
           </div>` : `
           <div class="cd-flow cd-flow-empty">
@@ -2764,9 +2747,9 @@
           </div>`}
 
           <!-- Tabs -->
-          <div class="cd-tabs" role="tablist">
-            <button class="cd-tab cd-tab-active" data-cdtab="overview">概観</button>
-            <button class="cd-tab" data-cdtab="line">LINE履歴 <span class="cd-tab-count">${(c.lineHistory || []).length}</span>${(function(){
+          <div class="cd-tabs" role="tablist" style="font-size:15px !important;">
+            <button class="cd-tab cd-tab-active" data-cdtab="overview" style="font-size:15px !important;font-weight:700 !important;">概観</button>
+            <button class="cd-tab" data-cdtab="line" style="font-size:15px !important;font-weight:700 !important;">LINE <span class="cd-tab-count">${(c.lineHistory || []).length}</span>${(function(){
               const lr = parseInt(localStorage.getItem('fp-line-read-' + c.id) || '0', 10);
               const uc = (c.lineHistory || []).filter(m => {
                 const isU = (m.from === 'user' || m.direction === 'in');
@@ -2775,9 +2758,9 @@
               }).length;
               return uc > 0 ? `<span style="display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#DC2626,#B91C1C);color:#fff;font-size:10px;font-weight:900;min-width:18px;height:18px;padding:0 5px;border-radius:9px;margin-left:5px;box-shadow:0 2px 6px rgba(220,38,38,0.45);animation:fp-unread-pulse 1.6s ease-in-out infinite;letter-spacing:0;">${uc > 99 ? '99+' : uc}</span>` : '';
             })()}</button>
-            <button class="cd-tab" data-cdtab="timeline">タイムライン <span class="cd-tab-count">${events.length}</span></button>
-            <button class="cd-tab" data-cdtab="meetings">📹 Zoom議事録 <span class="cd-tab-count" id="cd-meetings-count">…</span></button>
-            <button class="cd-tab" data-cdtab="family">👨‍👩‍👧‍👦 家系図 <span class="cd-tab-count">${(c.family || []).length + 1}</span></button>
+            <button class="cd-tab" data-cdtab="timeline" style="font-size:15px !important;font-weight:700 !important;">履歴 <span class="cd-tab-count">${events.length}</span></button>
+            <button class="cd-tab" data-cdtab="meetings" style="font-size:15px !important;font-weight:700 !important;">議事録 <span class="cd-tab-count" id="cd-meetings-count">…</span></button>
+            <button class="cd-tab" data-cdtab="family" style="font-size:15px !important;font-weight:700 !important;">家族 <span class="cd-tab-count">${(c.family || []).length + 1}</span></button>
           </div>
 
           <div class="cd-tabpanels">
@@ -3710,9 +3693,9 @@ ${ctxText}${surveyTxt}`;
     return `
       <div class="detail-section">
         <h3>👨‍👩‍👧‍👦 家系図 <span class="count-badge">${fam.length + 1}名</span></h3>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
-          <button id="fp-fam-ai" data-client-id="${escapeHtml(client.id)}" style="background:linear-gradient(135deg,#5B5BF0,#4242C9);color:#fff;border:none;padding:9px 16px;border-radius:8px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 4px 12px rgba(91,91,240,0.3);">✨ 議事録 から AI 抽出</button>
-          <button id="fp-fam-add" data-client-id="${escapeHtml(client.id)}" style="background:#fff;border:1.5px solid #5B5BF0;color:#5B5BF0;padding:9px 16px;border-radius:8px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit;">＋ 家族を追加</button>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
+          <button id="fp-fam-ai" data-client-id="${escapeHtml(client.id)}" style="background:#5B5BF0;color:#fff;border:none;padding:12px 20px;border-radius:8px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;">✨ 議事録から自動</button>
+          <button id="fp-fam-add" data-client-id="${escapeHtml(client.id)}" style="background:#fff;border:1.5px solid #CBD5E1;color:#475569;padding:12px 20px;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;">＋ 追加</button>
         </div>
         <div id="fp-fam-msg" style="font-size:11.5px;font-weight:700;margin-bottom:10px;"></div>
         <style>
@@ -3981,8 +3964,8 @@ ${ctxText}${surveyTxt}`;
             <div class="fp-meeting-card">
               <div class="fp-meeting-card-head">
                 <div>
-                  <div class="fp-meeting-card-eyebrow" style="font-size:11.5px !important;font-weight:900 !important;color:#1B3A5C !important;letter-spacing:0 !important;">📹 Zoom ${zN}回目</div>
-                  <div class="fp-meeting-card-date">${escapeHtml(fmtDateRobust(b.date))} ${escapeHtml(fmtTimeRobust(b.time))} 面談</div>
+                  <div class="fp-meeting-card-eyebrow" style="font-size:13px !important;font-weight:900 !important;color:#1B3A5C !important;letter-spacing:0 !important;">📹 Zoom ${zN}回目 ${aiData.ts || aiData.createdAt ? `<span style="font-size:11px;color:#9CA3AF;font-weight:700;margin-left:8px;font-family:Menlo,monospace;">#${(()=>{ const d=new Date(aiData.ts || aiData.createdAt); return d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0')+'-'+String(d.getHours()).padStart(2,'0')+String(d.getMinutes()).padStart(2,'0'); })()}</span>` : ''}</div>
+                  <div class="fp-meeting-card-date" style="font-size:14px;font-weight:700;">${escapeHtml(fmtDateRobust(b.date))} ${escapeHtml(fmtTimeRobust(b.time))} 面談</div>
                 </div>
                 <div class="fp-meeting-card-actions">
                   ${b.driveUrl ? `<a href="${escapeHtml(b.driveUrl)}" target="_blank" class="fp-btn fp-btn-sm fp-btn-gold">🎥 録画を見る</a>` : ''}
@@ -4058,11 +4041,11 @@ ${ctxText}${surveyTxt}`;
               const zKey = (a.bookingTs || '') + '|' + (a.ts || a.createdAt || '');
               const zN = aiZoomIdx.get(zKey) || '?';
               return `
-              <div class="fp-meeting-card fp-meeting-card-orphan">
+              <div class="fp-meeting-card">
                 <div class="fp-meeting-card-head">
                   <div>
-                    <div class="fp-meeting-card-eyebrow" style="font-size:11.5px !important;font-weight:900 !important;color:#1B3A5C !important;letter-spacing:0 !important;">📹 Zoom ${zN}回目</div>
-                    <div class="fp-meeting-card-date">${escapeHtml(fmtDateRobust(a.date) || String(a.bookingTs || a.createdAt || '').slice(0,10))} 面談</div>
+                    <div class="fp-meeting-card-eyebrow" style="font-size:13px !important;font-weight:900 !important;color:#1B3A5C !important;letter-spacing:0 !important;">📹 Zoom ${zN}回目 ${a.ts || a.createdAt ? `<span style="font-size:11px;color:#9CA3AF;font-weight:700;margin-left:8px;font-family:Menlo,monospace;">#${(()=>{ const d=new Date(a.ts || a.createdAt); return d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0')+'-'+String(d.getHours()).padStart(2,'0')+String(d.getMinutes()).padStart(2,'0'); })()}</span>` : ''}</div>
+                    <div class="fp-meeting-card-date" style="font-size:14px;font-weight:700;">${escapeHtml(fmtDateRobust(a.date) || String(a.bookingTs || a.createdAt || '').slice(0,10))} 面談</div>
                   </div>
                 </div>
                 ${a.transcript ? `

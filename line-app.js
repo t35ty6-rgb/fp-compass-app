@@ -2088,7 +2088,11 @@
         R._micStream = mic;
       } catch (_) {}
 
-      R.chunks = []; R.startTime = Date.now(); R.bookingTs = bookingTs;
+      // ★ bookingTs が URLエンコード状態 (%3A 等) で来る path がある → 必ず decode して保存
+      //   旧バグ: data-rec-start に encodeURIComponent済 ts を 入れる箇所 (fillBookingsList の tsEnc) → R.bookingTs encoded で GAS sheet 保存 → 顧客モーダル b.ts (decoded) と find 一致せず 議事録 反映なし
+      let _safeBookingTs = bookingTs;
+      try { if (_safeBookingTs && _safeBookingTs.indexOf('%') >= 0) _safeBookingTs = decodeURIComponent(_safeBookingTs); } catch (_) {}
+      R.chunks = []; R.startTime = Date.now(); R.bookingTs = _safeBookingTs;
       // booking が見つからない時の fallback: liveData users から 唯一の LINE 連携客
       let fallbackBooking = booking;
       if (!fallbackBooking) {
@@ -2422,8 +2426,16 @@
         } catch (_) {}
         // 顧客台帳再描画 (GAS から取り直す)
         fetchLiveData().catch(() => {});
-        // ★ 中央 ポップアップ「顧客カード 反映完了」 を 明示 (✕で閉じるまで残る)
-        try { showCenterToast('議事録 を ' + (nameKey || 'お客様') + ' 様 の 顧客カード に 反映 しました', '顧客台帳 → ' + (nameKey || 'お客様') + ' 様 → 📹 Zoom議事録 タブ で 確認できます', { tone: 'success' }); } catch (_) {}
+        // ★ 中央 ポップアップ「顧客カード 反映完了」 + SKU (録画時刻ID) で 紐付け可視化
+        try {
+          const recDate = new Date();
+          const sku = recDate.getFullYear() + String(recDate.getMonth()+1).padStart(2,'0') + String(recDate.getDate()).padStart(2,'0') + '-' + String(recDate.getHours()).padStart(2,'0') + String(recDate.getMinutes()).padStart(2,'0');
+          showCenterToast(
+            '議事録 #' + sku + ' を 反映しました',
+            (nameKey || 'お客様') + ' 様 → 議事録タブ → カード上の 「#' + sku + '」 が この議事録です',
+            { tone: 'success' }
+          );
+        } catch (_) {}
       } else {
         console.warn('[autoSaveAIResult] GAS 4回retry失敗→pending-sync 蓄積', d);
         saveAIToLocalBackup(entry, newTasks, persistKey);
