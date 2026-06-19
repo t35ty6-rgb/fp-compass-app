@@ -201,6 +201,24 @@
         <p class="section-sub">あなたの LINE 公式アカウント を 接続 → アンケート / 友だち追加QR が 自動 で セットアップ されます</p>
       </div>
       <div class="section-body">
+        <!-- ★ LINE Console / LIFF Console に 設定 する URL (オーナーが いつでも コピー できる ように 常時表示) -->
+        <div id="line-setup-urls" style="background:#F8FAFC;border:1px solid var(--line);border-radius:10px;padding:14px 18px;margin-bottom:18px;">
+          <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:11px;letter-spacing:0.14em;color:var(--ink-3);text-transform:uppercase;margin-bottom:10px;">📋 LINE Console / LIFF に 設定 する URL</div>
+          <div style="margin-bottom:10px;">
+            <div style="font-size:11.5px;font-weight:700;color:var(--ink-2);margin-bottom:4px;">アンケート URL <span style="font-weight:400;color:var(--ink-3);">— LIFF エンドポイントURL or リッチメニュー直URL</span></div>
+            <div style="display:flex;gap:6px;align-items:stretch;flex-wrap:wrap;">
+              <code id="setup-survey-url" style="flex:1;min-width:200px;background:#fff;padding:9px 12px;border-radius:5px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#065F46;word-break:break-all;line-height:1.5;border:1px solid var(--line);">読込中…</code>
+              <button data-copy-target="setup-survey-url" class="btn primary" style="padding:7px 14px;font-size:11.5px;background:#06C755;color:#fff;border:none;border-radius:5px;font-weight:700;cursor:pointer;">コピー</button>
+            </div>
+          </div>
+          <div>
+            <div style="font-size:11.5px;font-weight:700;color:var(--ink-2);margin-bottom:4px;">Webhook URL <span style="font-weight:400;color:var(--ink-3);">— LINE Developers Console の Messaging API設定 Webhook URL 欄</span></div>
+            <div style="display:flex;gap:6px;align-items:stretch;flex-wrap:wrap;">
+              <code id="setup-webhook-url" style="flex:1;min-width:200px;background:#fff;padding:9px 12px;border-radius:5px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#1E3A8A;word-break:break-all;line-height:1.5;border:1px solid var(--line);">https://asia-northeast1-skeleton-fp-compass-632026.cloudfunctions.net/lineWebhook</code>
+              <button data-copy-target="setup-webhook-url" class="btn primary" style="padding:7px 14px;font-size:11.5px;background:#3B82F6;color:#fff;border:none;border-radius:5px;font-weight:700;cursor:pointer;">コピー</button>
+            </div>
+          </div>
+        </div>
         <div id="line-status" style="margin-bottom:18px;"></div>
         <label class="lbl" style="font-size:12px;font-weight:700;margin-bottom:6px;display:block;">
           ① Channel access token (長期)
@@ -359,6 +377,28 @@
     const uData = uDoc.data();
     currentTenantId = uData.tenantId;
     loginEl.style.display = "none"; appEl.style.display = "block";
+
+    // ★ 設定用 URL を 常時表示 (= LIFF endpoint / Webhook 設定 に コピペ する 元)
+    try {
+      const surveyUrl = `https://app.skeleton-inc.jp/survey/?tenant=${uData.tenantId}`;
+      const surveyEl = document.getElementById('setup-survey-url');
+      if (surveyEl) surveyEl.textContent = surveyUrl;
+      // コピーボタン (data-copy-target) 全部 グローバル に バインド (loadLineStatus 後追記 と 重複しない よう ガード)
+      document.querySelectorAll('[data-copy-target]').forEach(btn => {
+        if (btn.dataset.bound) return;
+        btn.dataset.bound = '1';
+        btn.addEventListener('click', async () => {
+          const el = document.getElementById(btn.dataset.copyTarget);
+          if (!el) return;
+          try {
+            await navigator.clipboard.writeText(el.textContent.trim());
+            const orig = btn.textContent;
+            btn.textContent = '✓ コピー済'; btn.style.opacity = '0.7';
+            setTimeout(() => { btn.textContent = orig; btn.style.opacity = '1'; }, 1500);
+          } catch (e) { alert('コピー失敗: ' + e.message); }
+        });
+      });
+    } catch (_) {}
 
     const tDoc = await getDoc(doc(db, "tenants", uData.tenantId));
     const t = tDoc.exists() ? tDoc.data() : {};
