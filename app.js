@@ -2776,7 +2776,7 @@
               return uc > 0 ? `<span style="display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#DC2626,#B91C1C);color:#fff;font-size:10px;font-weight:900;min-width:18px;height:18px;padding:0 5px;border-radius:9px;margin-left:5px;box-shadow:0 2px 6px rgba(220,38,38,0.45);animation:fp-unread-pulse 1.6s ease-in-out infinite;letter-spacing:0;">${uc > 99 ? '99+' : uc}</span>` : '';
             })()}</button>
             <button class="cd-tab" data-cdtab="timeline">タイムライン <span class="cd-tab-count">${events.length}</span></button>
-            <button class="cd-tab" data-cdtab="meetings">📹 Zoom議事録 <span class="cd-tab-count">${(events.filter(e => e.kind === 'meeting')).length}</span></button>
+            <button class="cd-tab" data-cdtab="meetings">📹 Zoom議事録 <span class="cd-tab-count" id="cd-meetings-count">…</span></button>
             <button class="cd-tab" data-cdtab="family">👨‍👩‍👧‍👦 家系図 <span class="cd-tab-count">${(c.family || []).length + 1}</span></button>
           </div>
 
@@ -3083,6 +3083,15 @@
       });
     }
 
+    // ★ 議事録タブ count = 実際の カード数 (メイン + orphan) に同期
+    try {
+      const cntEl = document.getElementById('cd-meetings-count');
+      if (cntEl) {
+        const meetingsPanel = document.querySelector('[data-cdpanel="meetings"]');
+        const totalCards = meetingsPanel ? meetingsPanel.querySelectorAll('.fp-meeting-card').length : 0;
+        cntEl.textContent = totalCards;
+      }
+    } catch (_) {}
     // ★ 議事録 編集 / 保存 (CLOUD_RUN_BASE/api/save-ai-result 経由で GAS sheet 上書き)
     document.querySelectorAll('[data-minutes-editor]').forEach(wrap => {
       const editBtn = wrap.querySelector('.fp-minutes-edit');
@@ -3952,21 +3961,27 @@ ${ctxText}${surveyTxt}`;
         </details>` : ''}
         ${bookingsWithMemo.length === 0 ? '' :
           (function(){
-            // ★ Zoom 連番 — 日付昇順 で 「1回目, 2回目, ...」
+            // ★ Zoom 連番 — ai_results を ts昇順 で 並べ 1, 2, 3... を 振る (orphan と統一)
+            const aiSortedAll = aiResults.slice().sort((a, b) => String(a.ts || a.createdAt || '').localeCompare(String(b.ts || b.createdAt || '')));
+            const aiZoomMap = new Map();
+            aiSortedAll.forEach((a, i) => aiZoomMap.set((a.bookingTs || '') + '|' + (a.ts || a.createdAt || ''), i + 1));
+            // メインカード = bookingsWithMemo (legacy / fs 顧客) を ts順 で 並べる
             const sortedBks = bookingsWithMemo.slice().sort((a, b) => {
               const da = new Date(String(a.date || '') + 'T' + String(a.time || '00:00')).getTime();
               const db = new Date(String(b.date || '') + 'T' + String(b.time || '00:00')).getTime();
               return (isNaN(da) ? 0 : da) - (isNaN(db) ? 0 : db);
             });
-            sortedBks.forEach((b, idx) => { b._zoomIndex = idx + 1; });
             return '<div style="display:grid;gap:14px;margin-bottom:18px;">' +
             sortedBks.slice().reverse().map(b => {
             const aiData = aiResults.find(a => a.bookingTs === b.ts) || {};
+            // ★ メインカードの Zoom連番 は aiData の zoom連番 を使う (orphanと整合)
+            const zKey = (aiData.bookingTs || '') + '|' + (aiData.ts || aiData.createdAt || '');
+            const zN = aiZoomMap.get(zKey) || '?';
             return `
             <div class="fp-meeting-card">
               <div class="fp-meeting-card-head">
                 <div>
-                  <div class="fp-meeting-card-eyebrow" style="font-size:11.5px !important;font-weight:900 !important;color:#1B3A5C !important;letter-spacing:0 !important;">📹 Zoom ${b._zoomIndex}回目</div>
+                  <div class="fp-meeting-card-eyebrow" style="font-size:11.5px !important;font-weight:900 !important;color:#1B3A5C !important;letter-spacing:0 !important;">📹 Zoom ${zN}回目</div>
                   <div class="fp-meeting-card-date">${escapeHtml(fmtDateRobust(b.date))} ${escapeHtml(fmtTimeRobust(b.time))} 面談</div>
                 </div>
                 <div class="fp-meeting-card-actions">
