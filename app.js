@@ -482,7 +482,7 @@
             <div class="senior-action-text">${escapeHtml(t.topAction.action)}</div>
             <div class="senior-action-reason">${escapeHtml(t.topAction.reason)}</div>
             ${nextEvent ? `<div class="senior-action-event">📅 次のイベント: <strong>${escapeHtml(nextEvent.title)}</strong> (${escapeHtml(nextEvent.rel)})</div>` : ''}
-            <div class="senior-action-contact">⏰ 最終接触: <strong>${days}日前</strong></div>
+            <div class="senior-action-contact">⏰ 最終接触: <strong>${days == null ? '未記録' : days + '日前'}</strong></div>
           </div>
 
           <div class="senior-card-buttons">
@@ -5320,7 +5320,7 @@ ${JSON.stringify(jsonPayload, null, 2)}
 
     // Build context bullets
     const contextItems = [];
-    contextItems.push({ icon: 'clock', text: `最終接触 <strong>${days}日前</strong> (${client.lastContact})` });
+    contextItems.push({ icon: 'clock', text: `最終接触 ${days == null ? '<strong>未記録</strong>' : `<strong>${days}日前</strong> (${escapeHtml(client.lastContact || '')})`}` });
     if (nextEv) {
       contextItems.push({ icon: 'calendar', text: `次のライフイベント: <strong>${escapeHtml(nextEv.label)}</strong> (${window.LifeEvents.formatRelative(nextEv.date)})` });
     }
@@ -5620,26 +5620,34 @@ ${JSON.stringify(jsonPayload, null, 2)}
       const ready = window._fpReadyDeliverable;
       const hasAutoDeliv = ready && ready.clientId === client.id && ready.html && ready.html.length > 100;
       try {
-        const r = await fetch('https://fp-compass-webhook-527726449426.asia-northeast1.run.app/api/line/send', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            userId: userId,
-            text: text,
-            slots: slotsOn && slotsData.length ? slotsData.map(s => ({
-              date: s.iso,
-              wday: s.wday,
-              time: s.time,
-              label: `候補 ${slotsData.indexOf(s) + 1}`
-            })) : null,
-            deliverableHtml: hasAutoDeliv ? ready.html : undefined,
-            deliverableType: hasAutoDeliv ? ready.type : undefined,
-            deliverableTitle: hasAutoDeliv ? ready.taskTitle : undefined,
-            customerName: hasAutoDeliv ? ready.customerName : undefined,
-          }),
+        // ★ multi-tenant Firebase Cloud Function sendLineMessage に 切替
+        //   legacy GAS proxy 経由 だと FP テナント別 channelAccessToken 使えず 「お客様 がこのbotの友達でない」 で 送信失敗
+        //   候補日 slots も text に整形して 1メッセージで送る
+        let combinedText = text;
+        if (slotsOn && slotsData.length) {
+          const slotsTxt = slotsData.map((s, i) => {
+            const md = (s.iso || '').slice(5).replace('-', '/');
+            return `  候補${i+1}: ${md}(${s.wday}) ${s.time}`;
+          }).join('\n');
+          combinedText = text + '\n\n📅 ご希望の日時をご返信ください:\n' + slotsTxt;
+        }
+        const { initializeApp, getApps } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js');
+        const { getFunctions, httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-functions.js');
+        const fbApp = getApps()[0] || initializeApp({
+          apiKey: 'AIzaSyAmVAEe9l9e1Yo_dzzJdbTVU35wWKd2sH4',
+          authDomain: 'skeleton-fp-compass-632026.firebaseapp.com',
+          projectId: 'skeleton-fp-compass-632026',
         });
-        const data = await r.json();
-        if (data.ok) {
+        const fns = getFunctions(fbApp, 'asia-northeast1');
+        const sendFn = httpsCallable(fns, 'sendLineMessage');
+        const fsCustomerId = client._fsCustomerId || (client.id && client.id.startsWith('fs-') ? client.id.slice(3) : null) || client.id;
+        const callRes = await sendFn({
+          customerId: fsCustomerId,
+          lineFriendId: client.lineFriendId || null,
+          text: combinedText,
+        });
+        const data = (callRes && callRes.data) || {};
+        if (data.ok || data.success || data.messageId) {
           msg.style.color = 'var(--green)';
           msg.textContent = '✅ 送信完了 — ' + client.name + ' 様の LINE に届きました';
           sendBtn.textContent = '✓ 送信済';
@@ -5781,7 +5789,7 @@ ${JSON.stringify(jsonPayload, null, 2)}
 
 【顧客プロファイル】
 ${client.name}様 / ${ageDisp || '?'}歳 / ${client.occupation || '職業不明'} / 家族: ${familyDisp}
-管理資産: ¥${(client.aum || 0).toLocaleString()} / 最終接触: ${dsl}日前 (${client.lastContact})
+管理資産: ¥${(client.aum || 0).toLocaleString()} / 最終接触: ${dsl == null ? '未記録' : dsl + '日前 (' + (client.lastContact || '') + ')'}
 
 【会話ループ履歴 (※あれば、これに続けて自然に次の一手を生成)】
 ${convHist}
@@ -6519,7 +6527,7 @@ ${client.name}さん、ありがとうございます。
       intent = `${nearestEv.label} の事前準備提案`;
       reason = `${monthsAway}ヶ月後に「${nearestEv.label}」(${nearestEv.who})`;
       situation = `${nearestEv.who}様の「${nearestEv.label}」が${monthsAway}ヶ月後。今が準備のラストチャンス`;
-    } else if (dsl >= 365) {
+    } else if (dsl != null && dsl >= 365) {
       intent = '1年以上未接触の近況伺い';
       reason = `最終接触 ${dsl}日前`;
       situation = `1年以上接触なし。ライフ状況に変化があったか伺いつつ再エンゲージ`;
@@ -6529,7 +6537,7 @@ ${client.name}さん、ありがとうございます。
       situation = topRec.reason;
     } else {
       intent = '定期フォロー';
-      reason = `最終接触 ${dsl}日前`;
+      reason = dsl == null ? '最終接触 未記録' : `最終接触 ${dsl}日前`;
       situation = `特段の緊急事項なし。関係維持のための軽い連絡`;
     }
 
@@ -6758,14 +6766,15 @@ ${client.name}さん、ありがとうございます。
       const status = remaining === 0 ? 'good' : (remaining > total * 0.5 ? 'critical' : 'warn');
 
       const tasksHtml = clientsList.slice(0, 10).map(c => {
-        const dsl = Math.floor((TODAY - new Date(c.lastContact)) / 86400000);
+        const dslRaw = Math.floor((TODAY - new Date(c.lastContact)) / 86400000);
+        const dsl = isNaN(dslRaw) ? null : dslRaw;
         const initial = (c.name || '?').replace(/\s+/g, '').slice(0, 1);
         return `
           <div class="kpi-task" data-kpi-client="${c.id}">
             <div class="kpi-task-avatar">${escapeHtml(initial)}</div>
             <div class="kpi-task-body">
               <div class="kpi-task-name">${escapeHtml(c.name)} 様 <span class="status-pill ${c.status}">${statusLabel(c.status)}</span></div>
-              <div class="kpi-task-meta">最終接触 ${dsl}日前 / ${escapeHtml(c.occupation || '—')} / AUM ¥${fmtMoney(c.aum)}</div>
+              <div class="kpi-task-meta">${dsl == null ? '最終接触 未記録' : `最終接触 ${dsl}日前`} / ${escapeHtml(c.occupation || '—')} / AUM ¥${fmtMoney(c.aum)}</div>
             </div>
             <button class="kpi-task-btn primary" data-kpi-ai="${c.id}">
               <i data-lucide="wand-2"></i><span>AI下書き → 送信</span>
