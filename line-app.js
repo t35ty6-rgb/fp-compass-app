@@ -2737,8 +2737,8 @@
         return {
           userId: 'fs:' + c.docId,
           _fsCustomerId: c.docId,
-          customerName: c.name || 'お客様',
-          pictureUrl: '',
+          customerName: c.name || c.lineDisplayName || 'お客様',
+          pictureUrl: c.pictureUrl || c.linePictureUrl || '',
           age: c.surveyAnswers?.q1_年代 || '',
           family: c.surveyAnswers?.q3_家族 || '',
           income: c.surveyAnswers?.q4_年収 || '',
@@ -2760,14 +2760,16 @@
       if (idx >= 0) currentIdx = idx;
     }
 
+    // 日付を ローカル(JST)で YYYY-MM-DD に整形 (toISOString は UTC で 1日ずれる罠を回避)
+    const fmtLocalDate = (d) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
     // 起点日(候補日1つ目)の週初め (月曜) を計算
     const startDate = pendingByCustomer[currentIdx] && pendingByCustomer[currentIdx].candidates[0]
-      ? new Date(pendingByCustomer[currentIdx].candidates[0].dateStr)
+      ? new Date(pendingByCustomer[currentIdx].candidates[0].dateStr + 'T00:00:00')
       : new Date();
     const dow = startDate.getDay();
     const monOffset = (dow === 0 ? -6 : 1 - dow);
     const weekStart = new Date(startDate); weekStart.setDate(startDate.getDate() + monOffset); weekStart.setHours(0,0,0,0);
-    panel.dataset.weekStart = weekStart.toISOString().slice(0,10);
+    panel.dataset.weekStart = fmtLocalDate(weekStart);
 
     panel.innerHTML = `
       <div id="fp-cal-resize-v3" style="position:absolute;top:0;bottom:0;left:0;width:6px;cursor:ew-resize;z-index:2;background:transparent;"></div>
@@ -2794,8 +2796,8 @@
       if (!root) return;
       const ws = new Date(panel.dataset.weekStart + 'T00:00:00');
       const we = new Date(ws); we.setDate(ws.getDate() + 6); we.setHours(23,59,59,999);
-      const fromStr = ws.toISOString().slice(0,10);
-      const toStr = we.toISOString().slice(0,10);
+      const fromStr = fmtLocalDate(ws);
+      const toStr = fmtLocalDate(we);
       const wkLabel = `${ws.getMonth()+1}月${ws.getDate()}日 〜 ${we.getMonth()+1}月${we.getDate()}日`;
       root.innerHTML = `<div style="text-align:center;padding:8px;font-size:12px;color:#6b7280;font-weight:600;letter-spacing:0.04em;">${wkLabel}<span style="margin-left:8px;color:#9ca3af;font-weight:400;">読み込み中…</span></div>`;
       try {
@@ -2815,15 +2817,15 @@
         const wdLabel = ['月','火','水','木','金','土','日'];
         const today = new Date(); today.setHours(0,0,0,0);
         const eventsByDay = days.map(d => {
-          const dKey = d.toISOString().slice(0,10);
+          const dKey = fmtLocalDate(d);
           return (data.events || []).filter(ev => {
-            const evDate = new Date(ev.start).toISOString().slice(0,10);
+            const evDate = fmtLocalDate(new Date(ev.start));
             return evDate === dKey;
           });
         });
         let html = '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;padding:0 6px 14px;">';
         days.forEach((d, i) => {
-          const dKey = d.toISOString().slice(0,10);
+          const dKey = fmtLocalDate(d);
           const isToday = d.getTime() === today.getTime();
           const isCandidate = candidateSet.has(dKey);
           const evs = eventsByDay[i];
@@ -2856,13 +2858,13 @@
     document.getElementById('fp-cal-prev-v3').addEventListener('click', () => {
       const d = new Date(panel.dataset.weekStart + 'T00:00:00');
       d.setDate(d.getDate() - 7);
-      panel.dataset.weekStart = d.toISOString().slice(0,10);
+      panel.dataset.weekStart = fmtLocalDate(d);
       renderWeekView();
     });
     document.getElementById('fp-cal-next-v3').addEventListener('click', () => {
       const d = new Date(panel.dataset.weekStart + 'T00:00:00');
       d.setDate(d.getDate() + 7);
-      panel.dataset.weekStart = d.toISOString().slice(0,10);
+      panel.dataset.weekStart = fmtLocalDate(d);
       renderWeekView();
     });
     document.getElementById('fp-cal-today-v3').addEventListener('click', () => {
@@ -2870,7 +2872,7 @@
       const dow = t.getDay();
       const monOff = (dow === 0 ? -6 : 1 - dow);
       t.setDate(t.getDate() + monOff);
-      panel.dataset.weekStart = t.toISOString().slice(0,10);
+      panel.dataset.weekStart = fmtLocalDate(t);
       renderWeekView();
     });
     renderWeekView();
@@ -2947,11 +2949,11 @@
     function jumpIframeTo(customer) {
       if (!customer || !customer.candidates[0]) return;
       // 候補日の週へ ジャンプ (自前 週ビュー)
-      const d = new Date(customer.candidates[0].dateStr);
+      const d = new Date(customer.candidates[0].dateStr + 'T00:00:00');
       const dow = d.getDay();
       const monOffset = (dow === 0 ? -6 : 1 - dow);
       d.setDate(d.getDate() + monOffset); d.setHours(0,0,0,0);
-      panel.dataset.weekStart = d.toISOString().slice(0,10);
+      panel.dataset.weekStart = fmtLocalDate(d);
       if (typeof renderWeekView === 'function') renderWeekView();
     }
     function bindCandidateRows() {
@@ -2966,11 +2968,11 @@
         const jumpBtn = row.querySelector('.fp-cand-jump');
         jumpBtn.addEventListener('click', () => {
           // 候補日の週へ ジャンプ (自前 週ビュー)
-          const d = new Date(dateStr);
+          const d = new Date(dateStr + 'T00:00:00');
           const dow = d.getDay();
           const monOffset = (dow === 0 ? -6 : 1 - dow);
           d.setDate(d.getDate() + monOffset); d.setHours(0,0,0,0);
-          panel.dataset.weekStart = d.toISOString().slice(0,10);
+          panel.dataset.weekStart = fmtLocalDate(d);
           if (typeof renderWeekView === 'function') renderWeekView();
           panel.querySelectorAll('[data-cand-row]').forEach(c => { c.style.background = '#fff'; c.style.boxShadow = ''; });
           row.style.background = '#fef2f2';

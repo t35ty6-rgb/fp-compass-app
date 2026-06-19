@@ -462,7 +462,9 @@
               appId: '1:991197809601:web:9b9d49aa1c1c1f0d0d9c0d'
             });
             const fn = httpsCallable(getFunctions(app, 'asia-northeast1'), 'submitSurveyAnswer');
-            await fn({ tenantId, answers: fields, submittedAt: new Date().toISOString() });
+            const qs = new URLSearchParams(location.search);
+            const lineUserId = qs.get('uid') || qs.get('lineUserId') || '';
+            await fn({ tenantId, answers: fields, submittedAt: new Date().toISOString(), lineUserId });
           } catch (e) { console.error('送信失敗:', e); }
         })();
         setTimeout(() => {
