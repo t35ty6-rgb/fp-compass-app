@@ -1375,12 +1375,12 @@
         cta = `<button class="btn-rec-stop" data-rec-stop="${tsEnc}">■ 録画停止</button>
                <a class="btn-mini" href="${zUrl}" target="_blank">Zoomを開く</a>`;
       } else if (rec === 'saved') {
-        cta = `<button class="btn-mini" data-open-memo="${tsEnc}" style="background:linear-gradient(135deg,#b8893d,#d4a017);border:none;color:#fff;font-weight:700;">📝 メモ・タスク化${savedTasksCount > 0 ? ' ('+savedTasksCount+')' : ''}</button>
-               <button class="btn-mini" data-complete-booking="${tsEnc}" style="background:var(--line-green-soft,#dcfce7);color:#166534;border:1px solid #86efac;font-weight:700;">✓ 完了 (台帳へ)</button>`;
+        // ★ 「完了」 ボタン 廃止 — 録画停止で 自動 archive + 議事録 顧客カード反映
+        cta = `<button class="btn-mini" data-open-memo="${tsEnc}" style="background:linear-gradient(135deg,#b8893d,#d4a017);border:none;color:#fff;font-weight:700;">📝 メモ・タスク化${savedTasksCount > 0 ? ' ('+savedTasksCount+')' : ''}</button>`;
       } else if (zUrl) {
+        // ★ 「完了」 ボタン 廃止 — 録画停止で 自動完了 (Zoom待ち から自動消去)
         cta = `<button class="btn-rec-start" data-rec-start="${tsEnc}" data-zoom="${zUrl}">● 録画ONでZoom開始</button>
                <button class="btn-mini" data-open-memo="${tsEnc}" style="background:#f8fafc;border:1px solid #e5e7eb;color:#374151;">📝 メモ${savedTasksCount > 0 ? ' ('+savedTasksCount+'件)' : ''}</button>
-               <button class="btn-mini" data-complete-booking="${tsEnc}" style="background:var(--line-green-soft,#dcfce7);color:#166534;border:1px solid #86efac;font-weight:700;">✓ 完了</button>
                ${cancelBtnHtml}`;
       } else {
         cta = cancelBtnHtml;
@@ -2117,6 +2117,8 @@
         updateProgressStep('save', 'done');
         updateProgressStep('drive', 'active');
         updateProgressStep('ai', 'active');
+        // ★ 中央 ポップアップ「議事録 生成中」 (完了 ポップアップ で 自動 上書き される)
+        showCenterToast('議事録 を 生成中…', `${R.customerName} 様 の Zoom 録画 → AI で 文字起こし + 議事録 作成 中。 30-60秒 ほど お待ちください`, { tone: 'progress', duration: 0 });
         // booking が見つからなかった時の fallback (R.booking で保持済)
         const effectiveBooking = booking || R.booking || null;
         // Drive: 音声ファイル (.webm) を upload
@@ -2247,6 +2249,39 @@
     }
   }
 
+  // ★ 画面中央 ポップアップ (議事録生成中 / 反映完了 を 大きく 通知)
+  function showCenterToast(title, sub, opts) {
+    opts = opts || {};
+    const dur = opts.duration || 6000;
+    const tone = opts.tone || 'success'; // 'success' | 'progress'
+    // 既存の center toast あれば 上書き (進行中→完了 等)
+    const old = document.getElementById('fp-center-toast');
+    if (old) old.remove();
+    const bg = tone === 'progress'
+      ? 'linear-gradient(135deg,#EFF6FF,#fff)'
+      : 'linear-gradient(135deg,#ECFDF5,#fff)';
+    const accent = tone === 'progress' ? '#3B82F6' : '#059669';
+    const icon = tone === 'progress' ? '⏳' : '✅';
+    const t = document.createElement('div');
+    t.id = 'fp-center-toast';
+    t.style.cssText = `position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:${bg};border:2px solid ${accent}55;border-left:6px solid ${accent};border-radius:16px;padding:26px 38px;box-shadow:0 24px 60px rgba(0,0,0,0.25),0 0 0 12px rgba(255,255,255,0.4);z-index:10080;font-family:'Noto Sans JP',sans-serif;text-align:center;max-width:480px;width:90%;`;
+    t.innerHTML = `
+      <div style="font-size:54px;margin-bottom:8px;">${icon}</div>
+      <div style="font-size:17px;font-weight:900;color:${accent};letter-spacing:-0.01em;line-height:1.4;margin-bottom:6px;">${escapeHtml(title)}</div>
+      <div style="font-size:12.5px;color:#475569;line-height:1.65;">${escapeHtml(sub || '')}</div>`;
+    document.body.appendChild(t);
+    if (dur > 0) {
+      setTimeout(() => {
+        if (t.parentNode) {
+          t.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+          t.style.opacity = '0';
+          t.style.transform = 'translate(-50%,-50%) scale(0.96)';
+          setTimeout(() => t.remove(), 400);
+        }
+      }, dur);
+    }
+    return t;
+  }
   function showProgressDoneAction() {
     const bottom = document.getElementById('fp-progress-bottom');
     if (!bottom) return;
@@ -2255,18 +2290,21 @@
     bottom.style.background = 'linear-gradient(135deg,#dcfce7,#f0fdf4)';
     bottom.style.borderColor = '#86efac';
     bottom.style.borderStyle = 'solid';
+    const customerName = (window._fpAIResult && window._fpAIResult.customerName) || 'お客様';
     bottom.innerHTML = `
       <div style="display:flex;align-items:center;gap:10px;text-align:left;">
         <div style="font-size:26px;">✨</div>
         <div style="flex:1;">
-          <strong style="font-size:13px;color:#166534;display:block;">AI処理完了!</strong>
+          <strong style="font-size:13px;color:#166534;display:block;">議事録を ${escapeHtml(customerName)} 様 の 顧客カード に 反映 しました</strong>
           <span style="font-size:11px;color:#365314;">タスク${taskCount}件 + LINE下書き 生成済み</span>
         </div>
       </div>
       <div style="display:grid;gap:6px;margin-top:10px;">
         <button id="fp-show-result" style="font-size:13px;padding:11px;background:linear-gradient(135deg,#06c755,#04a045);color:#fff;border:none;border-radius:7px;cursor:pointer;font-weight:800;font-family:inherit;letter-spacing:0.04em;">📋 AI議事録を見る</button>
-        <button id="fp-progress-close" style="font-size:12px;padding:9px;background:#1b2845;color:#fff;border:none;border-radius:7px;cursor:pointer;font-weight:800;font-family:inherit;letter-spacing:0.08em;text-transform:uppercase;">✓ 面談を完了する (Zoom+メモ閉じる)</button>
+        <button id="fp-progress-close" style="font-size:12px;padding:9px;background:#1b2845;color:#fff;border:none;border-radius:7px;cursor:pointer;font-weight:800;font-family:inherit;letter-spacing:0.08em;text-transform:uppercase;">閉じる</button>
       </div>`;
+    // ★ 加えて 画面中央 に 大きな 「議事録 反映済」 トースト
+    showCenterToast('議事録 を 反映しました', `${customerName} 様 の 顧客カード → 面談録 に 自動 追加されました`);
     document.getElementById('fp-show-result').addEventListener('click', () => {
       const r = window._fpAIResult;
       if (r) showAIResultModal(r.result, r.customerName, r.booking);
