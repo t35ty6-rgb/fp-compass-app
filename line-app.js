@@ -4029,7 +4029,9 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
   // Cloud Run のリアルデータ
   const CLOUD_RUN_BASE = 'https://fp-compass-webhook-527726449426.asia-northeast1.run.app';
   // マルチテナント: 現在の FP (localStorage で永続、default fp001)
-  function currentFpId() { return localStorage.getItem('fp-current-fpid') || 'fp001'; }
+  // ★ デフォルト 'fp001' (= 旧 GAS データ 吉田恭聡 等 含む) を 撤去 — 旧テスト顧客 が 誤注入される 元凶
+  //   明示的に localStorage に セット された 場合 のみ GAS フェッチ 有効
+  function currentFpId() { return localStorage.getItem('fp-current-fpid') || ''; }
   function setCurrentFpId(id) { localStorage.setItem('fp-current-fpid', id); location.reload(); }
   window.FpTenant = { current: currentFpId, set: setCurrentFpId };
   const CLOUD_RUN_API = CLOUD_RUN_BASE + '/api/bookings?fpId=' + encodeURIComponent(currentFpId());
@@ -4063,6 +4065,13 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
   const LIVE_CACHE_KEY = 'fp-livedata-cache-v1';
 
   async function fetchLiveData() {
+    // ★ fpId が 未設定 (= 旧 GAS データ 誤注入 防止) なら GAS フェッチ スキップ
+    if (!currentFpId()) {
+      console.log('[fetchLiveData] skipped (no fpId set in localStorage)');
+      liveData = liveData || { users: [], bookings: [], survey_answers: [], line_messages: [] };
+      window.LineAppLiveData = liveData;
+      return;
+    }
     // ★ v20260608Y で全 GAS 遮断していたが、オーナーの実予約も消えてしまうので解除。
     // GAS は ?fpId=xxx で URL レベルで tenant 分離されている (CLOUD_RUN_API)。
     // demo テナントには dummy-data.js 由来の demo 客が出るのは変わらず (loadTenantData の別経路)。
