@@ -4157,7 +4157,15 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
   // マルチテナント: 現在の FP (localStorage で永続、default fp001)
   // ★ デフォルト 'fp001' (= 旧 GAS データ 吉田恭聡 等 含む) を 撤去 — 旧テスト顧客 が 誤注入される 元凶
   //   明示的に localStorage に セット された 場合 のみ GAS フェッチ 有効
-  function currentFpId() { return localStorage.getItem('fp-current-fpid') || ''; }
+  function currentFpId() {
+    // ★ multi-tenant Firebase Auth login 経由 だと fp-current-fpid が空のまま で
+    //   /api/bookings?fpId= が空文字 fetch → ai_results 0件 → 議事録 反映なし
+    //   fp-tenantId (login時にset) や AccountInfo.tenantId に fallback
+    return localStorage.getItem('fp-current-fpid')
+        || localStorage.getItem('fp-tenantId')
+        || (window.AccountInfo && window.AccountInfo.tenantId)
+        || '';
+  }
   function setCurrentFpId(id) { localStorage.setItem('fp-current-fpid', id); location.reload(); }
   window.FpTenant = { current: currentFpId, set: setCurrentFpId };
   const CLOUD_RUN_API = CLOUD_RUN_BASE + '/api/bookings?fpId=' + encodeURIComponent(currentFpId());
