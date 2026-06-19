@@ -3737,7 +3737,18 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
       btn.addEventListener('click', () => {
         const tsEnc = btn.dataset.completeBooking;
         const ts = decodeURIComponent(tsEnc);
-        const b = ((liveData && liveData.bookings) || []).find(x => String(x.ts).slice(0,19) === ts.slice(0,19));
+        // ★ multi-tenant Firestore 顧客 も lookup 対象に (legacy のみ だと 「お」 で alert 失敗)
+        const fsAsBookings = (window._fpFirestoreConfirmed || []).map(c => ({
+          _fsCustomerId: c.docId,
+          userId: 'fs:' + c.docId,
+          name: c.name,
+          date: String(c.confirmedSlot || '').split(' ')[0] || '',
+          time: String(c.confirmedSlot || '').split(' ')[1] || '',
+          zoomUrl: c.zoomUrl,
+          ts: c.confirmedAt?.toDate?.()?.toISOString?.() || '',
+        }));
+        const b = (((liveData && liveData.bookings) || []).concat(fsAsBookings))
+          .find(x => String(x.ts).slice(0,19) === ts.slice(0,19));
         if (!b) { alert('予約が見つかりません'); return; }
         if (!confirm(`「${b.name||'お客様'}様」の面談を完了扱いにして顧客台帳に反映しますか?\n(取り消しは「アーカイブを見る → 戻す」から可能)`)) return;
         const set = new Set(JSON.parse(localStorage.getItem('fp-booking-archived') || '[]'));
