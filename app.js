@@ -3092,29 +3092,37 @@
         sendBtn.innerHTML = '<span>送信中...</span>';
         statusEl.textContent = '';
         try {
-          const r = await fetch('https://fp-compass-webhook-527726449426.asia-northeast1.run.app/api/line/send', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId, text }),
+          // ★ 旧 GAS 経路 (Cloud Run) → Firebase Cloud Function (sendLineMessage) に 切替
+          //   旧: https://fp-compass-webhook-527726449426.../api/line/send (multi-tenant 非対応 + 認証なし + 「不明なエラー」 多発)
+          //   新: tenant.line.channelAccessToken を 使って 直 LINE API push
+          const { getFunctions, httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-functions.js');
+          const { initializeApp, getApps } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js');
+          const fbApp = getApps()[0] || initializeApp({
+            apiKey: 'AIzaSyAmVAEe9l9e1Yo_dzzJdbTVU35wWKd2sH4',
+            authDomain: 'skeleton-fp-compass-632026.firebaseapp.com',
+            projectId: 'skeleton-fp-compass-632026',
           });
-          const data = await r.json().catch(() => ({}));
-          if (data.ok) {
+          const fns = getFunctions(fbApp, 'asia-northeast1');
+          const fn = httpsCallable(fns, 'sendLineMessage');
+          const res = await fn({ customerId: c.id, text, lineFriendId: userId });
+          if (res?.data?.ok) {
             statusEl.textContent = '✓ 送信完了';
             statusEl.style.color = 'var(--positive)';
             appendLocalMessage(text);
             input.value = '';
           } else {
-            statusEl.textContent = '✕ 送信失敗: ' + (data.error || '不明なエラー');
+            statusEl.textContent = '✕ 送信失敗: 戻り値異常';
             statusEl.style.color = 'var(--critical)';
           }
         } catch (e) {
-          statusEl.textContent = '✕ 通信エラー: ' + e.message;
+          // HttpsError は e.message に 親切な文言 (友だち未追加 等) が 入ってる
+          statusEl.textContent = '✕ 送信失敗: ' + (e.message || e.code || '不明なエラー');
           statusEl.style.color = 'var(--critical)';
         } finally {
           sendBtn.disabled = false;
           sendBtn.innerHTML = orig;
           if (window.lucide) window.lucide.createIcons();
-          setTimeout(() => { statusEl.textContent = ''; }, 4000);
+          setTimeout(() => { statusEl.textContent = ''; }, 6000);
         }
       };
       sendBtn.addEventListener('click', doSend);

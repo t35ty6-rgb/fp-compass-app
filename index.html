@@ -469,6 +469,9 @@
     const list = [];
     for (const d of snap.docs) {
       const c = { id: d.id, ...d.data() };
+      // ★ pictureUrl (webhook 由来 / Profile API) を linePictureUrl (UI 表示用) に コピー
+      //   UI 側 は c.linePictureUrl を 参照する仕様。 webhook で 取得した pictureUrl が UI に 反映されない 問題を 修正
+      if (c.pictureUrl && !c.linePictureUrl) c.linePictureUrl = c.pictureUrl;
       // 各 customer のサブコレを並列で読む (line_messages, cancellations)
       const [lineSnap, cxlSnap] = await Promise.all([
         getDocs(collection(db, "tenants", tenantId, "customers", d.id, "line_messages")).catch(() => null),
