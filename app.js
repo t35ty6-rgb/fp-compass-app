@@ -1786,11 +1786,19 @@
       });
       // 2) GAS 永続化シート ai_results からも吸う (★ genericFallback 撤去)
       const liveAi = (window.LineAppLiveData && window.LineAppLiveData.ai_results) || [];
+      // ★ 救済lookup: customerName='お客様'+uid空 で c.confirmedSlot ±6h 以内なら 該当客とみなす
+      //   (renderMeetingRecordsBlock の救済lookup と 同じ条件 → カード表示と タイムライン entry が 一致)
+      const cConfMsTL = c.confirmedSlot ? new Date(String(c.confirmedSlot).replace(' ','T')).getTime() : NaN;
       liveAi.forEach(r => {
-        const match = (r.userId && r.userId === c.lineFriendId) ||
-                      (r.customerName && r.customerName === c.name) ||
-                      myBks.some(b => b.ts === r.bookingTs || b.userId === r.userId);
-        if (match) collectFromEntry(r);
+        const strictMatch = (r.userId && r.userId === c.lineFriendId) ||
+                            (r.customerName && r.customerName !== 'お客様' && r.customerName === c.name) ||
+                            myBks.some(b => b.ts === r.bookingTs || b.userId === r.userId);
+        let rescued = false;
+        if (!strictMatch && !isNaN(cConfMsTL) && (!r.customerName || r.customerName === 'お客様') && !r.userId) {
+          const rMs = new Date(String(r.ts || r.createdAt || r.bookingTs || '').replace(' ','T')).getTime();
+          if (!isNaN(rMs) && Math.abs(rMs - cConfMsTL) < 6 * 60 * 60 * 1000) rescued = true;
+        }
+        if (strictMatch || rescued) collectFromEntry(r);
       });
       // ④ タイムライン細分化: AI議事録から抽出したタスク (due日) を中間イベント化
       //    ★ 品質改善 (オーナーfb「ただ書いてるだけで実用的でない」):
