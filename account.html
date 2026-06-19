@@ -214,6 +214,12 @@
         </label>
         <input id="line-secret" placeholder="a1b2c3d4e5f6... (32文字)" style="width:100%;padding:12px 14px;font-size:12px;font-family:'JetBrains Mono',monospace;border:1.5px solid var(--line);border-radius:10px;">
 
+        <label class="lbl" style="font-size:12px;font-weight:700;margin-top:14px;margin-bottom:6px;display:block;">
+          ③ LIFF ID
+          <span style="font-weight:400;color:var(--ink-3);font-size:11px;">— 任意。 自分で LIFF アプリ 作った 場合に 設定 (例: 2010438953-T33xTMVb) / 空ならデフォルト共有 LIFF 使用</span>
+        </label>
+        <input id="line-liff-id" placeholder="2010438953-T33xTMVb (空欄でOK)" style="width:100%;padding:12px 14px;font-size:12px;font-family:'JetBrains Mono',monospace;border:1.5px solid var(--line);border-radius:10px;">
+
         <button id="line-save-btn" class="btn primary" style="margin-top:18px;padding:14px 28px;font-size:14px;font-weight:700;background:#06C755;color:#fff;border:none;border-radius:8px;cursor:pointer;">
           🔗 接続テスト + 保存 (自動セットアップ)
         </button>
@@ -536,6 +542,7 @@
         });
         document.getElementById('line-token').value = '••• 保存済 (再入力すると 上書き) •••';
         document.getElementById('line-secret').value = '••• 保存済 •••';
+        if (line.liffId) document.getElementById('line-liff-id').value = line.liffId;
       } else {
         statusEl.innerHTML = `<div style="background:#FEF3C7;border:1px solid #F59E0B;padding:14px 18px;border-radius:10px;font-size:13px;color:#92400E;">まだ LINE は 接続されていません。 下に Token と Secret を 入力 してください。</div>`;
       }
@@ -546,21 +553,24 @@
   $("line-save-btn").addEventListener("click", async () => {
     const tokenEl = document.getElementById('line-token');
     const secretEl = document.getElementById('line-secret');
+    const liffEl = document.getElementById('line-liff-id');
     const resultEl = document.getElementById('line-result');
     const token = tokenEl.value.trim();
     const secret = secretEl.value.trim();
+    const liffId = (liffEl?.value || '').trim();
     if (token.startsWith('•••') || secret.startsWith('•••')) {
       resultEl.innerHTML = '<div style="color:#92400E;font-size:13px;">既に 接続済 です。 上書き したい場合 は ① と ② を 両方 再入力 してください。</div>';
       return;
     }
     if (!token || token.length < 50) { resultEl.innerHTML = '<div style="color:#B91C1C;font-size:13px;">① Channel access token を 入れてください (200文字以上)</div>'; return; }
     if (!secret || secret.length < 16) { resultEl.innerHTML = '<div style="color:#B91C1C;font-size:13px;">② Channel secret を 入れてください (32文字)</div>'; return; }
+    if (liffId && !/^[0-9]{10}-[A-Za-z0-9]+$/.test(liffId)) { resultEl.innerHTML = '<div style="color:#B91C1C;font-size:13px;">③ LIFF ID 形式 不正 (例: 2010438953-T33xTMVb)</div>'; return; }
     const btn = document.getElementById('line-save-btn');
     btn.disabled = true; btn.textContent = '⏳ 接続中… (30秒程度)';
     resultEl.innerHTML = '';
     try {
       const fn = httpsCallable(functions, "saveLineCredentials");
-      const res = await fn({ channelAccessToken: token, channelSecret: secret });
+      const res = await fn({ channelAccessToken: token, channelSecret: secret, liffId });
       const d = res.data;
       let qrHtml = '';
       if (d.qrImgUrl) {
