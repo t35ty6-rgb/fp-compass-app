@@ -2269,18 +2269,23 @@
     const accent = tone === 'progress' ? '#3B82F6' : '#059669';
     const t = document.createElement('div');
     t.id = 'fp-center-toast';
-    t.style.cssText = `position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:${bg};border:3px solid ${accent};border-radius:20px;padding:32px 44px;box-shadow:0 32px 80px rgba(0,0,0,0.32),0 0 0 16px rgba(255,255,255,0.6);z-index:10090;font-family:'Noto Sans JP',sans-serif;text-align:center;max-width:520px;width:92%;animation:${tone === 'progress' ? 'fp-pulse-ring 1.8s infinite' : 'none'};`;
+    // ★ 邪魔にならない 右上 配置 + コンパクト (オーナーfb: 「真ん中じゃなく右上に」)
+    t.style.cssText = `position:fixed;top:18px;right:18px;background:${bg};border:2px solid ${accent};border-radius:14px;padding:16px 20px 18px;box-shadow:0 12px 36px rgba(0,0,0,0.22);z-index:10090;font-family:'Noto Sans JP',sans-serif;text-align:left;width:320px;max-width:90vw;`;
     const iconHtml = tone === 'progress'
-      ? `<div style="width:74px;height:74px;border:6px solid ${accent}33;border-top-color:${accent};border-radius:50%;margin:0 auto 14px;animation:fp-spin 1s linear infinite;"></div>`
-      : `<div style="font-size:64px;margin-bottom:10px;line-height:1;">✅</div>`;
+      ? `<div style="width:32px;height:32px;border:3px solid ${accent}33;border-top-color:${accent};border-radius:50%;animation:fp-spin 0.9s linear infinite;flex-shrink:0;"></div>`
+      : `<div style="font-size:30px;line-height:1;flex-shrink:0;">✅</div>`;
     const closeHtml = tone === 'progress'
       ? ''
-      : `<button id="fp-toast-close" style="margin-top:18px;background:#fff;border:1.5px solid ${accent};color:${accent};padding:10px 22px;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:0.04em;">確認しました ✓</button>`;
+      : `<button id="fp-toast-close" style="margin-top:10px;background:transparent;border:1px solid ${accent}66;color:${accent};padding:6px 14px;border-radius:6px;font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit;">確認 ✓</button>`;
     t.innerHTML = `
-      ${iconHtml}
-      <div style="font-size:19px;font-weight:900;color:${accent};letter-spacing:-0.01em;line-height:1.4;margin-bottom:8px;">${escapeHtml(title)}</div>
-      <div style="font-size:13px;color:#334155;line-height:1.7;font-weight:500;">${escapeHtml(sub || '')}</div>
-      ${closeHtml}`;
+      <div style="display:flex;align-items:flex-start;gap:12px;">
+        ${iconHtml}
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:13.5px;font-weight:800;color:${accent};letter-spacing:-0.005em;line-height:1.45;margin-bottom:4px;">${escapeHtml(title)}</div>
+          <div style="font-size:11.5px;color:#475569;line-height:1.55;">${escapeHtml(sub || '')}</div>
+          ${closeHtml}
+        </div>
+      </div>`;
     document.body.appendChild(t);
     const closeBtn = t.querySelector('#fp-toast-close');
     if (closeBtn) closeBtn.addEventListener('click', () => t.remove());
