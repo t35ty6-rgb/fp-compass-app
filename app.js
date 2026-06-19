@@ -1637,6 +1637,58 @@
     // AI BRIEF で拡大した modal-content の幅を通常に戻す
     try { document.getElementById('modal-content').style.maxWidth = ''; } catch (_) {}
     ensureLineHistory_(c);
+    // ★ 議事録 → タイムライン 自動キャッチアップ
+    //   録画時 autoSaveAIResult が走った時 client が未sync なら lifeEventCandidates の customEvents merge を 取りこぼす
+    //   モーダル開く度に GAS ai_results + localStorage fp-ai-backup 両方 走査して 救済 merge
+    try {
+      const liveAi = (window.LineAppLiveData && window.LineAppLiveData.ai_results) || [];
+      const lsBackupKeys = Object.keys(localStorage).filter(k => k.startsWith('fp-ai-backup-'));
+      const lsBackupEntries = [];
+      lsBackupKeys.forEach(k => {
+        try {
+          const data = JSON.parse(localStorage.getItem(k) || '{}');
+          if (data && data.entry) lsBackupEntries.push(data.entry);
+        } catch (_) {}
+      });
+      const allAi = liveAi.concat(lsBackupEntries);
+      const cConfirmedMs = c.confirmedSlot ? new Date(String(c.confirmedSlot).replace(' ', 'T')).getTime() : NaN;
+      let lifeMerged = 0;
+      allAi.forEach(r => {
+        const strictMatch = (r.userId && c.lineFriendId && r.userId === c.lineFriendId)
+                         || (r.customerName && r.customerName !== 'お客様' && r.customerName === c.name);
+        // 救済: customerName='お客様'+uid空 で confirmedSlot ±6h 以内
+        let rescued = false;
+        if (!strictMatch && !isNaN(cConfirmedMs) && (!r.customerName || r.customerName === 'お客様') && !r.userId) {
+          const rMs = new Date(String(r.ts || r.createdAt || r.bookingTs || '').replace(' ', 'T')).getTime();
+          if (!isNaN(rMs) && Math.abs(rMs - cConfirmedMs) < 6 * 60 * 60 * 1000) rescued = true;
+        }
+        if (!strictMatch && !rescued) return;
+        let cands = r.lifeEventCandidates;
+        if (typeof cands === 'string') { try { cands = JSON.parse(cands); } catch (_) { cands = []; } }
+        if (!Array.isArray(cands) || cands.length === 0) return;
+        if (!Array.isArray(c.customEvents)) c.customEvents = [];
+        cands.forEach(ev => {
+          if (!ev || typeof ev !== 'object') return;
+          const key = (ev.date || '') + '|' + (ev.label || '');
+          if (!ev.label) return;
+          if (c.customEvents.some(x => (x.date || '') + '|' + (x.label || '') === key)) return;
+          c.customEvents.push({
+            date: ev.date || '',
+            label: ev.label || '',
+            who: ev.who || c.name,
+            cat: ev.cat || 'family',
+            source: 'Zoom ' + (r.date || String(r.ts || '').slice(0, 10)),
+            confidence: ev.confidence || 0.5,
+            addedAt: new Date().toISOString(),
+          });
+          lifeMerged++;
+        });
+      });
+      if (lifeMerged > 0) {
+        try { localStorage.setItem('fp-crm-clients-v1', JSON.stringify(window.DUMMY_CLIENTS)); } catch (_) {}
+        console.log('[lifeEvent catchup]', lifeMerged, 'events → customEvents on', c.name);
+      }
+    } catch (e) { console.warn('lifeEvent catchup fail:', e); }
     console.log('[client modal]', c.id, c.name, 'lineHistory:', (c.lineHistory || []).length, 'DUMMY_CLIENTS_VERSION:', window.DUMMY_CLIENTS_VERSION || '(missing)');
     let events = window.LifeEvents.generate(c);
     const pureLifeEventCount = events.length; // ★ CTA条件 用: 議事録 events 追加前 の 純粋ライフイベント数
