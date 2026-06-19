@@ -1001,25 +1001,22 @@
   //   優先2: 直接 Firestore fetch (DUMMY_CLIENTS 未ロード時の fallback)
   async function refreshFirestoreCustomers() {
     try {
-      // 優先1: 既ロード DUMMY_CLIENTS に line_survey 顧客 がある時 のみ それ使う
-      //   (line_survey 0件 → priority 2 で Firestore 直接 fetch + sync に fallthrough)
-      //   旧コード: line_survey 0件 でも 早期return → Firestore からの顧客 が DUMMY_CLIENTS に 同期されない → 顧客台帳クリック で何も起きない
+      // 優先1 (cache hit): DUMMY_CLIENTS に line_survey 顧客 があれば 暫定 表示用に セット
+      //   (return しない — Firestore を 一次ソース に 必ず fetch + sync する。
+      //    旧コード: DUMMY_CLIENTS cache hit で 早期return → Firestore の新規顧客 (例: 「お」)
+      //    が DUMMY_CLIENTS に sync されず → openClientModal で clients.find undefined → 「クリック で何も起きない」)
       if (Array.isArray(window.DUMMY_CLIENTS) && window.DUMMY_CLIENTS.length > 0) {
         const lineSurvey = window.DUMMY_CLIENTS.filter(c => c.source === 'line_survey');
         if (lineSurvey.length > 0) {
-          const pendingFs = lineSurvey
+          window._fpFirestoreCustomers = lineSurvey
             .filter(c => (c.meetingCandidates||[]).length > 0 && !c.confirmedSlot)
             .map(c => ({ docId: c.id, ...c }));
-          const confirmedFs = lineSurvey
+          window._fpFirestoreConfirmed = lineSurvey
             .filter(c => c.confirmedSlot && c.zoomUrl)
             .map(c => ({ docId: c.id, ...c }));
-          window._fpFirestoreCustomers = pendingFs;
-          window._fpFirestoreConfirmed = confirmedFs;
-          try { if (currentSubview === 'leadHub') renderLeadHubInner(); } catch(_) {}
-          return;
         }
       }
-      // 優先2: tenantId 各所から 取得 + 直接 fetch
+      // 優先2 (一次ソース): Firestore 直接 fetch + DUMMY_CLIENTS へ 差分 sync
       const tenantId = (window.__fp && window.__fp.tenantId)
         || (window.AccountInfo && window.AccountInfo.tenantId)
         || localStorage.getItem('fp-tenantId');
