@@ -2777,6 +2777,7 @@
             })()}</button>
             <button class="cd-tab" data-cdtab="timeline">タイムライン <span class="cd-tab-count">${events.length}</span></button>
             <button class="cd-tab" data-cdtab="meetings">📹 Zoom議事録 <span class="cd-tab-count">${(events.filter(e => e.kind === 'meeting')).length}</span></button>
+            <button class="cd-tab" data-cdtab="family">👨‍👩‍👧‍👦 家系図 <span class="cd-tab-count">${(c.family || []).length + 1}</span></button>
           </div>
 
           <div class="cd-tabpanels">
@@ -2907,6 +2908,11 @@
             <!-- MEETINGS -->
             <div class="cd-tabpanel" data-cdpanel="meetings" hidden>
               ${renderMeetingRecordsBlock(c) || '<div class="cd-empty">面談録なし</div>'}
+            </div>
+
+            <!-- FAMILY 家系図 -->
+            <div class="cd-tabpanel" data-cdpanel="family" hidden>
+              ${renderFamilyTreeBlock(c)}
             </div>
           </div>
 
@@ -3151,6 +3157,196 @@
       });
     });
 
+    // ★ 家系図 タブ: AI 抽出 / 追加 / 編集 / 保存
+    function persistFamily() {
+      try { localStorage.setItem('fp-crm-clients-v1', JSON.stringify(window.DUMMY_CLIENTS || [])); } catch (_) {}
+      // Firestore 顧客 なら family も sync
+      if (c._fsCustomerId) {
+        (async () => {
+          try {
+            const { initializeApp, getApps } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js');
+            const { getFirestore, doc, updateDoc } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js');
+            const app = getApps()[0] || initializeApp({
+              apiKey: 'AIzaSyAmVAEe9l9e1Yo_dzzJdbTVU35wWKd2sH4',
+              authDomain: 'skeleton-fp-compass-632026.firebaseapp.com',
+              projectId: 'skeleton-fp-compass-632026',
+            });
+            const db = getFirestore(app);
+            const tenantId = (window.__fp && window.__fp.tenantId) || localStorage.getItem('fp-tenantId');
+            if (tenantId) {
+              await updateDoc(doc(db, 'tenants', tenantId, 'customers', c._fsCustomerId), { family: c.family || [] });
+            }
+          } catch (e) { console.warn('Firestore family sync fail:', e.message); }
+        })();
+      }
+    }
+    function refreshFamilyPanel() {
+      const panel = document.querySelector('[data-cdpanel="family"]');
+      if (panel) panel.innerHTML = renderFamilyTreeBlock(c);
+      bindFamilyHandlers();
+      // tab count 更新
+      const tab = document.querySelector('[data-cdtab="family"] .cd-tab-count');
+      if (tab) tab.textContent = (c.family || []).length + 1;
+    }
+    function openFamilyEditModal(memberIdx) {
+      const m = memberIdx == null ? { rel: 'child', name: '', birth: '', note: '' } : (c.family || [])[memberIdx] || { rel: 'other', name: '', birth: '', note: '' };
+      const isNew = memberIdx == null;
+      const overlay = document.createElement('div');
+      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.55);backdrop-filter:blur(4px);z-index:10100;display:flex;align-items:center;justify-content:center;padding:20px;';
+      overlay.innerHTML = `
+        <div style="background:#fff;width:min(440px,100%);border-radius:14px;box-shadow:0 24px 60px rgba(0,0,0,0.32);padding:24px 26px;font-family:'Noto Sans JP',sans-serif;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+            <div style="font-size:16px;font-weight:900;color:#0F172A;">${isNew ? '＋ 家族 を 追加' : '✏ 家族 を 編集'}</div>
+            <button id="fp-fam-modal-close" style="background:transparent;border:none;font-size:20px;cursor:pointer;color:#64748B;">✕</button>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <label style="display:block;"><div style="font-size:11px;font-weight:700;color:#475569;margin-bottom:4px;">関係</div>
+              <select id="fp-fam-rel" style="width:100%;padding:9px 12px;border:1px solid #E2E8F0;border-radius:7px;font-size:13px;font-family:inherit;">
+                <option value="spouse" ${m.rel==='spouse'?'selected':''}>配偶者</option>
+                <option value="child" ${m.rel==='child'?'selected':''}>お子様</option>
+                <option value="parent" ${m.rel==='parent'?'selected':''}>親</option>
+                <option value="sibling" ${m.rel==='sibling'?'selected':''}>ご兄弟</option>
+                <option value="other" ${m.rel==='other'?'selected':''}>その他</option>
+              </select>
+            </label>
+            <label style="display:block;"><div style="font-size:11px;font-weight:700;color:#475569;margin-bottom:4px;">お名前</div>
+              <input id="fp-fam-name" type="text" value="${escapeHtml(m.name || '')}" placeholder="例: 太郎 / 配偶者 / 長女" style="width:100%;padding:9px 12px;border:1px solid #E2E8F0;border-radius:7px;font-size:13px;font-family:inherit;box-sizing:border-box;">
+            </label>
+            <label style="display:block;"><div style="font-size:11px;font-weight:700;color:#475569;margin-bottom:4px;">生年月日 (年齢推定用)</div>
+              <input id="fp-fam-birth" type="date" value="${escapeHtml(m.birth || '')}" style="width:100%;padding:9px 12px;border:1px solid #E2E8F0;border-radius:7px;font-size:13px;font-family:inherit;box-sizing:border-box;">
+            </label>
+            <label style="display:block;"><div style="font-size:11px;font-weight:700;color:#475569;margin-bottom:4px;">メモ (職業 / 学年 等)</div>
+              <input id="fp-fam-note" type="text" value="${escapeHtml(m.note || '')}" placeholder="例: 中学2年 / 公務員" style="width:100%;padding:9px 12px;border:1px solid #E2E8F0;border-radius:7px;font-size:13px;font-family:inherit;box-sizing:border-box;">
+            </label>
+          </div>
+          <div style="display:flex;gap:8px;justify-content:space-between;margin-top:18px;">
+            ${isNew ? '<div></div>' : '<button id="fp-fam-delete" style="background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;padding:8px 14px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">🗑 削除</button>'}
+            <div style="display:flex;gap:8px;">
+              <button id="fp-fam-cancel" style="background:#fff;color:#475569;border:1px solid #E2E8F0;padding:8px 16px;border-radius:7px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;">キャンセル</button>
+              <button id="fp-fam-save" style="background:linear-gradient(135deg,#5B5BF0,#4242C9);color:#fff;border:none;padding:8px 22px;border-radius:7px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit;">💾 保存</button>
+            </div>
+          </div>
+        </div>`;
+      document.body.appendChild(overlay);
+      overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+      overlay.querySelector('#fp-fam-modal-close').addEventListener('click', () => overlay.remove());
+      overlay.querySelector('#fp-fam-cancel').addEventListener('click', () => overlay.remove());
+      overlay.querySelector('#fp-fam-save').addEventListener('click', () => {
+        const updated = {
+          rel: overlay.querySelector('#fp-fam-rel').value,
+          name: overlay.querySelector('#fp-fam-name').value.trim(),
+          birth: overlay.querySelector('#fp-fam-birth').value || '',
+          note: overlay.querySelector('#fp-fam-note').value.trim() || '',
+        };
+        if (!Array.isArray(c.family)) c.family = [];
+        if (isNew) c.family.push(updated);
+        else c.family[memberIdx] = updated;
+        persistFamily();
+        overlay.remove();
+        refreshFamilyPanel();
+      });
+      const delBtn = overlay.querySelector('#fp-fam-delete');
+      if (delBtn) delBtn.addEventListener('click', () => {
+        if (!confirm('この家族を削除しますか?')) return;
+        c.family.splice(memberIdx, 1);
+        persistFamily();
+        overlay.remove();
+        refreshFamilyPanel();
+      });
+    }
+    async function extractFamilyFromMinutes() {
+      const msgEl = document.getElementById('fp-fam-msg');
+      const btn = document.getElementById('fp-fam-ai');
+      btn.disabled = true; btn.style.opacity = '0.6'; btn.textContent = '✨ AI 抽出中…';
+      if (msgEl) { msgEl.style.color = '#475569'; msgEl.textContent = '議事録 + アンケート を 解析中 (10-20秒)…'; }
+      try {
+        // 議事録 集約
+        const ar = (window.LineAppLiveData && window.LineAppLiveData.ai_results) || [];
+        const cConfMs = c.confirmedSlot ? new Date(String(c.confirmedSlot).replace(' ','T')).getTime() : NaN;
+        const mine = ar.filter(r => {
+          const strict = (r.userId && c.lineFriendId && r.userId === c.lineFriendId)
+                      || (r.customerName && r.customerName !== 'お客様' && r.customerName === c.name);
+          if (strict) return true;
+          if (!isNaN(cConfMs) && (!r.customerName || r.customerName === 'お客様') && !r.userId) {
+            const rMs = new Date(String(r.ts || r.bookingTs || '').replace(' ','T')).getTime();
+            if (!isNaN(rMs) && Math.abs(rMs - cConfMs) < 6 * 60 * 60 * 1000) return true;
+          }
+          return false;
+        });
+        if (mine.length === 0) {
+          if (msgEl) { msgEl.style.color = '#92400e'; msgEl.textContent = '⚠ 議事録 が 見つかりません。 Zoom 録画 後 再試行してください'; }
+          btn.disabled = false; btn.style.opacity = ''; btn.textContent = '✨ 議事録 から AI 抽出';
+          return;
+        }
+        const ctxText = mine.map(r => 'summary: ' + (r.summary || '') + '\ntranscript: ' + (r.transcript || '').slice(0, 1500)).join('\n\n---\n\n');
+        const survey = ((window.LineAppLiveData && window.LineAppLiveData.survey_answers) || []).find(s => (s.userId && s.userId === c.lineFriendId) || (s.name && s.name === c.name));
+        const surveyTxt = survey ? '\n\nアンケート: ' + JSON.stringify({ family: survey.q3_家族, occupation: survey.q2_職業 }) : '';
+        const prompt = `あなたはFP事務所の家族構成抽出AIです。下記のZoom議事録(複数) + アンケート から ${c.name || 'お客様'} 様 の 家族構成 を 抽出してください。
+
+【出力フォーマット 厳守 — JSONのみ、 マークダウン や 説明文 一切なし】
+{
+  "family": [
+    { "rel": "spouse" | "child" | "parent" | "sibling" | "other", "name": "名前(または続柄: 配偶者/長女/長男/母 等)", "birth": "YYYY-MM-DD or 空", "note": "学年 / 職業 / 推定年齢 等" }
+  ]
+}
+
+【ルール】
+- 本人 (${c.name || 'お客様'} 様) は family に含めない (別途扱う)
+- birth が議事録から推定できない場合は空、 年齢ヒントがあれば note に「○歳」 と書く
+- 学年 / 職業 / 居住地 等の 補足情報 は note に
+- 同じ続柄複数いれば全部追加 (例: 長男 / 次男)
+- 議事録に出てこない人は推測しない
+- name は議事録に出てる呼称 (例: 「妻」「長女」 等) でも OK、 不明なら 続柄 をそのまま
+
+【議事録 + アンケート】
+${ctxText}${surveyTxt}`;
+        if (!window.__fp?.functions) throw new Error('Firebase functions 未初期化');
+        const { httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-functions.js');
+        const fn = httpsCallable(window.__fp.functions, 'generateBriefDraft');
+        const res = await fn({ prompt });
+        const reply = (res.data && res.data.reply) || '';
+        const m = reply.match(/\{[\s\S]*\}/);
+        if (!m) throw new Error('AI から JSON 形式 で 返ってこなかった');
+        const data = JSON.parse(m[0]);
+        const newFam = Array.isArray(data.family) ? data.family : [];
+        if (newFam.length === 0) {
+          if (msgEl) { msgEl.style.color = '#92400e'; msgEl.textContent = '⚠ 議事録 から 家族情報 を 抽出 できませんでした'; }
+        } else {
+          // 既存 family と merge (rel+name で 重複除外)
+          if (!Array.isArray(c.family)) c.family = [];
+          let added = 0;
+          newFam.forEach(nm => {
+            const key = (nm.rel || '') + '|' + (nm.name || '');
+            const exists = c.family.some(ex => ((ex.rel||'') + '|' + (ex.name||'')) === key);
+            if (!exists) { c.family.push(nm); added++; }
+          });
+          persistFamily();
+          if (msgEl) { msgEl.style.color = '#059669'; msgEl.textContent = `✓ ${added}名 を 抽出 + 追加 (既存と重複は スキップ)`; }
+          refreshFamilyPanel();
+        }
+      } catch (e) {
+        console.error('[extractFamily]', e);
+        if (msgEl) { msgEl.style.color = '#b91c1c'; msgEl.textContent = '⚠ 抽出失敗: ' + (e.message || e).slice(0, 80); }
+      } finally {
+        btn.disabled = false; btn.style.opacity = ''; btn.textContent = '✨ 議事録 から AI 抽出';
+      }
+    }
+    function bindFamilyHandlers() {
+      const aiBtn = document.getElementById('fp-fam-ai');
+      if (aiBtn) aiBtn.addEventListener('click', extractFamilyFromMinutes);
+      const addBtn = document.getElementById('fp-fam-add');
+      if (addBtn) addBtn.addEventListener('click', () => openFamilyEditModal(null));
+      document.querySelectorAll('.fp-fam-edit, .fp-fam-card[data-fam-idx]').forEach(el => {
+        el.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const idxStr = el.dataset.famEditIdx ?? el.dataset.famIdx;
+          if (idxStr === 'self' || idxStr == null) return;
+          const idx = parseInt(idxStr, 10);
+          if (!isNaN(idx)) openFamilyEditModal(idx);
+        });
+      });
+    }
+    bindFamilyHandlers();
     // Tab switching inside new modal
     document.querySelectorAll('.cd-tab').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -3457,6 +3653,95 @@
   // ============================
   // 面談記録ブロック (顧客詳細モーダル内 / 録画URL + メモ + タスク)
   // ============================
+  // ============================
+  // 👨‍👩‍👧‍👦 家系図 ブロック (議事録 から AI 自動抽出 + 編集可)
+  // ============================
+  function renderFamilyTreeBlock(client) {
+    const fam = Array.isArray(client.family) ? client.family : [];
+    // 関係 → 表示順 + ラベル + 色
+    const relMeta = {
+      self:    { label: '本人',     color: '#5B5BF0', order: 0 },
+      spouse:  { label: '配偶者',   color: '#EF4444', order: 1 },
+      child:   { label: 'お子様',   color: '#06B6D4', order: 2 },
+      parent:  { label: '親',       color: '#A855F7', order: -1 },
+      sibling: { label: 'ご兄弟',   color: '#84CC16', order: 3 },
+      other:   { label: 'その他',   color: '#6B7280', order: 4 },
+    };
+    const age = (birth) => {
+      if (!birth) return null;
+      const b = new Date(birth);
+      if (isNaN(b.getTime())) return null;
+      const now = new Date();
+      let a = now.getFullYear() - b.getFullYear();
+      const m = now.getMonth() - b.getMonth();
+      if (m < 0 || (m === 0 && now.getDate() < b.getDate())) a--;
+      return a;
+    };
+    const selfCard = `<div class="fp-fam-card" data-fam-idx="self" style="background:#5B5BF015;border:2px solid #5B5BF0;">
+      <div class="fp-fam-rel" style="color:#5B5BF0;">👤 本人</div>
+      <div class="fp-fam-name">${escapeHtml(client.name || 'お客様')}</div>
+      <div class="fp-fam-age">${age(client.birth) ?? '?'}歳 / ${escapeHtml(client.occupation || '職業未設定')}</div>
+    </div>`;
+    // 関係別 にグループ化 → 描画順は parent → self → spouse → sibling → child → other
+    const groups = { parent: [], self: [], spouse: [], sibling: [], child: [], other: [] };
+    fam.forEach((m, idx) => {
+      const r = (m.rel || 'other').toLowerCase();
+      const grp = groups[r] ? r : 'other';
+      groups[grp].push({ ...m, _idx: idx });
+    });
+    const renderGroup = (rel, list) => {
+      if (list.length === 0) return '';
+      const meta = relMeta[rel] || relMeta.other;
+      return `<div style="margin-bottom:14px;">
+        <div style="font-size:11px;font-weight:800;color:${meta.color};letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;">${meta.label} (${list.length}名)</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+          ${list.map(m => `<div class="fp-fam-card" data-fam-idx="${m._idx}" style="background:${meta.color}10;border:1.5px solid ${meta.color}66;cursor:pointer;">
+            <div class="fp-fam-rel" style="color:${meta.color};">${meta.label}</div>
+            <div class="fp-fam-name">${escapeHtml(m.name || '(未設定)')}</div>
+            <div class="fp-fam-age">${age(m.birth) ?? '?'}歳${m.note ? ' / ' + escapeHtml(m.note).slice(0,20) : ''}</div>
+            <button class="fp-fam-edit" data-fam-edit-idx="${m._idx}" title="編集">✏</button>
+          </div>`).join('')}
+        </div>
+      </div>`;
+    };
+    return `
+      <div class="detail-section">
+        <h3>👨‍👩‍👧‍👦 家系図 <span class="count-badge">${fam.length + 1}名</span></h3>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
+          <button id="fp-fam-ai" data-client-id="${escapeHtml(client.id)}" style="background:linear-gradient(135deg,#5B5BF0,#4242C9);color:#fff;border:none;padding:9px 16px;border-radius:8px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 4px 12px rgba(91,91,240,0.3);">✨ 議事録 から AI 抽出</button>
+          <button id="fp-fam-add" data-client-id="${escapeHtml(client.id)}" style="background:#fff;border:1.5px solid #5B5BF0;color:#5B5BF0;padding:9px 16px;border-radius:8px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit;">＋ 家族を追加</button>
+        </div>
+        <div id="fp-fam-msg" style="font-size:11.5px;font-weight:700;margin-bottom:10px;"></div>
+        <style>
+          .fp-fam-card{position:relative;min-width:140px;padding:12px 14px;border-radius:10px;font-family:inherit;}
+          .fp-fam-card .fp-fam-rel{font-size:10px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:4px;}
+          .fp-fam-card .fp-fam-name{font-size:14px;font-weight:800;color:#0F172A;margin-bottom:3px;line-height:1.3;}
+          .fp-fam-card .fp-fam-age{font-size:11px;color:#475569;line-height:1.4;}
+          .fp-fam-card .fp-fam-edit{position:absolute;top:6px;right:6px;background:rgba(255,255,255,0.7);border:1px solid rgba(0,0,0,0.08);border-radius:5px;width:24px;height:24px;cursor:pointer;font-size:11px;padding:0;}
+          .fp-fam-card .fp-fam-edit:hover{background:#fff;border-color:rgba(0,0,0,0.18);}
+        </style>
+        ${renderGroup('parent', groups.parent)}
+        <div style="margin-bottom:14px;">
+          <div style="font-size:11px;font-weight:800;color:#5B5BF0;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;">本人 + 配偶者</div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;">
+            ${selfCard}
+            ${groups.spouse.map(m => {
+              const meta = relMeta.spouse;
+              return `<div class="fp-fam-card" data-fam-idx="${m._idx}" style="background:${meta.color}10;border:1.5px solid ${meta.color}66;cursor:pointer;">
+                <div class="fp-fam-rel" style="color:${meta.color};">${meta.label}</div>
+                <div class="fp-fam-name">${escapeHtml(m.name || '(未設定)')}</div>
+                <div class="fp-fam-age">${age(m.birth) ?? '?'}歳${m.note ? ' / ' + escapeHtml(m.note).slice(0,20) : ''}</div>
+                <button class="fp-fam-edit" data-fam-edit-idx="${m._idx}" title="編集">✏</button>
+              </div>`;
+            }).join('')}
+          </div>
+        </div>
+        ${renderGroup('child', groups.child)}
+        ${renderGroup('sibling', groups.sibling)}
+        ${renderGroup('other', groups.other)}
+        ${fam.length === 0 ? '<div style="padding:24px;background:#F8FAFC;border:1px dashed #CBD5E1;border-radius:10px;text-align:center;color:#64748B;font-size:12.5px;">まだ家族情報が登録されていません。<br>「✨ 議事録 から AI 抽出」 で 過去の Zoom 議事録 から 自動 で 家族構成 を 取り込めます。</div>' : ''}
+      </div>`;
+  }
   function renderMeetingRecordsBlock(client) {
     // この顧客に関連する bookings を liveData から探す
     const liveBookings = (window.LineAppLiveData && window.LineAppLiveData.bookings) || [];
