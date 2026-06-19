@@ -1054,14 +1054,44 @@
   function syncFirestoreCustomersToClients(fsList) {
     if (!Array.isArray(fsList) || fsList.length === 0) return;
     if (!Array.isArray(window.DUMMY_CLIENTS)) return;
+
+    // ★ 過去 sync で 重複作成 されてしまった entries を まず除去
+    //   症状: 同 Firestore docId の顧客 が DUMMY_CLIENTS に 2件入る (1つは過去手動分、もう1つは autoFromFirestore)
+    //   原因: 旧 sync が lineFriendId だけで重複check → null同士は弾けず 2重登録
+    //   対策: 同名顧客が 2件以上ある時、 autoFromFirestore=true の方 を 廃棄 (手動分を保持)
+    const nameGroups = {};
+    window.DUMMY_CLIENTS.forEach((c, idx) => {
+      const k = String(c.name || '').trim();
+      if (!k) return;
+      if (!nameGroups[k]) nameGroups[k] = [];
+      nameGroups[k].push({ idx, c });
+    });
+    const toRemove = [];
+    Object.values(nameGroups).forEach(arr => {
+      if (arr.length < 2) return;
+      // 手動 entry (autoFromFirestore でない) が 1つ以上 ある → 自動分 を 削除候補
+      const hasManual = arr.some(x => !x.c.autoFromFirestore);
+      if (!hasManual) return;
+      arr.forEach(x => { if (x.c.autoFromFirestore) toRemove.push(x.idx); });
+    });
+    if (toRemove.length > 0) {
+      toRemove.sort((a,b) => b - a).forEach(idx => window.DUMMY_CLIENTS.splice(idx, 1));
+      console.log('[fsSync] dedupe 重複自動entry除去', toRemove.length, '件');
+    }
+
     const knownIds = new Set(window.DUMMY_CLIENTS.map(c => c.id));
     const knownUids = new Set(window.DUMMY_CLIENTS.map(c => c.lineFriendId).filter(Boolean));
+    // ★ 同名顧客 既存check (lineFriendId null 同士でも 重複 防止)
+    const knownNames = new Set(window.DUMMY_CLIENTS.map(c => String(c.name || '').trim()).filter(Boolean));
     let added = 0;
     fsList.forEach(c => {
       const fsClientId = 'fs-' + c.docId;
       if (knownIds.has(fsClientId)) return;
       // lineFriendId が 既存 clients と 一致 → 同人扱い (重複防止)
       if (c.lineFriendId && knownUids.has(c.lineFriendId)) return;
+      // ★ 同名顧客 既に居る → スキップ (手動入力 と Firestore sync の 2重登録防止)
+      const nm = String(c.name || '').trim();
+      if (nm && knownNames.has(nm)) return;
       const newC = {
         id: fsClientId,
         _fsCustomerId: c.docId,
@@ -1088,9 +1118,9 @@
       if (newC.lineFriendId) knownUids.add(newC.lineFriendId);
       added++;
     });
-    if (added > 0) {
+    if (added > 0 || toRemove.length > 0) {
       try { localStorage.setItem('fp-crm-clients-v1', JSON.stringify(window.DUMMY_CLIENTS)); } catch (_) {}
-      console.log('[fsSync] +', added, 'firestore customers → DUMMY_CLIENTS');
+      if (added > 0) console.log('[fsSync] +', added, 'firestore customers → DUMMY_CLIENTS');
       if (window.FPCrmRefreshClients) window.FPCrmRefreshClients();
     }
   }
