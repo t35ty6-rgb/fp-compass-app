@@ -4160,15 +4160,18 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
   function currentFpId() {
     // ★ multi-tenant Firebase Auth login 経由 だと fp-current-fpid が空のまま で
     //   /api/bookings?fpId= が空文字 fetch → ai_results 0件 → 議事録 反映なし
-    //   fp-tenantId (login時にset) や AccountInfo.tenantId に fallback
+    //   優先順: localStorage > window.__fp (login時に set) > AccountInfo
     return localStorage.getItem('fp-current-fpid')
+        || (window.__fp && window.__fp.tenantId)
         || localStorage.getItem('fp-tenantId')
         || (window.AccountInfo && window.AccountInfo.tenantId)
         || '';
   }
   function setCurrentFpId(id) { localStorage.setItem('fp-current-fpid', id); location.reload(); }
   window.FpTenant = { current: currentFpId, set: setCurrentFpId };
-  const CLOUD_RUN_API = CLOUD_RUN_BASE + '/api/bookings?fpId=' + encodeURIComponent(currentFpId());
+  // ★ CLOUD_RUN_API は 関数化 — login 後 に currentFpId() の値 が 変わる ため
+  //   const で 評価固定 だと page load 時 (login前) の 空文字で 固定 → 全fetch で fpId空 で AI results取れない
+  const getCloudRunApi = () => CLOUD_RUN_BASE + '/api/bookings?fpId=' + encodeURIComponent(currentFpId());
   let liveData = null;
 
   function showSyncIndicator(state, detail) {
@@ -4228,7 +4231,7 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
     // ② network fetch (バックグラウンドで最新化)
     showSyncIndicator('loading');
     try {
-      const r = await fetch(CLOUD_RUN_API);
+      const r = await fetch(getCloudRunApi());
       liveData = await r.json();
       // ※ 削除済: 旧コード「cleared flag で liveData 全配列空に強制上書き」
       //   → GAS resetAll で実データを消したので強制上書き不要。
