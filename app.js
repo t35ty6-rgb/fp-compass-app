@@ -158,7 +158,11 @@
     return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`;
   }
   function daysSince(d) {
-    return Math.round((TODAY - new Date(d)) / (1000 * 60 * 60 * 24));
+    // ★ NaN日前 / undefined 表示防止: 不正な日付なら null を返し、 呼出側で '—' 等 fallback
+    if (!d) return null;
+    const t = new Date(d).getTime();
+    if (isNaN(t)) return null;
+    return Math.round((TODAY - t) / (1000 * 60 * 60 * 24));
   }
   function statusLabel(s) {
     return { active: '管理中', important: '重点', new: '新規', dormant: '休眠' }[s] || s;
@@ -1888,7 +1892,17 @@
         seenDate.add(k);
         return true;
       });
-      events = dedup.concat(events).sort((a, b) => new Date(a.date) - new Date(b.date));
+      // ★ 議事録 連番付け: 時系列 (古→新) 順に「議事録1, 議事録2, ...」 を ラベル先頭に
+      const sortedMeetings = dedup.slice().sort((a, b) => new Date(a.date) - new Date(b.date));
+      sortedMeetings.forEach((e, idx) => {
+        const n = idx + 1;
+        // 既存 label が「面談実施 — concerns」 → 「議事録N — concerns」 に置き換え
+        const tailMatch = String(e.label || '').match(/^面談実施(.*)$/);
+        e.label = '議事録' + n + (tailMatch ? tailMatch[1] : '');
+        e.title = '議事録' + n;
+        e.meetingIndex = n;
+      });
+      events = sortedMeetings.concat(events).sort((a, b) => new Date(a.date) - new Date(b.date));
     } catch (e) { console.warn('meeting events skipped:', e); }
 
     // ③ 「次の一手」ブロック用データ抽出 (最新 AI 議事録 + 未完了タスク 上位3件)
@@ -2614,8 +2628,8 @@
             </div>
             <div class="cd-stat">
               <div class="cd-stat-label">最終接触</div>
-              <div class="cd-stat-value">${days}<span class="cd-stat-unit">日前</span></div>
-              <div class="cd-stat-sub">${c.lastContact}</div>
+              <div class="cd-stat-value">${days == null ? '—' : days}<span class="cd-stat-unit">${days == null ? '' : '日前'}</span></div>
+              <div class="cd-stat-sub">${escapeHtml(c.lastContact || '未記録')}</div>
             </div>
             <div class="cd-stat">
               <div class="cd-stat-label">年齢 / 性別</div>
@@ -2685,13 +2699,13 @@
             <div class="cd-flow-reason">${escapeHtml(topRec.reason)}</div>
 
             <div class="cd-flow-steps">
-              <button class="cd-flow-step cd-flow-step-active fp-draft-cta" id="modal-draft-btn" style="background:linear-gradient(135deg,#F97316,#EA580C,#DC2626) !important;border:none !important;color:#fff !important;box-shadow:0 8px 24px rgba(249,115,22,0.55),0 0 0 4px rgba(255,255,255,0.5) !important;">
-                <span class="cd-flow-step-no" style="background:rgba(255,255,255,0.28) !important;color:#fff !important;border:1px solid rgba(255,255,255,0.4) !important;">1</span>
-                <span class="cd-flow-step-body">
-                  <span class="cd-flow-step-label" style="color:#fff !important;font-weight:900 !important;letter-spacing:0.04em !important;">👉 ✨ AI下書きを作る</span>
-                  <span class="cd-flow-step-sub" style="color:rgba(255,255,255,0.95) !important;font-weight:600 !important;">押すと AI が文面生成</span>
+              <button class="cd-flow-step cd-flow-step-active fp-draft-cta" id="modal-draft-btn" style="background:linear-gradient(135deg,#F97316,#EA580C) !important;border:none !important;color:#fff !important;box-shadow:0 6px 18px rgba(249,115,22,0.42) !important;padding:14px 18px !important;min-height:56px !important;">
+                <span class="cd-flow-step-no" style="background:rgba(255,255,255,0.28) !important;color:#fff !important;border:1px solid rgba(255,255,255,0.4) !important;font-size:14px !important;">1</span>
+                <span class="cd-flow-step-body" style="min-width:0 !important;flex:1 !important;">
+                  <span class="cd-flow-step-label" style="color:#fff !important;font-weight:800 !important;font-size:15px !important;letter-spacing:0.02em !important;white-space:normal !important;line-height:1.35 !important;display:block !important;">✨ AI で 下書き を 作る</span>
+                  <span class="cd-flow-step-sub" style="color:rgba(255,255,255,0.92) !important;font-weight:500 !important;font-size:12px !important;white-space:normal !important;line-height:1.4 !important;display:block !important;margin-top:2px !important;">押すと AI が LINE 文面 を 自動 生成</span>
                 </span>
-                <i data-lucide="wand-2" class="cd-flow-step-icon" style="color:#fff !important;"></i>
+                <i data-lucide="wand-2" class="cd-flow-step-icon" style="color:#fff !important;flex-shrink:0 !important;"></i>
               </button>
               <style>@keyframes fp-draft-cta-pulse{0%,100%{transform:translateY(0) scale(1);box-shadow:0 8px 24px rgba(249,115,22,0.55),0 0 0 4px rgba(255,255,255,0.5)}50%{transform:translateY(-2.5px) scale(1.025);box-shadow:0 16px 36px rgba(249,115,22,0.72),0 0 0 7px rgba(255,255,255,0.6)}}@keyframes fp-draft-cta-gradient{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}</style>
               <i data-lucide="chevron-right" class="cd-flow-arrow"></i>
@@ -2754,7 +2768,6 @@
               return uc > 0 ? `<span style="display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#DC2626,#B91C1C);color:#fff;font-size:10px;font-weight:900;min-width:18px;height:18px;padding:0 5px;border-radius:9px;margin-left:5px;box-shadow:0 2px 6px rgba(220,38,38,0.45);animation:fp-unread-pulse 1.6s ease-in-out infinite;letter-spacing:0;">${uc > 99 ? '99+' : uc}</span>` : '';
             })()}</button>
             <button class="cd-tab" data-cdtab="timeline">タイムライン <span class="cd-tab-count">${events.length}</span></button>
-            <button class="cd-tab" data-cdtab="proposals">提案履歴 <span class="cd-tab-count">${(c.proposals || []).length}</span></button>
             <button class="cd-tab" data-cdtab="meetings">面談録</button>
           </div>
 
@@ -2881,11 +2894,6 @@
               ${lifeCtaCard}
               <div class="cd-tl-list">${timelineHtml2}</div>
               ${events.length > 12 ? `<div class="cd-tl-more">他 ${events.length - 12} 件...</div>` : ''}
-            </div>
-
-            <!-- PROPOSALS -->
-            <div class="cd-tabpanel" data-cdpanel="proposals" hidden>
-              <div class="cd-prop-list">${proposalsHtml2}</div>
             </div>
 
             <!-- MEETINGS -->
@@ -3060,6 +3068,80 @@
         openClientModal(c.id);
       });
     }
+
+    // ★ 議事録 編集 / 保存 (CLOUD_RUN_BASE/api/save-ai-result 経由で GAS sheet 上書き)
+    document.querySelectorAll('[data-minutes-editor]').forEach(wrap => {
+      const editBtn = wrap.querySelector('.fp-minutes-edit');
+      const viewEl = wrap.querySelector('.fp-minutes-view');
+      const editWrap = wrap.querySelector('.fp-minutes-edit-wrap');
+      const textarea = wrap.querySelector('.fp-minutes-textarea');
+      const cancelBtn = wrap.querySelector('.fp-minutes-cancel');
+      const saveBtn = wrap.querySelector('.fp-minutes-save');
+      const msgEl = wrap.querySelector('.fp-minutes-msg');
+      const bookingTs = wrap.dataset.bookingTs;
+      editBtn.addEventListener('click', () => {
+        viewEl.style.display = 'none';
+        editWrap.style.display = 'block';
+        editBtn.style.display = 'none';
+        textarea.focus();
+      });
+      cancelBtn.addEventListener('click', () => {
+        viewEl.style.display = '';
+        editWrap.style.display = 'none';
+        editBtn.style.display = '';
+        msgEl.textContent = '';
+        textarea.value = viewEl.textContent.startsWith('議事録 未生成') ? '' : viewEl.textContent;
+      });
+      saveBtn.addEventListener('click', async () => {
+        const newSummary = textarea.value.trim();
+        saveBtn.disabled = true;
+        saveBtn.textContent = '保存中…';
+        msgEl.textContent = '';
+        try {
+          // 既存 ai_result から transcript/key_concerns etc を 維持 して summary だけ上書き
+          const liveAi3 = (window.LineAppLiveData && window.LineAppLiveData.ai_results) || [];
+          const existing = liveAi3.find(r => r.bookingTs === bookingTs) || {};
+          const entry = {
+            bookingTs,
+            userId: existing.userId || c.lineFriendId || '',
+            customerName: existing.customerName || c.name || '',
+            date: existing.date || '',
+            transcript: existing.transcript || '',
+            summary: newSummary,
+            transcript_summary: existing.transcript_summary || '',
+            key_concerns: existing.key_concerns || [],
+            next_meeting_suggestion: existing.next_meeting_suggestion || '',
+            lifeEventCandidates: existing.lifeEventCandidates || [],
+          };
+          const res = await fetch('https://fp-compass-webhook-527726449426.asia-northeast1.run.app/api/save-ai-result', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ entry, tasks: [] }),
+          });
+          const data = await res.json();
+          if (!data.ok) throw new Error(data.error || 'unknown');
+          // UI更新
+          viewEl.textContent = newSummary;
+          viewEl.style.display = '';
+          viewEl.style.color = '';
+          viewEl.style.fontStyle = '';
+          editWrap.style.display = 'none';
+          editBtn.style.display = '';
+          msgEl.style.color = '#059669';
+          msgEl.textContent = '✓ 保存 完了';
+          // 既存 liveAi3 array も 更新 (再 fetch せず次回 開いた時 反映)
+          if (existing && Object.keys(existing).length > 0) existing.summary = newSummary;
+          else liveAi3.push(entry);
+          setTimeout(() => { msgEl.textContent = ''; }, 3000);
+        } catch (e) {
+          msgEl.style.color = '#B91C1C';
+          msgEl.textContent = '保存失敗: ' + (e.message || e).slice(0, 60);
+        } finally {
+          saveBtn.disabled = false;
+          saveBtn.textContent = '💾 保存';
+        }
+      });
+    });
 
     // Tab switching inside new modal
     document.querySelectorAll('.cd-tab').forEach(btn => {
@@ -3598,11 +3680,21 @@
                     <div style="padding:14px 18px;font-size:12.5px;line-height:1.95;white-space:pre-wrap;max-height:320px;overflow-y:auto;color:var(--fp-ink);">${escapeHtml(aiData.transcript)}</div>
                   </details>
                 </div>` : ''}
-              ${aiData.summary ? `
-                <div class="fp-meeting-block">
-                  <div class="fp-meeting-block-label">AI 議事録 (Claude)</div>
-                  <div class="fp-meeting-body">${escapeHtml(aiData.summary)}</div>
-                </div>` : ''}
+              <div class="fp-meeting-block" data-minutes-editor data-booking-ts="${escapeHtml(b.ts || '')}" data-client-id="${escapeHtml(client.id)}">
+                <div class="fp-meeting-block-label" style="display:flex;justify-content:space-between;align-items:center;">
+                  <span>AI 議事録 (Claude) <span style="font-size:10px;color:#9CA3AF;font-weight:600;margin-left:6px;">編集・追記可</span></span>
+                  <button class="fp-minutes-edit" style="background:#fff;border:1px solid #E2E8F0;color:#475569;font-size:11px;font-weight:700;padding:4px 10px;border-radius:5px;cursor:pointer;font-family:inherit;">✏ 編集</button>
+                </div>
+                <div class="fp-meeting-body fp-minutes-view" style="${aiData.summary ? '' : 'color:#9CA3AF;font-style:italic;'}">${aiData.summary ? escapeHtml(aiData.summary) : '議事録 未生成 — 「✏ 編集」 から手動追記 可'}</div>
+                <div class="fp-minutes-edit-wrap" style="display:none;">
+                  <textarea class="fp-minutes-textarea" rows="10" style="width:100%;padding:12px 14px;border:1.5px solid #BFDBFE;border-radius:8px;font-size:13px;font-family:inherit;line-height:1.9;resize:vertical;box-sizing:border-box;">${escapeHtml(aiData.summary || '')}</textarea>
+                  <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;">
+                    <button class="fp-minutes-cancel" style="background:#fff;border:1px solid #E2E8F0;color:#475569;font-size:12px;font-weight:700;padding:7px 14px;border-radius:6px;cursor:pointer;font-family:inherit;">キャンセル</button>
+                    <button class="fp-minutes-save" style="background:linear-gradient(135deg,#3B82F6,#2563EB);border:none;color:#fff;font-size:12.5px;font-weight:800;padding:7px 18px;border-radius:6px;cursor:pointer;font-family:inherit;box-shadow:0 3px 10px rgba(59,130,246,0.3);">💾 保存</button>
+                  </div>
+                  <div class="fp-minutes-msg" style="margin-top:6px;font-size:11.5px;font-weight:700;text-align:right;"></div>
+                </div>
+              </div>
               ${aiData.key_concerns && aiData.key_concerns.length > 0 ? `
                 <div class="fp-meeting-block">
                   <div class="fp-meeting-block-label">お客様の関心事</div>
@@ -3615,7 +3707,6 @@
                   <div class="fp-meeting-block-label">手書きメモ</div>
                   <div class="fp-meeting-body">${escapeHtml(b.memo)}</div>
                 </div>` : ''}
-              ${!aiData.transcript && !aiData.summary && !b.memo ? '<div style="font-size:12px;color:var(--fp-ink-3);font-style:italic;text-align:center;padding:18px;font-family:Noto Sans JP,sans-serif;">録画 + AI処理 もしくは 面談メモがまだ追加されていません</div>' : ''}
             </div>
           `;
           }).join('') + '</div>'
@@ -3770,9 +3861,13 @@
   function openHearingSheetModal(client) {
     const existing = document.getElementById('fp-hearing-modal');
     if (existing) existing.remove();
-    // 顧客の survey_answers を取得
+    // ★ 顧客の survey_answers を取得 — multi-tenant では Firestore customer.surveyAnswers 直接アクセス、 legacy では liveData から検索
     const surveys = (window.LineAppLiveData && window.LineAppLiveData.survey_answers) || [];
-    const s = surveys.find(x => x.userId === client.lineFriendId || x.name === client.name) || {};
+    let s = surveys.find(x => x.userId === client.lineFriendId || x.name === client.name) || {};
+    // ★ Firestore customer は client.surveyAnswers を 持ってる → そっち優先
+    if (client.surveyAnswers && typeof client.surveyAnswers === 'object') {
+      s = { ...client.surveyAnswers, ...s }; // legacy あれば 上書き、 無ければ Firestore を使う
+    }
     const age = window.LifeEvents.currentAge(client);
     const overlay = document.createElement('div');
     overlay.id = 'fp-hearing-modal';
