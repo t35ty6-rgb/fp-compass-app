@@ -2776,7 +2776,7 @@
               return uc > 0 ? `<span style="display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#DC2626,#B91C1C);color:#fff;font-size:10px;font-weight:900;min-width:18px;height:18px;padding:0 5px;border-radius:9px;margin-left:5px;box-shadow:0 2px 6px rgba(220,38,38,0.45);animation:fp-unread-pulse 1.6s ease-in-out infinite;letter-spacing:0;">${uc > 99 ? '99+' : uc}</span>` : '';
             })()}</button>
             <button class="cd-tab" data-cdtab="timeline">タイムライン <span class="cd-tab-count">${events.length}</span></button>
-            <button class="cd-tab" data-cdtab="meetings">📹 Zoom議事録 <span class="cd-tab-count">${(events.filter(e => e.kind === 'meeting' && e.date <= TODAY)).length}</span></button>
+            <button class="cd-tab" data-cdtab="meetings">📹 Zoom議事録 <span class="cd-tab-count">${(events.filter(e => e.kind === 'meeting')).length}</span></button>
           </div>
 
           <div class="cd-tabpanels">
