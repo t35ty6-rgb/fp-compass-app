@@ -2680,10 +2680,18 @@
             <div id="cd-instant-zoom-status" style="font-size:12px;font-weight:700;margin-top:8px;text-align:center;"></div>
           ` : ''}
 
-          <!-- ★ オーナーfb 2026-06-20: タグ管理 を 顧客名 直下、 ラベル大型化 -->
+          <!-- ★ オーナーfb 2026-06-20: タグ管理 を 顧客名 直下、 オリジナル タグ アイコン (ピンク+紺) -->
           <div class="cd-profile-section" id="cd-tags-section" data-client-id="${escapeHtml(c.id)}" style="margin-top:16px;padding:16px 18px;background:#F8FAFC;border:2px solid #E2E8F0;border-radius:12px;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-              <span style="font-size:18px;font-weight:900;color:#0F172A;letter-spacing:-0.01em;display:inline-flex;align-items:center;gap:8px;"><span style="font-size:22px;">🏷</span> タグ</span>
+              <span style="font-size:18px;font-weight:900;color:#0F172A;letter-spacing:-0.01em;display:inline-flex;align-items:center;gap:10px;">
+                <svg width="30" height="30" viewBox="0 0 32 32" fill="none" style="flex-shrink:0;">
+                  <path d="M15 9 L24 9 C25.1 9 26 9.9 26 11 L26 19 C26 19.5 25.8 20 25.4 20.4 L18.4 27.4 C17.6 28.2 16.3 28.2 15.5 27.4 L8.5 20.4 C7.7 19.6 7.7 18.3 8.5 17.5 L15 11 Z" fill="#E58FAE"/>
+                  <circle cx="20.5" cy="14.5" r="2" fill="#14213D"/>
+                  <path d="M11 5 L20 5 C21.1 5 22 5.9 22 7 L22 15 C22 15.5 21.8 16 21.4 16.4 L14.4 23.4 C13.6 24.2 12.3 24.2 11.5 23.4 L4.5 16.4 C3.7 15.6 3.7 14.3 4.5 13.5 L11 7 Z" fill="#fff" stroke="#14213D" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+                  <circle cx="16.5" cy="10.5" r="1.6" fill="#14213D"/>
+                </svg>
+                タグ
+              </span>
               <button id="cd-tags-edit" style="background:#5B5BF0;border:none;color:#fff;font-size:13.5px;font-weight:800;padding:9px 18px;border-radius:9px;cursor:pointer;font-family:inherit;letter-spacing:0.02em;box-shadow:0 4px 12px rgba(91,91,240,0.25);">＋ 追加 / 編集</button>
             </div>
             <div id="cd-tags-list" style="display:flex;flex-wrap:wrap;gap:7px;min-height:28px;"></div>
@@ -8045,7 +8053,15 @@ ${client.name}さん、ありがとうございます。
       overlay.innerHTML = `
         <div style="background:#fff;max-width:520px;width:100%;border-radius:14px;box-shadow:0 24px 60px rgba(0,0,0,0.35);overflow:hidden;font-family:'Noto Sans JP',sans-serif;">
           <div style="padding:18px 24px;border-bottom:1px solid #E2E8F0;display:flex;justify-content:space-between;align-items:center;">
-            <h3 style="margin:0;font-size:15px;font-weight:800;color:#0F172A;">🏷 タグの追加 / 編集</h3>
+            <h3 style="margin:0;font-size:15px;font-weight:800;color:#0F172A;display:inline-flex;align-items:center;gap:8px;">
+              <svg width="22" height="22" viewBox="0 0 32 32" fill="none" style="flex-shrink:0;">
+                <path d="M15 9 L24 9 C25.1 9 26 9.9 26 11 L26 19 C26 19.5 25.8 20 25.4 20.4 L18.4 27.4 C17.6 28.2 16.3 28.2 15.5 27.4 L8.5 20.4 C7.7 19.6 7.7 18.3 8.5 17.5 L15 11 Z" fill="#E58FAE"/>
+                <circle cx="20.5" cy="14.5" r="2" fill="#14213D"/>
+                <path d="M11 5 L20 5 C21.1 5 22 5.9 22 7 L22 15 C22 15.5 21.8 16 21.4 16.4 L14.4 23.4 C13.6 24.2 12.3 24.2 11.5 23.4 L4.5 16.4 C3.7 15.6 3.7 14.3 4.5 13.5 L11 7 Z" fill="#fff" stroke="#14213D" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+                <circle cx="16.5" cy="10.5" r="1.6" fill="#14213D"/>
+              </svg>
+              タグの追加 / 編集
+            </h3>
             <button id="fp-tag-close" style="background:transparent;border:none;cursor:pointer;font-size:20px;color:#94A3B8;">✕</button>
           </div>
           <div style="padding:20px 24px;">

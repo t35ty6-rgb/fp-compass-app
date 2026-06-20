@@ -738,7 +738,12 @@
           <span class="nav-count nav-count-alert" id="nav-count-dormant"></span>
         </div>
         <div class="tab tab-line" data-tab="tagsHub">
-          <i data-lucide="tag"></i>
+          <svg width="18" height="18" viewBox="0 0 32 32" fill="none" style="flex-shrink:0;">
+            <path d="M15 9 L24 9 C25.1 9 26 9.9 26 11 L26 19 C26 19.5 25.8 20 25.4 20.4 L18.4 27.4 C17.6 28.2 16.3 28.2 15.5 27.4 L8.5 20.4 C7.7 19.6 7.7 18.3 8.5 17.5 L15 11 Z" fill="#E58FAE"/>
+            <circle cx="20.5" cy="14.5" r="2" fill="#14213D"/>
+            <path d="M11 5 L20 5 C21.1 5 22 5.9 22 7 L22 15 C22 15.5 21.8 16 21.4 16.4 L14.4 23.4 C13.6 24.2 12.3 24.2 11.5 23.4 L4.5 16.4 C3.7 15.6 3.7 14.3 4.5 13.5 L11 7 Z" fill="#fff" stroke="#14213D" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+            <circle cx="16.5" cy="10.5" r="1.6" fill="#14213D"/>
+          </svg>
           <span>タグ管理</span>
           <span class="nav-count" id="nav-count-tags"></span>
         </div>
@@ -1176,7 +1181,7 @@ window.fpReadyAfterAuth = function() {
     });
   })();
 
-  const ver = "20260620CI-stg-schedule-direct-instant-merge";
+  const ver = "20260620CJ-stg-today-detail-tag-svg";
   const scripts = [
     "life-events.js?v=" + ver,
     "recommender.js?v=" + ver,
@@ -1495,7 +1500,7 @@ window.fpReadyAfterAuth = function() {
 <script>
 (function(){
   // 最新の ver を 1 箇所に集約 (fpReadyAfterAuth 側と一致させる必要あり)
-  const FP_VERSION = "20260620CI-stg-schedule-direct-instant-merge";
+  const FP_VERSION = "20260620CJ-stg-today-detail-tag-svg";
   const loadTime = new Date();
   const hhmm = String(loadTime.getHours()).padStart(2,'0') + ':' + String(loadTime.getMinutes()).padStart(2,'0');
   const dateLabel = (FP_VERSION.match(/^(\d{4})(\d{2})(\d{2})/) || []).slice(1).join('/').replace(/^(\d{4})\//,'$1/').replace(/\/(\d{2})\/(\d{2})$/,'/$1/$2') || FP_VERSION;

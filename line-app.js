@@ -333,7 +333,12 @@
             </div>
             ${master.length === 0 ? `
               <div style="text-align:center;padding:32px;color:#94A3B8;font-size:13px;">
-                <div style="font-size:24px;margin-bottom:8px;">🏷</div>
+                <svg width="56" height="56" viewBox="0 0 32 32" fill="none" style="margin:0 auto 8px;display:block;">
+                  <path d="M15 9 L24 9 C25.1 9 26 9.9 26 11 L26 19 C26 19.5 25.8 20 25.4 20.4 L18.4 27.4 C17.6 28.2 16.3 28.2 15.5 27.4 L8.5 20.4 C7.7 19.6 7.7 18.3 8.5 17.5 L15 11 Z" fill="#E58FAE"/>
+                  <circle cx="20.5" cy="14.5" r="2" fill="#14213D"/>
+                  <path d="M11 5 L20 5 C21.1 5 22 5.9 22 7 L22 15 C22 15.5 21.8 16 21.4 16.4 L14.4 23.4 C13.6 24.2 12.3 24.2 11.5 23.4 L4.5 16.4 C3.7 15.6 3.7 14.3 4.5 13.5 L11 7 Z" fill="#fff" stroke="#14213D" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+                  <circle cx="16.5" cy="10.5" r="1.6" fill="#14213D"/>
+                </svg>
                 まだタグがありません。上のフォームから作成してください。
               </div>
             ` : `
@@ -5088,11 +5093,23 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
         const body = isSelf
           ? `${c.name}さん、お誕生日おめでとうございます 🎂\n\n日頃お任せいただき、 ありがとうございます。\n新しい一年が ${c.name}さんにとって 良い年になりますよう\nお祈りしております。\n— ${fpName}`
           : `${c.name}さん、いつもお世話になっております。\n\n本日は ${t.personName}様 (${t.rel}) の お誕生日ですね。\n素敵な1日を お過ごしください 🎂\n\n— ${fpName}`;
+        // ★ ディテール: 最終接触 + 保有商品 タグ + 次の打ち手
+        const lastDays = c.lastContact ? Math.floor((today - new Date(c.lastContact)) / 86400000) : null;
+        const autoTagsTxt = Array.isArray(c.autoTags) ? c.autoTags.slice(0, 3).map(t => t.label || t).join(' / ') : '';
+        const ctxParts = [];
+        if (lastDays != null) ctxParts.push(`最終接触 ${lastDays}日前`);
+        else ctxParts.push('未接触');
+        if (autoTagsTxt) ctxParts.push(`関心 ${autoTagsTxt}`);
+        if (c.aum) ctxParts.push(`管理資産 ¥${Number(c.aum).toLocaleString()}`);
         queue.push({
           id, clientId: c.id, clientName: c.name,
           icon: '🎂',
           reason: isSelf ? '本日 お誕生日' : `${t.personName}様 (${t.rel}) のお誕生日`,
           category: '誕生日',
+          why: ctxParts.join(' · '),
+          nextAction: isSelf
+            ? (lastDays != null && lastDays >= 60 ? '返信あれば 60分Zoom で 直近の家計レビュー の 機会に' : '返信あれば 誕生日割記念で 個別商品 のご案内 (任意)')
+            : '返信あれば 教育費 / 老後資金 の話題 を 自然に展開',
           body,
         });
       });
@@ -5108,11 +5125,21 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
       if (dormantThisMonth.includes(c.id)) return;
       const id = 'dormant-' + c.id;
       if (isHandled(id)) return;
+      // ★ ディテール: 前回提案 / 関心タグ / 直近イベント
+      const lastProp = (c.proposals || []).slice().reverse()[0];
+      const autoTagsTxt = Array.isArray(c.autoTags) ? c.autoTags.slice(0, 3).map(t => t.label || t).join(' / ') : '';
+      const ctxParts = [`最終接触 ${days}日前`];
+      if (lastProp) ctxParts.push(`前回提案 「${lastProp.title}」 (${lastProp.result})`);
+      if (autoTagsTxt) ctxParts.push(`関心 ${autoTagsTxt}`);
       queue.push({
         id, clientId: c.id, clientName: c.name,
         icon: '🔔',
         reason: `${days}日 ご連絡 が空いています`,
         category: 'ご無沙汰',
+        why: ctxParts.join(' · '),
+        nextAction: days >= 180
+          ? '返信あれば 関係再構築 の 30分 Zoom → 直近の生活変化 ヒアリング'
+          : '返信あれば 候補日3つ で Zoom 設定 → 前回提案 のフォロー or 新テーマ',
         body: `${c.name}さん、 ご無沙汰しております 😊\n\nお元気でいらっしゃいますか?\n\n最近、 ${c.name}さんに お伝えしたい話題が\nいくつか出てきました。\n\nお時間ある時に 30分の Zoom でも\nお茶でも いかがでしょうか?\n\n候補日 3つ ご返信いただけると 助かります。\n— ${fpName}`,
       });
     });
@@ -5129,11 +5156,16 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
         if (monthlySent.includes(c.id)) return;
         const id = 'monthly-' + c.id;
         if (isHandled(id)) return;
+        const lastDays = c.lastContact ? Math.floor((today - new Date(c.lastContact)) / 86400000) : null;
+        const ctxParts = [`月初一斉配信 / テーマ「${theme}」`];
+        if (lastDays != null) ctxParts.push(`最終接触 ${lastDays}日前`);
         queue.push({
           id, clientId: c.id, clientName: c.name,
           icon: '📰',
           reason: `${today.getMonth()+1}月の お役立ち情報`,
           category: '月初配信',
+          why: ctxParts.join(' · '),
+          nextAction: '返信あれば 個別シミュ 作成 → 商品提案 / 別件あれば 自然に拡張',
           body: `${c.name}さん、こんにちは 🌷\n\n今月の お役立ち情報を お届けします。\n\n📌 ${theme}\n→ 3行 で まとめました。\nお時間ある時に ご覧ください 😊\n\n気になる点あれば LINE で お知らせください。\n— ${fpName}`,
         });
       });
@@ -5247,7 +5279,26 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
               <div class="fp-today-v2-name">${escapeHtml(m.clientName)} <span>さん</span></div>
               <div class="fp-today-v2-reason">${m.icon} ${escapeHtml(m.reason)}</div>
             </header>
+            ${m.why ? `
+              <div style="background:#FFFBEB;border:1.5px solid #FCD34D;border-radius:10px;padding:11px 14px;margin-bottom:12px;display:flex;gap:10px;align-items:flex-start;">
+                <span style="font-size:14px;flex-shrink:0;line-height:1.4;">💡</span>
+                <div style="flex:1;min-width:0;">
+                  <div style="font-size:10.5px;font-weight:900;color:#B45309;letter-spacing:0.08em;margin-bottom:3px;">なぜ 今 この人に</div>
+                  <div style="font-size:13px;font-weight:700;color:#0F172A;line-height:1.55;">${escapeHtml(m.why)}</div>
+                </div>
+              </div>
+            ` : ''}
+            <div style="font-size:10.5px;font-weight:900;color:#475569;letter-spacing:0.08em;margin-bottom:5px;text-transform:uppercase;">📝 送る本文</div>
             <div class="fp-today-v2-bubble">${escapeHtml(m.body).replace(/\n/g, '<br>')}</div>
+            ${m.nextAction ? `
+              <div style="background:linear-gradient(135deg,#F0F9FF,#E0F2FE);border:1.5px solid #7DD3FC;border-radius:10px;padding:11px 14px;margin-bottom:14px;display:flex;gap:10px;align-items:flex-start;">
+                <span style="font-size:14px;flex-shrink:0;line-height:1.4;">→</span>
+                <div style="flex:1;min-width:0;">
+                  <div style="font-size:10.5px;font-weight:900;color:#0369A1;letter-spacing:0.08em;margin-bottom:3px;">送ったあと の 次の打ち手</div>
+                  <div style="font-size:13px;font-weight:700;color:#0F172A;line-height:1.55;">${escapeHtml(m.nextAction)}</div>
+                </div>
+              </div>
+            ` : ''}
             <button class="fp-today-v2-send" data-send="${escapeHtml(m.id)}">
               <span class="fp-today-v2-send-icon">📤</span>
               <span>このまま LINE で送る</span>
