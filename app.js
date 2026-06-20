@@ -3659,6 +3659,12 @@ ${ctxText}${surveyTxt}`;
             status.textContent = data.lineSent
               ? '✅ LINE 送付完了 / FP の Zoom を 別タブ で 開きました (Meeting ID: ' + (data.meetingId || '?') + ')'
               : '⚠ Meeting 作成成功 だが LINE 送信失敗 (' + (data.error || '') + ')';
+            // ★ Firestore データ即refresh → leadHub/Zoom予定 リスト 即反映
+            try {
+              if (window.refreshFirestoreCustomers) await window.refreshFirestoreCustomers();
+              c.zoomUrl = data.joinUrl;
+              c.zoomMeetingId = String(data.meetingId || '');
+            } catch (_) {}
             instantBtn.style.background = '#ECFDF5';
             instantBtn.style.borderColor = '#10B981';
             instantBtn.style.opacity = '1';
@@ -5910,6 +5916,14 @@ STEP C: 結果報告
             ? '✅ Zoom 予約完了 + LINE 送付済 (Meeting ID: ' + (data.zoomMeetingId || '?') + ')'
             : '⚠ Zoom 予約成功 だが LINE 送信失敗';
           sendBtn.textContent = '✓ 予約完了';
+          // ★ Firestore データ即refresh → leadHub/Zoom予定 リスト 即反映
+          try {
+            if (window.refreshFirestoreCustomers) await window.refreshFirestoreCustomers();
+            // 顧客ローカル更新 (zoomMeetingId が モーダル内 lookup で 使える ように)
+            client.confirmedSlot = confirmedSlot;
+            client.zoomUrl = data.zoomUrl;
+            client.zoomMeetingId = String(data.zoomMeetingId || '');
+          } catch (_) {}
           setTimeout(() => overlay.remove(), 2200);
         } else {
           throw new Error('応答 ok=false');

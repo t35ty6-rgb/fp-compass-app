@@ -831,11 +831,14 @@
     const upcomingZoom = bookings.filter(b => {
       if (archived.has(b.ts)) return false;
       if (b.recordingStatus === 'saved' || b.recordingStatus === 'recording') return false;
-      const meetDate = new Date(b.date);
+      if (!b.date) return false;
+      // ★ オーナーfb 2026-06-20: 今日の 予約 が 弾かれる バグ修正
+      //   旧: floor((midnight - now)/86400000) → 今日も -1 になる
+      //   新: 日付 ローカル 0:00 で 比較 → 今日(0) も 未来 も 含める
+      const meetDate = new Date(b.date + 'T00:00:00');
       if (isNaN(meetDate.getTime())) return false;
-      // 当日含めて未来
-      const diffDays = Math.floor((meetDate - now) / 86400000);
-      return diffDays >= 0;
+      const today0 = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      return meetDate >= today0;
     });
     const upcomingZoomCount = upcomingZoom.length;
     // 最も近い面談を計算 (今日 / 明日 / N日後 表示用)
