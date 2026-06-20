@@ -2657,6 +2657,15 @@
             </div>
           </div>
 
+          <!-- ★ オーナーfb 2026-06-20: 「今すぐ Zoom 開始」 — 顧客名直下 の 最目立ち位置 -->
+          ${c.lineFriendId ? `
+            <button id="cd-instant-zoom-btn" data-client-id="${escapeHtml(c.id)}" style="margin-top:14px;width:100%;background:linear-gradient(135deg,#06C755,#04A045);color:#fff;border:none;padding:18px 22px;border-radius:14px;font-size:17px;font-weight:900;cursor:pointer;font-family:'Noto Sans JP',sans-serif;letter-spacing:0.01em;box-shadow:0 8px 24px rgba(6,199,85,0.36),inset 0 1px 0 rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;gap:10px;min-height:62px;transition:transform .12s,box-shadow .12s;">
+              <span style="font-size:22px;">⚡</span>
+              <span>今すぐ Zoom 開始 → LINE 自動送付</span>
+            </button>
+            <div id="cd-instant-zoom-status" style="font-size:12px;font-weight:700;margin-top:8px;text-align:center;"></div>
+          ` : ''}
+
           <!-- ★ オーナーfb 2026-06-20: タグ管理 を 顧客名 直下、 ラベル大型化 -->
           <div class="cd-profile-section" id="cd-tags-section" data-client-id="${escapeHtml(c.id)}" style="margin-top:16px;padding:16px 18px;background:#F8FAFC;border:2px solid #E2E8F0;border-radius:12px;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
@@ -3559,6 +3568,46 @@ ${ctxText}${surveyTxt}`;
     document.querySelectorAll('[data-line-slots]').forEach(btn => {
       btn.addEventListener('click', () => openSlotsSendModal(c));
     });
+    // ★ オーナーfb 2026-06-20: 「⚡ 今すぐ Zoom 開始」 — Zoom Instant Meeting 作成 → LINE 自動送付 → host URL を 新タブで開く
+    const instantBtn = document.getElementById('cd-instant-zoom-btn');
+    if (instantBtn) {
+      instantBtn.addEventListener('click', async () => {
+        const status = document.getElementById('cd-instant-zoom-status');
+        if (!confirm(c.name + ' 様 に 「今すぐ Zoom 開始」 します。\n\n・Zoom Instant Meeting が 作成されます\n・URL が LINE で 即送信されます\n・ FP の Zoom が この後 新タブで 開きます (録画ON)\n\nよろしいですか?')) return;
+        const origHtml = instantBtn.innerHTML;
+        instantBtn.disabled = true;
+        instantBtn.innerHTML = '<span style="font-size:22px;">⏳</span><span>Zoom 作成 + LINE 送信中…</span>';
+        status.style.color = '#0F172A'; status.textContent = 'Zoom Meeting 作成中…';
+        try {
+          const { initializeApp, getApps } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js');
+          const { getFunctions, httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-functions.js');
+          const fbApp = getApps()[0] || initializeApp({
+            apiKey: 'AIzaSyAmVAEe9l9e1Yo_dzzJdbTVU35wWKd2sH4',
+            authDomain: 'skeleton-fp-compass-632026.firebaseapp.com',
+            projectId: 'skeleton-fp-compass-632026',
+          });
+          const fns = getFunctions(fbApp, 'asia-northeast1');
+          const fn = httpsCallable(fns, 'startInstantZoom');
+          const fsCustomerId = c._fsCustomerId || c.id;
+          const res = await fn({ customerId: fsCustomerId, lineFriendId: c.lineFriendId || null });
+          const data = (res && res.data) || {};
+          if (data.startUrl) {
+            window.open(data.startUrl, '_blank');
+            status.style.color = '#059669';
+            status.textContent = data.lineSent
+              ? '✅ LINE 送付完了 / FP の Zoom を 別タブ で 開きました'
+              : '⚠ Meeting 作成成功 だが LINE 送信失敗 (' + (data.error || '') + ')';
+            instantBtn.innerHTML = '<span style="font-size:22px;">✓</span><span>Zoom 開始済 (URL: ' + (data.meetingId || '?') + ')</span>';
+          } else {
+            throw new Error('startUrl が 返ってこなかった');
+          }
+        } catch (e) {
+          console.error('[instantZoom]', e);
+          status.style.color = '#DC2626'; status.textContent = '❌ 失敗: ' + (e.message || e).slice(0, 200);
+          instantBtn.disabled = false; instantBtn.innerHTML = origHtml;
+        }
+      });
+    }
     // ★ AI で返信案 を 1 クリック生成 (textarea に挿入、 編集して送信)
     const aiQuickBtn = document.getElementById('cd-line-ai-quick');
     if (aiQuickBtn) {
