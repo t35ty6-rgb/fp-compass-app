@@ -191,13 +191,27 @@
     days = days || 30;
     const result = [];
     const clients = window.DUMMY_CLIENTS || [];
-    // ★ rel ラベルマップ (家系図 拡張13区分対応 / 退化バグ修正 2026-06-20)
+    // ★ rel ラベルマップ (家系図 細分化34区分 + legacy 13区分 後方互換)
     const REL_LABEL = {
       self: '本人',
-      grandparent: '祖父母', parent: '親', parent_in_law: '義父母', uncle: 'おじ・おば',
-      spouse: '配偶者', sibling: 'ご兄弟', sibling_in_law: '義兄弟', cousin: 'いとこ',
-      child: 'お子様', child_in_law: '子の配偶者', nephew: '甥・姪', grandchild: 'お孫さん',
-      other: 'その他',
+      // 祖父母世代
+      grandfather_p:'祖父(父方)', grandmother_p:'祖母(父方)', grandfather_m:'祖父(母方)', grandmother_m:'祖母(母方)',
+      grandparent:'祖父母',
+      // 親世代
+      father:'父', mother:'母', parent:'親',
+      father_in_law:'義父', mother_in_law:'義母', parent_in_law:'義父母',
+      uncle_p:'おじ(父方)', aunt_p:'おば(父方)', uncle_m:'おじ(母方)', aunt_m:'おば(母方)', uncle:'おじ・おば',
+      // 本人世代
+      spouse:'配偶者',
+      elder_brother:'兄', elder_sister:'姉', younger_brother:'弟', younger_sister:'妹', sibling:'ご兄弟',
+      brother_in_law:'義兄弟', sister_in_law:'義姉妹', sibling_in_law:'義兄弟姉妹', cousin:'いとこ',
+      // 子世代
+      son_1st:'長男', daughter_1st:'長女', son_2nd:'次男', daughter_2nd:'次女', son_3rd:'三男', daughter_3rd:'三女',
+      child_other:'お子様', child:'お子様',
+      child_in_law:'子の配偶者', nephew:'甥', niece:'姪',
+      // 孫世代
+      grandson:'孫(男)', granddaughter:'孫(女)', grandchild:'お孫さん',
+      other:'その他',
     };
     clients.forEach(c => {
       // ★ filter 緩和: lineSubscribed 必須 → lineFriendId/userId/source=line_survey でも 通す (Firestore 客対応)

@@ -509,14 +509,57 @@
     const v = document.querySelector('[data-line-view="dormantFollowup"]');
     if (!v) return;
     const allClients = (window.DUMMY_CLIENTS || []).filter(c => c.lineFriendId); // LINE連携客のみ
-    // タグフィルタ (state)
+    // ★ 複数フィルタ state (タグ + 年代 + 職業 + 家族 + 期間 + 保有商品)
     const tagsMaster = (window.FpApp && window.FpApp.getTagsMaster) ? window.FpApp.getTagsMaster() : [];
-    const activeTagFilter = window._fpDormantTagFilter || null; // null = 全員, 'tag-id' = そのタグ持ち
-    const clients = activeTagFilter
-      ? allClients.filter(c => (window.FpApp.getClientTags(c.id) || []).includes(activeTagFilter))
-      : allClients;
-    const enriched = clients.map(c => ({ c, days: daysSinceLastContact(c) })).filter(x => x.days >= 21);
+    const F = (window._fpDormantFilters = window._fpDormantFilters || { tag: null, age: null, occ: null, fam: null, bucket: null, product: null });
+    // 候補 抽出 (現状客から 動的に セレクトボックス候補 作成)
+    const uniq = (arr) => Array.from(new Set(arr.filter(Boolean)));
+    const ageOptions = uniq(allClients.map(c => {
+      // c.birth → 20/30/40... に丸める
+      if (!c.birth) return null;
+      const y = new Date().getFullYear() - new Date(c.birth).getFullYear();
+      if (y < 30) return '20代'; if (y < 40) return '30代'; if (y < 50) return '40代';
+      if (y < 60) return '50代'; if (y < 70) return '60代'; return '70代+';
+    })).sort();
+    const occOptions = uniq(allClients.map(c => c.occupation));
+    const famOptions = uniq(allClients.map(c => c.family && Array.isArray(c.family) ? `家族${c.family.length}名` : null));
+    const productOptions = uniq(allClients.flatMap(c => Array.isArray(c.autoTags) ? c.autoTags.map(t => t.label || t) : []));
+    // バケット 期間
+    const bucketOptions = ['21-60日', '60-180日', '180日+'];
+
+    // フィルタ適用
+    const passesFilters = (c) => {
+      if (F.tag && !((window.FpApp.getClientTags(c.id) || []).includes(F.tag))) return false;
+      if (F.age) {
+        if (!c.birth) return false;
+        const y = new Date().getFullYear() - new Date(c.birth).getFullYear();
+        const a = y < 30 ? '20代' : y < 40 ? '30代' : y < 50 ? '40代' : y < 60 ? '50代' : y < 70 ? '60代' : '70代+';
+        if (a !== F.age) return false;
+      }
+      if (F.occ && c.occupation !== F.occ) return false;
+      if (F.fam) {
+        const famKey = c.family && Array.isArray(c.family) ? `家族${c.family.length}名` : null;
+        if (famKey !== F.fam) return false;
+      }
+      if (F.product) {
+        const tags = Array.isArray(c.autoTags) ? c.autoTags.map(t => t.label || t) : [];
+        if (!tags.includes(F.product)) return false;
+      }
+      return true;
+    };
+    const clients = allClients.filter(passesFilters);
+    let enriched = clients.map(c => ({ c, days: daysSinceLastContact(c) })).filter(x => x.days >= 21);
+    if (F.bucket) {
+      enriched = enriched.filter(x => {
+        if (F.bucket === '21-60日') return x.days >= 21 && x.days < 60;
+        if (F.bucket === '60-180日') return x.days >= 60 && x.days < 180;
+        if (F.bucket === '180日+') return x.days >= 180;
+        return true;
+      });
+    }
     enriched.sort((a, b) => b.days - a.days);
+    // 旧 state 互換
+    const activeTagFilter = F.tag;
 
     const buckets = {
       light:  enriched.filter(x => x.days >= 21  && x.days < 60),
@@ -561,18 +604,42 @@
 
 また落ち着いてお話できる機会、楽しみにしてます ✨`;
 
-    // タグフィルタ UI
-    const tagFilterHtml = tagsMaster.length === 0 ? '' : `
-      <div style="background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-        <span style="font-size:11px;font-weight:800;color:#475569;letter-spacing:0.06em;">🏷 タグで絞る:</span>
-        <button data-tag-filter="" style="background:${!activeTagFilter ? '#0F172A' : 'transparent'};color:${!activeTagFilter ? '#fff' : '#64748B'};border:1px solid ${!activeTagFilter ? '#0F172A' : '#E2E8F0'};padding:5px 12px;border-radius:999px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">全員 (${allClients.filter(c => daysSinceLastContact(c) >= 21).length})</button>
-        ${tagsMaster.map(t => {
-          const n = allClients.filter(c => (window.FpApp.getClientTags(c.id) || []).includes(t.id) && daysSinceLastContact(c) >= 21).length;
-          const on = activeTagFilter === t.id;
-          return `<button data-tag-filter="${t.id}" style="background:${on ? t.color : t.color+'1A'};color:${on ? '#fff' : t.color};border:1px solid ${t.color}${on ? '' : '55'};padding:5px 12px;border-radius:999px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">${escapeHtml(t.label)} (${n})</button>`;
-        }).join('')}
+    // ★ 多段 絞り込みフィルタ UI (タグ + 期間 + 年代 + 職業 + 家族 + 保有商品)
+    const selBox = (id, label, opts, current) => `
+      <label style="display:flex;flex-direction:column;gap:4px;min-width:0;flex:1 1 130px;">
+        <span style="font-size:10.5px;font-weight:800;color:#64748B;letter-spacing:0.05em;">${label}</span>
+        <select data-multi-filter="${id}" style="padding:9px 30px 9px 11px;border:1.5px solid #E2E8F0;border-radius:8px;font-size:13px;font-weight:600;font-family:inherit;background:#fff;color:#0F172A;cursor:pointer;min-height:38px;">
+          <option value="">— すべて —</option>
+          ${opts.map(o => `<option value="${escapeHtml(o)}" ${current === o ? 'selected' : ''}>${escapeHtml(o)}</option>`).join('')}
+        </select>
+      </label>`;
+    const activeFilterCount = ['tag','bucket','age','occ','fam','product'].filter(k => F[k]).length;
+    const filterHtml = `
+      <div style="background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <strong style="font-size:12.5px;color:#0F172A;letter-spacing:0.02em;">🔍 絞り込み <span style="color:#5B5BF0;font-weight:900;">${activeFilterCount > 0 ? '(' + activeFilterCount + '個 適用中)' : ''}</span></strong>
+          ${activeFilterCount > 0 ? '<button id="fp-dormant-filter-clear" style="background:transparent;color:#64748B;border:1px solid #E2E8F0;padding:5px 11px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">✕ すべて解除</button>' : ''}
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+          ${selBox('bucket', '⏰ 期間', bucketOptions, F.bucket)}
+          ${selBox('age', '🎂 年代', ageOptions, F.age)}
+          ${selBox('occ', '💼 職業', occOptions, F.occ)}
+          ${selBox('fam', '👨‍👩‍👧 家族', famOptions, F.fam)}
+          ${productOptions.length > 0 ? selBox('product', '📊 保有商品', productOptions, F.product) : ''}
+        </div>
+        ${tagsMaster.length > 0 ? `
+          <div style="border-top:1px solid #F1F5F9;margin-top:12px;padding-top:12px;display:flex;flex-wrap:wrap;align-items:center;gap:7px;">
+            <span style="font-size:10.5px;font-weight:800;color:#64748B;letter-spacing:0.05em;">🏷 タグ:</span>
+            <button data-tag-filter="" style="background:${!F.tag ? '#0F172A' : 'transparent'};color:${!F.tag ? '#fff' : '#64748B'};border:1px solid ${!F.tag ? '#0F172A' : '#E2E8F0'};padding:4px 11px;border-radius:999px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">指定なし</button>
+            ${tagsMaster.map(t => {
+              const n = allClients.filter(c => (window.FpApp.getClientTags(c.id) || []).includes(t.id) && daysSinceLastContact(c) >= 21).length;
+              const on = F.tag === t.id;
+              return `<button data-tag-filter="${t.id}" style="background:${on ? t.color : t.color+'1A'};color:${on ? '#fff' : t.color};border:1px solid ${t.color}${on ? '' : '55'};padding:4px 11px;border-radius:999px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">${escapeHtml(t.label)} (${n})</button>`;
+            }).join('')}
+          </div>` : ''}
       </div>
     `;
+    const tagFilterHtml = filterHtml;
 
     v.innerHTML = `
       <div class="page" style="max-width:920px;">
@@ -619,9 +686,24 @@
     v.querySelectorAll('[data-tag-filter]').forEach(btn => {
       btn.addEventListener('click', () => {
         const id = btn.dataset.tagFilter;
-        window._fpDormantTagFilter = id || null;
+        F.tag = id || null;
+        window._fpDormantTagFilter = F.tag;  // 後方互換
         renderDormantInner();
       });
+    });
+    // ★ 多段フィルタ select
+    v.querySelectorAll('[data-multi-filter]').forEach(sel => {
+      sel.addEventListener('change', () => {
+        F[sel.dataset.multiFilter] = sel.value || null;
+        renderDormantInner();
+      });
+    });
+    // フィルタ クリア
+    const clearBtn = document.getElementById('fp-dormant-filter-clear');
+    if (clearBtn) clearBtn.addEventListener('click', () => {
+      Object.keys(F).forEach(k => F[k] = null);
+      window._fpDormantTagFilter = null;
+      renderDormantInner();
     });
 
     if (enriched.length === 0) return;
@@ -3915,45 +3997,44 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
   // ============================
   function renderDistributionHub() {
     const v = document.querySelector('[data-line-view="distributionHub"]');
+    const cur = window._fpDistSubtab || 'today';  // today / schedules / templates / log
+    const tab = (k, ic, label) => `
+      <button data-dist-subtab="${k}" style="background:${cur===k?'#0F172A':'#fff'};color:${cur===k?'#fff':'#475569'};border:2px solid ${cur===k?'#0F172A':'#E2E8F0'};padding:14px 22px;border-radius:11px;font-family:'Noto Sans JP',sans-serif;font-weight:800;font-size:15px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:all .12s;min-height:54px;letter-spacing:-0.005em;">
+        <span style="font-size:18px;">${ic}</span>${label}
+      </button>`;
     v.innerHTML = `
-      <div class="howto-banner">
-        <div class="howto-banner-head">
-          <span class="howto-banner-title">📨 配信管理</span>
-        </div>
-        <div class="howto-steps">
-          <div class="howto-step"><div class="howto-step-no">1</div><div><strong>ダッシュボード</strong> — 今日 送る人</div></div>
-          <div class="howto-step"><div class="howto-step-no">2</div><div><strong>スケジュール</strong> — いつ 誰に 何を</div></div>
-          <div class="howto-step"><div class="howto-step-no">3</div><div><strong>テンプレ</strong> — 文章ストック</div></div>
-          <div class="howto-step"><div class="howto-step-no">4</div><div><strong>送信ログ</strong> — 過去の配信履歴</div></div>
-        </div>
+      <!-- サブタブ: 今日 / スケジュール / テンプレ / ログ — 一発目は「今日」 -->
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;">
+        ${tab('today', '📤', '今日 送る')}
+        ${tab('schedules', '⏰', '予定')}
+        ${tab('templates', '💬', 'テンプレ')}
+        ${tab('log', '📋', '送信ログ')}
       </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;font-size:11.5px;">
-        <a href="#dist-overview" class="quick-jump">📊 概況</a>
-        <a href="#dist-schedules" class="quick-jump">⏰ スケジュール</a>
-        <a href="#dist-templates" class="quick-jump">💬 テンプレ</a>
-        <a href="#dist-log" class="quick-jump">📋 ログ</a>
-      </div>
-      <section id="dist-overview">
-        <h2 class="hub-section-title">📊 配信ダッシュボード</h2>
+      <section data-dist-pane="today" ${cur==='today'?'':'hidden'}>
         <div data-line-view="dashboard"></div>
       </section>
-      <section id="dist-schedules" style="margin-top:32px;">
-        <h2 class="hub-section-title">⏰ 配信スケジュール</h2>
+      <section data-dist-pane="schedules" ${cur==='schedules'?'':'hidden'}>
         <div data-line-view="schedules"></div>
       </section>
-      <section id="dist-templates" style="margin-top:32px;">
-        <h2 class="hub-section-title">💬 メッセージテンプレ</h2>
+      <section data-dist-pane="templates" ${cur==='templates'?'':'hidden'}>
         <div data-line-view="templates"></div>
       </section>
-      <section id="dist-log" style="margin-top:32px;">
-        <h2 class="hub-section-title">📋 送信ログ</h2>
+      <section data-dist-pane="log" ${cur==='log'?'':'hidden'}>
         <div data-line-view="log"></div>
       </section>
     `;
-    renderLineDashboard();
-    renderSchedules();
-    renderTemplates();
-    renderLog();
+    // ★ 一発目に重い 4 render 全部 走らせない: 現在の サブタブ だけ render
+    if (cur === 'today') renderLineDashboard();
+    else if (cur === 'schedules') renderSchedules();
+    else if (cur === 'templates') renderTemplates();
+    else if (cur === 'log') renderLog();
+    // サブタブ click
+    v.querySelectorAll('[data-dist-subtab]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        window._fpDistSubtab = btn.dataset.distSubtab;
+        renderDistributionHub();
+      });
+    });
   }
 
   // ============================

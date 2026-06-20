@@ -3262,24 +3262,45 @@
       const isNew = memberIdx == null;
       // ★ 2段プルダウン: 世代グループ → 細部 (50-60代 FP の 操作迷い 解消)
       // グループ 色: 上=パープル / 同=ティール / 下=オレンジ / その他=グレー
+      // 細分化: 父/母 別、 兄/姉/弟/妹 別、 長男/長女/次男/次女 別 (家系図 仕組み準拠)
       const REL_TREE = {
         upper:    { label: '上の世代', color: '#A855F7', bg: '#FAF5FF', items: [
-          { v: 'grandparent',   ja: '祖父母' },
-          { v: 'parent',        ja: '親 (実父母)' },
-          { v: 'parent_in_law', ja: '義父母 (配偶者の親)' },
-          { v: 'uncle',         ja: 'おじ・おば' },
+          { v: 'grandfather_p', ja: '祖父 (父方)' },
+          { v: 'grandmother_p', ja: '祖母 (父方)' },
+          { v: 'grandfather_m', ja: '祖父 (母方)' },
+          { v: 'grandmother_m', ja: '祖母 (母方)' },
+          { v: 'father',         ja: '父' },
+          { v: 'mother',         ja: '母' },
+          { v: 'father_in_law',  ja: '義父 (配偶者の父)' },
+          { v: 'mother_in_law',  ja: '義母 (配偶者の母)' },
+          { v: 'uncle_p',        ja: 'おじ (父方)' },
+          { v: 'aunt_p',         ja: 'おば (父方)' },
+          { v: 'uncle_m',        ja: 'おじ (母方)' },
+          { v: 'aunt_m',         ja: 'おば (母方)' },
         ] },
         same:     { label: '同世代',   color: '#0D9488', bg: '#F0FDFA', items: [
-          { v: 'spouse',         ja: '配偶者' },
-          { v: 'sibling',        ja: 'ご兄弟' },
-          { v: 'sibling_in_law', ja: '義兄弟 (配偶者の兄弟)' },
-          { v: 'cousin',         ja: 'いとこ' },
+          { v: 'spouse',           ja: '配偶者' },
+          { v: 'elder_brother',    ja: '兄' },
+          { v: 'elder_sister',     ja: '姉' },
+          { v: 'younger_brother',  ja: '弟' },
+          { v: 'younger_sister',   ja: '妹' },
+          { v: 'brother_in_law',   ja: '義兄弟 (配偶者の兄弟)' },
+          { v: 'sister_in_law',    ja: '義姉妹 (配偶者の姉妹)' },
+          { v: 'cousin',           ja: 'いとこ' },
         ] },
         lower:    { label: '下の世代', color: '#EA580C', bg: '#FFF7ED', items: [
-          { v: 'child',        ja: 'お子様' },
-          { v: 'child_in_law', ja: '子の配偶者' },
-          { v: 'nephew',       ja: '甥・姪 (兄弟の子)' },
-          { v: 'grandchild',   ja: 'お孫さん' },
+          { v: 'son_1st',       ja: '長男' },
+          { v: 'daughter_1st',  ja: '長女' },
+          { v: 'son_2nd',       ja: '次男' },
+          { v: 'daughter_2nd',  ja: '次女' },
+          { v: 'son_3rd',       ja: '三男' },
+          { v: 'daughter_3rd',  ja: '三女' },
+          { v: 'child_other',   ja: 'お子様 (その他)' },
+          { v: 'child_in_law',  ja: '子の配偶者' },
+          { v: 'nephew',        ja: '甥' },
+          { v: 'niece',         ja: '姪' },
+          { v: 'grandson',      ja: '孫 (男)' },
+          { v: 'granddaughter', ja: '孫 (女)' },
         ] },
         other:    { label: 'その他',   color: '#64748B', bg: '#F8FAFC', items: [
           { v: 'other', ja: 'その他' },
@@ -3442,24 +3463,29 @@
 【出力フォーマット 厳守 — JSONのみ、 マークダウン や 説明文 一切なし】
 {
   "family": [
-    { "rel": "grandparent" | "parent" | "parent_in_law" | "uncle" | "spouse" | "sibling" | "sibling_in_law" | "cousin" | "child" | "child_in_law" | "nephew" | "grandchild" | "other",
-      "name": "名前(または続柄: 配偶者/長女/長男/母 等)",
+    { "rel": "<下記 rel 種別 から 必ず ひとつ>",
+      "name": "名前(または続柄: 妻/長女/長男/母 等)",
       "birth": "YYYY-MM-DD or 空",
       "note": "学年 / 職業 / 推定年齢 等" }
   ]
 }
 
+【rel 種別 — 細分化 34区分 / 必ず この値 を 使う】
+祖父母世代: grandfather_p (祖父・父方) / grandmother_p (祖母・父方) / grandfather_m (祖父・母方) / grandmother_m (祖母・母方)
+親世代: father (父) / mother (母) / father_in_law (義父) / mother_in_law (義母) / uncle_p (おじ・父方) / aunt_p (おば・父方) / uncle_m (おじ・母方) / aunt_m (おば・母方)
+本人世代: spouse (配偶者) / elder_brother (兄) / elder_sister (姉) / younger_brother (弟) / younger_sister (妹) / brother_in_law (義兄弟) / sister_in_law (義姉妹) / cousin (いとこ)
+子世代: son_1st (長男) / daughter_1st (長女) / son_2nd (次男) / daughter_2nd (次女) / son_3rd (三男) / daughter_3rd (三女) / child_other (お子様その他) / child_in_law (子の配偶者) / nephew (甥) / niece (姪)
+孫世代: grandson (孫・男) / granddaughter (孫・女)
+その他: other
+
 【ルール】
 - 本人 (${c.name || 'お客様'} 様) は family に含めない (別途扱う)
-- rel 種別 (13区分):
-  - grandparent=祖父母, parent=実親, parent_in_law=義父母 (配偶者の親), uncle=おじ・おば
-  - spouse=配偶者, sibling=実兄弟姉妹, sibling_in_law=義兄弟姉妹 (配偶者の兄弟), cousin=いとこ
-  - child=実子, child_in_law=子の配偶者, nephew=甥・姪 (兄弟の子), grandchild=孫
-  - other=上記以外
+- 父/母 を 区別 (議事録から 性別 / 続柄判明時)、 不明なら parent では なく 父 か 母 推測
+- 兄/姉/弟/妹 は 年齢関係から 判別 (本人より上=elder_, 下=younger_, 性別 で 兄/弟・姉/妹)
+- 長男/長女/次男/次女 は 議事録 の 順序 + 性別 で 判別 (上 の 子から 順に)
 - birth は 議事録に YYYY/MM/DD や 生年月日明示があれば YYYY-MM-DD で 抽出 (例: 「妻は1972年5月生まれ」 → "1972-05-01")
 - birth が議事録から推定できない場合は空、 年齢ヒントがあれば note に「○歳」 と書く
 - 学年 / 職業 / 居住地 等の 補足情報 は note に
-- 同じ続柄複数いれば全部追加 (例: 長男 / 次男)
 - 議事録に出てこない人は推測しない
 - name は議事録に出てる呼称 (例: 「妻」「長女」「弟」「兄」 等) でも OK、 不明なら 続柄 をそのまま
 
@@ -3830,22 +3856,76 @@ ${ctxText}${surveyTxt}`;
   // ============================
   function renderFamilyTreeBlock(client) {
     const fam = Array.isArray(client.family) ? client.family : [];
-    // 関係 → 表示順 + ラベル + 色 (相続/二世帯/事業承継 で 必要になる 拡張親族 込み)
+    // 関係 → ラベル + 色 (細分化 13→34区分: 父/母別、 長男/長女/次男/次女別、 兄/姉/弟/妹別)
+    // legacy rel (parent/child/sibling/grandparent/parent_in_law/uncle/child_in_law/nephew/grandchild) も 後方互換
     const relMeta = {
-      self:           { label: '本人',         color: '#5B5BF0', order: 0 },
-      grandparent:    { label: '祖父母',       color: '#7C3AED', order: -3 },
-      parent:         { label: '親',           color: '#A855F7', order: -2 },
-      parent_in_law:  { label: '義父母',       color: '#C084FC', order: -1 },
-      uncle:          { label: 'おじ・おば',   color: '#D8B4FE', order: -1 },
-      spouse:         { label: '配偶者',       color: '#EF4444', order: 1 },
-      sibling:        { label: 'ご兄弟',       color: '#84CC16', order: 2 },
-      sibling_in_law: { label: '義兄弟',       color: '#A3E635', order: 2 },
-      cousin:         { label: 'いとこ',       color: '#22C55E', order: 3 },
-      child:          { label: 'お子様',       color: '#06B6D4', order: 4 },
-      child_in_law:   { label: '子の配偶者',   color: '#22D3EE', order: 5 },
-      nephew:         { label: '甥・姪',       color: '#0EA5E9', order: 5 },
-      grandchild:     { label: 'お孫さん',     color: '#F59E0B', order: 6 },
-      other:          { label: 'その他',       color: '#6B7280', order: 7 },
+      self:            { label: '本人',         color: '#5B5BF0' },
+      // 祖父母世代
+      grandfather_p:   { label: '祖父(父方)',   color: '#7C3AED' },
+      grandmother_p:   { label: '祖母(父方)',   color: '#7C3AED' },
+      grandfather_m:   { label: '祖父(母方)',   color: '#7C3AED' },
+      grandmother_m:   { label: '祖母(母方)',   color: '#7C3AED' },
+      grandparent:     { label: '祖父母',       color: '#7C3AED' },  // legacy
+      // 親世代
+      father:          { label: '父',           color: '#A855F7' },
+      mother:          { label: '母',           color: '#A855F7' },
+      parent:          { label: '親',           color: '#A855F7' },  // legacy
+      father_in_law:   { label: '義父',         color: '#C084FC' },
+      mother_in_law:   { label: '義母',         color: '#C084FC' },
+      parent_in_law:   { label: '義父母',       color: '#C084FC' },  // legacy
+      uncle_p:         { label: 'おじ(父方)',   color: '#D8B4FE' },
+      aunt_p:          { label: 'おば(父方)',   color: '#D8B4FE' },
+      uncle_m:         { label: 'おじ(母方)',   color: '#D8B4FE' },
+      aunt_m:          { label: 'おば(母方)',   color: '#D8B4FE' },
+      uncle:           { label: 'おじ・おば',   color: '#D8B4FE' },  // legacy
+      // 本人世代
+      spouse:          { label: '配偶者',       color: '#EF4444' },
+      elder_brother:   { label: '兄',           color: '#84CC16' },
+      elder_sister:    { label: '姉',           color: '#84CC16' },
+      younger_brother: { label: '弟',           color: '#84CC16' },
+      younger_sister:  { label: '妹',           color: '#84CC16' },
+      sibling:         { label: 'ご兄弟',       color: '#84CC16' },  // legacy
+      brother_in_law:  { label: '義兄弟',       color: '#A3E635' },
+      sister_in_law:   { label: '義姉妹',       color: '#A3E635' },
+      sibling_in_law:  { label: '義兄弟姉妹',   color: '#A3E635' },  // legacy
+      cousin:          { label: 'いとこ',       color: '#22C55E' },
+      // 子世代
+      son_1st:         { label: '長男',         color: '#EA580C' },
+      daughter_1st:    { label: '長女',         color: '#EA580C' },
+      son_2nd:         { label: '次男',         color: '#EA580C' },
+      daughter_2nd:    { label: '次女',         color: '#EA580C' },
+      son_3rd:         { label: '三男',         color: '#EA580C' },
+      daughter_3rd:    { label: '三女',         color: '#EA580C' },
+      child_other:     { label: 'お子様',       color: '#EA580C' },
+      child:           { label: 'お子様',       color: '#06B6D4' },  // legacy
+      child_in_law:    { label: '子の配偶者',   color: '#FB923C' },
+      nephew:          { label: '甥',           color: '#0EA5E9' },
+      niece:           { label: '姪',           color: '#0EA5E9' },
+      // 孫世代
+      grandson:        { label: '孫(男)',       color: '#F59E0B' },
+      granddaughter:   { label: '孫(女)',       color: '#F59E0B' },
+      grandchild:      { label: 'お孫さん',     color: '#F59E0B' },  // legacy
+      other:           { label: 'その他',       color: '#6B7280' },
+    };
+    // 世代マップ: gen1=祖父母 / gen2=親 / gen3=本人 / gen4=子 / gen5=孫 / other
+    const GEN_OF = {
+      grandfather_p:'gen1', grandmother_p:'gen1', grandfather_m:'gen1', grandmother_m:'gen1', grandparent:'gen1',
+      father:'gen2', mother:'gen2', parent:'gen2', father_in_law:'gen2', mother_in_law:'gen2', parent_in_law:'gen2',
+      uncle_p:'gen2', aunt_p:'gen2', uncle_m:'gen2', aunt_m:'gen2', uncle:'gen2',
+      spouse:'gen3', elder_brother:'gen3', elder_sister:'gen3', younger_brother:'gen3', younger_sister:'gen3', sibling:'gen3',
+      brother_in_law:'gen3', sister_in_law:'gen3', sibling_in_law:'gen3', cousin:'gen3',
+      son_1st:'gen4', daughter_1st:'gen4', son_2nd:'gen4', daughter_2nd:'gen4', son_3rd:'gen4', daughter_3rd:'gen4',
+      child_other:'gen4', child:'gen4', child_in_law:'gen4', nephew:'gen4', niece:'gen4',
+      grandson:'gen5', granddaughter:'gen5', grandchild:'gen5',
+      other:'other',
+    };
+    const GEN_DEF = {
+      gen1: { label: '祖父母世代', color: '#7C3AED', bg: '#FAF5FF' },
+      gen2: { label: '親世代',     color: '#A855F7', bg: '#FAF5FF' },
+      gen3: { label: '本人世代',   color: '#0D9488', bg: '#F0FDFA' },
+      gen4: { label: '子世代',     color: '#EA580C', bg: '#FFF7ED' },
+      gen5: { label: '孫世代',     color: '#F59E0B', bg: '#FFFBEB' },
+      other:{ label: 'その他',     color: '#6B7280', bg: '#F8FAFC' },
     };
     const age = (birth) => {
       if (!birth) return null;
@@ -3857,35 +3937,51 @@ ${ctxText}${surveyTxt}`;
       if (m < 0 || (m === 0 && now.getDate() < b.getDate())) a--;
       return a;
     };
-    const selfCard = `<div class="fp-fam-card" data-fam-idx="self" style="background:#5B5BF015;border:2px solid #5B5BF0;">
-      <div class="fp-fam-rel" style="color:#5B5BF0;">👤 本人</div>
-      <div class="fp-fam-name">${escapeHtml(client.name || 'お客様')}</div>
-      <div class="fp-fam-age">${age(client.birth) ?? '?'}歳 / ${escapeHtml(client.occupation || '職業未設定')}</div>
-    </div>`;
-    // 関係別 にグループ化 → 描画順は 祖父母 → 親/義父母/おじおば → self/spouse → 兄弟/義兄弟/いとこ → 子/義子/甥姪 → 孫 → other
-    const groups = {
-      grandparent: [], parent: [], parent_in_law: [], uncle: [],
-      spouse: [], sibling: [], sibling_in_law: [], cousin: [],
-      child: [], child_in_law: [], nephew: [], grandchild: [], other: [],
-    };
+    // ★ 木構造表示: 世代ごとに 横並び (gen1 祖父母 → gen2 親 → gen3 本人+配偶者+兄弟 → gen4 子 → gen5 孫)
+    // 関係を 世代 でグループ化
+    const byGen = { gen1: [], gen2: [], gen3: [], gen4: [], gen5: [], other: [] };
     fam.forEach((m, idx) => {
       const r = (m.rel || 'other').toLowerCase();
-      const grp = groups[r] ? r : 'other';
-      groups[grp].push({ ...m, _idx: idx });
+      const gen = GEN_OF[r] || 'other';
+      byGen[gen].push({ ...m, _idx: idx, _meta: relMeta[r] || relMeta.other });
     });
-    const renderGroup = (rel, list) => {
-      if (list.length === 0) return '';
-      const meta = relMeta[rel] || relMeta.other;
-      return `<div style="margin-bottom:14px;">
-        <div style="font-size:11px;font-weight:800;color:${meta.color};letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;">${meta.label} (${list.length}名)</div>
-        <div style="display:flex;flex-wrap:wrap;gap:8px;">
-          ${list.map(m => `<div class="fp-fam-card" data-fam-idx="${m._idx}" style="background:${meta.color}10;border:1.5px solid ${meta.color}66;cursor:pointer;">
-            <div class="fp-fam-rel" style="color:${meta.color};">${meta.label}</div>
-            <div class="fp-fam-name">${escapeHtml(m.name || '(未設定)')}</div>
-            <div class="fp-fam-age">${age(m.birth) ?? '?'}歳${m.note ? ' / ' + escapeHtml(m.note).slice(0,20) : ''}</div>
-            <button class="fp-fam-edit" data-fam-edit-idx="${m._idx}" title="編集">✏</button>
-          </div>`).join('')}
-        </div>
+    // 各世代内 の 並び順 (兄→姉→弟→妹、 長男→長女→次男→次女 等 自然な順)
+    const REL_ORDER = [
+      'grandfather_p','grandmother_p','grandfather_m','grandmother_m','grandparent',
+      'father','mother','parent','father_in_law','mother_in_law','parent_in_law',
+      'uncle_p','aunt_p','uncle_m','aunt_m','uncle',
+      'spouse','elder_brother','elder_sister','younger_brother','younger_sister','sibling',
+      'brother_in_law','sister_in_law','sibling_in_law','cousin',
+      'son_1st','daughter_1st','son_2nd','daughter_2nd','son_3rd','daughter_3rd','child_other','child',
+      'child_in_law','nephew','niece',
+      'grandson','granddaughter','grandchild','other',
+    ];
+    Object.keys(byGen).forEach(g => {
+      byGen[g].sort((a, b) => REL_ORDER.indexOf(a.rel) - REL_ORDER.indexOf(b.rel));
+    });
+    const cardHtml = (m, meta, isSelf) => {
+      const color = isSelf ? '#5B5BF0' : meta.color;
+      return `<div class="fp-fam-card" data-fam-idx="${isSelf ? 'self' : m._idx}" style="background:${color}10;border:2px solid ${color};cursor:${isSelf?'default':'pointer'};">
+        <div class="fp-fam-rel" style="color:${color};">${isSelf ? '👤 本人' : meta.label}</div>
+        <div class="fp-fam-name">${escapeHtml(isSelf ? (client.name || 'お客様') : (m.name || '(未設定)'))}</div>
+        <div class="fp-fam-age">${age(isSelf ? client.birth : m.birth) ?? '?'}歳${(isSelf ? client.occupation : m.note) ? ' / ' + escapeHtml(String(isSelf ? client.occupation : m.note)).slice(0,20) : ''}</div>
+        ${isSelf ? '' : `<button class="fp-fam-edit" data-fam-edit-idx="${m._idx}" title="編集">✏</button>`}
+      </div>`;
+    };
+    const renderGenRow = (genKey, customSelfInsert) => {
+      const list = byGen[genKey] || [];
+      if (list.length === 0 && !customSelfInsert) return '';
+      const def = GEN_DEF[genKey];
+      const cards = list.map(m => cardHtml(m, m._meta)).join('');
+      const selfCardHtml = customSelfInsert ? cardHtml(null, null, true) : '';
+      return `<div class="fp-fam-gen-row" style="background:${def.bg};border-left:4px solid ${def.color};">
+        <div class="fp-fam-gen-label" style="color:${def.color};">${def.label}</div>
+        <div class="fp-fam-gen-cards">${customSelfInsert
+          ? [...list.filter(m => m.rel === 'elder_brother' || m.rel === 'elder_sister'),
+             { _self: true }].filter(Boolean).map(x => x._self ? selfCardHtml : cardHtml(x, x._meta)).join('') +
+            list.filter(m => m.rel === 'spouse').map(m => cardHtml(m, m._meta)).join('') +
+            list.filter(m => !['elder_brother','elder_sister','spouse'].includes(m.rel)).map(m => cardHtml(m, m._meta)).join('')
+          : cards}</div>
       </div>`;
     };
     return `
@@ -3897,41 +3993,28 @@ ${ctxText}${surveyTxt}`;
         </div>
         <div id="fp-fam-msg" style="font-size:11.5px;font-weight:700;margin-bottom:10px;"></div>
         <style>
-          .fp-fam-card{position:relative;min-width:140px;padding:12px 14px;border-radius:10px;font-family:inherit;}
-          .fp-fam-card .fp-fam-rel{font-size:10px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:4px;}
-          .fp-fam-card .fp-fam-name{font-size:14px;font-weight:800;color:#0F172A;margin-bottom:3px;line-height:1.3;}
-          .fp-fam-card .fp-fam-age{font-size:11px;color:#475569;line-height:1.4;}
-          .fp-fam-card .fp-fam-edit{position:absolute;top:6px;right:6px;background:rgba(255,255,255,0.7);border:1px solid rgba(0,0,0,0.08);border-radius:5px;width:24px;height:24px;cursor:pointer;font-size:11px;padding:0;}
-          .fp-fam-card .fp-fam-edit:hover{background:#fff;border-color:rgba(0,0,0,0.18);}
+          /* 家系図 木構造 — 世代ごと 横並び + 縦に 連結線 */
+          .fp-fam-tree{display:flex;flex-direction:column;gap:0;font-family:'Noto Sans JP',sans-serif;}
+          .fp-fam-gen-row{position:relative;padding:14px 16px 16px;border-radius:10px;margin-bottom:8px;}
+          .fp-fam-gen-row + .fp-fam-gen-row::before{content:'';position:absolute;left:50%;top:-8px;width:2px;height:8px;background:#CBD5E1;}
+          .fp-fam-gen-label{font-size:11px;font-weight:900;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:10px;}
+          .fp-fam-gen-cards{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start;}
+          .fp-fam-card{position:relative;min-width:148px;padding:14px 16px 12px;border-radius:11px;font-family:'Noto Sans JP',sans-serif;}
+          .fp-fam-card .fp-fam-rel{font-size:11px;font-weight:900;letter-spacing:0.05em;margin-bottom:5px;}
+          .fp-fam-card .fp-fam-name{font-size:15.5px;font-weight:900;color:#0F172A;margin-bottom:4px;line-height:1.3;letter-spacing:-0.01em;}
+          .fp-fam-card .fp-fam-age{font-size:12px;color:#475569;line-height:1.4;font-weight:600;}
+          .fp-fam-card .fp-fam-edit{position:absolute;top:8px;right:8px;background:rgba(255,255,255,0.85);border:1px solid rgba(0,0,0,0.1);border-radius:6px;width:26px;height:26px;cursor:pointer;font-size:12px;padding:0;}
+          .fp-fam-card .fp-fam-edit:hover{background:#fff;border-color:rgba(0,0,0,0.22);}
         </style>
-        ${renderGroup('grandparent', groups.grandparent)}
-        ${renderGroup('parent', groups.parent)}
-        ${renderGroup('parent_in_law', groups.parent_in_law)}
-        ${renderGroup('uncle', groups.uncle)}
-        <div style="margin-bottom:14px;">
-          <div style="font-size:11px;font-weight:800;color:#5B5BF0;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;">本人 + 配偶者</div>
-          <div style="display:flex;flex-wrap:wrap;gap:8px;">
-            ${selfCard}
-            ${groups.spouse.map(m => {
-              const meta = relMeta.spouse;
-              return `<div class="fp-fam-card" data-fam-idx="${m._idx}" style="background:${meta.color}10;border:1.5px solid ${meta.color}66;cursor:pointer;">
-                <div class="fp-fam-rel" style="color:${meta.color};">${meta.label}</div>
-                <div class="fp-fam-name">${escapeHtml(m.name || '(未設定)')}</div>
-                <div class="fp-fam-age">${age(m.birth) ?? '?'}歳${m.note ? ' / ' + escapeHtml(m.note).slice(0,20) : ''}</div>
-                <button class="fp-fam-edit" data-fam-edit-idx="${m._idx}" title="編集">✏</button>
-              </div>`;
-            }).join('')}
-          </div>
+        <div class="fp-fam-tree">
+          ${renderGenRow('gen1')}
+          ${renderGenRow('gen2')}
+          ${renderGenRow('gen3', true)}
+          ${renderGenRow('gen4')}
+          ${renderGenRow('gen5')}
+          ${byGen.other.length > 0 ? renderGenRow('other') : ''}
         </div>
-        ${renderGroup('sibling', groups.sibling)}
-        ${renderGroup('sibling_in_law', groups.sibling_in_law)}
-        ${renderGroup('cousin', groups.cousin)}
-        ${renderGroup('child', groups.child)}
-        ${renderGroup('child_in_law', groups.child_in_law)}
-        ${renderGroup('nephew', groups.nephew)}
-        ${renderGroup('grandchild', groups.grandchild)}
-        ${renderGroup('other', groups.other)}
-        ${fam.length === 0 ? '<div style="padding:24px;background:#F8FAFC;border:1px dashed #CBD5E1;border-radius:10px;text-align:center;color:#64748B;font-size:12.5px;">まだ家族情報が登録されていません。<br>「✨ 議事録 から AI 抽出」 で 過去の Zoom 議事録 から 自動 で 家族構成 を 取り込めます。</div>' : ''}
+        ${fam.length === 0 ? '<div style="padding:24px;background:#F8FAFC;border:1px dashed #CBD5E1;border-radius:10px;text-align:center;color:#64748B;font-size:12.5px;margin-top:10px;">まだ家族情報が登録されていません。<br>「✨ 議事録から自動」 で 過去の Zoom 議事録 から 自動 で 家族構成 を 取り込めます。</div>' : ''}
       </div>`;
   }
   function renderMeetingRecordsBlock(client) {
