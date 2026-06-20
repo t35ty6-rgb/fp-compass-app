@@ -11,8 +11,11 @@
   }
 
   function daysSinceLastContact(client) {
-    if (!client.lastContact) return 9999;
-    return daysBetween(new Date(client.lastContact), TODAY);
+    // ★ 9999日前 表示バグ修正: 未接触は -1 sentinel (呼出側で「未接触」表記)
+    if (!client.lastContact) return -1;
+    const d = new Date(client.lastContact);
+    if (isNaN(d.getTime())) return -1;
+    return daysBetween(d, TODAY);
   }
 
   // イベント発生 N ヶ月前から提案ウィンドウを開く設定
@@ -30,17 +33,18 @@
 
     // 接触頻度ベース
     const dslc = daysSinceLastContact(client);
-    if (dslc >= 365) {
+    const reasonText = dslc === -1 ? '未接触 (最終接触 記録なし)' : `最終接触 ${dslc}日前`;
+    if (dslc === -1 || dslc >= 365) {
       recs.push({
-        action: '定期レビュー (1年以上未接触)',
-        reason: `最終接触 ${dslc}日前`,
+        action: dslc === -1 ? '初回接触' : '定期レビュー (1年以上未接触)',
+        reason: reasonText,
         priority: 90,
         dueDate: TODAY,
       });
     } else if (dslc >= 180 && client.status !== 'dormant') {
       recs.push({
         action: '定期フォロー (半年経過)',
-        reason: `最終接触 ${dslc}日前`,
+        reason: reasonText,
         priority: 55,
         dueDate: TODAY,
       });

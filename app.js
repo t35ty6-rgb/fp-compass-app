@@ -1735,8 +1735,13 @@
     try { document.getElementById('modal-content').style.maxWidth = ''; } catch (_) {}
     ensureLineHistory_(c);
     // ★ 議事録 → 自動タグ抽出 (NISA/iDeCo/保険/相続 等を 議事録本文から regex で キャッチ → c.autoTags)
+    //   オーナーfb 2026-06-20: 重さ対策 → 議事録 数 が 同じなら 前回結果 再利用 (キャッシュ)
     try {
       const liveAi2 = (window.LineAppLiveData && window.LineAppLiveData.ai_results) || [];
+      const _aiSig = liveAi2.length + ':' + (liveAi2[liveAi2.length-1]?.ts || '');
+      if (c._autoTagSig === _aiSig && Array.isArray(c.autoTags)) {
+        // cache hit → skip regex 全件
+      } else { c._autoTagSig = _aiSig;
       const productPatterns = [
         { key: 'nisa',        re: /NISA|ニーサ|つみたて/i,                              label: 'NISA',     color: '#3B82F6' },
         { key: 'ideco',       re: /iDeCo|イデコ|個人型確定拠出/i,                       label: 'iDeCo',    color: '#6366F1' },
@@ -1769,6 +1774,7 @@
         c.autoTags = Array.from(detected).map(k => productPatterns.find(p => p.key === k)).filter(Boolean);
         console.log('[autoTag]', c.name, ':', c.autoTags.map(t => t.label).join(', '));
       }
+      }  // end cache miss branch
     } catch (e) { console.warn('autoTag fail:', e); }
     // ★ 議事録 → タイムライン 自動キャッチアップ
     //   録画時 autoSaveAIResult が走った時 client が未sync なら lifeEventCandidates の customEvents merge を 取りこぼす
@@ -2650,13 +2656,13 @@
             </div>
           </div>
 
-          <!-- ★ オーナーfb 2026-06-20: タグ管理 を 顧客名 直下 (上の方) に 配置 -->
-          <div class="cd-profile-section" id="cd-tags-section" data-client-id="${escapeHtml(c.id)}" style="margin-top:14px;padding:12px 14px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-              <span style="font-size:11.5px;font-weight:800;color:#475569;letter-spacing:0.04em;">🏷 タグ</span>
-              <button id="cd-tags-edit" style="background:#5B5BF0;border:none;color:#fff;font-size:11.5px;font-weight:800;padding:6px 14px;border-radius:7px;cursor:pointer;font-family:inherit;letter-spacing:0.02em;">＋ 追加 / 編集</button>
+          <!-- ★ オーナーfb 2026-06-20: タグ管理 を 顧客名 直下、 ラベル大型化 -->
+          <div class="cd-profile-section" id="cd-tags-section" data-client-id="${escapeHtml(c.id)}" style="margin-top:16px;padding:16px 18px;background:#F8FAFC;border:2px solid #E2E8F0;border-radius:12px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+              <span style="font-size:18px;font-weight:900;color:#0F172A;letter-spacing:-0.01em;display:inline-flex;align-items:center;gap:8px;"><span style="font-size:22px;">🏷</span> タグ</span>
+              <button id="cd-tags-edit" style="background:#5B5BF0;border:none;color:#fff;font-size:13.5px;font-weight:800;padding:9px 18px;border-radius:9px;cursor:pointer;font-family:inherit;letter-spacing:0.02em;box-shadow:0 4px 12px rgba(91,91,240,0.25);">＋ 追加 / 編集</button>
             </div>
-            <div id="cd-tags-list" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+            <div id="cd-tags-list" style="display:flex;flex-wrap:wrap;gap:7px;min-height:28px;"></div>
           </div>
 
           ${(function () {
@@ -2829,47 +2835,27 @@
           </div>
 
           <div class="cd-tabpanels">
-            <!-- OVERVIEW -->
+            <!-- OVERVIEW (オーナーfb 2026-06-20: WORKFLOW/次にやること/直近のイベント/イベント分類 を全削除し、 最終議事録サマリー 1枚 のみ) -->
             <div class="cd-tabpanel" data-cdpanel="overview">
-              ${window._fpNextActionHtml || ''}
-              <div class="cd-overview-grid">
-                <div class="cd-card">
-                  <div class="cd-card-head"><i data-lucide="alert-circle"></i><span>次にやること</span><span class="cd-card-badge">${Math.min(recs.length, 4)}</span></div>
-                  <div class="cd-card-body">${actionsHtml2}</div>
-                </div>
-                <div class="cd-card">
-                  <div class="cd-card-head"><i data-lucide="calendar-clock"></i><span>直近のイベント</span></div>
-                  <div class="cd-card-body">
-                    ${nextEv ? `
-                    <div class="cd-next-ev">
-                      <div class="cd-next-ev-rel">${window.LifeEvents.formatRelative(nextEv.date)}</div>
-                      <div class="cd-next-ev-label">${escapeHtml(nextEv.label)}</div>
-                      <div class="cd-next-ev-meta">${fmtDate(nextEv.date)} · 対象: ${escapeHtml(nextEv.who || '—')}</div>
+              ${(function(){
+                if (latestAi && latestAi.summary && String(latestAi.summary).trim()) {
+                  const date = latestAi.ts ? new Date(latestAi.ts).toLocaleDateString('ja-JP') : '';
+                  return `
+                  <div class="cd-card" style="border:1px solid #E2E8F0;border-radius:12px;padding:18px 20px;">
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+                      <span style="font-size:14px;font-weight:900;color:#0F172A;">📝 最終 Zoom 議事録</span>
+                      ${date ? `<span style="font-size:11.5px;color:#64748B;font-weight:600;">${escapeHtml(date)}</span>` : ''}
                     </div>
-                    ${futureEvs.slice(1, 4).map(ev => `
-                    <div class="cd-next-ev cd-next-ev-mini">
-                      <span class="cd-next-ev-mini-rel">${window.LifeEvents.formatRelative(ev.date)}</span>
-                      <span class="cd-next-ev-mini-label">${escapeHtml(ev.label)}</span>
-                    </div>`).join('')}
-                    ` : '<div class="cd-empty">予測イベントなし</div>'}
-                  </div>
-                </div>
-              </div>
-
-              <div class="cd-card">
-                <div class="cd-card-head"><i data-lucide="bar-chart-3"></i><span>イベント分類サマリー</span></div>
-                <div class="cd-card-body">
-                  <div class="cd-cat-summary">
-                    ${Object.entries(eventsByCat).map(([cat, n]) => `
-                      <div class="cd-cat-chip cd-cat-${cat}">
-                        <span class="cd-cat-dot"></span>
-                        <span class="cd-cat-name">${catLabel(cat)}</span>
-                        <span class="cd-cat-count">${n}</span>
-                      </div>
-                    `).join('') || '<div class="cd-empty">なし</div>'}
-                  </div>
-                </div>
-              </div>
+                    <div style="font-size:14px;line-height:1.7;color:#334155;white-space:pre-wrap;">${escapeHtml(String(latestAi.summary).slice(0, 600))}</div>
+                  </div>`;
+                }
+                return `
+                <div style="padding:32px 24px;text-align:center;color:#64748B;background:#F8FAFC;border:1px dashed #CBD5E1;border-radius:12px;">
+                  <div style="font-size:32px;margin-bottom:8px;">📋</div>
+                  <div style="font-size:14px;font-weight:700;color:#0F172A;margin-bottom:6px;">まだ 議事録 が ありません</div>
+                  <div style="font-size:12.5px;line-height:1.6;">上の <strong>LINE</strong> / <strong>履歴</strong> / <strong>議事録</strong> / <strong>家族</strong> タブ から詳細をご覧ください</div>
+                </div>`;
+              })()}
             </div>
 
             <!-- LINE HISTORY (統合タイムライン v 20260610J) -->
@@ -2907,6 +2893,7 @@
                 </div>
                 <button class="cd-line-new" data-line-ai="${c.id}"><i data-lucide="wand-2"></i><span>AI下書き (Jobs提案)</span></button>
                 <button class="cd-line-new" data-line-brief="${c.id}" style="background:#10B981;color:#fff;margin-left:6px;"><i data-lucide="edit-3"></i><span>✍ 伝えたいことから下書き</span></button>
+                <button class="cd-line-new" data-line-slots="${c.id}" style="background:#5B5BF0;color:#fff;margin-left:6px;"><i data-lucide="calendar-plus"></i><span>📅 候補日 3つ 送る</span></button>
               </div>
               ${(function(){
                 // ★ オーナーfb「客返信に対する AI 生成 ボタンが分かりづらい」: LINE履歴タブ内に大きな AI返信案ボタン
@@ -3566,6 +3553,10 @@ ${ctxText}${surveyTxt}`;
     // ★ 「✍ 伝えたいことから下書き」 → 簡易ブリーフ Modal
     document.querySelectorAll('[data-line-brief]').forEach(btn => {
       btn.addEventListener('click', () => openBriefDraftModal(c));
+    });
+    // ★ オーナーfb 2026-06-20: 「候補日 3つ 送る」 → AI下書き 経由不要、 直接 Flex Carousel で 送れる
+    document.querySelectorAll('[data-line-slots]').forEach(btn => {
+      btn.addEventListener('click', () => openSlotsSendModal(c));
     });
     // ★ AI で返信案 を 1 クリック生成 (textarea に挿入、 編集して送信)
     const aiQuickBtn = document.getElementById('cd-line-ai-quick');
@@ -5690,6 +5681,128 @@ STEP C: 結果報告
   // ============================
   // ★ v 20260610J: Claude Code フロー化 — paid API (generateLineReply) は呼ばない。
   //   triggerDeliverable と同じパターン: JSON+プロンプト構築 → clipboard 自動コピー → claude.ai/new 別タブ open
+  // ★ オーナーfb 2026-06-20: 候補日 3つ を AI下書き 経由なしで 直接 Flex Carousel で送る (シンプル モーダル)
+  function openSlotsSendModal(client) {
+    if (!client.lineFriendId && !client._fsCustomerId) {
+      alert('このお客様は LINE 未連携 です (lineFriendId 未登録)');
+      return;
+    }
+    // 3つの date+time 入力 → Flex Carousel で 送信
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.55);backdrop-filter:blur(4px);z-index:10200;display:flex;align-items:center;justify-content:center;padding:20px;';
+    // default: 翌日〜3日後 の 10:00
+    const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
+    const defaults = [0, 1, 2].map(off => {
+      const d = new Date(tomorrow); d.setDate(d.getDate() + off);
+      return d.toISOString().slice(0, 10);
+    });
+    overlay.innerHTML = `
+      <div style="background:#fff;width:min(500px,100%);border-radius:14px;box-shadow:0 24px 60px rgba(0,0,0,0.3);padding:24px 26px;font-family:'Noto Sans JP',sans-serif;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+          <div style="font-size:18px;font-weight:900;color:#0F172A;">📅 候補日 3つ 送る</div>
+          <button id="fp-slots-close" style="background:transparent;border:none;font-size:22px;cursor:pointer;color:#64748B;">✕</button>
+        </div>
+        <div style="font-size:13px;color:#475569;margin-bottom:14px;line-height:1.6;">${escapeHtml(client.name)} 様 へ LINE で Flex Card 候補日 3つ を 送ります。 お客様 が タップ で 第◯候補 が 返信されます。</div>
+        ${[1,2,3].map(i => `
+          <div style="display:flex;gap:8px;margin-bottom:10px;align-items:center;">
+            <span style="font-size:13px;font-weight:800;color:#5B5BF0;min-width:44px;">候補${i}</span>
+            <input type="date" id="fp-slot-d${i}" value="${defaults[i-1]}" style="flex:1;padding:11px 12px;border:2px solid #E2E8F0;border-radius:9px;font-size:14px;font-family:inherit;">
+            <input type="time" id="fp-slot-t${i}" value="${10 + (i-1)*2}:00" style="width:120px;padding:11px 12px;border:2px solid #E2E8F0;border-radius:9px;font-size:14px;font-family:inherit;">
+          </div>
+        `).join('')}
+        <label style="display:block;margin-top:14px;">
+          <div style="font-size:12px;font-weight:800;color:#475569;margin-bottom:5px;">添える 一言 (任意)</div>
+          <textarea id="fp-slots-msg" rows="3" placeholder="例: 次回 Zoom 面談 の 候補日 を 3つ お送りします。 タップ で 確定 します。" style="width:100%;padding:12px 14px;border:2px solid #E2E8F0;border-radius:9px;font-size:14px;font-family:inherit;box-sizing:border-box;resize:vertical;">${escapeHtml(client.name)}様\n\n次回 Zoom 面談 の 候補日 を 3つ お送りします。\nタップ で 確定 します。</textarea>
+        </label>
+        <div id="fp-slots-status" style="margin-top:12px;font-size:13px;font-weight:700;"></div>
+        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:18px;">
+          <button id="fp-slots-cancel" style="background:#fff;color:#475569;border:1.5px solid #E2E8F0;padding:12px 22px;border-radius:9px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">キャンセル</button>
+          <button id="fp-slots-send" style="background:linear-gradient(135deg,#5B5BF0,#4242C9);color:#fff;border:none;padding:12px 28px;border-radius:9px;font-size:14px;font-weight:900;cursor:pointer;font-family:inherit;box-shadow:0 6px 18px rgba(91,91,240,0.32);">LINE で 送信</button>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+    overlay.querySelector('#fp-slots-close').addEventListener('click', () => overlay.remove());
+    overlay.querySelector('#fp-slots-cancel').addEventListener('click', () => overlay.remove());
+    overlay.querySelector('#fp-slots-send').addEventListener('click', async () => {
+      const status = overlay.querySelector('#fp-slots-status');
+      const sendBtn = overlay.querySelector('#fp-slots-send');
+      const slots = [1,2,3].map(i => ({
+        date: overlay.querySelector('#fp-slot-d'+i).value,
+        time: overlay.querySelector('#fp-slot-t'+i).value,
+      })).filter(s => s.date && s.time);
+      if (slots.length < 3) {
+        status.style.color = '#DC2626'; status.textContent = '⚠ 3つの 日付 + 時刻 全部 ご入力ください';
+        return;
+      }
+      const text = overlay.querySelector('#fp-slots-msg').value.trim();
+      // Flex Carousel 構築
+      const wdayJa = ['日','月','火','水','木','金','土'];
+      const flex = {
+        type: 'carousel',
+        contents: slots.map((s, i) => {
+          const d = new Date(s.date + 'T00:00:00');
+          const md = (s.date || '').slice(5).replace('-', '/');
+          const wday = wdayJa[d.getDay()];
+          const time = s.time;
+          const replyTxt = `候補${i+1} (${(d.getMonth()+1)}月${d.getDate()}日 ${time}) でお願いします`;
+          return {
+            type: 'bubble', size: 'kilo',
+            header: { type: 'box', layout: 'vertical', backgroundColor: '#5B5BF0', paddingAll: '12px', contents: [
+              { type: 'text', text: `候補 ${i+1}`, color: '#ffffff', size: 'sm', weight: 'bold' },
+            ] },
+            body: { type: 'box', layout: 'vertical', spacing: 'md', paddingAll: '16px', contents: [
+              { type: 'text', text: `${(d.getMonth()+1)}月${d.getDate()}日`, size: 'xxl', weight: 'bold', color: '#0F172A' },
+              { type: 'text', text: `(${wday})`, size: 'md', color: '#64748B', weight: 'bold' },
+              { type: 'separator', margin: 'md' },
+              { type: 'box', layout: 'baseline', margin: 'md', contents: [
+                { type: 'text', text: '🕐', size: 'sm', flex: 0 },
+                { type: 'text', text: time, size: 'lg', weight: 'bold', color: '#0F172A', margin: 'sm' },
+              ] },
+            ] },
+            footer: { type: 'box', layout: 'vertical', spacing: 'sm', paddingAll: '12px', contents: [
+              { type: 'button', style: 'primary', color: '#5B5BF0', height: 'sm',
+                action: { type: 'message', label: 'この日でお願いします', text: replyTxt } },
+            ] },
+          };
+        }),
+      };
+      sendBtn.disabled = true; sendBtn.textContent = '送信中…';
+      status.style.color = '#5B5BF0'; status.textContent = '送信中…';
+      try {
+        const { initializeApp, getApps } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js');
+        const { getFunctions, httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-functions.js');
+        const fbApp = getApps()[0] || initializeApp({
+          apiKey: 'AIzaSyAmVAEe9l9e1Yo_dzzJdbTVU35wWKd2sH4',
+          authDomain: 'skeleton-fp-compass-632026.firebaseapp.com',
+          projectId: 'skeleton-fp-compass-632026',
+        });
+        const fns = getFunctions(fbApp, 'asia-northeast1');
+        const sendFn = httpsCallable(fns, 'sendLineMessage');
+        const fsCustomerId = client._fsCustomerId || client.id;
+        const callRes = await sendFn({
+          customerId: fsCustomerId,
+          lineFriendId: client.lineFriendId || null,
+          text,
+          flex,
+        });
+        const data = (callRes && callRes.data) || {};
+        if (data.ok || data.success) {
+          status.style.color = '#059669'; status.textContent = '✅ 送信完了 ' + client.name + ' 様 の LINE に Flex Carousel 候補日 届きました';
+          sendBtn.textContent = '✓ 送信済';
+          setTimeout(() => overlay.remove(), 1800);
+        } else {
+          status.style.color = '#DC2626'; status.textContent = '送信応答 ok=false';
+          sendBtn.disabled = false; sendBtn.textContent = 'LINE で 送信';
+        }
+      } catch (e) {
+        console.error('[slots-send]', e);
+        status.style.color = '#DC2626'; status.textContent = '送信失敗: ' + (e.message || e).slice(0, 200);
+        sendBtn.disabled = false; sendBtn.textContent = 'LINE で 送信';
+      }
+    });
+  }
+
   function openBriefDraftModal(client) {
     const overlay = document.createElement('div');
     overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.62);backdrop-filter:blur(4px);z-index:10060;display:flex;align-items:center;justify-content:center;padding:20px;font-family:"Noto Sans JP",sans-serif;';
@@ -5698,7 +5811,7 @@ STEP C: 結果報告
         <div style="background:linear-gradient(135deg,#10B981,#059669);color:#fff;padding:18px 24px;display:flex;justify-content:space-between;align-items:center;">
           <div>
             <div style="font-size:10px;font-weight:800;letter-spacing:0.22em;opacity:0.85;">FP → CUSTOMER</div>
-            <h3 style="margin:4px 0 0 0;font-size:16px;font-weight:900;">✍ ${escapeHtml(client.name)}様 への LINE 下書き (Claude Code)</h3>
+            <h3 style="margin:4px 0 0 0;font-size:16px;font-weight:900;">✍ ${escapeHtml(client.name)}様 への LINE 下書き</h3>
           </div>
           <button id="fp-brief-close" style="background:rgba(255,255,255,0.2);border:none;color:#fff;width:34px;height:34px;border-radius:6px;cursor:pointer;font-size:18px;">✕</button>
         </div>
@@ -6065,20 +6178,9 @@ ${JSON.stringify(jsonPayload, null, 2)}
             </div>
           </section>
 
-          <!-- STEP 3: Send + post-send tasks -->
+          <!-- 送信エリア (オーナーfb 2026-06-20: 「送信→タスク自動化」 説明 全削除、 送信ボタンのみ) -->
           <section class="aib-step aib-step-final">
-            <div class="aib-step-head">
-              <span class="aib-step-no">3</span>
-              <div>
-                <div class="aib-step-title">送信 → タスク自動化</div>
-                <div class="aib-step-sub">送信後、CRM が自動でやってくれること</div>
-              </div>
-              <span class="aib-step-status aib-step-ready">あと1クリック</span>
-            </div>
-            <div class="aib-step-body">
-              <ul class="aib-postsend">
-                ${postSendTasks.map(t => `<li><i data-lucide="${t.icon}"></i><span>${t.text}</span></li>`).join('')}
-              </ul>
+            <div class="aib-step-body" style="padding-top:14px;">
               <div class="aib-cta-row">
                 <button class="primary aib-send" id="draft-send"><i data-lucide="send"></i><span>この内容で LINE 送信</span></button>
                 <button class="ghost-btn" id="draft-copy"><i data-lucide="copy"></i><span>文面コピー</span></button>
@@ -6210,7 +6312,7 @@ ${JSON.stringify(jsonPayload, null, 2)}
               return {
                 type: 'bubble', size: 'kilo',
                 header: { type: 'box', layout: 'vertical', backgroundColor: '#5B5BF0', paddingAll: '12px', contents: [
-                  { type: 'text', text: `候補 ${i+1}`, color: '#ffffff', size: 'sm', weight: 'bold', letterSpacing: 'lg' },
+                  { type: 'text', text: `候補 ${i+1}`, color: '#ffffff', size: 'sm', weight: 'bold' },
                 ] },
                 body: { type: 'box', layout: 'vertical', spacing: 'md', paddingAll: '16px', contents: [
                   { type: 'text', text: `${s.month}月${s.day}日`, size: 'xxl', weight: 'bold', color: '#0F172A' },
@@ -7839,10 +7941,10 @@ ${client.name}さん、ありがとうございます。
 
     // 残存 cleared flag を解除 (前回までの残骸)
     try { localStorage.removeItem('fp-cleared-permanently'); } catch (_) {}
-    // ★ mergeLineActivity を 30秒毎に強制実行 (ページ重さ対策、5秒→30秒 緩和)
+    // ★ mergeLineActivity 90秒毎 (オーナーfb 2026-06-20 重い → 30→90秒 緩和)
     setInterval(() => {
       try { mergeLineActivity(); } catch (e) { console.warn('mergeLineActivity periodic fail:', e); }
-    }, 30000);
+    }, 90000);
     // 起動直後も実行 (3秒待ってfetchLiveData完了を見越す)
     setTimeout(() => { try { mergeLineActivity(); } catch (_) {} }, 3000);
 

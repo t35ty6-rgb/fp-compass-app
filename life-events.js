@@ -202,8 +202,19 @@
     return (isNaN(a) || a < 0) ? null : a;
   }
 
+  // ★ オーナーfb 2026-06-20: 重い → generateEvents 結果を WeakMap キャッシュ (同じ client 何度呼ばれても再計算0)
+  const _genCache = new WeakMap();
+  function generateEventsCached(client) {
+    if (!client || typeof client !== 'object') return generateEvents(client);
+    const cached = _genCache.get(client);
+    if (cached) return cached;
+    const r = generateEvents(client);
+    _genCache.set(client, r);
+    return r;
+  }
+
   window.LifeEvents = {
-    generate: generateEvents,
+    generate: generateEventsCached,
     currentAge: currentAge,
     formatRelative: formatRelative,
     TODAY: TODAY,
