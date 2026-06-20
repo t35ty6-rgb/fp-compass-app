@@ -1589,26 +1589,43 @@
   }
 
   function showArchivedBookings(items) {
+    // 顧客台帳に紐付け (lineFriendId / name で マッチ)
+    const findClient = (b) => {
+      const cs = window.DUMMY_CLIENTS || [];
+      let c = cs.find(x => x.lineFriendId && b.userId && x.lineFriendId === b.userId);
+      if (!c) c = cs.find(x => x.name && b.name && x.name === b.name);
+      return c;
+    };
     const overlay = document.createElement('div');
     overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.6);backdrop-filter:blur(4px);z-index:10001;display:flex;align-items:center;justify-content:center;padding:20px;';
     overlay.innerHTML = `
-      <div style="background:#fff;width:min(680px,100%);max-height:90vh;overflow-y:auto;border-radius:14px;box-shadow:0 24px 60px rgba(0,0,0,0.35);">
-        <div style="padding:20px 24px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:baseline;">
-          <h2 style="margin:0;font-family:'Noto Serif JP',serif;font-size:18px;">✓ 完了済み面談 (${items.length}件)</h2>
-          <button id="fp-arc-close" style="font-size:18px;width:32px;height:32px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;cursor:pointer;">✕</button>
+      <div style="background:#fff;width:min(720px,100%);max-height:90vh;overflow-y:auto;border-radius:14px;box-shadow:0 24px 60px rgba(0,0,0,0.35);font-family:'Noto Sans JP',sans-serif;">
+        <div style="padding:20px 24px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
+          <h2 style="margin:0;font-size:17px;font-weight:900;color:#0F172A;">✓ 完了済み面談 (${items.length}件)</h2>
+          <button id="fp-arc-close" style="font-size:18px;width:34px;height:34px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;cursor:pointer;">✕</button>
         </div>
-        <div style="padding:18px 24px;display:grid;gap:8px;">
-          ${items.map(b => `
-            <div style="display:grid;grid-template-columns:90px 1fr auto;gap:12px;align-items:center;padding:12px 14px;background:#fafbfc;border:1px solid #e5e7eb;border-radius:8px;">
-              <div style="font-size:13px;font-weight:700;font-family:'Inter',sans-serif;">${escapeHtml(String(b.date||'').slice(5,10).replace('-','/'))}</div>
-              <div><strong style="font-size:13px;">${escapeHtml(b.name || '匿名')}様</strong><div style="font-size:11px;color:var(--muted);margin-top:2px;">${escapeHtml(String(b.time||'').slice(0,5))}</div></div>
-              <button class="fp-arc-unar" data-ts="${escapeHtml(b.ts)}" style="font-size:11px;padding:6px 12px;background:#fff;border:1px solid #e5e7eb;border-radius:6px;cursor:pointer;font-family:inherit;">↩ 戻す</button>
-            </div>
-          `).join('')}
+        <div style="padding:18px 24px;display:grid;gap:10px;">
+          ${items.length === 0 ? '<div style="text-align:center;color:#94A3B8;padding:30px;font-size:13px;">完了済み面談 はありません</div>' : items.map((b, i) => {
+            const c = findClient(b);
+            const cid = c ? c.id : '';
+            return `
+              <div style="display:grid;grid-template-columns:90px 1fr auto;gap:12px;align-items:center;padding:13px 16px;background:#fafbfc;border:1.5px solid #e5e7eb;border-radius:10px;">
+                <div style="font-size:14px;font-weight:800;font-family:'Inter',sans-serif;color:#0F172A;">${escapeHtml(String(b.date||'').slice(5,10).replace('-','/'))}</div>
+                <div>
+                  <strong style="font-size:14px;color:#0F172A;">${escapeHtml(b.name || '匿名')}様</strong>
+                  <div style="font-size:11.5px;color:var(--muted);margin-top:2px;">${escapeHtml(String(b.time||'').slice(0,5))}${c ? '' : ' · ⚠ 顧客台帳 未紐付け'}</div>
+                </div>
+                <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">
+                  ${cid ? `<button class="fp-arc-jump" data-cid="${escapeHtml(cid)}" style="font-size:12px;padding:8px 14px;background:linear-gradient(135deg,#5B5BF0,#4242C9);color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:inherit;font-weight:800;">📋 議事録を見る</button>` : ''}
+                  <button class="fp-arc-unar" data-ts="${escapeHtml(b.ts)}" style="font-size:11.5px;padding:8px 12px;background:#fff;border:1.5px solid #e5e7eb;border-radius:8px;cursor:pointer;font-family:inherit;font-weight:700;color:#64748B;">↩ 戻す</button>
+                </div>
+              </div>`;
+          }).join('')}
         </div>
       </div>`;
     document.body.appendChild(overlay);
     overlay.querySelector('#fp-arc-close').addEventListener('click', () => overlay.remove());
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
     overlay.querySelectorAll('.fp-arc-unar').forEach(btn => {
       btn.addEventListener('click', () => {
         const set = new Set(JSON.parse(localStorage.getItem('fp-booking-archived') || '[]'));
@@ -1616,6 +1633,25 @@
         localStorage.setItem('fp-booking-archived', JSON.stringify([...set]));
         overlay.remove();
         fillBookingsList();
+      });
+    });
+    // ★ オーナーfb 2026-06-20: 「議事録を見る」 → 顧客モーダル の 議事録タブ に 直接 飛ぶ
+    overlay.querySelectorAll('.fp-arc-jump').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const cid = btn.dataset.cid;
+        overlay.remove();
+        // 顧客台帳タブ に 切替 → モーダル open → 議事録 タブ active
+        const tabBtn = document.querySelector('div.tab[data-tab="clients"]');
+        if (tabBtn) tabBtn.click();
+        setTimeout(() => {
+          if (window.FpApp && window.FpApp.openClientModal) {
+            window.FpApp.openClientModal(cid);
+            setTimeout(() => {
+              const mt = document.querySelector('[data-cdtab="meetings"]');
+              if (mt) mt.click();
+            }, 250);
+          }
+        }, 200);
       });
     });
   }
@@ -2386,8 +2422,15 @@
     const accent = tone === 'progress' ? '#3B82F6' : '#059669';
     const t = document.createElement('div');
     t.id = 'fp-center-toast';
-    // ★ 邪魔にならない 右上 配置 + コンパクト (オーナーfb: 「真ん中じゃなく右上に」)
-    t.style.cssText = `position:fixed;top:18px;right:18px;background:${bg};border:2px solid ${accent};border-radius:14px;padding:16px 20px 18px;box-shadow:0 12px 36px rgba(0,0,0,0.22);z-index:10090;font-family:'Noto Sans JP',sans-serif;text-align:left;width:320px;max-width:90vw;`;
+    // ★ 邪魔にならない 右上 配置 + コンパクト + ドラッグ可能 (オーナーfb 2026-06-20)
+    //   復元: 前回ドラッグ位置を localStorage 保存 → 同位置に出る
+    let posLeft = null, posTop = 18;
+    try {
+      const saved = JSON.parse(localStorage.getItem('fp-toast-pos') || 'null');
+      if (saved && typeof saved.left === 'number') { posLeft = saved.left; posTop = saved.top; }
+    } catch (_) {}
+    const positionCss = posLeft != null ? `left:${posLeft}px;top:${posTop}px;right:auto;` : `top:18px;right:18px;`;
+    t.style.cssText = `position:fixed;${positionCss}background:${bg};border:2px solid ${accent};border-radius:14px;padding:16px 20px 18px;box-shadow:0 12px 36px rgba(0,0,0,0.22);z-index:10090;font-family:'Noto Sans JP',sans-serif;text-align:left;width:320px;max-width:90vw;user-select:none;`;
     const iconHtml = tone === 'progress'
       ? `<div style="width:32px;height:32px;border:3px solid ${accent}33;border-top-color:${accent};border-radius:50%;animation:fp-spin 0.9s linear infinite;flex-shrink:0;"></div>`
       : `<div style="font-size:30px;line-height:1;flex-shrink:0;">✅</div>`;
@@ -2395,17 +2438,54 @@
       ? ''
       : `<button id="fp-toast-close" style="margin-top:10px;background:transparent;border:1px solid ${accent}66;color:${accent};padding:6px 14px;border-radius:6px;font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit;">確認 ✓</button>`;
     t.innerHTML = `
-      <div style="display:flex;align-items:flex-start;gap:12px;">
+      <!-- ドラッグハンドル -->
+      <div id="fp-toast-drag" style="position:absolute;top:0;left:0;right:0;height:8px;cursor:grab;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.04);border-radius:12px 12px 0 0;">
+        <div style="width:34px;height:3px;background:${accent}55;border-radius:2px;"></div>
+      </div>
+      <div style="display:flex;align-items:flex-start;gap:12px;margin-top:6px;cursor:grab;" id="fp-toast-drag-area">
         ${iconHtml}
         <div style="flex:1;min-width:0;">
           <div style="font-size:13.5px;font-weight:800;color:${accent};letter-spacing:-0.005em;line-height:1.45;margin-bottom:4px;">${escapeHtml(title)}</div>
-          <div style="font-size:11.5px;color:#475569;line-height:1.55;">${escapeHtml(sub || '')}</div>
+          <div style="font-size:11.5px;color:#475569;line-height:1.55;cursor:text;user-select:text;">${escapeHtml(sub || '')}</div>
           ${closeHtml}
         </div>
+        <button id="fp-toast-mini-close" title="閉じる" style="background:transparent;border:none;color:${accent};font-size:14px;cursor:pointer;padding:2px 6px;line-height:1;align-self:flex-start;font-weight:700;">✕</button>
       </div>`;
     document.body.appendChild(t);
     const closeBtn = t.querySelector('#fp-toast-close');
     if (closeBtn) closeBtn.addEventListener('click', () => t.remove());
+    const miniClose = t.querySelector('#fp-toast-mini-close');
+    if (miniClose) miniClose.addEventListener('click', () => t.remove());
+    // ★ ドラッグ 実装
+    (function setupDrag(){
+      const handles = [t.querySelector('#fp-toast-drag'), t.querySelector('#fp-toast-drag-area')];
+      let drag = null;
+      const onDown = (e) => {
+        if (e.target.closest('button')) return;  // ボタンクリックはドラッグ扱いしない
+        e.preventDefault();
+        const r = t.getBoundingClientRect();
+        drag = { startX: e.clientX, startY: e.clientY, baseLeft: r.left, baseTop: r.top };
+        t.style.cursor = 'grabbing';
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onUp);
+      };
+      const onMove = (e) => {
+        if (!drag) return;
+        const nx = Math.max(0, Math.min(window.innerWidth - 60, drag.baseLeft + (e.clientX - drag.startX)));
+        const ny = Math.max(0, Math.min(window.innerHeight - 60, drag.baseTop + (e.clientY - drag.startY)));
+        t.style.left = nx + 'px'; t.style.top = ny + 'px'; t.style.right = 'auto';
+      };
+      const onUp = () => {
+        if (drag) {
+          const r = t.getBoundingClientRect();
+          try { localStorage.setItem('fp-toast-pos', JSON.stringify({ left: Math.round(r.left), top: Math.round(r.top) })); } catch(_) {}
+        }
+        drag = null; t.style.cursor = '';
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+      };
+      handles.forEach(h => h && h.addEventListener('mousedown', onDown));
+    })();
     if (dur > 0) {
       setTimeout(() => { if (t.parentNode) t.remove(); }, dur);
     }

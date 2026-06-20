@@ -2799,7 +2799,7 @@
         <!-- ============= RIGHT: Activity column ============= -->
         <main class="cd-right">
 
-          <!-- AI Next Best Action — 3-step guided flow -->
+          <!-- AI Next Best Action — オーナーfb 2026-06-20: 2列バランス + Zoom/タグ クイック内包 -->
           ${topRec ? `
           <div class="cd-flow">
             <div class="cd-flow-eyebrow">
@@ -2809,22 +2809,51 @@
             <div class="cd-flow-title">${escapeHtml(topRec.action)}</div>
             <div class="cd-flow-reason">${escapeHtml(topRec.reason)}</div>
 
-            <div class="cd-flow-steps">
-              <button class="cd-flow-step cd-flow-step-active fp-draft-cta" id="modal-draft-btn">
+            <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:14px;margin-top:14px;">
+              <!-- 左: AI下書き 大ボタン (primary) -->
+              <button class="cd-flow-step cd-flow-step-active fp-draft-cta" id="modal-draft-btn" style="margin:0;">
                 <span class="cd-flow-step-no">1</span>
                 <span class="cd-flow-step-body">
-                  <span class="cd-flow-step-label">✨ AI で 下書き を 作る</span>
-                  <span class="cd-flow-step-sub">押すと AI が LINE 文面 を 自動 生成</span>
+                  <span class="cd-flow-step-label">✨ AI で 下書き</span>
+                  <span class="cd-flow-step-sub">AI が LINE 文面 自動 生成</span>
                 </span>
                 <i data-lucide="wand-2" class="cd-flow-step-icon"></i>
               </button>
-              <style>@keyframes fp-draft-cta-pulse{0%,100%{transform:translateY(0) scale(1);box-shadow:0 8px 24px rgba(249,115,22,0.55),0 0 0 4px rgba(255,255,255,0.5)}50%{transform:translateY(-2.5px) scale(1.025);box-shadow:0 16px 36px rgba(249,115,22,0.72),0 0 0 7px rgba(255,255,255,0.6)}}@keyframes fp-draft-cta-gradient{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}</style>
+              <!-- 右: クイックアクション グリッド (Zoom今すぐ / Zoom予約 / 候補日 / タグ / 自分で書く / 顧客情報) -->
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                ${c.lineFriendId ? `
+                  <button class="fp-quick-act" data-quick-instant="${escapeHtml(c.id)}" style="background:#fff;border:1.5px solid #2D8CFF;color:#0F172A;padding:9px 8px;border-radius:9px;font-size:11.5px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:3px;min-height:50px;justify-content:center;line-height:1.25;">
+                    <svg width="20" height="20" viewBox="0 0 100 100" fill="none"><rect width="100" height="100" rx="22" fill="#2D8CFF"/><text x="50" y="62" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-weight="700" font-size="28" fill="#fff" letter-spacing="-1">zoom</text></svg>
+                    <span>⚡ 今すぐ</span>
+                  </button>
+                  <button class="fp-quick-act" data-quick-schedule="${escapeHtml(c.id)}" style="background:#fff;border:1.5px solid #2D8CFF;color:#0F172A;padding:9px 8px;border-radius:9px;font-size:11.5px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:3px;min-height:50px;justify-content:center;line-height:1.25;">
+                    <svg width="20" height="20" viewBox="0 0 100 100" fill="none"><rect width="100" height="100" rx="22" fill="#2D8CFF"/><text x="50" y="62" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-weight="700" font-size="28" fill="#fff" letter-spacing="-1">zoom</text></svg>
+                    <span>📅 日時指定</span>
+                  </button>
+                  <button class="fp-quick-act" data-quick-slots="${escapeHtml(c.id)}" style="background:#fff;border:1.5px solid #E2E8F0;color:#475569;padding:9px 8px;border-radius:9px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:3px;min-height:50px;justify-content:center;line-height:1.25;">
+                    <span style="font-size:18px;">📅</span>
+                    <span>候補日 3つ</span>
+                  </button>
+                ` : ''}
+                <button class="fp-quick-act" data-quick-tag="${escapeHtml(c.id)}" style="background:#fff;border:1.5px solid #E2E8F0;color:#475569;padding:9px 8px;border-radius:9px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:3px;min-height:50px;justify-content:center;line-height:1.25;">
+                  <svg width="20" height="20" viewBox="0 0 32 32" fill="none"><path d="M11 5 L20 5 C21.1 5 22 5.9 22 7 L22 15 C22 15.5 21.8 16 21.4 16.4 L14.4 23.4 C13.6 24.2 12.3 24.2 11.5 23.4 L4.5 16.4 C3.7 15.6 3.7 14.3 4.5 13.5 L11 7 Z" fill="#E58FAE" stroke="#14213D" stroke-width="2.5" stroke-linejoin="round"/><circle cx="16.5" cy="10.5" r="1.6" fill="#14213D"/></svg>
+                  <span>タグ</span>
+                </button>
+                <button class="modal-brief-btn fp-quick-act" data-line-brief="${c.id}" style="background:#fff;color:#059669;border:1.5px solid #10B981;padding:9px 8px;border-radius:9px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:3px;min-height:50px;justify-content:center;line-height:1.25;">
+                  <span style="font-size:18px;">✍</span>
+                  <span>自分で書く</span>
+                </button>
+                <button class="cd-flow-edit fp-quick-act" id="modal-edit-btn" style="background:#fff;color:#475569;border:1.5px solid #E2E8F0;padding:9px 8px;border-radius:9px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:3px;min-height:50px;justify-content:center;line-height:1.25;">
+                  <span style="font-size:18px;">✏</span>
+                  <span>顧客情報</span>
+                </button>
+              </div>
+              <style>@keyframes fp-draft-cta-pulse{0%,100%{transform:translateY(0) scale(1);box-shadow:0 8px 24px rgba(249,115,22,0.55),0 0 0 4px rgba(255,255,255,0.5)}50%{transform:translateY(-2.5px) scale(1.025);box-shadow:0 16px 36px rgba(249,115,22,0.72),0 0 0 7px rgba(255,255,255,0.6)}}@keyframes fp-draft-cta-gradient{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+              .fp-quick-act:hover{border-color:#5B5BF0 !important;background:#F8FAFC !important;}</style>
             </div>
 
-            <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;">
-              <button class="modal-brief-btn" data-line-brief="${c.id}" style="background:#fff;color:#059669;border:1.5px solid #10B981;padding:11px 18px;border-radius:8px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">✍ 自分で書く</button>
-              <button class="cd-flow-edit" id="modal-edit-btn" style="background:#fff;color:#475569;border:1.5px solid #E2E8F0;padding:11px 18px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">✏ 顧客情報</button>
-              <button id="modal-delete-btn" style="background:transparent;color:#94A3B8;border:none;padding:11px 8px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;text-decoration:underline;">削除</button>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;justify-content:flex-end;">
+              <button id="modal-delete-btn" style="background:transparent;color:#94A3B8;border:none;padding:6px 8px;font-size:11.5px;font-weight:600;cursor:pointer;font-family:inherit;text-decoration:underline;">この顧客を削除</button>
             </div>
           </div>` : `
           <div class="cd-flow cd-flow-empty">
@@ -3595,6 +3624,11 @@ ${ctxText}${surveyTxt}`;
     if (scheduleBtn) {
       scheduleBtn.addEventListener('click', () => openScheduleZoomModal(c));
     }
+    // ★ クイックアクション (AI推奨ブロック内 内包)
+    document.querySelectorAll('[data-quick-instant]').forEach(b => b.addEventListener('click', () => document.getElementById('cd-instant-zoom-btn')?.click()));
+    document.querySelectorAll('[data-quick-schedule]').forEach(b => b.addEventListener('click', () => openScheduleZoomModal(c)));
+    document.querySelectorAll('[data-quick-slots]').forEach(b => b.addEventListener('click', () => openSlotsSendModal(c)));
+    document.querySelectorAll('[data-quick-tag]').forEach(b => b.addEventListener('click', () => document.getElementById('cd-tags-edit')?.click()));
     // ★ オーナーfb 2026-06-20: 「⚡ 今すぐ Zoom 開始」 — Zoom Instant Meeting 作成 → LINE 自動送付 → host URL を 新タブで開く
     const instantBtn = document.getElementById('cd-instant-zoom-btn');
     if (instantBtn) {
@@ -4088,7 +4122,20 @@ ${ctxText}${surveyTxt}`;
         name: c.name,
         userId: c.lineFriendId || ('fs:' + c.docId),
         zoomUrl: c.zoomUrl,
+        zoomMeetingId: c.zoomMeetingId || '',
       }));
+    // ★ 顧客doc 直接の zoomMeetingId/zoomUrl (instantZoom 後の最新値 が _fpFirestoreConfirmed sync より早い場合の救済)
+    if (client.zoomMeetingId || client.zoomUrl) {
+      const exists = fsMyBookings.some(b => b.zoomMeetingId === client.zoomMeetingId);
+      if (!exists) {
+        fsMyBookings.push({
+          ts: '', date: String(client.confirmedSlot||'').split(' ')[0] || '',
+          time: String(client.confirmedSlot||'').split(' ')[1] || '',
+          name: client.name, userId: client.lineFriendId,
+          zoomUrl: client.zoomUrl, zoomMeetingId: client.zoomMeetingId || '',
+        });
+      }
+    }
     const myBookings = liveBookings.filter(b => b.userId === client.lineFriendId || b.name === client.name).concat(fsMyBookings);
 
     // localStorage から この顧客のメモ + タスクを取得
@@ -4175,11 +4222,17 @@ ${ctxText}${surveyTxt}`;
     });
     // GAS 永続化シートからも取得 (別ブラウザで保存された分)
     const liveAiResults = (window.LineAppLiveData && window.LineAppLiveData.ai_results) || [];
+    // ★ 全 myBookings から zoomMeetingId set
+    const myMeetingIds = new Set(myBookings.map(b => String(b.zoomMeetingId || '')).filter(Boolean));
+    if (client.zoomMeetingId) myMeetingIds.add(String(client.zoomMeetingId));
     liveAiResults.forEach(r => {
       // ★ strict 一致のみ (顧客名不明=「お客様」/空 の議事録は表示しない、 データ漏れ防止)
+      // ★ オーナーfb 2026-06-20: zoomMeetingId 一致 も match に追加 (instantZoom→議事録 救済)
+      const rZoomMid = String(r.zoomMeetingId || r.meetingId || '');
       const match = (r.userId && client.lineFriendId && r.userId === client.lineFriendId) ||
                     (r.customerName && r.customerName !== 'お客様' && r.customerName === client.name) ||
-                    myBookings.some(b => (b.ts && b.ts === r.bookingTs) || (b.userId && r.userId && b.userId === r.userId));
+                    myBookings.some(b => (b.ts && b.ts === r.bookingTs) || (b.userId && r.userId && b.userId === r.userId)) ||
+                    (rZoomMid && myMeetingIds.has(rZoomMid));
       if (!match) return;
       // key_concerns は文字列で来てるので JSON.parse
       let kc = r.key_concerns;
