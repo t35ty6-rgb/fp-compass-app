@@ -2657,11 +2657,22 @@
             </div>
           </div>
 
-          <!-- ★ オーナーfb 2026-06-20: 「今すぐ Zoom 開始」 — 顧客名直下 の 最目立ち位置 -->
+          <!-- ★ オーナーfb 2026-06-20: 「今すぐ Zoom 開始」 — 顧客名直下、 Zoom 公式アイコン 埋め込み -->
           ${c.lineFriendId ? `
-            <button id="cd-instant-zoom-btn" data-client-id="${escapeHtml(c.id)}" style="margin-top:14px;width:100%;background:linear-gradient(135deg,#06C755,#04A045);color:#fff;border:none;padding:18px 22px;border-radius:14px;font-size:17px;font-weight:900;cursor:pointer;font-family:'Noto Sans JP',sans-serif;letter-spacing:0.01em;box-shadow:0 8px 24px rgba(6,199,85,0.36),inset 0 1px 0 rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;gap:10px;min-height:62px;transition:transform .12s,box-shadow .12s;">
-              <span style="font-size:22px;">⚡</span>
-              <span>今すぐ Zoom 開始 → LINE 自動送付</span>
+            <button id="cd-instant-zoom-btn" data-client-id="${escapeHtml(c.id)}" style="margin-top:14px;width:100%;background:#fff;color:#0F172A;border:2px solid #2D8CFF;padding:14px 18px;border-radius:14px;font-size:16.5px;font-weight:900;cursor:pointer;font-family:'Noto Sans JP',sans-serif;letter-spacing:0.005em;box-shadow:0 8px 24px rgba(45,140,255,0.22),inset 0 1px 0 rgba(255,255,255,0.6);display:flex;align-items:center;justify-content:center;gap:12px;min-height:66px;transition:transform .12s,box-shadow .12s,background-color .12s;">
+              <!-- Zoom 公式アイコン (SVG) -->
+              <svg width="38" height="38" viewBox="0 0 100 100" style="flex-shrink:0;border-radius:11px;box-shadow:0 2px 6px rgba(45,140,255,0.30);">
+                <defs>
+                  <linearGradient id="zg-${escapeHtml(c.id)}" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stop-color="#4A9BFF"/>
+                    <stop offset="100%" stop-color="#2D8CFF"/>
+                  </linearGradient>
+                </defs>
+                <rect width="100" height="100" rx="22" fill="url(#zg-${escapeHtml(c.id)})"/>
+                <!-- zoom wordmark (custom path 風) -->
+                <text x="50" y="62" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-weight="700" font-size="28" fill="#fff" letter-spacing="-1">zoom</text>
+              </svg>
+              <span style="text-align:left;line-height:1.35;">今すぐ Zoom 開始<br><span style="font-size:11.5px;font-weight:700;color:#475569;letter-spacing:0.04em;">→ お客様の LINE に URL 自動送付</span></span>
             </button>
             <div id="cd-instant-zoom-status" style="font-size:12px;font-weight:700;margin-top:8px;text-align:center;"></div>
           ` : ''}
@@ -3576,8 +3587,9 @@ ${ctxText}${surveyTxt}`;
         if (!confirm(c.name + ' 様 に 「今すぐ Zoom 開始」 します。\n\n・Zoom Instant Meeting が 作成されます\n・URL が LINE で 即送信されます\n・ FP の Zoom が この後 新タブで 開きます (録画ON)\n\nよろしいですか?')) return;
         const origHtml = instantBtn.innerHTML;
         instantBtn.disabled = true;
-        instantBtn.innerHTML = '<span style="font-size:22px;">⏳</span><span>Zoom 作成 + LINE 送信中…</span>';
-        status.style.color = '#0F172A'; status.textContent = 'Zoom Meeting 作成中…';
+        instantBtn.style.opacity = '0.7';
+        instantBtn.style.cursor = 'wait';
+        status.style.color = '#2D8CFF'; status.textContent = '⏳ Zoom Meeting 作成中 + LINE 送信中…';
         try {
           const { initializeApp, getApps } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js');
           const { getFunctions, httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-functions.js');
@@ -3595,9 +3607,12 @@ ${ctxText}${surveyTxt}`;
             window.open(data.startUrl, '_blank');
             status.style.color = '#059669';
             status.textContent = data.lineSent
-              ? '✅ LINE 送付完了 / FP の Zoom を 別タブ で 開きました'
+              ? '✅ LINE 送付完了 / FP の Zoom を 別タブ で 開きました (Meeting ID: ' + (data.meetingId || '?') + ')'
               : '⚠ Meeting 作成成功 だが LINE 送信失敗 (' + (data.error || '') + ')';
-            instantBtn.innerHTML = '<span style="font-size:22px;">✓</span><span>Zoom 開始済 (URL: ' + (data.meetingId || '?') + ')</span>';
+            instantBtn.style.background = '#ECFDF5';
+            instantBtn.style.borderColor = '#10B981';
+            instantBtn.style.opacity = '1';
+            instantBtn.style.cursor = 'default';
           } else {
             throw new Error('startUrl が 返ってこなかった');
           }
@@ -3605,6 +3620,7 @@ ${ctxText}${surveyTxt}`;
           console.error('[instantZoom]', e);
           status.style.color = '#DC2626'; status.textContent = '❌ 失敗: ' + (e.message || e).slice(0, 200);
           instantBtn.disabled = false; instantBtn.innerHTML = origHtml;
+          instantBtn.style.opacity = '1'; instantBtn.style.cursor = 'pointer';
         }
       });
     }
