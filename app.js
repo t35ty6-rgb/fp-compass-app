@@ -2,6 +2,7 @@
 // シングルページ。ダッシュボード / 顧客一覧 / タイムライン / 顧客詳細モーダル。
 
 (function () {
+
   const TODAY = window.LifeEvents.TODAY;
   const LS_KEY = 'fp-crm-state-v1';
   const LS_REAL_MODE = 'fp-crm-real-mode';
@@ -181,7 +182,14 @@
   // ============================
   // タブ切替
   // ============================
-  function activateTab(name) {
+  // ★ URLルーティング: 全 view を `?view={name}` で 表現
+  //   - tab click → activateTab(name) → URL pushState → URL更新
+  //   - ブラウザ back / forward → popstate → URL読取 → activateTab(name, {fromPopstate:true})
+  //   - リロード / 直アクセス → 初期 URL 読取 → activateTab で 復元
+  //   メリット: F5でも 同じ画面戻る / Playwright E2E URL直アクセス / Bug再現が URL共有 だけで済む
+  const VALID_VIEWS = ['dashboard','clients','timeline','leadHub','distributionHub','birthdayTab','calendarTab','settingsHub','dormantFollowup','tagsHub','kpi'];
+  function activateTab(name, options) {
+    options = options || {};
     state.activeTab = name;
     saveState();
     document.querySelectorAll('.tab').forEach(t => {
@@ -193,7 +201,6 @@
     if (name === 'dashboard') renderDashboard();
     if (name === 'clients') renderClients();
     if (name === 'timeline') renderGlobalTimeline();
-    // LINE系メインタブ昇格
     if (['leadHub', 'distributionHub', 'birthdayTab', 'calendarTab', 'settingsHub', 'dormantFollowup', 'tagsHub'].indexOf(name) >= 0) {
       if (window.LineApp) {
         if (!window._lineInited) {
@@ -203,7 +210,80 @@
         window.LineApp.activateSubview(name);
       }
     }
+    // ★ URL更新 (popstate由来でない時 = ユーザclick / 初期化 など)
+    if (!options.fromPopstate && VALID_VIEWS.indexOf(name) >= 0) {
+      try {
+        const url = new URL(window.location);
+        if (url.searchParams.get('view') !== name) {
+          url.searchParams.set('view', name);
+          // モーダル系の customer/tab パラメータ も view 切替時はクリア
+          url.searchParams.delete('customer');
+          url.searchParams.delete('tab');
+          history.pushState({ view: name }, '', url.pathname + url.search);
+        }
+      } catch (e) { console.warn('[router] pushState fail:', e); }
+    }
   }
+  // popstate (ブラウザ back/forward) listener
+  window.addEventListener('popstate', () => { applyUrlState({ fromPopstate: true }); });
+  // 初期URL → 該当 view 復元 (リロード時 同じ画面に戻る)
+  function routeFromUrl() { applyUrlState({ fromPopstate: true }); }
+  // URLの ?view= / ?customer= / ?tab= を 読み取って UI状態に反映
+  // - view: メインタブ
+  // - customer: 顧客モーダルID (あれば 開く / なければ 閉じる)
+  // - tab: モーダル内タブ (overview/line/timeline/proposals/meetings/family)
+  function applyUrlState(options) {
+    options = options || {};
+    const params = new URLSearchParams(window.location.search);
+    const view = params.get('view');
+    const customer = params.get('customer');
+    const subtab = params.get('tab');
+    // 1. view 同期
+    if (view && VALID_VIEWS.indexOf(view) >= 0 && view !== state.activeTab) {
+      activateTab(view, { fromPopstate: true });
+    }
+    // 2. customer モーダル 同期
+    const overlay = document.getElementById('modal-overlay');
+    const overlayOpen = overlay && overlay.style.display === 'flex';
+    if (customer) {
+      // URL に customer 指定あり → モーダル開く
+      try {
+        if (typeof openClientModal === 'function' && (!overlayOpen || window._fpCurrentClient?.id !== customer)) {
+          openClientModal(customer, { fromPopstate: true });
+        }
+        // 3. モーダル内タブ 同期
+        if (subtab) {
+          setTimeout(() => {
+            const tabBtn = document.querySelector('[data-cdtab="' + subtab + '"]');
+            if (tabBtn && !tabBtn.classList.contains('cd-tab-active')) tabBtn.click();
+          }, 150);
+        }
+      } catch (e) { console.warn('[router] openClientModal fail:', e); }
+    } else if (overlayOpen && !options.skipModalClose) {
+      // URL に customer 指定なし → モーダル閉じる (popstateで戻った時)
+      try { closeModal({ fromPopstate: true }); } catch (_) {}
+    }
+  }
+  // モーダル URL push helper (openClientModal/closeModal/タブclick から呼ぶ)
+  function pushModalUrl(customerId, subtab) {
+    try {
+      const url = new URL(window.location);
+      if (customerId) {
+        url.searchParams.set('view', 'clients');
+        url.searchParams.set('customer', customerId);
+        if (subtab) url.searchParams.set('tab', subtab);
+        else url.searchParams.delete('tab');
+      } else {
+        url.searchParams.delete('customer');
+        url.searchParams.delete('tab');
+      }
+      const target = url.pathname + url.search;
+      if (window.location.pathname + window.location.search !== target) {
+        history.pushState({ view: 'clients', customer: customerId, tab: subtab }, '', target);
+      }
+    } catch (e) { console.warn('[router] pushModalUrl fail:', e); }
+  }
+  window.FPRouter = { activateTab, routeFromUrl, applyUrlState, pushModalUrl, VALID_VIEWS };
 
   // ============================
   // ダッシュボード
@@ -1637,7 +1717,8 @@
     }
   }
 
-  function openClientModal(id) {
+  function openClientModal(id, options) {
+    options = options || {};
     const c = clients.find(x => x.id === id);
     if (!c) return;
     window._fpCurrentClient = c;  // AI議事録モーダルの LINE 送信 fallback 用
@@ -1646,6 +1727,10 @@
       localStorage.setItem('fp-last-open-client', id);
       localStorage.setItem('fp-last-open-mode', 'client');
     } catch (_) {}
+    // ★ URL routing: ?view=clients&customer={id} に更新 (popstate由来でない時)
+    if (!options.fromPopstate) {
+      try { pushModalUrl(id, null); } catch (_) {}
+    }
     // AI BRIEF で拡大した modal-content の幅を通常に戻す
     try { document.getElementById('modal-content').style.maxWidth = ''; } catch (_) {}
     ensureLineHistory_(c);
@@ -2091,7 +2176,6 @@
             <div style="font-family:'Inter',sans-serif;font-size:10px;font-weight:800;letter-spacing:0.16em;opacity:0.8;">📍 WORKFLOW — このお客様の現在地</div>
             <div style="font-size:10.5px;opacity:0.85;">面談 ${pastMs}回 / 次予約 ${futureMs}件</div>
           </div>
-          <!-- 進捗フローチャート -->
           <div style="display:flex;gap:4px;align-items:center;overflow-x:auto;padding-bottom:8px;margin-bottom:10px;">
             ${stages.map((s, i) => `
               <div style="flex:1;min-width:90px;text-align:center;padding:8px 6px;border-radius:8px;background:${i < currentStageIdx ? 'rgba(16,185,129,0.25)' : i === currentStageIdx ? 'linear-gradient(135deg,#f59e0b,#ea580c)' : 'rgba(255,255,255,0.08)'};border:1.5px solid ${i < currentStageIdx ? '#10b981' : i === currentStageIdx ? '#f59e0b' : 'rgba(255,255,255,0.2)'};">
@@ -2102,7 +2186,6 @@
             `).join('')}
           </div>
           <style>@keyframes fp-stage-pulse{0%,100%{box-shadow:0 0 0 0 rgba(245,158,11,0.5)}50%{box-shadow:0 0 0 8px rgba(245,158,11,0)}}</style>
-          <!-- 2カラム: いま動いてる + Jobs候補 -->
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:11.5px;">
             <div style="background:rgba(255,255,255,0.08);border-radius:8px;padding:10px 12px;">
               <div style="font-size:10px;font-weight:800;letter-spacing:0.08em;color:#94a3b8;margin-bottom:6px;text-transform:uppercase;">🔄 いま動いてる</div>
@@ -2707,13 +2790,13 @@
             <div class="cd-flow-reason">${escapeHtml(topRec.reason)}</div>
 
             <div class="cd-flow-steps">
-              <button class="cd-flow-step cd-flow-step-active fp-draft-cta" id="modal-draft-btn" style="background:linear-gradient(135deg,#F97316,#EA580C) !important;border:none !important;color:#fff !important;box-shadow:0 6px 18px rgba(249,115,22,0.42) !important;padding:14px 18px !important;min-height:56px !important;">
-                <span class="cd-flow-step-no" style="background:rgba(255,255,255,0.28) !important;color:#fff !important;border:1px solid rgba(255,255,255,0.4) !important;font-size:14px !important;">1</span>
-                <span class="cd-flow-step-body" style="min-width:0 !important;flex:1 !important;">
-                  <span class="cd-flow-step-label" style="color:#fff !important;font-weight:800 !important;font-size:15px !important;letter-spacing:0.02em !important;white-space:normal !important;line-height:1.35 !important;display:block !important;">✨ AI で 下書き を 作る</span>
-                  <span class="cd-flow-step-sub" style="color:rgba(255,255,255,0.92) !important;font-weight:500 !important;font-size:12px !important;white-space:normal !important;line-height:1.4 !important;display:block !important;margin-top:2px !important;">押すと AI が LINE 文面 を 自動 生成</span>
+              <button class="cd-flow-step cd-flow-step-active fp-draft-cta" id="modal-draft-btn">
+                <span class="cd-flow-step-no">1</span>
+                <span class="cd-flow-step-body">
+                  <span class="cd-flow-step-label">✨ AI で 下書き を 作る</span>
+                  <span class="cd-flow-step-sub">押すと AI が LINE 文面 を 自動 生成</span>
                 </span>
-                <i data-lucide="wand-2" class="cd-flow-step-icon" style="color:#fff !important;flex-shrink:0 !important;"></i>
+                <i data-lucide="wand-2" class="cd-flow-step-icon"></i>
               </button>
               <style>@keyframes fp-draft-cta-pulse{0%,100%{transform:translateY(0) scale(1);box-shadow:0 8px 24px rgba(249,115,22,0.55),0 0 0 4px rgba(255,255,255,0.5)}50%{transform:translateY(-2.5px) scale(1.025);box-shadow:0 16px 36px rgba(249,115,22,0.72),0 0 0 7px rgba(255,255,255,0.6)}}@keyframes fp-draft-cta-gradient{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}</style>
             </div>
@@ -3188,10 +3271,24 @@
           <div style="display:flex;flex-direction:column;gap:12px;">
             <label style="display:block;"><div style="font-size:11px;font-weight:700;color:#475569;margin-bottom:4px;">関係</div>
               <select id="fp-fam-rel" style="width:100%;padding:9px 12px;border:1px solid #E2E8F0;border-radius:7px;font-size:13px;font-family:inherit;">
-                <option value="spouse" ${m.rel==='spouse'?'selected':''}>配偶者</option>
-                <option value="child" ${m.rel==='child'?'selected':''}>お子様</option>
-                <option value="parent" ${m.rel==='parent'?'selected':''}>親</option>
-                <option value="sibling" ${m.rel==='sibling'?'selected':''}>ご兄弟</option>
+                <optgroup label="上の世代">
+                  <option value="grandparent" ${m.rel==='grandparent'?'selected':''}>祖父母</option>
+                  <option value="parent" ${m.rel==='parent'?'selected':''}>親 (実父母)</option>
+                  <option value="parent_in_law" ${m.rel==='parent_in_law'?'selected':''}>義父母 (配偶者の親)</option>
+                  <option value="uncle" ${m.rel==='uncle'?'selected':''}>おじ・おば</option>
+                </optgroup>
+                <optgroup label="同世代">
+                  <option value="spouse" ${m.rel==='spouse'?'selected':''}>配偶者</option>
+                  <option value="sibling" ${m.rel==='sibling'?'selected':''}>ご兄弟</option>
+                  <option value="sibling_in_law" ${m.rel==='sibling_in_law'?'selected':''}>義兄弟 (配偶者の兄弟)</option>
+                  <option value="cousin" ${m.rel==='cousin'?'selected':''}>いとこ</option>
+                </optgroup>
+                <optgroup label="下の世代">
+                  <option value="child" ${m.rel==='child'?'selected':''}>お子様</option>
+                  <option value="child_in_law" ${m.rel==='child_in_law'?'selected':''}>子の配偶者</option>
+                  <option value="nephew" ${m.rel==='nephew'?'selected':''}>甥・姪 (兄弟の子)</option>
+                  <option value="grandchild" ${m.rel==='grandchild'?'selected':''}>お孫さん</option>
+                </optgroup>
                 <option value="other" ${m.rel==='other'?'selected':''}>その他</option>
               </select>
             </label>
@@ -3342,6 +3439,13 @@ ${ctxText}${surveyTxt}`;
           if (p.dataset.cdpanel === key) p.removeAttribute('hidden');
           else p.setAttribute('hidden', '');
         });
+        // ★ URL routing Phase3: モーダル内タブ → ?tab=key
+        try {
+          const cur = window._fpCurrentClient;
+          if (cur && cur.id && typeof pushModalUrl === 'function' && !btn.dataset.fromPopstate) {
+            pushModalUrl(cur.id, key);
+          }
+        } catch (_) {}
         // ★ LINE 履歴タブ開いたら「既読」マーク
         if (key === 'line') {
           try {
@@ -3644,14 +3748,22 @@ ${ctxText}${surveyTxt}`;
   // ============================
   function renderFamilyTreeBlock(client) {
     const fam = Array.isArray(client.family) ? client.family : [];
-    // 関係 → 表示順 + ラベル + 色
+    // 関係 → 表示順 + ラベル + 色 (相続/二世帯/事業承継 で 必要になる 拡張親族 込み)
     const relMeta = {
-      self:    { label: '本人',     color: '#5B5BF0', order: 0 },
-      spouse:  { label: '配偶者',   color: '#EF4444', order: 1 },
-      child:   { label: 'お子様',   color: '#06B6D4', order: 2 },
-      parent:  { label: '親',       color: '#A855F7', order: -1 },
-      sibling: { label: 'ご兄弟',   color: '#84CC16', order: 3 },
-      other:   { label: 'その他',   color: '#6B7280', order: 4 },
+      self:           { label: '本人',         color: '#5B5BF0', order: 0 },
+      grandparent:    { label: '祖父母',       color: '#7C3AED', order: -3 },
+      parent:         { label: '親',           color: '#A855F7', order: -2 },
+      parent_in_law:  { label: '義父母',       color: '#C084FC', order: -1 },
+      uncle:          { label: 'おじ・おば',   color: '#D8B4FE', order: -1 },
+      spouse:         { label: '配偶者',       color: '#EF4444', order: 1 },
+      sibling:        { label: 'ご兄弟',       color: '#84CC16', order: 2 },
+      sibling_in_law: { label: '義兄弟',       color: '#A3E635', order: 2 },
+      cousin:         { label: 'いとこ',       color: '#22C55E', order: 3 },
+      child:          { label: 'お子様',       color: '#06B6D4', order: 4 },
+      child_in_law:   { label: '子の配偶者',   color: '#22D3EE', order: 5 },
+      nephew:         { label: '甥・姪',       color: '#0EA5E9', order: 5 },
+      grandchild:     { label: 'お孫さん',     color: '#F59E0B', order: 6 },
+      other:          { label: 'その他',       color: '#6B7280', order: 7 },
     };
     const age = (birth) => {
       if (!birth) return null;
@@ -3668,8 +3780,12 @@ ${ctxText}${surveyTxt}`;
       <div class="fp-fam-name">${escapeHtml(client.name || 'お客様')}</div>
       <div class="fp-fam-age">${age(client.birth) ?? '?'}歳 / ${escapeHtml(client.occupation || '職業未設定')}</div>
     </div>`;
-    // 関係別 にグループ化 → 描画順は parent → self → spouse → sibling → child → other
-    const groups = { parent: [], self: [], spouse: [], sibling: [], child: [], other: [] };
+    // 関係別 にグループ化 → 描画順は 祖父母 → 親/義父母/おじおば → self/spouse → 兄弟/義兄弟/いとこ → 子/義子/甥姪 → 孫 → other
+    const groups = {
+      grandparent: [], parent: [], parent_in_law: [], uncle: [],
+      spouse: [], sibling: [], sibling_in_law: [], cousin: [],
+      child: [], child_in_law: [], nephew: [], grandchild: [], other: [],
+    };
     fam.forEach((m, idx) => {
       const r = (m.rel || 'other').toLowerCase();
       const grp = groups[r] ? r : 'other';
@@ -3706,7 +3822,10 @@ ${ctxText}${surveyTxt}`;
           .fp-fam-card .fp-fam-edit{position:absolute;top:6px;right:6px;background:rgba(255,255,255,0.7);border:1px solid rgba(0,0,0,0.08);border-radius:5px;width:24px;height:24px;cursor:pointer;font-size:11px;padding:0;}
           .fp-fam-card .fp-fam-edit:hover{background:#fff;border-color:rgba(0,0,0,0.18);}
         </style>
+        ${renderGroup('grandparent', groups.grandparent)}
         ${renderGroup('parent', groups.parent)}
+        ${renderGroup('parent_in_law', groups.parent_in_law)}
+        ${renderGroup('uncle', groups.uncle)}
         <div style="margin-bottom:14px;">
           <div style="font-size:11px;font-weight:800;color:#5B5BF0;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;">本人 + 配偶者</div>
           <div style="display:flex;flex-wrap:wrap;gap:8px;">
@@ -3722,8 +3841,13 @@ ${ctxText}${surveyTxt}`;
             }).join('')}
           </div>
         </div>
-        ${renderGroup('child', groups.child)}
         ${renderGroup('sibling', groups.sibling)}
+        ${renderGroup('sibling_in_law', groups.sibling_in_law)}
+        ${renderGroup('cousin', groups.cousin)}
+        ${renderGroup('child', groups.child)}
+        ${renderGroup('child_in_law', groups.child_in_law)}
+        ${renderGroup('nephew', groups.nephew)}
+        ${renderGroup('grandchild', groups.grandchild)}
         ${renderGroup('other', groups.other)}
         ${fam.length === 0 ? '<div style="padding:24px;background:#F8FAFC;border:1px dashed #CBD5E1;border-radius:10px;text-align:center;color:#64748B;font-size:12.5px;">まだ家族情報が登録されていません。<br>「✨ 議事録 から AI 抽出」 で 過去の Zoom 議事録 から 自動 で 家族構成 を 取り込めます。</div>' : ''}
       </div>`;
@@ -5002,8 +5126,7 @@ STEP C: 結果報告
       if (!match) return;
       if (!latestAi || (r.ts || '') > (latestAi.createdAt || '')) latestAi = { summary: r.summary, transcript: r.transcript, createdAt: r.ts };
     });
-    const sanitize = (s) => typeof s !== 'string' ? s : s.replace(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])/g, '').replace(/(^|[^\uD800-\uDBFF])([\uDC00-\uDFFF])/g, '$1').replace(/[ --]/g, '');
-
+    const sanitize = (s) => typeof s !== 'string' ? s : s.replace(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])/g, '').replace(/(^|[^\uD800-\uDBFF])([\uDC00-\uDFFF])/g, '$1').replace(/[ -]/g, '');
     try {
       const result = await generateDeliverableViaMacMini({ type, client, clientCtx, taskTitle, latestAi, sanitize });
       const d = await result.json();
@@ -6978,13 +7101,19 @@ ${client.name}さん、ありがとうございます。
     return { intent, reason, body, situation, proposals };
   }
 
-  function closeModal() {
+  function closeModal(options) {
+    options = options || {};
     document.getElementById('modal-overlay').style.display = 'none';
     // ★ 閉じたら復元 flag クリア
     try {
       localStorage.removeItem('fp-last-open-client');
       localStorage.removeItem('fp-last-open-mode');
     } catch (_) {}
+    window._fpCurrentClient = null;
+    // ★ URL routing: customer / tab パラメータ を 除去 (popstate由来でない時)
+    if (!options.fromPopstate) {
+      try { pushModalUrl(null, null); } catch (_) {}
+    }
   }
 
   // ============================
@@ -7532,6 +7661,14 @@ ${client.name}さん、ありがとうございます。
     // line-app.js から呼び出せるように公開
     window.FpApp = { openClientModal: openClientModal, openClientForm: openClientForm, getTagsMaster: getTagsMaster, getClientTags: getClientTags };
 
+    // ★ URL routing: ?view=clients 等で起動された場合は state.activeTab を 上書き
+    //   (activateTab を 呼ぶ前に やらないと 先に state.activeTab で URL を 上書きしてしまう)
+    try {
+      const urlView = new URLSearchParams(window.location.search).get('view');
+      if (urlView && VALID_VIEWS.indexOf(urlView) >= 0) {
+        state.activeTab = urlView;
+      }
+    } catch (_) {}
     activateTab(state.activeTab);
 
     // 残存 cleared flag を解除 (前回までの残骸)

@@ -1143,6 +1143,8 @@
       _fsCustomerId: c.docId,
       userId: 'fs:' + c.docId,
       name: c.name,
+      // ★ LINE pictureUrl 反映 (fs:DOCID は liveData.users に存在しない → usersByUid lookup miss → イニシャル円になる退化バグ 修正)
+      pictureUrl: c.pictureUrl || c.linePictureUrl || '',
       q2_年代: c.surveyAnswers?.q1_年代,
       q3_家族: c.surveyAnswers?.q3_家族,
       q4_年収: c.surveyAnswers?.q4_年収,
@@ -1170,8 +1172,10 @@
         || (u.displayName && String(u.displayName).trim())
         || ((s.q1_テーマ && s.q1_テーマ.trim()) ? s.q1_テーマ + 'のお客様' : '相談者');
       const initial = (displayName || '?').replace(/\s+/g, '').slice(0, 1);
-      const avatarHtml = u.pictureUrl
-        ? `<img src="${escapeHtml(u.pictureUrl)}" alt="" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,0.12);">`
+      // ★ pictureUrl: s.pictureUrl (Firestore直) → u.pictureUrl (legacy users) の順 で fallback
+      const picUrl = s.pictureUrl || u.pictureUrl || '';
+      const avatarHtml = picUrl
+        ? `<img src="${escapeHtml(picUrl)}" alt="" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,0.12);">`
         : `<div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#4f46e5);color:#fff;font-weight:700;font-size:18px;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,0.12);">${escapeHtml(initial)}</div>`;
       return `
         <div data-pending-card data-uid="${escapeHtml(s.userId || '')}" style="background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--gold);border-radius:10px;padding:18px 22px;margin-bottom:10px;box-shadow:var(--shadow-xs);">
@@ -3915,13 +3919,12 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
       <div class="howto-banner">
         <div class="howto-banner-head">
           <span class="howto-banner-title">📨 配信管理</span>
-          <span class="howto-banner-subtitle">自動配信の全体を1画面で / 上から下にスクロール</span>
         </div>
         <div class="howto-steps">
-          <div class="howto-step"><div class="howto-step-no">1</div><div><strong>配信ダッシュボード</strong> — 全体KPIと今後の配信予定</div></div>
-          <div class="howto-step"><div class="howto-step-no">2</div><div><strong>配信スケジュール</strong> — どのテンプレをいつ・誰に配信するか管理</div></div>
-          <div class="howto-step"><div class="howto-step-no">3</div><div><strong>メッセージテンプレ</strong> — 配信に使う文章のストック</div></div>
-          <div class="howto-step"><div class="howto-step-no">4</div><div><strong>送信ログ</strong> — 過去配信の履歴・成功/失敗確認</div></div>
+          <div class="howto-step"><div class="howto-step-no">1</div><div><strong>ダッシュボード</strong> — 今日 送る人</div></div>
+          <div class="howto-step"><div class="howto-step-no">2</div><div><strong>スケジュール</strong> — いつ 誰に 何を</div></div>
+          <div class="howto-step"><div class="howto-step-no">3</div><div><strong>テンプレ</strong> — 文章ストック</div></div>
+          <div class="howto-step"><div class="howto-step-no">4</div><div><strong>送信ログ</strong> — 過去の配信履歴</div></div>
         </div>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;font-size:11.5px;">
@@ -5119,13 +5122,13 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
     const heroHtml = todayMessages.length === 0 ? `
       <div class="fp-dist-simple-empty">
         <div class="fp-dist-simple-empty-mark">🌿</div>
-        <h2>今日は LINE で 送る方は いません</h2>
-        <p>明日の朝、 また 下書きを ご用意しておきます。</p>
+        <h2>今日 送る方は いません</h2>
+        <p>明日朝 また 下書き 出します</p>
       </div>
     ` : `
       <div class="fp-dist-simple-head">
-        <h1>今日 LINE で 送る お客様 <span class="fp-dist-simple-count">${todayMessages.length}名</span></h1>
-        <p>AI が下書きを 作りました。 確認して 緑のボタンを 押すだけ です。</p>
+        <h1>今日 送るお客様 <span class="fp-dist-simple-count">${todayMessages.length}名</span></h1>
+        <p>緑のボタンで 送信</p>
       </div>
     `;
 
@@ -5587,10 +5590,10 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
         border-bottom: 1px solid #E8E2D4;
       }
       .fp-dist-simple-head h1 {
-        font-family: 'Noto Serif JP', serif;
-        font-weight: 700; font-size: 24px;
-        letter-spacing: -0.012em; color: #1F1A12;
-        margin: 0 0 6px 0; line-height: 1.4;
+        font-family: 'Noto Sans JP', -apple-system, sans-serif;
+        font-weight: 900; font-size: 30px;
+        letter-spacing: -0.02em; color: #0F172A;
+        margin: 0 0 8px 0; line-height: 1.3;
       }
       .fp-dist-simple-count {
         background: linear-gradient(135deg, #C19A3A, #B8893D);
@@ -5604,8 +5607,10 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
         vertical-align: middle;
       }
       .fp-dist-simple-head p {
-        font-size: 13.5px; color: #5E5648;
-        margin: 0; line-height: 1.7;
+        font-family: 'Noto Sans JP', -apple-system, sans-serif;
+        font-size: 16px; color: #475569;
+        font-weight: 500;
+        margin: 0; line-height: 1.6;
       }
       .fp-dist-simple-empty {
         background: linear-gradient(135deg, #F0FDF4, #DCFCE7);
@@ -5616,13 +5621,16 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
       }
       .fp-dist-simple-empty-mark { font-size: 48px; margin-bottom: 10px; }
       .fp-dist-simple-empty h2 {
-        font-family: 'Noto Serif JP', serif;
-        font-weight: 700; font-size: 20px;
+        font-family: 'Noto Sans JP', -apple-system, sans-serif;
+        font-weight: 900; font-size: 22px;
         color: #065F46; margin: 0 0 8px 0;
+        letter-spacing: -0.01em;
       }
       .fp-dist-simple-empty p {
-        font-size: 13px; color: #047857;
-        margin: 0; line-height: 1.7;
+        font-family: 'Noto Sans JP', -apple-system, sans-serif;
+        font-size: 15px; color: #047857;
+        font-weight: 500;
+        margin: 0; line-height: 1.6;
       }
       .fp-today-card-v2 {
         background: #fff;
@@ -5635,35 +5643,38 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
       }
       .fp-today-v2-head { margin-bottom: 14px; }
       .fp-today-v2-name {
-        font-family: 'Noto Serif JP', serif;
-        font-weight: 700; font-size: 18px;
-        color: #1F1A12; letter-spacing: -0.005em;
-        line-height: 1.3;
+        font-family: 'Noto Sans JP', -apple-system, sans-serif;
+        font-weight: 900; font-size: 22px;
+        color: #0F172A; letter-spacing: -0.015em;
+        line-height: 1.25;
       }
       .fp-today-v2-name span {
-        font-size: 13px; color: #8B7D5D;
-        font-weight: 400; margin-left: 3px;
+        font-size: 15px; color: #64748B;
+        font-weight: 600; margin-left: 4px;
       }
       .fp-today-v2-reason {
-        font-size: 12.5px; color: #C19A3A;
-        font-weight: 700;
-        background: #FDFBF4;
-        border: 1px solid #E8C56F;
+        font-family: 'Noto Sans JP', -apple-system, sans-serif;
+        font-size: 13.5px; color: #B45309;
+        font-weight: 800;
+        background: #FFFBEB;
+        border: 1px solid #FCD34D;
         display: inline-block;
-        padding: 4px 11px;
+        padding: 5px 12px;
         border-radius: 999px;
-        margin-top: 6px;
-        letter-spacing: 0.02em;
+        margin-top: 8px;
+        letter-spacing: 0.01em;
       }
       .fp-today-v2-bubble {
-        background: linear-gradient(180deg, #F1F5F9, #E2E8F0);
+        background: #F8FAFC;
+        border: 1px solid #E2E8F0;
         border-radius: 10px;
-        padding: 16px 18px;
-        font-family: 'Hiragino Sans', 'Noto Sans JP', sans-serif;
-        font-size: 13.5px;
-        line-height: 1.95;
-        color: #1F1A12;
-        margin-bottom: 16px;
+        padding: 18px 20px;
+        font-family: 'Noto Sans JP', 'Hiragino Sans', sans-serif;
+        font-size: 16px;
+        line-height: 1.85;
+        color: #0F172A;
+        font-weight: 500;
+        margin-bottom: 18px;
         white-space: pre-wrap;
       }
       .fp-today-v2-send {
@@ -5671,19 +5682,20 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 10px;
-        font-family: 'Noto Sans JP', 'Manrope', sans-serif;
+        gap: 12px;
+        font-family: 'Noto Sans JP', sans-serif;
         font-weight: 900;
-        font-size: 16px;
+        font-size: 19px;
         letter-spacing: 0.04em;
         color: #fff;
         background: linear-gradient(135deg, #06C755, #04A847);
         border: none;
-        padding: 16px 22px;
-        border-radius: 11px;
+        padding: 22px 28px;
+        border-radius: 12px;
         cursor: pointer;
         box-shadow: 0 6px 18px rgba(6,199,85,0.32);
         transition: transform 0.12s ease, box-shadow 0.18s ease;
+        min-height: 64px;
       }
       .fp-today-v2-send-icon { font-size: 18px; }
       .fp-today-v2-send:hover {

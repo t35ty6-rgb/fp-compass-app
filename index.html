@@ -1176,7 +1176,7 @@ window.fpReadyAfterAuth = function() {
     });
   })();
 
-  const ver = "20260620BK-bookingts-decode-sku-tag-and-orphan-merge";
+  const ver = "20260620CA-stg-disthub-gothic-survey-largebtn";
   const scripts = [
     "life-events.js?v=" + ver,
     "recommender.js?v=" + ver,
@@ -1351,10 +1351,13 @@ window.fpReadyAfterAuth = function() {
     });
     setText('nav-count-kpi', kpiAlert);
     // 新規相談バッジ: 候補日確定待ち (アンケート回答+候補日3つ届いたが未確定) の実件数のみ
+    //   legacy survey_answers (GAS) + Firestore _fpFirestoreCustomers 両方 合算
     try {
       const surveys = (window.LineAppLiveData && window.LineAppLiveData.survey_answers) || [];
       const isRealUid = (uid) => /^U[a-f0-9]{32}$/i.test(String(uid || ''));
-      const pendingConfirm = surveys.filter(s => !s.confirmedSlot && (s.q6_候補1 || s.q7_候補2 || s.q8_候補3 || s.q11_候補1) && isRealUid(s.userId)).length;
+      const pendingLegacy = surveys.filter(s => !s.confirmedSlot && (s.q6_候補1 || s.q7_候補2 || s.q8_候補3 || s.q11_候補1) && isRealUid(s.userId)).length;
+      const pendingFs = (window._fpFirestoreCustomers || []).filter(c => (c.meetingCandidates||[]).length > 0 && !c.confirmedSlot).length;
+      const pendingConfirm = pendingLegacy + pendingFs;
       setText('nav-count-lead', pendingConfirm > 0 ? pendingConfirm : '');
     } catch (_) { setText('nav-count-lead', ''); }
     const m = today.getMonth() + 1;
@@ -1492,7 +1495,7 @@ window.fpReadyAfterAuth = function() {
 <script>
 (function(){
   // 最新の ver を 1 箇所に集約 (fpReadyAfterAuth 側と一致させる必要あり)
-  const FP_VERSION = "20260620BK-bookingts-decode-sku-tag-and-orphan-merge";
+  const FP_VERSION = "20260620CA-stg-disthub-gothic-survey-largebtn";
   const loadTime = new Date();
   const hhmm = String(loadTime.getHours()).padStart(2,'0') + ':' + String(loadTime.getMinutes()).padStart(2,'0');
   const dateLabel = (FP_VERSION.match(/^(\d{4})(\d{2})(\d{2})/) || []).slice(1).join('/').replace(/^(\d{4})\//,'$1/').replace(/\/(\d{2})\/(\d{2})$/,'/$1/$2') || FP_VERSION;
