@@ -2657,23 +2657,26 @@
             </div>
           </div>
 
-          <!-- ★ オーナーfb 2026-06-20: 「今すぐ Zoom 開始」 — 顧客名直下、 Zoom 公式アイコン 埋め込み -->
+          <!-- ★ オーナーfb 2026-06-20: 「今すぐ Zoom 開始」 + 「日時指定 Zoom 予約」 — 顧客名直下、 Zoom 公式アイコン -->
           ${c.lineFriendId ? `
-            <button id="cd-instant-zoom-btn" data-client-id="${escapeHtml(c.id)}" style="margin-top:14px;width:100%;background:#fff;color:#0F172A;border:2px solid #2D8CFF;padding:14px 18px;border-radius:14px;font-size:16.5px;font-weight:900;cursor:pointer;font-family:'Noto Sans JP',sans-serif;letter-spacing:0.005em;box-shadow:0 8px 24px rgba(45,140,255,0.22),inset 0 1px 0 rgba(255,255,255,0.6);display:flex;align-items:center;justify-content:center;gap:12px;min-height:66px;transition:transform .12s,box-shadow .12s,background-color .12s;">
-              <!-- Zoom 公式アイコン (SVG) -->
-              <svg width="38" height="38" viewBox="0 0 100 100" style="flex-shrink:0;border-radius:11px;box-shadow:0 2px 6px rgba(45,140,255,0.30);">
-                <defs>
-                  <linearGradient id="zg-${escapeHtml(c.id)}" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stop-color="#4A9BFF"/>
-                    <stop offset="100%" stop-color="#2D8CFF"/>
-                  </linearGradient>
-                </defs>
-                <rect width="100" height="100" rx="22" fill="url(#zg-${escapeHtml(c.id)})"/>
-                <!-- zoom wordmark (custom path 風) -->
-                <text x="50" y="62" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-weight="700" font-size="28" fill="#fff" letter-spacing="-1">zoom</text>
-              </svg>
-              <span style="text-align:left;line-height:1.35;">今すぐ Zoom 開始<br><span style="font-size:11.5px;font-weight:700;color:#475569;letter-spacing:0.04em;">→ お客様の LINE に URL 自動送付</span></span>
-            </button>
+            <div style="margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+              <button id="cd-instant-zoom-btn" data-client-id="${escapeHtml(c.id)}" style="background:#fff;color:#0F172A;border:2px solid #2D8CFF;padding:12px 14px;border-radius:14px;font-size:14.5px;font-weight:900;cursor:pointer;font-family:'Noto Sans JP',sans-serif;letter-spacing:0.005em;box-shadow:0 6px 18px rgba(45,140,255,0.22);display:flex;align-items:center;justify-content:flex-start;gap:10px;min-height:66px;transition:transform .12s,box-shadow .12s;">
+                <svg width="34" height="34" viewBox="0 0 100 100" style="flex-shrink:0;border-radius:10px;box-shadow:0 2px 6px rgba(45,140,255,0.30);">
+                  <defs><linearGradient id="zg-inst-${escapeHtml(c.id)}" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#4A9BFF"/><stop offset="100%" stop-color="#2D8CFF"/></linearGradient></defs>
+                  <rect width="100" height="100" rx="22" fill="url(#zg-inst-${escapeHtml(c.id)})"/>
+                  <text x="50" y="62" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-weight="700" font-size="28" fill="#fff" letter-spacing="-1">zoom</text>
+                </svg>
+                <span style="text-align:left;line-height:1.3;">⚡ 今すぐ 開始<br><span style="font-size:10.5px;font-weight:700;color:#475569;">LINE 自動送付</span></span>
+              </button>
+              <button id="cd-schedule-zoom-btn" data-client-id="${escapeHtml(c.id)}" style="background:#fff;color:#0F172A;border:2px solid #2D8CFF;padding:12px 14px;border-radius:14px;font-size:14.5px;font-weight:900;cursor:pointer;font-family:'Noto Sans JP',sans-serif;letter-spacing:0.005em;box-shadow:0 6px 18px rgba(45,140,255,0.22);display:flex;align-items:center;justify-content:flex-start;gap:10px;min-height:66px;transition:transform .12s,box-shadow .12s;">
+                <svg width="34" height="34" viewBox="0 0 100 100" style="flex-shrink:0;border-radius:10px;box-shadow:0 2px 6px rgba(45,140,255,0.30);">
+                  <defs><linearGradient id="zg-sch-${escapeHtml(c.id)}" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#4A9BFF"/><stop offset="100%" stop-color="#2D8CFF"/></linearGradient></defs>
+                  <rect width="100" height="100" rx="22" fill="url(#zg-sch-${escapeHtml(c.id)})"/>
+                  <text x="50" y="62" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-weight="700" font-size="28" fill="#fff" letter-spacing="-1">zoom</text>
+                </svg>
+                <span style="text-align:left;line-height:1.3;">📅 日時指定 予約<br><span style="font-size:10.5px;font-weight:700;color:#475569;">数日後 / 指定時刻</span></span>
+              </button>
+            </div>
             <div id="cd-instant-zoom-status" style="font-size:12px;font-weight:700;margin-top:8px;text-align:center;"></div>
           ` : ''}
 
@@ -3579,6 +3582,11 @@ ${ctxText}${surveyTxt}`;
     document.querySelectorAll('[data-line-slots]').forEach(btn => {
       btn.addEventListener('click', () => openSlotsSendModal(c));
     });
+    // ★ オーナーfb 2026-06-20: 「📅 日時指定 Zoom 予約」 — 単一日時 指定 → scheduleZoomDirect Cloud Function
+    const scheduleBtn = document.getElementById('cd-schedule-zoom-btn');
+    if (scheduleBtn) {
+      scheduleBtn.addEventListener('click', () => openScheduleZoomModal(c));
+    }
     // ★ オーナーfb 2026-06-20: 「⚡ 今すぐ Zoom 開始」 — Zoom Instant Meeting 作成 → LINE 自動送付 → host URL を 新タブで開く
     const instantBtn = document.getElementById('cd-instant-zoom-btn');
     if (instantBtn) {
@@ -5747,6 +5755,112 @@ STEP C: 結果報告
   // ============================
   // ★ v 20260610J: Claude Code フロー化 — paid API (generateLineReply) は呼ばない。
   //   triggerDeliverable と同じパターン: JSON+プロンプト構築 → clipboard 自動コピー → claude.ai/new 別タブ open
+  // ★ オーナーfb 2026-06-20: 「日時指定 Zoom 予約」 — 1スロット 指定 → scheduleZoomDirect → Zoom予約 + LINE 送付
+  function openScheduleZoomModal(client) {
+    if (!client.lineFriendId) {
+      alert('このお客様は LINE 未連携 です');
+      return;
+    }
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.55);backdrop-filter:blur(4px);z-index:10200;display:flex;align-items:center;justify-content:center;padding:20px;';
+    const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
+    const defaultDate = tomorrow.toISOString().slice(0, 10);
+    overlay.innerHTML = `
+      <div style="background:#fff;width:min(540px,100%);max-height:92vh;border-radius:18px;box-shadow:0 30px 80px rgba(0,0,0,0.35);font-family:'Noto Sans JP',sans-serif;overflow:hidden;display:flex;flex-direction:column;">
+        <div style="background:linear-gradient(135deg,#2D8CFF,#1E6FE0);color:#fff;padding:18px 24px;display:flex;justify-content:space-between;align-items:center;">
+          <div style="display:flex;align-items:center;gap:14px;">
+            <svg width="42" height="42" viewBox="0 0 100 100" style="border-radius:11px;box-shadow:0 4px 10px rgba(0,0,0,0.18);">
+              <rect width="100" height="100" rx="22" fill="#fff"/>
+              <text x="50" y="62" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-weight="700" font-size="28" fill="#2D8CFF" letter-spacing="-1">zoom</text>
+            </svg>
+            <div>
+              <div style="font-size:10.5px;font-weight:800;letter-spacing:0.16em;opacity:0.85;">SCHEDULE ZOOM</div>
+              <div style="font-size:17.5px;font-weight:900;margin-top:2px;">📅 ${escapeHtml(client.name)} 様 と Zoom 予約</div>
+            </div>
+          </div>
+          <button id="fp-sch-close" style="background:rgba(255,255,255,0.18);color:#fff;border:none;font-size:18px;cursor:pointer;width:36px;height:36px;border-radius:8px;font-family:inherit;">✕</button>
+        </div>
+        <div style="padding:24px 26px;overflow-y:auto;">
+          <div style="font-size:11.5px;font-weight:800;letter-spacing:0.06em;color:#5B5BF0;margin-bottom:10px;">STEP 1 — 日時 を 1つ 指定</div>
+          <div style="background:#F8FAFC;border:2px solid #E2E8F0;border-radius:12px;padding:16px 18px;margin-bottom:16px;">
+            <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:10px;">
+              <div>
+                <div style="font-size:11px;font-weight:800;color:#64748B;letter-spacing:0.04em;margin-bottom:5px;">📆 日付</div>
+                <input type="date" id="fp-sch-date" value="${defaultDate}" style="width:100%;padding:13px 12px;border:2px solid #E2E8F0;border-radius:10px;font-size:15.5px;font-weight:700;font-family:inherit;background:#fff;min-height:52px;">
+              </div>
+              <div>
+                <div style="font-size:11px;font-weight:800;color:#64748B;letter-spacing:0.04em;margin-bottom:5px;">🕐 時刻</div>
+                <input type="time" id="fp-sch-time" value="14:00" style="width:100%;padding:13px 12px;border:2px solid #E2E8F0;border-radius:10px;font-size:15.5px;font-weight:700;font-family:inherit;background:#fff;min-height:52px;">
+              </div>
+              <div>
+                <div style="font-size:11px;font-weight:800;color:#64748B;letter-spacing:0.04em;margin-bottom:5px;">⏱ 時間 (分)</div>
+                <select id="fp-sch-dur" style="width:100%;padding:13px 12px;border:2px solid #E2E8F0;border-radius:10px;font-size:15.5px;font-weight:700;font-family:inherit;background:#fff;min-height:52px;">
+                  <option value="30">30分</option>
+                  <option value="60" selected>60分</option>
+                  <option value="90">90分</option>
+                  <option value="120">120分</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div style="font-size:11.5px;font-weight:800;letter-spacing:0.06em;color:#5B5BF0;margin-bottom:10px;">STEP 2 — 添える 一言 (任意)</div>
+          <textarea id="fp-sch-msg" rows="5" placeholder="お客様への一言 — 空欄で 標準メッセージ" style="width:100%;padding:14px 16px;border:2px solid #E2E8F0;border-radius:10px;font-size:14.5px;font-family:inherit;box-sizing:border-box;resize:vertical;line-height:1.7;min-height:120px;background:#fff;">${escapeHtml(client.name)}様\n\nZoom 面談の日時を確定しました。\n下記URLからご参加ください。</textarea>
+          <div id="fp-sch-status" style="margin-top:14px;font-size:13.5px;font-weight:800;text-align:center;"></div>
+        </div>
+        <div style="background:#F8FAFC;padding:16px 24px;border-top:1px solid #E2E8F0;display:flex;justify-content:flex-end;gap:10px;">
+          <button id="fp-sch-cancel" style="background:#fff;color:#475569;border:2px solid #E2E8F0;padding:14px 24px;border-radius:11px;font-size:14.5px;font-weight:800;cursor:pointer;font-family:inherit;">キャンセル</button>
+          <button id="fp-sch-send" style="background:linear-gradient(135deg,#2D8CFF,#1E6FE0);color:#fff;border:none;padding:14px 34px;border-radius:11px;font-size:15.5px;font-weight:900;cursor:pointer;font-family:inherit;box-shadow:0 8px 22px rgba(45,140,255,0.36);display:inline-flex;align-items:center;gap:8px;">📅 予約 + LINE 送信</button>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+    overlay.querySelector('#fp-sch-close').addEventListener('click', () => overlay.remove());
+    overlay.querySelector('#fp-sch-cancel').addEventListener('click', () => overlay.remove());
+    overlay.querySelector('#fp-sch-send').addEventListener('click', async () => {
+      const status = overlay.querySelector('#fp-sch-status');
+      const sendBtn = overlay.querySelector('#fp-sch-send');
+      const date = overlay.querySelector('#fp-sch-date').value;
+      const time = overlay.querySelector('#fp-sch-time').value;
+      const dur = parseInt(overlay.querySelector('#fp-sch-dur').value, 10);
+      const msg = overlay.querySelector('#fp-sch-msg').value.trim();
+      if (!date || !time) {
+        status.style.color = '#DC2626'; status.textContent = '⚠ 日付 + 時刻 を 入力してください';
+        return;
+      }
+      const confirmedSlot = `${date} ${time}`;
+      sendBtn.disabled = true; sendBtn.textContent = '予約中…';
+      status.style.color = '#2D8CFF'; status.textContent = '⏳ Zoom 予約 + LINE 送付中…';
+      try {
+        const { initializeApp, getApps } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js');
+        const { getFunctions, httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-functions.js');
+        const fbApp = getApps()[0] || initializeApp({
+          apiKey: 'AIzaSyAmVAEe9l9e1Yo_dzzJdbTVU35wWKd2sH4',
+          authDomain: 'skeleton-fp-compass-632026.firebaseapp.com',
+          projectId: 'skeleton-fp-compass-632026',
+        });
+        const fns = getFunctions(fbApp, 'asia-northeast1');
+        const fn = httpsCallable(fns, 'scheduleZoomDirect');
+        const fsCustomerId = client._fsCustomerId || client.id;
+        const res = await fn({ customerId: fsCustomerId, confirmedSlot, customMessage: msg, durationMin: dur });
+        const data = (res && res.data) || {};
+        if (data.ok) {
+          status.style.color = '#059669';
+          status.textContent = data.lineSent
+            ? '✅ Zoom 予約完了 + LINE 送付済 (Meeting ID: ' + (data.zoomMeetingId || '?') + ')'
+            : '⚠ Zoom 予約成功 だが LINE 送信失敗';
+          sendBtn.textContent = '✓ 予約完了';
+          setTimeout(() => overlay.remove(), 2200);
+        } else {
+          throw new Error('応答 ok=false');
+        }
+      } catch (e) {
+        console.error('[scheduleZoomDirect]', e);
+        status.style.color = '#DC2626'; status.textContent = '❌ 失敗: ' + (e.message || e).slice(0, 200);
+        sendBtn.disabled = false; sendBtn.textContent = '📅 予約 + LINE 送信';
+      }
+    });
+  }
+
   // ★ オーナーfb 2026-06-20: 候補日 3つ を AI下書き と 同じ 2ペイン (入力 + iPhone live preview) で 送信
   function openSlotsSendModal(client) {
     if (!client.lineFriendId && !client._fsCustomerId) {
