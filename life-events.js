@@ -195,8 +195,11 @@
 
   function currentAge(client) {
     if (!client || !client.birth) return null;
+    // ★ birth が将来日 / 不正値の場合 null を返す (-1歳バグ防止)
+    const b = new Date(client.birth);
+    if (isNaN(b.getTime()) || b > TODAY) return null;
     const a = age(client.birth, TODAY);
-    return isNaN(a) ? null : a;
+    return (isNaN(a) || a < 0) ? null : a;
   }
 
   window.LifeEvents = {

@@ -500,9 +500,12 @@
   }
 
   function daysSinceLastContact(c) {
-    if (!c.lastContact) return 9999;
+    // ★ NaN日前 / 9999日前 表示防止: 未接触は -1 sentinel、 呼出側で 「未接触」 表記
+    if (!c.lastContact) return -1;
+    const t = new Date(c.lastContact).getTime();
+    if (isNaN(t)) return -1;
     const today = (window.LifeEvents && window.LifeEvents.TODAY) || new Date();
-    return Math.floor((today - new Date(c.lastContact)) / 86400000);
+    return Math.floor((today - t) / 86400000);
   }
 
   function renderDormantInner() {
@@ -548,7 +551,8 @@
       return true;
     };
     const clients = allClients.filter(passesFilters);
-    let enriched = clients.map(c => ({ c, days: daysSinceLastContact(c) })).filter(x => x.days >= 21);
+    // ★ 未接触 (-1) は heavy bucket と同じ扱い (180日+ 相当の 関係再構築 対象)
+    let enriched = clients.map(c => ({ c, days: daysSinceLastContact(c) })).filter(x => x.days >= 21 || x.days === -1);
     if (F.bucket) {
       enriched = enriched.filter(x => {
         if (F.bucket === '21-60日') return x.days >= 21 && x.days < 60;
@@ -564,7 +568,7 @@
     const buckets = {
       light:  enriched.filter(x => x.days >= 21  && x.days < 60),
       mid:    enriched.filter(x => x.days >= 60  && x.days < 180),
-      heavy:  enriched.filter(x => x.days >= 180),
+      heavy:  enriched.filter(x => x.days >= 180 || x.days === -1),  // 未接触も heavy 扱い
     };
     document.getElementById('nav-count-dormant') && (document.getElementById('nav-count-dormant').textContent = String(enriched.length || ''));
 
@@ -580,7 +584,7 @@
             <div style="font-weight:700;font-size:13px;color:#0F172A;">${escapeHtml(c.name)} 様 <span style="font-size:10px;color:#94A3B8;font-weight:500;margin-left:6px;">${escapeHtml((c.occupation||''))}</span></div>
             ${ctx ? `<div style="font-size:11px;color:#64748B;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">📝 ${escapeHtml(ctx)}</div>` : '<div style="font-size:11px;color:#CBD5E1;margin-top:2px;font-style:italic;">議事録なし</div>'}
           </div>
-          <div style="text-align:right;font-size:11.5px;font-weight:800;color:${days>=180?'#DC2626':days>=60?'#EA580C':'#CA8A04'};font-variant-numeric:tabular-nums;">${days}日</div>
+          <div style="text-align:right;font-size:11.5px;font-weight:800;color:${days===-1?'#94A3B8':days>=180?'#DC2626':days>=60?'#EA580C':'#CA8A04'};font-variant-numeric:tabular-nums;">${days===-1?'未接触':days+'日'}</div>
         </label>
       `;
     };

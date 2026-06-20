@@ -2170,42 +2170,21 @@
         '3->close': ['提案資料 送付', '契約意向 確認', '次回見直し設定'],
       };
       (kpiHintsMap[stageKey] || []).forEach(h => jobsCandidates.push(h));
+      // ★ オーナーfb 2026-06-20: 「使い方分からん、 消すか シンプルに」 → 「いま動いてる」「Jobs候補」 2box 削除、 stepper のみ ライト版
       const workflowHtml = `
-        <div style="background:linear-gradient(135deg,#0f1729,#1b2845);color:#fff;border-radius:12px;padding:14px 18px;margin-bottom:12px;">
+        <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;padding:14px 18px;margin-bottom:12px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-            <div style="font-family:'Inter',sans-serif;font-size:10px;font-weight:800;letter-spacing:0.16em;opacity:0.8;">📍 WORKFLOW — このお客様の現在地</div>
-            <div style="font-size:10.5px;opacity:0.85;">面談 ${pastMs}回 / 次予約 ${futureMs}件</div>
+            <div style="font-size:11.5px;font-weight:800;color:#475569;letter-spacing:0.02em;">📍 進捗 — 現在 <strong style="color:#0F172A;">${escapeHtml(stages[currentStageIdx].label)}</strong></div>
+            <div style="font-size:11px;color:#64748B;font-weight:600;">面談 ${pastMs}回 / 次予約 ${futureMs}件</div>
           </div>
-          <div style="display:flex;gap:4px;align-items:center;overflow-x:auto;padding-bottom:8px;margin-bottom:10px;">
+          <div style="display:flex;gap:4px;align-items:center;overflow-x:auto;">
             ${stages.map((s, i) => `
-              <div style="flex:1;min-width:90px;text-align:center;padding:8px 6px;border-radius:8px;background:${i < currentStageIdx ? 'rgba(16,185,129,0.25)' : i === currentStageIdx ? 'linear-gradient(135deg,#f59e0b,#ea580c)' : 'rgba(255,255,255,0.08)'};border:1.5px solid ${i < currentStageIdx ? '#10b981' : i === currentStageIdx ? '#f59e0b' : 'rgba(255,255,255,0.2)'};">
+              <div style="flex:1;min-width:80px;text-align:center;padding:8px 6px;border-radius:8px;background:${i < currentStageIdx ? '#DCFCE7' : i === currentStageIdx ? 'linear-gradient(135deg,#FB923C,#EA580C)' : '#fff'};border:1.5px solid ${i < currentStageIdx ? '#86EFAC' : i === currentStageIdx ? '#EA580C' : '#E2E8F0'};color:${i === currentStageIdx ? '#fff' : '#0F172A'};">
                 <div style="font-size:18px;">${i < currentStageIdx ? '✓' : s.icon}</div>
-                <div style="font-size:10px;font-weight:700;margin-top:3px;${i > currentStageIdx ? 'opacity:0.55;' : ''}">${escapeHtml(s.label)}</div>
+                <div style="font-size:10.5px;font-weight:700;margin-top:3px;${i > currentStageIdx ? 'opacity:0.5;' : ''}">${escapeHtml(s.label)}</div>
               </div>
-              ${i < stages.length - 1 ? '<div style="font-size:14px;opacity:0.5;">→</div>' : ''}
+              ${i < stages.length - 1 ? '<div style="font-size:12px;color:#CBD5E1;">→</div>' : ''}
             `).join('')}
-          </div>
-          <style>@keyframes fp-stage-pulse{0%,100%{box-shadow:0 0 0 0 rgba(245,158,11,0.5)}50%{box-shadow:0 0 0 8px rgba(245,158,11,0)}}</style>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:11.5px;">
-            <div style="background:rgba(255,255,255,0.08);border-radius:8px;padding:10px 12px;">
-              <div style="font-size:10px;font-weight:800;letter-spacing:0.08em;color:#94a3b8;margin-bottom:6px;text-transform:uppercase;">🔄 いま動いてる</div>
-              ${activeActions.length === 0 ? '<div style="font-size:11px;opacity:0.6;">なし — 次のアクション待ち</div>' : activeActions.map(a => `
-                <div style="display:flex;align-items:center;gap:6px;padding:4px 0;font-size:11.5px;">
-                  <span>${a.icon}</span>
-                  <span style="flex:1;">${escapeHtml(a.label)}</span>
-                  <span style="font-size:9px;padding:2px 6px;border-radius:8px;background:${a.tone === 'done' ? '#10b981' : a.tone === 'active' ? '#5B5BF0' : a.tone === 'wait' ? '#f59e0b' : '#dc2626'};color:#fff;font-weight:800;letter-spacing:0.04em;">${a.tone === 'done' ? '完了' : a.tone === 'active' ? '進行' : a.tone === 'wait' ? '待ち' : '要対応'}</span>
-                </div>
-              `).join('')}
-            </div>
-            <div style="background:rgba(91,91,240,0.18);border:1px solid rgba(91,91,240,0.4);border-radius:8px;padding:10px 12px;">
-              <div style="font-size:10px;font-weight:800;letter-spacing:0.08em;color:#C7D2FE;margin-bottom:6px;text-transform:uppercase;">⚡ Jobs候補 → 次やるべき (${escapeHtml(stages[nextStageIdx].label)} 達成のため)</div>
-              ${jobsCandidates.map((j, idx) => `
-                <div style="display:flex;align-items:center;gap:6px;padding:4px 0;font-size:11.5px;">
-                  <span style="background:#5B5BF0;color:#fff;width:18px;height:18px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;">${idx + 1}</span>
-                  <span style="flex:1;">${escapeHtml(j)}</span>
-                </div>
-              `).join('')}
-            </div>
           </div>
         </div>
       `;
@@ -2671,6 +2650,15 @@
             </div>
           </div>
 
+          <!-- ★ オーナーfb 2026-06-20: タグ管理 を 顧客名 直下 (上の方) に 配置 -->
+          <div class="cd-profile-section" id="cd-tags-section" data-client-id="${escapeHtml(c.id)}" style="margin-top:14px;padding:12px 14px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+              <span style="font-size:11.5px;font-weight:800;color:#475569;letter-spacing:0.04em;">🏷 タグ</span>
+              <button id="cd-tags-edit" style="background:#5B5BF0;border:none;color:#fff;font-size:11.5px;font-weight:800;padding:6px 14px;border-radius:7px;cursor:pointer;font-family:inherit;letter-spacing:0.02em;">＋ 追加 / 編集</button>
+            </div>
+            <div id="cd-tags-list" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+          </div>
+
           ${(function () {
             const _days = daysSince(c.lastContact);
             const _kpis = [];
@@ -2724,8 +2712,8 @@
             </div>
             <div class="cd-stat">
               <div class="cd-stat-label">年齢 / 性別</div>
-              <div class="cd-stat-value">${age}<span class="cd-stat-unit">歳</span></div>
-              <div class="cd-stat-sub">${c.gender === 'F' ? '女性' : '男性'} · ${c.birth}</div>
+              <div class="cd-stat-value">${age != null && age >= 0 ? age : '—'}<span class="cd-stat-unit">${age != null && age >= 0 ? '歳' : ''}</span></div>
+              <div class="cd-stat-sub">${c.gender === 'F' ? '女性' : '男性'} · ${c.birth || '生年月日 未記録'}</div>
             </div>
           </div>
 
@@ -2737,12 +2725,6 @@
               <dt>家族</dt><dd>${familyShort}</dd>
               ${c.mortgage ? `<dt>住宅ローン</dt><dd>残${c.mortgage.remainingYears}年 / 月¥${c.mortgage.monthly.toLocaleString()}</dd>` : ''}
             </dl>
-          </div>
-
-          <!-- ★ オーナーfb: FPが自由に作るタグ機能 -->
-          <div class="cd-profile-section" id="cd-tags-section" data-client-id="${escapeHtml(c.id)}">
-            <div class="cd-section-label">🏷 タグ <button id="cd-tags-edit" style="margin-left:8px;background:transparent;border:1px solid var(--line);color:var(--muted);font-size:10px;padding:2px 8px;border-radius:5px;cursor:pointer;">+ 追加 / 編集</button></div>
-            <div id="cd-tags-list" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;"></div>
           </div>
 
           <div class="cd-profile-section">
@@ -6201,17 +6183,10 @@ ${JSON.stringify(jsonPayload, null, 2)}
         return;
       }
       if (!confirm(client.name + ' 様 へ この内容で LINE 送信します。よろしいですか?')) return;
-      // Compose final text: body + slot block (text fallback for cards) + pdf block
+      // Compose: 本文(text) + 候補日(Flex Carousel) + pdf
       const slotsOn = document.getElementById('aib-attach-slots')?.checked;
       const pdfOn = document.getElementById('aib-attach-pdf')?.checked;
       let text = baseText.trimEnd();
-      if (slotsOn && slotsData.length) {
-        text += '\n\n────────\n◆ 次回面談 候補日 (どれかご都合よろしければ返信ください)';
-        slotsData.forEach((s, i) => {
-          text += `\n【候補${i+1}】${s.month}月${s.day}日(${s.wday}) ${s.time}`;
-        });
-        text += '\n※ 上記が難しい場合は別日程をご提案ください。\n────────';
-      }
       if (pdfOn) {
         text += '\n\n────────\n◆ 添付資料\n📎 ' + (client.name || 'お客様') + '様向け_資料.pdf\n────────';
       }
@@ -6221,16 +6196,38 @@ ${JSON.stringify(jsonPayload, null, 2)}
       const ready = window._fpReadyDeliverable;
       const hasAutoDeliv = ready && ready.clientId === client.id && ready.html && ready.html.length > 100;
       try {
-        // ★ multi-tenant Firebase Cloud Function sendLineMessage に 切替
-        //   legacy GAS proxy 経由 だと FP テナント別 channelAccessToken 使えず 「お客様 がこのbotの友達でない」 で 送信失敗
-        //   候補日 slots も text に整形して 1メッセージで送る
+        // ★ オーナーfb 2026-06-20: 候補日 を LINE Flex Carousel で 送る (テキストベタ送りNG)
+        let flexCarousel = null;
         let combinedText = text;
         if (slotsOn && slotsData.length) {
-          const slotsTxt = slotsData.map((s, i) => {
-            const md = (s.iso || '').slice(5).replace('-', '/');
-            return `  候補${i+1}: ${md}(${s.wday}) ${s.time}`;
-          }).join('\n');
-          combinedText = text + '\n\n📅 ご希望の日時をご返信ください:\n' + slotsTxt;
+          // 上部 案内 1行 だけ text に 残す (Flex は カード)
+          combinedText = text + '\n\n📅 ご希望の日時を 下記カード から ご返信ください。';
+          flexCarousel = {
+            type: 'carousel',
+            contents: slotsData.slice(0, 10).map((s, i) => {
+              const md = (s.iso || '').slice(5).replace('-', '/');
+              const replyTxt = `候補${i+1} (${s.month}月${s.day}日 ${s.time}) でお願いします`;
+              return {
+                type: 'bubble', size: 'kilo',
+                header: { type: 'box', layout: 'vertical', backgroundColor: '#5B5BF0', paddingAll: '12px', contents: [
+                  { type: 'text', text: `候補 ${i+1}`, color: '#ffffff', size: 'sm', weight: 'bold', letterSpacing: 'lg' },
+                ] },
+                body: { type: 'box', layout: 'vertical', spacing: 'md', paddingAll: '16px', contents: [
+                  { type: 'text', text: `${s.month}月${s.day}日`, size: 'xxl', weight: 'bold', color: '#0F172A' },
+                  { type: 'text', text: `(${s.wday})`, size: 'md', color: '#64748B', weight: 'bold' },
+                  { type: 'separator', margin: 'md' },
+                  { type: 'box', layout: 'baseline', margin: 'md', contents: [
+                    { type: 'text', text: '🕐', size: 'sm', flex: 0 },
+                    { type: 'text', text: s.time, size: 'lg', weight: 'bold', color: '#0F172A', margin: 'sm' },
+                  ] },
+                ] },
+                footer: { type: 'box', layout: 'vertical', spacing: 'sm', paddingAll: '12px', contents: [
+                  { type: 'button', style: 'primary', color: '#5B5BF0', height: 'sm',
+                    action: { type: 'message', label: 'この日でお願いします', text: replyTxt } },
+                ] },
+              };
+            }),
+          };
         }
         const { initializeApp, getApps } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js');
         const { getFunctions, httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-functions.js');
@@ -6246,6 +6243,7 @@ ${JSON.stringify(jsonPayload, null, 2)}
           customerId: fsCustomerId,
           lineFriendId: client.lineFriendId || null,
           text: combinedText,
+          flex: flexCarousel || undefined,
         });
         const data = (callRes && callRes.data) || {};
         if (data.ok || data.success || data.messageId) {
@@ -7186,7 +7184,10 @@ ${client.name}さん、ありがとうございます。
         }
       } else {
         props.push('資産配分の年次レビュー');
-        props.push(`${age}歳のライフステージに合った新しい商品/制度のご紹介`);
+        // ★ age null/不正 (-1歳バグ修正): 年齢未取得時は ライフステージ 表現に switch
+        props.push((age != null && age >= 0)
+          ? `${age}歳のライフステージに合った新しい商品/制度のご紹介`
+          : 'ライフステージに合った新しい商品/制度のご紹介');
       }
       return props.slice(0, 3);
     }
