@@ -3260,65 +3260,138 @@
     function openFamilyEditModal(memberIdx) {
       const m = memberIdx == null ? { rel: 'child', name: '', birth: '', note: '' } : (c.family || [])[memberIdx] || { rel: 'other', name: '', birth: '', note: '' };
       const isNew = memberIdx == null;
+      // ★ 2段プルダウン: 世代グループ → 細部 (50-60代 FP の 操作迷い 解消)
+      // グループ 色: 上=パープル / 同=ティール / 下=オレンジ / その他=グレー
+      const REL_TREE = {
+        upper:    { label: '上の世代', color: '#A855F7', bg: '#FAF5FF', items: [
+          { v: 'grandparent',   ja: '祖父母' },
+          { v: 'parent',        ja: '親 (実父母)' },
+          { v: 'parent_in_law', ja: '義父母 (配偶者の親)' },
+          { v: 'uncle',         ja: 'おじ・おば' },
+        ] },
+        same:     { label: '同世代',   color: '#0D9488', bg: '#F0FDFA', items: [
+          { v: 'spouse',         ja: '配偶者' },
+          { v: 'sibling',        ja: 'ご兄弟' },
+          { v: 'sibling_in_law', ja: '義兄弟 (配偶者の兄弟)' },
+          { v: 'cousin',         ja: 'いとこ' },
+        ] },
+        lower:    { label: '下の世代', color: '#EA580C', bg: '#FFF7ED', items: [
+          { v: 'child',        ja: 'お子様' },
+          { v: 'child_in_law', ja: '子の配偶者' },
+          { v: 'nephew',       ja: '甥・姪 (兄弟の子)' },
+          { v: 'grandchild',   ja: 'お孫さん' },
+        ] },
+        other:    { label: 'その他',   color: '#64748B', bg: '#F8FAFC', items: [
+          { v: 'other', ja: 'その他' },
+        ] },
+      };
+      // 現在の rel から グループ 推定
+      const findGroup = (relV) => {
+        for (const [g, def] of Object.entries(REL_TREE)) {
+          if (def.items.find(it => it.v === relV)) return g;
+        }
+        return 'other';
+      };
+      const curGroup = findGroup(m.rel);
+      // 生年月日 → year/month/day 分解
+      const bDate = m.birth ? new Date(m.birth + 'T00:00:00') : null;
+      const bYear = bDate && !isNaN(bDate) ? bDate.getFullYear() : '';
+      const bMonth = bDate && !isNaN(bDate) ? bDate.getMonth() + 1 : '';
+      const bDay = bDate && !isNaN(bDate) ? bDate.getDate() : '';
+      const thisYear = new Date().getFullYear();
+      const yearOpts = ['<option value="">—</option>'];
+      for (let y = thisYear; y >= thisYear - 110; y--) yearOpts.push(`<option value="${y}" ${y === bYear ? 'selected' : ''}>${y} 年</option>`);
+      const monthOpts = ['<option value="">—</option>'];
+      for (let mo = 1; mo <= 12; mo++) monthOpts.push(`<option value="${mo}" ${mo === bMonth ? 'selected' : ''}>${mo} 月</option>`);
+      const dayOpts = ['<option value="">—</option>'];
+      for (let d = 1; d <= 31; d++) dayOpts.push(`<option value="${d}" ${d === bDay ? 'selected' : ''}>${d} 日</option>`);
+      // グループ プルダウン
+      const grpOpts = Object.entries(REL_TREE).map(([g, def]) => `<option value="${g}" ${g === curGroup ? 'selected' : ''}>${def.label}</option>`).join('');
       const overlay = document.createElement('div');
       overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.55);backdrop-filter:blur(4px);z-index:10100;display:flex;align-items:center;justify-content:center;padding:20px;';
       overlay.innerHTML = `
-        <div style="background:#fff;width:min(440px,100%);border-radius:14px;box-shadow:0 24px 60px rgba(0,0,0,0.32);padding:24px 26px;font-family:'Noto Sans JP',sans-serif;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-            <div style="font-size:16px;font-weight:900;color:#0F172A;">${isNew ? '＋ 家族 を 追加' : '✏ 家族 を 編集'}</div>
-            <button id="fp-fam-modal-close" style="background:transparent;border:none;font-size:20px;cursor:pointer;color:#64748B;">✕</button>
+        <div id="fp-fam-modal-box" style="background:#fff;width:min(480px,100%);border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,0.32);padding:26px 28px;font-family:'Noto Sans JP',sans-serif;border-top:6px solid ${REL_TREE[curGroup].color};transition:border-color .2s;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+            <div style="font-size:19px;font-weight:900;color:#0F172A;letter-spacing:-0.01em;">${isNew ? '＋ 家族 を 追加' : '✏ 家族 を 編集'}</div>
+            <button id="fp-fam-modal-close" style="background:transparent;border:none;font-size:22px;cursor:pointer;color:#64748B;">✕</button>
           </div>
-          <div style="display:flex;flex-direction:column;gap:12px;">
-            <label style="display:block;"><div style="font-size:11px;font-weight:700;color:#475569;margin-bottom:4px;">関係</div>
-              <select id="fp-fam-rel" style="width:100%;padding:9px 12px;border:1px solid #E2E8F0;border-radius:7px;font-size:13px;font-family:inherit;">
-                <optgroup label="上の世代">
-                  <option value="grandparent" ${m.rel==='grandparent'?'selected':''}>祖父母</option>
-                  <option value="parent" ${m.rel==='parent'?'selected':''}>親 (実父母)</option>
-                  <option value="parent_in_law" ${m.rel==='parent_in_law'?'selected':''}>義父母 (配偶者の親)</option>
-                  <option value="uncle" ${m.rel==='uncle'?'selected':''}>おじ・おば</option>
-                </optgroup>
-                <optgroup label="同世代">
-                  <option value="spouse" ${m.rel==='spouse'?'selected':''}>配偶者</option>
-                  <option value="sibling" ${m.rel==='sibling'?'selected':''}>ご兄弟</option>
-                  <option value="sibling_in_law" ${m.rel==='sibling_in_law'?'selected':''}>義兄弟 (配偶者の兄弟)</option>
-                  <option value="cousin" ${m.rel==='cousin'?'selected':''}>いとこ</option>
-                </optgroup>
-                <optgroup label="下の世代">
-                  <option value="child" ${m.rel==='child'?'selected':''}>お子様</option>
-                  <option value="child_in_law" ${m.rel==='child_in_law'?'selected':''}>子の配偶者</option>
-                  <option value="nephew" ${m.rel==='nephew'?'selected':''}>甥・姪 (兄弟の子)</option>
-                  <option value="grandchild" ${m.rel==='grandchild'?'selected':''}>お孫さん</option>
-                </optgroup>
-                <option value="other" ${m.rel==='other'?'selected':''}>その他</option>
-              </select>
+          <div style="display:flex;flex-direction:column;gap:16px;">
+            <!-- STEP 1: 世代グループ -->
+            <label style="display:block;">
+              <div style="font-size:13px;font-weight:800;color:#475569;margin-bottom:8px;letter-spacing:0.01em;"><span style="background:${REL_TREE[curGroup].color};color:#fff;font-size:11px;font-weight:900;padding:2px 9px;border-radius:5px;margin-right:8px;letter-spacing:0.06em;">STEP 1</span>世代</div>
+              <select id="fp-fam-grp" style="width:100%;padding:14px 14px;border:2px solid #E2E8F0;border-radius:11px;font-size:17px;font-weight:700;font-family:inherit;background:#fff;min-height:56px;color:#0F172A;">${grpOpts}</select>
             </label>
-            <label style="display:block;"><div style="font-size:11px;font-weight:700;color:#475569;margin-bottom:4px;">お名前</div>
-              <input id="fp-fam-name" type="text" value="${escapeHtml(m.name || '')}" placeholder="例: 太郎 / 配偶者 / 長女" style="width:100%;padding:9px 12px;border:1px solid #E2E8F0;border-radius:7px;font-size:13px;font-family:inherit;box-sizing:border-box;">
+            <!-- STEP 2: 関係 細部 (グループに応じて 更新) -->
+            <label style="display:block;">
+              <div style="font-size:13px;font-weight:800;color:#475569;margin-bottom:8px;letter-spacing:0.01em;"><span style="background:${REL_TREE[curGroup].color};color:#fff;font-size:11px;font-weight:900;padding:2px 9px;border-radius:5px;margin-right:8px;letter-spacing:0.06em;">STEP 2</span>関係</div>
+              <select id="fp-fam-rel" style="width:100%;padding:14px 14px;border:2px solid #E2E8F0;border-radius:11px;font-size:17px;font-weight:700;font-family:inherit;background:#fff;min-height:56px;color:#0F172A;"></select>
             </label>
-            <label style="display:block;"><div style="font-size:11px;font-weight:700;color:#475569;margin-bottom:4px;">生年月日 (年齢推定用)</div>
-              <input id="fp-fam-birth" type="date" value="${escapeHtml(m.birth || '')}" style="width:100%;padding:9px 12px;border:1px solid #E2E8F0;border-radius:7px;font-size:13px;font-family:inherit;box-sizing:border-box;">
+            <!-- 名前 -->
+            <label style="display:block;">
+              <div style="font-size:13px;font-weight:800;color:#475569;margin-bottom:8px;">お名前</div>
+              <input id="fp-fam-name" type="text" value="${escapeHtml(m.name || '')}" placeholder="例: 太郎 / 長女" style="width:100%;padding:14px 14px;border:2px solid #E2E8F0;border-radius:11px;font-size:17px;font-weight:600;font-family:inherit;box-sizing:border-box;min-height:56px;">
             </label>
-            <label style="display:block;"><div style="font-size:11px;font-weight:700;color:#475569;margin-bottom:4px;">メモ (職業 / 学年 等)</div>
-              <input id="fp-fam-note" type="text" value="${escapeHtml(m.note || '')}" placeholder="例: 中学2年 / 公務員" style="width:100%;padding:9px 12px;border:1px solid #E2E8F0;border-radius:7px;font-size:13px;font-family:inherit;box-sizing:border-box;">
+            <!-- 生年月日 (3プルダウン) -->
+            <div>
+              <div style="font-size:13px;font-weight:800;color:#475569;margin-bottom:8px;">生年月日 <span style="font-weight:500;color:#94A3B8;font-size:11.5px;margin-left:6px;">(誕生日タブに 自動反映)</span></div>
+              <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:8px;">
+                <select id="fp-fam-byear" style="padding:14px 8px;border:2px solid #E2E8F0;border-radius:11px;font-size:16px;font-weight:700;font-family:inherit;background:#fff;min-height:56px;color:#0F172A;">${yearOpts.join('')}</select>
+                <select id="fp-fam-bmonth" style="padding:14px 8px;border:2px solid #E2E8F0;border-radius:11px;font-size:16px;font-weight:700;font-family:inherit;background:#fff;min-height:56px;color:#0F172A;">${monthOpts.join('')}</select>
+                <select id="fp-fam-bday" style="padding:14px 8px;border:2px solid #E2E8F0;border-radius:11px;font-size:16px;font-weight:700;font-family:inherit;background:#fff;min-height:56px;color:#0F172A;">${dayOpts.join('')}</select>
+              </div>
+            </div>
+            <!-- メモ -->
+            <label style="display:block;">
+              <div style="font-size:13px;font-weight:800;color:#475569;margin-bottom:8px;">メモ <span style="font-weight:500;color:#94A3B8;font-size:11.5px;margin-left:6px;">(任意 — 職業 / 学年 等)</span></div>
+              <input id="fp-fam-note" type="text" value="${escapeHtml(m.note || '')}" placeholder="例: 中学2年 / 公務員" style="width:100%;padding:14px 14px;border:2px solid #E2E8F0;border-radius:11px;font-size:16px;font-weight:500;font-family:inherit;box-sizing:border-box;min-height:56px;">
             </label>
           </div>
-          <div style="display:flex;gap:8px;justify-content:space-between;margin-top:18px;">
-            ${isNew ? '<div></div>' : '<button id="fp-fam-delete" style="background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;padding:8px 14px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">🗑 削除</button>'}
-            <div style="display:flex;gap:8px;">
-              <button id="fp-fam-cancel" style="background:#fff;color:#475569;border:1px solid #E2E8F0;padding:8px 16px;border-radius:7px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;">キャンセル</button>
-              <button id="fp-fam-save" style="background:linear-gradient(135deg,#5B5BF0,#4242C9);color:#fff;border:none;padding:8px 22px;border-radius:7px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit;">💾 保存</button>
+          <div style="display:flex;gap:10px;justify-content:space-between;margin-top:24px;">
+            ${isNew ? '<div></div>' : '<button id="fp-fam-delete" style="background:#fef2f2;color:#b91c1c;border:1.5px solid #fecaca;padding:14px 18px;border-radius:11px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">🗑 削除</button>'}
+            <div style="display:flex;gap:10px;">
+              <button id="fp-fam-cancel" style="background:#fff;color:#475569;border:1.5px solid #E2E8F0;padding:14px 22px;border-radius:11px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">キャンセル</button>
+              <button id="fp-fam-save" style="background:linear-gradient(135deg,${REL_TREE[curGroup].color},${REL_TREE[curGroup].color}DD);color:#fff;border:none;padding:14px 28px;border-radius:11px;font-size:14.5px;font-weight:900;cursor:pointer;font-family:inherit;box-shadow:0 4px 14px ${REL_TREE[curGroup].color}40;">💾 保存</button>
             </div>
           </div>
         </div>`;
       document.body.appendChild(overlay);
+      const box = overlay.querySelector('#fp-fam-modal-box');
+      const grpSel = overlay.querySelector('#fp-fam-grp');
+      const relSel = overlay.querySelector('#fp-fam-rel');
+      const saveBtn = overlay.querySelector('#fp-fam-save');
+      // STEP2 細部 select を STEP1 グループ に応じて 更新 + 全体の色を更新
+      const refreshRelOpts = () => {
+        const g = grpSel.value;
+        const def = REL_TREE[g] || REL_TREE.other;
+        relSel.innerHTML = def.items.map(it => `<option value="${it.v}" ${it.v === m.rel ? 'selected' : ''}>${it.ja}</option>`).join('');
+        // 色を group color に切替
+        box.style.borderTopColor = def.color;
+        saveBtn.style.background = `linear-gradient(135deg,${def.color},${def.color}DD)`;
+        saveBtn.style.boxShadow = `0 4px 14px ${def.color}40`;
+        // STEPバッジ色も更新
+        box.querySelectorAll('span[style*="background:"][style*="STEP"]').forEach(s => {
+          s.style.background = def.color;
+        });
+        // 当該 グループ の バッジ も
+        Array.from(box.querySelectorAll('span')).forEach(s => {
+          if (s.textContent.startsWith('STEP ')) s.style.background = def.color;
+        });
+      };
+      grpSel.addEventListener('change', refreshRelOpts);
+      refreshRelOpts();
       overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
       overlay.querySelector('#fp-fam-modal-close').addEventListener('click', () => overlay.remove());
       overlay.querySelector('#fp-fam-cancel').addEventListener('click', () => overlay.remove());
-      overlay.querySelector('#fp-fam-save').addEventListener('click', () => {
+      saveBtn.addEventListener('click', () => {
+        // birth: 3プルダウン → YYYY-MM-DD 復元
+        const y = overlay.querySelector('#fp-fam-byear').value;
+        const mo = overlay.querySelector('#fp-fam-bmonth').value;
+        const da = overlay.querySelector('#fp-fam-bday').value;
+        const birth = (y && mo && da) ? `${y}-${String(mo).padStart(2,'0')}-${String(da).padStart(2,'0')}` : '';
         const updated = {
-          rel: overlay.querySelector('#fp-fam-rel').value,
+          rel: relSel.value,
           name: overlay.querySelector('#fp-fam-name').value.trim(),
-          birth: overlay.querySelector('#fp-fam-birth').value || '',
+          birth: birth,
           note: overlay.querySelector('#fp-fam-note').value.trim() || '',
         };
         if (!Array.isArray(c.family)) c.family = [];
@@ -3369,17 +3442,26 @@
 【出力フォーマット 厳守 — JSONのみ、 マークダウン や 説明文 一切なし】
 {
   "family": [
-    { "rel": "spouse" | "child" | "parent" | "sibling" | "other", "name": "名前(または続柄: 配偶者/長女/長男/母 等)", "birth": "YYYY-MM-DD or 空", "note": "学年 / 職業 / 推定年齢 等" }
+    { "rel": "grandparent" | "parent" | "parent_in_law" | "uncle" | "spouse" | "sibling" | "sibling_in_law" | "cousin" | "child" | "child_in_law" | "nephew" | "grandchild" | "other",
+      "name": "名前(または続柄: 配偶者/長女/長男/母 等)",
+      "birth": "YYYY-MM-DD or 空",
+      "note": "学年 / 職業 / 推定年齢 等" }
   ]
 }
 
 【ルール】
 - 本人 (${c.name || 'お客様'} 様) は family に含めない (別途扱う)
+- rel 種別 (13区分):
+  - grandparent=祖父母, parent=実親, parent_in_law=義父母 (配偶者の親), uncle=おじ・おば
+  - spouse=配偶者, sibling=実兄弟姉妹, sibling_in_law=義兄弟姉妹 (配偶者の兄弟), cousin=いとこ
+  - child=実子, child_in_law=子の配偶者, nephew=甥・姪 (兄弟の子), grandchild=孫
+  - other=上記以外
+- birth は 議事録に YYYY/MM/DD や 生年月日明示があれば YYYY-MM-DD で 抽出 (例: 「妻は1972年5月生まれ」 → "1972-05-01")
 - birth が議事録から推定できない場合は空、 年齢ヒントがあれば note に「○歳」 と書く
 - 学年 / 職業 / 居住地 等の 補足情報 は note に
 - 同じ続柄複数いれば全部追加 (例: 長男 / 次男)
 - 議事録に出てこない人は推測しない
-- name は議事録に出てる呼称 (例: 「妻」「長女」 等) でも OK、 不明なら 続柄 をそのまま
+- name は議事録に出てる呼称 (例: 「妻」「長女」「弟」「兄」 等) でも OK、 不明なら 続柄 をそのまま
 
 【議事録 + アンケート】
 ${ctxText}${surveyTxt}`;

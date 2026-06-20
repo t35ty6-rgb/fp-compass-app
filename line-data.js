@@ -191,13 +191,23 @@
     days = days || 30;
     const result = [];
     const clients = window.DUMMY_CLIENTS || [];
+    // ★ rel ラベルマップ (家系図 拡張13区分対応 / 退化バグ修正 2026-06-20)
+    const REL_LABEL = {
+      self: '本人',
+      grandparent: '祖父母', parent: '親', parent_in_law: '義父母', uncle: 'おじ・おば',
+      spouse: '配偶者', sibling: 'ご兄弟', sibling_in_law: '義兄弟', cousin: 'いとこ',
+      child: 'お子様', child_in_law: '子の配偶者', nephew: '甥・姪', grandchild: 'お孫さん',
+      other: 'その他',
+    };
     clients.forEach(c => {
-      if (!c.lineSubscribed) return;
+      // ★ filter 緩和: lineSubscribed 必須 → lineFriendId/userId/source=line_survey でも 通す (Firestore 客対応)
+      const hasLineLink = c.lineSubscribed || c.lineFriendId || c.userId || c.source === 'line_survey' || c.source === 'line_follow';
+      if (!hasLineLink) return;
       // 本人
       addBirthday(result, c, c, '本人', days);
       // 家族
       (c.family || []).forEach(m => {
-        const rel = m.rel === 'spouse' ? '配偶者' : (m.rel === 'child' ? 'お子様' : m.rel);
+        const rel = REL_LABEL[m.rel] || m.rel || 'その他';
         addBirthday(result, c, m, rel, days);
       });
     });

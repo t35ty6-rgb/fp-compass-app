@@ -175,8 +175,8 @@
 
     <form method="post" id="surveyForm" class="card">
 
-    <!-- お名前 (常時表示 / wizard 外) -->
-    <div class="q" style="margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid var(--line);">
+    <!-- お名前 (Q1のステップ内に表示、 Q2以降は 隠す) -->
+    <div class="q" id="customer-name-block" style="margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid var(--line);">
       <div class="q-label"><span class="q-no">名前</span>お名前 <span style="color:#DC2B2B;font-weight:700;">*</span></div>
       <div class="q-sub">面談時 にFP が お声がけ する 用 です。</div>
       <input type="text" name="name" id="customer-name" placeholder="例: 山田 太郎" autocomplete="name" required>
@@ -413,6 +413,9 @@
           const s = getStep(i);
           if (s) s.style.display = (i === n ? 'block' : 'none');
         }
+        // ★ お名前ブロックは Q1 のみ表示、 Q2以降は隠す
+        const nameBlock = document.getElementById('customer-name-block');
+        if (nameBlock) nameBlock.style.display = (n === 1 ? 'block' : 'none');
         cur = n;
         curNo.textContent = n;
         const p = Math.round(n / total * 100);
