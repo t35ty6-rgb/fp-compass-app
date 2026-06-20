@@ -2,7 +2,8 @@
 // セグメント定義 / メッセージテンプレ / 配信スケジュール / 送信ログ / セグメント評価
 
 (function () {
-  const TODAY = new Date('2026-05-27');
+  // ★ オーナーfb 2026-06-20: ハードコード 5/27 → 動的TODAY (0時) 修正
+  const TODAY = (function(){ const d = new Date(); d.setHours(0,0,0,0); return d; })();
 
   // ============================
   // セグメント定義

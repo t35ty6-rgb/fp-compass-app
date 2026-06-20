@@ -3,7 +3,8 @@
 // 優先度 (priority) は数値が大きいほど急ぎ。
 
 (function () {
-  const TODAY = new Date('2026-05-27');
+  // ★ オーナーfb 2026-06-20: 「TODAY が 5/27 ハードコード で 計算 全部ズレ」 修正 → 動的 (今日 0:00)
+  const TODAY = (function(){ const d = new Date(); d.setHours(0,0,0,0); return d; })();
   const ONE_DAY = 1000 * 60 * 60 * 24;
 
   function daysBetween(d1, d2) {
