@@ -3995,34 +3995,101 @@ table.clients [class*="avatar"],
 /* ==================================================================
    LINE Flex Preview — what the customer actually sees
    ================================================================== */
+/* ★ iPhone風 frame 2026-06-20 アップグレード — LINE 受信側 体験 を 忠実に */
 .aib-preview {
   margin-top: 16px;
-  background: #06C755;
-  background-image: linear-gradient(180deg, #06C755 0%, #04A045 100%);
-  border-radius: 14px;
-  padding: 14px;
+  background: linear-gradient(180deg, #475569 0%, #1E293B 100%);
+  border-radius: 22px;
+  padding: 14px 14px 18px;
   position: relative;
+  box-shadow: 0 24px 60px rgba(15,23,42,0.32), inset 0 1px 0 rgba(255,255,255,0.08);
 }
 .aib-preview-head {
   display: flex; align-items: center; gap: 6px;
   color: #fff;
-  font-family: var(--font-display);
-  font-size: 11.5px; font-weight: 700;
-  letter-spacing: 0.04em;
-  margin-bottom: 10px;
-  opacity: 0.92;
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 11.5px; font-weight: 800;
+  letter-spacing: 0.06em;
+  margin-bottom: 12px;
+  opacity: 0.7;
+  text-transform: uppercase;
+  text-align: center;
+  justify-content: center;
 }
 .aib-preview-head i[data-lucide], .aib-preview-head svg.lucide {
   width: 14px !important; height: 14px !important;
   color: #fff;
 }
+/* iPhone 内側スクリーン */
 .aib-preview-phone {
-  background: #7FB8E1;
-  background-image: linear-gradient(180deg, #7FB8E1 0%, #9AC8E8 100%);
-  border-radius: 10px;
-  padding: 14px 12px;
-  min-height: 80px;
-  display: flex; flex-direction: column; gap: 12px;
+  position: relative;
+  background: #8AB1D2;
+  border-radius: 28px;
+  padding: 0;
+  min-height: 320px;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+  border: 3px solid #0F172A;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.04);
+}
+/* iPhone Notch */
+.aib-preview-phone::before {
+  content: '';
+  position: absolute;
+  top: 6px; left: 50%; transform: translateX(-50%);
+  width: 90px; height: 18px;
+  background: #0F172A;
+  border-radius: 0 0 14px 14px;
+  z-index: 3;
+}
+/* Status bar (時刻 + 通信) */
+.aib-preview-phone::after {
+  content: '21:30  ●●● 5G';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  background: linear-gradient(180deg, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0.85) 100%);
+  height: 28px;
+  font-family: -apple-system, 'SF Pro Display', sans-serif;
+  font-size: 11px; font-weight: 700;
+  color: #0F172A;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 20px;
+  z-index: 2;
+  letter-spacing: 0.04em;
+}
+/* LINE ヘッダー (緑) */
+.aib-preview-phone .aib-line-header {
+  margin-top: 28px;
+  background: linear-gradient(180deg, #06C755 0%, #05B14C 100%);
+  color: #fff;
+  padding: 10px 14px 9px;
+  display: flex; align-items: center; gap: 10px;
+  font-family: 'Noto Sans JP', sans-serif;
+  border-bottom: 1px solid rgba(0,0,0,0.08);
+}
+.aib-preview-phone .aib-line-back {
+  font-size: 18px; font-weight: 700; opacity: 0.95;
+}
+.aib-preview-phone .aib-line-avatar {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: rgba(255,255,255,0.22);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 900;
+}
+.aib-preview-phone .aib-line-name {
+  font-size: 13.5px; font-weight: 800; letter-spacing: -0.005em;
+}
+.aib-preview-phone .aib-line-sub {
+  font-size: 10px; opacity: 0.8; margin-top: 1px;
+}
+/* チャット領域 */
+.aib-preview-phone .aib-line-chat {
+  flex: 1;
+  background: #8AB1D2;
+  background-image: linear-gradient(180deg, #8AB1D2 0%, #A5C2DC 100%);
+  padding: 14px 12px 18px;
+  display: flex; flex-direction: column; gap: 10px;
+  overflow-y: auto;
 }
 .aib-preview-bubble {
   background: #fff;

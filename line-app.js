@@ -608,38 +608,56 @@
 
 また落ち着いてお話できる機会、楽しみにしてます ✨`;
 
-    // ★ 多段 絞り込みフィルタ UI (タグ + 期間 + 年代 + 職業 + 家族 + 保有商品)
-    const selBox = (id, label, opts, current) => `
-      <label style="display:flex;flex-direction:column;gap:4px;min-width:0;flex:1 1 130px;">
-        <span style="font-size:10.5px;font-weight:800;color:#64748B;letter-spacing:0.05em;">${label}</span>
-        <select data-multi-filter="${id}" style="padding:9px 30px 9px 11px;border:1.5px solid #E2E8F0;border-radius:8px;font-size:13px;font-weight:600;font-family:inherit;background:#fff;color:#0F172A;cursor:pointer;min-height:38px;">
-          <option value="">— すべて —</option>
-          ${opts.map(o => `<option value="${escapeHtml(o)}" ${current === o ? 'selected' : ''}>${escapeHtml(o)}</option>`).join('')}
-        </select>
-      </label>`;
+    // ★ 多段 絞り込みフィルタ UI — デザイン UP (カスタム chevron + ホバー + アクティブ強調)
+    const selBox = (id, label, opts, current, color) => {
+      const active = !!current;
+      const c = color || '#5B5BF0';
+      return `
+        <label class="fp-filter-cell" style="display:flex;flex-direction:column;gap:6px;min-width:0;flex:1 1 150px;">
+          <span style="font-size:11px;font-weight:900;color:${active ? c : '#64748B'};letter-spacing:0.06em;display:flex;align-items:center;gap:4px;">${label}</span>
+          <div style="position:relative;">
+            <select data-multi-filter="${id}" style="width:100%;padding:13px 38px 13px 14px;border:2px solid ${active ? c : '#E2E8F0'};border-radius:11px;font-size:14px;font-weight:${active ? '800' : '600'};font-family:inherit;background:${active ? c + '0D' : '#fff'};color:${active ? c : '#0F172A'};cursor:pointer;min-height:50px;appearance:none;-webkit-appearance:none;transition:border-color .15s,background-color .15s;box-shadow:${active ? '0 4px 12px ' + c + '22' : '0 1px 2px rgba(15,23,42,0.04)'};">
+              <option value="">— すべて —</option>
+              ${opts.map(o => `<option value="${escapeHtml(o)}" ${current === o ? 'selected' : ''}>${escapeHtml(o)}</option>`).join('')}
+            </select>
+            <svg style="position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;" width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M3.5 5.25L7 8.75L10.5 5.25" stroke="${active ? c : '#64748B'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        </label>`;
+    };
     const activeFilterCount = ['tag','bucket','age','occ','fam','product'].filter(k => F[k]).length;
     const filterHtml = `
-      <div style="background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:14px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-          <strong style="font-size:12.5px;color:#0F172A;letter-spacing:0.02em;">🔍 絞り込み <span style="color:#5B5BF0;font-weight:900;">${activeFilterCount > 0 ? '(' + activeFilterCount + '個 適用中)' : ''}</span></strong>
-          ${activeFilterCount > 0 ? '<button id="fp-dormant-filter-clear" style="background:transparent;color:#64748B;border:1px solid #E2E8F0;padding:5px 11px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">✕ すべて解除</button>' : ''}
+      <style>
+        .fp-filter-cell select:hover { border-color: #5B5BF0 !important; }
+        .fp-filter-cell select:focus { outline:none; border-color:#5B5BF0 !important; box-shadow:0 0 0 4px rgba(91,91,240,0.16); }
+      </style>
+      <div style="background:linear-gradient(180deg,#fff,#FAFBFF);border:1.5px solid #E2E8F0;border-radius:16px;padding:18px 20px;margin-bottom:18px;box-shadow:0 4px 16px rgba(15,23,42,0.04);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+          <strong style="font-size:14.5px;font-weight:900;color:#0F172A;letter-spacing:-0.01em;display:inline-flex;align-items:center;gap:8px;">
+            <span style="font-size:18px;">🔍</span>絞り込み
+            ${activeFilterCount > 0 ? `<span style="background:#5B5BF0;color:#fff;font-size:11px;font-weight:900;padding:3px 10px;border-radius:99px;letter-spacing:0.04em;">${activeFilterCount} 適用中</span>` : ''}
+          </strong>
+          ${activeFilterCount > 0 ? '<button id="fp-dormant-filter-clear" style="background:#fff;color:#DC2626;border:1.5px solid #FECACA;padding:7px 14px;border-radius:9px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:5px;">✕ 全解除</button>' : ''}
         </div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
-          ${selBox('bucket', '⏰ 期間', bucketOptions, F.bucket)}
-          ${selBox('age', '🎂 年代', ageOptions, F.age)}
-          ${selBox('occ', '💼 職業', occOptions, F.occ)}
-          ${selBox('fam', '👨‍👩‍👧 家族', famOptions, F.fam)}
-          ${productOptions.length > 0 ? selBox('product', '📊 保有商品', productOptions, F.product) : ''}
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;">
+          ${selBox('bucket', '⏰ 期間', bucketOptions, F.bucket, '#EA580C')}
+          ${selBox('age', '🎂 年代', ageOptions, F.age, '#A855F7')}
+          ${selBox('occ', '💼 職業', occOptions, F.occ, '#0EA5E9')}
+          ${selBox('fam', '👨‍👩‍👧 家族構成', famOptions, F.fam, '#10B981')}
+          ${productOptions.length > 0 ? selBox('product', '📊 保有商品', productOptions, F.product, '#F59E0B') : ''}
         </div>
         ${tagsMaster.length > 0 ? `
-          <div style="border-top:1px solid #F1F5F9;margin-top:12px;padding-top:12px;display:flex;flex-wrap:wrap;align-items:center;gap:7px;">
-            <span style="font-size:10.5px;font-weight:800;color:#64748B;letter-spacing:0.05em;">🏷 タグ:</span>
-            <button data-tag-filter="" style="background:${!F.tag ? '#0F172A' : 'transparent'};color:${!F.tag ? '#fff' : '#64748B'};border:1px solid ${!F.tag ? '#0F172A' : '#E2E8F0'};padding:4px 11px;border-radius:999px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">指定なし</button>
-            ${tagsMaster.map(t => {
-              const n = allClients.filter(c => (window.FpApp.getClientTags(c.id) || []).includes(t.id) && daysSinceLastContact(c) >= 21).length;
-              const on = F.tag === t.id;
-              return `<button data-tag-filter="${t.id}" style="background:${on ? t.color : t.color+'1A'};color:${on ? '#fff' : t.color};border:1px solid ${t.color}${on ? '' : '55'};padding:4px 11px;border-radius:999px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">${escapeHtml(t.label)} (${n})</button>`;
-            }).join('')}
+          <div style="border-top:1.5px dashed #E2E8F0;margin-top:16px;padding-top:14px;">
+            <div style="font-size:11.5px;font-weight:900;color:#475569;letter-spacing:0.06em;margin-bottom:8px;">🏷 タグ で 絞る</div>
+            <div style="display:flex;flex-wrap:wrap;align-items:center;gap:7px;">
+              <button data-tag-filter="" style="background:${!F.tag ? '#0F172A' : '#fff'};color:${!F.tag ? '#fff' : '#475569'};border:1.5px solid ${!F.tag ? '#0F172A' : '#E2E8F0'};padding:7px 14px;border-radius:99px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;transition:all .12s;">指定なし</button>
+              ${tagsMaster.map(t => {
+                const n = allClients.filter(c => (window.FpApp.getClientTags(c.id) || []).includes(t.id) && daysSinceLastContact(c) >= 21).length;
+                const on = F.tag === t.id;
+                return `<button data-tag-filter="${t.id}" style="background:${on ? t.color : '#fff'};color:${on ? '#fff' : t.color};border:1.5px solid ${t.color};padding:7px 14px;border-radius:99px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:${on ? '0 4px 12px ' + t.color + '44' : 'none'};transition:all .12s;">${escapeHtml(t.label)} <span style="opacity:0.75;font-weight:700;">(${n})</span></button>`;
+              }).join('')}
+            </div>
           </div>` : ''}
       </div>
     `;

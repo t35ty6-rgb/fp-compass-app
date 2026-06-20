@@ -1129,13 +1129,14 @@
     }
     tbody.innerHTML = list.map(c => {
       const dslRaw = daysSince(c.lastContact);
-      const dsl = Math.max(0, dslRaw); // 負の値 (未来日) は 0扱い
-      const contactCls = dsl >= 365 ? 'contact-stale' : (dsl >= 180 ? 'contact-warn' : '');
+      const isUncontacted = dslRaw == null;  // ★ null日前 バグ修正: 未接触は 専用バッジ
+      const dsl = isUncontacted ? 99999 : Math.max(0, dslRaw); // 未接触は 計算上 1年超扱い
+      const contactCls = (isUncontacted || dsl >= 365) ? 'contact-stale' : (dsl >= 180 ? 'contact-warn' : '');
       // 接触経過のラベル
-      const contactBg = dsl <= 30 ? '#dcfce7' : (dsl <= 90 ? '#dbeafe' : (dsl <= 180 ? '#fef3c7' : (dsl <= 365 ? '#fed7aa' : '#fecaca')));
-      const contactFg = dsl <= 30 ? '#166534' : (dsl <= 90 ? '#1e40af' : (dsl <= 180 ? '#92400e' : (dsl <= 365 ? '#9a3412' : '#991b1b')));
-      const contactLabel = dsl <= 30 ? '直近' : (dsl <= 90 ? '3ヶ月以内' : (dsl <= 180 ? '半年以内' : (dsl <= 365 ? '1年以内' : '1年超')));
-      const dayDisplay = dslRaw < 0 ? `${Math.abs(dslRaw)}日後 予定` : (dslRaw === 0 ? '今日' : `${dslRaw}日前`);
+      const contactBg = isUncontacted ? '#F1F5F9' : (dsl <= 30 ? '#dcfce7' : (dsl <= 90 ? '#dbeafe' : (dsl <= 180 ? '#fef3c7' : (dsl <= 365 ? '#fed7aa' : '#fecaca'))));
+      const contactFg = isUncontacted ? '#64748B' : (dsl <= 30 ? '#166534' : (dsl <= 90 ? '#1e40af' : (dsl <= 180 ? '#92400e' : (dsl <= 365 ? '#9a3412' : '#991b1b'))));
+      const contactLabel = isUncontacted ? '未接触' : (dsl <= 30 ? '直近' : (dsl <= 90 ? '3ヶ月以内' : (dsl <= 180 ? '半年以内' : (dsl <= 365 ? '1年以内' : '1年超'))));
+      const dayDisplay = isUncontacted ? '記録なし' : (dslRaw < 0 ? `${Math.abs(dslRaw)}日後 予定` : (dslRaw === 0 ? '今日' : `${dslRaw}日前`));
       // localStorage に保存されたタスク件数
       const taskCount = (JSON.parse(localStorage.getItem('fp-tasks-' + (c.lineFriendId || c.id)) || '[]')).length;
       const childCount = (c.family || []).filter(m => m.rel === 'child').length;
@@ -5681,49 +5682,136 @@ STEP C: 結果報告
   // ============================
   // ★ v 20260610J: Claude Code フロー化 — paid API (generateLineReply) は呼ばない。
   //   triggerDeliverable と同じパターン: JSON+プロンプト構築 → clipboard 自動コピー → claude.ai/new 別タブ open
-  // ★ オーナーfb 2026-06-20: 候補日 3つ を AI下書き 経由なしで 直接 Flex Carousel で送る (シンプル モーダル)
+  // ★ オーナーfb 2026-06-20: 候補日 3つ を AI下書き と 同じ 2ペイン (入力 + iPhone live preview) で 送信
   function openSlotsSendModal(client) {
     if (!client.lineFriendId && !client._fsCustomerId) {
       alert('このお客様は LINE 未連携 です (lineFriendId 未登録)');
       return;
     }
-    // 3つの date+time 入力 → Flex Carousel で 送信
     const overlay = document.createElement('div');
     overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.55);backdrop-filter:blur(4px);z-index:10200;display:flex;align-items:center;justify-content:center;padding:20px;';
-    // default: 翌日〜3日後 の 10:00
+    // default: 翌日〜3日後 の 10:00 11:00 13:00
     const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
     const defaults = [0, 1, 2].map(off => {
       const d = new Date(tomorrow); d.setDate(d.getDate() + off);
       return d.toISOString().slice(0, 10);
     });
+    const defaultTimes = ['10:00', '14:00', '19:00'];
+    const wdayJa = ['日','月','火','水','木','金','土'];
+    const defaultMsg = `${client.name || 'お客様'}様\n\n次回 Zoom 面談 の 候補日 を 3つ お送りします。\nお好きな日を タップ してください。`;
+    const companyName = (window.AccountInfo && window.AccountInfo.companyName) || 'FP Compass';
+
     overlay.innerHTML = `
-      <div style="background:#fff;width:min(500px,100%);border-radius:14px;box-shadow:0 24px 60px rgba(0,0,0,0.3);padding:24px 26px;font-family:'Noto Sans JP',sans-serif;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
-          <div style="font-size:18px;font-weight:900;color:#0F172A;">📅 候補日 3つ 送る</div>
-          <button id="fp-slots-close" style="background:transparent;border:none;font-size:22px;cursor:pointer;color:#64748B;">✕</button>
-        </div>
-        <div style="font-size:13px;color:#475569;margin-bottom:14px;line-height:1.6;">${escapeHtml(client.name)} 様 へ LINE で Flex Card 候補日 3つ を 送ります。 お客様 が タップ で 第◯候補 が 返信されます。</div>
-        ${[1,2,3].map(i => `
-          <div style="display:flex;gap:8px;margin-bottom:10px;align-items:center;">
-            <span style="font-size:13px;font-weight:800;color:#5B5BF0;min-width:44px;">候補${i}</span>
-            <input type="date" id="fp-slot-d${i}" value="${defaults[i-1]}" style="flex:1;padding:11px 12px;border:2px solid #E2E8F0;border-radius:9px;font-size:14px;font-family:inherit;">
-            <input type="time" id="fp-slot-t${i}" value="${10 + (i-1)*2}:00" style="width:120px;padding:11px 12px;border:2px solid #E2E8F0;border-radius:9px;font-size:14px;font-family:inherit;">
+      <div style="background:#fff;width:min(1100px,100%);max-height:92vh;border-radius:18px;box-shadow:0 30px 80px rgba(0,0,0,0.35);font-family:'Noto Sans JP',sans-serif;overflow:hidden;display:flex;flex-direction:column;">
+        <!-- Header -->
+        <div style="background:linear-gradient(135deg,#5B5BF0,#4242C9);color:#fff;padding:16px 24px;display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div style="font-size:10.5px;font-weight:800;letter-spacing:0.16em;opacity:0.85;">SEND CANDIDATE DATES</div>
+            <div style="font-size:18px;font-weight:900;margin-top:2px;">📅 ${escapeHtml(client.name)} 様 へ 候補日 3つ を 送る</div>
           </div>
-        `).join('')}
-        <label style="display:block;margin-top:14px;">
-          <div style="font-size:12px;font-weight:800;color:#475569;margin-bottom:5px;">添える 一言 (任意)</div>
-          <textarea id="fp-slots-msg" rows="3" placeholder="例: 次回 Zoom 面談 の 候補日 を 3つ お送りします。 タップ で 確定 します。" style="width:100%;padding:12px 14px;border:2px solid #E2E8F0;border-radius:9px;font-size:14px;font-family:inherit;box-sizing:border-box;resize:vertical;">${escapeHtml(client.name)}様\n\n次回 Zoom 面談 の 候補日 を 3つ お送りします。\nタップ で 確定 します。</textarea>
-        </label>
-        <div id="fp-slots-status" style="margin-top:12px;font-size:13px;font-weight:700;"></div>
-        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:18px;">
-          <button id="fp-slots-cancel" style="background:#fff;color:#475569;border:1.5px solid #E2E8F0;padding:12px 22px;border-radius:9px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">キャンセル</button>
-          <button id="fp-slots-send" style="background:linear-gradient(135deg,#5B5BF0,#4242C9);color:#fff;border:none;padding:12px 28px;border-radius:9px;font-size:14px;font-weight:900;cursor:pointer;font-family:inherit;box-shadow:0 6px 18px rgba(91,91,240,0.32);">LINE で 送信</button>
+          <button id="fp-slots-close" style="background:rgba(255,255,255,0.18);color:#fff;border:none;font-size:18px;cursor:pointer;width:36px;height:36px;border-radius:8px;font-family:inherit;">✕</button>
+        </div>
+        <!-- 2 ペイン -->
+        <div style="display:grid;grid-template-columns:1fr 380px;gap:0;flex:1;min-height:0;overflow:hidden;">
+          <!-- 左: 入力 -->
+          <div style="padding:24px 26px;overflow-y:auto;border-right:1px solid #E2E8F0;background:#F8FAFC;">
+            <div style="font-size:11px;font-weight:800;letter-spacing:0.12em;color:#5B5BF0;margin-bottom:10px;">STEP 1 — 候補日 3つ を 選ぶ</div>
+            ${[1,2,3].map(i => `
+              <div style="background:#fff;border:2px solid #E2E8F0;border-radius:12px;padding:14px 16px;margin-bottom:12px;">
+                <div style="font-size:12px;font-weight:900;color:#5B5BF0;letter-spacing:0.05em;margin-bottom:8px;">候補 ${i}</div>
+                <div style="display:flex;gap:10px;align-items:center;">
+                  <input type="date" id="fp-slot-d${i}" value="${defaults[i-1]}" style="flex:1.4;padding:13px 12px;border:2px solid #E2E8F0;border-radius:9px;font-size:15px;font-weight:700;font-family:inherit;min-height:50px;">
+                  <input type="time" id="fp-slot-t${i}" value="${defaultTimes[i-1]}" style="flex:1;padding:13px 12px;border:2px solid #E2E8F0;border-radius:9px;font-size:15px;font-weight:700;font-family:inherit;min-height:50px;">
+                </div>
+              </div>
+            `).join('')}
+            <div style="font-size:11px;font-weight:800;letter-spacing:0.12em;color:#5B5BF0;margin:24px 0 10px;">STEP 2 — 添える 一言</div>
+            <textarea id="fp-slots-msg" rows="5" placeholder="お客様への一言..." style="width:100%;padding:14px 16px;border:2px solid #E2E8F0;border-radius:10px;font-size:14.5px;font-family:inherit;box-sizing:border-box;resize:vertical;line-height:1.7;min-height:120px;background:#fff;">${escapeHtml(defaultMsg)}</textarea>
+          </div>
+          <!-- 右: iPhone LIVE PREVIEW (Flex Carousel) -->
+          <div style="padding:20px 18px 22px;background:linear-gradient(180deg,#475569,#1E293B);overflow-y:auto;">
+            <div style="text-align:center;font-size:10.5px;font-weight:800;letter-spacing:0.16em;color:#fff;opacity:0.7;text-transform:uppercase;margin-bottom:12px;">LIVE PREVIEW · お客様 の iPhone</div>
+            <div id="fp-slots-phone" style="position:relative;background:#8AB1D2;border-radius:28px;border:3px solid #0F172A;overflow:hidden;min-height:540px;display:flex;flex-direction:column;">
+              <!-- Notch -->
+              <div style="position:absolute;top:6px;left:50%;transform:translateX(-50%);width:90px;height:18px;background:#0F172A;border-radius:0 0 14px 14px;z-index:3;"></div>
+              <!-- Status bar -->
+              <div style="background:rgba(255,255,255,0.92);height:28px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;font-family:-apple-system,sans-serif;font-size:11px;font-weight:700;color:#0F172A;z-index:2;">
+                <span>21:30</span>
+                <span>●●● 5G</span>
+              </div>
+              <!-- LINE Header -->
+              <div style="background:linear-gradient(180deg,#06C755,#05B14C);color:#fff;padding:10px 14px 9px;display:flex;align-items:center;gap:10px;">
+                <span style="font-size:18px;font-weight:700;opacity:0.95;">‹</span>
+                <div style="width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.22);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;">FP</div>
+                <div>
+                  <div style="font-size:13.5px;font-weight:800;">${escapeHtml(companyName)}</div>
+                  <div style="font-size:10px;opacity:0.8;">公式アカウント</div>
+                </div>
+              </div>
+              <!-- チャット -->
+              <div id="fp-slots-chat" style="flex:1;background:linear-gradient(180deg,#8AB1D2,#A5C2DC);padding:14px 12px 18px;display:flex;flex-direction:column;gap:10px;overflow-y:auto;">
+                <!-- 動的に bubble + carousel が 描画される -->
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Footer (送信) -->
+        <div style="background:#fff;padding:16px 24px;border-top:1px solid #E2E8F0;display:flex;justify-content:space-between;align-items:center;gap:14px;">
+          <div id="fp-slots-status" style="font-size:13.5px;font-weight:800;flex:1;"></div>
+          <button id="fp-slots-cancel" style="background:#fff;color:#475569;border:2px solid #E2E8F0;padding:14px 24px;border-radius:11px;font-size:14.5px;font-weight:800;cursor:pointer;font-family:inherit;">キャンセル</button>
+          <button id="fp-slots-send" style="background:linear-gradient(135deg,#06C755,#04A045);color:#fff;border:none;padding:14px 34px;border-radius:11px;font-size:15.5px;font-weight:900;cursor:pointer;font-family:inherit;box-shadow:0 8px 22px rgba(6,199,85,0.36);display:inline-flex;align-items:center;gap:8px;">📤 この内容で LINE 送信</button>
         </div>
       </div>`;
     document.body.appendChild(overlay);
     overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
     overlay.querySelector('#fp-slots-close').addEventListener('click', () => overlay.remove());
     overlay.querySelector('#fp-slots-cancel').addEventListener('click', () => overlay.remove());
+
+    // === LIVE PREVIEW 更新 ===
+    const updatePreview = () => {
+      const chat = overlay.querySelector('#fp-slots-chat');
+      const text = overlay.querySelector('#fp-slots-msg').value.trim();
+      const slots = [1,2,3].map(i => ({
+        date: overlay.querySelector('#fp-slot-d'+i).value,
+        time: overlay.querySelector('#fp-slot-t'+i).value,
+      }));
+      let html = '';
+      if (text) {
+        html += `<div style="background:#fff;color:#0F172A;font-family:'Noto Sans JP',sans-serif;font-size:13px;line-height:1.65;padding:10px 14px;border-radius:4px 18px 18px 18px;white-space:pre-wrap;max-width:78%;box-shadow:0 1px 2px rgba(0,0,0,0.10);align-self:flex-start;">${escapeHtml(text)}</div>`;
+      }
+      const validSlots = slots.filter(s => s.date && s.time);
+      if (validSlots.length > 0) {
+        html += `<div style="display:flex;gap:8px;overflow-x:auto;margin-top:4px;padding-bottom:4px;align-self:stretch;">`;
+        validSlots.forEach((s, i) => {
+          const d = new Date(s.date + 'T00:00:00');
+          const wday = wdayJa[d.getDay()];
+          html += `
+            <div style="flex-shrink:0;width:140px;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.14);font-family:'Noto Sans JP',sans-serif;">
+              <div style="background:#5B5BF0;color:#fff;padding:8px 12px;font-size:10.5px;font-weight:800;letter-spacing:0.08em;">候補 ${i+1}</div>
+              <div style="padding:12px 14px;">
+                <div style="font-size:22px;font-weight:900;color:#0F172A;line-height:1.1;letter-spacing:-0.025em;">${d.getMonth()+1}月${d.getDate()}日</div>
+                <div style="font-size:12px;color:#64748B;font-weight:700;margin-top:2px;">(${wday})</div>
+                <div style="border-top:1px solid #F1F5F9;margin-top:8px;padding-top:8px;display:flex;align-items:center;gap:5px;">
+                  <span style="font-size:11px;">🕐</span>
+                  <span style="font-size:14px;font-weight:800;color:#0F172A;">${s.time}</span>
+                </div>
+                <button style="margin-top:8px;width:100%;background:#5B5BF0;color:#fff;border:none;padding:7px 6px;border-radius:6px;font-size:11.5px;font-weight:800;font-family:inherit;cursor:default;">この日でお願いします</button>
+              </div>
+            </div>`;
+        });
+        html += `</div>`;
+      }
+      if (!html) {
+        html = `<div style="background:rgba(255,255,255,0.6);color:#475569;font-size:11.5px;padding:10px 14px;border-radius:10px;font-style:italic;text-align:center;">日付 + 時刻 を入力すると ここに プレビュー が出ます</div>`;
+      }
+      chat.innerHTML = html;
+    };
+    overlay.querySelectorAll('input,textarea').forEach(el => {
+      el.addEventListener('input', updatePreview);
+      el.addEventListener('change', updatePreview);
+    });
+    updatePreview();
+
     overlay.querySelector('#fp-slots-send').addEventListener('click', async () => {
       const status = overlay.querySelector('#fp-slots-status');
       const sendBtn = overlay.querySelector('#fp-slots-send');
@@ -5736,13 +5824,10 @@ STEP C: 結果報告
         return;
       }
       const text = overlay.querySelector('#fp-slots-msg').value.trim();
-      // Flex Carousel 構築
-      const wdayJa = ['日','月','火','水','木','金','土'];
       const flex = {
         type: 'carousel',
         contents: slots.map((s, i) => {
           const d = new Date(s.date + 'T00:00:00');
-          const md = (s.date || '').slice(5).replace('-', '/');
           const wday = wdayJa[d.getDay()];
           const time = s.time;
           const replyTxt = `候補${i+1} (${(d.getMonth()+1)}月${d.getDate()}日 ${time}) でお願いします`;
@@ -5788,17 +5873,17 @@ STEP C: 結果報告
         });
         const data = (callRes && callRes.data) || {};
         if (data.ok || data.success) {
-          status.style.color = '#059669'; status.textContent = '✅ 送信完了 ' + client.name + ' 様 の LINE に Flex Carousel 候補日 届きました';
+          status.style.color = '#059669'; status.textContent = '✅ 送信完了 — ' + client.name + ' 様 の LINE に 届きました';
           sendBtn.textContent = '✓ 送信済';
-          setTimeout(() => overlay.remove(), 1800);
+          setTimeout(() => overlay.remove(), 2000);
         } else {
           status.style.color = '#DC2626'; status.textContent = '送信応答 ok=false';
-          sendBtn.disabled = false; sendBtn.textContent = 'LINE で 送信';
+          sendBtn.disabled = false; sendBtn.textContent = '📤 この内容で LINE 送信';
         }
       } catch (e) {
         console.error('[slots-send]', e);
         status.style.color = '#DC2626'; status.textContent = '送信失敗: ' + (e.message || e).slice(0, 200);
-        sendBtn.disabled = false; sendBtn.textContent = 'LINE で 送信';
+        sendBtn.disabled = false; sendBtn.textContent = '📤 この内容で LINE 送信';
       }
     });
   }
@@ -6164,15 +6249,25 @@ ${JSON.stringify(jsonPayload, null, 2)}
                 </div>
               </div>
 
-              <!-- LINE preview (Flex Message look) -->
+              <!-- LINE preview (iPhone風 Flex Message ライブビュー) -->
               <div class="aib-preview" id="aib-preview-area">
                 <div class="aib-preview-head">
                   <i data-lucide="smartphone"></i>
-                  <span>LINEで実際に届く見た目</span>
+                  <span>LIVE PREVIEW — お客様 の iPhone</span>
                 </div>
                 <div class="aib-preview-phone" id="aib-preview-phone">
-                  <div class="aib-preview-bubble" id="aib-preview-text"></div>
-                  <div class="aib-preview-carousel" id="aib-preview-carousel"></div>
+                  <div class="aib-line-header">
+                    <span class="aib-line-back">‹</span>
+                    <div class="aib-line-avatar">FP</div>
+                    <div>
+                      <div class="aib-line-name">${escapeHtml((window.AccountInfo && window.AccountInfo.companyName) || 'FP Compass')}</div>
+                      <div class="aib-line-sub">公式アカウント</div>
+                    </div>
+                  </div>
+                  <div class="aib-line-chat">
+                    <div class="aib-preview-bubble" id="aib-preview-text"></div>
+                    <div class="aib-preview-carousel" id="aib-preview-carousel"></div>
+                  </div>
                 </div>
               </div>
             </div>
