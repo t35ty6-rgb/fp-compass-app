@@ -696,6 +696,14 @@
       <span class="kbd">⌘K</span>
     </div>
 
+    <!-- ★ サイドバー直下: 急遽 面談開始 (Zoom即発行 or 対面録音 を選べる) -->
+    <button id="sidebar-quick-inperson" class="sidebar-quick-rec"
+      title="急にお客様から相談入った時 → Zoom 即発行 or 対面録音 を 選んで 即開始">
+      <span class="sidebar-quick-rec-dot"></span>
+      <span class="sidebar-quick-rec-label">急遽 面談スタート</span>
+      <span class="sidebar-quick-rec-pill">予約不要</span>
+    </button>
+
     <div class="sidebar-group">
       <div class="sidebar-label">
         <i data-lucide="layout"></i><span>ワークスペース</span>
@@ -713,6 +721,11 @@
         <div class="tab" data-tab="timeline">
           <i data-lucide="git-commit-horizontal"></i>
           <span>ライフイベント</span>
+        </div>
+        <div class="tab" data-tab="meetingHistory">
+          <i data-lucide="video"></i>
+          <span>面談履歴</span>
+          <span class="nav-count" id="nav-count-history"></span>
         </div>
       </nav>
     </div>
@@ -994,6 +1007,12 @@
               </button>
             </div>
           </div>
+          <!-- ★ 2026-06-22 roundI: タグセグメントfilter (オーナーが作ったタグで絞り込み) -->
+          <div id="client-tag-segment-bar" style="display:none;align-items:center;gap:8px;flex-wrap:wrap;padding:12px 14px;background:#FBF5E3;border:1px solid #E8D9A8;border-radius:10px;margin-bottom:12px;">
+            <span style="font-size:11px;font-weight:800;color:#9A5A18;letter-spacing:0.12em;margin-right:4px;">🏷 タグで絞込</span>
+            <div id="client-tag-chips" style="display:flex;gap:6px;flex-wrap:wrap;flex:1;"></div>
+            <button id="client-tag-clear" class="btn-mini-action" style="display:none;font-size:10.5px;">クリア</button>
+          </div>
           <div class="client-toolbar">
             <input type="search" id="client-search" placeholder="名前 / 職業 / かな で検索">
             <select id="status-filter">
@@ -1050,6 +1069,11 @@
           <div class="footnote">
             ※ 顧客の家族構成と生年月日から、進学・退職・年金・後期高齢・住宅ローン完済を自動展開。カードクリックで顧客詳細を開きます。
           </div>
+        </section>
+
+        <!-- ===== 面談履歴 (Past Meetings) ===== -->
+        <section class="view" data-view="meetingHistory">
+          <div id="mh-root"></div>
         </section>
 
         <!-- ===== KPI / タスク管理 ===== -->
@@ -1181,7 +1205,7 @@ window.fpReadyAfterAuth = function() {
     });
   })();
 
-  const ver = "20260620CM-stg-today-hardcode-killed";
+  const ver = "20260622S-3col-span";
   const scripts = [
     "life-events.js?v=" + ver,
     "recommender.js?v=" + ver,
@@ -1304,6 +1328,26 @@ window.fpReadyAfterAuth = function() {
       cs.dispatchEvent(new Event('input', { bubbles: true }));
     }
   });
+
+  // ★ サイドバー急遽録画ボタン: どの画面からでも 1クリックで対面録画モーダル
+  const qiBtn = document.getElementById('sidebar-quick-inperson');
+  if (qiBtn) {
+    qiBtn.addEventListener('click', () => {
+      // LineApp が未初期化なら init してから呼ぶ
+      if (window.LineApp && window.LineApp.openQuickInpersonModal) {
+        window.LineApp.openQuickInpersonModal();
+      } else if (window.LineApp) {
+        // 念のためフォールバック: leadHub サブビューを activate して既存ボタンを click
+        try { window.LineApp.activateSubview('leadHub'); } catch (_) {}
+        setTimeout(() => {
+          const b = document.getElementById('fp-quick-inperson');
+          if (b) b.click();
+        }, 200);
+      } else {
+        alert('読み込み中です。少し待ってから再度押してください。');
+      }
+    });
+  }
 
   // Hero CTAs
   document.getElementById('hero-cta-new')?.addEventListener('click', () => {
@@ -1500,7 +1544,7 @@ window.fpReadyAfterAuth = function() {
 <script>
 (function(){
   // 最新の ver を 1 箇所に集約 (fpReadyAfterAuth 側と一致させる必要あり)
-  const FP_VERSION = "20260620CM-stg-today-hardcode-killed";
+  const FP_VERSION = "20260622S-3col-span";
   const loadTime = new Date();
   const hhmm = String(loadTime.getHours()).padStart(2,'0') + ':' + String(loadTime.getMinutes()).padStart(2,'0');
   const dateLabel = (FP_VERSION.match(/^(\d{4})(\d{2})(\d{2})/) || []).slice(1).join('/').replace(/^(\d{4})\//,'$1/').replace(/\/(\d{2})\/(\d{2})$/,'/$1/$2') || FP_VERSION;

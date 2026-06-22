@@ -183,8 +183,60 @@ body, table, .kpi-value, .num, .funnel-value, .task-count,
   border: 1px solid var(--hairline);
   border-radius: 8px;
   padding: 8px 10px;
-  margin: 0 0 18px;
+  margin: 0 0 12px;
   transition: border-color .12s, box-shadow .12s;
+}
+
+/* -------- Sidebar Quick Recording Button -------- */
+/* どこからでも 1クリックで対面録画開始できる action ボタン (nav tab ではない) */
+.sidebar-quick-rec {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%;
+  background: linear-gradient(135deg, #7C3AED 0%, #5B21B6 100%);
+  color: #fff;
+  border: none;
+  border-radius: 9px;
+  padding: 11px 14px;
+  margin: 0 0 18px;
+  font-family: 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.28);
+  transition: transform .12s, box-shadow .15s;
+}
+.sidebar-quick-rec:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 22px rgba(124, 58, 237, 0.42);
+}
+.sidebar-quick-rec:active {
+  transform: translateY(0);
+}
+.sidebar-quick-rec-dot {
+  width: 9px; height: 9px;
+  background: #FCA5A5;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 2px rgba(252, 165, 165, 0.3);
+  animation: sidebar-quick-rec-pulse 2.5s ease-in-out infinite;
+}
+@keyframes sidebar-quick-rec-pulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 2px rgba(252, 165, 165, 0.3); }
+  50% { opacity: 0.7; box-shadow: 0 0 0 4px rgba(252, 165, 165, 0.5); }
+}
+.sidebar-quick-rec-label {
+  flex: 1;
+  text-align: left;
+}
+.sidebar-quick-rec-pill {
+  background: rgba(255, 255, 255, 0.18);
+  font-size: 9.5px;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 4px;
+  letter-spacing: 0.06em;
+  flex-shrink: 0;
 }
 .sidebar-search:focus-within {
   border-color: var(--accent);
@@ -1137,37 +1189,79 @@ button:hover {
   transform: none;
   box-shadow: var(--shadow-xs);
 }
+/* ★ 2026-06-22 roundE: 既存 .primary を 新 CTA gold gradient で 一括 upgrade
+   個別 .btn-cta-primary に置換しなくても自動でゴールド化 */
 button.primary {
-  background: var(--accent) !important;
-  background-image: linear-gradient(180deg, var(--accent-3) 0%, var(--accent) 100%) !important;
+  background: linear-gradient(135deg, #C19A3A 0%, #9A5A18 100%) !important;
+  background-image: linear-gradient(135deg, #C19A3A 0%, #9A5A18 100%) !important;
   color: #fff !important;
-  border: 1px solid var(--accent-2) !important;
-  padding: 10px 18px !important;
-  font-size: 13px !important; font-weight: 600 !important;
+  border: none !important;
+  border-radius: 99px !important;
+  padding: 12px 22px !important;
+  font-family: 'Hiragino Sans', 'Noto Sans JP', sans-serif !important;
+  font-size: 13.5px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.04em !important;
   box-shadow:
-    0 1px 0 rgba(255,255,255,0.18) inset,
-    0 4px 12px var(--accent-glow) !important;
+    0 6px 16px rgba(193,154,58,0.32),
+    inset 0 1px 0 rgba(255,255,255,0.22) !important;
+  transition: transform .15s, box-shadow .18s, filter .15s !important;
 }
 button.primary::after { content: none !important; }
 button.primary:hover {
-  background-image: linear-gradient(180deg, var(--accent) 0%, var(--accent-2) 100%) !important;
+  background-image: linear-gradient(135deg, #C19A3A 0%, #9A5A18 100%) !important;
   color: #fff !important;
-  border-color: var(--accent-2) !important;
-  transform: translateY(-1px) !important;
-  box-shadow:
-    0 1px 0 rgba(255,255,255,0.18) inset,
-    0 8px 22px var(--accent-glow) !important;
-}
-button.ghost, button.btn-mini {
   border: none !important;
+  transform: translateY(-2px) !important;
+  filter: brightness(1.05) !important;
+  box-shadow:
+    0 10px 26px rgba(193,154,58,0.42),
+    inset 0 1px 0 rgba(255,255,255,0.3) !important;
+}
+button.primary:active { transform: translateY(0) !important; }
+button.primary:disabled {
+  opacity: 0.55 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+  filter: grayscale(0.4) !important;
+}
+/* ★ 2026-06-22 roundE: ghost / btn-mini を 下線アンダーラインスタイル に upgrade */
+button.ghost, button.btn-mini {
   background: transparent !important;
-  color: var(--ink-3) !important;
-  text-decoration: none !important;
-  padding: 6px 10px !important;
+  color: #6B7280 !important;
+  border: none !important;
+  border-bottom: 1.5px solid transparent !important;
+  border-radius: 0 !important;
+  padding: 8px 12px !important;
+  font-family: 'Hiragino Sans', sans-serif !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  transition: color .12s, border-color .12s !important;
 }
 button.ghost:hover, button.btn-mini:hover {
-  color: var(--ink) !important;
-  background: var(--surface-2) !important;
+  color: #1F2A3F !important;
+  background: transparent !important;
+  border-bottom-color: #C19A3A !important;
+}
+
+/* ★ 2026-06-22 roundE: .btn-rec-start (録画開始) は紫 → ゴールド統一 (急遽録画は紫キープ) */
+button.btn-rec-start:not([data-rec-mode="inperson"]) {
+  background: linear-gradient(135deg, #C19A3A 0%, #9A5A18 100%) !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: 99px !important;
+  padding: 12px 22px !important;
+  font-family: 'Hiragino Sans', sans-serif !important;
+  font-weight: 800 !important;
+  font-size: 13.5px !important;
+  letter-spacing: 0.04em !important;
+  box-shadow: 0 6px 16px rgba(193,154,58,0.32), inset 0 1px 0 rgba(255,255,255,0.22) !important;
+  cursor: pointer !important;
+  transition: transform .15s, box-shadow .18s !important;
+}
+button.btn-rec-start:not([data-rec-mode="inperson"]):hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 10px 26px rgba(193,154,58,0.42), inset 0 1px 0 rgba(255,255,255,0.3) !important;
 }
 
 #modal-draft-btn {
@@ -1782,23 +1876,32 @@ table.clients [class*="avatar"],
   gap: 6px;
   padding: 0 12px 12px;
 }
+/* ★ 2026-06-22 roundI: 顧客モーダル クイックアクション (LINE/電話/Zoom/メール) を gold ghost capsule */
 .cd-qa-btn {
-  display: inline-flex !important; align-items: center !important; justify-content: center !important; gap: 6px !important;
-  font-family: var(--font-body);
-  font-size: 12.5px; font-weight: 600;
-  background: var(--surface) !important;
-  border: 1px solid var(--hairline-2) !important;
-  color: var(--ink) !important;
-  padding: 9px 10px !important;
-  border-radius: 8px !important;
+  display: inline-flex !important; align-items: center !important; justify-content: center !important; gap: 7px !important;
+  font-family: 'Hiragino Sans','Noto Sans JP',sans-serif !important;
+  font-size: 12.5px !important; font-weight: 700 !important;
+  background: #fff !important;
+  border: 1.5px solid #C19A3A !important;
+  color: #1F2A3F !important;
+  padding: 10px 14px !important;
+  border-radius: 99px !important;
   cursor: pointer;
-  transition: background .12s, border-color .12s;
+  letter-spacing: 0.02em;
+  transition: background .12s, border-color .12s, color .12s, transform .12s !important;
+  box-shadow: 0 2px 6px rgba(193,154,58,0.12);
 }
-.cd-qa-btn:hover { background: var(--surface-2) !important; border-color: var(--ink-3) !important; }
+.cd-qa-btn:hover {
+  background: #FBF5E3 !important;
+  border-color: #9A5A18 !important;
+  color: #9A5A18 !important;
+  transform: translateY(-1px);
+}
 .cd-qa-btn i[data-lucide], .cd-qa-btn svg.lucide {
   width: 14px !important; height: 14px !important;
-  color: var(--ink-3);
+  color: #9A5A18 !important;
 }
+.cd-qa-btn:hover i[data-lucide], .cd-qa-btn:hover svg.lucide { color: #9A5A18 !important; }
 .cd-qa-primary {
   background: var(--accent) !important;
   background-image: linear-gradient(180deg, var(--accent-3), var(--accent)) !important;
@@ -2672,31 +2775,35 @@ table.clients [class*="avatar"],
   font-size: 11.5px;
   color: var(--ink-3);
 }
+/* ★ 2026-06-22 roundI: 顧客モーダル内 LINE送信ボタンを gold CTA 統一 */
 .cd-line-send-btn {
-  display: inline-flex; align-items: center; gap: 6px;
-  font-family: var(--font-display);
-  font-size: 12.5px; font-weight: 700;
-  background: var(--accent) !important;
-  background-image: linear-gradient(180deg, var(--accent-3), var(--accent)) !important;
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: 'Hiragino Sans','Noto Sans JP',sans-serif !important;
+  font-size: 13px; font-weight: 800;
+  letter-spacing: 0.04em;
+  background: linear-gradient(135deg, #C19A3A 0%, #9A5A18 100%) !important;
+  background-image: linear-gradient(135deg, #C19A3A 0%, #9A5A18 100%) !important;
   color: #fff !important;
-  border: 1px solid var(--accent-2) !important;
-  padding: 8px 16px !important;
-  border-radius: 8px !important;
+  border: none !important;
+  padding: 10px 22px !important;
+  border-radius: 99px !important;
   cursor: pointer;
-  box-shadow: 0 1px 0 rgba(255,255,255,.18) inset, 0 2px 6px rgba(91,91,240,.25);
-  transition: transform .12s, box-shadow .12s;
+  box-shadow: 0 6px 16px rgba(193,154,58,0.32), inset 0 1px 0 rgba(255,255,255,0.22);
+  transition: transform .15s, box-shadow .18s, filter .15s;
 }
 .cd-line-send-btn:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 1px 0 rgba(255,255,255,.18) inset, 0 4px 12px rgba(91,91,240,.35);
+  transform: translateY(-2px);
+  filter: brightness(1.05);
+  box-shadow: 0 10px 26px rgba(193,154,58,0.42), inset 0 1px 0 rgba(255,255,255,0.3);
 }
 .cd-line-send-btn:disabled {
-  background: var(--muted) !important;
+  background: #E5E7EB !important;
   background-image: none !important;
-  border-color: var(--muted) !important;
+  border: none !important;
   cursor: not-allowed;
   box-shadow: none;
-  opacity: 0.6;
+  opacity: 0.55;
+  color: #9CA3AF !important;
 }
 .cd-line-send-btn i[data-lucide] {
   width: 13px !important; height: 13px !important;
@@ -3995,101 +4102,34 @@ table.clients [class*="avatar"],
 /* ==================================================================
    LINE Flex Preview — what the customer actually sees
    ================================================================== */
-/* ★ iPhone風 frame 2026-06-20 アップグレード — LINE 受信側 体験 を 忠実に */
 .aib-preview {
   margin-top: 16px;
-  background: linear-gradient(180deg, #475569 0%, #1E293B 100%);
-  border-radius: 22px;
-  padding: 14px 14px 18px;
+  background: #06C755;
+  background-image: linear-gradient(180deg, #06C755 0%, #04A045 100%);
+  border-radius: 14px;
+  padding: 14px;
   position: relative;
-  box-shadow: 0 24px 60px rgba(15,23,42,0.32), inset 0 1px 0 rgba(255,255,255,0.08);
 }
 .aib-preview-head {
   display: flex; align-items: center; gap: 6px;
   color: #fff;
-  font-family: 'Noto Sans JP', sans-serif;
-  font-size: 11.5px; font-weight: 800;
-  letter-spacing: 0.06em;
-  margin-bottom: 12px;
-  opacity: 0.7;
-  text-transform: uppercase;
-  text-align: center;
-  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 11.5px; font-weight: 700;
+  letter-spacing: 0.04em;
+  margin-bottom: 10px;
+  opacity: 0.92;
 }
 .aib-preview-head i[data-lucide], .aib-preview-head svg.lucide {
   width: 14px !important; height: 14px !important;
   color: #fff;
 }
-/* iPhone 内側スクリーン */
 .aib-preview-phone {
-  position: relative;
-  background: #8AB1D2;
-  border-radius: 28px;
-  padding: 0;
-  min-height: 320px;
-  display: flex; flex-direction: column;
-  overflow: hidden;
-  border: 3px solid #0F172A;
-  box-shadow: 0 0 0 1px rgba(255,255,255,0.04);
-}
-/* iPhone Notch */
-.aib-preview-phone::before {
-  content: '';
-  position: absolute;
-  top: 6px; left: 50%; transform: translateX(-50%);
-  width: 90px; height: 18px;
-  background: #0F172A;
-  border-radius: 0 0 14px 14px;
-  z-index: 3;
-}
-/* Status bar (時刻 + 通信) */
-.aib-preview-phone::after {
-  content: '21:30  ●●● 5G';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  background: linear-gradient(180deg, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0.85) 100%);
-  height: 28px;
-  font-family: -apple-system, 'SF Pro Display', sans-serif;
-  font-size: 11px; font-weight: 700;
-  color: #0F172A;
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 0 20px;
-  z-index: 2;
-  letter-spacing: 0.04em;
-}
-/* LINE ヘッダー (緑) */
-.aib-preview-phone .aib-line-header {
-  margin-top: 28px;
-  background: linear-gradient(180deg, #06C755 0%, #05B14C 100%);
-  color: #fff;
-  padding: 10px 14px 9px;
-  display: flex; align-items: center; gap: 10px;
-  font-family: 'Noto Sans JP', sans-serif;
-  border-bottom: 1px solid rgba(0,0,0,0.08);
-}
-.aib-preview-phone .aib-line-back {
-  font-size: 18px; font-weight: 700; opacity: 0.95;
-}
-.aib-preview-phone .aib-line-avatar {
-  width: 28px; height: 28px; border-radius: 50%;
-  background: rgba(255,255,255,0.22);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 13px; font-weight: 900;
-}
-.aib-preview-phone .aib-line-name {
-  font-size: 13.5px; font-weight: 800; letter-spacing: -0.005em;
-}
-.aib-preview-phone .aib-line-sub {
-  font-size: 10px; opacity: 0.8; margin-top: 1px;
-}
-/* チャット領域 */
-.aib-preview-phone .aib-line-chat {
-  flex: 1;
-  background: #8AB1D2;
-  background-image: linear-gradient(180deg, #8AB1D2 0%, #A5C2DC 100%);
-  padding: 14px 12px 18px;
-  display: flex; flex-direction: column; gap: 10px;
-  overflow-y: auto;
+  background: #7FB8E1;
+  background-image: linear-gradient(180deg, #7FB8E1 0%, #9AC8E8 100%);
+  border-radius: 10px;
+  padding: 14px 12px;
+  min-height: 80px;
+  display: flex; flex-direction: column; gap: 12px;
 }
 .aib-preview-bubble {
   background: #fff;
@@ -6319,3 +6359,795 @@ body[data-prod="1"] #form-delete-btn { display: none !important; }
 body[data-prod="1"] .demo-only,
 body[data-prod="1"] [data-demo-only],
 body[data-prod="1"] .brand-badge { display: none !important; }
+
+/* ============================================================
+   CTA Button System (2026-06-22 roundD)
+   参考: 目を引くCTAデザイン6選 のうち pattern 1/2/5 を採用
+   階層: PRIMARY (確定アクション) / SECONDARY (個別) / GHOST (キャンセル)
+   既存サンセット (#c19a3a / #9a5a18) + navy を使い、 派手すぎない業務UI
+   ============================================================ */
+
+:root {
+  --cta-gold: #C19A3A;
+  --cta-gold-deep: #9A5A18;
+  --cta-gold-cream: #FBF5E3;
+  --cta-gold-shadow: rgba(193,154,58,0.32);
+  --cta-ink: #1F2A3F;
+  --cta-red: #B91C3C;
+  --cta-red-shadow: rgba(185,28,60,0.28);
+  --cta-line: #E8E2D4;
+}
+
+/* ───── PRIMARY ───── 一斉送信 / 予約確定 / 録画開始 等 確定アクション */
+.btn-cta-primary {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  background: linear-gradient(135deg, var(--cta-gold) 0%, var(--cta-gold-deep) 100%);
+  color: #fff;
+  border: none;
+  border-radius: 99px;
+  padding: 16px 26px 16px 32px;
+  font-family: 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+  font-weight: 800;
+  font-size: 15px;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  box-shadow:
+    0 6px 16px var(--cta-gold-shadow),
+    inset 0 1px 0 rgba(255,255,255,0.22);
+  transition: transform .15s, box-shadow .18s, filter .15s;
+  white-space: nowrap;
+}
+.btn-cta-primary:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 10px 26px var(--cta-gold-shadow),
+    inset 0 1px 0 rgba(255,255,255,0.3);
+  filter: brightness(1.05);
+}
+.btn-cta-primary:active {
+  transform: translateY(0);
+  box-shadow: 0 3px 10px var(--cta-gold-shadow);
+}
+.btn-cta-primary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+.btn-cta-primary .cta-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: #fff;
+  color: var(--cta-gold-deep);
+  border-radius: 50%;
+  font-size: 14px;
+  font-weight: 900;
+  transition: transform .2s;
+}
+.btn-cta-primary:hover .cta-arrow { transform: translateX(3px); }
+
+/* 上に乗る 吹き出し風 サブラベル (参考 #2) */
+.btn-cta-primary-wrap {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  isolation: isolate;
+}
+.btn-cta-primary-chip {
+  position: relative;
+  z-index: 2;
+  background: var(--cta-ink);
+  color: var(--cta-gold-cream);
+  font-family: 'Hiragino Sans', sans-serif;
+  font-weight: 800;
+  font-size: 11.5px;
+  letter-spacing: 0.06em;
+  padding: 6px 18px;
+  border-radius: 99px;
+  margin-bottom: -14px;
+  box-shadow: 0 4px 10px rgba(31,42,63,0.25);
+  white-space: nowrap;
+}
+.btn-cta-primary-chip::before,
+.btn-cta-primary-chip::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 1px;
+  height: 16px;
+  background: var(--cta-gold);
+  transform: translateY(-50%) rotate(15deg);
+}
+.btn-cta-primary-chip::before { left: -12px; transform: translateY(-50%) rotate(-20deg); }
+.btn-cta-primary-chip::after  { right: -12px; transform: translateY(-50%) rotate(20deg); }
+.btn-cta-primary-wrap .btn-cta-primary { z-index: 1; padding-top: 20px; }
+.btn-cta-primary-wrap:hover .btn-cta-primary-chip {
+  transform: translateY(-2px);
+  transition: transform .2s;
+}
+
+/* DANGER バリアント (赤系) — 削除 / キャンセル 等の取消できないアクション */
+.btn-cta-primary.is-danger {
+  background: linear-gradient(135deg, #DC2626 0%, var(--cta-red) 100%);
+  box-shadow: 0 6px 16px var(--cta-red-shadow), inset 0 1px 0 rgba(255,255,255,0.22);
+}
+.btn-cta-primary.is-danger .cta-arrow { color: var(--cta-red); }
+.btn-cta-primary.is-danger:hover {
+  box-shadow: 0 10px 26px var(--cta-red-shadow), inset 0 1px 0 rgba(255,255,255,0.3);
+}
+
+/* ───── SECONDARY ───── 個別送信 / 編集 等 (参考 #5: 円バッジ+矢印) */
+.btn-cta-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: #fff;
+  color: var(--cta-ink);
+  border: 1.5px solid var(--cta-gold);
+  border-radius: 99px;
+  padding: 9px 18px 9px 9px;
+  font-family: 'Hiragino Sans', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(193,154,58,0.12);
+  transition: background .12s, border-color .12s, box-shadow .12s, transform .12s;
+}
+.btn-cta-secondary:hover {
+  background: var(--cta-gold-cream);
+  border-color: var(--cta-gold-deep);
+  box-shadow: 0 4px 12px rgba(193,154,58,0.2);
+  transform: translateY(-1px);
+}
+.btn-cta-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+.btn-cta-secondary .cta-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  background: var(--cta-gold);
+  color: #fff;
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+}
+.btn-cta-secondary .cta-tail {
+  font-size: 13px;
+  color: var(--cta-gold-deep);
+  font-weight: 800;
+  margin-left: 4px;
+  transition: transform .15s;
+}
+.btn-cta-secondary:hover .cta-tail { transform: translateX(3px); }
+
+/* ───── GHOST ───── キャンセル / 戻る (参考 #6 派生: 下線下) */
+.btn-cta-ghost {
+  background: transparent;
+  color: #6B7280;
+  border: none;
+  padding: 10px 14px;
+  font-family: 'Hiragino Sans', sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  border-bottom: 1.5px solid transparent;
+  border-radius: 0;
+  transition: color .12s, border-color .12s;
+}
+.btn-cta-ghost:hover {
+  color: var(--cta-ink);
+  border-bottom-color: var(--cta-gold);
+}
+
+/* Reduced motion: 動きを止める */
+@media (prefers-reduced-motion: reduce) {
+  .btn-cta-primary, .btn-cta-secondary, .cta-arrow, .cta-tail, .btn-cta-primary-chip { transition: none !important; }
+  .btn-cta-primary:hover, .btn-cta-secondary:hover { transform: none !important; }
+}
+
+/* ============================================================
+   細部ボタン system v1 (2026-06-22 roundF)
+   主要 CTA (.btn-cta-primary) と整合する 小型 component 群
+   - .btn-mini-action : table行内 / カード内 の 24-28px 小ボタン
+   - .chip / .chip-* : 矩形 status pill
+   - .icon-btn       : 28x28 円形 icon-only
+   - .input-suffix-btn : input field 右隣接
+   既存 .ghost / .btn-mini は 壊さず 上塗りで 統一感UP
+   ============================================================ */
+
+/* ───── .btn-mini-action : 小ボタン (capsule gold ghost) ───── */
+.btn-mini-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  color: var(--cta-ink, #1F2A3F);
+  border: 1.5px solid var(--cta-gold, #C19A3A);
+  border-radius: 99px;
+  padding: 5px 14px;
+  font-family: 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+  font-weight: 700;
+  font-size: 11.5px;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: background .12s, border-color .12s, color .12s, transform .12s;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+.btn-mini-action:hover {
+  background: var(--cta-gold-cream, #FBF5E3);
+  border-color: var(--cta-gold-deep, #9A5A18);
+  color: var(--cta-gold-deep, #9A5A18);
+}
+.btn-mini-action:active { transform: scale(0.97); }
+.btn-mini-action:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  background: transparent;
+  color: #9CA3AF;
+  border-color: #E5E7EB;
+}
+.btn-mini-action.is-danger {
+  border-color: #DC2626;
+  color: #B91C1C;
+}
+.btn-mini-action.is-danger:hover {
+  background: #FEF2F2;
+  border-color: #991B1B;
+  color: #7F1D1D;
+}
+.btn-mini-action.is-line {
+  border-color: #06C755;
+  color: #047857;
+}
+.btn-mini-action.is-line:hover {
+  background: #F0FDF4;
+  border-color: #047857;
+  color: #065F46;
+}
+.btn-mini-action .icon {
+  font-size: 12px;
+  line-height: 1;
+}
+
+/* ───── .chip : 矩形 status pill (ink bg + cream text) ───── */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--cta-ink, #1F2A3F);
+  color: #FCFAF2;
+  font-family: 'Inter', 'Hiragino Sans', sans-serif;
+  font-weight: 800;
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  padding: 3px 9px;
+  border-radius: 5px;
+  text-transform: uppercase;
+  line-height: 1.4;
+}
+.chip.chip-warn   { background: #92400E; color: #FEF3C7; }
+.chip.chip-success { background: #065F46; color: #D1FAE5; }
+.chip.chip-info   { background: #1E3A5F; color: #DBEAFE; }
+.chip.chip-line   { background: #06C755; color: #fff; }
+.chip.chip-danger { background: #991B1B; color: #FEE2E2; }
+.chip.chip-gold   { background: var(--cta-gold-cream, #FBF5E3); color: var(--cta-gold-deep, #9A5A18); }
+
+/* ───── .icon-btn : 円形 icon-only (28x28) ───── */
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: transparent;
+  color: #6B7280;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background .12s, color .12s, box-shadow .15s, border-color .12s;
+  flex-shrink: 0;
+  line-height: 1;
+}
+.icon-btn:hover {
+  background: var(--cta-gold-cream, #FBF5E3);
+  color: var(--cta-gold-deep, #9A5A18);
+  box-shadow: 0 0 0 2px rgba(193, 154, 58, 0.25);
+}
+.icon-btn:active { background: var(--cta-gold, #C19A3A); color: #fff; }
+.icon-btn.is-active {
+  background: var(--cta-gold, #C19A3A);
+  color: #fff;
+  border-color: var(--cta-gold-deep, #9A5A18);
+}
+.icon-btn.is-danger:hover {
+  background: #FEF2F2;
+  color: #B91C1C;
+  box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.18);
+}
+.icon-btn.lg { width: 36px; height: 36px; font-size: 17px; }
+.icon-btn.sm { width: 24px; height: 24px; font-size: 12px; }
+
+/* ───── .input-suffix-btn : input 右隣接 (gold solid) ───── */
+.input-suffix-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  background: linear-gradient(135deg, var(--cta-gold, #C19A3A) 0%, var(--cta-gold-deep, #9A5A18) 100%);
+  color: #fff;
+  border: none;
+  border-radius: 0 6px 6px 0;
+  padding: 0 16px;
+  font-family: 'Hiragino Sans', sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: filter .12s;
+  white-space: nowrap;
+  min-height: 36px;
+  align-self: stretch;
+}
+.input-suffix-btn:hover { filter: brightness(1.06); }
+.input-suffix-btn:active { filter: brightness(0.95); }
+.input-suffix-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* input + suffix-btn を 連結 する wrapper */
+.input-with-suffix {
+  display: inline-flex;
+  align-items: stretch;
+  width: 100%;
+}
+.input-with-suffix > input,
+.input-with-suffix > textarea {
+  flex: 1;
+  border-top-right-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+  border-right: none !important;
+  min-height: 36px;
+}
+
+/* ───── 既存マークアップ への 自動適用 (selector 上書きで 統一感) ───── */
+/* .btn-mini が 「コピー」「編集」 等の 行内ボタン として使われてる箇所を 上塗り */
+button.btn-mini:not(.btn-cta-primary):not(.btn-cta-secondary) {
+  /* roundE で 下線アンダー化したが それは ghost テキストリンク向け
+     btn-mini が 実ボタン (action) として使われてる時は capsule にする */
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* table 行内の 小ボタン (= class 指定無しの button) を gold ghost capsule に */
+table tbody button:not([class]),
+table tbody button.btn-mini {
+  background: transparent !important;
+  color: var(--cta-ink, #1F2A3F) !important;
+  border: 1.5px solid var(--cta-gold, #C19A3A) !important;
+  border-radius: 99px !important;
+  padding: 5px 14px !important;
+  font-weight: 700 !important;
+  font-size: 11.5px !important;
+  border-bottom-color: var(--cta-gold, #C19A3A) !important;
+}
+table tbody button:not([class]):hover,
+table tbody button.btn-mini:hover {
+  background: var(--cta-gold-cream, #FBF5E3) !important;
+  border-color: var(--cta-gold-deep, #9A5A18) !important;
+  color: var(--cta-gold-deep, #9A5A18) !important;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .btn-mini-action, .icon-btn, .input-suffix-btn { transition: none !important; }
+  .btn-mini-action:active { transform: none !important; }
+}
+
+/* ============================================================
+   顧客モーダル クイックアクション CTA v2 (2026-06-22 roundL)
+   オーナー指定: 「\\全員に1クリック/」 吹き出し + ゴールド capsule + 円形アロー
+   構造: 吹き出し (上に重なる) + capsule本体 + 右に円形アロー
+   ============================================================ */
+
+.fp-qa-pop {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  background: transparent !important;
+  border: none !important;
+  padding: 14px 0 0 !important;
+  cursor: pointer;
+  font-family: 'Hiragino Sans', 'Noto Sans JP', sans-serif !important;
+  min-height: 0 !important;
+  width: 100%;
+  isolation: isolate;
+}
+
+.fp-qa-pop:focus-visible {
+  outline: 3px solid rgba(193, 154, 58, 0.45);
+  outline-offset: 4px;
+  border-radius: 16px;
+}
+
+/* 上の吹き出しチップ */
+.fp-qa-tip {
+  position: relative;
+  z-index: 2;
+  background: #1F2A3F;
+  color: #FBF5E3;
+  font-family: 'Hiragino Sans', sans-serif;
+  font-weight: 800;
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  padding: 4px 16px;
+  border-radius: 99px;
+  margin-bottom: -12px;
+  box-shadow: 0 4px 10px rgba(31, 42, 63, 0.28);
+  white-space: nowrap;
+  transition: transform .25s cubic-bezier(.2,.7,.3,1.2), box-shadow .2s;
+  letter-spacing: 0.04em;
+}
+
+/* 吹き出し両端の斜線 (// と \\) */
+.fp-qa-tip::before,
+.fp-qa-tip::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 1.5px;
+  height: 13px;
+  background: var(--fp-qa-accent, #C19A3A);
+  border-radius: 1px;
+}
+.fp-qa-tip::before {
+  left: -10px;
+  transform: translateY(-50%) rotate(-18deg);
+}
+.fp-qa-tip::after {
+  right: -10px;
+  transform: translateY(-50%) rotate(18deg);
+}
+
+/* メイン capsule */
+.fp-qa-capsule {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  background: linear-gradient(135deg, #C19A3A 0%, #9A5A18 100%) !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: 16px;
+  padding: 16px 14px 14px 18px;
+  box-shadow:
+    0 6px 18px rgba(193, 154, 58, 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  transition: transform .18s, box-shadow .22s, filter .18s;
+}
+
+.fp-qa-pop:hover .fp-qa-capsule {
+  transform: translateY(-2px);
+  filter: brightness(1.04);
+  box-shadow:
+    0 12px 28px rgba(193, 154, 58, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+.fp-qa-pop:hover .fp-qa-tip {
+  transform: translateY(-3px);
+}
+.fp-qa-pop:hover .fp-qa-arrow {
+  transform: translateX(3px);
+}
+.fp-qa-pop:active .fp-qa-capsule {
+  transform: translateY(0);
+}
+
+/* 左の小さい アクセントドット (色分け) */
+.fp-qa-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--fp-qa-accent, #FBF5E3);
+  box-shadow:
+    0 0 0 2px rgba(255, 255, 255, 0.5),
+    0 0 8px var(--fp-qa-accent-glow, rgba(251, 245, 227, 0.4));
+  flex-shrink: 0;
+  animation: fp-qa-dot-pulse 2.4s ease-in-out infinite;
+}
+@keyframes fp-qa-dot-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+
+/* ラベル領域 */
+.fp-qa-label {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: left;
+  line-height: 1.3;
+  min-width: 0;
+}
+.fp-qa-label-main {
+  font-size: 13.5px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: #fff;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.18);
+}
+.fp-qa-label-sub {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #FBF5E3;
+  letter-spacing: 0.02em;
+  opacity: 0.92;
+}
+
+/* 右の円形アロー */
+.fp-qa-arrow {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  background: #fff;
+  color: var(--fp-qa-accent, #9A5A18);
+  border-radius: 50%;
+  font-size: 14px;
+  font-weight: 900;
+  transition: transform .2s;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+}
+
+/* ── アクセント色 5パターン ── */
+.fp-qa-pop[data-accent="zoom"]    { --fp-qa-accent: #2D8CFF; --fp-qa-accent-glow: rgba(45,140,255,0.5); }
+.fp-qa-pop[data-accent="slots"]   { --fp-qa-accent: #C19A3A; --fp-qa-accent-glow: rgba(193,154,58,0.5); }
+.fp-qa-pop[data-accent="tag"]     { --fp-qa-accent: #A78BFA; --fp-qa-accent-glow: rgba(167,139,250,0.5); }
+.fp-qa-pop[data-accent="brief"]   { --fp-qa-accent: #34D399; --fp-qa-accent-glow: rgba(52,211,153,0.5); }
+.fp-qa-pop[data-accent="info"]    { --fp-qa-accent: #CBD5E1; --fp-qa-accent-glow: rgba(203,213,225,0.5); }
+
+/* レスポンシブ: モバイル幅で 1列 */
+@media (max-width: 520px) {
+  .fp-qa-grid { grid-template-columns: 1fr !important; }
+}
+
+/* reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .fp-qa-capsule, .fp-qa-tip, .fp-qa-arrow, .fp-qa-dot { transition: none !important; animation: none !important; }
+  .fp-qa-pop:hover .fp-qa-capsule,
+  .fp-qa-pop:hover .fp-qa-tip,
+  .fp-qa-pop:hover .fp-qa-arrow { transform: none !important; }
+}
+
+/* ============================================================
+   顧客モーダル CTA v3 (2026-06-22 roundM) — Jewel Tones
+   オーナーfb: 「色が一緒で見づらい / バランス悪い」
+   解決: capsule の base color を data-accent ごとに 大胆に変える + balance fix
+   ============================================================ */
+
+/* バランス: tip を absolute (上部中央固定) + capsule 統一サイズ */
+.fp-qa-pop {
+  position: relative !important;
+  padding-top: 18px !important;
+  min-height: 100px;
+}
+.fp-qa-pop .fp-qa-tip {
+  position: absolute !important;
+  top: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 0 !important;
+  z-index: 3;
+  pointer-events: none;
+}
+.fp-qa-pop:hover .fp-qa-tip {
+  transform: translateX(-50%) translateY(-2px) !important;
+}
+.fp-qa-pop .fp-qa-capsule {
+  width: 100%;
+  min-height: 76px;
+  padding: 18px 16px 16px 20px !important;
+  border-radius: 16px !important;
+  gap: 14px !important;
+}
+
+/* 色: data-accent ごとに capsule gradient + arrow color */
+
+/* ━━ Sapphire (Zoom今すぐ) — vivid Zoom blue ━━ */
+.fp-qa-pop[data-accent="zoom"] .fp-qa-capsule {
+  background: linear-gradient(135deg, #2D8CFF 0%, #0F62D1 100%) !important;
+  box-shadow:
+    0 6px 18px rgba(45, 140, 255, 0.36),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28) !important;
+}
+.fp-qa-pop[data-accent="zoom"]:hover .fp-qa-capsule {
+  box-shadow: 0 12px 30px rgba(45, 140, 255, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.35) !important;
+}
+.fp-qa-pop[data-accent="zoom"] .fp-qa-arrow { color: #0F62D1 !important; }
+.fp-qa-pop[data-accent="zoom"] .fp-qa-tip::before,
+.fp-qa-pop[data-accent="zoom"] .fp-qa-tip::after { background: #2D8CFF !important; }
+
+/* ━━ Night Blue (日時指定 Zoom) — calendar感 navy ━━ */
+.fp-qa-pop[data-accent="schedule"] .fp-qa-capsule {
+  background: linear-gradient(135deg, #1E3A5F 0%, #0F1B2F 100%) !important;
+  box-shadow:
+    0 6px 18px rgba(30, 58, 95, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
+}
+.fp-qa-pop[data-accent="schedule"]:hover .fp-qa-capsule {
+  box-shadow: 0 12px 30px rgba(30, 58, 95, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
+}
+.fp-qa-pop[data-accent="schedule"] .fp-qa-arrow { color: #1E3A5F !important; }
+.fp-qa-pop[data-accent="schedule"] .fp-qa-tip::before,
+.fp-qa-pop[data-accent="schedule"] .fp-qa-tip::after { background: #5B7BAA !important; }
+
+/* ━━ Amber (候補日3つ) — gold gradient (base) ━━ */
+/* 既存 .fp-qa-capsule の デフォルト gold は そのまま — slots アクセントは override 不要 */
+.fp-qa-pop[data-accent="slots"] .fp-qa-tip::before,
+.fp-qa-pop[data-accent="slots"] .fp-qa-tip::after { background: #C19A3A !important; }
+
+/* ━━ Amethyst (タグ) — purple ━━ */
+.fp-qa-pop[data-accent="tag"] .fp-qa-capsule {
+  background: linear-gradient(135deg, #7C3AED 0%, #5B21B6 100%) !important;
+  box-shadow:
+    0 6px 18px rgba(124, 58, 237, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22) !important;
+}
+.fp-qa-pop[data-accent="tag"]:hover .fp-qa-capsule {
+  box-shadow: 0 12px 30px rgba(124, 58, 237, 0.52), inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
+}
+.fp-qa-pop[data-accent="tag"] .fp-qa-arrow { color: #5B21B6 !important; }
+.fp-qa-pop[data-accent="tag"] .fp-qa-tip::before,
+.fp-qa-pop[data-accent="tag"] .fp-qa-tip::after { background: #A78BFA !important; }
+
+/* ━━ Emerald (自分で書く) — forest green ━━ */
+.fp-qa-pop[data-accent="brief"] .fp-qa-capsule {
+  background: linear-gradient(135deg, #047857 0%, #064E3B 100%) !important;
+  box-shadow:
+    0 6px 18px rgba(4, 120, 87, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22) !important;
+}
+.fp-qa-pop[data-accent="brief"]:hover .fp-qa-capsule {
+  box-shadow: 0 12px 30px rgba(4, 120, 87, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
+}
+.fp-qa-pop[data-accent="brief"] .fp-qa-arrow { color: #047857 !important; }
+.fp-qa-pop[data-accent="brief"] .fp-qa-tip::before,
+.fp-qa-pop[data-accent="brief"] .fp-qa-tip::after { background: #34D399 !important; }
+
+/* ━━ Pewter (顧客情報) — ghost / neutral ━━ */
+.fp-qa-pop[data-accent="info"] .fp-qa-capsule {
+  background: #fff !important;
+  border: 1.5px solid #CBD5E1 !important;
+  box-shadow:
+    0 4px 12px rgba(15, 23, 42, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6) !important;
+}
+.fp-qa-pop[data-accent="info"]:hover .fp-qa-capsule {
+  border-color: #94A3B8 !important;
+  background: #F8FAFC !important;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+}
+.fp-qa-pop[data-accent="info"] .fp-qa-label-main {
+  color: #1F2A3F !important;
+  text-shadow: none !important;
+}
+.fp-qa-pop[data-accent="info"] .fp-qa-label-sub {
+  color: #64748B !important;
+}
+.fp-qa-pop[data-accent="info"] .fp-qa-arrow {
+  background: #1F2A3F !important;
+  color: #fff !important;
+}
+.fp-qa-pop[data-accent="info"] .fp-qa-tip::before,
+.fp-qa-pop[data-accent="info"] .fp-qa-tip::after { background: #CBD5E1 !important; }
+.fp-qa-pop[data-accent="info"] .fp-qa-dot {
+  background: #475569 !important;
+  box-shadow: 0 0 0 2px rgba(71,85,105,0.18), 0 0 8px rgba(71,85,105,0.3) !important;
+}
+
+/* dot を 各色に 自動同期 (左ドットを目立たせる) */
+.fp-qa-pop[data-accent="zoom"] .fp-qa-dot     { background: #BFDBFE !important; box-shadow: 0 0 0 2px rgba(255,255,255,0.5), 0 0 10px rgba(191,219,254,0.6) !important; }
+.fp-qa-pop[data-accent="schedule"] .fp-qa-dot { background: #94A3B8 !important; box-shadow: 0 0 0 2px rgba(255,255,255,0.5), 0 0 10px rgba(148,163,184,0.5) !important; }
+.fp-qa-pop[data-accent="slots"] .fp-qa-dot    { background: #FDE68A !important; box-shadow: 0 0 0 2px rgba(255,255,255,0.5), 0 0 10px rgba(253,230,138,0.6) !important; }
+.fp-qa-pop[data-accent="tag"] .fp-qa-dot      { background: #DDD6FE !important; box-shadow: 0 0 0 2px rgba(255,255,255,0.5), 0 0 10px rgba(221,214,254,0.6) !important; }
+.fp-qa-pop[data-accent="brief"] .fp-qa-dot    { background: #A7F3D0 !important; box-shadow: 0 0 0 2px rgba(255,255,255,0.5), 0 0 10px rgba(167,243,208,0.6) !important; }
+
+/* グリッドのバランス: 吹き出し分の row gap 確保 */
+.fp-qa-grid { row-gap: 28px !important; column-gap: 14px !important; }
+
+/* モバイル: 1列 */
+@media (max-width: 520px) {
+  .fp-qa-grid { grid-template-columns: 1fr !important; }
+  .fp-qa-pop { min-height: 96px; }
+}
+
+/* ============================================================
+   顧客モーダル CTA v4 (2026-06-22 roundN) — 3列×2行 横長レイアウト
+   オーナーfb: 縦長すぎてスクロール必要 → 3列でコンパクトに
+   ============================================================ */
+.fp-qa-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;  /* minmax(0,1fr) で content幅 折返し 防止 */
+  row-gap: 26px !important;
+  column-gap: 10px !important;
+  width: 100% !important;
+  /* ★ 親が grid (左376+右268の2カラム) で 右カラムに押し込まれてた → 2カラム両方占有して 658px 確保 */
+  grid-column: 1 / -1 !important;
+  margin-top: 16px !important;
+}
+.fp-qa-grid > .fp-qa-pop { min-width: 0 !important; }
+.fp-qa-grid > .fp-qa-pop .fp-qa-label-main,
+.fp-qa-grid > .fp-qa-pop .fp-qa-label-sub {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 3列なので 各 cell を コンパクト化 */
+.fp-qa-pop {
+  padding-top: 16px !important;
+  min-height: 84px;
+}
+.fp-qa-pop .fp-qa-capsule {
+  min-height: 64px;
+  padding: 14px 12px 12px 14px !important;
+  gap: 9px !important;
+  border-radius: 14px !important;
+}
+.fp-qa-pop .fp-qa-dot {
+  width: 7px; height: 7px;
+}
+.fp-qa-pop .fp-qa-arrow {
+  width: 24px; height: 24px;
+  font-size: 12px;
+  box-shadow: 0 1.5px 4px rgba(0,0,0,0.2);
+}
+.fp-qa-pop .fp-qa-label-main {
+  font-size: 12px !important;
+  letter-spacing: 0.01em;
+}
+.fp-qa-pop .fp-qa-label-sub {
+  font-size: 9.5px !important;
+  letter-spacing: 0.01em;
+}
+.fp-qa-pop .fp-qa-tip {
+  font-size: 9.5px !important;
+  padding: 3px 12px !important;
+  letter-spacing: 0.03em !important;
+  top: 2px;
+}
+.fp-qa-pop .fp-qa-tip::before,
+.fp-qa-pop .fp-qa-tip::after {
+  height: 10px;
+  width: 1.3px;
+}
+
+/* レスポンシブ: 中間幅 (≤780px) で 2列、 狭い (≤500px) で 1列 */
+@media (max-width: 780px) {
+  .fp-qa-grid { grid-template-columns: repeat(2, 1fr) !important; }
+}
+@media (max-width: 500px) {
+  .fp-qa-grid { grid-template-columns: 1fr !important; }
+  .fp-qa-pop { min-height: 76px; }
+}
+/* deploy-trigger 1782091790 */

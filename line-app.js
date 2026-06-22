@@ -674,6 +674,18 @@
           <h1 class="page-title"><i data-lucide="alarm-clock" style="vertical-align:middle;margin-right:8px;"></i>ご無沙汰フォロー</h1>
           <p class="page-sub">21日以上 LINE で連絡してない方を期間ごとに表示。テンプレ編集 → 全員に1クリック送信。${activeTagFilter ? `<span style="color:#5B5BF0;font-weight:700;"> · タグ「${escapeHtml((tagsMaster.find(t => t.id === activeTagFilter) || {}).label || '')}」 で絞り込み中</span>` : ''}</p>
         </header>
+
+        <!-- ★ 役割明示バナー: 配信タブとの混同防止 -->
+        <div style="background:linear-gradient(135deg,#FEF3C7,#FFEDD5);border:1px solid #FCD34D;border-radius:12px;padding:18px 22px;margin-bottom:18px;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+            <span style="background:#7C2D12;color:#fff;font-size:10px;font-weight:800;letter-spacing:0.12em;padding:3px 9px;border-radius:4px;">ご無沙汰フォロー — RE-ENGAGE</span>
+            <span style="font-size:12px;color:#64748B;">= <strong style="color:#7C2D12;">最終接触から日数が経った客</strong>を1人ずつ追客 (関係維持・再接続)</span>
+          </div>
+          <div style="font-size:12px;color:#64748B;line-height:1.7;">
+            キャンペーンやお知らせを全員に一斉送信したい時は → <a href="#" onclick="document.querySelector('.tab[data-tab=&quot;distributionHub&quot;]')?.click();return false;" style="color:#1D4ED8;font-weight:700;text-decoration:underline;">配信タブ</a> （テンプレ駆動でまとめて送信）
+          </div>
+        </div>
+
         ${tagFilterHtml}
 
         ${enriched.length === 0 ? `
@@ -696,12 +708,18 @@
             <textarea id="fp-dormant-msg" rows="8" style="width:100%;padding:14px 16px;border:1.5px solid #E2E8F0;border-radius:8px;font-size:13.5px;font-family:'Noto Sans JP',sans-serif;line-height:1.75;resize:vertical;box-sizing:border-box;">${escapeHtml(defaultMsg)}</textarea>
           </div>
 
-          <div style="position:sticky;bottom:18px;background:linear-gradient(135deg,#0F172A,#1E293B);border-radius:12px;padding:18px;box-shadow:0 12px 36px rgba(15,23,42,0.32);display:flex;align-items:center;gap:14px;">
-            <div style="flex:1;color:#fff;">
-              <div style="font-size:11.5px;font-weight:700;letter-spacing:0.06em;color:#94A3B8;">✓ 選択中 <span id="fp-dormant-selected-count" style="color:#10B981;font-weight:900;">${enriched.length}</span>名 に送信</div>
+          <div style="position:sticky;bottom:18px;background:linear-gradient(135deg,#0F172A,#1E293B);border-radius:12px;padding:18px 22px;box-shadow:0 12px 36px rgba(15,23,42,0.32);display:flex;align-items:center;gap:18px;flex-wrap:wrap;">
+            <div style="flex:1;color:#fff;min-width:180px;">
+              <div style="font-size:11.5px;font-weight:700;letter-spacing:0.06em;color:#94A3B8;">✓ 選択中 <span id="fp-dormant-selected-count" style="color:#FCD34D;font-weight:900;">${enriched.length}</span>名 に送信</div>
               <div style="font-size:10px;color:#CBD5E1;margin-top:2px;">⚠ 送信後は取消不可。送信前に文面を確認してください</div>
             </div>
-            <button id="fp-dormant-send" style="background:#fff;color:#0F172A;border:none;padding:14px 28px;border-radius:8px;font-size:14px;font-weight:900;letter-spacing:0.08em;cursor:pointer;font-family:'Inter','Noto Sans JP',sans-serif;box-shadow:0 4px 14px rgba(255,255,255,0.18);">✨ 選択した方に一斉送信</button>
+            <div class="btn-cta-primary-wrap">
+              <span class="btn-cta-primary-chip">\\ 全員に 1クリック /</span>
+              <button id="fp-dormant-send" class="btn-cta-primary">
+                <span>選んだ方に 一斉送信</span>
+                <span class="cta-arrow">→</span>
+              </button>
+            </div>
           </div>
           <div id="fp-dormant-result" style="margin-top:14px;"></div>
         `}
@@ -766,21 +784,62 @@
       const btn = document.getElementById('fp-dormant-send');
       const result = document.getElementById('fp-dormant-result');
       btn.disabled = true; btn.textContent = '送信中...';
+      // ★ 全画面オーバーレイで操作ブロック (誤クリック / 中断 防止)
+      showSendingOverlay(`ご無沙汰フォロー 一斉送信中 (${selected.length}名)`, selected.length);
+      // ★ multi-tenant sendLineMessage 経由 (旧 /api/send-line = demo GAS token で別チャンネル失敗するのを修正)
+      const { initializeApp: _ia, getApps: _ga } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js');
+      const { getFunctions: _gf, httpsCallable: _hc } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-functions.js');
+      const _app = _ga()[0] || _ia({ apiKey: 'AIzaSyAmVAEe9l9e1Yo_dzzJdbTVU35wWKd2sH4', authDomain: 'skeleton-fp-compass-632026.firebaseapp.com', projectId: 'skeleton-fp-compass-632026' });
+      const _fn = _hc(_gf(_app, 'asia-northeast1'), 'sendLineMessage');
       let ok = 0, fail = 0;
-      for (const s of selected) {
+      const failDetails = [];
+      for (let i = 0; i < selected.length; i++) {
+        const s = selected[i];
+        updateSendingProgress(i, selected.length, s.name);
         const text = tpl.replace(/\{name\}/g, s.name);
         try {
-          const r = await fetch(CLOUD_RUN_BASE + '/api/send-line', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId: s.uid, text }),
-          });
-          const d = await r.json();
-          if (d.ok) ok++; else fail++;
-        } catch (_) { fail++; }
+          // customer id 紐付け: DUMMY_CLIENTS から逆引き
+          const cClient = (window.DUMMY_CLIENTS || []).find(c => c.lineFriendId === s.uid);
+          if (cClient) {
+            await _fn({ customerId: cClient.id, text });
+          } else {
+            await _fn({ lineFriendId: s.uid, text });
+          }
+          ok++;
+        } catch (e) {
+          fail++;
+          const m = e?.message || String(e);
+          const reason = /LINE 未連携|failed-precondition/.test(m)
+            ? 'あなたの LINE 公式アカウント が 未連携 (アカウント設定で 接続してください)'
+            : /Failed to send|友だち追加/.test(m)
+              ? `お客様 が この LINE 公式アカウント を 友だち未追加`
+              : m.slice(0, 200);
+          failDetails.push({ name: s.name, hint: reason });
+        }
         // レート制限対策 200ms 待つ
         await new Promise(res => setTimeout(res, 200));
       }
-      result.innerHTML = `<div style="background:${fail===0?'#F0FDF4':'#FEF3C7'};border:1px solid ${fail===0?'#10B981':'#F59E0B'};color:${fail===0?'#065F46':'#92400E'};padding:14px 18px;border-radius:8px;font-size:13px;font-weight:700;">✓ 送信完了: 成功 ${ok}名 / 失敗 ${fail}名</div>`;
+      updateSendingProgress(selected.length, selected.length, '');
+      closeSendingOverlay();
+      // ★ 結果バナー: 失敗時は理由ごとにグループ化して表示
+      let detailHtml = '';
+      if (failDetails.length > 0) {
+        // hint 別にまとめる
+        const groups = {};
+        failDetails.forEach(d => {
+          // ★ code 400 は LINE が「送信できない」一般エラー — 4つの可能性を併記
+          let key = d.hint
+            || (d.code === 400 ? 'LINE 配信エラー — 次のいずれか: ①友だち未追加/ブロック ②無効なuserId ③LINE OA のチャンネル違い ④月間配信上限到達 (LINE Official Account Manager で確認推奨)' : (d.error || '理由不明'));
+          (groups[key] = groups[key] || []).push(d.name);
+        });
+        detailHtml = '<div style="background:#fff;border:1px solid #FCA5A5;border-radius:8px;padding:14px 18px;margin-top:8px;font-size:12.5px;color:#7F1D1D;line-height:1.65;">'
+          + '<div style="font-weight:800;margin-bottom:6px;font-size:13px;">失敗の内訳:</div>'
+          + Object.keys(groups).map(reason => `<div style="margin-bottom:4px;"><strong>・${escapeHtml(reason)}</strong>: ${groups[reason].join(', ')}</div>`).join('')
+          + '</div>';
+      }
+      result.innerHTML = `<div style="background:${fail===0?'#F0FDF4':'#FEF3C7'};border:1px solid ${fail===0?'#10B981':'#F59E0B'};color:${fail===0?'#065F46':'#92400E'};padding:14px 18px;border-radius:8px;font-size:13px;font-weight:700;">${fail===0?'✓':'⚠'} 送信完了: 成功 ${ok}名 / 失敗 ${fail}名</div>${detailHtml}`;
+      // ★ オーナーfb: 結果を見えるところまでスクロール (画面外で気付かないバグ防止)
+      try { result.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (_) {}
       btn.disabled = false; btn.textContent = '✨ 選択した方に一斉送信';
     });
   }
@@ -905,10 +964,20 @@
     const heroColor = hero ? accents[hero.kind] : accents.ok;
 
     v.innerHTML = `
-      <div style="margin:0 0 28px;padding:0 0 16px;border-bottom:1px solid #e8e2d4;">
-        <div style="font-size:10.5px;font-weight:700;color:#8b7d5d;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:6px;">New Consultation</div>
-        <h1 style="font-family:'Noto Serif JP',serif;font-size:28px;font-weight:700;letter-spacing:0.02em;margin:0 0 6px;color:#1f2a3f;">新規相談</h1>
-        <p style="color:#6b7280;font-size:13px;margin:0;line-height:1.6;">LINE — アンケート — 候補日 — Zoom面談 — 完了 までの進行状況</p>
+      <div style="margin:0 0 18px;padding:0 0 16px;border-bottom:1px solid #e8e2d4;display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;">
+        <div>
+          <div style="font-size:10.5px;font-weight:700;color:#8b7d5d;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:6px;">New Consultation</div>
+          <h1 style="font-family:'Noto Serif JP',serif;font-size:28px;font-weight:700;letter-spacing:0.02em;margin:0 0 6px;color:#1f2a3f;">新規相談</h1>
+          <p style="color:#6b7280;font-size:13px;margin:0;line-height:1.6;">LINE — アンケート — 候補日 — Zoom面談 — 完了 までの進行状況</p>
+        </div>
+        <!-- ★ 急遽対面録画 (予約不要・お客様が突然来た時用) -->
+        <button id="fp-quick-inperson"
+          style="background:linear-gradient(135deg,#7C3AED,#5B21B6);color:#fff;border:none;padding:14px 22px;border-radius:10px;font-size:13.5px;font-weight:800;cursor:pointer;font-family:'Hiragino Sans',sans-serif;letter-spacing:0.04em;box-shadow:0 6px 20px rgba(124,58,237,0.35);display:flex;align-items:center;gap:10px;white-space:nowrap;"
+          title="急に対面相談が入った時 → ボタン1つで録画開始 (議事録は自動で作られます)">
+          <span style="font-size:18px;line-height:1;">●</span>
+          <span>急遽 対面録画開始</span>
+          <span style="background:rgba(255,255,255,0.18);font-size:10px;padding:2px 7px;border-radius:10px;font-weight:700;letter-spacing:0.06em;">予約不要</span>
+        </button>
       </div>
 
       ${isDemo ? '<div style="background:#fdfbf4;border:1px solid #e8d9a8;border-radius:6px;padding:11px 16px;margin-bottom:24px;font-size:12px;color:#5e4d1a;font-family:\'Noto Sans JP\',sans-serif;letter-spacing:0.02em;"><strong style="font-weight:700;">Note —</strong> 表示中の候補日待ち4件はサンプルです。本番では実際のLINEアンケート回答が並びます</div>' : ''}
@@ -943,12 +1012,10 @@
           <h2 style="font-family:'Noto Serif JP',serif;font-size:18px;margin:0;font-weight:600;color:#1f2a3f;">FP 作業フロー</h2>
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:14px;">
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:14px;">
         ${[
           { label: '候補日確定', desc: 'お客様の3候補から確定', value: pendingConfirm, unit: '名', target: '#section-confirm', accent: accents.urgent, active: pendingConfirm > 0, step: '01' },
           { label: 'Zoom 打ち合わせ予定', desc: '確定済 / 面談日待ち', value: upcomingZoomCount, unit: '件', target: '#section-recording', accent: accents.upcoming, active: upcomingZoomCount > 0, step: '02' },
-          { label: '面談中 (録画ON)', desc: '今まさに録画してる面談', value: recordingNow, unit: '件', target: '#section-recording', accent: accents.active, active: recordingNow > 0, step: '03' },
-          { label: 'フォロー対象', desc: '途中で止まったお客様', value: aftercare.length, unit: '名', target: '#section-aftercare', accent: accents.followup, active: aftercare.length > 0, step: '04' },
         ].map(c => `
           <a href="${c.target}" style="text-decoration:none;color:inherit;background:#fff;border:1px solid ${c.active ? c.accent.border + '55' : '#e8e2d4'};${c.active ? `border-top:2px solid ${c.accent.border};` : ''}border-radius:8px;padding:18px 18px 16px;display:flex;flex-direction:column;gap:4px;transition:all 0.15s;${c.active ? `box-shadow:0 1px 3px rgba(15,23,42,0.04),0 6px 20px ${c.accent.border}1f;` : 'box-shadow:0 1px 2px rgba(15,23,42,0.03);'}">
             <div style="display:flex;align-items:center;justify-content:space-between;">
@@ -965,9 +1032,7 @@
       <div style="background:#fdfbf4;border:1px solid #e8d9a8;border-radius:8px;padding:14px 20px;margin-bottom:36px;font-size:11.5px;color:#5e4d1a;line-height:1.7;">
         <div style="font-size:10px;font-weight:700;color:#8b7d5d;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:6px;">How it works</div>
         <strong style="color:#1f2a3f;font-weight:700;">01</strong> アンケート回答+候補日3つが届いたら確定 →
-        <strong style="color:#1f2a3f;font-weight:700;">02</strong> Zoom URLが発行され面談日待ち →
-        <strong style="color:#1f2a3f;font-weight:700;">03</strong> 面談当日「録画ONでZoom開始」で録画中に →
-        <strong style="color:#1f2a3f;font-weight:700;">04</strong> 途中で止まったお客様は別途リスト化
+        <strong style="color:#1f2a3f;font-weight:700;">02</strong> Zoom URLが発行され面談日待ち → 面談当日「録画ONでZoom開始」で録画開始 → 終了後 面談履歴タブに自動アーカイブ
       </div>
 
       <section class="board-section" id="section-confirm">
@@ -1005,20 +1070,13 @@
 
       <section class="board-section" id="section-aftercare" style="margin-top:36px;">
         <div style="margin:0 0 14px;padding-bottom:10px;border-bottom:1px solid #e8e2d4;">
-          <div style="font-size:10.5px;font-weight:700;color:#8b7d5d;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:3px;">Follow-up</div>
-          <h2 style="font-family:'Noto Serif JP',serif;font-size:18px;margin:0;font-weight:600;color:#1f2a3f;">フォローアップ対象 ${aftercare.length > 0 ? `<span style="font-size:11px;background:#9a5a18;color:#fff;padding:2px 8px;border-radius:10px;margin-left:8px;font-family:'Inter',sans-serif;font-weight:700;letter-spacing:0.04em;">${aftercare.length} 名</span>` : ''}</h2>
+          <div style="font-size:10.5px;font-weight:700;color:#8b7d5d;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:3px;">Stuck / Re-engage</div>
+          <h2 style="font-family:'Noto Serif JP',serif;font-size:18px;margin:0;font-weight:600;color:#1f2a3f;">対応漏れ ${aftercare.length > 0 ? `<span style="font-size:11px;background:#9a5a18;color:#fff;padding:2px 8px;border-radius:10px;margin-left:8px;font-family:'Inter',sans-serif;font-weight:700;letter-spacing:0.04em;">${aftercare.length} 名</span>` : ''}</h2>
         </div>
-        <p style="color:#6b7280;font-size:12.5px;margin:0 0 18px;line-height:1.65;letter-spacing:0.02em;">アンケート途中・候補日提示後・面談キャンセル等で止まっている方 / LINEで追加メッセージを送りましょう</p>
+        <p style="color:#6b7280;font-size:12.5px;margin:0 0 18px;line-height:1.65;letter-spacing:0.02em;">アンケート途中・候補日提示後・面談キャンセル等で<strong>途中で止まっている方</strong> / LINEで追撃メッセージを送りましょう</p>
         <div id="aftercare-list">
-          ${aftercare.length === 0 ? `<div style="background:#fff;border:1px dashed #e8e2d4;border-radius:8px;padding:28px 30px;color:#6b7280;font-size:12.5px;line-height:1.75;letter-spacing:0.02em;">
-            <strong style="color:#1f2a3f;font-weight:700;font-size:13.5px;display:block;margin-bottom:8px;">フォロー必要な方はいません</strong>
-            ここには <strong style="color:#1f2a3f;">途中で止まってる人</strong> が自動で並びます:<br>
-            ・友だち追加したがアンケート未回答 (3日以上)<br>
-            ・アンケート回答済みだが候補日を提示してない (5日以上)<br>
-            ・候補日提示済みだが FP が確定操作してない (3日以上)<br>
-            ・面談日が過ぎたが完了マークがついてない<br>
-            <br>
-            <span style="font-size:11px;color:#94a3b8;">該当者が出てきたら 「LINE 追撃」 ボタンでテンプレ自動入力 → ワンクリック送信できます</span>
+          ${aftercare.length === 0 ? `<div style="background:#fff;border:1px dashed #e8e2d4;border-radius:8px;padding:20px 26px;color:#6b7280;font-size:12.5px;line-height:1.7;letter-spacing:0.02em;">
+            <strong style="color:#1f2a3f;">途中で止まってる方はいません</strong> · 該当者が出てきたら自動でここに並びます
           </div>` :
             aftercare.map(a => `
               <div style="background:var(--surface);border:1px solid var(--line);border-left:4px solid ${a.stage==='completion-pending'?'#06c755':(a.days>=14?'#b91c3c':(a.days>=7?'#f59e0b':'#0ea5e9'))};border-radius:10px;padding:14px 18px;margin-bottom:8px;display:grid;grid-template-columns:36px 1fr auto;gap:14px;align-items:center;">
@@ -1080,10 +1138,147 @@
     // カレンダー比較トグル
     const calBtn = document.getElementById('fp-toggle-cal');
     if (calBtn) calBtn.addEventListener('click', toggleCalendarSidePanel);
+    // ★ 急遽対面録画ボタン (予約不要)
+    const quickBtn = document.getElementById('fp-quick-inperson');
+    if (quickBtn && !quickBtn._bound) {
+      quickBtn._bound = true;
+      quickBtn.addEventListener('click', openQuickInpersonModal);
+    }
     // 起動時にも復元
     if (localStorage.getItem('fp-cal-side-open') === '1') ensureCalendarSidePanel();
     fillFunnelArea();
     fillSurveysList();
+  }
+
+  // ★ 急遽対面録画モーダル: 顧客選択 → カメラ録画開始 → 議事録自動生成
+  function openQuickInpersonModal() {
+    const clients = (window.DUMMY_CLIENTS || []);
+    const ov = document.createElement('div');
+    ov.id = 'fp-quick-inperson-modal';
+    ov.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.72);z-index:99999;display:flex;align-items:center;justify-content:center;font-family:"Hiragino Sans",sans-serif;';
+    ov.innerHTML = `
+      <div style="background:#fff;border-radius:16px;max-width:480px;width:92%;padding:28px;box-shadow:0 32px 80px rgba(0,0,0,0.4);">
+        <div style="font-size:11px;font-weight:800;color:#9A5A18;letter-spacing:0.14em;margin-bottom:6px;">QUICK START</div>
+        <h2 style="font-size:20px;font-weight:800;color:#111827;margin:0 0 6px;font-family:'Noto Serif JP',serif;">急遽 面談スタート</h2>
+        <p style="font-size:13px;color:#6b7280;line-height:1.65;margin:0 0 18px;">予約なしで お客様から相談が入った時はこちら。 <strong style="color:#9A5A18;">Zoom リンクを 即発行 して 双方参加</strong> するか、 <strong style="color:#1F2A3F;">対面で 録音だけ する</strong> かを 選んで 開始してください。</p>
+
+        <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;letter-spacing:0.04em;margin-bottom:6px;">お客様を選択</label>
+        <select id="fp-qi-client" style="width:100%;padding:11px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:14px;font-family:inherit;margin-bottom:14px;background:#fff;">
+          <option value="">— 顧客を選んでください —</option>
+          <option value="__new__">＋ 新規お客様として記録 (後で顧客登録)</option>
+          <optgroup label="既存顧客 (${clients.length}名)">
+            ${clients.map(c => `<option value="${escapeHtml(c.id)}">${escapeHtml(c.name || '?')} 様</option>`).join('')}
+          </optgroup>
+        </select>
+
+        <div id="fp-qi-newname-row" style="display:none;margin-bottom:14px;">
+          <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;letter-spacing:0.04em;margin-bottom:6px;">新規お客様のお名前 (議事録ラベル用)</label>
+          <input id="fp-qi-newname" type="text" placeholder="例: 山田 太郎" style="width:100%;padding:11px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:14px;font-family:inherit;">
+        </div>
+
+        <!-- ★ 急遽 開始 — 2モード (Zoom即発行 / 対面録音) — カメラ/マイク権限は対面のみ必要 -->
+        <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;letter-spacing:0.04em;margin-bottom:8px;">面談スタイル</label>
+        <div id="fp-qi-mode-grid" style="display:grid;grid-template-columns:1fr;gap:8px;margin-bottom:16px;">
+          <label class="fp-qi-mode" data-mode="zoom" style="display:flex;gap:12px;padding:16px 18px;border:1.5px solid #C19A3A;border-radius:10px;cursor:pointer;background:#FBF5E3;transition:border-color .12s,background .12s;">
+            <input type="radio" name="fp-qi-mode" value="zoom" checked style="margin-top:3px;flex-shrink:0;">
+            <div style="flex:1;">
+              <div style="font-size:11px;font-weight:800;color:#9A5A18;letter-spacing:0.12em;margin-bottom:3px;">RECOMMENDED</div>
+              <div style="font-size:15px;font-weight:800;color:#1F2A3F;line-height:1.4;">🎥 Zoom リンクを 今すぐ発行 → 双方参加</div>
+              <div style="font-size:12px;color:#6b7280;margin-top:4px;line-height:1.6;">お客様の LINE に Zoom URL を 即push。 FP も 新タブで host参加。 マイク/カメラ 権限は不要 (Zoom 側で設定)。</div>
+            </div>
+          </label>
+          <label class="fp-qi-mode" data-mode="audio" style="display:flex;gap:12px;padding:16px 18px;border:1.5px solid #E5E7EB;border-radius:10px;cursor:pointer;background:#fff;transition:border-color .12s,background .12s;">
+            <input type="radio" name="fp-qi-mode" value="audio" style="margin-top:3px;flex-shrink:0;">
+            <div style="flex:1;">
+              <div style="font-size:11px;font-weight:800;color:#6B7280;letter-spacing:0.12em;margin-bottom:3px;">IN-PERSON</div>
+              <div style="font-size:15px;font-weight:800;color:#1F2A3F;line-height:1.4;">🎤 対面で録音だけ する</div>
+              <div style="font-size:12px;color:#6b7280;margin-top:4px;line-height:1.6;">対面相談時に PC のマイクで 録音 → AI議事録 自動生成。 マイク権限が必要。</div>
+            </div>
+          </label>
+          <label class="fp-qi-mode" data-mode="memo" style="display:flex;gap:12px;padding:14px 18px;border:1.5px solid #E5E7EB;border-radius:10px;cursor:pointer;background:#fff;transition:border-color .12s,background .12s;">
+            <input type="radio" name="fp-qi-mode" value="memo" style="margin-top:3px;flex-shrink:0;">
+            <div style="flex:1;">
+              <div style="font-size:11px;font-weight:800;color:#6B7280;letter-spacing:0.12em;margin-bottom:3px;">TEXT ONLY</div>
+              <div style="font-size:14px;font-weight:800;color:#1F2A3F;line-height:1.4;">📝 録音せず メモだけ 書く</div>
+              <div style="font-size:11.5px;color:#6b7280;margin-top:3px;line-height:1.55;">手入力で議事録を残す。 自動生成はなし。</div>
+            </div>
+          </label>
+        </div>
+
+        <div style="display:flex;gap:10px;">
+          <button id="fp-qi-start" class="btn-cta-primary" style="flex:2;justify-content:center;" disabled>
+            <span>選んだスタイルで開始</span>
+            <span class="cta-arrow">→</span>
+          </button>
+          <button id="fp-qi-cancel" class="btn-cta-ghost">キャンセル</button>
+        </div>
+      </div>
+      <style>
+        .fp-qi-mode:has(input:checked) { border-color: #C19A3A !important; background: #FBF5E3 !important; }
+        .fp-qi-mode:hover { border-color: #C19A3A; }
+      </style>`;
+    document.body.appendChild(ov);
+
+    const sel = ov.querySelector('#fp-qi-client');
+    const newRow = ov.querySelector('#fp-qi-newname-row');
+    const newInput = ov.querySelector('#fp-qi-newname');
+    const startBtn = ov.querySelector('#fp-qi-start');
+    sel.addEventListener('change', () => {
+      const v = sel.value;
+      newRow.style.display = v === '__new__' ? '' : 'none';
+      const valid = v && (v !== '__new__' || (newInput.value || '').trim().length > 0);
+      startBtn.disabled = !valid;
+    });
+    newInput.addEventListener('input', () => {
+      startBtn.disabled = !(sel.value === '__new__' && newInput.value.trim().length > 0);
+    });
+
+    ov.querySelector('#fp-qi-cancel').addEventListener('click', () => ov.remove());
+
+    startBtn.addEventListener('click', async () => {
+      const v = sel.value;
+      let clientName, clientId;
+      if (v === '__new__') {
+        clientName = (newInput.value || '').trim();
+        clientId = 'quick-' + Date.now();
+      } else {
+        const c = clients.find(x => x.id === v);
+        if (!c) return;
+        clientName = c.name || 'お客様';
+        clientId = c.id;
+      }
+      const mode = ov.querySelector('input[name="fp-qi-mode"]:checked')?.value || 'zoom';
+      const inpersonTs = 'quick-' + Date.now();
+      // ★ 2026-06-22 roundM: 新規お客様 (clientId が quick-) で 録音/メモ モード時は、
+      //   先に Firestore に customer doc を 作成して resolvedClientId を 取得 → 顧客台帳 自動反映
+      let effectiveClientId = clientId;
+      if (clientId.startsWith('quick-') && (mode === 'audio' || mode === 'memo')) {
+        try {
+          const { addDoc, collection, serverTimestamp } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js');
+          const tid = window.__fp?.tenantId;
+          if (tid) {
+            const newRef = await addDoc(collection(window.__fp.db, `tenants/${tid}/customers`), {
+              name: clientName, status: 'new', source: 'quick-inperson',
+              createdAt: serverTimestamp(), firstContactAt: serverTimestamp(),
+              note: '急遽 ' + (mode === 'audio' ? '対面録音' : '対面メモ') + ' から 自動追加',
+            });
+            effectiveClientId = newRef.id;
+            // refresh CRM 顧客台帳
+            if (window.refreshFirestoreCustomers) await window.refreshFirestoreCustomers();
+          }
+        } catch (e) { console.warn('quick customer firestore create failed:', e); }
+      }
+      try {
+        const existing = JSON.parse(localStorage.getItem('fp-quick-inperson-meta') || '[]');
+        existing.push({ ts: inpersonTs, clientId: effectiveClientId, clientName, startedAt: new Date().toISOString(), mode });
+        localStorage.setItem('fp-quick-inperson-meta', JSON.stringify(existing.slice(-50)));
+      } catch (_) {}
+      ov.remove();
+      // モード分岐
+      if (mode === 'zoom')        await startQuickZoom(effectiveClientId, clientName);
+      else if (mode === 'audio')  await startAudioOnlyRecording(inpersonTs);
+      else                        await openMemoOnlyForQuick(inpersonTs, effectiveClientId, clientName);
+    });
   }
 
   // Sheets が自動で日付型に変換してしまった ISO 文字列を JST の "YYYY-MM-DD / 帯+時間" に戻す
@@ -1144,21 +1339,20 @@
       const snap = await getDocs(collection(db, 'tenants', tenantId, 'customers'));
       const pendingFs = [];
       const confirmedFs = [];
+      const allFs = []; // ★ 2026-06-22 roundN: 全顧客 (source問わず) を DUMMY_CLIENTS 同期対象に
       snap.forEach(d => {
         const c = d.data();
-        if (c.source !== 'line_survey') return;
-        if ((c.meetingCandidates||[]).length > 0 && !c.confirmedSlot) {
-          pendingFs.push({ docId: d.id, ...c });
-        }
-        if (c.confirmedSlot && c.zoomUrl) {
-          confirmedFs.push({ docId: d.id, ...c });
+        const obj = { docId: d.id, ...c };
+        allFs.push(obj);  // ★ 全 source を sync 対象 (旧バグ: source!=='line_survey' で除外 → quick-zoom/quick-inperson 顧客が 顧客台帳に出なかった)
+        if (c.source === 'line_survey') {
+          if ((c.meetingCandidates||[]).length > 0 && !c.confirmedSlot) pendingFs.push(obj);
+          if (c.confirmedSlot && c.zoomUrl) confirmedFs.push(obj);
         }
       });
       window._fpFirestoreCustomers = pendingFs;
       window._fpFirestoreConfirmed = confirmedFs;
-      // ★ Firestore 多テナント顧客 を CRM顧客台帳 (DUMMY_CLIENTS) に 自動同期
-      //   未同期だと openClientModal('fs-xxx') が clients.find undefined で early return = 「クリックで何も起きない」
-      try { syncFirestoreCustomersToClients(pendingFs.concat(confirmedFs)); } catch (e) { console.warn('syncFirestoreCustomersToClients:', e); }
+      // ★ Firestore 全顧客 (line_survey + quick-zoom + quick-inperson 含む) を DUMMY_CLIENTS に sync
+      try { syncFirestoreCustomersToClients(allFs); } catch (e) { console.warn('syncFirestoreCustomersToClients:', e); }
       try { if (currentSubview === 'leadHub') renderLeadHubInner(); } catch(_) {}
     } catch (e) { console.warn('refreshFirestoreCustomers:', e); }
   }
@@ -1485,21 +1679,23 @@
       let cta = '';
       // キャンセルボタン (録画前のみ表示。録画開始したら出さない)
       const cancelBtnHtml = (rec !== 'recording' && rec !== 'saved')
-        ? `<button class="btn-mini fp-cancel-booking" data-cancel-ts="${tsEnc}" style="background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;font-weight:700;">✕ キャンセル</button>`
+        ? `<button class="btn-mini-action is-danger fp-cancel-booking" data-cancel-ts="${tsEnc}"><span class="icon">✕</span>キャンセル</button>`
         : '';
       if (rec === 'recording') {
         cta = `<button class="btn-rec-stop" data-rec-stop="${tsEnc}">■ 録画停止</button>
                <a class="btn-mini" href="${zUrl}" target="_blank">Zoomを開く</a>`;
       } else if (rec === 'saved') {
         // ★ 「完了」 ボタン 廃止 — 録画停止で 自動 archive + 議事録 顧客カード反映
-        cta = `<button class="btn-mini" data-open-memo="${tsEnc}" style="background:linear-gradient(135deg,#b8893d,#d4a017);border:none;color:#fff;font-weight:700;">📝 メモ・タスク化${savedTasksCount > 0 ? ' ('+savedTasksCount+')' : ''}</button>`;
+        cta = `<button class="btn-mini-action" data-open-memo="${tsEnc}"><span class="icon">📝</span>メモ・タスク化${savedTasksCount > 0 ? ' ('+savedTasksCount+')' : ''}</button>`;
       } else if (zUrl) {
         // ★ 「完了」 ボタン 廃止 — 録画停止で 自動完了 (Zoom待ち から自動消去)
         cta = `<button class="btn-rec-start" data-rec-start="${tsEnc}" data-zoom="${zUrl}">● 録画ONでZoom開始</button>
-               <button class="btn-mini" data-open-memo="${tsEnc}" style="background:#f8fafc;border:1px solid #e5e7eb;color:#374151;">📝 メモ${savedTasksCount > 0 ? ' ('+savedTasksCount+'件)' : ''}</button>
+               <button class="btn-mini-action" data-open-memo="${tsEnc}"><span class="icon">📝</span>メモ${savedTasksCount > 0 ? ' ('+savedTasksCount+'件)' : ''}</button>
                ${cancelBtnHtml}`;
       } else {
-        cta = cancelBtnHtml;
+        cta = `<button class="btn-rec-start" data-rec-start="${tsEnc}" data-rec-mode="inperson" style="background:linear-gradient(135deg,#7C3AED,#6D28D9);">● 対面録画開始</button>
+               <button class="btn-mini-action" data-open-memo="${tsEnc}"><span class="icon">📝</span>メモ${savedTasksCount > 0 ? ' ('+savedTasksCount+'件)' : ''}</button>
+               ${cancelBtnHtml}`;
       }
       const recPill = rec === 'recording' ? '<span class="rec-pill recording">● 録画中</span>'
         : rec === 'saved' ? '<span class="rec-pill saved">📼 録画保存済</span>' : '';
@@ -2132,6 +2328,506 @@
         }
       }
     });
+  }
+
+  // 対面モード録画: webcam + マイクで録画 → 同じ AI議事録パイプラインへ
+  async function startWebcamRecording(bookingTs) {
+    const R = window._fpRecorder;
+    let stream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' },
+        audio: { echoCancellation: true, noiseSuppression: true, sampleRate: 44100 },
+      });
+    } catch (e) {
+      // ★ オーナーfb 2026-06-22 (roundG): カメラ/マイク 失敗時に 進める fallback を 3 つ提示
+      //   1) マイクのみ録音 (音声 → AI議事録 まで同じパイプライン)
+      //   2) メモのみ (録画なしで メモモーダル 開く)
+      //   3) 設定見直してリロード
+      const errName = e?.name || '';
+      const isPermission = /NotAllowed|Permission/i.test(errName);
+      const isNoDevice = /NotFound|DevicesNotFound/i.test(errName);
+      const isInUse = /NotReadable|InUse|TrackStart/i.test(errName);
+      const ov = document.createElement('div');
+      ov.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.78);z-index:2147483647;display:flex;align-items:center;justify-content:center;font-family:"Hiragino Sans",sans-serif;overflow-y:auto;padding:24px 0;';
+      const heading = isPermission ? 'カメラ / マイク のアクセス が ブロックされています'
+        : isNoDevice ? 'カメラ / マイク が 見つかりません'
+        : isInUse ? 'カメラ / マイク が 他のアプリ で 使用中 です'
+        : 'カメラ起動 に 失敗しました';
+      ov.innerHTML = `
+        <div style="background:#fff;border-radius:14px;max-width:520px;width:92%;padding:28px 32px;box-shadow:0 28px 80px rgba(0,0,0,0.4);">
+          <div style="display:inline-flex;align-items:center;gap:8px;background:#FEF3C7;color:#92400E;font-size:11px;font-weight:800;padding:5px 12px;border-radius:99px;letter-spacing:0.1em;margin-bottom:14px;">⚠ 録画準備 に 問題</div>
+          <h2 style="font-family:'Noto Serif JP',serif;font-size:19px;font-weight:700;color:#111827;margin:0 0 8px;line-height:1.45;">${heading}</h2>
+          <p style="font-size:13px;color:#6b7280;line-height:1.75;margin:0 0 18px;">大丈夫です。 <strong style="color:#111827;">下のどれかを選んで そのまま 面談に進めます</strong>。 設定の修正は あとで OK。</p>
+
+          <!-- Option 1: マイクだけで録音 (大本命) -->
+          <button id="fp-rec-fallback-audio" style="display:block;width:100%;text-align:left;background:linear-gradient(135deg,#C19A3A,#9A5A18);color:#fff;border:none;border-radius:11px;padding:18px 22px;margin-bottom:10px;cursor:pointer;font-family:inherit;transition:transform .15s,box-shadow .15s;box-shadow:0 6px 18px rgba(193,154,58,0.3);">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;">
+              <div>
+                <div style="font-size:11px;font-weight:800;letter-spacing:0.14em;opacity:0.85;margin-bottom:4px;">RECOMMENDED</div>
+                <div style="font-size:15.5px;font-weight:800;letter-spacing:0.03em;line-height:1.4;">🎤 マイクだけで 録音する</div>
+                <div style="font-size:11.5px;opacity:0.9;margin-top:4px;line-height:1.55;">カメラ無しで OK。 音声から AI議事録 まで 同じ流れで 作れます。</div>
+              </div>
+              <span style="font-size:22px;flex-shrink:0;">→</span>
+            </div>
+          </button>
+
+          <!-- Option 2: メモのみ -->
+          <button id="fp-rec-fallback-memo" style="display:block;width:100%;text-align:left;background:#fff;color:#1F2A3F;border:1.5px solid #E8E2D4;border-radius:11px;padding:16px 22px;margin-bottom:10px;cursor:pointer;font-family:inherit;transition:background .12s,border-color .12s;">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;">
+              <div>
+                <div style="font-size:11px;font-weight:800;color:#9A5A18;letter-spacing:0.14em;margin-bottom:4px;">手書きメモ</div>
+                <div style="font-size:14px;font-weight:700;letter-spacing:0.03em;line-height:1.4;">📝 録音せず メモだけ 書く</div>
+                <div style="font-size:11.5px;color:#6b7280;margin-top:4px;line-height:1.55;">手入力で 議事録を 残す。 録音 / 議事録自動生成 は なし。</div>
+              </div>
+              <span style="font-size:18px;color:#9A5A18;flex-shrink:0;">→</span>
+            </div>
+          </button>
+
+          <!-- Option 3: 設定見直す (技術系) -->
+          <details style="margin-top:14px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:0;">
+            <summary style="cursor:pointer;padding:12px 16px;font-size:12.5px;font-weight:700;color:#475569;list-style:none;display:flex;align-items:center;justify-content:space-between;">
+              <span>⚙ カメラ/マイク を 設定して 録画 する (技術詳細)</span>
+              <span style="font-size:14px;">▾</span>
+            </summary>
+            <div style="padding:0 16px 14px;font-size:12.5px;color:#475569;line-height:1.85;">
+              <ol style="margin:0;padding-left:22px;">
+                ${(isPermission ? [
+                  '画面上部 アドレスバー左の <strong>🎥/🎤 アイコン</strong> をクリック',
+                  '「常に許可」を選択 → ページをリロード',
+                ] : isNoDevice ? [
+                  'PC に カメラ・マイク が 内蔵 / USB 接続されているか 確認',
+                  'Mac: <strong>システム設定 → プライバシーとセキュリティ → カメラ/マイク</strong> で ブラウザ ON',
+                ] : isInUse ? [
+                  'Zoom / Meet / Teams 等 他のビデオ会議アプリ を 完全終了',
+                  '別タブで カメラ を使う アプリ も 閉じる',
+                ] : [
+                  'ブラウザをリロード → 再試行',
+                ]).map(s => `<li style="margin-bottom:4px;">${s}</li>`).join('')}
+              </ol>
+              <button onclick="location.reload()" class="btn-mini-action" style="margin-top:12px;">↻ ページをリロード</button>
+              <div style="margin-top:12px;font-size:10.5px;color:#94A3B8;font-family:'JetBrains Mono',monospace;line-height:1.5;">技術: ${escapeHtml(String(errName || e?.message || e).slice(0, 160))}</div>
+            </div>
+          </details>
+
+          <div style="display:flex;justify-content:flex-end;margin-top:14px;">
+            <button class="btn-cta-ghost" id="fp-rec-err-close">あとにする</button>
+          </div>
+        </div>`;
+      document.body.appendChild(ov);
+
+      const closeOv = () => ov.remove();
+      document.getElementById('fp-rec-err-close').addEventListener('click', closeOv);
+
+      // Option 1: マイクのみで録音
+      document.getElementById('fp-rec-fallback-audio').addEventListener('click', async () => {
+        closeOv();
+        await startAudioOnlyRecording(bookingTs);
+      });
+
+      // Option 2: メモのみ → 既存 memo モーダル を開く
+      document.getElementById('fp-rec-fallback-memo').addEventListener('click', () => {
+        closeOv();
+        if (typeof openMemoModal === 'function') {
+          openMemoModal(bookingTs);
+        } else {
+          // 既存 data-open-memo ボタン を 探して click
+          const memoBtn = document.querySelector(`[data-open-memo="${bookingTs}"]`);
+          if (memoBtn) memoBtn.click();
+          else alert('メモ機能を 起動できませんでした。 顧客カード → 議事録 から 手入力できます。');
+        }
+      });
+      return;
+    }
+    // 録画プレビュー (小さく右下に表示)
+    let previewEl = document.getElementById('fp-webcam-preview');
+    if (!previewEl) {
+      previewEl = document.createElement('video');
+      previewEl.id = 'fp-webcam-preview';
+      previewEl.muted = true;
+      previewEl.autoplay = true;
+      previewEl.playsInline = true;
+      previewEl.style.cssText = 'position:fixed;bottom:80px;right:20px;width:180px;height:120px;border-radius:10px;border:3px solid #DC2626;z-index:9990;object-fit:cover;box-shadow:0 8px 24px rgba(0,0,0,0.4);';
+      document.body.appendChild(previewEl);
+    }
+    previewEl.srcObject = stream;
+    const chunks = [];
+    const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus') ? 'video/webm;codecs=vp9,opus'
+      : MediaRecorder.isTypeSupported('video/webm') ? 'video/webm' : 'video/mp4';
+    const mr = new MediaRecorder(stream, { mimeType });
+    mr.ondataavailable = e => { if (e.data && e.data.size > 0) chunks.push(e.data); };
+    mr.onstop = async () => {
+      stream.getTracks().forEach(t => t.stop());
+      if (previewEl) { previewEl.remove(); }
+      const blob = new Blob(chunks, { type: mimeType });
+      R.blob = blob;
+      R.bookingTs = bookingTs;
+      R.mediaRecorder = null;
+      try { await fetch(CLOUD_RUN_BASE + '/api/recording/stop?ts=' + encodeURIComponent(bookingTs), { method: 'POST' }); } catch (_) {}
+      // ★ 2026-06-22 roundJ: フル AI パイプライン (Drive + Whisper + Claude + 顧客保存 + 進捗UI)
+      const customerName = (function () {
+        try { return JSON.parse(localStorage.getItem('fp-quick-inperson-meta') || '[]').find(m => m.ts === bookingTs)?.clientName || 'お客様'; } catch (_) { return 'お客様'; }
+      })();
+      const customerId = (function () {
+        try { return JSON.parse(localStorage.getItem('fp-quick-inperson-meta') || '[]').find(m => m.ts === bookingTs)?.clientId || ''; } catch (_) { return ''; }
+      })();
+      const fallbackBooking = { ts: bookingTs, name: customerName, userId: customerId, isInperson: true };
+
+      try { showUnifiedProgressPanel(customerName, blob); } catch (_) {}
+      try { updateProgressStep('save', 'done'); updateProgressStep('drive', 'active'); updateProgressStep('ai', 'active'); } catch (_) {}
+      try { showCenterToast('議事録 を 生成中…', `${customerName} 様 の 対面録画 → AI で 文字起こし + 議事録 作成 中。 30-60秒 ほど お待ちください`, { tone: 'progress', duration: 0 }); } catch (_) {}
+
+      const drivePromise = autoUploadRecording(blob, bookingTs, customerName, fallbackBooking)
+        .then(() => { try { updateProgressStep('drive', 'done'); } catch(_){} })
+        .catch(() => { try { updateProgressStep('drive', 'error'); } catch(_){} });
+
+      let aiResult = null;
+      try { aiResult = await aiProcessRecording(blob, bookingTs, customerName, fallbackBooking); } catch (e) { console.error('aiProcessRecording fail:', e); }
+      if (aiResult && aiResult.ok) {
+        try { updateProgressStep('ai', 'done'); } catch(_){}
+        window._fpAIResult = { result: aiResult, customerName: customerName, booking: fallbackBooking };
+        try { autoSaveAIResult(aiResult, customerName, fallbackBooking); } catch(_){}
+        try { showProgressDoneAction(); } catch(_){}
+      } else {
+        try { updateProgressStep('ai', 'error', aiResult?.error); } catch(_){}
+        try {
+          autoSaveAIResult({
+            ok: true, bookingTs, userId: customerId, customerName,
+            summary: '⚠ AI処理 失敗\n\nエラー: ' + (aiResult?.error || '不明') + '\n\n録画ファイル自体は Drive に保存されています。',
+            transcript: '', key_concerns: ['AI処理エラー'], tasks: [], error: true,
+          }, customerName, fallbackBooking);
+        } catch(_){}
+      }
+      await drivePromise;
+      try { await onRecordingComplete(bookingTs, blob, URL.createObjectURL(blob)); } catch(_){}
+      await fetchLiveData();
+      try { renderLeadHubInner(); } catch(_){}
+      try { if (typeof renderMeetingHistory === 'function') renderMeetingHistory(); } catch(_){}
+    };
+    mr.start(3000);
+    R.mediaRecorder = mr;
+    R.bookingTs = bookingTs;
+    R.blob = null;
+    // GAS に録画開始を通知
+    try { await fetch(CLOUD_RUN_BASE + '/api/recording/start?ts=' + encodeURIComponent(bookingTs), { method: 'POST' }); } catch (_) {}
+    // ★ 同じく stopScreenRecording ボタン = 停止
+    await fetchLiveData();
+    renderLeadHubInner();
+  }
+
+  // ★ 2026-06-22 roundH: 急遽 Zoom 即発行 (オーナーfb: 「カメラ/マイク 関係ない、 Zoom リンク即発行 して双方参加」)
+  async function startQuickZoom(clientId, clientName) {
+    // 進行モーダル (Zoom発行中…)
+    const wait = document.createElement('div');
+    wait.id = 'fp-quick-zoom-wait';
+    wait.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.78);z-index:2147483646;display:flex;align-items:center;justify-content:center;font-family:"Hiragino Sans",sans-serif;';
+    wait.innerHTML = `
+      <div style="background:#fff;border-radius:14px;padding:32px 40px;max-width:420px;width:90%;box-shadow:0 32px 80px rgba(0,0,0,0.5);text-align:center;">
+        <div style="width:56px;height:56px;border:4px solid #E2E8F0;border-top-color:#C19A3A;border-radius:50%;margin:0 auto 18px;animation:fp-spin 0.9s linear infinite;"></div>
+        <div style="font-size:11px;font-weight:800;color:#9A5A18;letter-spacing:0.14em;margin-bottom:6px;">QUICK ZOOM</div>
+        <div style="font-size:17px;font-weight:800;color:#111827;font-family:'Noto Serif JP',serif;margin-bottom:6px;">${escapeHtml(clientName)} 様 / Zoom 発行中…</div>
+        <div style="font-size:12.5px;color:#6b7280;line-height:1.7;">Zoom Meeting を 作成 → お客様に LINE で URL 通知 → FP は host で 参加 します</div>
+      </div>
+      <style>@keyframes fp-spin { to { transform: rotate(360deg); } }</style>`;
+    document.body.appendChild(wait);
+
+    let result;
+    try {
+      const { initializeApp, getApps } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js');
+      const { getFunctions, httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-functions.js');
+      const app = getApps()[0] || initializeApp({
+        apiKey: 'AIzaSyAmVAEe9l9e1Yo_dzzJdbTVU35wWKd2sH4',
+        authDomain: 'skeleton-fp-compass-632026.firebaseapp.com',
+        projectId: 'skeleton-fp-compass-632026',
+      });
+      const fn = httpsCallable(getFunctions(app, 'asia-northeast1'), 'quickZoomMeeting');
+      const payload = clientId.startsWith('quick-')
+        ? { customerId: clientId, topic: clientName }   // quick-* + topic=clientName → CF が auto-create
+        : { customerId: clientId };
+      const res = await fn(payload);
+      result = res.data;
+      // ★ 2026-06-22 roundM: 新規顧客自動追加バグ修正
+      //   CF で Firestore に作っても CRM の DUMMY_CLIENTS に同期されてないとき 顧客台帳に出ない
+      //   → refreshFirestoreCustomers で 即同期 + ローカル meta も更新
+      if (result.autoCreatedCustomer && result.customerId) {
+        try {
+          if (window.refreshFirestoreCustomers) await window.refreshFirestoreCustomers();
+          // localStorage の急遽meta も resolvedCustomerId に書き換え (議事録 紐付け維持)
+          try {
+            const meta = JSON.parse(localStorage.getItem('fp-quick-inperson-meta') || '[]');
+            const last = meta[meta.length - 1];
+            if (last && last.clientId === clientId) {
+              last.clientId = result.customerId;
+              last.autoLinkedFromQuick = true;
+              localStorage.setItem('fp-quick-inperson-meta', JSON.stringify(meta));
+            }
+          } catch (_) {}
+        } catch (e) { console.warn('auto-create sync failed:', e); }
+      }
+    } catch (e) {
+      wait.remove();
+      const errMsg = e?.message || String(e);
+      const isNoZoom = /Zoom 未連携|failed-precondition/.test(errMsg);
+      alert(isNoZoom
+        ? `Zoom が 未連携 です。\n\nアカウント設定 → Zoom 連携 で 認証情報 (Account ID / Client ID / Client Secret) を 入れてから 再度 お試しください。\n\n→ /account.html#zoom`
+        : `Zoom 発行失敗: ${errMsg.slice(0, 300)}`);
+      return;
+    }
+
+    wait.remove();
+
+    // 成功 → 結果モーダル — LINE 送信成否で 出し分け
+    const ov = document.createElement('div');
+    ov.id = 'fp-quick-zoom-result';
+    ov.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.78);z-index:2147483647;display:flex;align-items:center;justify-content:center;font-family:"Hiragino Sans",sans-serif;padding:24px;overflow-y:auto;';
+
+    // QR コード (新規お客様 = LINE未送信 時に 一発でスマホに伝えられるよう)
+    const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(result.zoomUrl)}`;
+    const mailSubject = encodeURIComponent(`【${clientName} 様】Zoom 面談のご案内`);
+    const mailBody = encodeURIComponent(`${clientName} 様\n\nご相談 ありがとうございます。 下記 URL から Zoom に お入りください。\n\n${result.zoomUrl}\n\n何かあれば お気軽に ご連絡ください。`);
+    const mailtoUrl = `mailto:?subject=${mailSubject}&body=${mailBody}`;
+    const smsBody = encodeURIComponent(`${clientName}様 Zoom面談URLです → ${result.zoomUrl}`);
+    const smsUrl = `sms:?body=${smsBody}`;
+
+    ov.innerHTML = `
+      <div style="background:#fff;border-radius:14px;max-width:540px;width:100%;padding:28px 32px;box-shadow:0 32px 80px rgba(0,0,0,0.5);">
+        <div style="display:inline-flex;align-items:center;gap:8px;background:#FBF5E3;color:#9A5A18;font-size:11px;font-weight:800;padding:5px 12px;border-radius:99px;letter-spacing:0.12em;margin-bottom:14px;">⚡ Zoom 発行完了</div>
+        <h2 style="font-family:'Noto Serif JP',serif;font-size:20px;font-weight:700;color:#111827;margin:0 0 6px;">${escapeHtml(clientName)} 様 と Zoom 開始</h2>
+
+        ${result.linePushed
+          ? `<p style="font-size:12.5px;color:#6b7280;line-height:1.7;margin:0 0 16px;">下の <strong>「FPとして 参加」</strong> を 押すと 新タブで Zoom が起動。 お客様 にも すでに LINE で URL を 送信済 です。</p>
+             <div style="display:inline-flex;align-items:center;gap:6px;background:#D1FAE5;color:#065F46;font-size:11px;font-weight:800;padding:5px 12px;border-radius:99px;letter-spacing:0.08em;margin-bottom:14px;">✓ LINE 送信済</div>`
+          : `<p style="font-size:13.5px;color:#1F2A3F;line-height:1.7;margin:0 0 16px;"><strong style="color:#9A5A18;">LINE 未連携のお客様</strong>のため、 下の方法で URL を お伝えください。 まず <strong>「FPとして 参加」</strong> で Zoom 開いて お客様の入室を 待ちましょう。</p>`}
+
+        <!-- FP 用 host URL — メインCTA -->
+        <div style="background:#FBF5E3;border:1.5px solid #C19A3A;border-radius:10px;padding:14px 16px;margin-bottom:14px;">
+          <div style="font-size:10.5px;font-weight:800;color:#9A5A18;letter-spacing:0.14em;margin-bottom:8px;">FP HOST URL (あなた用)</div>
+          <a href="${escapeHtml(result.hostZoomUrl)}" target="_blank" rel="noopener noreferrer" class="btn-cta-primary" style="text-decoration:none;justify-content:center;width:100%;">
+            <span>FPとして Zoom に参加 (host)</span>
+            <span class="cta-arrow">→</span>
+          </a>
+        </div>
+
+        <!-- お客様用 URL 共有エリア -->
+        ${result.linePushed ? `
+          <details style="margin-top:14px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:0;">
+            <summary style="cursor:pointer;padding:12px 16px;font-size:12.5px;font-weight:700;color:#475569;list-style:none;display:flex;align-items:center;justify-content:space-between;">
+              <span>📋 お客様用 URL (コピー / 手動共有)</span>
+              <span style="font-size:14px;">▾</span>
+            </summary>
+            <div style="padding:0 16px 14px;">
+              <code style="display:block;font-size:11px;font-family:'JetBrains Mono',monospace;color:#1F2A3F;word-break:break-all;line-height:1.5;background:#fff;padding:8px 10px;border-radius:6px;border:1px solid #E2E8F0;">${escapeHtml(result.zoomUrl)}</code>
+              <button id="fp-qz-copy" class="btn-mini-action" style="margin-top:10px;"><span class="icon">📋</span>URLを コピー</button>
+            </div>
+          </details>
+        ` : `
+          <!-- LINE 未連携時: 共有手段を プロミネント に出す -->
+          <div style="background:#fff;border:2px solid #C19A3A;border-radius:12px;padding:18px 20px;">
+            <div style="font-size:10.5px;font-weight:800;color:#9A5A18;letter-spacing:0.14em;margin-bottom:10px;">お客様 へ 共有する</div>
+            <code style="display:block;font-size:12px;font-family:'JetBrains Mono',monospace;color:#1F2A3F;word-break:break-all;line-height:1.6;background:#FBF5E3;padding:10px 12px;border-radius:6px;border:1px solid #E8D9A8;margin-bottom:14px;">${escapeHtml(result.zoomUrl)}</code>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">
+              <button id="fp-qz-copy" class="btn-mini-action" style="justify-content:center;"><span class="icon">📋</span>コピー</button>
+              <a id="fp-qz-mail" href="${mailtoUrl}" class="btn-mini-action" style="justify-content:center;text-decoration:none;"><span class="icon">✉</span>メール 起動</a>
+              <a id="fp-qz-sms" href="${smsUrl}" class="btn-mini-action" style="justify-content:center;text-decoration:none;"><span class="icon">📱</span>SMS 起動</a>
+              <button id="fp-qz-toggle-qr" class="btn-mini-action" style="justify-content:center;"><span class="icon">▦</span>QR 表示</button>
+            </div>
+            <div id="fp-qz-qr-wrap" style="display:none;text-align:center;background:#fff;border:1px solid #E2E8F0;border-radius:8px;padding:14px;">
+              <img src="${qrSrc}" alt="Zoom URL QR" style="width:180px;height:180px;border-radius:6px;">
+              <div style="font-size:11px;color:#6B7280;margin-top:6px;">お客様 のスマホ で 読み取ると Zoom が 開きます</div>
+            </div>
+          </div>
+        `}
+
+        ${result.linePushError ? `<div style="margin-top:12px;background:#FEE2E2;border:1px solid #FCA5A5;border-radius:6px;padding:10px 14px;font-size:11.5px;color:#991B1B;line-height:1.6;"><strong>LINE 送信失敗:</strong> ${escapeHtml(result.linePushError.slice(0, 200))}</div>` : ''}
+
+        <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:18px;">
+          <button class="btn-cta-ghost" id="fp-qz-close">閉じる</button>
+        </div>
+      </div>`;
+    document.body.appendChild(ov);
+    const qrToggle = document.getElementById('fp-qz-toggle-qr');
+    if (qrToggle) qrToggle.addEventListener('click', () => {
+      const w = document.getElementById('fp-qz-qr-wrap');
+      if (w) w.style.display = w.style.display === 'none' ? 'block' : 'none';
+    });
+    document.getElementById('fp-qz-close').addEventListener('click', () => ov.remove());
+    document.getElementById('fp-qz-copy').addEventListener('click', () => {
+      navigator.clipboard.writeText(result.zoomUrl).then(() => {
+        const t = document.createElement('div');
+        t.style.cssText = 'position:fixed;top:24px;left:50%;transform:translateX(-50%);background:#065F46;color:#fff;padding:10px 22px;border-radius:99px;font-weight:800;font-size:12px;z-index:2147483647;';
+        t.textContent = '✓ コピー完了';
+        document.body.appendChild(t);
+        setTimeout(() => t.remove(), 1800);
+      });
+    });
+
+    // Firestore 反映 (面談履歴に出るよう liveData refresh)
+    try { await fetchLiveData(); renderLeadHubInner(); } catch (_) {}
+  }
+
+  // ★ 2026-06-22 roundG: 録音せずメモだけ書く (急遽録画モーダルの 3rd option)
+  function openMemoOnlyForQuick(inpersonTs, clientId, clientName) {
+    const ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.78);z-index:2147483647;display:flex;align-items:center;justify-content:center;font-family:"Hiragino Sans",sans-serif;padding:24px;';
+    ov.innerHTML = `
+      <div style="background:#fff;border-radius:14px;max-width:560px;width:100%;padding:28px 32px;box-shadow:0 28px 80px rgba(0,0,0,0.4);">
+        <div style="display:inline-flex;align-items:center;gap:8px;background:#FBF5E3;color:#9A5A18;font-size:11px;font-weight:800;padding:5px 12px;border-radius:99px;letter-spacing:0.12em;margin-bottom:14px;">📝 メモ ONLY</div>
+        <h2 style="font-family:'Noto Serif JP',serif;font-size:19px;font-weight:700;color:#111827;margin:0 0 6px;">${escapeHtml(clientName)} 様 / 面談メモ</h2>
+        <p style="font-size:12.5px;color:#6b7280;line-height:1.7;margin:0 0 14px;">面談中・面談後に メモを 書いてください。 保存すると 顧客カードに 残ります。</p>
+        <textarea id="fp-memo-only-text" rows="12" placeholder="例:\n相談テーマ: 老後資金 / NISA\n論点: 月3万 積立 / 配偶者 控除\n次のアクション: 来月 候補日3つ 送る" style="width:100%;padding:14px 16px;font-size:13.5px;font-family:'Hiragino Sans',sans-serif;line-height:1.75;border:1.5px solid #E5E7EB;border-radius:8px;resize:vertical;box-sizing:border-box;"></textarea>
+        <div style="display:flex;gap:10px;margin-top:18px;">
+          <button class="btn-cta-primary" id="fp-memo-only-save" style="flex:2;justify-content:center;"><span>メモを 保存</span><span class="cta-arrow">✓</span></button>
+          <button class="btn-cta-ghost" id="fp-memo-only-cancel">キャンセル</button>
+        </div>
+      </div>`;
+    document.body.appendChild(ov);
+
+    document.getElementById('fp-memo-only-cancel').addEventListener('click', () => ov.remove());
+    document.getElementById('fp-memo-only-save').addEventListener('click', () => {
+      const text = document.getElementById('fp-memo-only-text').value.trim();
+      if (!text) { alert('メモが空です。 内容を 書いてから 保存してください。'); return; }
+      // localStorage に メモとして保存 (既存のキー命名規則に揃える)
+      const tasksKey = 'fp-tasks-' + inpersonTs;
+      try {
+        const existing = JSON.parse(localStorage.getItem(tasksKey) || '[]');
+        existing.push({ ts: new Date().toISOString(), text: text, kind: 'memo-only', clientId, clientName });
+        localStorage.setItem(tasksKey, JSON.stringify(existing));
+      } catch (_) {}
+      // 面談履歴 にも 反映されるよう meta 更新
+      try {
+        const meta = JSON.parse(localStorage.getItem('fp-quick-inperson-meta') || '[]');
+        const idx = meta.findIndex(m => m.ts === inpersonTs);
+        if (idx >= 0) { meta[idx].memo = text.slice(0, 200); localStorage.setItem('fp-quick-inperson-meta', JSON.stringify(meta)); }
+      } catch (_) {}
+      ov.remove();
+      const toast = document.createElement('div');
+      toast.style.cssText = 'position:fixed;top:24px;left:50%;transform:translateX(-50%);background:#065F46;color:#fff;padding:14px 28px;border-radius:99px;font-weight:800;font-size:13px;z-index:2147483647;box-shadow:0 12px 30px rgba(0,0,0,0.3);';
+      toast.textContent = '✓ メモを 保存しました';
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 2800);
+      if (typeof renderMeetingHistory === 'function') renderMeetingHistory();
+    });
+  }
+
+  // ★ 2026-06-22 roundG: マイクのみ録音 fallback (カメラ NotFound / 不要 時)
+  //   音声 → 同じパイプライン (upload → AI議事録)
+  async function startAudioOnlyRecording(bookingTs) {
+    const R = window._fpRecorder;
+    let stream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: true, sampleRate: 44100 },
+      });
+    } catch (e) {
+      alert('マイク も アクセス不可 です。\n\nMac の場合: システム設定 → プライバシーとセキュリティ → マイク で ブラウザ を ON にしてください。\n\n技術: ' + (e?.name || e?.message || e));
+      return;
+    }
+
+    // 録音中インジケータ (右下、 audio-only 用)
+    let indicator = document.getElementById('fp-audio-rec-indicator');
+    if (!indicator) {
+      indicator = document.createElement('div');
+      indicator.id = 'fp-audio-rec-indicator';
+      indicator.style.cssText = 'position:fixed;bottom:80px;right:20px;background:#fff;border:3px solid #DC2626;border-radius:99px;padding:14px 22px;z-index:9990;box-shadow:0 8px 24px rgba(0,0,0,0.25);font-family:"Hiragino Sans",sans-serif;display:flex;align-items:center;gap:12px;cursor:pointer;';
+      indicator.innerHTML = `
+        <span style="width:12px;height:12px;background:#DC2626;border-radius:50%;animation:fp-audio-pulse 1.2s ease-in-out infinite;"></span>
+        <span style="font-weight:800;color:#1F2A3F;font-size:13px;">🎤 マイク 録音中…</span>
+        <span id="fp-audio-rec-timer" style="font-family:'Inter',monospace;font-weight:700;color:#9A5A18;font-size:12px;">00:00</span>
+        <span style="font-size:10.5px;color:#6B7280;border-left:1px solid #E5E7EB;padding-left:10px;margin-left:2px;">クリックで 停止</span>
+        <style>@keyframes fp-audio-pulse { 0%,100%{opacity:1;transform:scale(1);} 50%{opacity:.5;transform:scale(1.15);} }</style>`;
+      document.body.appendChild(indicator);
+    }
+
+    const startedAt = Date.now();
+    const timerEl = document.getElementById('fp-audio-rec-timer');
+    const timerInterval = setInterval(() => {
+      if (!timerEl) return;
+      const s = Math.floor((Date.now() - startedAt) / 1000);
+      const mm = String(Math.floor(s / 60)).padStart(2, '0');
+      const ss = String(s % 60).padStart(2, '0');
+      timerEl.textContent = `${mm}:${ss}`;
+    }, 1000);
+
+    const chunks = [];
+    const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus'
+      : MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4';
+    const mr = new MediaRecorder(stream, { mimeType });
+    mr.ondataavailable = e => { if (e.data && e.data.size > 0) chunks.push(e.data); };
+    mr.onstop = async () => {
+      stream.getTracks().forEach(t => t.stop());
+      clearInterval(timerInterval);
+      if (indicator) indicator.remove();
+      const blob = new Blob(chunks, { type: mimeType });
+      R.blob = blob;
+      R.bookingTs = bookingTs;
+      R.mediaRecorder = null;
+      try { await fetch(CLOUD_RUN_BASE + '/api/recording/stop?ts=' + encodeURIComponent(bookingTs), { method: 'POST' }); } catch (_) {}
+      // ★ 2026-06-22 roundJ: 録画停止後のフル AI パイプラインを startScreenRecording と同じく実装
+      //   旧: 単純 upload のみ で AI議事録 生成されず → 面談履歴に出ない
+      //   新: Drive 保存 + Whisper 文字起こし + Claude 解析 + 顧客カード自動保存 + 進捗パネル
+      const customerName = (function () {
+        try {
+          const meta = JSON.parse(localStorage.getItem('fp-quick-inperson-meta') || '[]');
+          const found = meta.find(m => m.ts === bookingTs);
+          return found?.clientName || 'お客様';
+        } catch (_) { return 'お客様'; }
+      })();
+      const customerId = (function () {
+        try {
+          const meta = JSON.parse(localStorage.getItem('fp-quick-inperson-meta') || '[]');
+          return meta.find(m => m.ts === bookingTs)?.clientId || '';
+        } catch (_) { return ''; }
+      })();
+      const fallbackBooking = { ts: bookingTs, name: customerName, userId: customerId, isInperson: true };
+
+      // 進捗パネル
+      try { showUnifiedProgressPanel(customerName, blob); } catch (_) {}
+      try { updateProgressStep('save', 'done'); updateProgressStep('drive', 'active'); updateProgressStep('ai', 'active'); } catch (_) {}
+      try { showCenterToast('議事録 を 生成中…', `${customerName} 様 の 対面録音 → AI で 文字起こし + 議事録 作成 中。 30-60秒 ほど お待ちください`, { tone: 'progress', duration: 0 }); } catch (_) {}
+
+      // Drive: 音声ファイル upload (並列)
+      const drivePromise = autoUploadRecording(blob, bookingTs, customerName, fallbackBooking)
+        .then(() => { try { updateProgressStep('drive', 'done'); } catch(_){} })
+        .catch(() => { try { updateProgressStep('drive', 'error'); } catch(_){} });
+
+      // AI: 同じ音声を Whisper + Claude で処理
+      let aiResult = null;
+      try { aiResult = await aiProcessRecording(blob, bookingTs, customerName, fallbackBooking); } catch (e) { console.error('aiProcessRecording fail:', e); }
+      if (aiResult && aiResult.ok) {
+        try { updateProgressStep('ai', 'done'); } catch(_){}
+        window._fpAIResult = { result: aiResult, customerName: customerName, booking: fallbackBooking };
+        try { autoSaveAIResult(aiResult, customerName, fallbackBooking); } catch(_){}
+        try { showProgressDoneAction(); } catch(_){}
+      } else {
+        try { updateProgressStep('ai', 'error', aiResult?.error); } catch(_){}
+        // AI 失敗ログも 保存して 面談履歴に「失敗」として 残す
+        try {
+          autoSaveAIResult({
+            ok: true, bookingTs, userId: customerId, customerName,
+            summary: '⚠ AI処理 失敗\n\nエラー: ' + (aiResult?.error || '不明') + '\n\n録画ファイル自体は Drive に保存されています。',
+            transcript: '', key_concerns: ['AI処理エラー'], tasks: [], error: true,
+          }, customerName, fallbackBooking);
+        } catch(_){}
+      }
+      await drivePromise;
+      try { await onRecordingComplete(bookingTs, blob, URL.createObjectURL(blob)); } catch(_){}
+      await fetchLiveData();
+      try { renderLeadHubInner(); } catch(_){}
+      try { if (typeof renderMeetingHistory === 'function') renderMeetingHistory(); } catch(_){}
+    };
+    indicator.addEventListener('click', () => {
+      if (mr.state !== 'inactive') {
+        if (confirm('録音を 停止しますか?\n\n停止後、 音声から 自動で AI議事録 が生成されます。')) mr.stop();
+      }
+    });
+    mr.start(3000);
+    R.mediaRecorder = mr;
+    R.bookingTs = bookingTs;
+    R.blob = null;
+    R.mode = 'audio-only';
+    try { await fetch(CLOUD_RUN_BASE + '/api/recording/start?ts=' + encodeURIComponent(bookingTs), { method: 'POST' }); } catch (_) {}
+    await fetchLiveData();
+    renderLeadHubInner();
   }
 
   // 画面録画 → 停止時に Drive の顧客フォルダへ自動アップロード
@@ -3988,6 +4684,12 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
       btn.addEventListener('click', async () => {
         const ts = btn.dataset.recStart;
         const zoomUrl = btn.dataset.zoom;
+        if (btn.dataset.recMode === 'inperson') {
+            await startWebcamRecording(ts);
+            await fetchLiveData();
+            renderLeadHubInner();
+            return;
+          }
         // ★ オーナーfb (v AH): Zoom pre-open popup が画面共有ダイアログを覆ってた。
         // 修正: pre-open は 画面外/極小 で 開いて 即 blur + CRM focus 戻し。 ユーザには見えないように。
         const sw = window.screen.availWidth || screen.width;
@@ -4113,6 +4815,16 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
         <span style="font-size:18px;">${ic}</span>${label}
       </button>`;
     v.innerHTML = `
+      <!-- ★ 役割明示バナー: 「配信」 と 「ご無沙汰フォロー」 の混同防止 -->
+      <div style="background:linear-gradient(135deg,#EFF6FF,#F5F3FF);border:1px solid #BFDBFE;border-radius:12px;padding:18px 22px;margin-bottom:20px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+          <span style="background:#1D4ED8;color:#fff;font-size:10px;font-weight:800;letter-spacing:0.12em;padding:3px 9px;border-radius:4px;">配信タブ — BROADCAST</span>
+          <span style="font-size:12px;color:#64748B;">= テンプレで <strong style="color:#1D4ED8;">複数人に一斉送信</strong> (キャンペーン/お知らせ/季節企画)</span>
+        </div>
+        <div style="font-size:12px;color:#64748B;line-height:1.7;">
+          1対1で個別追客したい時は → <a href="#" onclick="document.querySelector('.tab[data-tab=&quot;dormantFollowup&quot;]')?.click();return false;" style="color:#7C2D12;font-weight:700;text-decoration:underline;">ご無沙汰フォロー</a> （最終接触から日数が経った客を順番に1人ずつ）
+        </div>
+      </div>
       <!-- サブタブ: 今日 / スケジュール / テンプレ / ログ — 一発目は「今日」 -->
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;">
         ${tab('today', '📤', '今日 送る')}
@@ -4564,7 +5276,11 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
           let merged = 0;
           msgs.forEach(m => {
             if (!m.userId || !m.text) return;
-            const c = window.DUMMY_CLIENTS.find(x => x.lineFriendId === m.userId);
+            let c = window.DUMMY_CLIENTS.find(x => x.lineFriendId === m.userId);
+            if (!c && m.name) {
+              c = window.DUMMY_CLIENTS.find(x => String(x.name || '').trim() === String(m.name || '').trim());
+              if (c && m.userId) c.lineFriendId = m.userId;
+            }
             if (!c) return;
             if (!Array.isArray(c.lineHistory)) c.lineHistory = [];
             const ts = String(m.ts || '').slice(0, 19);
@@ -4646,6 +5362,7 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
           }
         }
       } catch (sErr) { console.warn('survey→client merge fail:', sErr); }
+      try { checkPendingDateSelections(); } catch(_) {}
 
       const detail = (liveData.users ? liveData.users.length + 'ユーザー' : '') +
                      (liveData.bookings ? ' / ' + liveData.bookings.length + '予約' : '');
@@ -4659,6 +5376,89 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
       showSyncIndicator('error', e.message || '');
       return liveData; // キャッシュがあれば返す
     }
+  }
+
+  // Scan line_messages for customer date selections → show FP confirmation popup
+  function checkPendingDateSelections() {
+    if (!liveData) return;
+    const msgs = liveData.line_messages || [];
+    const surveys = liveData.survey_answers || [];
+    const bookings = liveData.bookings || [];
+    const DATE_SEL_PAT = /候補([1-3１２３])\s*[（(]([^）)]+)[）)]\s*でお願いします/;
+    msgs.forEach(m => {
+      if (!m.text || !m.userId || m.direction === 'out') return;
+      const match = m.text.match(DATE_SEL_PAT);
+      if (!match) return;
+      const alreadyConfirmed = bookings.some(b => b.userId === m.userId && b.date && b.status !== 'cancelled');
+      if (alreadyConfirmed) return;
+      const pending = surveys.find(s => s.userId === m.userId && !s.confirmedSlot && (s.q6_候補1 || s.q7_候補2 || s.q8_候補3));
+      if (!pending) return;
+      const alertKey = 'fp-date-alert-' + m.userId + '-' + String(m.ts || '').slice(0, 16);
+      if (localStorage.getItem(alertKey)) return;
+      localStorage.setItem(alertKey, '1');
+      const userName = m.name || (window.DUMMY_CLIENTS || []).find(c => c.lineFriendId === m.userId)?.name || 'お客様';
+      showDateConfirmModal(m.userId, userName, match[2], m.text);
+    });
+  }
+
+  function showDateConfirmModal(userId, userName, dateTimeStr, originalText) {
+    const year = new Date().getFullYear();
+    const dmMatch = dateTimeStr.match(/(\d{1,2})月(\d{1,2})日/);
+    const timeMatch = dateTimeStr.match(/(\d{1,2}:\d{2})/);
+    if (!dmMatch) return;
+    const dateStr = year + '-' + dmMatch[1].padStart(2, '0') + '-' + dmMatch[2].padStart(2, '0');
+    const slotStr = timeMatch ? timeMatch[1] : '';
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.72);backdrop-filter:blur(6px);z-index:10090;display:flex;align-items:center;justify-content:center;padding:20px;font-family:"Noto Sans JP",sans-serif;';
+    overlay.innerHTML = `
+      <div style="background:#fff;max-width:500px;width:100%;border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,0.35);overflow:hidden;">
+        <div style="background:linear-gradient(135deg,#F59E0B,#D97706);color:#fff;padding:20px 24px;">
+          <div style="font-size:10px;font-weight:800;letter-spacing:0.2em;margin-bottom:4px;opacity:0.9;">📅 日程確認リクエスト</div>
+          <h3 style="margin:0;font-size:18px;font-weight:900;">お客様から日程選択が届きました</h3>
+        </div>
+        <div style="padding:24px;">
+          <div style="background:#FFFBEB;border:1.5px solid #FCD34D;border-radius:10px;padding:14px 16px;margin-bottom:16px;">
+            <div style="font-size:11px;font-weight:800;color:#92400E;letter-spacing:0.06em;margin-bottom:5px;">📩 ${escapeHtml(userName)}様からのメッセージ</div>
+            <div style="font-size:14px;font-weight:800;color:#1F1A12;">${escapeHtml(originalText)}</div>
+          </div>
+          <div style="font-size:14px;color:#374151;margin-bottom:6px;line-height:1.8;">
+            <strong>${escapeHtml(userName)}様</strong>が <strong style="color:#5B5BF0;">${escapeHtml(dateTimeStr)}</strong> を選択しました。<br>
+            確定してよろしいですか？
+          </div>
+          <div style="font-size:11.5px;color:#6B7280;margin-bottom:20px;">確定すると Zoom URL が自動生成・送信され、Googleカレンダーに登録されます。</div>
+          <div id="fp-date-confirm-status" style="font-size:12.5px;font-weight:700;margin-bottom:14px;min-height:18px;"></div>
+          <div style="display:flex;gap:10px;justify-content:flex-end;">
+            <button id="fp-date-confirm-skip" style="background:#fff;color:#6B7280;border:1px solid #D1D5DB;padding:11px 22px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">後で確認</button>
+            <button id="fp-date-confirm-ok" style="background:linear-gradient(135deg,#5B5BF0,#6D6DEF);color:#fff;border:none;padding:11px 26px;border-radius:8px;font-size:13.5px;font-weight:900;cursor:pointer;font-family:inherit;box-shadow:0 4px 14px rgba(91,91,240,0.3);">✓ 確定して承りましたを送る</button>
+          </div>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+    overlay.querySelector('#fp-date-confirm-skip').addEventListener('click', () => overlay.remove());
+    overlay.querySelector('#fp-date-confirm-ok').addEventListener('click', async () => {
+      const statusEl = overlay.querySelector('#fp-date-confirm-status');
+      const okBtn = overlay.querySelector('#fp-date-confirm-ok');
+      okBtn.disabled = true; okBtn.textContent = '処理中...';
+      statusEl.style.color = '#5B5BF0'; statusEl.textContent = 'Zoom URL を発行・カレンダー登録中…';
+      try {
+        const r = await fetch(CLOUD_RUN_BASE + '/api/confirm-slot', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId, dateStr, slotStr, name: userName }),
+        });
+        const d = await r.json();
+        if (d.ok || d.success) {
+          statusEl.style.color = '#059669'; statusEl.textContent = '✅ 確定完了 — 「承りました」メッセージを送信しました';
+          setTimeout(() => overlay.remove(), 2200);
+          fetchLiveData().then(() => { if (currentSubview === 'leadHub') renderLeadHubInner(); });
+        } else {
+          statusEl.style.color = '#DC2626'; statusEl.textContent = '❌ ' + (d.error || '確定処理に失敗しました');
+          okBtn.disabled = false; okBtn.textContent = '✓ 確定して承りましたを送る';
+        }
+      } catch (e) {
+        statusEl.style.color = '#DC2626'; statusEl.textContent = '❌ 通信エラー: ' + e.message;
+        okBtn.disabled = false; okBtn.textContent = '✓ 確定して承りましたを送る';
+      }
+    });
   }
 
   function renderLeadFunnel() {
@@ -4826,7 +5626,7 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
               <a class="btn-mini" href="${escapeHtml(b.driveUrl||'#')}" target="_blank" data-hint="Google Drive に保存された録画ファイルを開く">📁 録画を開く (Drive)</a>
               <a class="btn-mini" href="${escapeHtml(b.zoomUrl)}" target="_blank" data-hint="同じZoom URLを再度開く (フォロー面談用)">Zoomを開く</a>
               ${b.transcript
-                ? `<button class="btn-mini" data-view-transcript="${escapeHtml(b.ts)}" data-hint="AIが作った議事録を表示・コピー" style="background:#fff8e1;border-color:#f0d36b;color:#8a6f1e;font-weight:600;">📝 議事録を見る</button>`
+                ? `<button class="btn-mini-action" data-view-transcript="${escapeHtml(b.ts)}" data-hint="AIが作った議事録を表示・コピー"><span class="icon">📝</span>議事録を見る</button>`
                 : `<button class="btn-mini" data-gen-transcript="${escapeHtml(b.ts)}" data-hint="アンケート回答と顧客情報から議事録テンプレを自動生成。面談後に押す" style="background:linear-gradient(135deg,#b8893d,#d4a017);border:none;color:#fff;font-weight:700;">✨ AI議事録を生成</button>`}
             ` : `
               <button class="btn-rec-start" data-rec-start="${escapeHtml(b.ts)}" data-zoom="${escapeHtml(b.zoomUrl)}" data-hint="面談直前に押す。Zoomが別タブで開き、録画状態が「録画中」に">● 録画ONでZoom開始</button>
@@ -5049,29 +5849,152 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
     });
   }
 
-  function showTranscriptModal(transcript, title) {
+  // ★ 2026-06-22 roundK: 議事録モーダル 3タブ化 (要約 / タスク / 全文)
+  // transcriptOrAI: string (旧: 全文だけ) OR object { transcript, summary, transcript_summary, key_concerns, tasks, next_meeting_suggestion }
+  function showTranscriptModal(transcriptOrAI, title) {
+    const isObj = transcriptOrAI && typeof transcriptOrAI === 'object';
+    const ai = isObj ? transcriptOrAI : null;
+    const transcript = isObj ? (ai.transcript || '') : String(transcriptOrAI || '');
+    const summary = ai?.transcript_summary || (ai?.summary && !Array.isArray(ai.summary) ? '' : '');
+    const summaryPoints = ai?.summary || '';
+    const concerns = Array.isArray(ai?.key_concerns) ? ai.key_concerns : [];
+    const tasks = Array.isArray(ai?.tasks) ? ai.tasks : [];
+    const nextMeeting = ai?.next_meeting_suggestion || '';
+    const hasAny = summary || summaryPoints || concerns.length || tasks.length;
+    // タブ初期値: タスクあればタスク優先 / なければ要約
+    const defaultTab = tasks.length > 0 ? 'tasks' : (hasAny ? 'summary' : 'full');
+
+    const tabs = [
+      { id: 'summary', label: '要約', icon: '◉', count: hasAny ? (concerns.length + (summaryPoints ? 1 : 0)) : 0 },
+      { id: 'tasks', label: 'タスク', icon: '✓', count: tasks.length },
+      { id: 'full', label: '全文', icon: '◧', count: transcript ? Math.ceil(transcript.length / 100) + 'p' : 0 },
+    ];
+
+    // タスク priority → 色マッピング (左ボーダー)
+    const priColor = (p) => {
+      if (/至急|即/.test(p || '')) return '#B91C3C';
+      if (/今週|today|今日/i.test(p || '')) return '#9A5A18';
+      if (/3ヶ月|three.month/i.test(p || '')) return '#5B21B6';
+      if (/半年|6.month/i.test(p || '')) return '#1E3A5F';
+      return '#6B7280';
+    };
+
     const html = `
-      <div class="modal-header">
-        <h2>${title || '議事録'}</h2>
+      <div class="modal-header" style="border-bottom:1px solid #E8E2D4;background:linear-gradient(180deg,#fdfbf4,#fff);">
+        <div style="display:flex;flex-direction:column;gap:2px;">
+          <div style="font-size:10.5px;font-weight:700;color:#9A5A18;letter-spacing:0.22em;text-transform:uppercase;font-family:'Inter',sans-serif;">Meeting Minutes</div>
+          <h2 style="font-family:'Noto Serif JP',serif;font-size:19px;font-weight:700;color:#1F2A3F;margin:0;letter-spacing:0.02em;">${escapeHtml(title || '議事録')}</h2>
+        </div>
         <button class="modal-close" id="tr-close">×</button>
       </div>
-      <div class="modal-body">
-        <div style="background:#fafbfc;border:1px solid var(--line);border-radius:8px;padding:18px 22px;font-family:'Noto Sans JP',monospace;font-size:12.5px;line-height:1.85;white-space:pre-wrap;max-height:600px;overflow-y:auto;letter-spacing:0.01em;">${escapeHtml(transcript)}</div>
-        <div style="display:flex;gap:8px;margin-top:14px;">
-          <button class="primary" id="tr-copy">📋 全文をコピー</button>
-          <button id="tr-close-btn">閉じる</button>
+      <div class="modal-body" style="padding:0;">
+        <!-- サブタブ inline -->
+        <div id="tr-tabs" style="display:flex;gap:0;border-bottom:1px solid #E8E2D4;background:#fff;padding:0 22px;">
+          ${tabs.map(t => `
+            <button data-tr-tab="${t.id}" class="tr-tab" style="background:transparent;border:none;padding:14px 18px 12px;font-family:'Hiragino Sans',sans-serif;font-size:13px;font-weight:700;color:#6B7280;cursor:pointer;border-bottom:3px solid transparent;letter-spacing:0.04em;display:inline-flex;align-items:center;gap:7px;">
+              <span style="font-size:14px;opacity:0.8;">${t.icon}</span>
+              ${t.label}
+              ${t.count ? `<span style="background:#F0EBDF;color:#9A5A18;font-size:10.5px;font-weight:800;padding:1px 7px;border-radius:99px;font-family:'Inter',sans-serif;">${t.count}</span>` : ''}
+            </button>
+          `).join('')}
         </div>
-        <div id="tr-msg" style="font-size:11.5px;color:var(--muted);margin-top:8px;text-align:center;"></div>
+
+        <!-- 要約 panel -->
+        <div id="tr-panel-summary" data-tr-panel="summary" style="display:none;padding:24px 28px;max-height:560px;overflow-y:auto;">
+          ${hasAny ? `
+            ${summary ? `
+              <div style="background:linear-gradient(135deg,#FBF5E3,#FDFBF4);border:1px solid #E8D9A8;border-left:3px solid #C19A3A;border-radius:10px;padding:18px 22px;margin-bottom:14px;">
+                <div style="font-size:10px;font-weight:800;color:#9A5A18;letter-spacing:0.18em;margin-bottom:6px;">TODAY'S THEME</div>
+                <div style="font-family:'Noto Serif JP',serif;font-size:15.5px;font-weight:600;color:#1F2A3F;line-height:1.75;">${escapeHtml(summary)}</div>
+              </div>
+            ` : ''}
+            ${concerns.length ? `
+              <div style="margin-bottom:14px;">
+                <div style="font-size:10px;font-weight:800;color:#9A5A18;letter-spacing:0.18em;margin-bottom:8px;">CONCERNS · お客様の懸念</div>
+                <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                  ${concerns.map(c => `<span style="background:#1F2A3F;color:#FCFAF2;font-family:'Hiragino Sans',sans-serif;font-weight:700;font-size:11.5px;padding:5px 12px;border-radius:99px;">${escapeHtml(c)}</span>`).join('')}
+                </div>
+              </div>
+            ` : ''}
+            ${summaryPoints ? `
+              <div style="background:#fff;border:1px solid #E8E2D4;border-radius:10px;padding:18px 22px;margin-bottom:14px;">
+                <div style="font-size:10px;font-weight:800;color:#9A5A18;letter-spacing:0.18em;margin-bottom:8px;">SUMMARY · ポイント</div>
+                <div style="font-family:'Hiragino Sans',sans-serif;font-size:13.5px;color:#1F2A3F;line-height:1.85;white-space:pre-wrap;">${escapeHtml(summaryPoints)}</div>
+              </div>
+            ` : ''}
+            ${nextMeeting ? `
+              <div style="background:#F0FDF4;border:1px solid #86EFAC;border-left:3px solid #065F46;border-radius:10px;padding:14px 18px;">
+                <div style="font-size:10px;font-weight:800;color:#065F46;letter-spacing:0.18em;margin-bottom:6px;">NEXT MEETING</div>
+                <div style="font-size:13px;color:#1F2A3F;line-height:1.7;">${escapeHtml(nextMeeting)}</div>
+              </div>
+            ` : ''}
+          ` : '<div style="padding:40px;text-align:center;color:#9CA3AF;font-size:13px;">要約はまだ生成されていません。 「全文」 タブで 文字起こしを確認できます。</div>'}
+        </div>
+
+        <!-- タスク panel -->
+        <div id="tr-panel-tasks" data-tr-panel="tasks" style="display:none;padding:24px 28px;max-height:560px;overflow-y:auto;">
+          ${tasks.length ? tasks.map(t => `
+            <div style="background:#fff;border:1px solid #E8E2D4;border-left:4px solid ${priColor(t.priority)};border-radius:10px;padding:16px 20px;margin-bottom:10px;">
+              <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:8px;">
+                <strong style="font-family:'Hiragino Sans',sans-serif;font-size:14px;color:#1F2A3F;line-height:1.4;flex:1;">${escapeHtml(t.task || '')}</strong>
+                <span style="font-size:10.5px;font-weight:800;color:${priColor(t.priority)};letter-spacing:0.08em;white-space:nowrap;font-family:'Hiragino Sans',sans-serif;">${escapeHtml(t.priority || '')}${t.dueDate ? ' · ' + escapeHtml(t.dueDate) : ''}</span>
+              </div>
+              ${t.recommendedAction ? `<div style="font-size:12px;color:#5e4d1a;background:#FBF5E3;border-radius:6px;padding:9px 13px;line-height:1.7;margin-bottom:${t.lineDraft ? '8px' : '0'};">${escapeHtml(t.recommendedAction)}</div>` : ''}
+              ${t.lineDraft ? `
+                <div style="background:#F0FDF4;border:1px solid #86EFAC;border-radius:6px;padding:10px 13px;font-size:12px;color:#065F46;line-height:1.7;white-space:pre-wrap;margin-bottom:8px;">${escapeHtml(t.lineDraft)}</div>
+                <button class="btn-mini-action is-line" data-tr-copy-draft="${escapeHtml(t.lineDraft).replace(/&quot;/g, '&#34;')}"><span class="icon">📋</span>LINE文案コピー</button>
+              ` : ''}
+            </div>
+          `).join('') : '<div style="padding:40px;text-align:center;color:#9CA3AF;font-size:13px;">タスクはまだ抽出されていません。</div>'}
+        </div>
+
+        <!-- 全文 panel -->
+        <div id="tr-panel-full" data-tr-panel="full" style="display:none;padding:24px 28px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <div style="font-size:10px;font-weight:800;color:#9A5A18;letter-spacing:0.18em;">FULL TRANSCRIPT · 文字起こし全文 (${transcript.length}文字)</div>
+            <button class="btn-mini-action" id="tr-copy"><span class="icon">📋</span>全文コピー</button>
+          </div>
+          <div style="background:#fafbfc;border:1px solid #E8E2D4;border-radius:8px;padding:20px 24px;font-family:'Hiragino Sans',monospace;font-size:13px;line-height:1.95;white-space:pre-wrap;max-height:520px;overflow-y:auto;letter-spacing:0.02em;color:#1F2A3F;">${escapeHtml(transcript) || '<span style="color:#9CA3AF;">文字起こしがありません</span>'}</div>
+        </div>
+
+        <div style="padding:14px 28px;border-top:1px solid #E8E2D4;display:flex;justify-content:space-between;align-items:center;background:#fafaf7;">
+          <div id="tr-msg" style="font-size:11.5px;color:#6B7280;"></div>
+          <button class="btn-cta-ghost" id="tr-close-btn">閉じる</button>
+        </div>
       </div>
+      <style>
+        .tr-tab.is-active { color: #1F2A3F !important; border-bottom-color: #C19A3A !important; }
+        .tr-tab:hover:not(.is-active) { color: #1F2A3F !important; }
+      </style>
     `;
     document.getElementById('modal-content').innerHTML = html;
     document.getElementById('modal-overlay').style.display = 'flex';
     const close = () => { document.getElementById('modal-overlay').style.display = 'none'; };
     document.getElementById('tr-close').addEventListener('click', close);
     document.getElementById('tr-close-btn').addEventListener('click', close);
-    document.getElementById('tr-copy').addEventListener('click', () => {
+
+    // タブ切替
+    const switchTab = (id) => {
+      document.querySelectorAll('.tr-tab').forEach(b => b.classList.toggle('is-active', b.dataset.trTab === id));
+      document.querySelectorAll('[data-tr-panel]').forEach(p => p.style.display = p.dataset.trPanel === id ? 'block' : 'none');
+    };
+    document.querySelectorAll('.tr-tab').forEach(b => b.addEventListener('click', () => switchTab(b.dataset.trTab)));
+    switchTab(defaultTab);
+
+    // 全文コピー
+    const copyBtn = document.getElementById('tr-copy');
+    if (copyBtn) copyBtn.addEventListener('click', () => {
       navigator.clipboard.writeText(transcript);
       document.getElementById('tr-msg').textContent = '✓ クリップボードにコピーしました';
+      setTimeout(() => { document.getElementById('tr-msg').textContent = ''; }, 2200);
+    });
+    // タスク内 LINE文案コピー
+    document.querySelectorAll('[data-tr-copy-draft]').forEach(b => {
+      b.addEventListener('click', () => {
+        navigator.clipboard.writeText(b.dataset.trCopyDraft);
+        document.getElementById('tr-msg').textContent = '✓ LINE文案をコピーしました';
+        setTimeout(() => { document.getElementById('tr-msg').textContent = ''; }, 2200);
+      });
     });
   }
 
@@ -5461,49 +6384,34 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
         </div>
       </details>
 
-      <!-- いま登録されてる予定 (折り畳み) -->
+      <!-- いま登録されてる予定 (デフォルト 折りたたみ — 開いた時に各予定もコンパクト表示) -->
       ${enabledSchedules > 0 ? `
-      <details class="fp-dist-fold" open>
+      <details class="fp-dist-fold">
         <summary>
           <span class="fp-dist-fold-icon">📋</span>
           <div>
             <strong>いま登録されてる予定 (${enabledSchedules}件)</strong>
-            <span>毎朝、 ここに登録された予定に従って 承認リストが作られます。</span>
+            <span>クリックで一覧表示 / 各行クリックで本文編集</span>
           </div>
           <span class="fp-dist-fold-chev">▾</span>
         </summary>
         <div class="fp-dist-fold-body">
-        <div class="fp-dist-running-grid">
+        <div class="fp-dist-sched-list">
           ${window.LINE_SCHEDULES.filter(s => s.enabled).map(s => {
             const seg = window.SEGMENTS.find(x => x.id === s.segment);
             const recipients = seg ? window.LineCRM.evaluateSegment(seg.id).length : (s.segment === 'auto-birthday' ? todayBirthdays.length : 0);
-            // ★ オーナーfb (v AN): 何が送られるか分かるよう 本文プレビューを 表示
             const tpl = (window.LINE_TEMPLATES || []).find(t => t.id === s.templateId);
             const bodyText = (s.body || (tpl && tpl.body) || '').replace(/\{\{name\}\}/g, 'お客様').replace(/\{name\}/g, 'お客様').replace(/\{\{fp_name\}\}/g, 'FP').replace(/\{fpName\}/g, 'FP').replace(/\{\{[^}]+\}\}/g, '…');
-            const previewText = bodyText.slice(0, 80).replace(/\n/g, ' / ');
+            const cadenceText = s.schedule || '';
             return `
-              <div class="fp-dist-run-card" data-schid-jump="${escapeHtml(s.id)}">
-                <div class="fp-dist-run-top">
-                  ${cadenceVisual(s.schedule)}
-                  <div class="fp-dist-run-main">
-                    <div class="fp-dist-run-name">${escapeHtml(s.name)}</div>
-                    <div class="fp-dist-run-meta">${seg ? seg.icon + ' ' + escapeHtml(seg.name) : '🎂 誕生日対象者'} <span class="fp-dist-run-recipients">${recipients}名</span></div>
-                    <div class="fp-dist-run-next">次回: <strong>${escapeHtml(s.nextSend || '—')}</strong></div>
-                  </div>
-                  <div class="fp-dist-run-toggle">●</div>
-                </div>
-                ${bodyText ? `
-                  <div class="fp-dist-run-preview">
-                    <div class="fp-dist-run-preview-label">📝 本文</div>
-                    <div class="fp-dist-run-preview-text">${escapeHtml(previewText)}${bodyText.length > 80 ? '…' : ''}</div>
-                    <button class="fp-dist-run-preview-btn" data-preview-schid="${escapeHtml(s.id)}">全文を見る・編集する →</button>
-                  </div>
-                ` : `
-                  <div class="fp-dist-run-preview fp-dist-run-preview-empty">
-                    ⚠ 本文が未設定です。 編集して本文を入れてください。
-                  </div>
-                `}
-              </div>
+              <button class="fp-dist-sched-row" data-preview-schid="${escapeHtml(s.id)}" title="クリックで本文編集">
+                <span class="fp-dist-sched-row-cadence">${escapeHtml(cadenceText.slice(0, 18) || '—')}</span>
+                <span class="fp-dist-sched-row-name">${escapeHtml(s.name)}</span>
+                <span class="fp-dist-sched-row-seg">${seg ? seg.icon : '🎂'}</span>
+                <span class="fp-dist-sched-row-count">${recipients}名</span>
+                <span class="fp-dist-sched-row-next">${escapeHtml((s.nextSend || '').slice(5))}</span>
+                <span class="fp-dist-sched-row-arrow">›</span>
+              </button>
             `;
           }).join('')}
         </div>
@@ -5746,6 +6654,25 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
       .fp-dist-preset-edit:hover { border-color: #C19A3A; color: #C19A3A; }
 
       .fp-dist-running-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      /* ★ コンパクト1行リスト: 折りたたみ展開時の予定一覧 */
+      .fp-dist-sched-list { display: flex; flex-direction: column; gap: 0; border: 1px solid #E8E2D4; border-radius: 8px; overflow: hidden; background: #fff; }
+      .fp-dist-sched-row {
+        display: grid;
+        grid-template-columns: 100px 1fr 24px 60px 60px 16px;
+        gap: 12px; align-items: center;
+        background: transparent; border: none; border-bottom: 1px solid #F0EBDF;
+        padding: 12px 16px; cursor: pointer;
+        font-family: 'Hiragino Sans', sans-serif;
+        text-align: left; transition: background .12s;
+      }
+      .fp-dist-sched-row:last-child { border-bottom: none; }
+      .fp-dist-sched-row:hover { background: #FDFBF4; }
+      .fp-dist-sched-row-cadence { font-size: 11px; color: #9A5A18; font-weight: 700; letter-spacing: 0.04em; font-family: 'Inter', sans-serif; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .fp-dist-sched-row-name { font-size: 13px; color: #1F2A3F; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .fp-dist-sched-row-seg { font-size: 14px; text-align: center; }
+      .fp-dist-sched-row-count { font-size: 11.5px; color: #6B7280; font-weight: 600; text-align: right; font-family: 'Inter', sans-serif; }
+      .fp-dist-sched-row-next { font-size: 10.5px; color: #94A3B8; font-weight: 600; text-align: right; font-family: 'Inter', sans-serif; white-space: nowrap; }
+      .fp-dist-sched-row-arrow { font-size: 16px; color: #C19A3A; text-align: center; }
       .fp-dist-run-card {
         background: #fff; border: 1px solid #E8E2D4;
         border-radius: 10px; padding: 14px 16px;
@@ -6300,16 +7227,40 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
     }
     async function sendMsg(msg) {
       const client = (window.DUMMY_CLIENTS || []).find(c => c.id === msg.clientId);
-      if (!client || !client.lineFriendId) { alert('LINE 連携情報が見つかりません'); return false; }
+      if (!client) { alert(`送信失敗: ${msg.clientName}様の顧客データが見つかりません`); return false; }
+      if (!client.lineFriendId || client.lineFriendId.startsWith('U-lead-') || client.lineFriendId.startsWith('demo-')) {
+        alert(`${msg.clientName}様はLINE未連携です。\n\n顧客台帳でLINE友だちIDを確認してください。`); return false;
+      }
+      // ★ 真因対応 (2026-06-22): multi-tenant sendLineMessage callable に切替
+      //    旧 /api/send-line は demo (福田) GAS token で 別チャンネル送信失敗していた
       try {
-        const r = await fetch(CLOUD_RUN_BASE + '/api/send-line', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: client.lineFriendId, text: msg.body }),
+        const { initializeApp, getApps } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js');
+        const { getFunctions, httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-functions.js');
+        const app = getApps()[0] || initializeApp({
+          apiKey: 'AIzaSyAmVAEe9l9e1Yo_dzzJdbTVU35wWKd2sH4',
+          authDomain: 'skeleton-fp-compass-632026.firebaseapp.com',
+          projectId: 'skeleton-fp-compass-632026',
         });
-        const d = await r.json();
-        if (d.ok) { markSent(msg.id, msg.clientId); return true; }
-        alert('送信失敗: ' + (d.error || '')); return false;
-      } catch (e) { alert('送信失敗: ' + e.message); return false; }
+        const fn = httpsCallable(getFunctions(app, 'asia-northeast1'), 'sendLineMessage');
+        await fn({ customerId: client.id, text: msg.body });
+        markSent(msg.id, msg.clientId);
+        return true;
+      } catch (e) {
+        // Firebase callable は friendlyMsg を message に入れて throw 投げてくれる
+        const errMsg = e?.message || String(e);
+        const isNoToken = /LINE 未連携|failed-precondition/.test(errMsg);
+        const lines = [`${msg.clientName}様への送信に失敗しました`, ''];
+        if (isNoToken) {
+          lines.push('原因: あなたの LINE 公式アカウントが未連携です');
+          lines.push('');
+          lines.push('→ アカウント設定 で LINE 公式アカウント の Channel Access Token を 入力してください');
+          lines.push('  (画面右上「アカウント」 から ⚙ 設定)');
+        } else {
+          lines.push(errMsg.slice(0, 400));
+        }
+        alert(lines.join('\n'));
+        return false;
+      }
     }
 
     document.querySelectorAll('[data-send]').forEach(btn => {
@@ -6353,11 +7304,17 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
     if (bulkBtn) bulkBtn.addEventListener('click', async () => {
       if (!confirm(`${todayMessages.length}件 すべて 送信します。 よろしいですか?`)) return;
       bulkBtn.disabled = true; bulkBtn.textContent = '送信中...';
+      // ★ 全画面ブロック (誤クリック / 中断 防止)
+      showSendingOverlay(`今日 送る 一斉送信中 (${todayMessages.length}件)`, todayMessages.length);
       let ok = 0, ng = 0;
-      for (const m of todayMessages) {
+      for (let i = 0; i < todayMessages.length; i++) {
+        const m = todayMessages[i];
+        updateSendingProgress(i, todayMessages.length, m.clientName);
         const sent = await sendMsg(m); if (sent) ok++; else ng++;
         await new Promise(r => setTimeout(r, 200));
       }
+      updateSendingProgress(todayMessages.length, todayMessages.length, '');
+      closeSendingOverlay();
       toast(`✓ 一斉送信 完了: ${ok}件 / 失敗 ${ng}件`, 'sent');
       setTimeout(() => renderLineDashboard(), 1200);
     });
@@ -7297,10 +8254,338 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
   }
 
   // ============================
+  // 送信中オーバーレイ (全クリック ブロック + 進捗表示)
+  // ★ オーナーfb 2026-06-22: 送信中 に 他ボタン 押せて 中断 / 取消 起きる バグ対策
+  // ============================
+  function showSendingOverlay(label, total) {
+    closeSendingOverlay(); // 念のため 既存 を 消す
+    const ov = document.createElement('div');
+    ov.id = 'fp-sending-overlay';
+    ov.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.78);z-index:2147483646;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(3px);font-family:"Hiragino Sans","Noto Sans JP",sans-serif;';
+    ov.innerHTML = `
+      <div style="background:#fff;border-radius:14px;padding:32px 40px;max-width:440px;width:90%;box-shadow:0 32px 80px rgba(0,0,0,0.5);text-align:center;">
+        <div style="width:60px;height:60px;border:4px solid #E2E8F0;border-top-color:#7C3AED;border-radius:50%;margin:0 auto 20px;animation:fp-spin 0.9s linear infinite;"></div>
+        <div style="font-size:11px;font-weight:800;color:#7C3AED;letter-spacing:0.16em;margin-bottom:6px;">SENDING</div>
+        <div id="fp-sending-label" style="font-size:18px;font-weight:800;color:#111827;font-family:'Noto Serif JP',serif;margin-bottom:8px;">${label || '送信中…'}</div>
+        <div id="fp-sending-progress" style="font-size:12.5px;color:#6b7280;line-height:1.7;">${total ? '0 / ' + total + ' 名 完了' : '通信中…'}</div>
+        <div style="margin-top:18px;background:#FEF3C7;border:1px solid #F59E0B;border-radius:6px;padding:10px 14px;font-size:11px;color:#92400E;font-weight:600;line-height:1.6;">
+          ⚠ 完了するまで このまま お待ちください<br>他の操作 / ブラウザ閉じ は 行わないでください
+        </div>
+      </div>
+      <style>@keyframes fp-spin { to { transform: rotate(360deg); } }</style>`;
+    document.body.appendChild(ov);
+    return ov;
+  }
+  function updateSendingProgress(done, total, currentName) {
+    const p = document.getElementById('fp-sending-progress');
+    if (!p) return;
+    p.innerHTML = `<strong style="color:#111827;font-family:'Inter',sans-serif;">${done}</strong> / ${total} 名 完了` + (currentName ? `<br><span style="color:#7C3AED;font-weight:700;">今: ${currentName} 様 へ 送信中…</span>` : '');
+  }
+  function closeSendingOverlay() {
+    const ov = document.getElementById('fp-sending-overlay');
+    if (ov) ov.remove();
+  }
+
+  // ============================
+  // 面談履歴 (ワークスペース top タブ)
+  // Zoom + 対面 + 議事録リンクの蓄積場所 — editorial layout
+  // ============================
+  function renderMeetingHistory() {
+    const root = document.getElementById('mh-root');
+    if (!root) return;
+
+    // ★ 同期 render: liveData が無くても empty/quick だけで描く。 取得は背後で並行
+    const live = window.LineAppLiveData || liveData || {};
+    if (!live.bookings) {
+      // 背後で fetch → 完了後に再 render
+      try { fetchLiveData().then(() => renderMeetingHistory()).catch(() => {}); } catch (_) {}
+    }
+    (function () {
+      const bookings = live.bookings || [];
+      const aiResults = live.ai_results || [];
+      const now = new Date();
+      const today0 = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+      // 完了予約: recordingStatus==='saved' or 過去日付
+      const seen = new Set();
+      const completed = bookings.filter(b => {
+        if (b.status === 'cancelled') return false;
+        if (b.recordingStatus === 'saved') return true;
+        if (!b.date) return false;
+        const md = new Date(b.date + 'T00:00:00');
+        return !isNaN(md.getTime()) && md < today0;
+      }).filter(b => {
+        const k = b.ts || (b.date + '_' + b.userId);
+        if (seen.has(k)) return false; seen.add(k); return true;
+      });
+
+      // 急遽対面 (localStorage)
+      let quick = [];
+      try { quick = JSON.parse(localStorage.getItem('fp-quick-inperson-meta') || '[]'); } catch (_) {}
+      const quickRows = quick.map(q => ({
+        ts: q.ts,
+        date: (q.startedAt || '').slice(0, 10),
+        time: (q.startedAt || '').slice(11, 16),
+        name: q.clientName + ' 様',
+        userId: q.clientId,
+        isInperson: true,
+      }));
+
+      const all = quickRows.concat(completed).sort((a, b) => {
+        const ka = String(a.date || '') + (a.time || '');
+        const kb = String(b.date || '') + (b.time || '');
+        return kb.localeCompare(ka);
+      });
+
+      // バッジ更新
+      const navCount = document.getElementById('nav-count-history');
+      if (navCount) navCount.textContent = all.length > 0 ? String(all.length) : '';
+
+      // 月別グルーピング
+      const byMonth = {};
+      all.forEach(b => {
+        const ym = (b.date || '').slice(0, 7) || 'unknown';
+        (byMonth[ym] = byMonth[ym] || []).push(b);
+      });
+      const months = Object.keys(byMonth).sort().reverse();
+
+      // 統計
+      const thisYm = String(now.getFullYear()) + '-' + String(now.getMonth() + 1).padStart(2, '0');
+      const thisMonthCount = byMonth[thisYm]?.length || 0;
+      const yearCount = all.filter(b => (b.date || '').slice(0, 4) === String(now.getFullYear())).length;
+      const withMinutes = all.filter(b => aiResults.find(r =>
+        (r.bookingTs && r.bookingTs === b.ts) ||
+        (r.userId && r.userId === b.userId) ||
+        (r.customerName && r.customerName === (b.name || '').replace(/様$/, '').trim())
+      )).length;
+      const minRate = all.length > 0 ? Math.round((withMinutes / all.length) * 100) : 0;
+
+      // ----- HTML -----
+      const fmtMonth = ym => {
+        if (ym === 'unknown') return '日付未定';
+        const [y, m] = ym.split('-');
+        return `<span style="font-family:'Inter',sans-serif;font-weight:600;font-size:0.7em;letter-spacing:0.06em;color:#9ca3af;">${y}</span>　${parseInt(m, 10)}月`;
+      };
+      const fmtWeekday = dateStr => {
+        if (!dateStr) return '';
+        const d = new Date(dateStr + 'T00:00:00');
+        if (isNaN(d.getTime())) return '';
+        return ['日', '月', '火', '水', '木', '金', '土'][d.getDay()];
+      };
+
+      root.innerHTML = `
+        <style>
+          .mh-page { max-width: 920px; }
+          .mh-header { padding: 0 0 22px; border-bottom: 1px solid #e8e2d4; margin-bottom: 26px; }
+          .mh-eyebrow { font-size: 10.5px; font-weight: 700; color: #9a5a18; letter-spacing: 0.22em; text-transform: uppercase; margin-bottom: 8px; font-family: 'Inter',sans-serif; }
+          .mh-title { font-family: 'Noto Serif JP', serif; font-size: 30px; font-weight: 700; letter-spacing: 0.02em; margin: 0 0 8px; color: #1f2a3f; line-height: 1.2; }
+          .mh-sub { color: #6b7280; font-size: 13px; margin: 0; line-height: 1.65; }
+          .mh-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: #e8e2d4; border: 1px solid #e8e2d4; border-radius: 10px; overflow: hidden; margin-bottom: 32px; }
+          .mh-stat { background: #fafaf7; padding: 18px 22px; }
+          .mh-stat-label { font-size: 10px; font-weight: 700; color: #9a5a18; letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 6px; font-family: 'Inter',sans-serif; }
+          .mh-stat-val { font-size: 26px; font-weight: 800; color: #1f2a3f; font-family: 'Inter',sans-serif; line-height: 1; letter-spacing: -0.02em; }
+          .mh-stat-unit { font-size: 11px; color: #9ca3af; font-weight: 600; margin-left: 4px; }
+          .mh-month-head { font-family: 'Noto Serif JP', serif; font-size: 22px; font-weight: 700; color: #1f2a3f; margin: 28px 0 14px; padding-bottom: 8px; border-bottom: 1px solid #e8e2d4; display: flex; align-items: baseline; justify-content: space-between; }
+          .mh-month-count { font-size: 11px; color: #9ca3af; font-weight: 700; letter-spacing: 0.12em; font-family: 'Inter',sans-serif; }
+          .mh-card { background: #fff; border: 1px solid #e8e2d4; border-left: 4px solid #c19a3a; border-radius: 10px; padding: 18px 22px; margin-bottom: 10px; display: grid; grid-template-columns: 88px 1fr auto; gap: 22px; align-items: center; transition: box-shadow 0.15s, transform 0.15s; }
+          .mh-card:hover { box-shadow: 0 6px 22px rgba(193,154,58,0.18), 0 1px 3px rgba(15,23,42,0.04); }
+          .mh-card.no-minutes { border-left-color: #d1c8b3; }
+          .mh-date-block { border-right: 1px solid #e8e2d4; padding-right: 18px; }
+          .mh-date-day { font-family: 'Inter',sans-serif; font-size: 24px; font-weight: 800; color: #1f2a3f; line-height: 1; letter-spacing: -0.02em; }
+          .mh-date-month { font-size: 10.5px; color: #9a5a18; font-weight: 700; letter-spacing: 0.12em; margin-top: 4px; font-family: 'Inter',sans-serif; }
+          .mh-date-time { font-size: 11.5px; color: #6b7280; font-weight: 600; margin-top: 6px; font-family: 'Inter',sans-serif; }
+          .mh-meta { min-width: 0; }
+          .mh-name { font-family: 'Noto Serif JP', serif; font-size: 17px; font-weight: 700; color: #1f2a3f; margin-bottom: 4px; letter-spacing: 0.02em; }
+          .mh-kind { display: inline-block; font-size: 9.5px; font-weight: 800; padding: 2px 8px; border-radius: 4px; letter-spacing: 0.08em; margin-left: 8px; vertical-align: 1px; font-family: 'Inter',sans-serif; }
+          .mh-kind.zoom { background: #f0f4fa; color: #1e3a5f; }
+          .mh-kind.inperson { background: #faf5ff; color: #6d28d9; }
+          .mh-minutes-preview { font-size: 11.5px; color: #6b7280; line-height: 1.55; }
+          .mh-minutes-preview .has { color: #065F46; font-weight: 700; }
+          .mh-minutes-preview .none { color: #c0b8a5; font-style: italic; }
+          .mh-actions { display: flex; gap: 8px; align-items: center; }
+          .mh-btn { display: inline-flex; align-items: center; gap: 5px; padding: 6px 14px; border-radius: 99px; font-size: 11.5px; font-weight: 700; letter-spacing: 0.02em; cursor: pointer; font-family: 'Hiragino Sans',sans-serif; border: 1.5px solid transparent; transition: background .12s, border-color .12s, color .12s; white-space: nowrap; background: transparent; }
+          .mh-btn-minutes { border-color: #c19a3a; color: #1f2a3f; }
+          .mh-btn-minutes:hover { background: #fbf5e3; border-color: #9a5a18; color: #9a5a18; }
+          .mh-btn-minutes:disabled { background: transparent; border-color: #e5e7eb; color: #c0b8a5; cursor: not-allowed; opacity: 0.55; }
+          .mh-btn-client { border-color: #cbd5e1; color: #1f2a3f; }
+          .mh-btn-client:hover { background: #f8fafc; border-color: #94a3b8; }
+          .mh-empty { background: #fff; border: 1px dashed #e8e2d4; border-radius: 10px; padding: 40px 36px; color: #6b7280; font-size: 13px; line-height: 1.8; text-align: center; }
+          .mh-empty-title { font-family: 'Noto Serif JP', serif; font-size: 16px; font-weight: 700; color: #1f2a3f; margin-bottom: 10px; }
+          @media (max-width: 720px) {
+            .mh-card { grid-template-columns: 72px 1fr; gap: 14px; padding: 14px 16px; }
+            .mh-actions { grid-column: 1 / -1; justify-content: flex-end; padding-top: 8px; border-top: 1px dashed #e8e2d4; margin-top: 4px; }
+            .mh-stats { grid-template-columns: 1fr; }
+          }
+        </style>
+
+        <div class="mh-page">
+          <div class="mh-header">
+            <div class="mh-eyebrow">Past Meetings · 面談履歴</div>
+            <h1 class="mh-title">これまでの面談</h1>
+            <p class="mh-sub">Zoom 録画・対面録画が完了したミーティングを時系列で振り返り。各行から議事録と顧客カードへ飛べます。</p>
+          </div>
+
+          <div class="mh-stats">
+            <div class="mh-stat">
+              <div class="mh-stat-label">This Month</div>
+              <div class="mh-stat-val">${thisMonthCount}<span class="mh-stat-unit">件</span></div>
+            </div>
+            <div class="mh-stat">
+              <div class="mh-stat-label">${now.getFullYear()} 累計</div>
+              <div class="mh-stat-val">${yearCount}<span class="mh-stat-unit">件</span></div>
+            </div>
+            <div class="mh-stat">
+              <div class="mh-stat-label">議事録 生成率</div>
+              <div class="mh-stat-val">${minRate}<span class="mh-stat-unit">%</span></div>
+            </div>
+          </div>
+
+          ${all.length === 0 ? `
+            <div class="mh-empty">
+              <div class="mh-empty-title">まだ完了した面談はありません</div>
+              録画完了した Zoom 面談 / 急遽対面録画が、ここに時系列で積み上がります。<br>
+              録画を停止すると、議事録が自動生成されて各行から確認できます。
+            </div>
+          ` : months.map(ym => {
+            const list = byMonth[ym];
+            return `
+              <h2 class="mh-month-head">
+                <span>${fmtMonth(ym)}</span>
+                <span class="mh-month-count">${list.length} ${list.length === 1 ? 'meeting' : 'meetings'}</span>
+              </h2>
+              ${list.map(b => {
+                const ai = aiResults.find(r =>
+                  (r.bookingTs && r.bookingTs === b.ts) ||
+                  (r.userId && r.userId === b.userId) ||
+                  (r.customerName && r.customerName === (b.name || '').replace(/様$/, '').trim())
+                );
+                const day = b.date ? String(parseInt(b.date.slice(8, 10), 10)) : '?';
+                const monthLabel = b.date ? String(parseInt(b.date.slice(5, 7), 10)) + '月' : '';
+                const wd = fmtWeekday(b.date);
+                const tm = b.time ? String(b.time).slice(0, 5) : '';
+                const isInp = b.isInperson;
+                const summary = ai ? String(ai.summary || '').split('\n')[0].slice(0, 80) : '';
+
+                return `
+                  <div class="mh-card ${ai ? '' : 'no-minutes'}">
+                    <div class="mh-date-block">
+                      <div class="mh-date-day">${day}</div>
+                      <div class="mh-date-month">${monthLabel} ${wd ? '(' + wd + ')' : ''}</div>
+                      ${tm ? `<div class="mh-date-time">${tm}</div>` : ''}
+                    </div>
+                    <div class="mh-meta">
+                      <div class="mh-name">
+                        ${escapeHtml(b.name || '匿名')}
+                        <span class="mh-kind ${isInp ? 'inperson' : 'zoom'}">${isInp ? '対面' : 'ZOOM'}</span>
+                      </div>
+                      <div class="mh-minutes-preview">
+                        ${ai
+                          ? `<span class="has">議事録あり</span>　${escapeHtml(summary)}`
+                          : '<span class="none">議事録なし（録画が完了していないか、 生成中）</span>'}
+                      </div>
+                    </div>
+                    <div class="mh-actions">
+                      <button class="mh-btn mh-btn-minutes" data-view-mh-minutes="${escapeHtml(b.ts || '')}" data-ai-summary="${escapeHtml(String(ai && ai.summary || ''))}" data-ai-transcript="${escapeHtml(String(ai && (ai.transcript || ai.summary) || ''))}" data-has-ai="${ai ? '1' : '0'}" data-client-name="${escapeHtml((b.name||'').replace(/様$/,'').trim())}">議事録${ai ? '' : ' (未)'}</button>
+                      ${b.userId ? `<button class="mh-btn mh-btn-client" data-open-mh-client="${escapeHtml(b.userId)}" data-client-name="${escapeHtml((b.name||'').replace(/様$/,'').trim())}">顧客カードへ</button>` : ''}
+                    </div>
+                  </div>`;
+              }).join('')}
+            `;
+          }).join('')}
+        </div>
+      `;
+
+      // bind
+      root.querySelectorAll('[data-view-mh-minutes]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const ts = btn.dataset.viewMhMinutes;
+          const cname = btn.dataset.clientName || 'お客様';
+          const hasAi = btn.dataset.hasAi === '1';
+          const liveBookings = (live.bookings || []);
+          const matched = liveBookings.find(x => String(x.ts).slice(0, 19) === String(ts).slice(0, 19));
+          // ★ 2026-06-22 roundK: AI結果オブジェクト全体を 渡して タブ構造で見せる
+          const aiByTs = aiResults.find(r =>
+            (r.bookingTs && String(r.bookingTs).slice(0, 19) === String(ts).slice(0, 19)) ||
+            (r.customerName && r.customerName === cname)
+          );
+          // tasks 等 JSON 文字列で 保存されてる場合は parse
+          const safeAi = aiByTs ? {
+            transcript: aiByTs.transcript || '',
+            summary: aiByTs.summary || '',
+            transcript_summary: aiByTs.transcript_summary || '',
+            key_concerns: typeof aiByTs.key_concerns === 'string'
+              ? (function () { try { return JSON.parse(aiByTs.key_concerns); } catch (_) { return aiByTs.key_concerns.split(/[,、]\s*/).filter(Boolean); } })()
+              : (aiByTs.key_concerns || []),
+            tasks: typeof aiByTs.tasks === 'string'
+              ? (function () { try { return JSON.parse(aiByTs.tasks); } catch (_) { return []; } })()
+              : (aiByTs.tasks || []),
+            next_meeting_suggestion: aiByTs.next_meeting_suggestion || '',
+          } : null;
+          // 多重 fallback
+          if (safeAi && (safeAi.transcript || safeAi.summary || safeAi.transcript_summary || safeAi.tasks?.length)) {
+            showTranscriptModal(safeAi, '議事録 — ' + cname);
+            return;
+          }
+          const transcript = (matched && matched.transcript)
+            || btn.dataset.aiTranscript
+            || btn.dataset.aiSummary
+            || '';
+          if (transcript) {
+            showTranscriptModal(transcript, '議事録 — ' + cname);
+            return;
+          }
+          // 議事録未生成 — 案内モーダル
+          const ov = document.createElement('div');
+          ov.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.78);z-index:2147483647;display:flex;align-items:center;justify-content:center;font-family:"Hiragino Sans",sans-serif;padding:24px;';
+          ov.innerHTML = `
+            <div style="background:#fff;border-radius:14px;max-width:460px;width:100%;padding:28px 32px;box-shadow:0 28px 80px rgba(0,0,0,0.4);">
+              <div style="display:inline-flex;align-items:center;gap:8px;background:#FEF3C7;color:#92400E;font-size:11px;font-weight:800;padding:5px 12px;border-radius:99px;letter-spacing:0.12em;margin-bottom:14px;">⏳ 議事録 未生成</div>
+              <h2 style="font-family:'Noto Serif JP',serif;font-size:18px;font-weight:700;color:#111827;margin:0 0 8px;">${escapeHtml(cname)} 様 / 議事録</h2>
+              <p style="font-size:13px;color:#6b7280;line-height:1.75;margin:0 0 18px;">この面談の議事録は まだ 生成されていません。 次のいずれかが 原因です:</p>
+              <ul style="font-size:12.5px;color:#374151;line-height:1.85;padding-left:22px;margin:0 0 18px;">
+                <li>録画停止後 まだ AI 処理が <strong>完了していない</strong> (通常 30〜60 秒)</li>
+                <li>録音は終わったが <strong>音声が短すぎた</strong> / 検出できなかった</li>
+                <li>AI 処理が <strong>エラー</strong> で 止まった (録画ファイル自体は Drive に保存済)</li>
+              </ul>
+              <div style="display:flex;gap:10px;justify-content:flex-end;">
+                <button class="btn-cta-ghost" id="fp-mh-err-close">閉じる</button>
+                <button class="btn-cta-primary" id="fp-mh-err-refresh" style="justify-content:center;">
+                  <span>更新して再確認</span>
+                  <span class="cta-arrow">↻</span>
+                </button>
+              </div>
+            </div>`;
+          document.body.appendChild(ov);
+          document.getElementById('fp-mh-err-close').addEventListener('click', () => ov.remove());
+          document.getElementById('fp-mh-err-refresh').addEventListener('click', async () => {
+            ov.remove();
+            await fetchLiveData();
+            renderMeetingHistory();
+          });
+        });
+      });
+      root.querySelectorAll('[data-open-mh-client]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const uid = btn.dataset.openMhClient;
+          const cname = btn.dataset.clientName;
+          const c = (window.DUMMY_CLIENTS || []).find(x => x.lineFriendId === uid || (cname && x.name === cname));
+          if (c && window.FpApp && window.FpApp.openClientModal) {
+            window.FpApp.openClientModal(c.id);
+          } else {
+            alert('該当する顧客カードが見つかりません');
+          }
+        });
+      });
+    })();
+  }
+
+  // ============================
   // 初期化 (LINEタブが activate されたら)
   // ============================
   window.LineApp = {
     activateSubview: activateSubview,
+    renderMeetingHistory: renderMeetingHistory,
+    openQuickInpersonModal: openQuickInpersonModal,
     init: function () {
       document.querySelectorAll('.line-subtab').forEach(t => {
         t.addEventListener('click', () => activateSubview(t.dataset.lineSub));
