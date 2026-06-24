@@ -4989,6 +4989,9 @@ ${ctxText}${surveyTxt}`;
                     <div class="fp-meeting-card-date" style="font-size:14px;font-weight:700;">${escapeHtml(fmtDateRobust(a.ts || a.createdAt) || fmtDateRobust(a.date))} ${escapeHtml(fmtJstTime(a.ts || a.createdAt))} 面談</div>
                     ${a.ts || a.createdAt ? `<div class="fp-meeting-card-recstart" style="font-size:11.5px;color:#6B7280;font-weight:600;margin-top:3px;">録画開始: ${escapeHtml(fmtJstTime(a.ts || a.createdAt))} (${escapeHtml(fmtDateRobust(a.ts || a.createdAt))})</div>` : ''}
                   </div>
+                  <div class="fp-meeting-card-actions" style="display:flex;gap:6px;flex-wrap:wrap;">
+                    <button class="fp-btn fp-btn-sm fp-btn-pdf" data-pdf-export="${escapeHtml(a.bookingTs || a.ts || a.createdAt || '')}" style="background:#C19A3A;border:1px solid #8B6F26;color:#fff;padding:7px 14px;border-radius:6px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 2px 6px rgba(193,154,58,0.35);letter-spacing:0.02em;">📄 議事録をPDFで保存</button>
+                  </div>
                 </div>
                 ${a.transcript ? `
                   <div class="fp-meeting-block">
