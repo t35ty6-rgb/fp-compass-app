@@ -6842,27 +6842,29 @@ ${JSON.stringify(jsonPayload, null, 2)}
       } catch (e) { /* silent */ }
     })();
 
+    // ★ オーナーfb 2026-06-24: Sonnet / Groq 切替 state (デフォルト Groq=速度優先)
+    let modelPref = 'groq'; // 'groq' | 'sonnet'
+
     async function runGenerate(brief, refineInstruction) {
       const genBtn = overlay.querySelector('#fp-brief-gen');
       const origLabel = genBtn ? genBtn.innerHTML : '';
       if (genBtn) { genBtn.disabled = true; genBtn.innerHTML = '✨ AI 生成中…'; }
-      // refineInstruction があれば refineHistory に 追加
       if (refineInstruction) {
         const prev = (overlay.querySelector('#fp-brief-result') || {}).value || '';
         refineHistory.push({ draft: prev, instruction: refineInstruction });
       }
       const prompt = buildBriefPrompt(client, brief, refineHistory);
       try {
-        // ★ オーナーfb 2026-06-24: 「AI下書き 遅すぎ」 → Groq Llama 70B 経由 (~0.5-1秒) に 切替
-        // 旧: Firebase Function generateBriefDraft (Claude Haiku 4秒)
-        // 失敗時は 旧経路に fallback
         let reply = '';
+        let usedModelLabel = '';
+        let elapsedMs = 0;
         try {
           const r = await fetch('https://fp-compass-webhook-527726449426.asia-northeast1.run.app/api/generate-line-draft', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               prompt,
+              model: modelPref === 'sonnet' ? 'sonnet' : 'groq',
               tenantId: (window.__fp && window.__fp.tenantId) || '',
               userId: client.lineFriendId || '',
               customerName: client.name || '',
@@ -6871,21 +6873,23 @@ ${JSON.stringify(jsonPayload, null, 2)}
           const d = await r.json();
           if (r.ok && d.ok && d.reply) {
             reply = d.reply;
-            console.log('[draft] Groq Llama', d.elapsedMs + 'ms', d.inputTokens + '/' + d.outputTokens + ' tok');
+            usedModelLabel = d.modelLabel || (modelPref === 'sonnet' ? 'Claude Sonnet' : 'Groq Llama 70B');
+            elapsedMs = d.elapsedMs || 0;
+            console.log('[draft]', usedModelLabel, elapsedMs + 'ms', d.inputTokens + '/' + d.outputTokens + ' tok');
           } else {
-            console.warn('[draft] Groq fail → fallback Claude:', d.error || r.status);
+            console.warn('[draft] endpoint fail → fallback Claude Haiku:', d.error || r.status);
           }
-        } catch (e) { console.warn('[draft] Groq fetch fail → fallback Claude:', e.message); }
+        } catch (e) { console.warn('[draft] fetch fail → fallback Claude Haiku:', e.message); }
         if (!reply) {
-          // Fallback: Anthropic Claude Haiku
           if (!window.__fp?.functions) throw new Error('functions 未初期化');
           const { httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-functions.js');
           const fn = httpsCallable(window.__fp.functions, 'generateBriefDraft');
           const res = await fn({ prompt });
           reply = (res.data && res.data.reply) || '';
+          usedModelLabel = 'Claude Haiku (fallback)';
         }
         if (!reply) throw new Error('AI 応答 が 空');
-        renderResultUI(brief, reply);
+        renderResultUI(brief, reply, usedModelLabel, elapsedMs);
       } catch (e) {
         console.error('[generateBriefDraft]', e);
         try { await navigator.clipboard.writeText(prompt); } catch (_) {}
@@ -6900,15 +6904,24 @@ ${JSON.stringify(jsonPayload, null, 2)}
       }
     }
 
-    function renderResultUI(brief, reply) {
+    function renderResultUI(brief, reply, modelLabel, elapsedMs) {
       overlay.querySelector('#fp-brief-step1').style.display = 'none';
       const after = overlay.querySelector('#fp-brief-after');
       after.style.display = 'block';
       const refineBadge = refineHistory.length > 0
         ? `<span style="background:#5B5BF0;color:#fff;font-size:10px;font-weight:800;padding:2px 8px;border-radius:99px;margin-left:8px;letter-spacing:0.04em;">${refineHistory.length} 回 添削</span>` : '';
+      const modelTag = modelLabel
+        ? `<span style="margin-left:auto;font-size:10px;font-weight:700;color:#475569;background:#F1F5F9;padding:2px 8px;border-radius:99px;">${escapeHtml(modelLabel)}${elapsedMs ? ' / ' + (elapsedMs/1000).toFixed(1) + '秒' : ''}</span>` : '';
       after.innerHTML = `
         <div style="background:linear-gradient(135deg,#F0FDF4,#fff);border:1px solid #BBF7D0;border-radius:10px;padding:14px 16px;margin-bottom:14px;font-size:12.5px;color:#065F46;font-weight:700;display:flex;align-items:center;">
-          ✅ AI下書き 生成 完了 (Claude Haiku) ${refineBadge}
+          ✅ AI下書き 生成 完了 ${refineBadge} ${modelTag}
+        </div>
+        <!-- ★ Model toggle (Sonnet で 再生成 ボタン) -->
+        <div style="background:#fff;border:1px solid #E2E8F0;border-radius:8px;padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:11.5px;">
+          <span style="color:#64748B;font-weight:700;">🎚 質をあげる:</span>
+          <button id="fp-model-sonnet" style="background:${modelPref === 'sonnet' ? 'linear-gradient(135deg,#C19A3A,#8B6F26)' : '#fff'};color:${modelPref === 'sonnet' ? '#fff' : '#1F2A3F'};border:1px solid ${modelPref === 'sonnet' ? '#C19A3A' : '#CBD5E1'};padding:5px 12px;border-radius:99px;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit;">🌟 Sonnet (3-5秒/質高)</button>
+          <button id="fp-model-groq" style="background:${modelPref === 'groq' ? 'linear-gradient(135deg,#3F6B4C,#2C4D38)' : '#fff'};color:${modelPref === 'groq' ? '#fff' : '#1F2A3F'};border:1px solid ${modelPref === 'groq' ? '#3F6B4C' : '#CBD5E1'};padding:5px 12px;border-radius:99px;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit;">⚡ Groq (1秒/速度)</button>
+          <span style="color:#94A3B8;font-size:10.5px;">↑ ボタンで モデル切替 → 「再生成」 で 別モデル比較</span>
         </div>
         <div style="background:#fff;border:1.5px solid #BBF7D0;border-radius:12px;padding:18px 20px;margin-bottom:14px;">
           <div style="font-family:'Inter',sans-serif;font-size:10px;letter-spacing:0.18em;color:#059669;font-weight:800;margin-bottom:8px;">📝 LINE 下書き 案</div>
@@ -6941,6 +6954,15 @@ ${JSON.stringify(jsonPayload, null, 2)}
 
     function bindResultButtons(brief) {
       const after = overlay.querySelector('#fp-brief-after');
+      // ★ Model toggle
+      after.querySelector('#fp-model-sonnet')?.addEventListener('click', () => {
+        modelPref = 'sonnet';
+        runGenerate(brief, '前回と同じ意図で 別モデル (Claude Sonnet) で 再生成 してください');
+      });
+      after.querySelector('#fp-model-groq')?.addEventListener('click', () => {
+        modelPref = 'groq';
+        runGenerate(brief, '前回と同じ意図で 速度優先モデル (Groq Llama) で 再生成 してください');
+      });
       after.querySelectorAll('.fp-refine-quick').forEach(btn => {
         btn.addEventListener('click', () => runGenerate(brief, btn.dataset.q));
       });

@@ -194,6 +194,8 @@
       // Stripe Checkout 戻り処理
       if (u.searchParams.get("signup_success")) {
         sessionStorage.setItem("fpc.checkout.result", "success");
+        // ★ オーナーfb 2026-06-24: signup 直後 → 初回 onboarding tour を 表示する flag
+        sessionStorage.setItem("fp_new_signup", "1");
       } else if (u.searchParams.get("signup_canceled")) {
         sessionStorage.setItem("fpc.checkout.result", "canceled");
       }
@@ -1268,7 +1270,7 @@ window.fpReadyAfterAuth = function() {
     });
   })();
 
-  const ver = "20260624H-name-cap";
+  const ver = "20260624J-onboarding";
   const scripts = [
     "life-events.js?v=" + ver,
     "recommender.js?v=" + ver,
@@ -1762,6 +1764,82 @@ window.fpReadyAfterAuth = function() {
   setTimeout(updateNavCounts, 800);
   setInterval(updateNavCounts, 5000);
 
+  // ★ オーナーfb 2026-06-24: 初回 signup 後 onboarding tour (1度だけ)
+  function maybeShowOnboarding() {
+    try {
+      // 表示条件: fp_new_signup フラグ あり OR 「再表示」 URL ?tour=1
+      const params = new URLSearchParams(location.search);
+      const force = params.has('tour');
+      const isNew = sessionStorage.getItem('fp_new_signup') === '1';
+      const alreadyDone = localStorage.getItem('fp_onboarding_done') === '1';
+      if (!force && (!isNew || alreadyDone)) return;
+      sessionStorage.removeItem('fp_new_signup');
+      const steps = [
+        {
+          icon: '✨', title: 'FP Compass へ ようこそ',
+          body: 'Zoom 面談を 録画 → AI が 文字起こし + 議事録 + LINE 文面を 自動生成。 月20件 商談 でも 月800円 (粗利95%) で 動きます。',
+          cta: '次へ',
+        },
+        {
+          icon: '👥', title: '① 顧客 を 登録 してみる',
+          body: '左サイドバー or 下部「+ 新規 顧客」 から 名前 だけで 追加 OK。 LINE 友だち追加 は 後から「LINE userId 紐付け」 で 統合できます。',
+          cta: '次へ',
+        },
+        {
+          icon: '🎥', title: '② Zoom or 対面 で 録画',
+          body: 'サイドバー「急遽 面談スタート」 → Zoom 即発行 / 対面 録音 を 選択。 終了で AI が 議事録 + タスク + LINE下書き を 自動生成 (60分 で 約30秒)。',
+          cta: '次へ',
+        },
+        {
+          icon: '💬', title: '③ AI で LINE 返信 を 作る',
+          body: '顧客モーダル → ✍ AI下書き で 議事録/家族/過去質問 を 踏まえた 文面 を 1秒で 生成。 「📤 LINE で 送信」 で その場で 客に push。',
+          cta: '次へ',
+        },
+        {
+          icon: '📖', title: '④ 困ったら マニュアル',
+          body: '右上「もっと」 → ヘルプ から 全機能解説。 オーナーへの 質問は support@skeleton-inc.jp で 24時間以内 返信。 では はじめましょう!',
+          cta: 'はじめる',
+        },
+      ];
+      let idx = 0;
+      const overlay = document.createElement('div');
+      overlay.id = 'fp-onboarding';
+      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.72);backdrop-filter:blur(8px);z-index:2147483645;display:flex;align-items:center;justify-content:center;padding:24px;font-family:"Noto Sans JP",sans-serif;';
+      function render() {
+        const s = steps[idx];
+        overlay.innerHTML = `
+          <div style="background:#FFFBF1;max-width:480px;width:100%;border-radius:18px;box-shadow:0 30px 80px rgba(0,0,0,0.4);overflow:hidden;border-top:6px solid #C19A3A;">
+            <div style="padding:34px 30px 22px;text-align:center;">
+              <div style="font-size:64px;line-height:1;margin-bottom:14px;">${s.icon}</div>
+              <div style="font-family:'Inter',sans-serif;font-size:10.5px;letter-spacing:0.22em;color:#8B7D5D;font-weight:800;text-transform:uppercase;margin-bottom:6px;">Step ${idx+1} / ${steps.length}</div>
+              <h2 style="font-family:'Noto Serif JP',serif;font-size:22px;font-weight:700;color:#1F2A3F;margin:0 0 12px;letter-spacing:0.01em;">${s.title}</h2>
+              <p style="font-size:13.5px;line-height:1.85;color:#4A556A;margin:0 0 24px;">${s.body}</p>
+              <button id="fp-onb-next" style="background:linear-gradient(135deg,#C19A3A,#8B6F26);color:#fff;border:none;padding:12px 32px;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:0.06em;box-shadow:0 6px 20px rgba(193,154,58,0.35);">${s.cta} →</button>
+              <div style="margin-top:18px;">
+                <button id="fp-onb-skip" style="background:transparent;border:none;color:#8B7D5D;font-size:11.5px;cursor:pointer;font-family:inherit;letter-spacing:0.04em;">スキップ</button>
+              </div>
+            </div>
+            <div style="display:flex;gap:6px;padding:0 30px 22px;justify-content:center;">
+              ${steps.map((_, i) => `<div style="width:${i === idx ? 24 : 8}px;height:6px;border-radius:3px;background:${i === idx ? '#C19A3A' : '#E8D9A8'};transition:width .3s;"></div>`).join('')}
+            </div>
+          </div>`;
+        overlay.querySelector('#fp-onb-next').addEventListener('click', () => {
+          idx++;
+          if (idx >= steps.length) finish();
+          else render();
+        });
+        overlay.querySelector('#fp-onb-skip').addEventListener('click', finish);
+      }
+      function finish() {
+        localStorage.setItem('fp_onboarding_done', '1');
+        overlay.remove();
+      }
+      document.body.appendChild(overlay);
+      render();
+    } catch (e) { console.warn('onboarding fail', e); }
+  }
+  setTimeout(maybeShowOnboarding, 2200);
+
   // MEGA HERO hydration
   function hydrateHero() {
     if (!window.DUMMY_CLIENTS || !window.Recommender || !window.LifeEvents) return false;
@@ -1886,7 +1964,7 @@ window.fpReadyAfterAuth = function() {
 <script>
 (function(){
   // 最新の ver を 1 箇所に集約 (fpReadyAfterAuth 側と一致させる必要あり)
-  const FP_VERSION = "20260624H-name-cap";
+  const FP_VERSION = "20260624J-onboarding";
   try { window.FP_VERSION = FP_VERSION; } catch(_) {}
   const loadTime = new Date();
   const hhmm = String(loadTime.getHours()).padStart(2,'0') + ':' + String(loadTime.getMinutes()).padStart(2,'0');
