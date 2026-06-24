@@ -4898,7 +4898,7 @@ ${ctxText}${surveyTxt}`;
                 </div>
                 <div class="fp-meeting-card-actions" style="display:flex;gap:6px;flex-wrap:wrap;">
                   ${b.driveUrl ? `<a href="${escapeHtml(b.driveUrl)}" target="_blank" class="fp-btn fp-btn-sm fp-btn-gold">🎥 録画を見る</a>` : ''}
-                  <button class="fp-btn fp-btn-sm fp-btn-pdf" data-pdf-export="${escapeHtml(b.ts || '')}" style="background:#fff;border:1px solid #C19A3A;color:#8B6F26;padding:5px 12px;border-radius:6px;font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit;">📄 PDF</button>
+                  <button class="fp-btn fp-btn-sm fp-btn-pdf" data-pdf-export="${escapeHtml(b.ts || '')}" style="background:#C19A3A;border:1px solid #8B6F26;color:#fff;padding:7px 14px;border-radius:6px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 2px 6px rgba(193,154,58,0.35);letter-spacing:0.02em;">📄 議事録をPDFで保存</button>
                 </div>
               </div>
               ${aiData.transcript ? `
