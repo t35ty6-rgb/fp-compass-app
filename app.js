@@ -1796,6 +1796,50 @@
         c._lineHistoryLoading = false;
       }).catch(() => { c._lineHistoryLoading = false; });
     }
+    // ★ オーナーfb 2026-06-25 (重さ解消 Phase 4 lite mode):
+    // 初期fetchは ai_results の transcript を strip + 最新60件のみ → ここで full data を hydrate
+    // 同じ顧客を再度開いた時 は スキップ (cache)
+    try {
+      // ★ ai_result.userId は Firestore 顧客ID(=c.id) に揃ってる。 lineFriendId は LINE側 と Firestore側で別物。
+      // /api/customer-detail は backend で `x.userId === uid || x.lineFriendId === uid` で 両方マッチ
+      const detailUid = c._fsCustomerId || c.id;
+      if (detailUid && window.LineAppLiveData?._lite && typeof window.getCustomerDetailApi === 'function' && !c._fullHydrated && !c._fullHydrating) {
+        c._fullHydrating = true;
+        fetch(window.getCustomerDetailApi(detailUid))
+          .then(r => r.ok ? r.json() : null)
+          .then(detail => {
+            if (!detail) return;
+            try {
+              const live = window.LineAppLiveData;
+              if (!live) return;
+              // ai_results を merge (同じbookingTsは backend版で上書き = transcript復元)
+              if (Array.isArray(detail.ai_results)) {
+                const existingKeyset = new Set();
+                (live.ai_results || []).forEach(a => existingKeyset.add(a.bookingTs || a.ts || a.createdAt));
+                detail.ai_results.forEach(a => {
+                  const key = a.bookingTs || a.ts || a.createdAt;
+                  const idx = (live.ai_results || []).findIndex(x => (x.bookingTs || x.ts || x.createdAt) === key);
+                  if (idx >= 0) live.ai_results[idx] = a;       // upgrade lite → full
+                  else (live.ai_results = live.ai_results || []).push(a);   // 新規追加 (lite cap で 落ちてた古いやつ)
+                });
+              }
+              if (Array.isArray(detail.line_messages)) {
+                const seen = new Set((live.line_messages || []).map(m => (m.userId || '') + '|' + (m.ts || '') + '|' + (m.text || '').slice(0, 50)));
+                detail.line_messages.forEach(m => {
+                  const k = (m.userId || '') + '|' + (m.ts || '') + '|' + (m.text || '').slice(0, 50);
+                  if (!seen.has(k)) (live.line_messages = live.line_messages || []).push(m);
+                });
+              }
+              c._fullHydrated = true;
+              // 議事録タブ が active なら 再描画 (transcript全文 + 古い議事録 復元)
+              const meetingsTab = document.querySelector('.cd-tab.cd-tab-active[data-cdtab="meetings"]');
+              if (meetingsTab && typeof openClientModal === 'function') openClientModal(c.id, { fromPopstate: true });
+            } catch (e) { console.warn('[customer-detail hydrate] merge fail', e); }
+            c._fullHydrating = false;
+          })
+          .catch(() => { c._fullHydrating = false; });
+      }
+    } catch (_) {}
     // ★ 議事録 → 自動タグ抽出 (NISA/iDeCo/保険/相続 等を 議事録本文から regex で キャッチ → c.autoTags)
     //   オーナーfb 2026-06-20: 重さ対策 → 議事録 数 が 同じなら 前回結果 再利用 (キャッシュ)
     try {

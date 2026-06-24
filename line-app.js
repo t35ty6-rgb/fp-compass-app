@@ -5305,7 +5305,11 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
   window.FpTenant = { current: currentFpId, set: setCurrentFpId };
   // ★ CLOUD_RUN_API は 関数化 — login 後 に currentFpId() の値 が 変わる ため
   //   const で 評価固定 だと page load 時 (login前) の 空文字で 固定 → 全fetch で fpId空 で AI results取れない
-  const getCloudRunApi = () => CLOUD_RUN_BASE + '/api/bookings?fpId=' + encodeURIComponent(currentFpId());
+  // ★ 2026-06-25 軽量化: lite=1 で initial fetch (transcript 等 重いfield strip)
+  //   顧客モーダル open 時に /api/customer-detail で 該当客の full data を hydrate
+  const getCloudRunApi = () => CLOUD_RUN_BASE + '/api/bookings?lite=1&fpId=' + encodeURIComponent(currentFpId());
+  const getCustomerDetailApi = (userId) => CLOUD_RUN_BASE + '/api/customer-detail?fpId=' + encodeURIComponent(currentFpId()) + '&userId=' + encodeURIComponent(userId);
+  window.getCustomerDetailApi = getCustomerDetailApi;
   let liveData = null;
 
   function showSyncIndicator(state, detail) {
