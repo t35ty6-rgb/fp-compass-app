@@ -1273,7 +1273,7 @@ window.fpReadyAfterAuth = function() {
     });
   })();
 
-  const ver = "20260625D-pdf-removed";
+  const ver = "20260625E-lighter";
   const scripts = [
     "life-events.js?v=" + ver,
     "recommender.js?v=" + ver,
@@ -1308,13 +1308,16 @@ window.fpReadyAfterAuth = function() {
 <script>
   // Lucide icon hydration
   function hydrateIcons() {
+    if (document.hidden) return;
     if (window.lucide && window.lucide.createIcons) {
       window.lucide.createIcons({ attrs: { 'stroke-width': '1.6' } });
     }
   }
   document.addEventListener('DOMContentLoaded', () => {
     hydrateIcons();
-    setInterval(hydrateIcons, 1200);
+    // ★ 2026-06-25 軽量化: 1.2s → 4s, 非表示時 skip
+    setInterval(hydrateIcons, 4000);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) hydrateIcons(); });
   });
 
   // Howto banner: collapse by default + dismissible + persisted
@@ -1352,11 +1355,13 @@ window.fpReadyAfterAuth = function() {
     }
   }
   function scanHowtoBanners() {
+    if (document.hidden) return;
     document.querySelectorAll('.howto-banner').forEach(setupHowtoBanner);
   }
   document.addEventListener('DOMContentLoaded', () => {
     scanHowtoBanners();
-    setInterval(scanHowtoBanners, 1500);
+    // ★ 2026-06-25 軽量化: 1.5s → 5s + 非表示時 skip
+    setInterval(scanHowtoBanners, 5000);
   });
 
   // Breadcrumb sync (current tab → top bar)
@@ -1765,7 +1770,8 @@ window.fpReadyAfterAuth = function() {
     setText('nav-count-dormant', dormantCount);
   }
   setTimeout(updateNavCounts, 800);
-  setInterval(updateNavCounts, 5000);
+  // ★ 2026-06-25 軽量化: 5s → 15s + 非表示時 skip
+  setInterval(() => { if (!document.hidden) updateNavCounts(); }, 15000);
 
   // ★ オーナーfb 2026-06-24: 初回 signup 後 onboarding tour (1度だけ)
   function maybeShowOnboarding() {
@@ -1967,7 +1973,7 @@ window.fpReadyAfterAuth = function() {
 <script>
 (function(){
   // 最新の ver を 1 箇所に集約 (fpReadyAfterAuth 側と一致させる必要あり)
-  const FP_VERSION = "20260625D-pdf-removed";
+  const FP_VERSION = "20260625E-lighter";
   try { window.FP_VERSION = FP_VERSION; } catch(_) {}
   const loadTime = new Date();
   const hhmm = String(loadTime.getHours()).padStart(2,'0') + ':' + String(loadTime.getMinutes()).padStart(2,'0');

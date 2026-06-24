@@ -9084,8 +9084,9 @@ ${client.name}さん、ありがとうございます。
 
     // 残存 cleared flag を解除 (前回までの残骸)
     try { localStorage.removeItem('fp-cleared-permanently'); } catch (_) {}
-    // ★ mergeLineActivity 90秒毎 (オーナーfb 2026-06-20 重い → 30→90秒 緩和)
+    // ★ mergeLineActivity 90秒毎 (2026-06-25 軽量化: 非表示時 skip)
     setInterval(() => {
+      if (document.hidden) return;
       try { mergeLineActivity(); } catch (e) { console.warn('mergeLineActivity periodic fail:', e); }
     }, 90000);
     // 起動直後も実行 (3秒待ってfetchLiveData完了を見越す)

@@ -1432,7 +1432,11 @@
   }
   window.refreshFirestoreCustomers = refreshFirestoreCustomers;
   if (!window._fpFirestoreInterval) {
-    window._fpFirestoreInterval = setInterval(refreshFirestoreCustomers, 20000);
+    // ★ 2026-06-25 軽量化: 20s → 45s + 非表示時 skip (Firestore fetch を 裏で 回し続けない)
+    window._fpFirestoreInterval = setInterval(() => {
+      if (document.hidden) return;
+      refreshFirestoreCustomers();
+    }, 45000);
     refreshFirestoreCustomers();
   }
 
@@ -8727,8 +8731,14 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
     bootLiveData: function () {
       fetchLiveData();
       // 30秒ごとに自動更新 (LINE 友だち追加や bookings 反映が常時走るよう)
+      // ★ 2026-06-25 軽量化: 30s → 60s + 非表示時 skip (重い fetch を 裏で 回さない)
       if (!window._fpBootInterval) {
-        window._fpBootInterval = setInterval(fetchLiveData, 30000);
+        window._fpBootInterval = setInterval(() => {
+          if (document.hidden) return;
+          fetchLiveData();
+        }, 60000);
+        // 再表示時 即 1回 リフレッシュ
+        document.addEventListener('visibilitychange', () => { if (!document.hidden) fetchLiveData(); });
       }
     }
   };
