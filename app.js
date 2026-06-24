@@ -1779,6 +1779,23 @@
     // AI BRIEF で拡大した modal-content の幅を通常に戻す
     try { document.getElementById('modal-content').style.maxWidth = ''; } catch (_) {}
     ensureLineHistory_(c);
+    // ★ オーナーfb 2026-06-24 (重さ解消): 初回ロード は LINE 履歴 20件 だけ →
+    // 顧客モーダル を 開いた時に フル履歴 を lazy load
+    if (c._lineHistoryPartial && typeof window.fetchFullLineHistory === 'function' && !c._lineHistoryLoading) {
+      c._lineHistoryLoading = true;
+      window.fetchFullLineHistory(c._fsCustomerId || c.id).then(full => {
+        if (full && full.length > (c.lineHistory || []).length) {
+          c.lineHistory = full;
+          c._lineHistoryPartial = false;
+          // モーダル開いてる間 に LINE タブ が active なら再描画
+          try {
+            const lineTab = document.querySelector('.cd-tab.cd-tab-active[data-cdtab="line"]');
+            if (lineTab && typeof openClientModal === 'function') openClientModal(c.id, { fromPopstate: true });
+          } catch (_) {}
+        }
+        c._lineHistoryLoading = false;
+      }).catch(() => { c._lineHistoryLoading = false; });
+    }
     // ★ 議事録 → 自動タグ抽出 (NISA/iDeCo/保険/相続 等を 議事録本文から regex で キャッチ → c.autoTags)
     //   オーナーfb 2026-06-20: 重さ対策 → 議事録 数 が 同じなら 前回結果 再利用 (キャッシュ)
     try {
@@ -1886,18 +1903,26 @@
       if (c.name)         aiKeys.add('fp-ai-' + c.name);
       myBks.forEach(b => { if (b.userId) aiKeys.add('fp-ai-' + b.userId); if (b.ts) aiKeys.add('fp-ai-' + b.ts); if (b.name) aiKeys.add('fp-ai-' + b.name); });
       const meetingEvents = [];
+      // ★ オーナーfb 2026-06-23: 議事録の日付が1日ずれる → UTC を Asia/Tokyo で日付化
+      const toJstDateStr = (raw) => {
+        if (!raw) return null;
+        const d = new Date(raw);
+        if (isNaN(d.getTime())) return null;
+        return d.toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' });
+      };
       const collectFromEntry = (a) => {
         if (!a || (!a.summary && !a.key_concerns && !(typeof a.key_concerns === 'string'))) return;
-        let dateStr = a.date || String(a.bookingTs || '').slice(0, 10);
-        if (!dateStr && a.createdAt) dateStr = String(a.createdAt).slice(0, 10);
-        if (!dateStr && a.ts) dateStr = String(a.ts).slice(0, 10);
-        if (!dateStr) dateStr = new Date().toISOString().slice(0, 10);
+        let dateStr = (typeof a.date === 'string' && /^\d{4}-\d{2}-\d{2}/.test(a.date))
+          ? a.date.slice(0, 10)
+          : (toJstDateStr(a.bookingTs) || toJstDateStr(a.createdAt) || toJstDateStr(a.ts) || toJstDateStr(new Date()));
         let kc = a.key_concerns;
         if (typeof kc === 'string') { try { kc = JSON.parse(kc); } catch (_) { kc = []; } }
         const concerns = (kc || []).slice(0, 3).join(' / ');
         const label = '面談実施' + (concerns ? ' — ' + concerns : '');
+        // dateStr "YYYY-MM-DD" を ローカル noon でDate化 (UTC midnightだと前日表示される)
+        const [yy, mm, dd] = dateStr.split('-').map(Number);
         meetingEvents.push({
-          date: new Date(dateStr),
+          date: new Date(yy, mm - 1, dd, 12, 0, 0),
           kind: 'meeting',
           cat: 'meeting',
           label,
@@ -2703,7 +2728,7 @@
 
           <!-- ★ オーナーfb 2026-06-20: 「今すぐ Zoom 開始」 + 「日時指定 Zoom 予約」 — 顧客名直下、 Zoom 公式アイコン -->
           ${c.lineFriendId ? `
-            <div style="margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <div class="cd-zoom-pair" style="margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
               <button id="cd-instant-zoom-btn" data-client-id="${escapeHtml(c.id)}" style="background:#fff;color:#0F172A;border:2px solid #2D8CFF;padding:12px 14px;border-radius:14px;font-size:14.5px;font-weight:900;cursor:pointer;font-family:'Noto Sans JP',sans-serif;letter-spacing:0.005em;box-shadow:0 6px 18px rgba(45,140,255,0.22);display:flex;align-items:center;justify-content:flex-start;gap:10px;min-height:66px;transition:transform .12s,box-shadow .12s;">
                 <svg width="34" height="34" viewBox="0 0 100 100" style="flex-shrink:0;border-radius:10px;box-shadow:0 2px 6px rgba(45,140,255,0.30);">
                   <defs><linearGradient id="zg-inst-${escapeHtml(c.id)}" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#4A9BFF"/><stop offset="100%" stop-color="#2D8CFF"/></linearGradient></defs>
@@ -3018,6 +3043,7 @@
             })()}</button>
             <button class="cd-tab" data-cdtab="timeline" style="font-size:15px !important;font-weight:700 !important;">履歴 <span class="cd-tab-count">${events.length}</span></button>
             <button class="cd-tab" data-cdtab="meetings" style="font-size:15px !important;font-weight:700 !important;">議事録 <span class="cd-tab-count" id="cd-meetings-count">…</span></button>
+            <button class="cd-tab" data-cdtab="qa" style="font-size:15px !important;font-weight:700 !important;">Q&A <span class="cd-tab-count" id="cd-qa-count">—</span></button>
             <button class="cd-tab" data-cdtab="family" style="font-size:15px !important;font-weight:700 !important;">家族 <span class="cd-tab-count">${(c.family || []).length + 1}</span></button>
           </div>
 
@@ -3112,14 +3138,26 @@
                   <!-- ★ 2026-06-22 roundK: LINE ID 後付け 紐付け input — 顧客登録 後に LINE 友だち追加してもらった時の流れ -->
                   <div style="background:#FBF5E3;border:1.5px solid #C19A3A;border-radius:10px;padding:12px 14px;margin-bottom:12px;">
                     <div style="font-size:11px;font-weight:800;color:#9A5A18;letter-spacing:0.12em;margin-bottom:6px;">🔗 LINE 友だち ID を 後から 紐付け</div>
-                    <p style="font-size:11.5px;color:#5e4d1a;line-height:1.65;margin:0 0 10px;">先に Zoom などで お会いした お客様。 後で 公式LINE を 友だち追加してもらったら、 ここで <strong>LINE userId</strong> を 入れて 紐付けてください。 LINE 履歴も 紐付きます。</p>
+                    <p style="font-size:11.5px;color:#5e4d1a;line-height:1.65;margin:0 0 10px;">先に Zoom などで お会いした お客様。 後で 公式LINE を 友だち追加してもらったら、 ここで <strong>LINE userId</strong> を 入れて 紐付けてください。 LINE 履歴も 紐付きます。 取得方法 は LINE連携済 顧客 を 開くと 同じ枠に 「📋 ID をコピー」 ボタン が 出ます。</p>
                     <div style="display:flex;gap:8px;align-items:stretch;">
                       <input type="text" id="cd-lineid-attach-input" placeholder="U+32文字 の LINE userId (例: U6f07ed9af4afce1bb...)" style="flex:1;padding:8px 12px;font-size:12px;font-family:'JetBrains Mono',monospace;border:1.5px solid #E8D9A8;border-radius:7px;background:#fff;">
                       <button id="cd-lineid-attach-btn" data-cid="${escapeHtml(c.id)}" class="btn-cta-primary" style="padding:8px 18px;font-size:12.5px;border-radius:7px;justify-content:center;"><span>紐付ける</span></button>
                     </div>
                     <div id="cd-lineid-attach-msg" style="font-size:11px;color:#9A5A18;margin-top:8px;min-height:14px;"></div>
                   </div>
-                ` : ''}
+                ` : `
+                  <!-- ★ オーナーfb 2026-06-23: LINE 連携済 客 で userId 表示+コピー + 既存客マージ -->
+                  <div style="background:#F0FDF4;border:1.5px solid #06C755;border-radius:10px;padding:10px 14px;margin-bottom:12px;">
+                    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                      <div style="flex:1 1 auto;min-width:0;">
+                        <div style="font-size:11px;font-weight:800;color:#065F46;letter-spacing:0.12em;margin-bottom:4px;">🔗 LINE userId (この客の)</div>
+                        <code id="cd-lineid-show" style="font-size:11px;font-family:'JetBrains Mono',monospace;color:#0F172A;background:#fff;padding:4px 8px;border-radius:5px;border:1px solid #BBF7D0;display:inline-block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(c.lineFriendId)}</code>
+                      </div>
+                      <button id="cd-lineid-copy" data-uid="${escapeHtml(c.lineFriendId)}" style="background:#06C755;color:#fff;border:none;padding:8px 14px;border-radius:7px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;flex-shrink:0;">📋 コピー</button>
+                    </div>
+                    <button id="cd-merge-existing" data-cid="${escapeHtml(c.id)}" data-uid="${escapeHtml(c.lineFriendId)}" style="margin-top:8px;width:100%;background:#fff;color:#065F46;border:1.5px solid #06C755;padding:9px 12px;border-radius:7px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit;">→ この客は 既に登録済 (既存客に マージ)</button>
+                  </div>
+                `}
                 <textarea id="cd-line-input" placeholder="メッセージを入力... (Cmd+Enter で送信)"></textarea>
                 <div class="cd-line-composer-foot">
                   <span class="cd-line-composer-meta">${c.lineFriendId ? '✓ LINE連携済' : '⚠ LINE friend ID 未登録 (上の枠で 紐付け)'}</span>
@@ -3142,6 +3180,15 @@
             <!-- MEETINGS -->
             <div class="cd-tabpanel" data-cdpanel="meetings" hidden>
               ${renderMeetingRecordsBlock(c) || '<div class="cd-empty">面談録なし</div>'}
+            </div>
+
+            <!-- Q&A (Phase 2: LINE質問 自動分類) -->
+            <div class="cd-tabpanel" data-cdpanel="qa" hidden>
+              <div id="cd-qa-content" data-client-id="${escapeHtml(c.id)}">
+                <div style="padding:32px 24px;text-align:center;color:#94A3B8;font-size:13px;">
+                  Q&A 分析 — 「Q&A」タブを開くと自動分析
+                </div>
+              </div>
             </div>
 
             <!-- FAMILY 家系図 -->
@@ -3734,6 +3781,10 @@ ${ctxText}${surveyTxt}`;
             });
           } catch(_) {}
         }
+        // ★ Phase 2: Q&A タブ 初回開時 自動 分析
+        if (key === 'qa') {
+          loadQATabForClient(c);
+        }
       });
     });
     // Quick action stubs
@@ -3818,6 +3869,75 @@ ${ctxText}${surveyTxt}`;
         }
       });
     }
+    // ★ オーナーfb 2026-06-23: 「この LINE客 は 既に登録済」 → 既存客 list pick → マージ
+    const mergeBtn = document.getElementById('cd-merge-existing');
+    if (mergeBtn) {
+      mergeBtn.addEventListener('click', async () => {
+        const sourceCid = mergeBtn.dataset.cid;      // この LINE 客 (削除予定)
+        const uid = mergeBtn.dataset.uid;
+        const allClients = (window.DUMMY_CLIENTS || []).filter(x => x.id !== sourceCid && !x.lineFriendId);
+        if (allClients.length === 0) {
+          alert('マージ先 候補 (LINE 未連携 の既存客) が ありません。 先に 「+ 新規 顧客」 で 登録してください。');
+          return;
+        }
+        // 簡易 picker: prompt で 名前選択
+        const list = allClients.map((c, i) => `${i + 1}. ${c.name}${c.kana ? ' (' + c.kana + ')' : ''}`).join('\n');
+        const sel = prompt(`どの既存客に マージ しますか? (番号で 入力)\n\n${list}\n\nキャンセル: 空 or × を 入力`);
+        if (!sel || sel === '×') return;
+        const idx = parseInt(sel, 10) - 1;
+        if (isNaN(idx) || idx < 0 || idx >= allClients.length) {
+          alert('番号が 不正です'); return;
+        }
+        const target = allClients[idx];
+        if (!confirm(`「${target.name}」 に この LINE 客 を マージします。\n\n・「${target.name}」 に LINE userId 紐付け\n・現在開いてる LINE 客レコード を 削除\n\nよろしいですか?`)) return;
+        try {
+          const { doc, updateDoc, deleteDoc } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js');
+          const tid = window.__fp.tenantId;
+          await updateDoc(doc(window.__fp.db, `tenants/${tid}/customers/${target.id}`), {
+            lineFriendId: uid, userId: uid, lineLinkedAt: new Date(),
+          });
+          target.lineFriendId = uid; target.userId = uid;
+          await deleteDoc(doc(window.__fp.db, `tenants/${tid}/customers/${sourceCid}`));
+          const i2 = (window.DUMMY_CLIENTS || []).findIndex(x => x.id === sourceCid);
+          if (i2 >= 0) window.DUMMY_CLIENTS.splice(i2, 1);
+          alert(`✓ マージ完了 — 「${target.name}」 に LINE 連携を 紐付けました。`);
+          if (typeof window.refreshFirestoreCustomers === 'function') await window.refreshFirestoreCustomers();
+          if (typeof renderClients === 'function') renderClients();
+          // 元モーダル 閉じて マージ先 を 開く
+          try { document.getElementById('modal-overlay').style.display = 'none'; } catch (_) {}
+          setTimeout(() => openClientModal(target.id), 600);
+        } catch (e) {
+          alert('✗ マージ失敗: ' + (e.message || e));
+        }
+      });
+    }
+    // ★ オーナーfb 2026-06-23: LINE userId コピー (LINE連携済客)
+    const lineidCopyBtn = document.getElementById('cd-lineid-copy');
+    if (lineidCopyBtn) {
+      lineidCopyBtn.addEventListener('click', async () => {
+        const uid = lineidCopyBtn.dataset.uid || '';
+        try {
+          await navigator.clipboard.writeText(uid);
+          const orig = lineidCopyBtn.innerHTML;
+          lineidCopyBtn.innerHTML = '✓ コピー済';
+          lineidCopyBtn.style.background = '#065F46';
+          setTimeout(() => { lineidCopyBtn.innerHTML = orig; lineidCopyBtn.style.background = '#06C755'; }, 1500);
+        } catch (e) {
+          // fallback: select the code element
+          const code = document.getElementById('cd-lineid-show');
+          if (code) {
+            const range = document.createRange();
+            range.selectNodeContents(code);
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+            try { document.execCommand('copy'); } catch (_) {}
+            sel.removeAllRanges();
+          }
+          alert('LINE userId: ' + uid);
+        }
+      });
+    }
     // ★ 2026-06-22 roundK: LINE ID 後付け 紐付け
     const lineidBtn = document.getElementById('cd-lineid-attach-btn');
     if (lineidBtn) {
@@ -3836,21 +3956,45 @@ ${ctxText}${surveyTxt}`;
         lineidBtn.disabled = true;
         try {
           if (!window.__fp?.functions) throw new Error('functions 未初期化');
-          // Firestore に直接書き込み (admin SDK 経由ではなく client SDK)
-          const { doc, updateDoc } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js');
+          const { doc, updateDoc, deleteDoc } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js');
           const tid = window.__fp.tenantId;
+          // ★ オーナーfb 2026-06-23: 紐付け時に 同じ userId の 自動作成 LINE 客 (重複) を 削除する
+          const dupes = (window._fpFirestoreCustomers || []).filter(x => x.lineFriendId === val && x.docId !== cid);
+          if (dupes.length > 0) {
+            const confirmMsg = `この LINE userId は 既に「${dupes[0].name || '(名無し)'}」 として 別行 に 自動登録されてます。\n\nこちらの 「${(window.DUMMY_CLIENTS || []).find(x => x.id === cid)?.name || cid}」 に 統合 (自動登録分を 削除) しますか?\n\n※ LINE 履歴 は 紐付くだけなので 失われません。 自動登録分の メモ/タスク は 残ります (元客id ベースなので)。`;
+            if (!confirm(confirmMsg)) {
+              msg.textContent = '✗ キャンセルされました';
+              msg.style.color = '#9A5A18';
+              lineidBtn.disabled = false;
+              return;
+            }
+          }
+          // 1. 元客 に lineFriendId をセット
           await updateDoc(doc(window.__fp.db, `tenants/${tid}/customers/${cid}`), {
             lineFriendId: val,
-            userId: val,  // legacy 互換
+            userId: val,
             lineLinkedAt: new Date(),
           });
-          // ローカル DUMMY_CLIENTS 更新
           const lc = (window.DUMMY_CLIENTS || []).find(x => x.id === cid);
           if (lc) { lc.lineFriendId = val; lc.userId = val; }
-          msg.textContent = '✓ LINE ID 紐付け完了。 これで LINE 送受信できます。';
+          // 2. 重複 LINE 客 を削除
+          for (const d of dupes) {
+            try {
+              await deleteDoc(doc(window.__fp.db, `tenants/${tid}/customers/${d.docId}`));
+              const idx = (window.DUMMY_CLIENTS || []).findIndex(x => x.id === d.docId);
+              if (idx >= 0) window.DUMMY_CLIENTS.splice(idx, 1);
+            } catch (delErr) { console.warn('[merge] delete dup fail', d.docId, delErr); }
+          }
+          msg.textContent = dupes.length > 0
+            ? `✓ 紐付け完了 + 重複 ${dupes.length} 件 を 統合しました。`
+            : '✓ LINE ID 紐付け完了。 これで LINE 送受信できます。';
           msg.style.color = '#065F46';
-          // モーダル再描画
-          setTimeout(() => { try { openClientModal(cid); } catch (_) {} }, 1200);
+          // 顧客一覧 強制 refresh
+          try {
+            if (window.refreshFirestoreCustomers) await window.refreshFirestoreCustomers();
+            if (typeof renderClients === 'function') renderClients();
+          } catch (_) {}
+          setTimeout(() => { try { openClientModal(cid); } catch (_) {} }, 1500);
         } catch (e) {
           msg.textContent = '✗ 紐付け失敗: ' + (e.message || e);
           msg.style.color = '#B91C1C';
@@ -4118,8 +4262,23 @@ ${ctxText}${surveyTxt}`;
   }
   function fmtDateRobust(raw) {
     if (!raw) return '';
-    const m = String(raw).match(/(\d{4})-(\d{2})-(\d{2})/);
+    const s = String(raw);
+    // ★ オーナーfb 2026-06-23: 「T...」 を含む 全 ISO 文字列 (Z 有無問わず) は JST に 変換 (1日ずれ防止)
+    if (s.includes('T') && /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(s)) {
+      const d = new Date(s);
+      if (!isNaN(d.getTime())) {
+        return d.toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' });
+      }
+    }
+    const m = s.match(/(\d{4})-(\d{2})-(\d{2})/);
     return m ? `${m[1]}-${m[2]}-${m[3]}` : '';
+  }
+  // ★ オーナーfb 2026-06-23: 録画開始時刻 (Zoom開始 = ai.ts/createdAt) を HH:MM JST で表示
+  function fmtJstTime(raw) {
+    if (!raw) return '';
+    const d = new Date(raw);
+    if (isNaN(d.getTime())) return '';
+    return d.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Tokyo' });
   }
 
   // ============================
@@ -4128,6 +4287,125 @@ ${ctxText}${surveyTxt}`;
   // ============================
   // 👨‍👩‍👧‍👦 家系図 ブロック (議事録 から AI 自動抽出 + 編集可)
   // ============================
+  // ============================
+  // ★ Phase 2 (オーナーfb 2026-06-24): Q&A タブ — LINE 質問 自動分類 + 予測
+  // 開いた時に Claude Haiku で 分類 → 顧客 ごとの Q&A サマリ表示
+  // ============================
+  async function loadQATabForClient(client) {
+    const root = document.getElementById('cd-qa-content');
+    if (!root) return;
+    if (root.dataset.loaded === '1' && !root.dataset.refresh) return; // 一度ロードしたら 再分析ボタン以外 再実行しない
+    const lh = (client.lineHistory || []).filter(m => (m.from === 'user' || m.direction === 'in') && m.text);
+    if (lh.length === 0) {
+      root.innerHTML = '<div style="padding:32px 24px;text-align:center;color:#94A3B8;font-size:13px;">LINE 履歴 が ないので Q&A 分析 できません</div>';
+      const tabBadge = document.getElementById('cd-qa-count');
+      if (tabBadge) tabBadge.textContent = '0';
+      return;
+    }
+    root.innerHTML = `<div style="padding:32px 24px;text-align:center;color:#94A3B8;font-size:13px;">
+      <div style="font-size:24px;margin-bottom:8px;">🔍</div>
+      Q&A 分析中 (AI が ${lh.length} 件の メッセージ を 分類しています…)
+    </div>`;
+    try {
+      const ctx = (function(){
+        const parts = [];
+        if (client.age) parts.push(client.age + '歳');
+        if (client.occupation) parts.push(client.occupation);
+        if (client.aum) parts.push('AUM¥' + (client.aum/10000) + '万');
+        return parts.join(' / ');
+      })();
+      const messages = lh.slice(-50).map(m => ({
+        text: m.text || '',
+        ts: m.ts || m.date || '',
+      }));
+      const r = await fetch('https://fp-compass-webhook-527726449426.asia-northeast1.run.app/api/classify-questions', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages, customerName: client.name,
+          customerContext: ctx,
+          tenantId: (window.__fp && window.__fp.tenantId) || '',
+          userId: client.lineFriendId || client.id || '',
+        }),
+      });
+      const data = await r.json();
+      if (!data.ok) {
+        root.innerHTML = `<div style="padding:24px;color:#B91C1C;font-size:13px;">分析失敗: ${escapeHtml(data.error || '')}</div>`;
+        return;
+      }
+      renderQAContent(root, data, client);
+      root.dataset.loaded = '1';
+      delete root.dataset.refresh;
+      const tabBadge = document.getElementById('cd-qa-count');
+      if (tabBadge) tabBadge.textContent = String(data.totalQuestions || 0);
+    } catch (e) {
+      root.innerHTML = `<div style="padding:24px;color:#B91C1C;font-size:13px;">分析 例外: ${escapeHtml(e.message || String(e))}</div>`;
+    }
+  }
+  function renderQAContent(root, data, client) {
+    const cats = data.categories || [];
+    const pred = data.predictedNext || data.predicted_next_questions || [];
+    const catColor = {
+      'NISA・iDeCo': '#5B5BF0',
+      '教育資金': '#06b6d4',
+      '住宅ローン': '#f59e0b',
+      '老後資金': '#8b5cf6',
+      '保険': '#ec4899',
+      '相続・贈与': '#10b981',
+      '税金': '#dc2626',
+      'その他': '#64748b',
+    };
+    const html = `
+      <div style="padding:18px 16px 80px;">
+        <!-- summary header -->
+        <div style="margin-bottom:18px;padding:14px 16px;background:linear-gradient(135deg,#FBF5E3,#FFFBF1);border:1px solid #E8D9A8;border-left:4px solid #C19A3A;border-radius:8px;">
+          <div style="font-size:11px;font-weight:800;color:#8B7D5D;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:4px;">Q&A 自動分析</div>
+          <div style="font-size:17px;font-weight:800;color:#1F2A3F;">${data.totalQuestions || 0} 件の質問</div>
+          ${data.topCategories && data.topCategories.length > 0 ? `<div style="font-size:12px;color:#5e4d1a;margin-top:4px;">頻出: ${data.topCategories.slice(0,3).map(c => escapeHtml(c)).join(' · ')}</div>` : ''}
+          <button id="cd-qa-refresh" style="margin-top:10px;background:#fff;color:#8B6F26;border:1px solid #C19A3A;padding:5px 12px;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">🔄 再分析</button>
+        </div>
+
+        <!-- predicted next questions -->
+        ${pred.length > 0 ? `
+        <div style="margin-bottom:18px;padding:14px 16px;background:#F8FAFC;border:1px solid #CBD5E1;border-left:4px solid #5B5BF0;border-radius:8px;">
+          <div style="font-size:11px;font-weight:800;color:#5B5BF0;letter-spacing:0.16em;text-transform:uppercase;margin-bottom:8px;">🔮 次に 聞かれそうな 質問</div>
+          <ul style="margin:0;padding-left:18px;font-size:13px;color:#1F2A3F;line-height:1.85;">
+            ${pred.slice(0, 6).map(q => `<li style="margin-bottom:4px;">${escapeHtml(q)}</li>`).join('')}
+          </ul>
+          <div style="font-size:10.5px;color:#64748B;margin-top:8px;line-height:1.55;">↑ AI が お客様の 質問パターン から 予測。 次回 面談の 事前準備 や 先回り LINE 返信 に。</div>
+        </div>
+        ` : ''}
+
+        <!-- categorized questions -->
+        ${cats.length === 0 ? '<div style="padding:24px;text-align:center;color:#94A3B8;font-size:13px;">分類対象の 質問 が 抽出できませんでした (会話が短い or 質問でない)</div>' : ''}
+        ${cats.map(cat => {
+          const color = catColor[cat.name] || '#64748B';
+          const qs = cat.questions || [];
+          return `
+          <div style="margin-bottom:14px;background:#fff;border:1px solid #E2E8F0;border-left:4px solid ${color};border-radius:8px;overflow:hidden;">
+            <div style="padding:11px 14px;background:${color}08;display:flex;align-items:center;justify-content:space-between;">
+              <div style="font-size:13px;font-weight:800;color:#1F2A3F;">${escapeHtml(cat.name)}</div>
+              <div style="font-size:11px;font-weight:800;color:${color};background:${color}1F;padding:2px 9px;border-radius:99px;letter-spacing:0.04em;">${cat.count || qs.length} 件</div>
+            </div>
+            <div style="padding:10px 14px;">
+              ${qs.slice(0, 8).map(q => `
+                <div style="padding:7px 0;border-bottom:1px solid #F1F5F9;font-size:12.5px;color:#334155;line-height:1.65;">
+                  <span style="color:${color};font-weight:700;margin-right:4px;">Q.</span>
+                  ${escapeHtml(q.q || q)}
+                  ${q.ts ? `<span style="font-size:10px;color:#94A3B8;margin-left:6px;">${escapeHtml(String(q.ts).slice(0,10))}</span>` : ''}
+                </div>
+              `).join('')}
+            </div>
+          </div>`;
+        }).join('')}
+      </div>`;
+    root.innerHTML = html;
+    document.getElementById('cd-qa-refresh')?.addEventListener('click', () => {
+      root.dataset.refresh = '1';
+      delete root.dataset.loaded;
+      loadQATabForClient(client);
+    });
+  }
+
   function renderFamilyTreeBlock(client) {
     const fam = Array.isArray(client.family) ? client.family : [];
     // 関係 → ラベル + 色 (細分化 13→34区分: 父/母別、 長男/長女/次男/次女別、 兄/姉/弟/妹別)
@@ -4541,8 +4819,17 @@ ${ctxText}${surveyTxt}`;
               const db = new Date(String(b.date || '') + 'T' + String(b.time || '00:00')).getTime();
               return (isNaN(da) ? 0 : da) - (isNaN(db) ? 0 : db);
             });
+            // ★ オーナーfb 2026-06-24: 「議事録」 タブには 実際に録画/メモが ある booking だけ表示
+            // (旧: 全 booking 表示 → 未来の予約だけの 空カード が 先頭に並ぶ「意味不明日付」 バグ)
+            const sortedBksFiltered = sortedBks.filter(b => {
+              const ai = aiResults.find(a => a.bookingTs === b.ts) || {};
+              const hasAi = !!(ai.transcript || ai.summary || (ai.key_concerns && ai.key_concerns.length > 0));
+              const hasMemo = !!(b.memo && String(b.memo).trim());
+              return hasAi || hasMemo;
+            });
+            if (sortedBksFiltered.length === 0) return '';
             return '<div style="display:grid;gap:14px;margin-bottom:18px;">' +
-            sortedBks.slice().reverse().map(b => {
+            sortedBksFiltered.slice().reverse().map(b => {
             const aiData = aiResults.find(a => a.bookingTs === b.ts) || {};
             // ★ メインカードの Zoom連番 は aiData の zoom連番 を使う (orphanと整合)
             const zKey = (aiData.bookingTs || '') + '|' + (aiData.ts || aiData.createdAt || '');
@@ -4552,7 +4839,8 @@ ${ctxText}${surveyTxt}`;
               <div class="fp-meeting-card-head">
                 <div>
                   <div class="fp-meeting-card-eyebrow" style="font-size:13px !important;font-weight:900 !important;color:#1B3A5C !important;letter-spacing:0 !important;">📹 Zoom ${zN}回目 ${aiData.ts || aiData.createdAt ? `<span style="font-size:11px;color:#9CA3AF;font-weight:700;margin-left:8px;font-family:Menlo,monospace;">#${(()=>{ const d=new Date(aiData.ts || aiData.createdAt); return d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0')+'-'+String(d.getHours()).padStart(2,'0')+String(d.getMinutes()).padStart(2,'0'); })()}</span>` : ''}</div>
-                  <div class="fp-meeting-card-date" style="font-size:14px;font-weight:700;">${escapeHtml(fmtDateRobust(b.date))} ${escapeHtml(fmtTimeRobust(b.time))} 面談</div>
+                  <div class="fp-meeting-card-date" style="font-size:14px;font-weight:700;">${escapeHtml(fmtDateRobust(aiData.ts || aiData.createdAt) || fmtDateRobust(b.date))} ${escapeHtml(fmtJstTime(aiData.ts || aiData.createdAt) || fmtTimeRobust(b.time))} 面談</div>
+                  ${aiData.ts || aiData.createdAt ? `<div class="fp-meeting-card-recstart" style="font-size:11.5px;color:#6B7280;font-weight:600;margin-top:3px;">録画開始: ${escapeHtml(fmtJstTime(aiData.ts || aiData.createdAt))} (${escapeHtml(fmtDateRobust(aiData.ts || aiData.createdAt))})</div>` : ''}
                 </div>
                 <div class="fp-meeting-card-actions">
                   ${b.driveUrl ? `<a href="${escapeHtml(b.driveUrl)}" target="_blank" class="fp-btn fp-btn-sm fp-btn-gold">🎥 録画を見る</a>` : ''}
@@ -4587,6 +4875,17 @@ ${ctxText}${surveyTxt}`;
                   <div style="display:flex;gap:6px;flex-wrap:wrap;">
                     ${aiData.key_concerns.map(k => `<span class="fp-concern-chip">${escapeHtml(k)}</span>`).join('')}
                   </div>
+                </div>` : ''}
+              ${aiData.predicted_next_questions && aiData.predicted_next_questions.length > 0 ? `
+                <div class="fp-meeting-block">
+                  <div class="fp-meeting-block-label" style="display:flex;align-items:center;gap:6px;">
+                    🔮 次回 聞かれそうな 質問
+                    <span style="font-size:9.5px;font-weight:600;color:#94A3B8;background:#F1F5F9;padding:1px 6px;border-radius:99px;">AI 予測</span>
+                  </div>
+                  <ul style="margin:0;padding-left:18px;font-size:13px;color:#1F2A3F;line-height:1.85;">
+                    ${aiData.predicted_next_questions.slice(0, 6).map(q => `<li style="margin-bottom:3px;">${escapeHtml(q)}</li>`).join('')}
+                  </ul>
+                  <div style="font-size:10.5px;color:#64748B;margin-top:6px;line-height:1.55;">次の LINE 連絡 や 次回 面談 の 事前 準備 で 先回り 対応 してください。</div>
                 </div>` : ''}
               ${b.memo ? `
                 <div class="fp-meeting-block">
@@ -4632,7 +4931,8 @@ ${ctxText}${surveyTxt}`;
                 <div class="fp-meeting-card-head">
                   <div>
                     <div class="fp-meeting-card-eyebrow" style="font-size:13px !important;font-weight:900 !important;color:#1B3A5C !important;letter-spacing:0 !important;">📹 Zoom ${zN}回目 ${a.ts || a.createdAt ? `<span style="font-size:11px;color:#9CA3AF;font-weight:700;margin-left:8px;font-family:Menlo,monospace;">#${(()=>{ const d=new Date(a.ts || a.createdAt); return d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0')+'-'+String(d.getHours()).padStart(2,'0')+String(d.getMinutes()).padStart(2,'0'); })()}</span>` : ''}</div>
-                    <div class="fp-meeting-card-date" style="font-size:14px;font-weight:700;">${escapeHtml(fmtDateRobust(a.date) || String(a.bookingTs || a.createdAt || '').slice(0,10))} 面談</div>
+                    <div class="fp-meeting-card-date" style="font-size:14px;font-weight:700;">${escapeHtml(fmtDateRobust(a.ts || a.createdAt) || fmtDateRobust(a.date))} ${escapeHtml(fmtJstTime(a.ts || a.createdAt))} 面談</div>
+                    ${a.ts || a.createdAt ? `<div class="fp-meeting-card-recstart" style="font-size:11.5px;color:#6B7280;font-weight:600;margin-top:3px;">録画開始: ${escapeHtml(fmtJstTime(a.ts || a.createdAt))} (${escapeHtml(fmtDateRobust(a.ts || a.createdAt))})</div>` : ''}
                   </div>
                 </div>
                 ${a.transcript ? `
@@ -4654,6 +4954,16 @@ ${ctxText}${surveyTxt}`;
                     <div style="display:flex;gap:6px;flex-wrap:wrap;">
                       ${a.key_concerns.map(k => `<span class="fp-concern-chip">${escapeHtml(k)}</span>`).join('')}
                     </div>
+                  </div>` : ''}
+                ${a.predicted_next_questions && a.predicted_next_questions.length > 0 ? `
+                  <div class="fp-meeting-block">
+                    <div class="fp-meeting-block-label" style="display:flex;align-items:center;gap:6px;">
+                      🔮 次回 聞かれそうな 質問
+                      <span style="font-size:9.5px;font-weight:600;color:#94A3B8;background:#F1F5F9;padding:1px 6px;border-radius:99px;">AI 予測</span>
+                    </div>
+                    <ul style="margin:0;padding-left:18px;font-size:13px;color:#1F2A3F;line-height:1.85;">
+                      ${a.predicted_next_questions.slice(0, 6).map(q => `<li style="margin-bottom:3px;">${escapeHtml(q)}</li>`).join('')}
+                    </ul>
                   </div>` : ''}
               </div>
             `;
@@ -6376,7 +6686,7 @@ STEP C: 結果報告
     overlay.querySelector('#fp-brief-close').addEventListener('click', () => overlay.remove());
     overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
 
-    function buildBriefPrompt(c, brief) {
+    function buildBriefPrompt(c, brief, refineHistory) {
       const surveys = ((window.LineAppLiveData && window.LineAppLiveData.survey_answers) || [])
         .filter(s => (s.userId && s.userId === c.lineFriendId) || (s.name && s.name === c.name) || (s.displayName && s.displayName === c.name))
         .sort((a, b) => (b.ts || '').localeCompare(a.ts || ''));
@@ -6385,7 +6695,7 @@ STEP C: 結果報告
         .filter(r => (r.userId && r.userId === c.lineFriendId) || (r.customerName && r.customerName === c.name))
         .sort((a, b) => (a.ts || '').localeCompare(b.ts || ''))
         .slice(-3)
-        .map(r => ({ date: (r.ts || '').slice(0, 10), summary: r.summary || '', key_concerns: r.key_concerns || [] }));
+        .map(r => ({ date: (r.ts || '').slice(0, 10), summary: (r.summary || '').slice(0, 600), key_concerns: r.key_concerns || [], predicted_next_questions: r.predicted_next_questions || [] }));
       const recentLine = (c.lineHistory || []).slice(-12)
         .map(m => ({ direction: m.direction || m.from || 'out', ts: m.ts, text: (m.text || '').slice(0, 240) }));
       const family = (c.family || []).map(m => {
@@ -6395,6 +6705,42 @@ STEP C: 結果報告
       });
       const age = window.LifeEvents ? window.LifeEvents.currentAge(c) : null;
       const fpName = (window.__fp && window.__fp.tenantName ? String(window.__fp.tenantName) : 'FP事務所').replace(/ — DEMO ビュー/, '');
+
+      // ★ Phase A 強化 (オーナーfb 2026-06-24):
+      // [1] FP 過去送信文 (out 方向のみ 直近10通) → トーン 学習
+      const fpToneSamples = (c.lineHistory || [])
+        .filter(m => (m.direction === 'out' || m.from === 'fp' || m.from === 'system') && m.text)
+        .slice(-10)
+        .map(m => String(m.text).slice(0, 240));
+      // [2] 客 過去質問 (Q&A archive cache: customer_qa_summary より優先、 無ければ lineHistory in から推定)
+      const pastQuestions = (function(){
+        try {
+          const cs = (window._fpQACache && window._fpQACache[c.id]) || null;
+          if (cs && cs.categories) {
+            return cs.categories.flatMap(cat => (cat.questions || []).slice(0, 3).map(q => ({
+              category: cat.name, q: typeof q === 'string' ? q : (q.q || '')
+            }))).slice(0, 12);
+          }
+        } catch (_) {}
+        return (c.lineHistory || [])
+          .filter(m => (m.direction === 'in' || m.from === 'user') && /[?？]/.test(m.text || ''))
+          .slice(-6)
+          .map(m => ({ category: '不明', q: String(m.text).slice(0, 160) }));
+      })();
+      // [3] 提案 / キャンセル ステータス (触れていい/タブー 判断)
+      const stalledProp = (c.proposals || []).slice().reverse().find(p => p.result === '提案中' || p.result === '検討中');
+      const lastCancel = (c.cancellations || []).slice().sort((a,b) => new Date(b.date) - new Date(a.date))[0];
+      const proposalStatus = {
+        stalled: stalledProp ? { title: stalledProp.title, daysSince: Math.floor((Date.now() - new Date(stalledProp.date).getTime())/86400000) } : null,
+        lastSuccess: (c.proposals || []).slice().reverse().find(p => p.result === '成約') || null,
+        lastCancel: lastCancel ? { reason: lastCancel.reason, daysSince: Math.floor((Date.now() - new Date(lastCancel.date).getTime())/86400000) } : null,
+      };
+      // [4] タグ (FPが手動で つけた) + 自動タグ (議事録 AI 抽出)
+      const tagsMaster = (typeof getTagsMaster === 'function') ? getTagsMaster() : [];
+      const myTagIds = (typeof getClientTags === 'function') ? getClientTags(c.id) : [];
+      const manualTags = myTagIds.map(id => tagsMaster.find(t => t.id === id)).filter(Boolean).map(t => t.label);
+      const autoTags = Array.isArray(c.autoTags) ? c.autoTags.map(t => t.label) : [];
+
       const jsonPayload = {
         meta: { generatedAt: new Date().toISOString(), fpName, mode: 'line_reply_from_brief' },
         customer: {
@@ -6405,6 +6751,7 @@ STEP C: 結果報告
           family,
           aum: c.aum || 0,
           lastContact: c.lastContact || '',
+          manualTags, autoTags,
         },
         surveyAnswers: latestSurvey ? {
           年代: latestSurvey.q2_年代 || latestSurvey.q1_年代 || '',
@@ -6419,18 +6766,44 @@ STEP C: 結果報告
         } : null,
         recentMeetings: allMeetings,
         recentLineHistory: recentLine,
+        proposalStatus,
+        pastQuestions,           // ★ 新規: 客が 過去 LINE で 聞いた 質問
+        fpToneSamples,           // ★ 新規: FP の 過去 LINE 送信文 (トーン参考)
         fpBrief: brief,
+        refineHistory: refineHistory || [], // ★ Phase C: 添削履歴 (前回 draft + FP の修正指示)
       };
+      const refineSection = (refineHistory && refineHistory.length > 0) ? `
+
+【★ 重要: 添削モード】
+前回 生成した 下書き と FP からの修正指示が refineHistory にあります。
+最新の修正指示に従って 文面を 練り直してください。
+過去の指示 も 累積で 反映してください (例: 「丁寧に」 → 「もっとフランクに」 と来たら 中間の 親しみ易い丁寧 が 正解)。
+` : '';
+
       return `あなたは 経験豊富な FP の 文章コーチ です。
 下記 JSON の fpBrief (FP が ${escapeHtml(c.name)}様 に 伝えたい意図) を、
-LINE 1通分 (200-400字、 顧客の家族/議事録/直近やりとり を 踏まえた 個別感のある 文面) に 整えてください。
+LINE 1通分 (200-400字、 顧客の家族/議事録/過去質問/直近やりとり を 踏まえた 個別感のある 文面) に 整えてください。
+${refineSection}
 
 【出力フォーマット 厳守】
 - LINE文面 のみ。 前置き不要、 code fence 不要、 解説不要。
 - 改行は自然に (LINE プレビューを意識)、 顧客の呼称は「${escapeHtml(c.name)}様」。
 - 文末は柔らかく(「お時間あるときに 一言いただけたら嬉しいです」 等)。
-- 議事録 / アンケート から 拾える キーワード (テーマ/悩み) を 1箇所 だけ 自然に 引用。
-- 強引なクロージング / 提案 押し付け は NG。
+
+【個別感を出すコツ (品質基準)】
+- fpToneSamples を 参考に、 この FP らしい 文体・絵文字使い・改行リズム に 寄せる
+- pastQuestions に ある カテゴリ を 1つ 自然に 触れる ("先日のご質問の○○の件…" 等)
+- proposalStatus.stalled が ある なら 「先日の○○のご検討」 に 軽く触れる (押し売り NG)
+- proposalStatus.lastCancel が 30日以内 なら キャンセル理由 を 暗黙に 配慮 (「お忙しい中」 等)
+- recentMeetings.key_concerns の 1個 を 自然に 拾う (議事録の キーワード 引用)
+- 議事録の predicted_next_questions が ある なら 客が 次に 聞きたい事に 先回りで 軽く触れる
+- manualTags / autoTags は FP が この客に 持ってる 属性 (「教育資金AI」 等) → 該当テーマに 寄せる
+
+【NG】
+- 「お疲れ様でした」 「ありがとうございます」 だけの 定型挨拶 で 始めない
+- 全顧客に 当てはまる 一般論 で 終わらせない (固有情報 最低2個 引用 必須)
+- 強引なクロージング / 提案押し付け
+- pastQuestions / fpToneSamples が 空でも 嘘の 過去質問 を 創作しない
 
 【顧客データ JSON】
 \`\`\`json
@@ -6451,76 +6824,185 @@ ${JSON.stringify(jsonPayload, null, 2)}
       } catch (e) { console.warn('download fail:', e); }
     }
 
-    overlay.querySelector('#fp-brief-gen').addEventListener('click', async () => {
-      const brief = overlay.querySelector('#fp-brief-input').value.trim();
-      if (!brief) { alert('伝えたいこと を 入力してください'); return; }
-      const genBtn = overlay.querySelector('#fp-brief-gen');
-      const origLabel = genBtn.innerHTML;
-      genBtn.disabled = true;
-      genBtn.innerHTML = '✨ AI 生成中…';
-      const prompt = buildBriefPrompt(client, brief);
+    // ★ Phase C: 添削履歴 (refine 用の state)
+    const refineHistory = []; // [{ draft, instruction }]
+
+    // ★ Phase A: Q&A archive cache を 先に 取得 (個別感UP)
+    (async () => {
       try {
-        if (!window.__fp?.functions) throw new Error('functions 未初期化');
-        const { httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-functions.js');
-        const fn = httpsCallable(window.__fp.functions, 'generateBriefDraft');
-        const res = await fn({ prompt });
-        const reply = (res.data && res.data.reply) || '';
+        if (!window._fpQACache) window._fpQACache = {};
+        if (window._fpQACache[client.id] || !client.lineFriendId) return;
+        const { getFirestore, doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js');
+        const fs = getFirestore(window.__fp.app || window.__fp.firebaseApp || undefined);
+        const tid = (window.__fp && window.__fp.tenantId) || '';
+        if (!tid) return;
+        const ref = doc(fs, 'customer_qa_summary', `${tid}__${client.lineFriendId}`);
+        const snap = await getDoc(ref);
+        if (snap.exists()) window._fpQACache[client.id] = snap.data();
+      } catch (e) { /* silent */ }
+    })();
+
+    async function runGenerate(brief, refineInstruction) {
+      const genBtn = overlay.querySelector('#fp-brief-gen');
+      const origLabel = genBtn ? genBtn.innerHTML : '';
+      if (genBtn) { genBtn.disabled = true; genBtn.innerHTML = '✨ AI 生成中…'; }
+      // refineInstruction があれば refineHistory に 追加
+      if (refineInstruction) {
+        const prev = (overlay.querySelector('#fp-brief-result') || {}).value || '';
+        refineHistory.push({ draft: prev, instruction: refineInstruction });
+      }
+      const prompt = buildBriefPrompt(client, brief, refineHistory);
+      try {
+        // ★ オーナーfb 2026-06-24: 「AI下書き 遅すぎ」 → Groq Llama 70B 経由 (~0.5-1秒) に 切替
+        // 旧: Firebase Function generateBriefDraft (Claude Haiku 4秒)
+        // 失敗時は 旧経路に fallback
+        let reply = '';
+        try {
+          const r = await fetch('https://fp-compass-webhook-527726449426.asia-northeast1.run.app/api/generate-line-draft', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              prompt,
+              tenantId: (window.__fp && window.__fp.tenantId) || '',
+              userId: client.lineFriendId || '',
+              customerName: client.name || '',
+            }),
+          });
+          const d = await r.json();
+          if (r.ok && d.ok && d.reply) {
+            reply = d.reply;
+            console.log('[draft] Groq Llama', d.elapsedMs + 'ms', d.inputTokens + '/' + d.outputTokens + ' tok');
+          } else {
+            console.warn('[draft] Groq fail → fallback Claude:', d.error || r.status);
+          }
+        } catch (e) { console.warn('[draft] Groq fetch fail → fallback Claude:', e.message); }
+        if (!reply) {
+          // Fallback: Anthropic Claude Haiku
+          if (!window.__fp?.functions) throw new Error('functions 未初期化');
+          const { httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-functions.js');
+          const fn = httpsCallable(window.__fp.functions, 'generateBriefDraft');
+          const res = await fn({ prompt });
+          reply = (res.data && res.data.reply) || '';
+        }
         if (!reply) throw new Error('AI 応答 が 空');
-        // 結果表示UIに 差し替え
-        overlay.querySelector('#fp-brief-step1').style.display = 'none';
-        const after = overlay.querySelector('#fp-brief-after');
-        after.style.display = 'block';
-        after.innerHTML = `
-          <div style="background:linear-gradient(135deg,#F0FDF4,#fff);border:1px solid #BBF7D0;border-radius:10px;padding:14px 16px;margin-bottom:14px;font-size:12.5px;color:#065F46;font-weight:700;">✅ AI下書き 生成 完了 (Claude Haiku)</div>
-          <div style="background:#fff;border:1.5px solid #BBF7D0;border-radius:12px;padding:18px 20px;margin-bottom:14px;">
-            <div style="font-family:'Inter',sans-serif;font-size:10px;letter-spacing:0.18em;color:#059669;font-weight:800;margin-bottom:8px;">📝 LINE 下書き 案</div>
-            <textarea id="fp-brief-result" rows="10" style="width:100%;padding:12px 14px;border:1px solid #E2E8F0;border-radius:8px;font-size:13.5px;font-family:inherit;line-height:1.85;resize:vertical;box-sizing:border-box;">${escapeHtml(reply)}</textarea>
-          </div>
-          <div style="display:flex;gap:8px;justify-content:flex-end;">
-            <button id="fp-brief-back" style="background:#fff;border:1px solid #E2E8F0;color:#475569;padding:10px 18px;border-radius:8px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;">← もう一度</button>
-            <button id="fp-brief-copy" style="background:#fff;border:1px solid #10B981;color:#059669;padding:10px 18px;border-radius:8px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit;">📋 コピー</button>
-            <button id="fp-brief-set-line" style="background:linear-gradient(135deg,#10B981,#059669);color:#fff;border:none;padding:10px 22px;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 4px 12px rgba(16,185,129,0.35);">LINE送信欄に セット →</button>
-          </div>
-          <div id="fp-brief-msg" style="margin-top:10px;font-size:11.5px;font-weight:700;text-align:center;color:#059669;"></div>`;
-        after.querySelector('#fp-brief-back').addEventListener('click', () => {
-          overlay.querySelector('#fp-brief-step1').style.display = 'block';
-          after.style.display = 'none';
-          genBtn.disabled = false;
-          genBtn.innerHTML = origLabel;
-        });
-        after.querySelector('#fp-brief-copy').addEventListener('click', async () => {
-          const t = after.querySelector('#fp-brief-result').value;
-          try { await navigator.clipboard.writeText(t); after.querySelector('#fp-brief-msg').textContent = '✓ コピー しました'; } catch (_) {}
-        });
-        after.querySelector('#fp-brief-set-line').addEventListener('click', () => {
-          const t = after.querySelector('#fp-brief-result').value;
-          const tArea = document.getElementById('cd-line-input');
-          if (tArea) { tArea.value = t; tArea.focus(); }
-          overlay.remove();
-        });
+        renderResultUI(brief, reply);
       } catch (e) {
         console.error('[generateBriefDraft]', e);
-        // フォールバック: 残高切れ等 paid API 失敗時 → 旧 prompt copy + claude.ai UX
         try { await navigator.clipboard.writeText(prompt); } catch (_) {}
-        const customerSlug = String(client.name || 'customer').replace(/[\/\\\s]+/g, '_');
-        const stamp = new Date().toISOString().slice(0, 10);
-        downloadAsFile(`${customerSlug}_brief-prompt_${stamp}.txt`, prompt, 'text/plain');
-        overlay.querySelector('#fp-brief-step1').style.display = 'none';
-        overlay.querySelector('#fp-brief-after').style.display = 'block';
         const errMsg = String(e.message || e);
         const msgEl = overlay.querySelector('#fp-brief-msg');
         if (msgEl) {
           msgEl.style.color = '#B91C1C';
-          msgEl.textContent = '⚠ AI生成失敗 (' + errMsg.slice(0,80) + ')。 プロンプトをクリップボードに コピー しました → Claude を開いて 貼り付けて下さい';
+          msgEl.textContent = '⚠ AI生成失敗 (' + errMsg.slice(0,80) + ')。 プロンプト クリップボード コピー済';
         }
       } finally {
-        // 成功時は new UI に置き換え済 → ボタン状態 戻すのは fallback path のみ
-        if (overlay.querySelector('#fp-brief-step1') && overlay.querySelector('#fp-brief-step1').style.display !== 'none') {
-          genBtn.disabled = false;
-          genBtn.innerHTML = origLabel;
-        }
+        if (genBtn && genBtn.innerHTML.includes('生成中')) { genBtn.disabled = false; genBtn.innerHTML = origLabel; }
       }
+    }
+
+    function renderResultUI(brief, reply) {
+      overlay.querySelector('#fp-brief-step1').style.display = 'none';
+      const after = overlay.querySelector('#fp-brief-after');
+      after.style.display = 'block';
+      const refineBadge = refineHistory.length > 0
+        ? `<span style="background:#5B5BF0;color:#fff;font-size:10px;font-weight:800;padding:2px 8px;border-radius:99px;margin-left:8px;letter-spacing:0.04em;">${refineHistory.length} 回 添削</span>` : '';
+      after.innerHTML = `
+        <div style="background:linear-gradient(135deg,#F0FDF4,#fff);border:1px solid #BBF7D0;border-radius:10px;padding:14px 16px;margin-bottom:14px;font-size:12.5px;color:#065F46;font-weight:700;display:flex;align-items:center;">
+          ✅ AI下書き 生成 完了 (Claude Haiku) ${refineBadge}
+        </div>
+        <div style="background:#fff;border:1.5px solid #BBF7D0;border-radius:12px;padding:18px 20px;margin-bottom:14px;">
+          <div style="font-family:'Inter',sans-serif;font-size:10px;letter-spacing:0.18em;color:#059669;font-weight:800;margin-bottom:8px;">📝 LINE 下書き 案</div>
+          <textarea id="fp-brief-result" rows="9" style="width:100%;padding:12px 14px;border:1px solid #E2E8F0;border-radius:8px;font-size:13.5px;font-family:inherit;line-height:1.85;resize:vertical;box-sizing:border-box;">${escapeHtml(reply)}</textarea>
+        </div>
+        <!-- ★ Phase C: 添削チャット UI -->
+        <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-left:3px solid #5B5BF0;border-radius:10px;padding:12px 14px;margin-bottom:12px;">
+          <div style="font-size:11px;font-weight:800;color:#5B5BF0;letter-spacing:0.12em;margin-bottom:6px;">🔁 AI に 直してもらう</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
+            <button class="fp-refine-quick" data-q="もっとフランクに" style="background:#fff;border:1px solid #CBD5E1;color:#475569;padding:4px 10px;border-radius:99px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">もっとフランクに</button>
+            <button class="fp-refine-quick" data-q="もっと丁寧に" style="background:#fff;border:1px solid #CBD5E1;color:#475569;padding:4px 10px;border-radius:99px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">もっと丁寧に</button>
+            <button class="fp-refine-quick" data-q="もっと短く (100字以内)" style="background:#fff;border:1px solid #CBD5E1;color:#475569;padding:4px 10px;border-radius:99px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">短く</button>
+            <button class="fp-refine-quick" data-q="数字を入れてもっと具体的に" style="background:#fff;border:1px solid #CBD5E1;color:#475569;padding:4px 10px;border-radius:99px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">数字 入れる</button>
+            <button class="fp-refine-quick" data-q="絵文字を1-2個 入れて 柔らかく" style="background:#fff;border:1px solid #CBD5E1;color:#475569;padding:4px 10px;border-radius:99px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">絵文字</button>
+            <button class="fp-refine-quick" data-q="押し売り感を消して もっと相手のペースに寄せて" style="background:#fff;border:1px solid #CBD5E1;color:#475569;padding:4px 10px;border-radius:99px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">押し売り感 消す</button>
+          </div>
+          <div style="display:flex;gap:6px;">
+            <input id="fp-refine-input" type="text" placeholder="例: お子様の名前を 入れて / 結論を先に / etc" style="flex:1;padding:8px 12px;border:1px solid #CBD5E1;border-radius:6px;font-size:12.5px;font-family:inherit;">
+            <button id="fp-refine-go" style="background:#5B5BF0;color:#fff;border:none;padding:8px 16px;border-radius:6px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;white-space:nowrap;">🔁 直す</button>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;align-items:center;">
+          <button id="fp-brief-back" style="background:#fff;border:1px solid #E2E8F0;color:#475569;padding:10px 18px;border-radius:8px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;">← 入力に戻る</button>
+          <button id="fp-brief-copy" style="background:#fff;border:1px solid #10B981;color:#059669;padding:10px 18px;border-radius:8px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit;">📋 コピー</button>
+          <button id="fp-brief-send-line" style="background:linear-gradient(135deg,#06c755,#04a045);color:#fff;border:none;padding:10px 22px;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 4px 12px rgba(6,199,85,0.4);">📤 LINE で 送信</button>
+        </div>
+        <div id="fp-brief-msg" style="margin-top:10px;font-size:11.5px;font-weight:700;text-align:center;color:#059669;"></div>`;
+      bindResultButtons(brief);
+    }
+
+    function bindResultButtons(brief) {
+      const after = overlay.querySelector('#fp-brief-after');
+      after.querySelectorAll('.fp-refine-quick').forEach(btn => {
+        btn.addEventListener('click', () => runGenerate(brief, btn.dataset.q));
+      });
+      after.querySelector('#fp-refine-go').addEventListener('click', () => {
+        const inp = after.querySelector('#fp-refine-input');
+        const v = (inp.value || '').trim();
+        if (!v) { inp.focus(); return; }
+        inp.value = '';
+        runGenerate(brief, v);
+      });
+      after.querySelector('#fp-refine-input').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') after.querySelector('#fp-refine-go').click();
+      });
+      after.querySelector('#fp-brief-back').addEventListener('click', () => {
+        overlay.querySelector('#fp-brief-step1').style.display = 'block';
+        after.style.display = 'none';
+        refineHistory.length = 0;
+        const genBtn = overlay.querySelector('#fp-brief-gen');
+        if (genBtn) { genBtn.disabled = false; genBtn.innerHTML = '✨ AI で 下書き 生成'; }
+      });
+      after.querySelector('#fp-brief-copy').addEventListener('click', async () => {
+        const t = after.querySelector('#fp-brief-result').value;
+        try { await navigator.clipboard.writeText(t); after.querySelector('#fp-brief-msg').textContent = '✓ コピー しました'; } catch (_) {}
+      });
+      bindSendLine(after);
+    }
+
+    function bindSendLine(after) {
+      after.querySelector('#fp-brief-send-line').addEventListener('click', async () => {
+        const sendBtn = after.querySelector('#fp-brief-send-line');
+        const msgEl = after.querySelector('#fp-brief-msg');
+        const text = after.querySelector('#fp-brief-result').value.trim();
+        if (!text) { msgEl.style.color = '#B91C1C'; msgEl.textContent = '⚠ 本文が空です'; return; }
+        if (!client.lineFriendId) { msgEl.style.color = '#B91C1C'; msgEl.textContent = '⚠ この客は LINE 未連携'; return; }
+        if (!confirm(`${client.name || 'お客様'} 様 に この文面で LINE を送信します。 よろしいですか?\n\n${text.slice(0, 120)}${text.length > 120 ? '…' : ''}`)) return;
+        sendBtn.disabled = true; sendBtn.textContent = '送信中…';
+        msgEl.style.color = '#9A5A18'; msgEl.textContent = '⏳ LINE 送信中…';
+        try {
+          const { httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-functions.js');
+          const fn = httpsCallable(window.__fp.functions, 'sendLineMessage');
+          const res = await fn({ lineFriendId: client.lineFriendId, text, customerId: client._fsCustomerId || client.id });
+          if (res.data && res.data.ok) {
+            msgEl.style.color = '#059669'; msgEl.textContent = '✓ 送信完了';
+            sendBtn.textContent = '✓ 送信済'; sendBtn.style.background = '#065F46';
+            try { client.lineHistory = client.lineHistory || []; client.lineHistory.push({ direction: 'out', text, ts: new Date().toISOString(), via: 'brief-draft' }); } catch (_) {}
+            setTimeout(() => overlay.remove(), 1500);
+          } else { throw new Error((res.data && res.data.error) || 'LINE送信失敗'); }
+        } catch (e) {
+          console.error('[brief send line]', e);
+          msgEl.style.color = '#B91C1C'; msgEl.textContent = '❌ 送信失敗: ' + (e.message || String(e)).slice(0, 100);
+          sendBtn.disabled = false; sendBtn.textContent = '📤 LINE で 送信';
+        }
+      });
+    }
+
+    overlay.querySelector('#fp-brief-gen').addEventListener('click', async () => {
+      const brief = overlay.querySelector('#fp-brief-input').value.trim();
+      if (!brief) { alert('伝えたいこと を 入力してください'); return; }
+      refineHistory.length = 0;
+      await runGenerate(brief);
     });
+
     overlay.querySelector('#fp-brief-after').addEventListener('click', (e) => {
       if (e.target.closest('#fp-brief-open-claude')) {
         window.open('https://claude.ai/new', '_blank');
@@ -7731,7 +8213,16 @@ ${client.name}さん、ありがとうございます。
 
     // 直近 LINE メッセージ
     const lastIncoming = (client.lineHistory || []).slice().reverse().find(m => m.direction === 'in');
-    const lastIncomingDays = lastIncoming ? daysSince((lastIncoming.ts || '').slice(0, 10)) : 9999;
+    // ★ オーナーfb 2026-06-24: lastIncoming.ts が Firestore Timestamp の場合 .slice() で死ぬ → 文字列化
+    const lastIncomingTsStr = (function(t){
+      if (!t) return '';
+      if (typeof t === 'string') return t;
+      if (typeof t.toDate === 'function') { try { return t.toDate().toISOString(); } catch(_) {} }
+      if (typeof t.seconds === 'number') return new Date(t.seconds * 1000).toISOString();
+      if (t instanceof Date) return t.toISOString();
+      try { return String(t); } catch(_) { return ''; }
+    })(lastIncoming && lastIncoming.ts);
+    const lastIncomingDays = lastIncoming ? daysSince(lastIncomingTsStr.slice(0, 10)) : 9999;
 
     // 家族構成
     const children = (client.family || []).filter(m => m.rel === 'child');

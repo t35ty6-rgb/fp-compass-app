@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OPS — FP Compass 運営マニュアル</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Noto+Sans+JP:wght@400;500;700;800&family=Noto+Serif+JP:wght@500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FBF5E3;
+  --sheet: #FFFBF1;
+  --ink: #1F2A3F;
+  --ink-2: #4A556A;
+  --muted: #8B7D5D;
+  --hair: #E8D9A8;
+  --gold: #C19A3A;
+  --gold-d: #8B6F26;
+  --moss: #3F6B4C;
+  --warn: #A03D2E;
+  --num: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  --jp: 'Noto Sans JP', -apple-system, 'Hiragino Sans', sans-serif;
+  --serif: 'Noto Serif JP', serif;
+  --en: 'Inter', sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { background: var(--bg); color: var(--ink); margin: 0; font-family: var(--jp); }
+body { font-size: 14px; line-height: 1.65; min-height: 100vh; }
+a { color: var(--gold-d); }
+
+.gate { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 28px; }
+.gate-card { background: var(--sheet); border: 1px solid var(--hair); border-radius: 6px; padding: 36px 32px; max-width: 360px; width: 100%; }
+.gate-card .eyebrow { font-family: var(--en); font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+.gate-card h1 { font-size: 18px; margin: 0 0 18px; font-weight: 800; }
+.gate-card input { width: 100%; padding: 10px 12px; border: 1px solid var(--hair); background: #fff; border-radius: 4px; font-family: inherit; font-size: 14px; margin-bottom: 10px; }
+.gate-card button { width: 100%; padding: 11px; background: var(--ink); color: #fff; border: none; border-radius: 4px; font-family: inherit; font-size: 14px; font-weight: 700; letter-spacing: 0.04em; cursor: pointer; }
+.gate-card .err { color: var(--warn); font-size: 12px; margin-top: 8px; min-height: 16px; }
+
+.topbar { background: var(--ink); color: #fff; padding: 12px 22px; display: flex; align-items: center; justify-content: space-between; gap: 18px; border-bottom: 1px solid var(--gold); position: sticky; top: 0; z-index: 50; }
+.topbar-left { display: flex; align-items: baseline; gap: 18px; }
+.topbar-brand { font-family: var(--en); font-weight: 800; letter-spacing: 0.16em; font-size: 11.5px; color: rgba(255,255,255,0.7); }
+.topbar-brand strong { color: var(--gold); }
+.topbar-tabs { display: flex; gap: 4px; }
+.topbar-tab { background: transparent; color: rgba(255,255,255,0.55); border: 1px solid transparent; padding: 6px 14px; border-radius: 3px; font-family: var(--jp); font-size: 12px; cursor: pointer; letter-spacing: 0.04em; font-weight: 700; }
+.topbar-tab.active { color: var(--gold); border-color: var(--gold); background: rgba(193,154,58,0.1); }
+.btn-logout { background: transparent; color: rgba(255,255,255,0.6); border: 1px solid rgba(255,255,255,0.18); padding: 6px 12px; border-radius: 3px; font-family: var(--num); font-size: 10.5px; cursor: pointer; letter-spacing: 0.06em; }
+
+.wrap { max-width: 1280px; margin: 0 auto; padding: 28px 22px 80px; }
+.tab-pane { display: none; }
+.tab-pane.active { display: block; }
+
+.sec { background: var(--sheet); border: 1px solid var(--hair); border-left: 4px solid var(--gold); margin-bottom: 18px; padding: 22px 24px; border-radius: 2px; }
+.sec-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 14px; flex-wrap: wrap; }
+.sec-label { font-family: var(--en); font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+.sec-title { font-size: 15px; font-weight: 800; margin: 2px 0 0; }
+.sec-note { font-family: var(--num); font-size: 10.5px; color: var(--muted); }
+
+.hero { background: var(--ink); color: #fff; border: none; border-left: 4px solid var(--gold); padding: 32px 28px 28px; display: grid; grid-template-columns: 1fr auto; gap: 24px; align-items: end; }
+.hero-label { font-family: var(--en); font-size: 10.5px; letter-spacing: 0.22em; text-transform: uppercase; color: rgba(255,255,255,0.55); margin-bottom: 10px; }
+.hero-num { font-family: var(--num); font-weight: 800; font-size: 56px; line-height: 0.95; letter-spacing: -0.02em; font-variant-numeric: tabular-nums lining-nums; }
+.hero-num .ccy { color: var(--gold); font-weight: 500; margin-right: 4px; }
+.hero-num .unit { color: var(--gold); font-weight: 500; font-size: 22px; margin-left: 6px; }
+.hero-sub { font-family: var(--num); font-size: 11.5px; color: rgba(255,255,255,0.55); margin-top: 10px; }
+.hero-right { font-family: var(--num); font-size: 10.5px; color: rgba(255,255,255,0.7); text-align: right; line-height: 1.85; }
+.hero-right strong { color: var(--gold); font-weight: 700; }
+
+.kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 18px; }
+.kpi { background: var(--sheet); border: 1px solid var(--hair); border-left: 3px solid var(--gold); padding: 16px 18px; border-radius: 2px; }
+.kpi-label { font-family: var(--en); font-size: 9.5px; letter-spacing: 0.20em; text-transform: uppercase; color: var(--muted); font-weight: 700; margin-bottom: 8px; }
+.kpi-num { font-family: var(--num); font-weight: 700; font-size: 26px; line-height: 1; letter-spacing: -0.01em; font-variant-numeric: tabular-nums lining-nums; }
+.kpi-num .ccy { color: var(--gold); font-weight: 500; margin-right: 2px; font-size: 18px; }
+.kpi-sub { font-family: var(--num); font-size: 10.5px; color: var(--ink-2); margin-top: 6px; }
+
+.chart { display: flex; align-items: flex-end; gap: 3px; height: 140px; margin: 8px 0 4px; border-bottom: 1px solid var(--hair); padding-bottom: 4px; }
+.chart-bar { flex: 1; background: var(--gold); border-radius: 1px 1px 0 0; min-height: 2px; position: relative; }
+.chart-bar.zero { background: var(--hair); }
+.chart-bar:hover { background: var(--gold-d); }
+.chart-bar:hover::after { content: attr(data-tip); position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--gold); padding: 5px 9px; border-radius: 3px; font-family: var(--num); font-size: 10.5px; white-space: nowrap; z-index: 10; }
+.chart-x { display: flex; justify-content: space-between; font-family: var(--num); font-size: 9.5px; color: var(--muted); margin-top: 6px; }
+
+table.ledger { width: 100%; border-collapse: collapse; }
+table.ledger th, table.ledger td { padding: 9px 10px; vertical-align: top; }
+table.ledger thead th { font-family: var(--en); font-size: 9.5px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); font-weight: 700; text-align: left; border-bottom: 1px solid var(--hair); }
+table.ledger thead th.num, table.ledger td.num { text-align: right; font-family: var(--num); font-variant-numeric: tabular-nums lining-nums; }
+table.ledger tbody tr { border-bottom: 1px solid var(--hair); }
+table.ledger tbody tr:hover { background: rgba(193,154,58,0.06); }
+table.ledger tbody td { font-size: 13px; }
+table.ledger tbody td.num { font-weight: 600; }
+table.ledger tbody td.num .ccy { color: var(--gold); font-weight: 400; margin-right: 1px; }
+table.ledger tbody td.rank { font-family: var(--num); font-size: 11px; color: var(--muted); width: 28px; }
+
+.feed { display: grid; gap: 1px; background: var(--hair); border: 1px solid var(--hair); border-radius: 2px; }
+.feed-row { background: var(--sheet); padding: 10px 14px; display: grid; grid-template-columns: 120px 90px 1fr 100px 90px; gap: 12px; align-items: center; font-size: 12.5px; }
+.feed-time { font-family: var(--num); font-size: 11px; color: var(--muted); }
+.feed-type { font-family: var(--num); font-size: 10.5px; font-weight: 700; letter-spacing: 0.08em; padding: 2px 7px; border-radius: 2px; display: inline-block; width: fit-content; }
+.feed-type.whisper { background: rgba(63,107,76,0.12); color: var(--moss); }
+.feed-type.claude { background: rgba(193,154,58,0.15); color: var(--gold-d); }
+.feed-customer { font-weight: 600; }
+.feed-detail { font-family: var(--num); font-size: 10.5px; color: var(--muted); }
+.feed-cost { font-family: var(--num); text-align: right; font-weight: 700; }
+.feed-cost .ccy { color: var(--gold); font-weight: 400; }
+
+.cat-list { display: flex; flex-direction: column; gap: 10px; }
+.cat-row { display: grid; grid-template-columns: 140px 1fr 60px; gap: 12px; align-items: center; }
+.cat-bar-wrap { background: var(--hair); height: 22px; border-radius: 2px; overflow: hidden; }
+.cat-bar { height: 100%; background: var(--gold); }
+.cat-bar.education { background: #06b6d4; }
+.cat-bar.nisa { background: #5B5BF0; }
+.cat-bar.house { background: #f59e0b; }
+.cat-bar.retire { background: #8b5cf6; }
+.cat-bar.insurance { background: #ec4899; }
+.cat-bar.tax { background: #dc2626; }
+.cat-bar.inherit { background: #10b981; }
+.cat-bar.other { background: var(--muted); }
+.cat-count { font-family: var(--num); font-size: 12px; font-weight: 700; text-align: right; }
+.cat-count .pct { color: var(--muted); font-weight: 500; margin-left: 4px; }
+.cat-chip { display: inline-block; font-family: var(--num); font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; letter-spacing: 0.04em; }
+.cat-chip.education { background: rgba(6,182,212,0.15); color: #0e7490; }
+.cat-chip.nisa { background: rgba(91,91,240,0.15); color: #4338ca; }
+.cat-chip.house { background: rgba(245,158,11,0.15); color: #b45309; }
+.cat-chip.retire { background: rgba(139,92,246,0.15); color: #6b21a8; }
+.cat-chip.insurance { background: rgba(236,72,153,0.15); color: #9d174d; }
+.cat-chip.tax { background: rgba(220,38,38,0.15); color: #991b1b; }
+.cat-chip.inherit { background: rgba(16,185,129,0.15); color: #047857; }
+.cat-chip.other { background: rgba(139,125,93,0.15); color: var(--muted); }
+
+.filter-bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.filter-bar select, .filter-bar input { background: #fff; border: 1px solid var(--hair); border-radius: 3px; padding: 6px 10px; font-family: var(--num); font-size: 11px; color: var(--ink); }
+
+.empty { padding: 40px 24px; text-align: center; color: var(--muted); font-family: var(--num); font-size: 12px; }
+.loading { font-family: var(--num); font-size: 11px; color: var(--muted); padding: 12px 0; }
+
+.manual-pane { max-width: 760px; margin: 0 auto; }
+.manual-pane h2 { font-family: var(--serif); font-size: 22px; margin: 30px 0 8px; font-weight: 700; }
+.manual-pane h2:first-child { margin-top: 0; }
+.manual-pane h3 { font-family: var(--serif); font-size: 16px; margin: 22px 0 6px; font-weight: 700; }
+.manual-pane p { color: var(--ink-2); margin: 6px 0; }
+.manual-pane code { background: rgba(193,154,58,0.08); color: var(--gold-d); padding: 1px 6px; border-radius: 3px; font-family: var(--num); font-size: 12px; }
+.manual-pane ul { padding-left: 22px; }
+.manual-pane li { margin: 4px 0; color: var(--ink-2); }
+.manual-pane .callout { background: rgba(193,154,58,0.08); border-left: 4px solid var(--gold); padding: 14px 18px; margin: 14px 0; border-radius: 2px; }
+.manual-pane .callout strong { color: var(--ink); }
+.manual-pane table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 13px; }
+.manual-pane table th, .manual-pane table td { padding: 8px 12px; border-bottom: 1px solid var(--hair); text-align: left; }
+.manual-pane table th { font-family: var(--en); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+.manual-pane table td.num { font-family: var(--num); text-align: right; font-variant-numeric: tabular-nums; }
+
+.foot { font-family: var(--num); font-size: 10px; color: var(--muted); margin-top: 24px; padding-top: 14px; border-top: 1px solid var(--hair); line-height: 1.85; }
+.foot strong { color: var(--ink); }
+
+@media (max-width: 880px) {
+  .wrap { padding: 18px 14px 60px; }
+  .hero { grid-template-columns: 1fr; padding: 22px 18px 20px; }
+  .hero-num { font-size: 42px; }
+  .hero-right { text-align: left; }
+  .kpi-grid { grid-template-columns: 1fr 1fr; }
+  .sec { padding: 16px 16px; }
+  .feed-row { grid-template-columns: 80px 1fr 80px; gap: 8px; padding: 9px 12px; font-size: 12px; }
+  .feed-row > .feed-detail, .feed-row > .feed-type { display: none; }
+  table.ledger td, table.ledger th { padding: 7px 6px; font-size: 12px; }
+  .topbar { padding: 10px 14px; gap: 10px; flex-wrap: wrap; }
+  .topbar-left { gap: 10px; }
+  .topbar-tab { padding: 5px 9px; font-size: 11px; }
+}
+</style>
+</head>
+<body>
+
+<div id="gate" class="gate" style="display:none">
+  <div class="gate-card">
+    <div class="eyebrow">FP Compass / Operations</div>
+    <h1>運営 マニュアル</h1>
+    <input id="gate-email" type="email" placeholder="オーナー email" />
+    <input id="gate-pw" type="password" placeholder="パスワード" />
+    <button id="gate-btn">ログイン</button>
+    <div id="gate-err" class="err"></div>
+  </div>
+</div>
+
+<div id="main" style="display:none">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-brand">FP COMPASS <strong>/ OPS</strong></div>
+      <div class="topbar-tabs">
+        <button class="topbar-tab active" data-pane="cost">💰 コスト</button>
+        <button class="topbar-tab" data-pane="questions">🔍 質問</button>
+        <button class="topbar-tab" data-pane="manual">📖 マニュアル</button>
+      </div>
+    </div>
+    <button class="btn-logout" id="logout">LOGOUT</button>
+  </div>
+
+  <div class="wrap">
+
+    <div class="tab-pane active" data-pane="cost">
+      <div class="sec hero">
+        <div>
+          <div class="hero-label" id="hero-month-label">— 月 — 日 時点</div>
+          <div class="hero-num"><span class="ccy">¥</span><span id="hero-num">0</span></div>
+          <div class="hero-sub" id="hero-sub">本日まで · 全テナント合計</div>
+        </div>
+        <div class="hero-right">
+          <div>WHISPER &nbsp;<strong id="hero-w">¥0</strong></div>
+          <div>CLAUDE &nbsp;&nbsp;<strong id="hero-c">¥0</strong></div>
+          <div style="margin-top:8px;">CALLS &nbsp;&nbsp;&nbsp;<strong id="hero-calls">0</strong></div>
+        </div>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi">
+          <div class="kpi-label">本日 / Today</div>
+          <div class="kpi-num"><span class="ccy">¥</span><span id="kpi-today">0</span></div>
+          <div class="kpi-sub" id="kpi-today-sub">— 件</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">1顧客あたり 平均</div>
+          <div class="kpi-num"><span class="ccy">¥</span><span id="kpi-avg">0</span></div>
+          <div class="kpi-sub" id="kpi-avg-sub">— 顧客 / 月</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">最大消費 テナント</div>
+          <div class="kpi-num" id="kpi-top-name" style="font-size:18px;font-family:var(--jp);font-weight:800;">—</div>
+          <div class="kpi-sub" id="kpi-top-sub">¥— / 月</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">録画 文字起こし</div>
+          <div class="kpi-num" id="kpi-audio-min">0</div>
+          <div class="kpi-sub">分 / 月</div>
+        </div>
+      </div>
+
+      <div class="sec">
+        <div class="sec-head">
+          <div><div class="sec-label">Daily Cost</div><div class="sec-title">日別 推移 (当月)</div></div>
+          <div class="sec-note">過去 30日</div>
+        </div>
+        <div class="chart" id="chart"></div>
+        <div class="chart-x" id="chart-x"></div>
+      </div>
+
+      <div class="sec">
+        <div class="sec-head">
+          <div><div class="sec-label">By Tenant</div><div class="sec-title">テナント別 当月コスト</div></div>
+          <div class="sec-note" id="tenant-count">— テナント</div>
+        </div>
+        <table class="ledger"><thead><tr>
+          <th style="width:32px;">#</th><th>テナント ID</th>
+          <th class="num">録画分</th><th class="num">Whisper</th>
+          <th class="num">Claude</th><th class="num">合計</th>
+        </tr></thead><tbody id="tenant-tbody"><tr><td colspan="6" class="loading">読込中…</td></tr></tbody></table>
+      </div>
+
+      <div class="sec">
+        <div class="sec-head">
+          <div><div class="sec-label">Recent Activity</div><div class="sec-title">直近 50件</div></div>
+          <div class="sec-note" id="feed-updated">—</div>
+        </div>
+        <div class="feed" id="feed"><div class="loading" style="padding:14px;">読込中…</div></div>
+      </div>
+
+      <div class="foot">
+        <strong>価格</strong>: Groq Whisper $0.111/音声1h · Claude Sonnet 入力$3+出力$15/Mtok · Claude Haiku 入力$0.25+出力$1.25 · USD-JPY 150固定<br>
+        <strong>録画分</strong>は 24kbps 想定 推定値 (MB × 5.6分)
+      </div>
+    </div>
+
+    <div class="tab-pane" data-pane="questions">
+      <div class="sec hero">
+        <div>
+          <div class="hero-label">全テナント横断 累計</div>
+          <div class="hero-num"><span id="q-hero-num">0</span><span class="unit">問</span></div>
+          <div class="hero-sub" id="q-hero-sub">お客様 LINE 質問 蓄積</div>
+        </div>
+        <div class="hero-right">
+          <div>テナント数 &nbsp;<strong id="q-hero-tenants">0</strong></div>
+          <div>顧客数 &nbsp;&nbsp;&nbsp;<strong id="q-hero-customers">0</strong></div>
+          <div style="margin-top:8px;">最頻 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong id="q-hero-topcat">—</strong></div>
+        </div>
+      </div>
+
+      <div class="sec">
+        <div class="sec-head">
+          <div><div class="sec-label">Filter</div><div class="sec-title">範囲</div></div>
+          <div class="sec-note" id="q-filter-result">—</div>
+        </div>
+        <div class="filter-bar">
+          <select id="q-range"><option value="all">全期間</option><option value="thismonth">今月</option><option value="lastmonth">先月</option><option value="7d">過去7日</option><option value="30d">過去30日</option></select>
+          <select id="q-cat"><option value="">全カテゴリ</option><option>NISA・iDeCo</option><option>教育資金</option><option>住宅ローン</option><option>老後資金</option><option>保険</option><option>相続・贈与</option><option>税金</option><option>その他</option></select>
+          <select id="q-tenant"><option value="">全テナント</option></select>
+          <input id="q-search" type="search" placeholder="質問 検索…" style="flex:1;min-width:160px;" />
+        </div>
+      </div>
+
+      <div class="sec">
+        <div class="sec-head">
+          <div><div class="sec-label">By Category</div><div class="sec-title">カテゴリ別 質問数</div></div>
+          <div class="sec-note" id="q-cat-total">— 件</div>
+        </div>
+        <div class="cat-list" id="q-cat-list"><div class="loading">読込中…</div></div>
+      </div>
+
+      <div class="sec">
+        <div class="sec-head">
+          <div><div class="sec-label">Top Questions</div><div class="sec-title">最頻出 質問 TOP 20</div></div>
+          <div class="sec-note">類似質問 = 同じ重み</div>
+        </div>
+        <table class="ledger"><thead><tr>
+          <th style="width:32px;">#</th><th>質問</th><th style="width:120px;">カテゴリ</th><th class="num" style="width:80px;">出現回数</th>
+        </tr></thead><tbody id="q-top-tbody"><tr><td colspan="4" class="loading">読込中…</td></tr></tbody></table>
+      </div>
+
+      <div class="sec">
+        <div class="sec-head">
+          <div><div class="sec-label">All Questions</div><div class="sec-title">全質問 一覧</div></div>
+          <div class="sec-note" id="q-all-count">—</div>
+        </div>
+        <table class="ledger"><thead><tr>
+          <th style="width:90px;">日付</th><th>質問</th><th style="width:110px;">カテゴリ</th><th>テナント</th><th>顧客</th>
+        </tr></thead><tbody id="q-all-tbody"><tr><td colspan="5" class="loading">読込中…</td></tr></tbody></table>
+      </div>
+
+      <div class="foot">
+        <strong>蓄積</strong>: FP が 顧客モーダル「Q&A」 タブを 開いた時 AI(Claude Haiku) で 分類 → <code>question_archive</code> Firestore
+      </div>
+    </div>
+
+    <div class="tab-pane" data-pane="manual">
+      <div class="manual-pane">
+        <h2>📖 OPS マニュアル</h2>
+        <p>FP Compass オーナー専用 運営ダッシュボード。 売上原価 と ユーザー需要 を 一画面で 把握。</p>
+
+        <div class="callout">
+          <strong>このページの 役割</strong><br>
+          ① <strong>「💰 コスト」</strong> = AI(Whisper + Claude) の 利用料金 を 全テナント横断 集計<br>
+          ② <strong>「🔍 質問」</strong> = お客様が LINE で 聞いてきた 質問を カテゴリ別に 蓄積・分析<br>
+          ③ <strong>「📖 マニュアル」</strong> = 仕組み・価格根拠・トラブルシュート の 解説
+        </div>
+
+        <h2>💰 コスト ダッシュボード</h2>
+        <h3>何が見えるか</h3>
+        <ul>
+          <li>当月 API 合計コスト (Whisper / Claude 内訳)</li>
+          <li>本日 / 1顧客あたり平均 / 最大消費テナント / 録画分数</li>
+          <li>日別推移グラフ (過去30日)</li>
+          <li>テナント別 ランキング (録画分・Whisper・Claude・合計)</li>
+          <li>直近 50件 アクティビティ feed</li>
+        </ul>
+
+        <h3>記録される タイミング</h3>
+        <p>Cloud Run の 以下 3つの endpoint 呼出時 に Firestore <code>usage_logs</code> に 1 doc 追加:</p>
+        <ul>
+          <li><code>/api/process-recording</code> — 録画 → AI議事録 (Whisper + Claude Sonnet)</li>
+          <li><code>/api/generate-deliverable</code> — 提案書/シミュレータ生成 (Claude Sonnet)</li>
+          <li><code>/api/classify-questions</code> — Q&A 自動分類 (Claude Haiku)</li>
+        </ul>
+
+        <h3>価格表</h3>
+        <table>
+          <tr><th>サービス</th><th>単価 (USD)</th><th>用途</th></tr>
+          <tr><td>Groq Whisper Large v3</td><td class="num">$0.111 / 音声1h</td><td>録画 文字起こし</td></tr>
+          <tr><td>Claude Sonnet 4.5</td><td class="num">入力$3 + 出力$15 / Mtok</td><td>議事録 / 提案書</td></tr>
+          <tr><td>Claude Haiku 4.5</td><td class="num">入力$0.25 + 出力$1.25 / Mtok</td><td>Q&A 分類</td></tr>
+        </table>
+
+        <h3>1商談あたり コスト目安 (24kbps)</h3>
+        <table>
+          <tr><th>商談時間</th><th>処理時間</th><th>コスト</th></tr>
+          <tr><td>30分</td><td class="num">~35秒</td><td class="num">¥14</td></tr>
+          <tr><td>60分</td><td class="num">~1分10秒</td><td class="num">¥26</td></tr>
+          <tr><td>90分</td><td class="num">~1分45秒</td><td class="num">¥38</td></tr>
+          <tr><td>2時間</td><td class="num">~2分25秒</td><td class="num">¥48</td></tr>
+          <tr><td>3時間</td><td class="num">~3分30秒</td><td class="num">¥70</td></tr>
+        </table>
+
+        <h3>単位経済</h3>
+        <p>FP1人あたり 月額 ¥19,800 SaaS。 標準利用 (週3-4商談×60分) で AIコスト 約 800円/月 → 粗利率 <strong>95%+</strong>。 100契約 = 月粗利 約 190万円。</p>
+
+        <h2>🔍 質問 アーカイブ</h2>
+        <h3>仕組み</h3>
+        <p>各 FP が 顧客モーダルの 「Q&A」 タブを 開くと、 そのお客様の LINE 履歴 全部を AI (Claude Haiku) で 分類。 結果は <code>question_archive</code> Firestore に 1質問 = 1 doc で 蓄積。 重複は merge (同テナント × 同顧客 × 同質問テキスト)。</p>
+
+        <h3>分類カテゴリ (8種)</h3>
+        <ul>
+          <li>NISA・iDeCo (制度・配分・引出)</li>
+          <li>教育資金 (学資保険・大学費用)</li>
+          <li>住宅ローン (繰上返済・借換・控除)</li>
+          <li>老後資金 (年金・退職金)</li>
+          <li>保険 (生命・医療・がん)</li>
+          <li>相続・贈与</li>
+          <li>税金</li>
+          <li>その他</li>
+        </ul>
+
+        <h3>事業 活用</h3>
+        <ul>
+          <li>多い質問 = LP / 営業資料 で 先回り 解決</li>
+          <li>カテゴリ偏り = 教材 / プロダクト 改良 の 一次データ</li>
+          <li>テナント別 トレンド = どの FP が どの領域 強いか 把握</li>
+        </ul>
+
+        <h2>🔧 トラブルシューティング</h2>
+        <h3>コスト ダッシュボードが 空</h3>
+        <ul>
+          <li>当月の Whisper / Claude 呼出が ゼロ → 録画 / Q&A タブを 1度 開く と 表示</li>
+          <li>Firestore 読込権限エラー → オーナーemail で ログインしているか 確認</li>
+        </ul>
+        <h3>質問アーカイブが 空</h3>
+        <ul>
+          <li>各 FP が 顧客モーダル → Q&A タブ を 開いていない → FP に依頼</li>
+        </ul>
+
+        <h3>変更履歴 / 価格更新</h3>
+        <p>USD-JPY 為替 固定 = 150。 改定時は <code>proxy/index.js</code> の <code>PRICING</code> 定数 + <code>USD_JPY</code> を 更新 → <code>gcloud run deploy</code>。</p>
+
+        <h2>📚 関連 URL</h2>
+        <ul>
+          <li>このページ: <code>/admin/ops.html</code></li>
+          <li>FP アプリ: <code>https://stg.app.skeleton-inc.jp/</code></li>
+          <li>Cloud Run: <code>fp-compass-webhook</code> @ asia-northeast1</li>
+          <li>Firestore: <code>skeleton-fp-compass-632026</code></li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut, browserLocalPersistence, setPersistence } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
+  import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAmVAEe9l9e1Yo_dzzJdbTVU35wWKd2sH4",
+    authDomain: "skeleton-fp-compass-632026.firebaseapp.com",
+    projectId: "skeleton-fp-compass-632026",
+    storageBucket: "skeleton-fp-compass-632026.firebasestorage.app",
+    messagingSenderId: "833972948597",
+    appId: "1:833972948597:web:b7310cc22ce41d9738f23c",
+  };
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  await setPersistence(auth, browserLocalPersistence);
+
+  const OWNER_EMAILS = ['t3.5ty6@gmail.com'];
+  const $ = (id) => document.getElementById(id);
+  const fmtYen = (n) => Math.round(n).toLocaleString('ja-JP');
+  const pad = (n) => String(n).padStart(2, '0');
+  const escapeHtml = (s) => String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const catSlug = (n) => ({ 'NISA・iDeCo': 'nisa', '教育資金': 'education', '住宅ローン': 'house', '老後資金': 'retire', '保険': 'insurance', '相続・贈与': 'inherit', '税金': 'tax', 'その他': 'other' })[n] || 'other';
+
+  document.querySelectorAll('.topbar-tab').forEach(t => {
+    t.addEventListener('click', () => {
+      const key = t.dataset.pane;
+      document.querySelectorAll('.topbar-tab').forEach(x => x.classList.toggle('active', x === t));
+      document.querySelectorAll('.tab-pane').forEach(p => p.classList.toggle('active', p.dataset.pane === key));
+      if (key !== 'cost') location.hash = key; else history.replaceState(null, '', location.pathname);
+    });
+  });
+  (function init() {
+    const h = (location.hash || '').replace('#', '');
+    if (h && document.querySelector(`[data-pane="${h}"]`)) {
+      document.querySelectorAll('.topbar-tab').forEach(x => x.classList.toggle('active', x.dataset.pane === h));
+      document.querySelectorAll('.tab-pane').forEach(p => p.classList.toggle('active', p.dataset.pane === h));
+    }
+  })();
+
+  onAuthStateChanged(auth, async (user) => {
+    if (user && OWNER_EMAILS.includes(user.email)) {
+      $('gate').style.display = 'none';
+      $('main').style.display = 'block';
+      await loadCost();
+      await loadQuestions();
+    } else {
+      if (user) await signOut(auth);
+      $('main').style.display = 'none';
+      $('gate').style.display = 'flex';
+    }
+  });
+  $('gate-btn').addEventListener('click', async () => {
+    const email = $('gate-email').value.trim();
+    $('gate-err').textContent = '';
+    if (!OWNER_EMAILS.includes(email)) { $('gate-err').textContent = 'オーナー未登録'; return; }
+    try { await signInWithEmailAndPassword(auth, email, $('gate-pw').value); } catch (e) { $('gate-err').textContent = e.code || e.message; }
+  });
+  $('gate-pw').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('gate-btn').click(); });
+  $('logout').addEventListener('click', () => signOut(auth));
+
+  // COST
+  async function loadCost() {
+    const now = new Date();
+    const yyyymm = `${now.getFullYear()}${pad(now.getMonth() + 1)}`;
+    const todayKey = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}`;
+    $('hero-month-label').textContent = `${now.getMonth() + 1}月 ${now.getDate()}日 時点`;
+    let snap;
+    try { snap = await getDocs(query(collection(db, 'usage_logs'), where('yyyymm', '==', yyyymm))); }
+    catch (e) { $('feed').innerHTML = `<div class="empty">読込失敗: ${escapeHtml(e.message)}</div>`; return; }
+    const logs = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => {
+      return (b.createdAt?.toDate?.()?.getTime() || 0) - (a.createdAt?.toDate?.()?.getTime() || 0);
+    });
+    if (logs.length === 0) { renderCostEmpty(); return; }
+    let mc = 0, mw = 0, mcl = 0, ma = 0, tc = 0, tn = 0;
+    const tenants = new Map(), customers = new Set(), daily = new Map();
+    for (const log of logs) {
+      const cost = log.costJPY || 0; mc += cost;
+      if (log.type === 'whisper') { mw += cost; ma += (log.estAudioSec || 0); }
+      else if (log.type === 'claude') mcl += cost;
+      if (log.yyyymmdd === todayKey) { tc += cost; tn++; }
+      const tid = log.tenantId || 'unknown';
+      if (!tenants.has(tid)) tenants.set(tid, { whisper: 0, claude: 0, audioSec: 0, count: 0 });
+      const ts = tenants.get(tid);
+      if (log.type === 'whisper') { ts.whisper += cost; ts.audioSec += (log.estAudioSec || 0); }
+      else if (log.type === 'claude') ts.claude += cost;
+      ts.count++;
+      if (log.customerName) customers.add(tid + '|' + log.customerName);
+      const d = log.yyyymmdd || todayKey;
+      daily.set(d, (daily.get(d) || 0) + cost);
+    }
+    $('hero-num').textContent = fmtYen(mc);
+    $('hero-w').textContent = '¥' + fmtYen(mw);
+    $('hero-c').textContent = '¥' + fmtYen(mcl);
+    $('hero-calls').textContent = logs.length.toLocaleString();
+    $('hero-sub').textContent = `本日まで · ${tenants.size} テナント · ${customers.size} 顧客`;
+    $('kpi-today').textContent = fmtYen(tc);
+    $('kpi-today-sub').textContent = `${tn} 件`;
+    $('kpi-avg').textContent = fmtYen(customers.size > 0 ? mc / customers.size : 0);
+    $('kpi-avg-sub').textContent = `${customers.size} 顧客 / 月`;
+    const sortedT = [...tenants.entries()].sort((a, b) => (b[1].whisper + b[1].claude) - (a[1].whisper + a[1].claude));
+    if (sortedT.length > 0) {
+      $('kpi-top-name').textContent = sortedT[0][0] === 'unknown' ? '(未識別)' : sortedT[0][0].slice(0, 14);
+      $('kpi-top-sub').textContent = '¥' + fmtYen(sortedT[0][1].whisper + sortedT[0][1].claude) + ' / 月';
+    }
+    $('kpi-audio-min').textContent = Math.round(ma / 60).toLocaleString();
+    renderChart(daily, now);
+    $('tenant-count').textContent = `${sortedT.length} テナント`;
+    $('tenant-tbody').innerHTML = sortedT.map(([tid, s], i) => `<tr>
+      <td class="rank">${pad(i + 1)}</td>
+      <td>${tid === 'unknown' ? '<span style="color:var(--muted);">(未識別)</span>' : escapeHtml(tid)}</td>
+      <td class="num">${Math.round(s.audioSec / 60)}<span style="color:var(--muted);font-size:9.5px;margin-left:2px;">分</span></td>
+      <td class="num"><span class="ccy">¥</span>${fmtYen(s.whisper)}</td>
+      <td class="num"><span class="ccy">¥</span>${fmtYen(s.claude)}</td>
+      <td class="num" style="color:var(--gold-d);font-weight:800;"><span class="ccy">¥</span>${fmtYen(s.whisper + s.claude)}</td>
+    </tr>`).join('');
+    $('feed').innerHTML = logs.slice(0, 50).map(log => {
+      const ts = log.createdAt?.toDate ? log.createdAt.toDate() : new Date();
+      const time = `${pad(ts.getMonth() + 1)}/${pad(ts.getDate())} ${pad(ts.getHours())}:${pad(ts.getMinutes())}`;
+      let detail = '';
+      if (log.type === 'whisper') detail = `${Math.round((log.estAudioSec || 0) / 60)}分 / ${(log.audioSizeMB || 0).toFixed(1)}MB`;
+      else if (log.type === 'claude') {
+        const m = (log.model || '').match(/sonnet|haiku|opus/i);
+        detail = `${m ? m[0] : 'sonnet'} ${log.inputTokens || 0}→${log.outputTokens || 0} tok`;
+      }
+      const cls = log.type === 'whisper' ? 'whisper' : 'claude';
+      const tlabel = log.type === 'whisper' ? 'WHISPER' : (log.subtype || 'CLAUDE').replace('_', ' ').toUpperCase();
+      return `<div class="feed-row">
+        <div class="feed-time">${time}</div>
+        <div class="feed-type ${cls}">${tlabel}</div>
+        <div class="feed-customer">${escapeHtml(log.customerName || '(no name)')}</div>
+        <div class="feed-detail">${escapeHtml(detail)}</div>
+        <div class="feed-cost"><span class="ccy">¥</span>${fmtYen(log.costJPY || 0)}</div>
+      </div>`;
+    }).join('');
+    $('feed-updated').textContent = `更新 ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  }
+  function renderCostEmpty() {
+    $('hero-sub').textContent = '今月のログ なし — 録画 or AI処理 が走っていません';
+    $('chart').innerHTML = '';
+    $('tenant-tbody').innerHTML = '<tr><td colspan="6" class="empty">なし</td></tr>';
+    $('feed').innerHTML = '<div class="empty">なし</div>';
+  }
+  function renderChart(daily, now) {
+    const days = 30, list = [];
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date(now); d.setDate(d.getDate() - i);
+      const k = `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}`;
+      list.push({ label: `${d.getMonth() + 1}/${d.getDate()}`, cost: daily.get(k) || 0 });
+    }
+    const max = Math.max(1, ...list.map(d => d.cost));
+    $('chart').innerHTML = list.map(d => {
+      const h = Math.max(2, Math.round((d.cost / max) * 100));
+      return `<div class="chart-bar${d.cost === 0 ? ' zero' : ''}" style="height:${h}%" data-tip="${d.label} ¥${fmtYen(d.cost)}"></div>`;
+    }).join('');
+    $('chart-x').innerHTML = `<span>${list[0].label}</span><span>${list[Math.floor(days/2)].label}</span><span>${list[days - 1].label}</span>`;
+  }
+
+  // QUESTIONS
+  let Q_ALL = [];
+  async function loadQuestions() {
+    try {
+      const snap = await getDocs(query(collection(db, 'question_archive')));
+      Q_ALL = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const tenants = [...new Set(Q_ALL.map(d => d.tenantId))].filter(Boolean).sort();
+      $('q-tenant').innerHTML = `<option value="">全テナント (${tenants.length})</option>` + tenants.map(t => `<option value="${escapeHtml(t)}">${escapeHtml(t.slice(0, 24))}</option>`).join('');
+      renderQuestions();
+    } catch (e) { $('q-cat-list').innerHTML = `<div class="empty">読込失敗: ${escapeHtml(e.message)}</div>`; }
+  }
+  function getQFiltered() {
+    const range = $('q-range').value, cat = $('q-cat').value, tenant = $('q-tenant').value;
+    const search = $('q-search').value.trim().toLowerCase();
+    const now = new Date();
+    const monthKey = `${now.getFullYear()}${pad(now.getMonth()+1)}`;
+    const lastMonth = new Date(now); lastMonth.setMonth(lastMonth.getMonth() - 1);
+    const lastMonthKey = `${lastMonth.getFullYear()}${pad(lastMonth.getMonth()+1)}`;
+    const cutoff7 = new Date(now); cutoff7.setDate(cutoff7.getDate() - 7);
+    const cutoff30 = new Date(now); cutoff30.setDate(cutoff30.getDate() - 30);
+    return Q_ALL.filter(d => {
+      if (cat && d.category !== cat) return false;
+      if (tenant && d.tenantId !== tenant) return false;
+      if (search && !((d.question || '').toLowerCase().includes(search))) return false;
+      if (range === 'thismonth' && d.yyyymm !== monthKey) return false;
+      if (range === 'lastmonth' && d.yyyymm !== lastMonthKey) return false;
+      if (range === '7d' || range === '30d') {
+        const ts = d.archivedAt?.toDate?.() || (d.archivedAt ? new Date(d.archivedAt) : null);
+        if (!ts) return false;
+        if (range === '7d' && ts < cutoff7) return false;
+        if (range === '30d' && ts < cutoff30) return false;
+      }
+      return true;
+    });
+  }
+  function renderQuestions() {
+    const docs = getQFiltered();
+    const tenants = new Set(docs.map(d => d.tenantId).filter(Boolean));
+    const customers = new Set(docs.map(d => (d.tenantId || '') + '|' + (d.userId || '')).filter(k => k !== '|'));
+    $('q-hero-num').textContent = docs.length.toLocaleString();
+    $('q-hero-tenants').textContent = tenants.size;
+    $('q-hero-customers').textContent = customers.size;
+    $('q-filter-result').textContent = `${docs.length.toLocaleString()} 件`;
+    if (docs.length === 0) {
+      $('q-hero-sub').textContent = '該当データなし';
+      $('q-cat-list').innerHTML = '<div class="empty">データなし</div>';
+      $('q-top-tbody').innerHTML = '<tr><td colspan="4" class="empty">なし</td></tr>';
+      $('q-all-tbody').innerHTML = '<tr><td colspan="5" class="empty">なし</td></tr>';
+      $('q-hero-topcat').textContent = '—';
+      return;
+    }
+    const cc = {};
+    docs.forEach(d => { cc[d.category || 'その他'] = (cc[d.category || 'その他'] || 0) + 1; });
+    const sortedCats = Object.entries(cc).sort((a, b) => b[1] - a[1]);
+    const maxCat = sortedCats[0]?.[1] || 1;
+    $('q-hero-topcat').textContent = sortedCats[0]?.[0] || '—';
+    $('q-hero-sub').textContent = `全テナント横断 · 累計 ${docs.length.toLocaleString()}問`;
+    $('q-cat-total').textContent = `${docs.length.toLocaleString()} 件`;
+    $('q-cat-list').innerHTML = sortedCats.map(([name, count]) => {
+      const pct = ((count / docs.length) * 100).toFixed(1);
+      const w = (count / maxCat) * 100;
+      const slug = catSlug(name);
+      return `<div class="cat-row">
+        <div><span class="cat-chip ${slug}">${escapeHtml(name)}</span></div>
+        <div class="cat-bar-wrap"><div class="cat-bar ${slug}" style="width:${w}%"></div></div>
+        <div class="cat-count">${count}<span class="pct">${pct}%</span></div>
+      </div>`;
+    }).join('');
+    const qCount = new Map();
+    docs.forEach(d => {
+      const key = (d.question || '').slice(0, 40).toLowerCase().replace(/[\s。、？?！!]/g, '');
+      if (!key) return;
+      if (!qCount.has(key)) qCount.set(key, { sample: d.question, category: d.category, count: 0 });
+      qCount.get(key).count++;
+    });
+    const top = [...qCount.values()].sort((a, b) => b.count - a.count).slice(0, 20);
+    $('q-top-tbody').innerHTML = top.map((q, i) => `<tr>
+      <td class="num" style="color:var(--muted);">${pad(i + 1)}</td>
+      <td>${escapeHtml(q.sample.slice(0, 120))}</td>
+      <td><span class="cat-chip ${catSlug(q.category)}">${escapeHtml(q.category || '?')}</span></td>
+      <td class="num" style="font-weight:800;color:var(--gold-d);">${q.count}</td>
+    </tr>`).join('');
+    const sorted = docs.slice().sort((a, b) => (b.archivedAt?.toDate?.()?.getTime() || 0) - (a.archivedAt?.toDate?.()?.getTime() || 0)).slice(0, 200);
+    $('q-all-count').textContent = `${sorted.length} / ${docs.length} 件 表示`;
+    $('q-all-tbody').innerHTML = sorted.map(d => {
+      const ts = d.archivedAt?.toDate?.() || null;
+      const date = ts ? `${ts.getFullYear().toString().slice(2)}/${pad(ts.getMonth()+1)}/${pad(ts.getDate())}` : '';
+      return `<tr>
+        <td class="num" style="color:var(--muted);font-size:10.5px;">${date}</td>
+        <td>${escapeHtml((d.question || '').slice(0, 140))}</td>
+        <td><span class="cat-chip ${catSlug(d.category)}">${escapeHtml(d.category || '?')}</span></td>
+        <td style="font-family:var(--num);font-size:10.5px;color:var(--muted);">${escapeHtml((d.tenantId || '').slice(0, 16))}</td>
+        <td>${escapeHtml(d.customerName || '—')}</td>
+      </tr>`;
+    }).join('');
+  }
+  ['q-range', 'q-cat', 'q-tenant'].forEach(id => $(id).addEventListener('change', renderQuestions));
+  $('q-search').addEventListener('input', () => {
+    clearTimeout(window._sdeb);
+    window._sdeb = setTimeout(renderQuestions, 200);
+  });
+</script>
+</body>
+</html>

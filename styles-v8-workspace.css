@@ -7087,6 +7087,7 @@ table tbody button.btn-mini:hover {
    オーナーfb: 縦長すぎてスクロール必要 → 3列でコンパクトに
    ============================================================ */
 .fp-qa-grid {
+  display: grid !important;  /* ★ display: grid を明示しないと grid-template-columns が無視され block で縦並びになる (v3-3col-span ループ原因) */
   grid-template-columns: repeat(3, minmax(0, 1fr)) !important;  /* minmax(0,1fr) で content幅 折返し 防止 */
   row-gap: 26px !important;
   column-gap: 10px !important;
@@ -7151,3 +7152,3036 @@ table tbody button.btn-mini:hover {
   .fp-qa-pop { min-height: 76px; }
 }
 /* deploy-trigger 1782091790 */
+
+/* ============================================================
+   モバイル対応 v1 (2026-06-22 roundO)
+   ハンバーガー / サイドバー drawer / モーダル全画面 / table→カード
+   タッチ 44px+ / iOS auto-zoom 防止 (input font-size 16px)
+   ============================================================ */
+
+/* ハンバーガーボタン — PC では非表示、 < 768px で 左上 固定 表示 */
+#mobile-hamburger {
+  display: none;
+  position: fixed;
+  top: 12px; left: 12px;
+  z-index: 10100;
+  width: 44px; height: 44px;
+  background: #fff;
+  border: 1.5px solid #C19A3A;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.18);
+  padding: 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  transition: background .15s, border-color .15s;
+}
+#mobile-hamburger:hover { background: #FBF5E3; }
+#mobile-hamburger .mh-bar {
+  display: block;
+  width: 22px; height: 2.5px;
+  background: #1F2A3F;
+  border-radius: 2px;
+  transition: transform .25s, opacity .2s;
+}
+body.mobile-nav-open #mobile-hamburger .mh-bar:nth-child(1) { transform: translateY(7.5px) rotate(45deg); }
+body.mobile-nav-open #mobile-hamburger .mh-bar:nth-child(2) { opacity: 0; }
+body.mobile-nav-open #mobile-hamburger .mh-bar:nth-child(3) { transform: translateY(-7.5px) rotate(-45deg); }
+
+#mobile-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(2px);
+  z-index: 10080;
+  opacity: 0;
+  transition: opacity .25s;
+}
+
+/* ───── < 768px = モバイル ───── */
+@media (max-width: 768px) {
+  /* ハンバーガー / backdrop を 表示 */
+  #mobile-hamburger { display: flex; }
+
+  body.mobile-nav-open #mobile-backdrop {
+    display: block;
+    opacity: 1;
+  }
+
+  /* サイドバー: 左から slide-in (drawer) */
+  .sidebar {
+    position: fixed !important;
+    top: 0; left: 0;
+    width: 280px !important;
+    height: 100vh !important;
+    z-index: 10090 !important;
+    transform: translateX(-105%);
+    transition: transform .28s cubic-bezier(.2,.7,.2,1), box-shadow .28s;
+    overflow-y: auto !important;
+    box-shadow: none;
+  }
+  body.mobile-nav-open .sidebar {
+    transform: translateX(0);
+    box-shadow: 14px 0 36px rgba(0, 0, 0, 0.32);
+  }
+
+  /* メイン content: 全幅 + 上に hamburger 分の padding */
+  .shell {
+    display: block !important;
+    grid-template-columns: 1fr !important;
+  }
+  .main, main {
+    margin-left: 0 !important;
+    padding-top: 68px !important;
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+
+  /* topbar (breadcrumb 等) を 右に ずらして ハンバーガー 重ならないように */
+  .topbar, .breadcrumb, .crumbs {
+    padding-left: 60px !important;
+  }
+
+  /* ===== モーダル 全画面化 ===== */
+  .modal-overlay {
+    padding: 0 !important;
+  }
+  .modal#modal-content,
+  #modal-content,
+  .modal {
+    max-width: 100% !important;
+    width: 100% !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    border-radius: 0 !important;
+    overflow-y: auto !important;
+  }
+  /* 顧客モーダル の grid (320+778) → flex column */
+  .cd-modal {
+    display: flex !important;
+    flex-direction: column !important;
+    grid-template-columns: 1fr !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    overflow-y: auto !important;
+  }
+  .cd-left, .cd-right {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  .cd-left {
+    border-right: none !important;
+    border-bottom: 1px solid #E8E2D4 !important;
+    padding-bottom: 16px !important;
+  }
+
+  /* CTA grid: 親が flex column になったので 全幅で 2列 */
+  .fp-qa-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-column: auto !important;
+  }
+
+  /* ===== 顧客台帳 table → カード式 ===== */
+  table.clients {
+    display: block !important;
+    width: 100% !important;
+  }
+  table.clients thead { display: none !important; }
+  table.clients tbody { display: block !important; }
+  table.clients tbody tr {
+    display: block !important;
+    background: #fff !important;
+    border: 1px solid #E8E2D4 !important;
+    border-radius: 12px !important;
+    padding: 14px 16px !important;
+    margin-bottom: 10px !important;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.05);
+  }
+  table.clients tbody td {
+    display: block !important;
+    padding: 4px 0 !important;
+    border: none !important;
+    font-size: 13.5px !important;
+  }
+  table.clients tbody td:first-child {
+    font-weight: 800 !important;
+    font-size: 16px !important;
+    color: #1F2A3F !important;
+    margin-bottom: 8px !important;
+    padding-bottom: 6px !important;
+    border-bottom: 1px solid #F0EBDF !important;
+  }
+  table.clients tbody td::before {
+    content: attr(data-label);
+    display: inline-block;
+    font-size: 10.5px;
+    font-weight: 700;
+    color: #9A5A18;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-right: 8px;
+    min-width: 60px;
+  }
+
+  /* ===== タッチターゲット 44px+ + iOS auto-zoom 防止 ===== */
+  .tab, button, .btn, .btn-cta-primary, .btn-cta-secondary, .btn-mini-action, .fp-qa-pop, [role="button"] {
+    min-height: 44px;
+  }
+  input[type="text"], input[type="email"], input[type="search"], input[type="password"],
+  input[type="tel"], input[type="url"], input[type="number"], textarea, select {
+    font-size: 16px !important;  /* iOS auto-zoom 防止 (16px 未満で zoom) */
+    min-height: 44px;
+  }
+  textarea { min-height: 88px; }
+
+  /* font scale up + line-height ゆとり */
+  body { font-size: 14px !important; line-height: 1.7 !important; }
+
+  /* hero / 見出し もモバイルで縮める */
+  .hero-title { font-size: 24px !important; line-height: 1.35 !important; }
+  .hero-sub { font-size: 13px !important; }
+  .page-head { flex-direction: column; align-items: stretch; gap: 12px; }
+  .hero-actions { width: 100%; }
+  .hero-actions button { width: 100%; }
+
+  /* client-toolbar (検索 + フィルタ + ソート) を 縦に */
+  .client-toolbar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+  .client-toolbar > * { width: 100%; }
+  .client-toolbar input,
+  .client-toolbar select { width: 100% !important; }
+
+  /* タグセグメントbar: chip wrap */
+  #client-tag-segment-bar { flex-direction: column !important; align-items: stretch !important; }
+  #client-tag-chips { width: 100% !important; }
+
+  /* 面談履歴 mhカード モバイル */
+  .mh-card { grid-template-columns: 64px 1fr !important; }
+  .mh-actions { grid-column: 1 / -1; padding-top: 8px; border-top: 1px dashed #F0EBDF; margin-top: 4px; }
+
+  /* CTA pop モバイルで コンパクトに (3列→2列 / 1列) */
+  .fp-qa-pop .fp-qa-tip { font-size: 9px !important; padding: 2px 10px !important; }
+  .fp-qa-pop .fp-qa-label-main { font-size: 12.5px !important; }
+  .fp-qa-pop .fp-qa-label-sub { font-size: 10px !important; }
+}
+
+/* < 380px = 極小スマホ */
+@media (max-width: 380px) {
+  .fp-qa-grid { grid-template-columns: 1fr !important; }
+  .sidebar { width: 88vw !important; }
+}
+
+/* タッチデバイス: hover transform を 抑制 (sticky stuck 防止) */
+@media (hover: none) {
+  .btn-cta-primary:hover,
+  .btn-cta-secondary:hover,
+  .fp-qa-pop:hover .fp-qa-capsule { transform: none !important; }
+}
+
+/* ============================================================
+   モバイルファースト v2 (2026-06-22 roundP)
+   トップバー (56px固定) + ボトムナビ (64px+safe固定 5タブ)
+   既存 サイドバー drawer は "もっと" タブから 補助起動
+   ============================================================ */
+
+/* m-only 要素 は PC では隠す */
+.m-only { display: none; }
+
+/* ───── < 768px = モバイル ───── */
+@media (max-width: 768px) {
+  .m-only { display: flex; }
+
+  /* ===== トップバー (56px + safe area top) ===== */
+  #mobile-topbar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: calc(56px + env(safe-area-inset-top, 0px));
+    padding-top: env(safe-area-inset-top, 0px);
+    background: linear-gradient(180deg, #1F2A3F 0%, #1A2235 100%);
+    border-bottom: 1px solid #C19A3A;
+    z-index: 10100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-left: 12px;
+    padding-right: 12px;
+    color: #fff;
+    font-family: 'Hiragino Sans','Noto Sans JP',sans-serif;
+  }
+  /* スクロール時に frosted glass (細部 シグネチャ) */
+  body[data-scrolled="1"] #mobile-topbar {
+    background: rgba(31, 42, 63, 0.82);
+    backdrop-filter: saturate(180%) blur(14px);
+    -webkit-backdrop-filter: saturate(180%) blur(14px);
+  }
+  #mobile-topbar #mobile-hamburger {
+    position: static;
+    width: 40px; height: 40px;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    cursor: pointer;
+    padding: 0;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    border-radius: 8px;
+  }
+  #mobile-topbar #mobile-hamburger:hover { background: rgba(255,255,255,0.08); }
+  #mobile-topbar #mobile-hamburger .mh-bar {
+    width: 20px; height: 2px;
+    background: #FBF5E3;
+    border-radius: 2px;
+    transition: transform .25s, opacity .2s;
+  }
+  body.mobile-nav-open #mobile-topbar #mobile-hamburger .mh-bar:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+  body.mobile-nav-open #mobile-topbar #mobile-hamburger .mh-bar:nth-child(2) { opacity: 0; }
+  body.mobile-nav-open #mobile-topbar #mobile-hamburger .mh-bar:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+  #mobile-title-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    line-height: 1.1;
+    gap: 1px;
+  }
+  #mobile-title-wrap .m-eyebrow {
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.22em;
+    color: #C19A3A;
+    font-family: 'Inter',sans-serif;
+  }
+  #mobile-current-title {
+    font-family: 'Noto Serif JP',serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 0.04em;
+  }
+
+  #mobile-user-btn {
+    width: 40px; height: 40px;
+    background: transparent;
+    border: 1.5px solid rgba(193,154,58,0.5);
+    border-radius: 50%;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    color: #FBF5E3;
+    font-family: 'Inter',sans-serif;
+    font-weight: 800;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+  }
+  #mobile-user-btn:hover { background: rgba(193,154,58,0.15); }
+
+  /* ===== ボトムナビ (64px + safe area bottom) ===== */
+  #mobile-bottomnav {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: calc(64px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    background: #fff;
+    border-top: 1px solid #E8E2D4;
+    z-index: 10100;
+    display: flex;
+    justify-content: space-around;
+    align-items: stretch;
+    box-shadow: 0 -8px 24px rgba(15, 23, 42, 0.08);
+  }
+  .m-tab {
+    flex: 1;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    color: #94A3B8;
+    font-family: 'Hiragino Sans',sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    padding: 8px 4px;
+    transition: color .15s;
+    position: relative;
+    min-height: 56px;
+  }
+  .m-tab svg {
+    transition: stroke .15s, transform .25s cubic-bezier(.2,.7,.3,1.3);
+    position: relative;
+    z-index: 2;
+  }
+  .m-tab span {
+    position: relative;
+    z-index: 2;
+  }
+  /* ★ オーナーfb 2026-06-23: 白アイコンが背景と重なって見えない → gold pill を ::before で 注入 */
+  .m-tab {
+    position: relative;
+  }
+  .m-tab::before {
+    content: '';
+    position: absolute;
+    top: 5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 44px;
+    height: 30px;
+    border-radius: 99px;
+    background: transparent;
+    transition: background .25s, box-shadow .25s;
+    z-index: 1;
+    pointer-events: none;
+  }
+  .m-tab.is-active {
+    color: #9A5A18;
+  }
+  .m-tab.is-active::before {
+    background: linear-gradient(135deg, #C19A3A 0%, #9A5A18 100%) !important;
+    box-shadow: 0 4px 12px rgba(193,154,58,0.32) !important;
+  }
+  .m-tab.is-active svg {
+    stroke: #fff !important;
+    transform: scale(1.05);
+  }
+
+  /* ===== content area: topbar 下から bottomnav 上まで ===== */
+  body {
+    padding-top: calc(56px + env(safe-area-inset-top, 0px)) !important;
+    padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  /* 既存 ハンバーガー drawer (サイドバー) は そのまま slide-in 機構 を 流用 */
+  .sidebar {
+    position: fixed !important;
+    top: 0; left: 0;
+    width: 280px !important;
+    height: 100vh !important;
+    z-index: 10090 !important;
+    transform: translateX(-105%);
+    transition: transform .28s cubic-bezier(.2,.7,.2,1);
+    overflow-y: auto !important;
+    padding-top: calc(20px + env(safe-area-inset-top, 0px)) !important;
+  }
+  body.mobile-nav-open .sidebar {
+    transform: translateX(0);
+    box-shadow: 14px 0 36px rgba(0, 0, 0, 0.4);
+  }
+  body.mobile-nav-open #mobile-backdrop {
+    display: block !important;
+    opacity: 1;
+    top: calc(56px + env(safe-area-inset-top, 0px));
+  }
+
+  /* メインコンテンツ */
+  .shell { display: block !important; }
+  .main, main {
+    margin-left: 0 !important;
+    padding: 12px !important;
+  }
+
+  /* 既存トップ breadcrumb / アカウントヘッダ は モバイルでは隠す (topbar に集約) */
+  .topbar, .crumbs, .breadcrumb { display: none !important; }
+  /* tenant ID badge とかも 隠す */
+  [data-tenant-badge], .acc-row, #acc-header { display: none !important; }
+
+  /* page-head 圧縮: hero-sub / hero-eyebrow 隠す、 タイトル 縮める */
+  .page-head { margin-bottom: 14px !important; padding-bottom: 0 !important; border-bottom: none !important; }
+  .hero-eyebrow { display: none !important; }
+  .hero-sub { display: none !important; }
+  .hero-title {
+    font-family: 'Noto Serif JP', serif !important;
+    font-size: 22px !important;
+    line-height: 1.4 !important;
+    margin: 0 0 10px !important;
+  }
+  .hero-actions { width: 100%; }
+  .hero-actions button {
+    width: 100% !important;
+    min-height: 48px;
+    justify-content: center;
+  }
+
+  /* ===== モーダル モバイル 全画面 ===== */
+  .modal-overlay { padding: 0 !important; }
+  .modal#modal-content,
+  #modal-content,
+  .modal {
+    max-width: 100% !important;
+    width: 100% !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    border-radius: 0 !important;
+    margin-top: calc(56px + env(safe-area-inset-top, 0px)) !important;
+  }
+  .cd-modal {
+    display: flex !important;
+    flex-direction: column !important;
+    grid-template-columns: 1fr !important;
+    height: calc(100vh - 56px - env(safe-area-inset-top, 0px) - 64px - env(safe-area-inset-bottom, 0px)) !important;
+    max-height: none !important;
+    overflow-y: auto !important;
+  }
+  .cd-left, .cd-right {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  .cd-left {
+    border-right: none !important;
+    border-bottom: 1px solid #E8E2D4 !important;
+    padding-bottom: 14px !important;
+  }
+
+  /* CTA grid モバイル: 2列、 < 380px で 1列 */
+  .fp-qa-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-column: auto !important;
+  }
+
+  /* ===== 顧客台帳 table → カード ===== */
+  table.clients { display: block !important; width: 100% !important; }
+  table.clients thead { display: none !important; }
+  table.clients tbody { display: block !important; }
+  table.clients tbody tr {
+    display: block !important;
+    background: #fff !important;
+    border: 1px solid #E8E2D4 !important;
+    border-radius: 12px !important;
+    padding: 14px 16px !important;
+    margin-bottom: 10px !important;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.05);
+  }
+  table.clients tbody td {
+    display: block !important;
+    padding: 4px 0 !important;
+    border: none !important;
+    font-size: 13.5px !important;
+  }
+  table.clients tbody td:first-child {
+    font-weight: 800 !important;
+    font-size: 16px !important;
+    color: #1F2A3F !important;
+    margin-bottom: 8px !important;
+    padding-bottom: 6px !important;
+    border-bottom: 1px solid #F0EBDF !important;
+  }
+
+  /* iOS auto-zoom 防止 (input 16px) */
+  input[type="text"], input[type="email"], input[type="search"], input[type="password"],
+  input[type="tel"], input[type="url"], input[type="number"], textarea, select {
+    font-size: 16px !important;
+    min-height: 44px;
+  }
+  textarea { min-height: 88px; }
+
+  /* タッチターゲット 44px+ */
+  .tab, button, .btn, .btn-cta-primary, .btn-cta-secondary, .btn-mini-action, .fp-qa-pop, [role="button"] {
+    min-height: 44px;
+  }
+
+  /* font scale up */
+  body { font-size: 14px !important; line-height: 1.7 !important; }
+
+  /* client-toolbar (検索 + フィルタ + ソート) を 縦に */
+  .client-toolbar { flex-direction: column !important; align-items: stretch !important; gap: 10px !important; }
+  .client-toolbar > * { width: 100% !important; }
+  #client-tag-segment-bar { flex-direction: column !important; align-items: stretch !important; }
+
+  /* 面談履歴 mhカード */
+  .mh-card { grid-template-columns: 64px 1fr !important; }
+  .mh-actions { grid-column: 1 / -1; padding-top: 8px; border-top: 1px dashed #F0EBDF; margin-top: 4px; }
+
+  /* fp-qa-pop モバイル font 縮める */
+  .fp-qa-pop .fp-qa-tip { font-size: 9px !important; padding: 2px 10px !important; }
+  .fp-qa-pop .fp-qa-label-main { font-size: 12.5px !important; }
+  .fp-qa-pop .fp-qa-label-sub { font-size: 10px !important; }
+
+  /* サイドバーの上部に「閉じる」案内 (drawer モード) */
+  body.mobile-nav-open .sidebar::before {
+    content: '✕ 閉じる は ハンバーガー or 右の黒い場所をタップ';
+    display: block;
+    background: rgba(193,154,58,0.18);
+    color: #FBF5E3;
+    font-size: 10.5px;
+    padding: 8px 14px;
+    letter-spacing: 0.04em;
+    border-bottom: 1px solid rgba(193,154,58,0.3);
+    margin-bottom: 8px;
+  }
+}
+
+@media (max-width: 380px) {
+  .fp-qa-grid { grid-template-columns: 1fr !important; }
+  .sidebar { width: 88vw !important; }
+}
+
+@media (hover: none) {
+  .btn-cta-primary:hover,
+  .btn-cta-secondary:hover,
+  .fp-qa-pop:hover .fp-qa-capsule,
+  .m-tab:hover { transform: none !important; }
+}
+
+/* ★ 2026-06-22 roundP fix: モバイルで 隠す追加要素 */
+@media (max-width: 768px) {
+  #fp-user-bar { display: none !important; }
+  #fp-version-badge {
+    display: none !important;  /* モバイルでは下に被るので隠す */
+  }
+  /* チャットbot (mb-fab) も モバイルではボトムナビ被る → 上にずらす */
+  #mbFab {
+    bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
+    right: 14px !important;
+  }
+  #mbPanel {
+    bottom: calc(72px + env(safe-area-inset-bottom, 0px)) !important;
+    max-height: calc(100vh - 56px - 80px - env(safe-area-inset-top, 0px)) !important;
+  }
+}
+
+/* ★ 2026-06-22 roundQ: モーダル内 二重ネストスクロール解消 (オーナーfb: スクロール効かない箇所がある) */
+@media (max-width: 768px) {
+  /* モバイルでは .cd-modal だけが scroll、 内部 ペイン は 自然な高さに */
+  .cd-left, .cd-right {
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+  }
+  /* .cd-modal も 自然な高さ → body 直 scroll に渡す (二重ネスト 解消) */
+  .cd-modal {
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+  }
+  /* モーダル自体 は scrollable に */
+  .modal#modal-content,
+  #modal-content,
+  .modal {
+    height: auto !important;
+    max-height: none !important;
+    min-height: calc(100vh - 56px - env(safe-area-inset-top, 0px) - 64px - env(safe-area-inset-bottom, 0px));
+    margin-bottom: calc(64px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+  /* modal-overlay は scroll 容器 */
+  .modal-overlay {
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    align-items: flex-start !important;  /* center だと はみ出した時 上に行けない */
+  }
+}
+
+/* ★ 2026-06-22 roundR: html/body overflow:hidden を モバイルで 解除 (オーナーfb: スクロール出来ない 真因) */
+@media (max-width: 768px) {
+  html, body {
+    height: auto !important;
+    min-height: 100% !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  /* sidebar/main 内部の overflow も モバイルでは body scroll に渡す */
+  .sidebar { overflow-y: auto !important; }
+  .main, main {
+    overflow: visible !important;
+    height: auto !important;
+    min-height: auto !important;
+  }
+  .shell {
+    overflow: visible !important;
+    height: auto !important;
+  }
+}
+
+/* ============================================================
+   モバイル特化 v3 (2026-06-22 roundR) — 真のモバイルファースト
+   オーナーfb: 「全然 携帯UI じゃない」 + 「見づらい もっと特化」
+   ・drawer label 復活
+   ・ホーム hero 圧縮 + 大数値 強調
+   ・顧客台帳 collapsible filter + FAB
+   ・顧客モーダル CTA 1列フル幅 + コンパクトhero
+   ============================================================ */
+@media (max-width: 768px) {
+  /* ───── drawer label 復活 (1024px @media の display:none を 上書き) ───── */
+  body.mobile-nav-open .sidebar-nav .tab span,
+  body.mobile-nav-open .sidebar-brand .brand-text,
+  body.mobile-nav-open .sidebar-search input,
+  body.mobile-nav-open .sidebar-label,
+  body.mobile-nav-open .nav-count,
+  body.mobile-nav-open .user-text {
+    display: inline-block !important;
+  }
+  body.mobile-nav-open .sidebar-nav .tab {
+    justify-content: flex-start !important;
+    padding: 12px 18px !important;
+    gap: 12px !important;
+    min-height: 48px;
+  }
+  body.mobile-nav-open .sidebar-search { padding: 10px 14px !important; justify-content: flex-start !important; }
+  body.mobile-nav-open .sidebar-brand { justify-content: flex-start !important; padding: 16px 18px !important; }
+  body.mobile-nav-open .sidebar-user { padding: 12px 18px !important; justify-content: flex-start !important; }
+
+  /* ───── ホーム hero モバイル特化 ───── */
+  .view[data-view="dashboard"] .page-head { padding: 12px 4px 8px !important; border: none !important; }
+  .view[data-view="dashboard"] .hero-title {
+    text-align: left !important;
+    font-family: 'Noto Serif JP', serif !important;
+    font-size: 20px !important;
+    font-weight: 700 !important;
+    line-height: 1.5 !important;
+    margin: 0 0 6px !important;
+    color: #1F2A3F;
+    white-space: normal !important;
+  }
+  .view[data-view="dashboard"] .hero-sub {
+    display: block !important;
+    text-align: left !important;
+    font-size: 12.5px !important;
+    color: #6B7280 !important;
+    margin: 0 0 14px !important;
+  }
+  /* ステータス3カード — 数字大 / ラベル下 */
+  .view[data-view="dashboard"] .kpi-row,
+  .view[data-view="dashboard"] .stat-row,
+  .view[data-view="dashboard"] .summary-stats {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 8px !important;
+    margin-bottom: 18px !important;
+  }
+  /* hero action 1列 */
+  .view[data-view="dashboard"] .hero-actions {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+    width: 100% !important;
+  }
+
+  /* ───── 顧客台帳: collapsible filter + FAB ───── */
+  /* hero-actions の「新規顧客を登録」 を 隠して FAB で表示 */
+  .view[data-view="clients"] .hero-actions { display: none !important; }
+  /* 検索バーは常時、 他は折りたたみ */
+  .view[data-view="clients"] .client-toolbar input[type="search"] {
+    order: -1;
+    width: 100% !important;
+  }
+  .view[data-view="clients"] .client-toolbar select,
+  .view[data-view="clients"] #client-col-config,
+  .view[data-view="clients"] .count {
+    display: none !important;  /* 折りたたみ ボタン経由 (将来) */
+  }
+  /* 「全フィルタ」 ボタン (toggle) を追加 */
+  .view[data-view="clients"] .client-toolbar::after {
+    content: '🔍 検索のみ表示 (フィルタは PC 推奨)';
+    display: block;
+    font-size: 11px;
+    color: #94A3B8;
+    text-align: center;
+    margin-top: 4px;
+    padding: 6px 0;
+  }
+  /* タグ filter bar 隠す (狭い画面では邪魔) */
+  #client-tag-segment-bar { display: none !important; }
+
+  /* FAB「+ 新規顧客」 */
+  body.has-mobile-fab::after {
+    content: none;  /* placeholder */
+  }
+  #mobile-fab-new-client {
+    position: fixed;
+    bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+    right: 16px;
+    width: 56px; height: 56px;
+    background: linear-gradient(135deg, #C19A3A 0%, #9A5A18 100%);
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    box-shadow: 0 10px 24px rgba(193, 154, 58, 0.45);
+    font-size: 28px;
+    font-weight: 800;
+    cursor: pointer;
+    z-index: 9100;
+    line-height: 1;
+    display: none;  /* 顧客タブ時のみ表示 (JSで切替) */
+    align-items: center;
+    justify-content: center;
+    padding-bottom: 4px;
+    transition: transform .15s;
+  }
+  #mobile-fab-new-client:active { transform: scale(0.94); }
+  body.tab-clients-active #mobile-fab-new-client { display: flex; }
+
+  /* ───── 顧客モーダル: コンパクトhero + CTA 1列フル幅 ───── */
+  /* 中央寄せ大型 hero → 左寄せ コンパクト header に */
+  .cd-hero, .cd-header, .cd-modal-head {
+    padding: 12px 16px !important;
+    border-bottom: 1px solid #E8E2D4;
+  }
+  /* CTA grid を **1列** 縦並びに override (モバイルでは 2列だと中身改行) */
+  .fp-qa-grid {
+    grid-template-columns: 1fr !important;
+    row-gap: 16px !important;
+    grid-column: auto !important;
+  }
+  .fp-qa-pop {
+    padding-top: 14px !important;
+    min-height: 76px;
+  }
+  .fp-qa-pop .fp-qa-capsule {
+    min-height: 60px !important;
+    padding: 16px 18px !important;
+    gap: 14px !important;
+  }
+  .fp-qa-pop .fp-qa-label-main {
+    font-size: 14.5px !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+  }
+  .fp-qa-pop .fp-qa-label-sub {
+    font-size: 11px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+  .fp-qa-pop .fp-qa-arrow { width: 28px; height: 28px; font-size: 14px; }
+  .fp-qa-pop .fp-qa-tip {
+    top: 0 !important;
+    font-size: 10px !important;
+    padding: 3px 14px !important;
+  }
+
+  /* 顧客モーダル ヘッダ アバター サイズ縮小 */
+  .cd-modal .cd-avatar,
+  .cd-modal img[class*="avatar"] {
+    width: 56px !important; height: 56px !important;
+  }
+
+  /* CTA セクション 上に余白追加 (tip ぶん) */
+  .fp-qa-grid::before { content: ''; display: block; height: 4px; }
+
+  /* タッチターゲット 56px に格上げ (主要だけ) */
+  .fp-qa-pop, .btn-cta-primary { min-height: 60px !important; }
+
+  /* ───── 一般 ボタン active 状態 (touch ripple 風) ───── */
+  button:active, .tab:active, .m-tab:active, .fp-qa-pop:active {
+    transform: scale(0.97);
+    transition: transform .08s;
+  }
+}
+
+/* < 380px 極小 */
+@media (max-width: 380px) {
+  .view[data-view="dashboard"] .kpi-row,
+  .view[data-view="dashboard"] .stat-row,
+  .view[data-view="dashboard"] .summary-stats {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ★ 2026-06-22 roundR fix: モバイルで Zoomペア を 1列 + 改行崩れ防止 */
+@media (max-width: 768px) {
+  .cd-zoom-pair {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+  .cd-zoom-pair > button {
+    padding: 14px 16px !important;
+    min-height: 64px !important;
+  }
+  .cd-zoom-pair > button > span:last-child {
+    white-space: nowrap !important;
+    flex: 1;
+  }
+}
+
+/* ★ 2026-06-22 roundR fix2: ホーム mega-hero モバイル + drawer label 表示領域拡大 */
+@media (max-width: 768px) {
+  /* mega-hero: hero タイトル 圧縮 + 左寄せ + 行詰める */
+  .mega-hero, .mega-hero-grid { padding: 12px 4px !important; }
+  .mega-hero-grid { grid-template-columns: 1fr !important; gap: 14px !important; }
+  .mega-hero-left { text-align: left !important; }
+  .mega-hero-date {
+    font-size: 11px !important;
+    color: #94A3B8 !important;
+    margin-bottom: 6px !important;
+  }
+  .mega-hero-title {
+    font-family: 'Noto Serif JP', serif !important;
+    font-size: 20px !important;
+    line-height: 1.55 !important;
+    font-weight: 700 !important;
+    margin: 0 0 10px !important;
+    color: #1F2A3F !important;
+    white-space: normal !important;
+  }
+  /* <br> はモバイルで邪魔 (横幅 狭くて 改行 自然に起きる) */
+  .mega-hero-title br { display: none !important; }
+  .mega-hero-name { color: #9A5A18 !important; font-family: inherit !important; }
+  .mega-hero-highlight {
+    font-family: 'Inter', sans-serif !important;
+    font-size: 26px !important;
+    font-weight: 900 !important;
+    color: #C19A3A !important;
+    padding: 0 4px;
+  }
+  .mega-hero-lead {
+    font-size: 12.5px !important;
+    color: #6B7280 !important;
+    line-height: 1.7 !important;
+    margin: 0 0 14px !important;
+  }
+  /* stats: 3カード grid */
+  .mega-hero-stats {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 8px !important;
+    margin-top: 14px !important;
+  }
+  .mega-hero-stat {
+    background: rgba(255, 255, 255, 0.06) !important;
+    border: 1px solid rgba(193, 154, 58, 0.25) !important;
+    border-radius: 10px !important;
+    padding: 10px 6px !important;
+    text-align: center !important;
+  }
+  .mega-hero-stat-label {
+    font-size: 10px !important;
+    color: #94A3B8 !important;
+    letter-spacing: 0.04em;
+    display: block !important;
+  }
+  .mega-hero-stat-value {
+    font-family: 'Inter', sans-serif !important;
+    font-size: 22px !important;
+    font-weight: 800 !important;
+    color: #C19A3A !important;
+    margin-top: 4px !important;
+  }
+
+  /* drawer の label 領域を 広げる (truncate しない) */
+  body.mobile-nav-open .sidebar-nav .tab span {
+    max-width: none !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    white-space: nowrap !important;
+    font-size: 13.5px !important;
+  }
+  body.mobile-nav-open .sidebar-nav .tab .nav-count {
+    margin-left: auto !important;
+    flex-shrink: 0;
+  }
+  /* sidebar を 88vw に拡げて label 表示余裕に */
+  body.mobile-nav-open .sidebar { width: 86vw !important; max-width: 340px !important; }
+}
+
+/* ★ 2026-06-22 roundR fix3: mega-hero (navy bg) の text color を 白系に戻す */
+@media (max-width: 768px) {
+  .mega-hero {
+    background: linear-gradient(135deg, #1F2A3F 0%, #2A3854 100%) !important;
+    border-radius: 16px !important;
+    padding: 18px 18px 20px !important;
+    margin: 0 0 16px !important;
+  }
+  .mega-hero-title { color: #FBF5E3 !important; }
+  .mega-hero-name { color: #FCD34D !important; font-weight: 800 !important; }
+  .mega-hero-lead { color: #CBD5E1 !important; }
+  .mega-hero-stat { background: rgba(255,255,255,0.08) !important; }
+  .mega-hero-stat-label { color: #CBD5E1 !important; }
+  .mega-hero-stat-value { color: #FCD34D !important; }
+}
+
+/* ============================================================
+   モバイル専用 完全 リビルド v1 (2026-06-22 roundS)
+   オーナーfb: 「縦長すぎ携帯専用に1から組むべき」
+   既存 PC マークアップは モバイルで 全hide → 代わりに 新規 .m-screen-* を 動的注入
+   ============================================================ */
+@media (max-width: 768px) {
+  /* 既存 ヒーロー系 を 全部 hide */
+  .mega-hero,
+  .view[data-view="dashboard"] .page-head,
+  .view[data-view="dashboard"] > div:not(.m-screen-home):first-child {
+    display: none !important;
+  }
+  /* PC用大型 hero エリア / クライアントタブ ツールバー の余計な装飾 を hide */
+  .view[data-view="clients"] .page-head { display: none !important; }
+  /* 顧客モーダル の 大型 ヘッダ を 隠して モバイル専用ヘッダ */
+  .cd-flow-empty, .cd-empty-state { padding: 16px !important; }
+
+  /* ===== モバイル専用 ホーム ===== */
+  .m-screen-home { display: block; padding: 8px 4px 24px; }
+  .m-greet {
+    background: linear-gradient(135deg, #1F2A3F 0%, #2A3854 100%);
+    border-radius: 16px;
+    padding: 18px 20px;
+    margin-bottom: 14px;
+    color: #FBF5E3;
+    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.16);
+  }
+  .m-greet-date { font-size: 11px; color: #94A3B8; letter-spacing: 0.06em; margin-bottom: 6px; font-family: 'Inter', sans-serif; }
+  .m-greet-line {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.5;
+    margin: 0 0 10px;
+  }
+  .m-greet-name { color: #FCD34D; font-weight: 800; }
+  .m-greet-big {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-top: 6px;
+  }
+  .m-greet-num {
+    font-family: 'Inter', sans-serif;
+    font-size: 44px;
+    font-weight: 900;
+    color: #FCD34D;
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+  .m-greet-unit { font-size: 13px; color: #CBD5E1; }
+
+  /* ステータス 3 boxes */
+  .m-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .m-stat {
+    background: #fff;
+    border: 1px solid #E8E2D4;
+    border-radius: 12px;
+    padding: 12px 8px;
+    text-align: center;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
+  }
+  .m-stat-num {
+    font-family: 'Inter', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    color: #1F2A3F;
+    line-height: 1;
+  }
+  .m-stat-label {
+    font-size: 10.5px;
+    color: #6B7280;
+    margin-top: 6px;
+    letter-spacing: 0.02em;
+  }
+
+  /* クイックアクション 2 buttons */
+  .m-quick-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+  .m-qa {
+    background: linear-gradient(135deg, #C19A3A, #9A5A18);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 14px 12px;
+    font-family: 'Hiragino Sans', sans-serif;
+    font-weight: 800;
+    font-size: 13.5px;
+    cursor: pointer;
+    min-height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 6px 16px rgba(193, 154, 58, 0.3);
+  }
+  .m-qa.is-secondary {
+    background: #fff;
+    color: #1F2A3F;
+    border: 1.5px solid #C19A3A;
+    box-shadow: none;
+  }
+  .m-qa-icon { font-size: 18px; }
+
+  /* "今日 話すべき方" セクション header */
+  .m-section-h {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 17px;
+    font-weight: 700;
+    color: #1F2A3F;
+    margin: 18px 0 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .m-section-h::before {
+    content: '';
+    width: 4px; height: 18px;
+    background: #C19A3A;
+    border-radius: 2px;
+  }
+}
+
+/* PC では モバイル専用 要素 非表示 */
+@media (min-width: 769px) {
+  .m-screen-home { display: none !important; }
+}
+
+/* ============================================================
+   モバイル ホーム 再々改修 v2 (2026-06-22 roundT) — Boxed
+   オーナーfb: 「文字はみ出る / 縦長 / ボックスに大幅変更」
+   既存 dashboard view を 全hide → .m-screen-home だけ表示
+   ============================================================ */
+@media (max-width: 768px) {
+  /* dashboard view の 直下 子要素 を 全hide (.m-screen-home だけ表示) */
+  .view[data-view="dashboard"] > *:not(.m-screen-home) {
+    display: none !important;
+  }
+
+  /* ★ m-screen-home コンテナ */
+  .m-screen-home {
+    display: flex !important;
+    flex-direction: column;
+    gap: 10px;
+    padding: 4px 2px 16px;
+  }
+
+  /* ─── 1) Greet (横並び 圧縮) ─── */
+  .m-greet {
+    background: linear-gradient(135deg, #1F2A3F 0%, #2A3854 100%);
+    border-radius: 14px;
+    padding: 14px 18px;
+    color: #FBF5E3;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.18);
+    min-height: 64px;
+  }
+  .m-greet-l {
+    flex: 1;
+    min-width: 0;
+  }
+  .m-greet-date {
+    font-size: 10.5px;
+    color: #94A3B8;
+    letter-spacing: 0.06em;
+    font-family: 'Inter', sans-serif;
+    margin-bottom: 3px;
+  }
+  .m-greet-msg {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 14.5px;
+    font-weight: 700;
+    line-height: 1.4;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .m-greet-name {
+    color: #FCD34D;
+    font-weight: 800;
+  }
+  .m-greet-r {
+    flex-shrink: 0;
+    text-align: right;
+    line-height: 1;
+  }
+  .m-greet-num {
+    font-family: 'Inter', sans-serif;
+    font-size: 38px;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #FCD34D 0%, #F59E0B 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    line-height: 1;
+  }
+  .m-greet-unit {
+    font-size: 10px;
+    color: #CBD5E1;
+    margin-top: 4px;
+    letter-spacing: 0.04em;
+  }
+
+  /* ─── 2) Stats 2x2 grid ─── */
+  .m-stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .m-stat-box {
+    background: #fff;
+    border: 1px solid #E8E2D4;
+    border-radius: 12px;
+    padding: 14px 14px 12px;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    opacity: 0;
+    transform: translateY(8px);
+    animation: m-stat-in .35s ease forwards;
+  }
+  .m-stat-box:nth-child(1) { animation-delay: .05s; }
+  .m-stat-box:nth-child(2) { animation-delay: .12s; }
+  .m-stat-box:nth-child(3) { animation-delay: .19s; }
+  .m-stat-box:nth-child(4) { animation-delay: .26s; }
+  @keyframes m-stat-in {
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .m-stat-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .m-stat-icon {
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    background: #FBF5E3;
+    color: #9A5A18;
+  }
+  .m-stat-num {
+    font-family: 'Inter', sans-serif;
+    font-size: 24px;
+    font-weight: 900;
+    color: #1F2A3F;
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+  .m-stat-label {
+    font-size: 11px;
+    color: #6B7280;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+
+  /* ─── 3) Today action box ─── */
+  .m-today-box {
+    background: linear-gradient(135deg, #FBF5E3 0%, #FDFBF4 100%);
+    border: 1px solid #C19A3A;
+    border-radius: 14px;
+    padding: 16px 18px;
+    margin-top: 4px;
+  }
+  .m-today-eyebrow {
+    font-size: 10px;
+    font-weight: 800;
+    color: #9A5A18;
+    letter-spacing: 0.18em;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .m-today-eyebrow::before {
+    content: '';
+    width: 4px; height: 4px;
+    background: #C19A3A;
+    border-radius: 50%;
+    animation: m-pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes m-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+  .m-today-name {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 17px;
+    font-weight: 700;
+    color: #1F2A3F;
+    margin-bottom: 4px;
+  }
+  .m-today-sub {
+    font-size: 12px;
+    color: #5e4d1a;
+    line-height: 1.55;
+    margin-bottom: 12px;
+  }
+  .m-today-empty {
+    font-size: 12px;
+    color: #6B7280;
+    text-align: center;
+    padding: 8px 0;
+  }
+  .m-today-cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    background: linear-gradient(135deg, #C19A3A 0%, #9A5A18 100%);
+    color: #fff;
+    border: none;
+    border-radius: 99px;
+    padding: 10px 22px;
+    font-family: 'Hiragino Sans', sans-serif;
+    font-weight: 800;
+    font-size: 13px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(193, 154, 58, 0.32);
+  }
+
+  /* ─── 4) Quick actions row (2 buttons) ─── */
+  .m-quick-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 4px;
+  }
+  .m-qa2 {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    background: #fff;
+    border: 1.5px solid #C19A3A;
+    color: #1F2A3F;
+    border-radius: 12px;
+    padding: 12px 8px;
+    font-family: 'Hiragino Sans', sans-serif;
+    font-weight: 800;
+    font-size: 12.5px;
+    cursor: pointer;
+    min-height: 52px;
+  }
+  .m-qa2.is-primary {
+    background: linear-gradient(135deg, #7C3AED 0%, #5B21B6 100%);
+    color: #fff;
+    border: none;
+    box-shadow: 0 4px 14px rgba(124, 58, 237, 0.32);
+  }
+  .m-qa2-icon { font-size: 16px; }
+}
+
+/* PC 非表示 (上書き) */
+@media (min-width: 769px) {
+  .m-screen-home { display: none !important; }
+}
+
+/* ============================================================
+   モバイル 致命的修正 v3 (2026-06-22 roundU)
+   オーナーfb スクショ で 判明:
+   - モーダルが背景顧客台帳に重ならない (二重表示)
+   - 顧客カードが縦長すぎ (1人で半画面)
+   - コンパちゃん bot が中央被る
+   ============================================================ */
+@media (max-width: 768px) {
+  /* ───── モーダル overlay を 確実に 全面 重ねる ───── */
+  .modal-overlay {
+    position: fixed !important;
+    inset: 0 !important;
+    top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
+    background: rgba(15, 23, 42, 0.75) !important;  /* 半透明黒で 完全に 後ろを覆う */
+    z-index: 10200 !important;  /* ボトムナビ (10100) の上 */
+    width: 100vw !important;
+    height: 100vh !important;
+    margin: 0 !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding: 0 !important;
+    align-items: flex-start !important;
+    justify-content: center !important;
+  }
+  .modal#modal-content,
+  #modal-content,
+  .modal {
+    background: #fff !important;
+    margin: 0 !important;
+    min-height: 100vh !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* ───── 顧客カード コンパクト化 (1人 = 1画面の 1/4 以下) ───── */
+  table.clients tbody tr {
+    padding: 12px 14px !important;
+    margin-bottom: 8px !important;
+    /* グリッドで 2列レイアウト: 左に名前/属性、 右に状態/接触日 */
+    display: grid !important;
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      "name name"
+      "info info";
+    gap: 4px 8px;
+  }
+  table.clients tbody td {
+    padding: 0 !important;
+    font-size: 12px !important;
+    line-height: 1.5 !important;
+  }
+  /* 1列目 = 名前 (顧客欄) */
+  table.clients tbody td:first-child {
+    grid-area: name !important;
+    font-weight: 800 !important;
+    font-size: 14.5px !important;
+    color: #1F2A3F !important;
+    padding-bottom: 4px !important;
+    margin-bottom: 2px !important;
+    border-bottom: 1px solid #F0EBDF !important;
+  }
+  /* 1列目以降 は インライン (横並び) で 短く */
+  table.clients tbody td:not(:first-child) {
+    display: inline-flex !important;
+    grid-area: info !important;
+    font-size: 11.5px !important;
+    color: #6B7280 !important;
+    margin-right: 8px !important;
+  }
+  /* 空セル ( - ) は 隠す */
+  table.clients tbody td:not(:first-child):empty,
+  table.clients tbody td:not(:first-child):has(> div:only-child:contains("-")) {
+    display: none !important;
+  }
+
+  /* ───── コンパちゃん bot モバイル: 顧客タブ / モーダル時 隠す ───── */
+  body.tab-clients-active #mbFab,
+  body.tab-clients-active #mbPanel { display: none !important; }
+  /* モーダル開いてる時 = #modal-overlay visible */
+  body:has(#modal-overlay[style*="display: flex"]) #mbFab,
+  body:has(#modal-overlay[style*="display:flex"]) #mbFab {
+    display: none !important;
+  }
+  /* デフォルト位置を 左下 (右下は FAB と被る) */
+  #mbFab {
+    right: auto !important;
+    left: 14px !important;
+    bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
+    width: 48px !important; height: 48px !important;
+  }
+  /* チャットbot ヒント (吹き出し) を 隠す → アイコンだけ */
+  #mbFabHint, .mb-fab-hint { display: none !important; }
+}
+
+/* ★ 2026-06-22 roundU fix2: 顧客カード grid override を 取消し → シンプル縦並び */
+@media (max-width: 768px) {
+  table.clients tbody tr {
+    display: block !important;
+    grid-template-areas: none !important;
+    padding: 12px 14px !important;
+    margin-bottom: 8px !important;
+    background: #fff !important;
+    border: 1px solid #E8E2D4 !important;
+    border-radius: 12px !important;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.05) !important;
+  }
+  table.clients tbody td {
+    display: block !important;
+    grid-area: auto !important;
+    padding: 3px 0 !important;
+    font-size: 12px !important;
+    line-height: 1.5 !important;
+    color: #6B7280 !important;
+    margin: 0 !important;
+  }
+  /* 1列目 = 顧客名 */
+  table.clients tbody td:first-child {
+    font-size: 14.5px !important;
+    font-weight: 800 !important;
+    color: #1F2A3F !important;
+    padding-bottom: 6px !important;
+    margin-bottom: 4px !important;
+    border-bottom: 1px solid #F0EBDF !important;
+  }
+  /* td 内 chip / badge を 横並び に */
+  table.clients tbody td > div,
+  table.clients tbody td > span {
+    display: inline-block !important;
+    margin-right: 4px !important;
+    vertical-align: middle !important;
+  }
+  /* 「-」 だけ の td を 隠す (data label="…" の対応がない時) */
+  table.clients tbody td:not(:first-child) {
+    overflow: visible !important;
+  }
+  /* 数字 yen 等 (¥750万) は 強調 */
+  table.clients tbody td:has(> :contains("¥")) {
+    color: #1F2A3F !important;
+    font-weight: 700 !important;
+  }
+}
+
+/* ★ 2026-06-22 roundU fix3: モーダル開いてる時 body scroll lock */
+body.modal-open {
+  overflow: hidden !important;
+  position: fixed !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* ============================================================
+   モバイル 表(table)型 UI v1 (2026-06-22 roundV)
+   オーナー指示: 「カードじゃなくて表タイプ」 → iOS設定アプリ風 group list
+   ============================================================ */
+@media (max-width: 768px) {
+
+  /* ───── 顧客台帳: カード → 表型 (1顧客 = 1 row 60px) ───── */
+  table.clients {
+    background: #fff !important;
+    border: 1px solid #E8E2D4 !important;
+    border-radius: 12px !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+  }
+  table.clients tbody tr {
+    display: grid !important;
+    grid-template-columns: 40px 1fr auto !important;
+    grid-template-areas:
+      "avatar name price"
+      "avatar meta price" !important;
+    gap: 2px 12px !important;
+    align-items: center !important;
+    padding: 12px 14px !important;
+    margin: 0 !important;
+    background: #fff !important;
+    border: none !important;
+    border-bottom: 1px solid #F0EBDF !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    min-height: 60px !important;
+    position: relative !important;
+  }
+  table.clients tbody tr:last-child { border-bottom: none !important; }
+  table.clients tbody tr::after {
+    content: '›';
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #C19A3A;
+    font-size: 20px;
+    font-weight: 300;
+    line-height: 1;
+    pointer-events: none;
+  }
+  table.clients tbody td {
+    display: block !important;
+    padding: 0 !important;
+    border: none !important;
+    margin: 0 !important;
+    font-size: 11.5px !important;
+    line-height: 1.4 !important;
+    color: #6B7280 !important;
+    grid-area: meta !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+  /* 1列目 = 名前 */
+  table.clients tbody td:first-child {
+    grid-area: name !important;
+    font-size: 14.5px !important;
+    font-weight: 800 !important;
+    color: #1F2A3F !important;
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+    border-bottom: none !important;
+  }
+  /* チェブロン余白 確保 */
+  table.clients tbody tr { padding-right: 32px !important; }
+  /* アバターはトリック: 名前内に絵文字 / SVG が入ってる前提 (なければ ●) */
+  /* td内の余計な要素を控えめに */
+  table.clients tbody td:not(:first-child) {
+    display: inline-block !important;
+    margin-right: 6px !important;
+    grid-area: meta !important;
+  }
+  /* 「-」 だけ の td: 隠す */
+  table.clients tbody td:not(:first-child):empty { display: none !important; }
+
+  /* ───── 顧客モーダル: box → 表型 ───── */
+  /* hero compact: アバター + 名前 + chip (76px) */
+  .cd-modal .cd-hero,
+  .cd-modal .cd-modal-head,
+  .cd-modal [class*="hero"] {
+    padding: 16px !important;
+    background: linear-gradient(180deg, #FDFBF4, #fff) !important;
+    border-bottom: 1px solid #E8E2D4 !important;
+  }
+
+  /* 各 cd-section / cd-card を group に */
+  .cd-modal .cd-section,
+  .cd-modal .cd-card,
+  .cd-modal [class*="cd-section"],
+  .cd-modal [class*="cd-card"] {
+    background: #fff !important;
+    border: none !important;
+    border-radius: 0 !important;
+    border-bottom: 1px solid #E8E2D4 !important;
+    padding: 14px 16px !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+  }
+
+  /* group title (gold縦線 + uppercase) */
+  .cd-modal .cd-section-title,
+  .cd-modal .cd-card-title,
+  .cd-modal h3,
+  .cd-modal [class*="-title"] {
+    font-size: 10.5px !important;
+    font-weight: 800 !important;
+    color: #9A5A18 !important;
+    letter-spacing: 0.14em !important;
+    text-transform: uppercase !important;
+    margin: 0 0 10px !important;
+    padding-left: 10px !important;
+    border-left: 3px solid #C19A3A !important;
+    line-height: 1.2 !important;
+  }
+
+  /* ───── Zoomペア (今すぐ/日時指定) を row 形式に ───── */
+  .cd-zoom-pair {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0 !important;
+    background: #fff !important;
+    border: 1px solid #E8E2D4 !important;
+    border-radius: 10px !important;
+    overflow: hidden !important;
+    margin: 0 !important;
+  }
+  .cd-zoom-pair > button {
+    border: none !important;
+    border-bottom: 1px solid #F0EBDF !important;
+    border-radius: 0 !important;
+    background: #fff !important;
+    padding: 14px 16px !important;
+    min-height: 56px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    width: 100% !important;
+    text-align: left !important;
+    box-shadow: none !important;
+    position: relative !important;
+  }
+  .cd-zoom-pair > button:last-child { border-bottom: none !important; }
+  .cd-zoom-pair > button::after {
+    content: '›';
+    position: absolute;
+    right: 14px; top: 50%;
+    transform: translateY(-50%);
+    color: #C19A3A;
+    font-size: 20px;
+    font-weight: 300;
+    line-height: 1;
+  }
+  .cd-zoom-pair > button > svg {
+    width: 26px !important; height: 26px !important; flex-shrink: 0;
+  }
+  .cd-zoom-pair > button > span {
+    flex: 1; padding-right: 18px;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    color: #1F2A3F !important;
+    line-height: 1.35 !important;
+  }
+  .cd-zoom-pair > button > span > span {
+    font-size: 11px !important;
+    color: #6B7280 !important;
+    font-weight: 600 !important;
+  }
+
+  /* ───── 各 .cd-* row (タグ / フォロー / 連絡手段) ───── */
+  /* タグエリア */
+  .cd-tags-wrap, .cd-modal [id*="tag"],
+  .cd-modal [class*="tag-wrap"] {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 6px !important;
+  }
+  /* +追加/編集 ボタン → 横並び subtle */
+  .cd-modal button[id*="tag-add"], .cd-modal .cd-tag-add-btn {
+    background: transparent !important;
+    border: 1.5px solid #C19A3A !important;
+    color: #9A5A18 !important;
+    border-radius: 99px !important;
+    padding: 6px 14px !important;
+    font-size: 11.5px !important;
+    font-weight: 700 !important;
+  }
+
+  /* ───── 「+ 追加/編集」紫 大ボタン を 控えめ outline に ───── */
+  .cd-modal button[id*="tag"]:not(.btn-cta-primary),
+  .cd-modal button[id*="-edit"]:not(.btn-cta-primary) {
+    background: #fff !important;
+    border: 1.5px solid #C19A3A !important;
+    color: #1F2A3F !important;
+    box-shadow: none !important;
+  }
+
+  /* fp-qa-grid (顧客モーダル 6 button) も 表型に */
+  .fp-qa-grid {
+    grid-template-columns: 1fr !important;
+    row-gap: 0 !important;
+    background: #fff !important;
+    border: 1px solid #E8E2D4 !important;
+    border-radius: 10px !important;
+    overflow: hidden !important;
+    grid-column: auto !important;
+  }
+  .fp-qa-grid > .fp-qa-pop {
+    padding: 0 !important;
+    min-height: 56px !important;
+    border-bottom: 1px solid #F0EBDF !important;
+  }
+  .fp-qa-grid > .fp-qa-pop:last-child { border-bottom: none !important; }
+  .fp-qa-grid > .fp-qa-pop .fp-qa-tip { display: none !important; }
+  .fp-qa-grid > .fp-qa-pop .fp-qa-capsule {
+    background: transparent !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    padding: 14px 16px !important;
+    min-height: 56px !important;
+    width: 100% !important;
+    position: relative;
+  }
+  .fp-qa-grid > .fp-qa-pop[data-accent] .fp-qa-capsule {
+    /* gradient bg を 解除して 各 row 白に */
+    background: #fff !important;
+  }
+  /* dot は accent color に */
+  .fp-qa-grid > .fp-qa-pop .fp-qa-dot { width: 8px; height: 8px; }
+  .fp-qa-grid > .fp-qa-pop .fp-qa-label-main {
+    color: #1F2A3F !important;
+    text-shadow: none !important;
+    font-size: 14px !important;
+  }
+  .fp-qa-grid > .fp-qa-pop .fp-qa-label-sub {
+    color: #6B7280 !important;
+    font-size: 11px !important;
+  }
+  .fp-qa-grid > .fp-qa-pop .fp-qa-arrow {
+    background: transparent !important;
+    color: #C19A3A !important;
+    box-shadow: none !important;
+    font-size: 20px;
+    font-weight: 300;
+    width: auto;
+    height: auto;
+  }
+}
+
+
+/* ★ 2026-06-22 roundV fix: 顧客台帳 chip重なり最終解消 */
+@media (max-width: 768px) {
+  /* 各 tr 内の data-label-value を block 縦並びに force */
+  table.clients tbody tr {
+    display: flex !important;
+    flex-direction: column !important;
+    grid-template-columns: none !important;
+    grid-template-areas: none !important;
+    align-items: flex-start !important;
+    padding: 12px 32px 12px 14px !important;
+    gap: 4px !important;
+    min-height: 60px !important;
+  }
+  table.clients tbody td {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    gap: 6px !important;
+    width: 100% !important;
+    padding: 1px 0 !important;
+    margin: 0 !important;
+    grid-area: auto !important;
+    font-size: 11.5px !important;
+    color: #6B7280 !important;
+    line-height: 1.5 !important;
+  }
+  table.clients tbody td:first-child {
+    font-size: 14.5px !important;
+    font-weight: 800 !important;
+    color: #1F2A3F !important;
+    padding-bottom: 4px !important;
+    border-bottom: 1px solid #F0EBDF !important;
+    margin-bottom: 4px !important;
+  }
+  /* td 内 要素 横並び 重なり防止 */
+  table.clients tbody td > * {
+    display: inline-flex !important;
+    margin: 0 4px 0 0 !important;
+    position: static !important;
+  }
+  /* 空 (- だけ) は隠す */
+  table.clients tbody td:not(:first-child) {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+}
+
+/* ★ 2026-06-22 roundV fix2: 顧客台帳 重要列だけ + 横並びcompact (1顧客 = 1スクリーン 1/6 ) */
+@media (max-width: 768px) {
+  table.clients tbody tr {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    padding: 12px 30px 12px 14px !important;
+    gap: 8px !important;
+    min-height: 64px !important;
+    max-height: 90px;
+    overflow: hidden !important;
+  }
+  /* 名前 (1列目) — 100% 幅、 太字 */
+  table.clients tbody td:nth-child(1) {
+    width: 100% !important;
+    flex: 0 0 100% !important;
+    font-size: 14.5px !important;
+    font-weight: 800 !important;
+    color: #1F2A3F !important;
+    padding-bottom: 4px !important;
+    margin-bottom: 4px !important;
+    border-bottom: 1px solid #F0EBDF !important;
+  }
+  /* 状態 (9列目) — chip 用 */
+  table.clients tbody td:nth-child(9) {
+    flex: 0 0 auto !important;
+    font-size: 11px !important;
+  }
+  /* 管理資産 (10列目) — 数字、 右寄 */
+  table.clients tbody td:nth-child(10) {
+    flex: 1 1 auto !important;
+    font-size: 12.5px !important;
+    font-weight: 700 !important;
+    color: #1F2A3F !important;
+    text-align: right !important;
+  }
+  /* 最終接触 (11列目) — 小さく */
+  table.clients tbody td:nth-child(11) {
+    flex: 0 0 100% !important;
+    font-size: 10.5px !important;
+    color: #94A3B8 !important;
+    border: none !important;
+  }
+  /* 他 td (年齢/職業/家族/緊急度/悩み/希望/保有商品) は 全hide */
+  table.clients tbody td:nth-child(2),
+  table.clients tbody td:nth-child(3),
+  table.clients tbody td:nth-child(4),
+  table.clients tbody td:nth-child(5),
+  table.clients tbody td:nth-child(6),
+  table.clients tbody td:nth-child(7),
+  table.clients tbody td:nth-child(8) {
+    display: none !important;
+  }
+}
+
+/* ============================================================
+   モバイル audit fix v1 (2026-06-22 roundW)
+   全15ページ細部点検で発覚した 8問題 一括修正
+   ============================================================ */
+@media (max-width: 768px) {
+  /* A/B. スケール縮小バグ: 配信タブ content / モーダル の親の transform を 解除 */
+  [data-line-view="distributionHub"],
+  [data-line-view="distributionHub"] *,
+  [data-view="distributionHub"],
+  .modal-overlay > *,
+  .modal#modal-content {
+    transform: none !important;
+    zoom: 1 !important;
+    width: 100% !important;
+  }
+  /* distributionHub view の min-width 解除 */
+  [data-line-view="distributionHub"] { min-width: 0 !important; max-width: 100% !important; }
+  /* 配信タブ内 サブタブ button (今日送る/予定/テンプレ/送信ログ) を 横並び 表示 */
+  [data-line-view="distributionHub"] > div:first-child {
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+  [data-line-view="distributionHub"] [data-dist-subtab] {
+    padding: 10px 14px !important;
+    font-size: 12.5px !important;
+    min-height: 44px !important;
+    flex: 1 1 auto !important;
+  }
+
+  /* D. 設定 セクションヘッダ 紫×紫 解消 */
+  .hub-section-title {
+    background: linear-gradient(135deg, #FBF5E3, #FDFBF4) !important;
+    color: #1F2A3F !important;
+    border-left: 4px solid #C19A3A !important;
+    font-weight: 800 !important;
+    padding: 12px 16px !important;
+    border-radius: 8px !important;
+  }
+
+  /* E. ご無沙汰フォロー RE-ENGAGE バナー 縦書き圧縮解消 */
+  [data-view="dormantFollowup"] .page-sub + div,
+  [data-view="dormantFollowup"] > div > div:has([style*="background:linear-gradient(135deg,#FEF3C7"]),
+  div[style*="background:linear-gradient(135deg,#FEF3C7,#FFEDD5)"] {
+    display: block !important;
+    text-align: left !important;
+  }
+  div[style*="background:linear-gradient(135deg,#FEF3C7,#FFEDD5)"] > div {
+    flex-wrap: wrap !important;
+    flex-direction: column !important;
+    gap: 6px !important;
+    align-items: flex-start !important;
+  }
+
+  /* F. 新規相談 「3 件」 縦折れ修正: hero の数字/単位 横並び維持 */
+  [data-line-view="leadHub"] a[href*="section"] {
+    flex-wrap: wrap !important;
+  }
+  [data-line-view="leadHub"] [style*="font-size:42px"],
+  [data-line-view="leadHub"] [style*="font-size:30px"] {
+    white-space: nowrap !important;
+    display: inline-flex !important;
+    align-items: baseline !important;
+  }
+  [data-line-view="leadHub"] [style*="font-size:42px"] > span,
+  [data-line-view="leadHub"] [style*="font-size:30px"] > span {
+    white-space: nowrap !important;
+    display: inline !important;
+  }
+
+  /* G. drawer 新規相談 真っ赤バッジ → 既存と同じ 薄ピンク色に */
+  #nav-count-leadhub, #nav-count-newrequests {
+    background: #FEE2E2 !important;
+    color: #B91C1C !important;
+  }
+  /* drawer の nav-count 全部 統一 (赤/オレンジ系の濃さ揃え) */
+  .sidebar .nav-count[id*="leadhub"],
+  .sidebar .nav-count[id*="lead"] {
+    background: #FECACA !important;
+    color: #991B1B !important;
+  }
+
+  /* H. 顧客台帳 山田太郎テスト ピンク帯チラ見え (cd-action-pri or chip 残骸) */
+  table.clients tbody tr [class*="action-pri"],
+  table.clients tbody tr [style*="background:#fef2f2"],
+  table.clients tbody tr [style*="background:#fee2e2"] {
+    display: none !important;
+  }
+}
+
+/* =================================================================
+   roundX (v.20260623L-list-style): iOS設定アプリ風 グループ化リスト
+   オーナー指示「カードタイプ→表タイプ」 顧客モーダル & 顧客台帳
+   設計トークン:
+     bg: #FFFFFF / divider: #ECE6D6 hairline / gold accent: #C19A3A
+     row min-height: 52px / label 12.5px #6B7280 / value 14px #1F2A3F
+     group label: 11.5px uppercase #8C7A4B + 4px gold left bar
+================================================================= */
+@media (max-width: 768px) {
+  /* ---- 0. cd-modal 全体: PC左右2カラム → mobile 1カラム平坦化 ---- */
+  .cd-modal {
+    background: #FFFFFF !important;
+    padding: 0 !important;
+    gap: 0 !important;
+    border-radius: 0 !important;
+  }
+  .cd-modal > .cd-left,
+  .cd-modal > .cd-right {
+    background: #FFFFFF !important;
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+  }
+
+  /* ---- 1. プロフィール hero (アバター+名前+chip) ---- */
+  .cd-modal .cd-profile-head {
+    background: linear-gradient(180deg, #FDFBF4 0%, #FFFFFF 100%) !important;
+    padding: 22px 18px 18px !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    text-align: center !important;
+    border-bottom: 1px solid #ECE6D6 !important;
+  }
+  .cd-modal .cd-profile-avatar {
+    width: 76px !important;
+    height: 76px !important;
+    font-size: 30px !important;
+    margin: 0 auto 12px !important;
+    box-shadow: 0 8px 20px rgba(193,154,58,0.18) !important;
+  }
+  .cd-modal .cd-profile-name {
+    font-size: 20px !important;
+    font-weight: 800 !important;
+    color: #1F2A3F !important;
+    letter-spacing: 0.01em !important;
+    margin-bottom: 2px !important;
+  }
+  .cd-modal .cd-profile-kana {
+    font-size: 11.5px !important;
+    color: #8C7A4B !important;
+    letter-spacing: 0.08em !important;
+    margin-bottom: 12px !important;
+  }
+  .cd-modal .cd-profile-pills {
+    display: inline-flex !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    gap: 6px !important;
+  }
+
+  /* ---- 2. グループ ラベル (iOS Settings の セクション見出し) ---- */
+  /* セクションラベル / 設定ラベル を 共通の group-label に統一 */
+  .cd-modal .cd-section-label,
+  .cd-modal .cd-kpi-label,
+  .cd-modal .cd-flow-eyebrow,
+  .cd-modal .cd-stat-label {
+    font-size: 11.5px !important;
+    font-weight: 800 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.1em !important;
+    color: #8C7A4B !important;
+    padding: 14px 18px 6px 14px !important;
+    background: #FAF6EB !important;
+    border-left: 4px solid #C19A3A !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    display: block !important;
+  }
+
+  /* ---- 3. profile-section / cd-flow / cd-kpi-section / cd-zoom-pair 共通 ---- */
+  /* 全部 同じ list group の見た目に揃える */
+  .cd-modal .cd-profile-section,
+  .cd-modal .cd-kpi-section,
+  .cd-modal .cd-flow,
+  .cd-modal .cd-qa-collapse,
+  .cd-modal #cd-tags-section,
+  .cd-modal .cd-profile-stats {
+    background: #FFFFFF !important;
+    border: none !important;
+    border-top: 1px solid #ECE6D6 !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+  }
+  /* 上の hero 直後の 最初の border-top を 消す */
+  .cd-modal .cd-profile-head + * {
+    border-top: none !important;
+  }
+
+  /* ---- 4. dl (プロフィール key-value) を 表行に ---- */
+  .cd-modal .cd-dl {
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #FFFFFF !important;
+  }
+  .cd-modal .cd-dl dt {
+    display: inline-block !important;
+    width: 38% !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    color: #6B7280 !important;
+    padding: 13px 0 13px 18px !important;
+    margin: 0 !important;
+    vertical-align: top !important;
+    letter-spacing: 0.02em !important;
+  }
+  .cd-modal .cd-dl dd {
+    display: inline-block !important;
+    width: 60% !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    color: #1F2A3F !important;
+    padding: 13px 18px 13px 0 !important;
+    margin: 0 !important;
+    text-align: right !important;
+    border-bottom: 1px solid #F4EFE0 !important;
+    letter-spacing: 0.01em !important;
+  }
+  .cd-modal .cd-dl dt {
+    border-bottom: 1px solid #F4EFE0 !important;
+  }
+  .cd-modal .cd-dl dt:last-of-type,
+  .cd-modal .cd-dl dd:last-of-type {
+    border-bottom: none !important;
+  }
+
+  /* ---- 5. cd-profile-stats (管理資産/最終接触/年齢) を 縦並びrowに ---- */
+  .cd-modal .cd-profile-stats {
+    display: block !important;
+    grid-template-columns: none !important;
+    gap: 0 !important;
+  }
+  .cd-modal .cd-stat {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 14px 18px !important;
+    border-bottom: 1px solid #F4EFE0 !important;
+    background: #FFFFFF !important;
+    text-align: left !important;
+    min-height: 52px !important;
+    gap: 12px !important;
+  }
+  .cd-modal .cd-stat:last-child { border-bottom: none !important; }
+  .cd-modal .cd-stat .cd-stat-label {
+    flex: 0 0 38% !important;
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    color: #6B7280 !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    text-transform: none !important;
+    letter-spacing: 0.02em !important;
+    text-align: left !important;
+  }
+  .cd-modal .cd-stat .cd-stat-value {
+    flex: 1 1 auto !important;
+    font-size: 16px !important;
+    font-weight: 800 !important;
+    color: #1F2A3F !important;
+    text-align: right !important;
+    line-height: 1.2 !important;
+    margin: 0 !important;
+  }
+  .cd-modal .cd-stat .cd-stat-unit {
+    font-size: 12px !important;
+    color: #8C7A4B !important;
+    font-weight: 700 !important;
+    margin-left: 3px !important;
+  }
+  .cd-modal .cd-stat .cd-stat-sub {
+    display: block !important;
+    flex: 1 1 100% !important;
+    width: 100% !important;
+    text-align: right !important;
+    font-size: 11px !important;
+    color: #8C7A4B !important;
+    margin-top: 2px !important;
+    font-weight: 600 !important;
+  }
+
+  /* ---- 6. cd-family-list / cd-note / cd-cancel-list の余白詰め ---- */
+  .cd-modal .cd-family-list,
+  .cd-modal .cd-note,
+  .cd-modal .cd-cancel-list {
+    padding: 12px 18px 14px !important;
+    margin: 0 !important;
+    background: #FFFFFF !important;
+    border: none !important;
+  }
+  .cd-modal .cd-note {
+    font-size: 13.5px !important;
+    color: #1F2A3F !important;
+    line-height: 1.65 !important;
+  }
+
+  /* ---- 7. KPI section (この方に必要なフォロー) ---- */
+  .cd-modal .cd-kpi-section .cd-kpi-badges {
+    padding: 8px 18px 14px !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+  .cd-modal .cd-kpi-section .senior-kpi-badge {
+    font-size: 12px !important;
+    padding: 6px 11px !important;
+  }
+
+  /* ---- 8. cd-flow (AI推奨) ---- */
+  .cd-modal .cd-flow {
+    padding: 14px 16px 14px !important;
+  }
+  .cd-modal .cd-flow .cd-flow-eyebrow {
+    padding: 0 !important;
+    background: transparent !important;
+    border-left: none !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    margin-bottom: 8px !important;
+  }
+  .cd-modal .cd-flow .cd-flow-eyebrow-pill {
+    background: linear-gradient(135deg, #C19A3A, #A0822E) !important;
+    color: #FFFFFF !important;
+    padding: 4px 10px !important;
+    border-radius: 999px !important;
+    font-size: 10.5px !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.08em !important;
+    display: inline-flex !important;
+    gap: 4px !important;
+    align-items: center !important;
+  }
+  .cd-modal .cd-flow-title {
+    font-size: 15.5px !important;
+    font-weight: 800 !important;
+    color: #1F2A3F !important;
+    line-height: 1.4 !important;
+    margin-bottom: 4px !important;
+  }
+  .cd-modal .cd-flow-reason {
+    font-size: 12.5px !important;
+    color: #6B7280 !important;
+    line-height: 1.55 !important;
+    margin-bottom: 12px !important;
+  }
+
+  /* ---- 8b. ✨AIで下書き ボタンを row化 (オーナーfb: 他のrowと同じサイズ) ---- */
+  .cd-modal .fp-draft-cta,
+  .cd-modal #modal-draft-btn,
+  .cd-modal .cd-flow-step.cd-flow-step-active {
+    margin: 0 !important;
+    padding: 12px 36px 12px 14px !important;
+    min-height: 52px !important;
+    background: #FFFFFF !important;
+    background-image: none !important;
+    color: #1F2A3F !important;
+    border: none !important;
+    border-bottom: 1px solid #ECE6D6 !important;
+    border-radius: 0 !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    text-align: left !important;
+    box-shadow: none !important;
+    position: relative !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    grid-template-columns: none !important;
+    transform: none !important;
+  }
+  .cd-modal .fp-draft-cta::after,
+  .cd-modal #modal-draft-btn::after,
+  .cd-modal .cd-flow-step.cd-flow-step-active::after {
+    content: '›' !important;
+    position: absolute !important;
+    right: 14px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    color: #C19A3A !important;
+    font-size: 22px !important;
+    font-weight: 400 !important;
+    line-height: 1 !important;
+  }
+  /* 番号バッジ「1」 は 小さい アイコン丸に */
+  .cd-modal .fp-draft-cta .cd-flow-step-no,
+  .cd-modal #modal-draft-btn .cd-flow-step-no,
+  .cd-modal .cd-flow-step.cd-flow-step-active .cd-flow-step-no {
+    width: 24px !important;
+    height: 24px !important;
+    font-size: 13px !important;
+    font-weight: 800 !important;
+    flex-shrink: 0 !important;
+    background: linear-gradient(135deg, #C19A3A, #A0822E) !important;
+    color: #FFFFFF !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  .cd-modal .fp-draft-cta .cd-flow-step-label,
+  .cd-modal #modal-draft-btn .cd-flow-step-label,
+  .cd-modal .cd-flow-step.cd-flow-step-active .cd-flow-step-label {
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    color: #1F2A3F !important;
+    line-height: 1.3 !important;
+  }
+  .cd-modal .fp-draft-cta .cd-flow-step-sub,
+  .cd-modal #modal-draft-btn .cd-flow-step-sub,
+  .cd-modal .cd-flow-step.cd-flow-step-active .cd-flow-step-sub {
+    font-size: 11px !important;
+    color: #8C7A4B !important;
+    font-weight: 600 !important;
+  }
+  .cd-modal .fp-draft-cta .cd-flow-step-icon,
+  .cd-modal #modal-draft-btn .cd-flow-step-icon,
+  .cd-modal .cd-flow-step.cd-flow-step-active .cd-flow-step-icon {
+    display: none !important;
+  }
+  /* 親 grid (cd-flow 内の AI下書き + fp-qa-grid 2列) を 1列に */
+  .cd-modal .cd-flow > div[style*="grid-template-columns"] {
+    display: block !important;
+    grid-template-columns: none !important;
+    gap: 0 !important;
+    margin-top: 8px !important;
+  }
+
+  /* ---- 9b. 家族構成 (cd-family-list) を非表示 — オーナーfb「これ別になくせばいい」 ---- */
+  .cd-modal .cd-family-list {
+    display: none !important;
+  }
+  /* 「家族構成」 group label も 隠す (中身が無いから ラベルだけ残ると 浮く) */
+  .cd-modal .cd-profile-section:has(.cd-family-list) {
+    display: none !important;
+  }
+
+  /* ============================================================
+     Z. Zoom 日程確定 (scheduleZoom / slotsSend) モーダル を list 形式に
+     オーナーfb 2026-06-23: 「相談のZoomの日程を確定するモーダルも 表タイプに」
+     対象: openScheduleZoomModal の overlay (z-index: 10200) と openSlotsSendModal
+  ============================================================ */
+  div[style*="z-index: 10200"] {
+    align-items: flex-start !important;
+    padding: 0 !important;
+  }
+  div[style*="z-index: 10200"] > div {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 100vh !important;
+    height: 100vh !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+  /* hero gradient header → cream + gold accent に置換 */
+  div[style*="z-index: 10200"] > div > div:first-child {
+    background: linear-gradient(180deg, #FDFBF4, #FFFFFF) !important;
+    color: #1F2A3F !important;
+    padding: 22px 18px 18px !important;
+    border-bottom: 1px solid #ECE6D6 !important;
+  }
+  /* hero 内 文字色補正 */
+  div[style*="z-index: 10200"] > div > div:first-child div {
+    color: #1F2A3F !important;
+  }
+  div[style*="z-index: 10200"] > div > div:first-child div[style*="font-size: 10.5px"] {
+    color: #8C7A4B !important;
+  }
+  /* 閉じるボタン (✕) */
+  div[style*="z-index: 10200"] #fp-sch-close,
+  div[style*="z-index: 10200"] [id$="-close"] {
+    background: rgba(0,0,0,0.06) !important;
+    color: #1F2A3F !important;
+  }
+
+  /* STEP ラベル (STEP 1 / STEP 2) を group label 化 — 構造的 selector
+     scroll パネル 直下の direct children で 1番目/3番目 など 奇数 が ラベル */
+  div[style*="z-index: 10200"] > div > div:nth-child(2) > div[style*="font-weight"][style*="letter-spacing"] {
+    background: #FAF6EB !important;
+    color: #8C7A4B !important;
+    border-left: 4px solid #C19A3A !important;
+    padding: 14px 18px 6px 14px !important;
+    margin: 0 !important;
+    font-size: 11.5px !important;
+    letter-spacing: 0.1em !important;
+    text-transform: uppercase !important;
+    font-weight: 800 !important;
+    display: block !important;
+  }
+
+  /* STEP 1 入力 wrapper (date/time/dur grid 親) — list rowに */
+  div[style*="z-index: 10200"] > div > div:nth-child(2) > div[style*="border-radius"]:not([style*="background: #fff"]):not(textarea) {
+    background: #FFFFFF !important;
+    border: none !important;
+    border-top: 1px solid #ECE6D6 !important;
+    border-bottom: 1px solid #ECE6D6 !important;
+    border-radius: 0 !important;
+    padding: 14px 16px !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+  }
+
+  /* 日付/時刻/時間(分) の 3列 grid 自体 → 縦並びの list rowに */
+  div[style*="z-index: 10200"] div[style*="grid-template-columns"] {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 14px !important;
+    grid-template-columns: none !important;
+  }
+  div[style*="z-index: 10200"] div[style*="grid-template-columns"] > div {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+    width: 100% !important;
+    padding: 6px 0 !important;
+  }
+  div[style*="z-index: 10200"] div[style*="grid-template-columns"] > div > div:first-child {
+    flex: 0 0 38% !important;
+    margin-bottom: 0 !important;
+    color: #6B7280 !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.02em !important;
+    text-transform: none !important;
+  }
+  div[style*="z-index: 10200"] input[type=date],
+  div[style*="z-index: 10200"] input[type=time],
+  div[style*="z-index: 10200"] select {
+    flex: 1 1 auto !important;
+    width: auto !important;
+    border: 1px solid #ECE6D6 !important;
+    background: #FFFFFF !important;
+    border-radius: 10px !important;
+    padding: 10px 12px !important;
+    font-size: 14.5px !important;
+    color: #1F2A3F !important;
+    min-height: 44px !important;
+  }
+
+  /* STEP 2 textarea — フラット化 */
+  div[style*="z-index: 10200"] textarea {
+    border: 1px solid #ECE6D6 !important;
+    background: #FFFFFF !important;
+    border-radius: 10px !important;
+    padding: 12px 14px !important;
+    font-size: 14px !important;
+    margin: 8px 16px 12px !important;
+    width: calc(100% - 32px) !important;
+    box-sizing: border-box !important;
+    min-height: 100px !important;
+  }
+  div[style*="z-index: 10200"] textarea + div {
+    margin: 6px 16px !important;
+  }
+  /* STEP 2 ラベルの 下 (textarea 直前) padding 調整 */
+
+  /* footer (キャンセル + 予約+LINE送信) を 縦 stack + 全幅 */
+  div[style*="z-index: 10200"] > div > div:last-child {
+    background: #FFFFFF !important;
+    border-top: 1px solid #ECE6D6 !important;
+    padding: 14px 16px env(safe-area-inset-bottom, 14px) !important;
+    flex-direction: column-reverse !important;
+    gap: 8px !important;
+    justify-content: stretch !important;
+  }
+  div[style*="z-index: 10200"] > div > div:last-child button {
+    width: 100% !important;
+    padding: 14px 16px !important;
+    border-radius: 12px !important;
+    min-height: 52px !important;
+    font-size: 15px !important;
+  }
+  /* 主送信ボタン: gold gradient に統一 (青grad → gold) */
+  div[style*="z-index: 10200"] [id$="-send"],
+  div[style*="z-index: 10200"] button[id="fp-sch-send"],
+  div[style*="z-index: 10200"] button[id="fp-slots-send"] {
+    background: linear-gradient(135deg, #C19A3A, #A0822E) !important;
+    color: #FFFFFF !important;
+    border: none !important;
+    box-shadow: 0 6px 16px rgba(193,154,58,0.30) !important;
+  }
+  div[style*="z-index: 10200"] [id$="-cancel"] {
+    background: #FFFFFF !important;
+    color: #6B7280 !important;
+    border: 1px solid #ECE6D6 !important;
+    box-shadow: none !important;
+  }
+
+  /* スクロール領域の padding 微調整 */
+  div[style*="z-index: 10200"] > div > div[style*="overflow-y: auto"],
+  div[style*="z-index: 10200"] > div > div[style*="overflow-y: auto"] {
+    padding: 0 !important;
+  }
+
+  /* ---- 9. Zoom ペア ボタン: rowスタイルに ---- */
+  .cd-modal .cd-zoom-pair {
+    display: block !important;
+    grid-template-columns: none !important;
+    gap: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #FFFFFF !important;
+  }
+  .cd-modal .cd-zoom-pair > button {
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 12px !important;
+    background: #FFFFFF !important;
+    border: none !important;
+    border-bottom: 1px solid #F4EFE0 !important;
+    border-radius: 0 !important;
+    padding: 14px 36px 14px 16px !important;
+    min-height: 60px !important;
+    box-shadow: none !important;
+    font-size: 14.5px !important;
+    color: #1F2A3F !important;
+    font-weight: 800 !important;
+    position: relative !important;
+    text-align: left !important;
+  }
+  .cd-modal .cd-zoom-pair > button::after {
+    content: '›';
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #C19A3A;
+    font-size: 22px;
+    font-weight: 400;
+    line-height: 1;
+  }
+  .cd-modal .cd-zoom-pair > button svg {
+    width: 30px !important;
+    height: 30px !important;
+  }
+  .cd-modal .cd-zoom-pair > button span {
+    font-size: 14px !important;
+    line-height: 1.35 !important;
+  }
+  .cd-modal .cd-zoom-pair > button span span {
+    font-size: 11px !important;
+    color: #8C7A4B !important;
+    font-weight: 600 !important;
+  }
+
+  /* ---- 10. タグ section ---- */
+  .cd-modal #cd-tags-section {
+    padding: 0 !important;
+  }
+  .cd-modal #cd-tags-section > div:first-child {
+    padding: 14px 16px 8px !important;
+    margin: 0 !important;
+  }
+  .cd-modal #cd-tags-section #cd-tags-list {
+    padding: 0 16px 14px !important;
+    margin: 0 !important;
+    min-height: 0 !important;
+  }
+  .cd-modal #cd-tags-section #cd-tags-edit {
+    padding: 7px 14px !important;
+    font-size: 12px !important;
+    background: #FFFFFF !important;
+    color: #C19A3A !important;
+    border: 1px solid #C19A3A !important;
+    box-shadow: none !important;
+    border-radius: 999px !important;
+  }
+
+  /* ---- 11. QA collapse (連絡手段) ---- */
+  .cd-modal .cd-qa-collapse .cd-qa-summary {
+    padding: 14px 18px !important;
+    background: #FFFFFF !important;
+    font-size: 14px !important;
+    color: #1F2A3F !important;
+    font-weight: 700 !important;
+    border-radius: 0 !important;
+  }
+  .cd-modal .cd-qa-collapse .cd-qa-inner {
+    padding: 0 16px 14px !important;
+    background: #FFFFFF !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+  }
+  .cd-modal .cd-qa-collapse .cd-qa-btn {
+    background: #FAF6EB !important;
+    border: 1px solid #ECE6D6 !important;
+    padding: 12px !important;
+    font-size: 12.5px !important;
+    color: #1F2A3F !important;
+    font-weight: 700 !important;
+    border-radius: 10px !important;
+  }
+
+  /* ---- 12. アンケート ボタン -> row形式 ---- */
+  .cd-modal button[data-open-hearing] {
+    width: calc(100% - 32px) !important;
+    margin: 12px 16px !important;
+    padding: 13px 16px !important;
+    background: #FFFFFF !important;
+    color: #1F2A3F !important;
+    border: 1px solid #ECE6D6 !important;
+    border-radius: 12px !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    text-align: left !important;
+    position: relative !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+  }
+  .cd-modal button[data-open-hearing]::after {
+    content: '›';
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #C19A3A;
+    font-size: 22px;
+    font-weight: 400;
+  }
+
+  /* ---- 13. cd-section-label-warn (キャンセル履歴) ---- */
+  .cd-modal .cd-section-label-warn {
+    background: linear-gradient(90deg, #FEF3C7 0%, #FFFFFF 70%) !important;
+    color: #92400E !important;
+    border-left: 4px solid #F59E0B !important;
+  }
+
+  /* ---- 14. cd-right (右ペイン) も モバイル では 同じ list 形式に ---- */
+  /* タブ ナビ (cd-tabs) は そのまま、 中の panel だけ 平坦化 */
+  .cd-modal .cd-pane {
+    padding: 0 !important;
+    background: #FFFFFF !important;
+  }
+  .cd-modal .cd-tabs {
+    background: #FFFFFF !important;
+    border-top: 1px solid #ECE6D6 !important;
+    border-bottom: 1px solid #ECE6D6 !important;
+    padding: 0 !important;
+    overflow-x: auto !important;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    gap: 0 !important;
+  }
+  .cd-modal .cd-tab {
+    flex: 0 0 auto !important;
+    padding: 12px 16px !important;
+    font-size: 13px !important;
+    color: #6B7280 !important;
+    background: transparent !important;
+    border: none !important;
+    border-bottom: 2px solid transparent !important;
+    border-radius: 0 !important;
+    font-weight: 700 !important;
+    white-space: nowrap !important;
+  }
+  .cd-modal .cd-tab.active {
+    color: #1F2A3F !important;
+    border-bottom-color: #C19A3A !important;
+    background: transparent !important;
+  }
+
+  /* ============================================================
+     B. 顧客台帳 (table.clients) — iOS list 風に再構築
+  ============================================================ */
+  /* table 自体の余白 リセット */
+  table.clients {
+    background: #FFFFFF !important;
+    border-radius: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-spacing: 0 !important;
+    border-collapse: collapse !important;
+    width: 100% !important;
+  }
+  table.clients thead { display: none !important; }
+  table.clients tbody { display: block !important; background: #FFFFFF !important; width: 100% !important; }
+  table.clients { display: block !important; width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; }
+
+  /* 各行: シンプル grid 2列 layout — avatar / 名前+meta + chevron */
+  /* オーナーfb: ¥金額 は不要、 お客様の名前だけでいい */
+  table.clients tbody tr {
+    display: grid !important;
+    grid-template-columns: 44px minmax(0, 1fr) !important;
+    grid-template-rows: auto !important;
+    align-items: center !important;
+    gap: 10px !important;
+    padding: 14px 32px 14px 14px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    background: #FFFFFF !important;
+    border: none !important;
+    border-bottom: 1px solid #ECE6D6 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    min-height: 64px !important;
+    position: relative !important;
+    cursor: pointer !important;
+  }
+  table.clients tbody tr:hover { background: #FBF5E3 !important; }
+  table.clients tbody tr:active { background: #F4EFE0 !important; }
+
+  /* chevron 右端 */
+  table.clients tbody tr::after {
+    content: '›' !important;
+    position: absolute !important;
+    right: 12px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    color: #C19A3A !important;
+    font-size: 22px !important;
+    font-weight: 400 !important;
+    line-height: 1 !important;
+    pointer-events: none !important;
+  }
+
+  /* td 全部 横並びに溶かす — 旧 roundV の grid-area:meta を override */
+  table.clients tbody td {
+    display: block !important;
+    grid-area: auto !important;
+    padding: 0 !important;
+    border: none !important;
+    background: transparent !important;
+    font-size: 12.5px !important;
+    color: #6B7280 !important;
+    line-height: 1.4 !important;
+    overflow: visible !important;
+    white-space: normal !important;
+    text-overflow: clip !important;
+    margin: 0 !important;
+  }
+
+  /* 1番目td (顧客): avatar + 名前 — col 1-2 spanning, internal flex */
+  table.clients tbody td:nth-child(1) {
+    grid-area: auto !important;
+    grid-column: 1 / 3 !important;
+    grid-row: 1 / 2 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+  }
+  /* 名前 strong は full幅で大きく */
+  table.clients tbody td:nth-child(1) strong {
+    font-size: 16px !important;
+  }
+  table.clients tbody td:nth-child(1) .client-row-name {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 10px !important;
+    min-width: 0 !important;
+    width: 100% !important;
+    flex: 1 1 100% !important;
+    margin: 0 !important;
+  }
+  table.clients tbody td:nth-child(1) .avatar {
+    width: 38px !important;
+    height: 38px !important;
+    font-size: 14px !important;
+    flex-shrink: 0 !important;
+  }
+  table.clients tbody td:nth-child(1) strong {
+    font-size: 15px !important;
+    font-weight: 800 !important;
+    color: #1F2A3F !important;
+    letter-spacing: 0.005em !important;
+    display: block !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    max-width: 100% !important;
+  }
+  table.clients tbody td:nth-child(1) .client-row-name > div {
+    min-width: 0 !important;
+    flex: 1 1 auto !important;
+  }
+  /* 名前直後のかな は隠す (情報密度優先) */
+  table.clients tbody td:nth-child(1) [style*="font-size:11px"][style*="muted"],
+  table.clients tbody td:nth-child(1) .client-row-name div > div:not([style*="flex-wrap"]) {
+    font-size: 10.5px !important;
+    color: #8C7A4B !important;
+  }
+
+  /* 2列目以降 (年齢/職業/家族/緊急/悩み/希望/商品) は 行2に集約 */
+  table.clients tbody td:nth-child(2),
+  table.clients tbody td:nth-child(3),
+  table.clients tbody td:nth-child(4),
+  table.clients tbody td:nth-child(5),
+  table.clients tbody td:nth-child(6),
+  table.clients tbody td:nth-child(7),
+  table.clients tbody td:nth-child(8) {
+    display: none !important;
+  }
+
+  /* ステータス列 (状態) pill — 名前の親内 inline 表示 (grid item 化 解除 → 第1tdに浮かべる) */
+  table.clients tbody td:nth-child(9) {
+    grid-area: auto !important;
+    display: none !important;
+  }
+  table.clients tbody td:nth-child(9) .status-pill {
+    font-size: 10px !important;
+    padding: 2px 8px !important;
+  }
+  /* unread 要返事 badge は コンパクト化 */
+  table.clients tbody td:nth-child(9) .fp-unread-badge {
+    font-size: 9px !important;
+    padding: 2px 6px !important;
+    margin-right: 4px !important;
+  }
+  /* task badge */
+  table.clients tbody td:nth-child(9) .fp-task-badge {
+    font-size: 9px !important;
+    padding: 1px 5px !important;
+  }
+  table.clients tbody td:nth-child(9) .status-pill {
+    font-size: 10px !important;
+    padding: 2px 8px !important;
+  }
+
+  /* 管理資産 (10列目) — オーナーfb: 名前だけでいい → 非表示 */
+  table.clients tbody td:nth-child(10) {
+    display: none !important;
+  }
+
+  /* 最終接触 (11列目): mobile では 隠す (情報過多 → chevron で 詳細誘導) */
+  table.clients tbody td:nth-child(11) {
+    display: none !important;
+  }
+  table.clients tbody td:nth-child(11) > div {
+    flex-direction: row !important;
+    justify-content: flex-end !important;
+    align-items: center !important;
+    gap: 6px !important;
+  }
+  table.clients tbody td:nth-child(11) span {
+    font-size: 10.5px !important;
+  }
+
+  /* 検索 + filter bar 上部 */
+  #client-tools, .client-tools-row, .filter-bar {
+    background: #FFFFFF !important;
+    border-bottom: 1px solid #ECE6D6 !important;
+  }
+
+  /* 防御: 旧 roundV/roundU の カード型 td/tr bg を 一掃 (cream stripe 防止) */
+  table.clients tbody tr,
+  table.clients tbody tr td,
+  table.clients tbody tr td > div {
+    background-color: transparent !important;
+  }
+  table.clients tbody tr {
+    background-color: #FFFFFF !important;
+  }
+  /* 旧 roundV: tbody tr の inset shadow / margin を 消して 連続 list に */
+  table.clients tbody tr {
+    margin: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    border-bottom: 1px solid #ECE6D6 !important;
+  }
+  table.clients {
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
+  /* ============================================================
+     FB2. 相談 (leadHub) 内の booking カード → row 形式に
+     ターゲット: `.btn-rec-start` を含む 確定済み 予約 カード
+  ============================================================ */
+  /* カード wrapper (grid-template-columns: 104px 1fr のもの) を 縦並びに */
+  div[style*="grid-template-columns:104px 1fr"],
+  div[style*="grid-template-columns:104px 1fr"] {
+    display: block !important;
+    grid-template-columns: none !important;
+    padding: 14px !important;
+    margin: 0 0 8px !important;
+    background: #FFFFFF !important;
+    border: none !important;
+    border-bottom: 1px solid #ECE6D6 !important;
+    border-left: 4px solid #C19A3A !important;
+    border-radius: 8px !important;
+    box-shadow: none !important;
+    gap: 0 !important;
+  }
+  /* 日付列 (06/22 + 曜日 + 時刻) を 横並びに圧縮 */
+  div[style*="grid-template-columns:104px 1fr"] > div:first-child {
+    border-right: none !important;
+    border-bottom: none !important;
+    padding: 0 0 6px !important;
+    display: flex !important;
+    align-items: baseline !important;
+    gap: 8px !important;
+  }
+  div[style*="grid-template-columns:104px 1fr"] > div:first-child > div:nth-child(1) {
+    font-size: 14px !important;
+    color: #8C7A4B !important;
+    font-weight: 700 !important;
+  }
+  div[style*="grid-template-columns:104px 1fr"] > div:first-child > div:nth-child(2) {
+    font-size: 11px !important;
+    color: #9CA3AF !important;
+    margin-top: 0 !important;
+  }
+  div[style*="grid-template-columns:104px 1fr"] > div:first-child > div:nth-child(3) {
+    font-size: 14px !important;
+    color: #1F2A3F !important;
+    font-weight: 800 !important;
+    margin-top: 0 !important;
+    margin-left: auto !important;
+  }
+  /* 右列 */
+  div[style*="grid-template-columns:104px 1fr"] > div:nth-child(2) {
+    padding: 0 !important;
+    min-width: 0 !important;
+  }
+  /* zoom URL を 短く 1行で 省略 */
+  div[style*="grid-template-columns:104px 1fr"] > div:nth-child(2) > div:nth-child(2) {
+    display: block !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    word-break: keep-all !important;
+    word-wrap: normal !important;
+    font-size: 10px !important;
+    line-height: 1.3 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    margin-bottom: 10px !important;
+    color: #9CA3AF !important;
+  }
+  /* 顧客名 row */
+  div[style*="grid-template-columns:104px 1fr"] > div:nth-child(2) > div:nth-child(1) {
+    margin-bottom: 8px !important;
+  }
+  div[style*="grid-template-columns:104px 1fr"] > div:nth-child(2) > div:nth-child(1) strong {
+    font-size: 15px !important;
+  }
+  /* 録画ONでZoom開始 ボタン: 巨大円形 → 横長 row ボタンに */
+  .btn-rec-start {
+    width: 100% !important;
+    border-radius: 12px !important;
+    padding: 12px 16px !important;
+    font-size: 14px !important;
+    font-weight: 800 !important;
+    min-height: 50px !important;
+    height: auto !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    white-space: nowrap !important;
+    line-height: 1.2 !important;
+    text-align: center !important;
+    margin: 0 0 8px !important;
+    background: linear-gradient(135deg, #C19A3A, #A0822E) !important;
+    color: #FFFFFF !important;
+    border: none !important;
+    box-shadow: 0 6px 16px rgba(193,154,58,0.30) !important;
+  }
+  /* メモ / キャンセル */
+  div[style*="grid-template-columns:104px 1fr"] > div:nth-child(2) > div:last-child {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    flex-wrap: nowrap !important;
+  }
+  div[style*="grid-template-columns:104px 1fr"] > div:nth-child(2) > div:last-child .btn-rec-start {
+    grid-column: 1 / -1 !important;
+    margin-bottom: 0 !important;
+  }
+  div[style*="grid-template-columns:104px 1fr"] > div:nth-child(2) > div:last-child .btn-mini-action {
+    width: 100% !important;
+    min-height: 44px !important;
+    padding: 10px 12px !important;
+    font-size: 13px !important;
+    border-radius: 10px !important;
+    justify-content: center !important;
+  }
+
+  /* ============================================================
+     FB3. 2-3階層モーダル ディテール polish
+  ============================================================ */
+  /* 一般 modal overlay (.modal-overlay) - mobile full screen, 内部スクロール */
+  .modal-overlay[style*="display: flex"],
+  .modal-overlay[style*="display:flex"],
+  .modal-overlay.show {
+    align-items: flex-start !important;
+    padding: 0 !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  #modal-content,
+  .modal-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 100vh !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+  }
+
+  /* ✕ 閉じる ボタン: タップ44px+ + 確実な押下位置 */
+  .cd-close,
+  div[style*="z-index: 10200"] [id$="-close"],
+  [class*="close-btn"]:not([id*="memo"]),
+  button[aria-label="閉じる"] {
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+    border-radius: 50% !important;
+    background: rgba(255, 255, 255, 0.95) !important;
+    color: #1F2A3F !important;
+    border: 1px solid #ECE6D6 !important;
+    font-size: 22px !important;
+    z-index: 100 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    flex-shrink: 0 !important;
+    cursor: pointer !important;
+  }
+  /* cd-close は fixed 配置 でスクロール しても 常に viewport 右上 */
+  .cd-modal .cd-close {
+    position: fixed !important;
+    top: max(12px, env(safe-area-inset-top, 12px)) !important;
+    right: 12px !important;
+    box-shadow: 0 4px 12px rgba(15,23,42,0.15) !important;
+  }
+  /* zoom-sch modal の ✕ は hero header 内に 維持 */
+  div[style*="z-index: 10200"] [id$="-close"] {
+    position: relative !important;
+    top: 0 !important;
+    right: 0 !important;
+    box-shadow: none !important;
+  }
+
+  /* ★ オーナーfb 2026-06-23: hero (compact) + タブ を 上部 sticky に
+     構造: cd-left hero(コンパクト化) → cd-right(タブ+pane) → cd-left rest */
+  .cd-modal {
+    display: flex !important;
+    flex-direction: column !important;
+    background: #FFFFFF !important;
+  }
+  .cd-modal > .cd-left { order: 2 !important; }
+  .cd-modal > .cd-right {
+    order: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  .cd-modal .cd-right .cd-tabs { order: 0 !important; }
+  .cd-modal .cd-right .cd-pane { order: 1 !important; }
+  .cd-modal .cd-right > *:not(.cd-tabs):not(.cd-pane) { order: 2 !important; }
+  /* ミニヒーロー (タブ上のidentity strip): cd-left hero を 抜き出して 最上に固定 */
+  /* CSSのみだと 抜き出せないので 別アプローチ: pageでは無視。 cd-profile-name + avatar を タブ上に小さく表示する案は後回し */
+  /* タブ は cd-right の sticky-top */
+  .cd-modal .cd-tabs {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 50 !important;
+    background: #FFFFFF !important;
+    padding: 0 12px !important;
+    border-top: 1px solid #ECE6D6 !important;
+    border-bottom: 1px solid #ECE6D6 !important;
+    -webkit-overflow-scrolling: touch !important;
+    margin: 0 !important;
+  }
+  .modal-overlay {
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  .cd-modal .cd-tab {
+    min-height: 44px !important;
+    flex-shrink: 0 !important;
+  }
+  .cd-modal .cd-pane {
+    padding: 0 0 24px !important;
+    min-height: 30vh !important;
+  }
+}
+/* ===== /roundX list style ===== */

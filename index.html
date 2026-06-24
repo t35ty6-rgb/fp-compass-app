@@ -122,6 +122,7 @@
   } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
   import {
     getFirestore, doc, getDoc, setDoc, serverTimestamp, collection, getDocs, addDoc,
+    query, where, orderBy, limit,
   } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
   import {
     getFunctions, httpsCallable,
@@ -467,24 +468,43 @@
   // ===== 認証状態の監視 + Firestore からデータ読み込み =====
   let signupInProgress = false;
   async function loadTenantData(tenantId) {
+    // ★ オーナーfb 2026-06-24 (重さ解消):
+    //   旧: 全顧客 × 全 line_messages を 初回ロードで 一括読込 → 顧客100名×msg100通=10,000docs で 重くなる
+    //   新: 初回は 顧客リスト + 最新20件 LINE のみ。 残り (= 顧客モーダル open 時) に lazy load
     const snap = await getDocs(collection(db, "tenants", tenantId, "customers"));
     const list = [];
     for (const d of snap.docs) {
       const c = { id: d.id, ...d.data() };
-      // ★ pictureUrl (webhook 由来 / Profile API) を linePictureUrl (UI 表示用) に コピー
-      //   UI 側 は c.linePictureUrl を 参照する仕様。 webhook で 取得した pictureUrl が UI に 反映されない 問題を 修正
       if (c.pictureUrl && !c.linePictureUrl) c.linePictureUrl = c.pictureUrl;
-      // 各 customer のサブコレを並列で読む (line_messages, cancellations)
+      // ★ 初期ロード は 最新20件 + cancellations のみ (キャンセル件数は通常 少ない)
       const [lineSnap, cxlSnap] = await Promise.all([
-        getDocs(collection(db, "tenants", tenantId, "customers", d.id, "line_messages")).catch(() => null),
+        getDocs(query(
+          collection(db, "tenants", tenantId, "customers", d.id, "line_messages"),
+          orderBy("idx", "desc"), limit(20)
+        )).catch(() => null),
         getDocs(collection(db, "tenants", tenantId, "customers", d.id, "cancellations")).catch(() => null),
       ]);
-      c.lineHistory = lineSnap ? lineSnap.docs.map(x => x.data()).sort((a,b) => (a.idx||0) - (b.idx||0)) : [];
+      const recent20 = lineSnap ? lineSnap.docs.map(x => x.data()).sort((a,b) => (a.idx||0) - (b.idx||0)) : [];
+      c.lineHistory = recent20;
+      c._lineHistoryPartial = recent20.length === 20; // フル取得 が 必要なら lazy load
       c.cancellations = cxlSnap ? cxlSnap.docs.map(x => x.data()).sort((a,b) => (a.idx||0) - (b.idx||0)) : [];
       list.push(c);
     }
     return list;
   }
+
+  // ★ 顧客モーダル を 開いた時に フル LINE 履歴 を lazy load (重さ解消)
+  window.fetchFullLineHistory = async function(customerId) {
+    try {
+      const tenantId = window.__fp && window.__fp.tenantId;
+      if (!tenantId) return null;
+      const snap = await getDocs(query(
+        collection(db, "tenants", tenantId, "customers", customerId, "line_messages"),
+        orderBy("idx", "asc")
+      ));
+      return snap.docs.map(x => x.data());
+    } catch (e) { console.warn('fetchFullLineHistory fail', e.message); return null; }
+  };
   function showBillingGate(status, tenantId) {
     // 既存ゲートがあれば消す
     const existing = document.getElementById("fp-billing-gate");
@@ -672,6 +692,49 @@
 
 </head>
 <body data-prod="1">
+
+<!-- ★ 2026-06-22 roundP: モバイル トップバー (固定 56px) -->
+<header id="mobile-topbar" class="m-only">
+  <button id="mobile-hamburger" aria-label="メニュー" type="button">
+    <span class="mh-bar"></span><span class="mh-bar"></span><span class="mh-bar"></span>
+  </button>
+  <div id="mobile-title-wrap">
+    <div class="m-eyebrow">FP COMPASS</div>
+    <div id="mobile-current-title">ホーム</div>
+  </div>
+  <button id="mobile-user-btn" aria-label="アカウント" type="button">
+    <span id="mobile-user-avatar">FP</span>
+  </button>
+</header>
+
+<!-- ★ 2026-06-22 roundP: モバイル ボトムナビ (固定 5タブ) -->
+<nav id="mobile-bottomnav" class="m-only" aria-label="メイン">
+  <button class="m-tab" data-mtab="dashboard" data-target-tab="dashboard">
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9 12 2 21 9v11a2 2 0 0 1-2 2h-4v-7H10v7H5a2 2 0 0 1-2-2z"/></svg>
+    <span>ホーム</span>
+  </button>
+  <button class="m-tab" data-mtab="clients" data-target-tab="clients">
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    <span>顧客</span>
+  </button>
+  <button class="m-tab" data-mtab="meetingHistory" data-target-tab="meetingHistory">
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+    <span>履歴</span>
+  </button>
+  <button class="m-tab" data-mtab="leadHub" data-target-tab="leadHub">
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+    <span>相談</span>
+  </button>
+  <button class="m-tab" data-mtab="more" id="mtab-more">
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+    <span>もっと</span>
+  </button>
+</nav>
+
+<div id="mobile-backdrop" aria-hidden="true"></div>
+
+<!-- ★ 2026-06-22 roundR: モバイル 顧客タブ FAB「+ 新規顧客」 -->
+<button id="mobile-fab-new-client" aria-label="新規顧客を登録" type="button">+</button>
 
 <div class="shell">
 
@@ -1205,7 +1268,7 @@ window.fpReadyAfterAuth = function() {
     });
   })();
 
-  const ver = "20260622S-3col-span";
+  const ver = "20260624G-fast-light";
   const scripts = [
     "life-events.js?v=" + ver,
     "recommender.js?v=" + ver,
@@ -1309,7 +1372,278 @@ window.fpReadyAfterAuth = function() {
       const crumb = CRUMB_MAP[tab.dataset.tab];
       if (crumb) document.getElementById('current-crumb').textContent = crumb;
     }
+    // ★ 2026-06-22 roundO: モバイルで タブ クリック後 サイドバー閉じる
+    if (e.target.closest('.tab[data-tab]')) {
+      document.body.classList.remove('mobile-nav-open');
+    }
   });
+
+  // ★ モバイル ハンバーガー click → サイドバー slide-in/out
+  (function () {
+    const ham = document.getElementById('mobile-hamburger');
+    const backdrop = document.getElementById('mobile-backdrop');
+    if (!ham || !backdrop) return;
+    const toggle = (open) => {
+      const isOpen = open === undefined ? !document.body.classList.contains('mobile-nav-open') : open;
+      document.body.classList.toggle('mobile-nav-open', isOpen);
+      ham.setAttribute('aria-label', isOpen ? 'メニューを閉じる' : 'メニューを開く');
+    };
+    ham.addEventListener('click', () => toggle());
+    backdrop.addEventListener('click', () => toggle(false));
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') toggle(false); });
+
+    // ★ 2026-06-22 roundP: ボトムナビ クリック → 該当 .tab を 同期 click
+    document.querySelectorAll('.m-tab[data-target-tab]').forEach(mt => {
+      mt.addEventListener('click', () => {
+        const target = mt.dataset.targetTab;
+        const tab = document.querySelector('.tab[data-tab="'+target+'"]');
+        if (tab) tab.click();
+        // active state を 即時反映 (タブ click の async 待たない)
+        document.querySelectorAll('.m-tab').forEach(t => t.classList.toggle('is-active', t === mt));
+        // タイトル更新
+        const t = document.getElementById('mobile-current-title');
+        if (t) t.textContent = mt.querySelector('span')?.textContent || '';
+        toggle(false);
+      });
+    });
+    // 「もっと」 タブ → drawer 開く
+    document.getElementById('mtab-more')?.addEventListener('click', () => {
+      document.querySelectorAll('.m-tab').forEach(t => t.classList.toggle('is-active', t.id === 'mtab-more'));
+      toggle(true);
+    });
+
+    // 既存 .tab click → ボトムナビ active 同期 + トップバータイトル 更新
+    const tabLabelMap = {
+      dashboard: 'ホーム', clients: '顧客', timeline: 'ライフイベント', meetingHistory: '面談履歴',
+      leadHub: '新規相談', distributionHub: '配信', dormantFollowup: 'ご無沙汰',
+      tagsHub: 'タグ管理', birthdayTab: '誕生日', calendarTab: '年末配布', settingsHub: '設定',
+    };
+    document.querySelectorAll('.tab[data-tab]').forEach(t => {
+      t.addEventListener('click', () => {
+        const id = t.dataset.tab;
+        const mtab = document.querySelector('.m-tab[data-target-tab="'+id+'"]');
+        const tt = document.getElementById('mobile-current-title');
+        if (mtab) {
+          document.querySelectorAll('.m-tab').forEach(x => x.classList.toggle('is-active', x === mtab));
+          if (tt) tt.textContent = mtab.querySelector('span')?.textContent || '';
+        } else {
+          // ボトムナビに無いタブ (配信/ご無沙汰/タグ/誕生日/年末配布/設定) は 「もっと」 をアクティブにして タイトルだけ更新
+          const moreTab = document.getElementById('mtab-more');
+          if (moreTab) document.querySelectorAll('.m-tab').forEach(x => x.classList.toggle('is-active', x === moreTab));
+          if (tt) tt.textContent = tabLabelMap[id] || id;
+        }
+      });
+    });
+    // 初期: dashboard active
+    document.querySelector('.m-tab[data-target-tab="dashboard"]')?.classList.add('is-active');
+
+    // ★ モバイル ユーザーボタン → アカウントページへ
+    document.getElementById('mobile-user-btn')?.addEventListener('click', () => {
+      window.location.href = '/account.html';
+    });
+
+    // ★ スクロール検知 → トップバー frosted glass (signature subtle motion)
+    let ticking = false;
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          document.body.dataset.scrolled = window.scrollY > 4 ? '1' : '0';
+          ticking = false;
+        });
+        ticking = true;
+      }
+    }, { passive: true });
+
+    // ★ 2026-06-22 roundU: モーダル開閉 監視 → body scroll lock
+    (function () {
+      const checkModal = () => {
+        const ovs = [document.getElementById('modal-overlay'), document.getElementById('form-overlay')];
+        const anyOpen = ovs.some(o => o && (o.style.display === 'flex' || window.getComputedStyle(o).display === 'flex'));
+        document.body.classList.toggle('modal-open', anyOpen);
+      };
+      // MutationObserver で modal-overlay の style 変化を検知
+      ['modal-overlay', 'form-overlay'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) new MutationObserver(checkModal).observe(el, { attributes: true, attributeFilter: ['style'] });
+      });
+      setInterval(checkModal, 500);  // フォールバック
+    })();
+
+    // ★ 2026-06-22 roundT: モバイル専用 ボックス ホーム (greet 圧縮 + 2x2 stats + today + 2quick)
+    function buildMobileHome() {
+      if (window.innerWidth > 768) return;
+      const dashView = document.querySelector('.view[data-view="dashboard"]');
+      if (!dashView) return;
+      // 既存があれば撤去して再構築 (DUMMY_CLIENTS 更新後の再描画用)
+      dashView.querySelector('.m-screen-home')?.remove();
+
+      const name = ((window.__fp?.userEmail || 'FP').split('@')[0] || 'FP').slice(0, 10);
+      const today = new Date();
+      const wdays = ['日','月','火','水','木','金','土'];
+      const md = `${today.getMonth()+1}/${today.getDate()} (${wdays[today.getDay()]})`;
+
+      const clients = window.DUMMY_CLIENTS || [];
+      const totalClients = clients.length;
+      // 今週 フォロー = lastContact 7日以内 or 不明
+      const today0 = today.getTime();
+      const weekFollow = clients.filter(c => {
+        if (!c.lastContact) return false;
+        const d = (today0 - new Date(c.lastContact).getTime()) / 86400000;
+        return d <= 7;
+      }).length;
+      // 未読 LINE = liveData.line_messages の direction='in' 全数 (簡易)
+      const lineMsgs = (window.LineAppLiveData?.line_messages || []).filter(m => m.direction === 'in').length;
+      // 完了 = bookings 過去日付
+      const bookings = window.LineAppLiveData?.bookings || [];
+      const completedM = bookings.filter(b => {
+        if (!b.date) return false;
+        const md = new Date(b.date + 'T00:00:00').getTime();
+        return md < today0;
+      }).length;
+      // フォロー待ち = recommender の TOP1
+      const recommended = (typeof window.recommendNext === 'function')
+        ? (window.recommendNext(clients) || []).slice(0, 1)
+        : [];
+      const top = recommended[0] || null;
+      const followCount = recommended.length > 0
+        ? Math.min(clients.filter(c => !c.lastContact || (today0 - new Date(c.lastContact).getTime()) / 86400000 > 30).length, 9)
+        : 0;
+
+      const root = document.createElement('div');
+      root.className = 'm-screen-home';
+      root.innerHTML = `
+        <!-- 1. greet -->
+        <div class="m-greet">
+          <div class="m-greet-l">
+            <div class="m-greet-date">${md}</div>
+            <div class="m-greet-msg">おはよう、 <span class="m-greet-name">${name}</span> さん。</div>
+          </div>
+          <div class="m-greet-r">
+            <div class="m-greet-num" id="m-greet-num">0</div>
+            <div class="m-greet-unit">名 フォロー待ち</div>
+          </div>
+        </div>
+
+        <!-- 2. stats 2x2 -->
+        <div class="m-stats-grid">
+          <div class="m-stat-box">
+            <div class="m-stat-top">
+              <span class="m-stat-icon">👥</span>
+              <span class="m-stat-num">${totalClients}</span>
+            </div>
+            <div class="m-stat-label">顧客 合計</div>
+          </div>
+          <div class="m-stat-box">
+            <div class="m-stat-top">
+              <span class="m-stat-icon" style="background:#DBEAFE;color:#1E3A5F;">📞</span>
+              <span class="m-stat-num">${weekFollow}</span>
+            </div>
+            <div class="m-stat-label">今週 フォロー</div>
+          </div>
+          <div class="m-stat-box">
+            <div class="m-stat-top">
+              <span class="m-stat-icon" style="background:#D1FAE5;color:#065F46;">💬</span>
+              <span class="m-stat-num">${lineMsgs}</span>
+            </div>
+            <div class="m-stat-label">LINE 受信</div>
+          </div>
+          <div class="m-stat-box">
+            <div class="m-stat-top">
+              <span class="m-stat-icon" style="background:#EDE9FE;color:#5B21B6;">✓</span>
+              <span class="m-stat-num">${completedM}</span>
+            </div>
+            <div class="m-stat-label">完了 面談</div>
+          </div>
+        </div>
+
+        <!-- 3. today action -->
+        <div class="m-today-box">
+          <div class="m-today-eyebrow">TODAY · 最優先 アクション</div>
+          ${top ? `
+            <div class="m-today-name">${(top.name || top.client?.name || 'お客様')} 様</div>
+            <div class="m-today-sub">${(top.subjectName ? '🎂 ' + top.subjectName + ' ' : '')}${top.info || top.reason || 'フォロー連絡 を おすすめします'}</div>
+            <button class="m-today-cta" data-target-client="${(top.id || top.client?.id || '')}">
+              <span>文面を 作って 送る</span>
+              <span>→</span>
+            </button>
+          ` : `
+            <div class="m-today-empty">今日 緊急の方は いません ✨</div>
+          `}
+        </div>
+
+        <!-- 4. quick row -->
+        <div class="m-quick-row">
+          <button class="m-qa2 is-primary" id="m-qa-meeting">
+            <span class="m-qa2-icon">⚡</span>
+            <span>急遽 面談</span>
+          </button>
+          <button class="m-qa2" id="m-qa-newcli">
+            <span class="m-qa2-icon">+</span>
+            <span>新規 顧客</span>
+          </button>
+        </div>
+      `;
+      dashView.insertBefore(root, dashView.firstChild);
+
+      // 大数字 カウントアップ
+      const numEl = document.getElementById('m-greet-num');
+      const target = Math.max(0, followCount);
+      let c = 0;
+      const tick = () => { c++; if (numEl) numEl.textContent = c; if (c < target) setTimeout(tick, 80); };
+      if (target > 0) setTimeout(tick, 250); else if (numEl) numEl.textContent = '0';
+
+      // クイック バインド
+      document.getElementById('m-qa-meeting')?.addEventListener('click', () => {
+        document.getElementById('sidebar-quick-inperson')?.click();
+      });
+      document.getElementById('m-qa-newcli')?.addEventListener('click', () => {
+        document.getElementById('add-client-btn')?.click();
+      });
+      // today CTA → 顧客モーダル openClientModal
+      const todayCta = root.querySelector('[data-target-client]');
+      if (todayCta) {
+        todayCta.addEventListener('click', () => {
+          const cid = todayCta.dataset.targetClient;
+          if (cid && typeof window.openClientModal === 'function') {
+            window.openClientModal(cid);
+          }
+        });
+      }
+    }
+    // 初回 + tab 切替時 に build
+    setTimeout(buildMobileHome, 1500);
+    document.querySelectorAll('.m-tab[data-target-tab="dashboard"], .tab[data-tab="dashboard"]').forEach(t => {
+      t.addEventListener('click', () => setTimeout(buildMobileHome, 300));
+    });
+    // ★ オーナーfb 2026-06-23: Firestore 顧客 が 後から ロードされた時 KPI を 更新
+    (function watchClientsLoad() {
+      let lastCount = -1, attempts = 0;
+      const interval = setInterval(() => {
+        attempts++;
+        const cur = (window.DUMMY_CLIENTS || []).length;
+        if (cur !== lastCount) {
+          lastCount = cur;
+          if (window.innerWidth <= 768) buildMobileHome();
+        }
+        if (attempts >= 60) clearInterval(interval);
+      }, 500);
+    })();
+
+    // ★ 2026-06-22 roundR: 顧客タブ active 時のみ FAB 表示 (body class で CSS切替)
+    function updateTabClassMobile() {
+      const active = document.querySelector('.tab.active[data-tab]');
+      document.body.classList.toggle('tab-clients-active', active?.dataset.tab === 'clients');
+    }
+    document.querySelectorAll('.tab[data-tab]').forEach(t => t.addEventListener('click', () => setTimeout(updateTabClassMobile, 100)));
+    document.querySelectorAll('.m-tab[data-target-tab]').forEach(t => t.addEventListener('click', () => setTimeout(updateTabClassMobile, 100)));
+    setTimeout(updateTabClassMobile, 500);
+
+    // FAB クリック → 既存「+新規顧客を登録」 ボタンを click (機能流用)
+    document.getElementById('mobile-fab-new-client')?.addEventListener('click', () => {
+      const btn = document.getElementById('add-client-btn');
+      if (btn) btn.click();
+    });
+  })();
 
   // Sidebar search → focus client search and switch tab
   document.getElementById('sidebar-search-input').addEventListener('focus', (e) => {
@@ -1544,7 +1878,8 @@ window.fpReadyAfterAuth = function() {
 <script>
 (function(){
   // 最新の ver を 1 箇所に集約 (fpReadyAfterAuth 側と一致させる必要あり)
-  const FP_VERSION = "20260622S-3col-span";
+  const FP_VERSION = "20260624G-fast-light";
+  try { window.FP_VERSION = FP_VERSION; } catch(_) {}
   const loadTime = new Date();
   const hhmm = String(loadTime.getHours()).padStart(2,'0') + ':' + String(loadTime.getMinutes()).padStart(2,'0');
   const dateLabel = (FP_VERSION.match(/^(\d{4})(\d{2})(\d{2})/) || []).slice(1).join('/').replace(/^(\d{4})\//,'$1/').replace(/\/(\d{2})\/(\d{2})$/,'/$1/$2') || FP_VERSION;
@@ -1567,9 +1902,11 @@ window.fpReadyAfterAuth = function() {
     document.body.appendChild(d);
     setTimeout(() => d.remove(), 12000);
   });
-  // ★ 本番では バッジ非表示 (stg のみ)。 オーナーfb: 「お客様 見える 場所 に Jobs の内部情報 出さない」
-  const isProd = location.host === 'app.skeleton-inc.jp';
-  if (!isProd) {
+  // ★ オーナーfb 2026-06-24: stg/本番 共に 非表示 デフォルト。
+  // 必要時は URL に ?debug=1 を 付けて 出す (or localStorage.fp_debug = '1')
+  const params = new URLSearchParams(location.search);
+  const debugOn = params.has('debug') || localStorage.getItem('fp_debug') === '1';
+  if (debugOn) {
     document.addEventListener('DOMContentLoaded', () => document.body.appendChild(badge));
     if (document.readyState !== 'loading') document.body.appendChild(badge);
   }
