@@ -1066,7 +1066,10 @@
               <h1 class="hero-title">顧客台帳</h1>
               <p class="hero-sub">最終接触日が古い順。タップで詳細モーダル（家族構成・30年タイムライン・提案履歴）。</p>
             </div>
-            <div class="hero-actions">
+            <div class="hero-actions" style="display:flex;gap:8px;align-items:center;">
+              <button id="export-csv-btn" data-hint="現在の顧客台帳をCSVで書き出し (Excelで開ける)" style="background:#fff;border:1px solid #C19A3A;color:#8B6F26;padding:9px 14px;border-radius:8px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:0.02em;display:inline-flex;align-items:center;gap:6px;">
+                <i data-lucide="download" style="width:14px;height:14px;"></i><span>CSV</span>
+              </button>
               <button class="primary" id="add-client-btn" data-hint="新しい顧客をCRMに追加。家族の生年月日も入れるとライフイベントが30年自動展開">
                 <i data-lucide="plus"></i><span>新規顧客を登録</span>
               </button>
@@ -1270,7 +1273,7 @@ window.fpReadyAfterAuth = function() {
     });
   })();
 
-  const ver = "20260624J-onboarding";
+  const ver = "20260624L-csv-polish";
   const scripts = [
     "life-events.js?v=" + ver,
     "recommender.js?v=" + ver,
@@ -1964,7 +1967,7 @@ window.fpReadyAfterAuth = function() {
 <script>
 (function(){
   // 最新の ver を 1 箇所に集約 (fpReadyAfterAuth 側と一致させる必要あり)
-  const FP_VERSION = "20260624J-onboarding";
+  const FP_VERSION = "20260624L-csv-polish";
   try { window.FP_VERSION = FP_VERSION; } catch(_) {}
   const loadTime = new Date();
   const hhmm = String(loadTime.getHours()).padStart(2,'0') + ':' + String(loadTime.getMinutes()).padStart(2,'0');
@@ -2003,6 +2006,16 @@ window.fpReadyAfterAuth = function() {
 <!-- 🌱 芽吹くん チャットボット (右下フローティング) v1.0     -->
 <!-- ====================================================== -->
 <style>
+  /* ★ オーナーfb 2026-06-24 Polish: アニメ緩和 (常時動くものを 落ち着かせる) */
+  .mb-fab-badge{animation-duration:3.2s !important;}
+  .mb-fab-hint{animation:none !important;}
+  .mb-fab{animation-duration:5s !important;}
+  .mb-fab-pulse{animation-duration:3.4s !important;opacity:0.5;}
+  @media (prefers-reduced-motion: reduce) {
+    .mb-fab, .mb-fab-badge, .mb-fab-hint, .mb-fab-pulse,
+    [class*="-pulse"], [class*="pulse-"] { animation: none !important; }
+    * { transition-duration: 0.01ms !important; }
+  }
   .mb-fab{position:fixed;right:24px;bottom:24px;z-index:9990;cursor:pointer;display:flex;flex-direction:column;align-items:center;user-select:none;animation:mbFabFloat 3s ease-in-out infinite;}
   /* マークダウン 装飾 */
   .mb-bubble strong, .mb-bubble b{color:#DC2626;font-weight:900;}
