@@ -9121,15 +9121,6 @@ ${client.name}さん、ありがとうございます。
         closeModal();
         document.getElementById('form-overlay').style.display = 'none';
       }
-      // ★ オーナーfb 2026-06-24 Polish: Cmd+K / Ctrl+K で 顧客検索 にフォーカス
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
-        e.preventDefault();
-        try { activateTab('clients'); } catch (_) {}
-        setTimeout(() => {
-          const search = document.getElementById('client-search');
-          if (search) { search.focus(); search.select(); }
-        }, 50);
-      }
     });
 
     // line-app.js から呼び出せるように公開

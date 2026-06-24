@@ -1748,7 +1748,7 @@ table.clients [class*="avatar"],
   background: rgba(15, 23, 42, 0.55) !important;
   backdrop-filter: blur(3px);
   -webkit-backdrop-filter: blur(3px);
-  padding: 60px 20px 40px !important;
+  padding: 28px 16px !important;
   overflow-y: auto;
 }
 .modal-overlay[style*="flex"] { display: flex !important; }
@@ -1759,7 +1759,7 @@ table.clients [class*="avatar"],
   box-shadow:
     0 32px 80px rgba(15,23,42,0.30),
     0 0 0 1px rgba(15,23,42,0.04);
-  max-width: 1100px;
+  max-width: 1320px;
   width: 100%;
   overflow: hidden;
 }
@@ -1769,8 +1769,8 @@ table.clients [class*="avatar"],
    ================================================================== */
 .cd-modal {
   display: grid;
-  grid-template-columns: 320px 1fr;
-  min-height: 540px;
+  grid-template-columns: 360px 1fr;
+  min-height: 720px;
   position: relative;
 }
 @media (max-width: 900px) {
