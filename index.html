@@ -1268,7 +1268,7 @@ window.fpReadyAfterAuth = function() {
     });
   })();
 
-  const ver = "20260624G-fast-light";
+  const ver = "20260624H-name-cap";
   const scripts = [
     "life-events.js?v=" + ver,
     "recommender.js?v=" + ver,
@@ -1477,7 +1477,15 @@ window.fpReadyAfterAuth = function() {
       // 既存があれば撤去して再構築 (DUMMY_CLIENTS 更新後の再描画用)
       dashView.querySelector('.m-screen-home')?.remove();
 
-      const name = ((window.__fp?.userEmail || 'FP').split('@')[0] || 'FP').slice(0, 10);
+      // ★ オーナーfb 2026-06-24: email username (k1122kk111...) ではなく tenant名 = 事務所名 を 出す
+      const name = (function() {
+        const t = (window.__fp && window.__fp.tenantName) ? String(window.__fp.tenantName) : '';
+        if (t) {
+          const m = t.replace(/ — DEMO ビュー/, '').match(/^([^\s(\[（【]+)/);
+          if (m) return m[1].slice(0, 14);
+        }
+        return ((window.__fp && window.__fp.userEmail) || 'FP').split('@')[0].slice(0, 10);
+      })();
       const today = new Date();
       const wdays = ['日','月','火','水','木','金','土'];
       const md = `${today.getMonth()+1}/${today.getDate()} (${wdays[today.getDay()]})`;
@@ -1878,7 +1886,7 @@ window.fpReadyAfterAuth = function() {
 <script>
 (function(){
   // 最新の ver を 1 箇所に集約 (fpReadyAfterAuth 側と一致させる必要あり)
-  const FP_VERSION = "20260624G-fast-light";
+  const FP_VERSION = "20260624H-name-cap";
   try { window.FP_VERSION = FP_VERSION; } catch(_) {}
   const loadTime = new Date();
   const hhmm = String(loadTime.getHours()).padStart(2,'0') + ':' + String(loadTime.getMinutes()).padStart(2,'0');

@@ -5363,6 +5363,18 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
     try {
       const r = await fetch(getCloudRunApi());
       liveData = await r.json();
+      // ★ オーナーfb 2026-06-24 (重さ解消 Phase 2):
+      //   ai_results / survey_answers / line_messages は データ蓄積で 膨大化 → メモリ圧迫
+      //   各配列を 直近順に 上限 cap (UI は ほぼ 直近しか 使わない / 必要時は 議事録モーダル で直fetch)
+      const capArray = (arr, limit) => Array.isArray(arr) && arr.length > limit
+        ? arr.slice().sort((a, b) => String(b.ts || b.createdAt || '').localeCompare(String(a.ts || a.createdAt || ''))).slice(0, limit)
+        : (arr || []);
+      if (liveData) {
+        liveData.ai_results = capArray(liveData.ai_results, 200);          // 議事録 直近200件
+        liveData.survey_answers = capArray(liveData.survey_answers, 500);  // アンケート 直近500件
+        liveData.line_messages = capArray(liveData.line_messages, 1000);   // LINE msg 直近1000件
+        liveData.bookings = liveData.bookings || [];
+      }
       // ※ 削除済: 旧コード「cleared flag で liveData 全配列空に強制上書き」
       //   → GAS resetAll で実データを消したので強制上書き不要。
       //   → リセット後に新規予約しても、この強制上書きで消えてしまうバグの原因だった。
