@@ -5367,25 +5367,15 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
     try {
       const r = await fetch(getCloudRunApi());
       liveData = await r.json();
-      // ★ オーナーfb 2026-06-25 (重さ解消 Phase 3):
-      //   transcript(文字起こし全文) が 1件10KB+ × 200件 = 2MB がメモリ+localStorage常駐 → 重さの主因
-      //   cap を 200→80 に削減 + 古い議事録(最新20件以降) は transcript を truncate (要約のみ残す)
+      // ★ オーナーfb 2026-06-24 (重さ解消 Phase 2):
+      //   実務影響を 避けるため cap は 緩め に戻す (古い議事録/LINE が 消えると FP の業務に支障)
       const capArray = (arr, limit) => Array.isArray(arr) && arr.length > limit
         ? arr.slice().sort((a, b) => String(b.ts || b.createdAt || '').localeCompare(String(a.ts || a.createdAt || ''))).slice(0, limit)
         : (arr || []);
       if (liveData) {
-        liveData.ai_results = capArray(liveData.ai_results, 80);
-        // 最新20件 だけ full transcript、 残り は 3000字 で trim (UI は 「全文を見る」 で 表示するが 詳細は backend 再fetch可)
-        try {
-          liveData.ai_results.forEach((r, i) => {
-            if (i >= 20 && typeof r.transcript === 'string' && r.transcript.length > 3000) {
-              r.transcript = r.transcript.slice(0, 3000) + '\n\n…(以下省略 / 全文は backend 再取得可)';
-              r._transcriptTrimmed = true;
-            }
-          });
-        } catch (_) {}
-        liveData.survey_answers = capArray(liveData.survey_answers, 300);
-        liveData.line_messages = capArray(liveData.line_messages, 500);
+        liveData.ai_results = capArray(liveData.ai_results, 200);
+        liveData.survey_answers = capArray(liveData.survey_answers, 500);
+        liveData.line_messages = capArray(liveData.line_messages, 1000);
         liveData.bookings = liveData.bookings || [];
       }
       // ※ 削除済: 旧コード「cleared flag で liveData 全配列空に強制上書き」
@@ -5426,25 +5416,16 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
             if (seen) return;
             const entry = { from: 'user', direction: 'in', text: m.text, message: m.text, ts: m.ts, date: String(m.ts || '').slice(0, 10), source: 'gas-webhook' };
             c.lineHistory.push(entry);
-            // 独立キーにも保存 (リロード耐性)
+            // 独立キーにも保存 (リロード耐性) — 古いLINE消すと FPの業務に支障 → cap せず 全保持
             try {
               const key = 'fp-line-history-' + c.id;
               const arr = JSON.parse(localStorage.getItem(key) || '[]');
               arr.push(entry);
-              // ★ 2026-06-25 軽量化: 顧客毎 lineHistory cap 200件 (古いものから drop) → localStorage膨張防止
-              if (arr.length > 200) arr.splice(0, arr.length - 200);
               localStorage.setItem(key, JSON.stringify(arr));
             } catch (_) {}
             merged++;
           });
           if (merged > 0) {
-            // ★ 2026-06-25 軽量化: c.lineHistory も 顧客毎 200件で cap (古いものdrop)
-            window.DUMMY_CLIENTS.forEach(cli => {
-              if (Array.isArray(cli.lineHistory) && cli.lineHistory.length > 200) {
-                cli.lineHistory.sort((a, b) => String(a.ts || '').localeCompare(String(b.ts || '')));
-                cli.lineHistory.splice(0, cli.lineHistory.length - 200);
-              }
-            });
             localStorage.setItem('fp-crm-clients-v1', JSON.stringify(window.DUMMY_CLIENTS));
             console.log('[line_messages] merged', merged, 'incoming msgs to client.lineHistory');
           }
