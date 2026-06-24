@@ -3373,59 +3373,6 @@
         cntEl.textContent = totalCards;
       }
     } catch (_) {}
-    // ★ オーナーfb 2026-06-24: 議事録 PDF エクスポート
-    document.querySelectorAll('[data-pdf-export]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const bookingTs = btn.dataset.pdfExport;
-        const card = btn.closest('.fp-meeting-card');
-        if (!card) return;
-        // 議事録カード の中身 を 整形して 新window へ 印刷
-        const customerName = window._fpCurrentClient?.name || 'お客様';
-        const fpName = (window.__fp?.tenantName || '').replace(/ — DEMO ビュー/, '') || 'FP事務所';
-        const dateTitle = card.querySelector('.fp-meeting-card-date')?.textContent?.trim() || '面談';
-        const eyebrow = card.querySelector('.fp-meeting-card-eyebrow')?.textContent?.trim() || '';
-        const summary = card.querySelector('.fp-minutes-view')?.textContent?.trim() || '';
-        const transcript = card.querySelector('details > div:last-child')?.textContent?.trim() || '';
-        const concerns = [...card.querySelectorAll('.fp-concern-chip')].map(c => c.textContent.trim());
-        const predictions = [...card.querySelectorAll('.fp-meeting-block ul li')].map(li => li.textContent.trim());
-        const html = `<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><title>議事録 - ${escapeHtml(customerName)} 様 - ${escapeHtml(dateTitle)}</title>
-        <style>
-          * { box-sizing: border-box; }
-          body { font-family: 'Noto Sans JP','Hiragino Sans',sans-serif; color: #1F2A3F; max-width: 720px; margin: 0 auto; padding: 36px 32px; line-height: 1.75; }
-          .header { border-bottom: 3px solid #C19A3A; padding-bottom: 20px; margin-bottom: 28px; }
-          .eyebrow { font-size: 10px; letter-spacing: 0.2em; color: #8B7D5D; font-weight: 700; text-transform: uppercase; }
-          h1 { font-family: 'Noto Serif JP',serif; font-size: 24px; margin: 6px 0 4px; font-weight: 700; }
-          .meta { font-size: 12px; color: #4A556A; margin-top: 6px; }
-          h2 { font-size: 14px; font-weight: 800; color: #1F2A3F; border-left: 3px solid #C19A3A; padding-left: 10px; margin: 28px 0 10px; }
-          .body { font-size: 13.5px; white-space: pre-wrap; }
-          .chips { display: flex; flex-wrap: wrap; gap: 6px; }
-          .chip { background: #FBF5E3; border: 1px solid #E8D9A8; color: #5e4d1a; padding: 3px 10px; border-radius: 99px; font-size: 11px; font-weight: 700; }
-          ul { padding-left: 22px; }
-          li { margin: 4px 0; font-size: 13px; }
-          .foot { margin-top: 40px; padding-top: 16px; border-top: 1px solid #E8D9A8; font-size: 10px; color: #8B7D5D; }
-          @media print {
-            body { padding: 24px; }
-            @page { margin: 16mm; }
-          }
-        </style></head><body>
-        <div class="header">
-          <div class="eyebrow">${escapeHtml(eyebrow || 'MEETING MINUTES')}</div>
-          <h1>${escapeHtml(customerName)} 様 — 面談議事録</h1>
-          <div class="meta">${escapeHtml(dateTitle)} ・ ${escapeHtml(fpName)}</div>
-        </div>
-        ${summary && !summary.startsWith('議事録 未生成') ? `<h2>議事録 (AI 要約)</h2><div class="body">${escapeHtml(summary)}</div>` : ''}
-        ${concerns.length > 0 ? `<h2>お客様の関心事</h2><div class="chips">${concerns.map(c => `<span class="chip">${escapeHtml(c)}</span>`).join('')}</div>` : ''}
-        ${predictions.length > 0 ? `<h2>🔮 次回 聞かれそうな質問</h2><ul>${predictions.map(p => `<li>${escapeHtml(p)}</li>`).join('')}</ul>` : ''}
-        ${transcript ? `<h2>文字起こし全文</h2><div class="body" style="font-size:11.5px;color:#475569;">${escapeHtml(transcript)}</div>` : ''}
-        <div class="foot">FP Compass で 生成 ・ ${new Date().toLocaleDateString('ja-JP')} 出力 ・ ${escapeHtml(fpName)}</div>
-        <script>window.onload = () => { setTimeout(() => window.print(), 500); };<\/script>
-        </body></html>`;
-        const win = window.open('', '_blank');
-        if (!win) { alert('ポップアップ ブロック されました → 許可してください'); return; }
-        win.document.write(html);
-        win.document.close();
-      });
-    });
 
     // ★ 議事録 編集 / 保存 (CLOUD_RUN_BASE/api/save-ai-result 経由で GAS sheet 上書き)
     document.querySelectorAll('[data-minutes-editor]').forEach(wrap => {
@@ -4898,7 +4845,6 @@ ${ctxText}${surveyTxt}`;
                 </div>
                 <div class="fp-meeting-card-actions" style="display:flex;gap:6px;flex-wrap:wrap;">
                   ${b.driveUrl ? `<a href="${escapeHtml(b.driveUrl)}" target="_blank" class="fp-btn fp-btn-sm fp-btn-gold">🎥 録画を見る</a>` : ''}
-                  <button class="fp-btn fp-btn-sm fp-btn-pdf" data-pdf-export="${escapeHtml(b.ts || '')}" style="background:#C19A3A;border:1px solid #8B6F26;color:#fff;padding:7px 14px;border-radius:6px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 2px 6px rgba(193,154,58,0.35);letter-spacing:0.02em;">📄 議事録をPDFで保存</button>
                 </div>
               </div>
               ${aiData.transcript ? `
@@ -4988,9 +4934,6 @@ ${ctxText}${surveyTxt}`;
                     <div class="fp-meeting-card-eyebrow" style="font-size:13px !important;font-weight:900 !important;color:#1B3A5C !important;letter-spacing:0 !important;">📹 Zoom ${zN}回目 ${a.ts || a.createdAt ? `<span style="font-size:11px;color:#9CA3AF;font-weight:700;margin-left:8px;font-family:Menlo,monospace;">#${(()=>{ const d=new Date(a.ts || a.createdAt); return d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0')+'-'+String(d.getHours()).padStart(2,'0')+String(d.getMinutes()).padStart(2,'0'); })()}</span>` : ''}</div>
                     <div class="fp-meeting-card-date" style="font-size:14px;font-weight:700;">${escapeHtml(fmtDateRobust(a.ts || a.createdAt) || fmtDateRobust(a.date))} ${escapeHtml(fmtJstTime(a.ts || a.createdAt))} 面談</div>
                     ${a.ts || a.createdAt ? `<div class="fp-meeting-card-recstart" style="font-size:11.5px;color:#6B7280;font-weight:600;margin-top:3px;">録画開始: ${escapeHtml(fmtJstTime(a.ts || a.createdAt))} (${escapeHtml(fmtDateRobust(a.ts || a.createdAt))})</div>` : ''}
-                  </div>
-                  <div class="fp-meeting-card-actions" style="display:flex;gap:6px;flex-wrap:wrap;">
-                    <button class="fp-btn fp-btn-sm fp-btn-pdf" data-pdf-export="${escapeHtml(a.bookingTs || a.ts || a.createdAt || '')}" style="background:#C19A3A;border:1px solid #8B6F26;color:#fff;padding:7px 14px;border-radius:6px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 2px 6px rgba(193,154,58,0.35);letter-spacing:0.02em;">📄 議事録をPDFで保存</button>
                   </div>
                 </div>
                 ${a.transcript ? `
