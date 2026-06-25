@@ -2136,6 +2136,27 @@
       if (!msg) { alert('メッセージ本文を入力してください。'); return; }
       const uid = booking && booking.userId;
       if (!uid) { showFriendAddPrompt(name, ''); return; }
+      // ★ 2026-06-26 v.O: Firestore booking で lineFriendId なし → uid が "fs:xxx" 形式 → LINE API reject
+      //   → 明示エラーで LINE送信スキップ + 予約だけキャンセル の選択肢を 出す
+      if (/^fs[:-]/.test(uid)) {
+        const skipLine = confirm('このお客様は LINE 未連携のため LINE 送信できません。\n\n[OK] LINE 送信せず 予約だけキャンセル\n[キャンセル] やめる\n\n※ お客様には 別途 メール / 電話 で キャンセル を 伝えてください');
+        if (!skipLine) return;
+        const btn = document.getElementById('fp-cancel-send');
+        btn.disabled = true; btn.textContent = '予約キャンセル中…';
+        try {
+          if (booking.id || booking.ts) {
+            await fetch(CLOUD_RUN_BASE + '/api/cancel-booking', {
+              method: 'POST', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ bookingId: booking.id || '', ts: booking.ts || '', userId: uid }),
+            }).catch(() => {});
+          }
+          overlay.remove();
+          alert('✓ 予約 を キャンセル しました (LINE 送信スキップ)');
+          await fetchLiveData();
+          renderLeadHubInner();
+        } catch (e) { alert('失敗: ' + e.message); btn.disabled = false; btn.textContent = '📤 この内容で送信 + 予約をキャンセル'; }
+        return;
+      }
       const btn = document.getElementById('fp-cancel-send');
       btn.disabled = true; btn.textContent = '送信中…';
       try {
@@ -2657,20 +2678,19 @@
     });
     document.getElementById('fp-qz-close').addEventListener('click', () => ov.remove());
     // ★ オーナーfb 2026-06-25: FPホストZoom入室 と 同時に startScreenRecording 起動
+    //   ★ 2026-06-26 v.O fix: window.open を 先にすると user gesture 切れて Invalid state エラー
+    //     → 画面共有ダイアログ先 → 許可後に startScreenRecording 内で Zoom を全画面で開く
+    //     → ホスト URL は session に 保持して startScreenRecording が 開く zoom URL を 差替え
     const joinRecBtn = document.getElementById('fp-qz-join-record');
     if (joinRecBtn) joinRecBtn.addEventListener('click', async () => {
       joinRecBtn.disabled = true;
-      joinRecBtn.innerHTML = '<span>Zoom 起動 + 録画準備中...</span>';
+      joinRecBtn.innerHTML = '<span>画面共有ダイアログ で 「Zoom + 音声」 選んで OK して...</span>';
       try {
-        // ① Zoom ホスト URL を 別タブ で 開く
-        const preZoomWin = window.open(result.hostZoomUrl, '_blank');
-        // ② 録画起動 (画面共有ダイアログ → 議事録 全自動 fp)
-        if (typeof startScreenRecording === 'function') {
-          await startScreenRecording(result.bookingTs, result.zoomUrl, { preZoomWin });
-          ov.remove();
-        } else {
-          throw new Error('startScreenRecording 未定義');
-        }
+        if (typeof startScreenRecording !== 'function') throw new Error('startScreenRecording 未定義');
+        // hostZoomUrl を Zoom URL の代わりに渡す (FP が ホスト権限で 入室するように)
+        // preZoomWin = null → 画面共有許可後に startScreenRecording 内で window.open する設計
+        await startScreenRecording(result.bookingTs, result.hostZoomUrl, null);
+        ov.remove();
       } catch (e) {
         joinRecBtn.disabled = false;
         joinRecBtn.innerHTML = '<span>📹 FPとして Zoom に参加 + 録画開始</span><span class="cta-arrow">→</span>';
@@ -8548,18 +8568,24 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
         isInperson: true,
       }));
 
-      // ★ オーナーfb 2026-06-25: 面談履歴 重複排除 (quick-* と autoCreated 顧客 で 同じ面談が 2重に出てたバグ fix)
-      //   dedup key: (date + time + 顧客名正規化) で 同一面談 を 1個に潰す
+      // ★ オーナーfb 2026-06-26 v.O: 面談履歴 重複排除 強化 (過去エントリも 確実に dedup)
+      //   normalize: 全空白(全角/半角)・「様」(末尾/中間)・date format (/と- 統一) 全部 揃える
+      const normName = (n) => String(n || '')
+        .replace(/様/g, '')           // 「様」 全箇所削除
+        .replace(/[\s　]/g, '')   // 全角/半角空白 全削除
+        .toLowerCase()
+        .trim();
+      const normDate = (d) => String(d || '').replace(/\//g, '-').slice(0, 10);
+      const normTime = (t) => String(t || '').slice(0, 5).replace(/:.*/, ($0) => $0);
       const dedupSeen = new Set();
       const all = quickRows.concat(completed)
         .sort((a, b) => {
-          const ka = String(a.date || '') + (a.time || '');
-          const kb = String(b.date || '') + (b.time || '');
+          const ka = normDate(a.date) + normTime(a.time);
+          const kb = normDate(b.date) + normTime(b.time);
           return kb.localeCompare(ka);  // 新しい順
         })
         .filter(b => {
-          const nameNorm = String(b.name || '').replace(/様$/, '').replace(/\s+/g, '').trim();
-          const key = (b.date || '') + '|' + (b.time || '') + '|' + nameNorm;
+          const key = normDate(b.date) + '|' + normTime(b.time) + '|' + normName(b.name);
           if (dedupSeen.has(key)) return false;
           dedupSeen.add(key);
           return true;
