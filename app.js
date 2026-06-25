@@ -2000,7 +2000,10 @@
       const detailUid = c._fsCustomerId || c.id;
       if (detailUid && window.LineAppLiveData?._lite && typeof window.getCustomerDetailApi === 'function' && !c._fullHydrated && !c._fullHydrating) {
         c._fullHydrating = true;
-        fetch(window.getCustomerDetailApi(detailUid))
+        (async () => {
+          const h = window.getFpAuthHeaders ? await window.getFpAuthHeaders() : { 'Content-Type': 'application/json' };
+          return fetch(window.getCustomerDetailApi(detailUid), { headers: h });
+        })()
           .then(r => r.ok ? r.json() : null)
           .then(detail => {
             if (!detail) return;

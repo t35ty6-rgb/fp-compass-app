@@ -5502,7 +5502,7 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
     // ② network fetch (バックグラウンドで最新化)
     showSyncIndicator('loading');
     try {
-      const r = await fetch(getCloudRunApi());
+      const r = await fetch(getCloudRunApi(), { headers: window.getFpAuthHeaders ? await window.getFpAuthHeaders() : { 'Content-Type': 'application/json' } });
       liveData = await r.json();
       // ★ オーナーfb 2026-06-24 (重さ解消 Phase 2):
       //   実務影響を 避けるため cap は 緩め に戻す (古い議事録/LINE が 消えると FP の業務に支障)
