@@ -3813,7 +3813,7 @@ ${ctxText}${surveyTxt}`;
             pushModalUrl(cur.id, key);
           }
         } catch (_) {}
-        // ★ LINE 履歴タブ開いたら「既読」マーク
+        // ★ LINE 履歴タブ開いたら「既読」マーク + 最新へ自動スクロール (オーナーfb 2026-06-25)
         if (key === 'line') {
           try {
             localStorage.setItem('fp-line-read-' + c.id, Date.now().toString());
@@ -3824,6 +3824,11 @@ ${ctxText}${surveyTxt}`;
               }
             });
           } catch(_) {}
+          // 最新メッセを 一番下 に スクロール (毎回 タブ開時 確実に底)
+          setTimeout(() => {
+            const chatEl = document.getElementById('cd-line-chat');
+            if (chatEl) chatEl.scrollTop = chatEl.scrollHeight;
+          }, 80);
         }
         // ★ Phase 2: Q&A タブ 初回開時 自動 分析
         if (key === 'qa') {
