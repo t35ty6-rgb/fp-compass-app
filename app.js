@@ -3245,6 +3245,15 @@
       </div>
     `;
     document.getElementById('modal-overlay').style.display = 'flex';
+    // ★ オーナーfb 2026-06-25: cd-line-chat が 出現 / 再描画 されたら 必ず 最新へ scroll
+    // (タブclick だけだと URL ?tab=line 復元 / hydrate 再render の時 漏れる)
+    const _scrollLineChatBottom = () => {
+      const el = document.getElementById('cd-line-chat');
+      if (el && el.offsetParent !== null) el.scrollTop = el.scrollHeight;
+    };
+    setTimeout(_scrollLineChatBottom, 50);
+    setTimeout(_scrollLineChatBottom, 250);
+    setTimeout(_scrollLineChatBottom, 800);
     document.getElementById('modal-close-btn').addEventListener('click', closeModal);
     // ★ 顧客削除ボタン
     const delBtn = document.getElementById('modal-delete-btn');
