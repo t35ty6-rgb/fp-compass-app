@@ -3347,8 +3347,61 @@
           const filtered = pending.filter(p => p.persistKey !== persistKey);
           if (filtered.length !== pending.length) localStorage.setItem('fp-ai-pending-sync', JSON.stringify(filtered));
         } catch (_) {}
-        // 顧客台帳再描画 (GAS から取り直す)
-        fetchLiveData().catch(() => {});
+        // ★ 2026-06-25 新議事録 即時反映 (オーナーfb: lite mode 導入後 議事録が顧客モーダルに 反映されない 問題)
+        //   ① liveData に 直接 inject (transcript 込み full data) — fetchLiveData の lite=1 で transcript stripped される前に
+        //   ② モーダル開いてる + 該当顧客なら 再描画 (議事録タブの active状態 維持)
+        const injectFullEntry = () => {
+          const live = window.LineAppLiveData = window.LineAppLiveData || {};
+          live.ai_results = live.ai_results || [];
+          // 同じ bookingTs+createdAt の 旧entry あれば置換
+          live.ai_results = live.ai_results.filter(a =>
+            !(a.bookingTs === entry.bookingTs && a.createdAt === entry.createdAt)
+          );
+          // unshift で 最新 を 先頭 (with full transcript)
+          live.ai_results.unshift({ ...entry });
+          live.ai_tasks = live.ai_tasks || [];
+          newTasks.forEach(t => {
+            if (!live.ai_tasks.find(x => x.bookingTs === t.bookingTs && x.task === t.task)) {
+              live.ai_tasks.push(t);
+            }
+          });
+          try { localStorage.setItem(LIVE_CACHE_KEY, JSON.stringify(live)); } catch (_) {}
+        };
+        // ★ 2026-06-25 新議事録 即時反映 (オーナーfb)
+        try {
+          injectFullEntry();
+          const currentCid = window._fpCurrentClient?.id;
+          let targetClient = (window.DUMMY_CLIENTS || []).find(c =>
+            (c.lineFriendId && c.lineFriendId === userId) ||
+            (c.name && (c.name === nameKey || c.name === customerName))
+          );
+          // ★ fallback: 名前/userId match 失敗時、 現在モーダル開いてる客 を 対象に (録画フローは「この客の議事録」 が 自明)
+          if (!targetClient && window._fpCurrentClient) {
+            targetClient = window._fpCurrentClient;
+          }
+          // fetchLiveData が lite=1 で transcript strip するので、 完了後に再inject + モーダル再描画
+          fetchLiveData()
+            .then(() => { injectFullEntry(); })
+            .catch(() => {})
+            .finally(() => {
+              if (currentCid && targetClient && currentCid === targetClient.id
+                  && document.getElementById('modal-overlay')?.style.display === 'flex'
+                  && typeof window.FpApp?.openClientModal === 'function') {
+                try {
+                  const u = new URL(window.location);
+                  u.searchParams.set('tab', 'meetings');
+                  history.replaceState({ view: 'clients' }, '', u.pathname + u.search);
+                } catch (_) {}
+                try {
+                  window.FpApp.openClientModal(targetClient.id, { fromPopstate: true });
+                  setTimeout(() => {
+                    const tabBtn = document.querySelector('[data-cdtab="meetings"]');
+                    if (tabBtn && !tabBtn.classList.contains('cd-tab-active')) tabBtn.click();
+                  }, 200);
+                } catch (_) {}
+              }
+            });
+        } catch (refreshErr) { console.warn('[autoSaveAIResult] live inject + modal refresh fail:', refreshErr); }
         // ★ 中央 ポップアップ「顧客カード 反映完了」 + SKU (録画時刻ID) で 紐付け可視化
         try {
           const recDate = new Date();
