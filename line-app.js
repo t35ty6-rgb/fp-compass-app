@@ -3457,15 +3457,54 @@
               }
             });
         } catch (refreshErr) { console.warn('[autoSaveAIResult] live inject + modal refresh fail:', refreshErr); }
-        // ★ 中央 ポップアップ「顧客カード 反映完了」 + SKU (録画時刻ID) で 紐付け可視化
+        // ★ オーナーfb 2026-06-26: 「議事録作成中」 toast は 即出す、
+        //   「✓ 反映完了」 toast は 顧客モーダル DOM に 該当 card が 実際に出てから出す (verify)
         try {
           const recDate = new Date();
           const sku = recDate.getFullYear() + String(recDate.getMonth()+1).padStart(2,'0') + String(recDate.getDate()).padStart(2,'0') + '-' + String(recDate.getHours()).padStart(2,'0') + String(recDate.getMinutes()).padStart(2,'0');
-          showCenterToast(
-            '議事録 #' + sku + ' を 反映しました',
-            (nameKey || 'お客様') + ' 様 → 議事録タブ → カード上の 「#' + sku + '」 が この議事録です',
-            { tone: 'success' }
-          );
+          // モーダル開いてないなら GAS 保存OK だけ報告
+          const modalOpen = document.getElementById('modal-overlay')?.style.display === 'flex';
+          const targetCurrent = (function () {
+            try {
+              return window._fpCurrentClient && (
+                (window._fpCurrentClient.lineFriendId && window._fpCurrentClient.lineFriendId === userId) ||
+                (window._fpCurrentClient.name && (window._fpCurrentClient.name === nameKey || window._fpCurrentClient.name === customerName))
+              );
+            } catch (_) { return false; }
+          })();
+          if (!modalOpen || !targetCurrent) {
+            showCenterToast('議事録 #' + sku + ' を 保存しました',
+              (nameKey || 'お客様') + ' 様 → 顧客モーダル の 議事録タブ で 確認できます',
+              { tone: 'success' });
+          } else {
+            // モーダル開いてる + 該当客 → DOM に カード出るまで 最大 8秒 poll
+            const tsHead = String(entry.bookingTs || entry.ts || '').slice(0, 19);
+            let attempt = 0;
+            const maxAttempts = 16;  // 0.5秒 × 16 = 8秒
+            const poll = () => {
+              attempt++;
+              const cards = document.querySelectorAll('.fp-meeting-card');
+              const found = [...cards].some(c =>
+                c.textContent.includes('#' + sku) ||
+                (tsHead && c.dataset.bookingTs && String(c.dataset.bookingTs).slice(0, 19) === tsHead) ||
+                [...c.querySelectorAll('[data-pdf-export], [data-booking-ts]')].some(b =>
+                  (b.dataset.pdfExport || b.dataset.bookingTs || '').slice(0, 19) === tsHead
+                )
+              );
+              if (found) {
+                showCenterToast('✓ 議事録 #' + sku + ' を 顧客モーダル に 反映しました',
+                  (nameKey || 'お客様') + ' 様 → 議事録タブ で カード表示中',
+                  { tone: 'success' });
+              } else if (attempt < maxAttempts) {
+                setTimeout(poll, 500);
+              } else {
+                showCenterToast('⚠ 議事録 #' + sku + ' は 保存OK ですが モーダル反映 未確認',
+                  '顧客モーダル を 1度 閉じて 開き直すと 表示されます',
+                  { tone: 'warning' });
+              }
+            };
+            setTimeout(poll, 500);  // 初回 0.5秒待ち (hydrate + re-render 完了見込み)
+          }
         } catch (_) {}
       } else {
         console.warn('[autoSaveAIResult] GAS 4回retry失敗→pending-sync 蓄積', d);
