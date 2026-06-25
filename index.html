@@ -1273,7 +1273,7 @@ window.fpReadyAfterAuth = function() {
     });
   })();
 
-  const ver = "20260625M-minutes-immediate-refresh";
+  const ver = "20260625N-multi-fix";
   const scripts = [
     "life-events.js?v=" + ver,
     "recommender.js?v=" + ver,
@@ -1973,7 +1973,7 @@ window.fpReadyAfterAuth = function() {
 <script>
 (function(){
   // 最新の ver を 1 箇所に集約 (fpReadyAfterAuth 側と一致させる必要あり)
-  const FP_VERSION = "20260625M-minutes-immediate-refresh";
+  const FP_VERSION = "20260625N-multi-fix";
   try { window.FP_VERSION = FP_VERSION; } catch(_) {}
   const loadTime = new Date();
   const hhmm = String(loadTime.getHours()).padStart(2,'0') + ':' + String(loadTime.getMinutes()).padStart(2,'0');

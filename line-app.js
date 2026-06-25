@@ -2603,13 +2603,14 @@
              <div style="display:inline-flex;align-items:center;gap:6px;background:#D1FAE5;color:#065F46;font-size:11px;font-weight:800;padding:5px 12px;border-radius:99px;letter-spacing:0.08em;margin-bottom:14px;">✓ LINE 送信済</div>`
           : `<p style="font-size:13.5px;color:#1F2A3F;line-height:1.7;margin:0 0 16px;"><strong style="color:#9A5A18;">LINE 未連携のお客様</strong>のため、 下の方法で URL を お伝えください。 まず <strong>「FPとして 参加」</strong> で Zoom 開いて お客様の入室を 待ちましょう。</p>`}
 
-        <!-- FP 用 host URL — メインCTA -->
+        <!-- FP 用 host URL — メインCTA (Zoom起動 + 画面録画自動開始) -->
         <div style="background:#FBF5E3;border:1.5px solid #C19A3A;border-radius:10px;padding:14px 16px;margin-bottom:14px;">
-          <div style="font-size:10.5px;font-weight:800;color:#9A5A18;letter-spacing:0.14em;margin-bottom:8px;">FP HOST URL (あなた用)</div>
-          <a href="${escapeHtml(result.hostZoomUrl)}" target="_blank" rel="noopener noreferrer" class="btn-cta-primary" style="text-decoration:none;justify-content:center;width:100%;">
-            <span>FPとして Zoom に参加 (host)</span>
+          <div style="font-size:10.5px;font-weight:800;color:#9A5A18;letter-spacing:0.14em;margin-bottom:8px;">FP HOST URL (あなた用) — クリックで Zoom 起動 + 画面録画自動開始</div>
+          <button id="fp-qz-join-record" class="btn-cta-primary" style="justify-content:center;width:100%;">
+            <span>📹 FPとして Zoom に参加 + 録画開始</span>
             <span class="cta-arrow">→</span>
-          </a>
+          </button>
+          <div style="font-size:11px;color:#6B7280;margin-top:8px;line-height:1.55;">画面共有ダイアログで <strong>「Zoom タブ」 + 音声を共有</strong> を 選んで OK → 自動で 議事録 生成 されます</div>
         </div>
 
         <!-- お客様用 URL 共有エリア -->
@@ -2655,6 +2656,27 @@
       if (w) w.style.display = w.style.display === 'none' ? 'block' : 'none';
     });
     document.getElementById('fp-qz-close').addEventListener('click', () => ov.remove());
+    // ★ オーナーfb 2026-06-25: FPホストZoom入室 と 同時に startScreenRecording 起動
+    const joinRecBtn = document.getElementById('fp-qz-join-record');
+    if (joinRecBtn) joinRecBtn.addEventListener('click', async () => {
+      joinRecBtn.disabled = true;
+      joinRecBtn.innerHTML = '<span>Zoom 起動 + 録画準備中...</span>';
+      try {
+        // ① Zoom ホスト URL を 別タブ で 開く
+        const preZoomWin = window.open(result.hostZoomUrl, '_blank');
+        // ② 録画起動 (画面共有ダイアログ → 議事録 全自動 fp)
+        if (typeof startScreenRecording === 'function') {
+          await startScreenRecording(result.bookingTs, result.zoomUrl, { preZoomWin });
+          ov.remove();
+        } else {
+          throw new Error('startScreenRecording 未定義');
+        }
+      } catch (e) {
+        joinRecBtn.disabled = false;
+        joinRecBtn.innerHTML = '<span>📹 FPとして Zoom に参加 + 録画開始</span><span class="cta-arrow">→</span>';
+        alert('録画起動 失敗: ' + (e?.message || e));
+      }
+    });
     document.getElementById('fp-qz-copy').addEventListener('click', () => {
       navigator.clipboard.writeText(result.zoomUrl).then(() => {
         const t = document.createElement('div');
@@ -4902,13 +4924,23 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
         openMemoModal(b || { name: 'お客様', userId: ts, date: new Date().toISOString().slice(0,10) }, ts);
       });
     });
-    // ✕ キャンセル → テンプレ選択モーダル
+    // ✕ キャンセル → テンプレ選択モーダル (オーナーfb 2026-06-25: Firestore confirmed booking も lookup対象に)
     document.querySelectorAll('.fp-cancel-booking').forEach(btn => {
       btn.addEventListener('click', () => {
         const tsEnc = btn.dataset.cancelTs;
         const ts = decodeURIComponent(tsEnc);
-        const b = ((liveData && liveData.bookings) || []).find(x => String(x.ts).slice(0,19) === ts.slice(0,19));
-        if (!b) { alert('予約が見つかりません'); return; }
+        const fsAsBookings = (window._fpFirestoreConfirmed || []).map(c => ({
+          _fsCustomerId: c.docId,
+          userId: c.lineFriendId || ('fs:' + c.docId),
+          name: c.name,
+          date: String(c.confirmedSlot || '').split(' ')[0] || '',
+          time: String(c.confirmedSlot || '').split(' ')[1] || '',
+          zoomUrl: c.zoomUrl,
+          ts: c.confirmedAt?.toDate?.()?.toISOString?.() || '',
+        }));
+        const all = ((liveData && liveData.bookings) || []).concat(fsAsBookings);
+        const b = all.find(x => String(x.ts).slice(0,19) === ts.slice(0,19));
+        if (!b) { alert('予約が見つかりません (legacy + Firestore 両方確認しましたが該当なし)'); return; }
         showCancelTemplatePicker(b);
       });
     });
@@ -8516,11 +8548,22 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
         isInperson: true,
       }));
 
-      const all = quickRows.concat(completed).sort((a, b) => {
-        const ka = String(a.date || '') + (a.time || '');
-        const kb = String(b.date || '') + (b.time || '');
-        return kb.localeCompare(ka);
-      });
+      // ★ オーナーfb 2026-06-25: 面談履歴 重複排除 (quick-* と autoCreated 顧客 で 同じ面談が 2重に出てたバグ fix)
+      //   dedup key: (date + time + 顧客名正規化) で 同一面談 を 1個に潰す
+      const dedupSeen = new Set();
+      const all = quickRows.concat(completed)
+        .sort((a, b) => {
+          const ka = String(a.date || '') + (a.time || '');
+          const kb = String(b.date || '') + (b.time || '');
+          return kb.localeCompare(ka);  // 新しい順
+        })
+        .filter(b => {
+          const nameNorm = String(b.name || '').replace(/様$/, '').replace(/\s+/g, '').trim();
+          const key = (b.date || '') + '|' + (b.time || '') + '|' + nameNorm;
+          if (dedupSeen.has(key)) return false;
+          dedupSeen.add(key);
+          return true;
+        });
 
       // バッジ更新
       const navCount = document.getElementById('nav-count-history');
