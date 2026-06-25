@@ -3179,29 +3179,17 @@
               </div>
               <div class="cd-line-composer">
                 ${!c.lineFriendId ? `
-                  <!-- ★ 2026-06-22 roundK: LINE ID 後付け 紐付け input — 顧客登録 後に LINE 友だち追加してもらった時の流れ -->
+                  <!-- ★ 未紐付け 時 は CTA 入力欄を 上 に置く (紐付けないと LINE 送れない) -->
                   <div style="background:#FBF5E3;border:1.5px solid #C19A3A;border-radius:10px;padding:12px 14px;margin-bottom:12px;">
                     <div style="font-size:11px;font-weight:800;color:#9A5A18;letter-spacing:0.12em;margin-bottom:6px;">🔗 LINE 友だち ID を 後から 紐付け</div>
-                    <p style="font-size:11.5px;color:#5e4d1a;line-height:1.65;margin:0 0 10px;">先に Zoom などで お会いした お客様。 後で 公式LINE を 友だち追加してもらったら、 ここで <strong>LINE userId</strong> を 入れて 紐付けてください。 LINE 履歴も 紐付きます。 取得方法 は LINE連携済 顧客 を 開くと 同じ枠に 「📋 ID をコピー」 ボタン が 出ます。</p>
+                    <p style="font-size:11.5px;color:#5e4d1a;line-height:1.65;margin:0 0 10px;">先に Zoom などで お会いした お客様。 後で 公式LINE を 友だち追加してもらったら、 ここで <strong>LINE userId</strong> を 入れて 紐付けてください。 LINE 履歴も 紐付きます。 取得方法 は LINE連携済 顧客 を 開くと 「📋 ID をコピー」 ボタン が 出ます。</p>
                     <div style="display:flex;gap:8px;align-items:stretch;">
-                      <input type="text" id="cd-lineid-attach-input" placeholder="U+32文字 の LINE userId (例: U6f07ed9af4afce1bb...)" style="flex:1;padding:8px 12px;font-size:12px;font-family:'JetBrains Mono',monospace;border:1.5px solid #E8D9A8;border-radius:7px;background:#fff;">
+                      <input type="text" id="cd-lineid-attach-input" placeholder="U+32文字 の LINE userId" style="flex:1;padding:8px 12px;font-size:12px;font-family:'JetBrains Mono',monospace;border:1.5px solid #E8D9A8;border-radius:7px;background:#fff;">
                       <button id="cd-lineid-attach-btn" data-cid="${escapeHtml(c.id)}" class="btn-cta-primary" style="padding:8px 18px;font-size:12.5px;border-radius:7px;justify-content:center;"><span>紐付ける</span></button>
                     </div>
                     <div id="cd-lineid-attach-msg" style="font-size:11px;color:#9A5A18;margin-top:8px;min-height:14px;"></div>
                   </div>
-                ` : `
-                  <!-- ★ オーナーfb 2026-06-23: LINE 連携済 客 で userId 表示+コピー + 既存客マージ -->
-                  <div style="background:#F0FDF4;border:1.5px solid #06C755;border-radius:10px;padding:10px 14px;margin-bottom:12px;">
-                    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-                      <div style="flex:1 1 auto;min-width:0;">
-                        <div style="font-size:11px;font-weight:800;color:#065F46;letter-spacing:0.12em;margin-bottom:4px;">🔗 LINE userId (この客の)</div>
-                        <code id="cd-lineid-show" style="font-size:11px;font-family:'JetBrains Mono',monospace;color:#0F172A;background:#fff;padding:4px 8px;border-radius:5px;border:1px solid #BBF7D0;display:inline-block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(c.lineFriendId)}</code>
-                      </div>
-                      <button id="cd-lineid-copy" data-uid="${escapeHtml(c.lineFriendId)}" style="background:#06C755;color:#fff;border:none;padding:8px 14px;border-radius:7px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;flex-shrink:0;">📋 コピー</button>
-                    </div>
-                    <button id="cd-merge-existing" data-cid="${escapeHtml(c.id)}" data-uid="${escapeHtml(c.lineFriendId)}" style="margin-top:8px;width:100%;background:#fff;color:#065F46;border:1.5px solid #06C755;padding:9px 12px;border-radius:7px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit;">→ この客は 既に登録済 (既存客に マージ)</button>
-                  </div>
-                `}
+                ` : ''}
                 <textarea id="cd-line-input" placeholder="メッセージを入力... (Cmd+Enter で送信)"></textarea>
                 <div class="cd-line-composer-foot">
                   <span class="cd-line-composer-meta">${c.lineFriendId ? '✓ LINE連携済' : '⚠ LINE friend ID 未登録 (上の枠で 紐付け)'}</span>
@@ -3211,6 +3199,17 @@
                   </button>
                 </div>
                 <div id="cd-line-msg" class="cd-line-msg-status"></div>
+                ${c.lineFriendId ? `
+                  <!-- ★ オーナーfb 2026-06-25: LINE連携済の userId 表示+マージ ボタンは 送信box の下 に移動 (重要度低) -->
+                  <details style="margin-top:14px;padding:8px 12px;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:7px;">
+                    <summary style="font-size:11px;font-weight:700;color:#065F46;cursor:pointer;letter-spacing:0.06em;list-style:none;">🔗 LINE userId / 既存客マージ</summary>
+                    <div style="margin-top:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                      <code id="cd-lineid-show" style="font-size:10.5px;font-family:'JetBrains Mono',monospace;color:#0F172A;background:#fff;padding:3px 7px;border-radius:4px;border:1px solid #BBF7D0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;">${escapeHtml(c.lineFriendId)}</code>
+                      <button id="cd-lineid-copy" data-uid="${escapeHtml(c.lineFriendId)}" style="background:#06C755;color:#fff;border:none;padding:5px 10px;border-radius:5px;font-size:10.5px;font-weight:700;cursor:pointer;font-family:inherit;flex-shrink:0;">📋 コピー</button>
+                      <button id="cd-merge-existing" data-cid="${escapeHtml(c.id)}" data-uid="${escapeHtml(c.lineFriendId)}" style="background:#fff;color:#065F46;border:1px solid #06C755;padding:5px 10px;border-radius:5px;font-size:10.5px;font-weight:700;cursor:pointer;font-family:inherit;flex-shrink:0;">→ 既存客に マージ</button>
+                    </div>
+                  </details>
+                ` : ''}
               </div>
             </div>
 
