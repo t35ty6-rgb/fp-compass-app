@@ -8,6 +8,168 @@
   const LS_REAL_MODE = 'fp-crm-real-mode';
   const LS_REAL_CLIENTS = 'fp-crm-real-clients-v1';
 
+  // ============================
+  // ★ 2026-06-26 重さ解消 Phase 5: 再render 削減ユーティリティ
+  // ============================
+  // (a) debounce: 入力イベントを wait ms 間隔に間引く
+  function debounce(fn, wait) {
+    let t;
+    return function (...args) {
+      clearTimeout(t);
+      t = setTimeout(() => fn.apply(this, args), wait);
+    };
+  }
+  // (b) clients データ署名 — 変わってない時は再render しない
+  function clientsSignature() {
+    try {
+      const arr = (typeof clients !== 'undefined' && clients) ? clients : [];
+      let h = arr.length + ':';
+      for (let i = 0; i < arr.length; i++) {
+        const c = arr[i];
+        h += (c.id || '') + (c.lastContact || '') + (c.status || '') + ((c.lineHistory || []).length) + '|';
+      }
+      const ld = window.LineAppLiveData || {};
+      h += 'L' + ((ld.line_messages || []).length) + 'A' + ((ld.ai_results || []).length) + 'B' + ((ld.bookings || []).length);
+      return h;
+    } catch (_) { return String(Date.now()); }
+  }
+  let _lastClientsSig = '';
+  // (c) 顧客モーダルが開いている間は 一覧の再render を保留 (ユーザー視野外)
+  function isClientModalOpen() {
+    try {
+      const ov = document.getElementById('modal-overlay');
+      if (!ov) return false;
+      const d = ov.style.display;
+      return d && d !== 'none';
+    } catch (_) { return false; }
+  }
+  let _pendingBgRender = false;
+  // (d) 背景polling 由来の再render を 1.5秒 coalesce
+  const scheduleBgRenderClients = debounce(function () {
+    if (isClientModalOpen()) { _pendingBgRender = true; return; }
+    const sig = clientsSignature();
+    if (sig === _lastClientsSig) return; // データ変化なし → skip
+    _lastClientsSig = sig;
+    try { renderClients(); } catch (e) { console.warn('scheduleBgRenderClients fail:', e); }
+  }, 1500);
+  window._fpScheduleBgRenderClients = scheduleBgRenderClients;
+  // モーダル close 時に保留分を消化
+  window._fpFlushPendingBgRender = function () {
+    if (!_pendingBgRender) return;
+    _pendingBgRender = false;
+    scheduleBgRenderClients();
+  };
+
+  // ★ 2026-06-25 軽量化 Phase 3: localStorage 蓄積 診断 + 自動 cleanup
+  //   起動時 1回 全key size 計測 + over-quota 警告 + 古い fp-ai-backup-* 削除 (>7日)
+  //   quota 5MB 超で setItem silent fail → モーダル / cache 全部死ぬ 真因対策
+  (function lsAudit() {
+    try {
+      const keys = Object.keys(localStorage);
+      let total = 0;
+      const sizes = [];
+      keys.forEach(k => {
+        const v = localStorage.getItem(k) || '';
+        // UTF-16 で 1文字 2byte 換算 (実 quota も 同じ計測)
+        const bytes = (k.length + v.length) * 2;
+        total += bytes;
+        sizes.push({ k, bytes });
+      });
+      sizes.sort((a, b) => b.bytes - a.bytes);
+      const fmt = b => (b / 1024).toFixed(1) + 'KB';
+      console.log('[ls-audit] total', fmt(total), '/', keys.length, 'keys (quota 5120KB)');
+      console.log('[ls-audit] top 5:', sizes.slice(0, 5).map(s => s.k + '=' + fmt(s.bytes)).join(', '));
+      // 80% 超で警告 / 95% 超で 強制 cleanup
+      if (total > 5120 * 1024 * 0.8) {
+        console.warn('[ls-audit] WARN over 80% quota:', fmt(total), '— cleanup を 推奨');
+      }
+      // ① fp-ai-backup-* の 古いの 削除 (>7日)
+      const NOW = Date.now();
+      const WEEK = 7 * 24 * 3600 * 1000;
+      let purged = 0, purgedBytes = 0;
+      keys.forEach(k => {
+        if (!k.startsWith('fp-ai-backup-')) return;
+        // key 末尾 は `-${Date.now()}` (line-app.js 3361行 persistKey 形式)
+        const m = k.match(/-(\d{13})$/);
+        if (!m) return;
+        const created = parseInt(m[1], 10);
+        if (NOW - created > WEEK) {
+          const v = localStorage.getItem(k) || '';
+          purgedBytes += (k.length + v.length) * 2;
+          localStorage.removeItem(k);
+          purged++;
+        }
+      });
+      if (purged > 0) console.log('[ls-audit] purged', purged, 'old fp-ai-backup-* keys (', fmt(purgedBytes), ')');
+      // ② 95% 超なら LIVE_CACHE_KEY 投棄 (次回 fetch で再生成、 transcript stripped 版で軽くなる)
+      if (total > 5120 * 1024 * 0.95) {
+        try {
+          localStorage.removeItem('fp-livedata-cache-v1');
+          console.warn('[ls-audit] over 95% → fp-livedata-cache-v1 投棄 (次回 fetch で再生成)');
+        } catch (_) {}
+      }
+    } catch (e) { console.warn('[ls-audit] fail:', e); }
+  })();
+
+  // ★ 顧客台帳 保存時 lineHistory が 巨大なら 末尾 N件 だけ in-memory に残し
+  //   全件は fp-line-history-{id} の 独立キー に 保持 (既存 ensureLineHistory_ で hydrate)
+  //   これで fp-crm-clients-v1 1個 で 数MB 食う事象 を 構造的に 防ぐ
+  function trimLineHistoryForSave(arr) {
+    if (!Array.isArray(arr)) return arr;
+    const KEEP_INLINE = 50; // 直近50件のみ inline
+    return arr.map(c => {
+      if (!c || !Array.isArray(c.lineHistory) || c.lineHistory.length <= KEEP_INLINE) return c;
+      try {
+        // 全件 を 独立キー へ ミラー (重複 ts は除去)
+        const key = 'fp-line-history-' + c.id;
+        const existing = JSON.parse(localStorage.getItem(key) || '[]');
+        const seenTs = new Set(existing.map(m => m.ts).filter(Boolean));
+        c.lineHistory.forEach(m => {
+          if (!m.ts || !seenTs.has(m.ts)) { existing.push(m); seenTs.add(m.ts); }
+        });
+        existing.sort((a, b) => String(a.ts || '').localeCompare(String(b.ts || '')));
+        localStorage.setItem(key, JSON.stringify(existing));
+      } catch (_) {}
+      const trimmed = Object.assign({}, c);
+      trimmed.lineHistory = c.lineHistory.slice(-KEEP_INLINE);
+      return trimmed;
+    });
+  }
+  window.__fpTrimLineHistoryForSave = trimLineHistoryForSave;
+
+  // ★ 全 setItem を 一括 intercept (個別 save site を 全部 書き換えるのは 退化リスク 高い)
+  //   - fp-crm-clients-v1: lineHistory >50件 を 独立キー へ 移して inline は 末尾50件 だけ保存
+  //   - fp-livedata-cache-v1: ai_results[].transcript を strip (server lite=1 と 同じ整形)
+  //   どちらも UI 表示には 影響なし (モーダル open 時 customer-detail で hydrate)
+  try {
+    const origSetItem = localStorage.setItem.bind(localStorage);
+    localStorage.setItem = function (k, v) {
+      try {
+        if (k === 'fp-crm-clients-v1' && typeof v === 'string' && v.length > 200 * 1024) {
+          const arr = JSON.parse(v);
+          if (Array.isArray(arr)) {
+            const trimmed = trimLineHistoryForSave(arr);
+            v = JSON.stringify(trimmed);
+          }
+        } else if (k === 'fp-livedata-cache-v1' && typeof v === 'string' && v.length > 200 * 1024) {
+          const live = JSON.parse(v);
+          if (live && Array.isArray(live.ai_results)) {
+            live.ai_results = live.ai_results.map(r => {
+              if (!r) return r;
+              const lite = Object.assign({}, r);
+              // 重い field を 削除 (モーダル open 時 GAS から再fetch される)
+              delete lite.transcript;
+              delete lite.full_transcript;
+              return lite;
+            });
+            v = JSON.stringify(live);
+          }
+        }
+      } catch (_) {}
+      return origSetItem(k, v);
+    };
+  } catch (_) {}
+
   // 客リスト = デモ客 (DUMMY_CLIENTS) + 実モード切替
   const demoClients = (window.DUMMY_CLIENTS || []).slice();
   function getRealClients() {
@@ -960,8 +1122,16 @@
   // 顧客一覧
   // ============================
   // line-app.js から呼ばれる: 顧客台帳の再描画
-  window.FPCrmRefreshClients = function() {
-    renderClients();
+  // ★ 2026-06-26 重さ解消 Phase 5: 背景polling 由来の連打は debounce/dedup する
+  //   options.immediate = true で 即時 render (ユーザー操作 直後 等)
+  window.FPCrmRefreshClients = function(options) {
+    options = options || {};
+    if (options.immediate) {
+      _lastClientsSig = clientsSignature();
+      try { renderClients(); } catch (e) { console.warn('FPCrmRefreshClients immediate fail:', e); }
+    } else {
+      scheduleBgRenderClients();
+    }
     // ★ Firestore 顧客 (line_survey + 候補日待ち) を line-app の lead hub に 反映
     if (window.refreshFirestoreCustomers) {
       try { window.refreshFirestoreCustomers(); } catch (_) {}
@@ -8486,6 +8656,8 @@ ${client.name}さん、ありがとうございます。
     if (!options.fromPopstate) {
       try { pushModalUrl(null, null); } catch (_) {}
     }
+    // ★ 2026-06-26 重さ解消 Phase 5: モーダル open 中に保留した 背景render を消化
+    try { if (typeof window._fpFlushPendingBgRender === 'function') window._fpFlushPendingBgRender(); } catch (_) {}
   }
 
   // ============================
@@ -9037,12 +9209,16 @@ ${client.name}さん、ありがとうございます。
       t.addEventListener('click', () => activateTab(t.dataset.tab));
     });
 
-    // 検索
+    // 検索 (★ 2026-06-26 重さ解消: 200ms debounce + 連打ガード)
     const searchEl = document.getElementById('client-search');
+    const debouncedSearchRender = debounce(() => {
+      _lastClientsSig = clientsSignature();
+      renderClients();
+    }, 200);
     searchEl.addEventListener('input', e => {
       state.search = e.target.value;
       saveState();
-      renderClients();
+      debouncedSearchRender();
     });
     document.getElementById('status-filter').addEventListener('change', e => {
       state.statusFilter = e.target.value;

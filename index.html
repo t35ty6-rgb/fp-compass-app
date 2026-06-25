@@ -24,8 +24,10 @@
 <link rel="stylesheet" href="styles-v2.css?v=20260531n">
 <link rel="stylesheet" href="styles-v3.css?v=20260531n">
 <link rel="stylesheet" href="styles-v8-workspace.css?v=20260603h-next-action">
-<script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<!-- ★ 2026-06-26 perf: lucide(350KB) と chart.js(201KB) を defer 化 -->
+<!--   どちらも DOMContentLoaded 後ハイドレートで OK (lucide: setInterval scan / chart: tryRender polling) -->
+<script defer src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -1273,20 +1275,22 @@ window.fpReadyAfterAuth = function() {
     });
   })();
 
-  const ver = "20260626A-rec-cancel-dedup";
-  const scripts = [
+  const ver = "20260626D-rerender-debounce";
+  // ★ 2026-06-26 perf: critical (画面初期表示に必須) と deferred (LINE/charts) を 分離
+  // critical: 顧客台帳・ホーム描画に必須
+  // deferred: LINE タブ (line-app.js 555KB) / dashboard charts (charts.js) → idle で 後ロード
+  const critical = [
     "life-events.js?v=" + ver,
     "recommender.js?v=" + ver,
     "line-data.js?v=" + ver,
     "app.js?v=" + ver,
+  ];
+  const deferred = [
     "line-app.js?v=" + ver,
     "charts.js?v=" + ver,
   ];
-  function load(i) {
-    if (i >= scripts.length) {
-      // ★ line-data.js が UPCOMING_BOOKINGS/HOT_LEADS/LEAD_FUNNEL を demo 値で
-      // 上書きするので、 認証済テナントでは Firestore データに即差し替え。
-      // (現状 Firestore に bookings/leads サブコレクション無いので空配列で確定)
+  function loadCritical(i) {
+    if (i >= critical.length) {
       window.UPCOMING_BOOKINGS = [];
       window.HOT_LEADS = [];
       window.LEAD_FUNNEL = { added: 0, surveyed: 0, booked: 0, completed: 0 };
@@ -1294,15 +1298,35 @@ window.fpReadyAfterAuth = function() {
       window.LEAD_FORM = {};
       // 全部終わったら DOMContentLoaded を擬似発火 (app.js が listening)
       document.dispatchEvent(new Event('DOMContentLoaded'));
+      // ★ critical 終わった後 idle で deferred を取りに行く
+      const startDeferred = () => loadDeferred(0);
+      if (window.requestIdleCallback) {
+        requestIdleCallback(startDeferred, { timeout: 2000 });
+      } else {
+        setTimeout(startDeferred, 100);
+      }
       return;
     }
     const s = document.createElement('script');
-    s.src = scripts[i];
-    s.onload = () => load(i + 1);
-    s.onerror = () => { console.error('script load failed:', scripts[i]); load(i + 1); };
+    s.src = critical[i];
+    s.onload = () => loadCritical(i + 1);
+    s.onerror = () => { console.error('script load failed:', critical[i]); loadCritical(i + 1); };
     document.body.appendChild(s);
   }
-  load(0);
+  function loadDeferred(i) {
+    if (i >= deferred.length) {
+      // line-app.js が後乗りなので bootLiveData を念のため 1回呼ぶ (race 回避)
+      try { if (window.LineApp && window.LineApp.bootLiveData) window.LineApp.bootLiveData(); } catch(_) {}
+      return;
+    }
+    const s = document.createElement('script');
+    s.src = deferred[i];
+    s.async = true;
+    s.onload = () => loadDeferred(i + 1);
+    s.onerror = () => { console.error('deferred script load failed:', deferred[i]); loadDeferred(i + 1); };
+    document.body.appendChild(s);
+  }
+  loadCritical(0);
 };
 </script>
 <script>
@@ -1973,7 +1997,7 @@ window.fpReadyAfterAuth = function() {
 <script>
 (function(){
   // 最新の ver を 1 箇所に集約 (fpReadyAfterAuth 側と一致させる必要あり)
-  const FP_VERSION = "20260626A-rec-cancel-dedup";
+  const FP_VERSION = "20260626D-rerender-debounce";
   try { window.FP_VERSION = FP_VERSION; } catch(_) {}
   const loadTime = new Date();
   const hhmm = String(loadTime.getHours()).padStart(2,'0') + ':' + String(loadTime.getMinutes()).padStart(2,'0');
