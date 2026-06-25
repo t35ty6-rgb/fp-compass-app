@@ -5004,14 +5004,26 @@ ${ctxText}${surveyTxt}`;
     // ★ 全 myBookings から zoomMeetingId set
     const myMeetingIds = new Set(myBookings.map(b => String(b.zoomMeetingId || '')).filter(Boolean));
     if (client.zoomMeetingId) myMeetingIds.add(String(client.zoomMeetingId));
+    // ★ オーナーfb 2026-06-26: lookup を broadly 化 (新規顧客/アンケート客 で モーダルに 反映されない 退化 fix)
+    //   match パターン: (1) lineFriendId 一致 / (2) Firestore docId 一致 / (3) docId プレフィクス 含む (quick-*) /
+    //                  (4) 名前正規化 一致 (様/空白吸収) / (5) booking ts/userId 一致 / (6) zoomMeetingId
+    const normName = (n) => String(n || '').replace(/様/g, '').replace(/[\s　]/g, '').toLowerCase().trim();
+    const cNameNorm = normName(client.name);
+    const cId = String(client.id || '');
+    const cLfid = String(client.lineFriendId || '');
     liveAiResults.forEach(r => {
-      // ★ strict 一致のみ (顧客名不明=「お客様」/空 の議事録は表示しない、 データ漏れ防止)
-      // ★ オーナーfb 2026-06-20: zoomMeetingId 一致 も match に追加 (instantZoom→議事録 救済)
       const rZoomMid = String(r.zoomMeetingId || r.meetingId || '');
-      const match = (r.userId && client.lineFriendId && r.userId === client.lineFriendId) ||
-                    (r.customerName && r.customerName !== 'お客様' && r.customerName === client.name) ||
-                    myBookings.some(b => (b.ts && b.ts === r.bookingTs) || (b.userId && r.userId && b.userId === r.userId)) ||
-                    (rZoomMid && myMeetingIds.has(rZoomMid));
+      const rUid = String(r.userId || '');
+      const rNameNorm = normName(r.customerName);
+      const match = (
+        (rUid && cLfid && rUid === cLfid) ||
+        (rUid && cId && rUid === cId) ||
+        (rUid && cId && rUid.indexOf(cId) >= 0) ||
+        (rUid && cLfid && rUid.indexOf(cLfid) >= 0) ||
+        (rNameNorm && cNameNorm && rNameNorm === cNameNorm && rNameNorm !== 'お客様' && rNameNorm !== '') ||
+        myBookings.some(b => (b.ts && b.ts === r.bookingTs) || (b.userId && rUid && b.userId === rUid)) ||
+        (rZoomMid && myMeetingIds.has(rZoomMid))
+      );
       if (!match) return;
       // key_concerns は文字列で来てるので JSON.parse
       let kc = r.key_concerns;

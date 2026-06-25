@@ -8649,6 +8649,31 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
         isInperson: true,
       }));
 
+      // ★ オーナーfb 2026-06-26: ai_results に あるが booking 一致 なし の議事録 を 救済して 面談履歴に出す
+      //   (新規 急遽客 / アンケート客 で 面談履歴 にも出ない退化 fix)
+      const bookingTsSet = new Set([...completed.map(b => String(b.ts || '').slice(0, 19)),
+                                     ...quickRows.map(q => String(q.ts || '').slice(0, 19))]);
+      const aiOrphanRows = (aiResults || [])
+        .filter(r => {
+          const rTs = String(r.bookingTs || r.ts || r.createdAt || '').slice(0, 19);
+          if (!rTs) return false;
+          if (bookingTsSet.has(rTs)) return false; // 既存 booking と重複
+          return !!(r.summary || r.transcript || (r.key_concerns && r.key_concerns.length > 0));
+        })
+        .map(r => {
+          const rTs = r.bookingTs || r.ts || r.createdAt;
+          const d = new Date(String(rTs).replace(' ', 'T'));
+          return {
+            ts: rTs,
+            date: r.date || (isNaN(d.getTime()) ? '' : d.toISOString().slice(0, 10)),
+            time: isNaN(d.getTime()) ? '' : d.toISOString().slice(11, 16),
+            name: (r.customerName || 'お客様') + (String(r.customerName || '').endsWith('様') ? '' : ' 様'),
+            userId: r.userId || '',
+            isOrphanAi: true,
+            _aiSummary: r.summary || '',
+          };
+        });
+
       // ★ オーナーfb 2026-06-26 v.O: 面談履歴 重複排除 強化 (過去エントリも 確実に dedup)
       //   normalize: 全空白(全角/半角)・「様」(末尾/中間)・date format (/と- 統一) 全部 揃える
       const normName = (n) => String(n || '')
@@ -8659,7 +8684,7 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
       const normDate = (d) => String(d || '').replace(/\//g, '-').slice(0, 10);
       const normTime = (t) => String(t || '').slice(0, 5).replace(/:.*/, ($0) => $0);
       const dedupSeen = new Set();
-      const all = quickRows.concat(completed)
+      const all = quickRows.concat(completed).concat(aiOrphanRows)
         .sort((a, b) => {
           const ka = normDate(a.date) + normTime(a.time);
           const kb = normDate(b.date) + normTime(b.time);
