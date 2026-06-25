@@ -1275,7 +1275,7 @@ window.fpReadyAfterAuth = function() {
     });
   })();
 
-  const ver = "20260626D-rerender-debounce";
+  const ver = "20260626E-security-perf-bundle";
   // ★ 2026-06-26 perf: critical (画面初期表示に必須) と deferred (LINE/charts) を 分離
   // critical: 顧客台帳・ホーム描画に必須
   // deferred: LINE タブ (line-app.js 555KB) / dashboard charts (charts.js) → idle で 後ロード
@@ -1317,6 +1317,14 @@ window.fpReadyAfterAuth = function() {
     if (i >= deferred.length) {
       // line-app.js が後乗りなので bootLiveData を念のため 1回呼ぶ (race 回避)
       try { if (window.LineApp && window.LineApp.bootLiveData) window.LineApp.bootLiveData(); } catch(_) {}
+      // ★ deferred 完了前 に LINE タブ クリックされてた場合 フォローアップ
+      try {
+        if (window._pendingLineView && window.LineApp) {
+          if (!window._lineInited) { window.LineApp.init(); window._lineInited = true; }
+          window.LineApp.activateSubview(window._pendingLineView);
+          window._pendingLineView = null;
+        }
+      } catch(_) {}
       return;
     }
     const s = document.createElement('script');
@@ -1997,7 +2005,7 @@ window.fpReadyAfterAuth = function() {
 <script>
 (function(){
   // 最新の ver を 1 箇所に集約 (fpReadyAfterAuth 側と一致させる必要あり)
-  const FP_VERSION = "20260626D-rerender-debounce";
+  const FP_VERSION = "20260626E-security-perf-bundle";
   try { window.FP_VERSION = FP_VERSION; } catch(_) {}
   const loadTime = new Date();
   const hhmm = String(loadTime.getHours()).padStart(2,'0') + ':' + String(loadTime.getMinutes()).padStart(2,'0');

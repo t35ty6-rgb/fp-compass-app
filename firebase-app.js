@@ -24,6 +24,18 @@ const db = getFirestore(app);
 // ブラウザを閉じても (30日まで) 自動ログイン維持
 setPersistence(auth, browserLocalPersistence).catch(console.error);
 
+// ★ 2026-06-26: 全 Cloud Run API call で Firebase ID Token Bearer 付与 (auth gate 対応)
+window.getFpAuthHeaders = async function (extra) {
+  const u = auth.currentUser;
+  if (!u) return Object.assign({ 'Content-Type': 'application/json' }, extra || {});
+  try {
+    const tok = await u.getIdToken();
+    return Object.assign({ 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok }, extra || {});
+  } catch (_) {
+    return Object.assign({ 'Content-Type': 'application/json' }, extra || {});
+  }
+};
+
 // ============ 紹介パラメータ捕捉 (?ref / ?agent) ============
 // 初回アクセス時に localStorage に保存、サインアップ時に tenant に紐付け
 (function captureReferral() {
@@ -261,6 +273,7 @@ onAuthStateChanged(auth, async (user) => {
   if (!userDoc) {
     loginEl.style.display = "grid";
     msg("err", `${user.email} は Skeleton 側にまだ登録されていません。新規登録タブで作成してください。`);
+    try { _clearFpLocalState(); } catch (_) {}
     await signOut(auth);
     return;
   }
@@ -349,7 +362,22 @@ function escapeHtml(s) {
 }
 
 // ============ ログアウト ============
+// ★ Critical-C: 端末共有/離席時の PII 漏洩 防止
+//   signOut 前に localStorage の fp-* キー (顧客台帳/lineHistory/議事録キャッシュ) を 全 wipe
+function _clearFpLocalState() {
+  try {
+    const keys = Object.keys(localStorage);
+    keys.forEach(k => {
+      // fp- prefix (顧客台帳/lineHistory/cache) + fp-livedata + fp-tenantId + fpc.ref/agent も含める
+      if (k.startsWith('fp-') || k.startsWith('fpc.') || k === 'fp-tenantId') {
+        try { localStorage.removeItem(k); } catch (_) {}
+      }
+    });
+  } catch (_) {}
+}
+
 $("logout-btn").addEventListener("click", async () => {
+  _clearFpLocalState();
   await signOut(auth);
   window.location.reload();
 });

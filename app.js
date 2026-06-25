@@ -128,7 +128,9 @@
           if (!m.ts || !seenTs.has(m.ts)) { existing.push(m); seenTs.add(m.ts); }
         });
         existing.sort((a, b) => String(a.ts || '').localeCompare(String(b.ts || '')));
-        localStorage.setItem(key, JSON.stringify(existing));
+        // ★ Critical-C: cap 500件 (古いから drop) — localStorage quota 突破 防止
+        const capped = existing.length > 500 ? existing.slice(-500) : existing;
+        localStorage.setItem(key, JSON.stringify(capped));
       } catch (_) {}
       const trimmed = Object.assign({}, c);
       trimmed.lineHistory = c.lineHistory.slice(-KEEP_INLINE);
@@ -277,7 +279,11 @@
               const seen = newArr.some(h => String(h.ts || '').slice(0, 19) === ts && (h.text || h.message) === (m.text || m.message));
               if (!seen) newArr.push(m);
             });
-            if (oldArr.length > 0) localStorage.setItem(newKey, JSON.stringify(newArr));
+            if (oldArr.length > 0) {
+              // ★ Critical-C: cap 500件 (古いから drop)
+              const _cappedNewArr = newArr.length > 500 ? newArr.slice(-500) : newArr;
+              localStorage.setItem(newKey, JSON.stringify(_cappedNewArr));
+            }
             localStorage.removeItem(oldKey);
           } catch (_) {}
           toRemove.add(c.id);
@@ -376,6 +382,9 @@
           window._lineInited = true;
         }
         window.LineApp.activateSubview(name);
+      } else {
+        // ★ 2026-06-26 perf: line-app.js deferred ロード中なら ペンディング保存→ロード後 リプレイ
+        window._pendingLineView = name;
       }
     }
     // ★ URL更新 (popstate由来でない時 = ユーザclick / 初期化 など)
@@ -715,7 +724,7 @@
                 const ids = (typeof getClientTags === 'function') ? getClientTags(c.id) : [];
                 if (!ids.length) return '';
                 const tags = ids.map(id => master.find(t => t.id === id)).filter(Boolean);
-                return `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;">${tags.map(t => `<span style="background:${t.color}1A;color:${t.color};border:1px solid ${t.color}55;padding:1px 8px;border-radius:8px;font-size:10px;font-weight:700;line-height:1.6;">${escapeHtml(t.label)}</span>`).join('')}</div>`;
+                return `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;">${tags.map(t => { const col = validColor(t.color); return `<span style="background:${col}1A;color:${col};border:1px solid ${col}55;padding:1px 8px;border-radius:8px;font-size:10px;font-weight:700;line-height:1.6;">${escapeHtml(t.label)}</span>`; }).join('')}</div>`;
               })()}
             </div>
           </div>
@@ -1046,7 +1055,9 @@
           const key = 'fp-line-history-' + c.id;
           const arr = JSON.parse(localStorage.getItem(key) || '[]');
           arr.push(entry);
-          localStorage.setItem(key, JSON.stringify(arr));
+          // ★ Critical-C: cap 500件 (古いから drop) — quota 突破 防止
+          const _capped = arr.length > 500 ? arr.slice(-500) : arr;
+          localStorage.setItem(key, JSON.stringify(_capped));
         } catch (_) {}
         merged++;
       });
@@ -1363,7 +1374,7 @@
           <td>
             <div class="client-row-name">
               ${c.linePictureUrl
-                ? `<span class="avatar avatar-sm" style="position:relative;padding:0;background:none;border:1.5px solid #06c755;overflow:visible;"><img src="${escapeHtml(c.linePictureUrl)}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" onerror="this.parentNode.innerHTML='${escapeHtml(initial)}';this.parentNode.style.background='hsl('+${hue}+',60%,55%)';this.parentNode.style.color='#fff';"><span title="LINE友だち" style="position:absolute;bottom:-3px;right:-3px;background:#06c755;color:#fff;width:14px;height:14px;border-radius:50%;font-size:8px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid #fff;font-family:inherit;">L</span></span>`
+                ? `<span class="avatar avatar-sm" style="position:relative;padding:0;background:none;border:1.5px solid #06c755;overflow:visible;"><img src="${escapeHtml(c.linePictureUrl)}" data-fallback-initial="${escapeHtml(initial)}" data-fallback-hue="${hue}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;"><span title="LINE友だち" style="position:absolute;bottom:-3px;right:-3px;background:#06c755;color:#fff;width:14px;height:14px;border-radius:50%;font-size:8px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid #fff;font-family:inherit;">L</span></span>`
                 : `<span class="avatar avatar-sm" style="--avh:${hue};position:relative;">${escapeHtml(initial)}${c.lineFriendId ? '<span title="LINE友だち" style="position:absolute;bottom:-3px;right:-3px;background:#06c755;color:#fff;width:14px;height:14px;border-radius:50%;font-size:8px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid #fff;font-family:inherit;">L</span>' : ''}</span>`}
               <div>
                 <strong>${escapeHtml(c.name)}</strong>${c.lineFriendId ? '<span style="font-size:9.5px;color:#06c755;font-weight:700;margin-left:5px;background:#dcfce7;padding:1px 5px;border-radius:6px;letter-spacing:0.05em;">LINE</span>' : ''}
@@ -1378,8 +1389,8 @@
                   // 重複除去 (label一致)
                   const seenLabels = new Set(myTags.map(t => t.label));
                   const autoUniq = autoTags.filter(t => !seenLabels.has(t.label));
-                  const manualHtml = myTags.map(t => `<span style="background:${t.color};color:#fff;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:800;line-height:1.4;letter-spacing:0.03em;box-shadow:0 2px 6px ${t.color}66;">${escapeHtml(t.label)}</span>`).join('');
-                  const autoHtml = autoUniq.map(t => `<span title="議事録から AI 自動抽出" style="background:${t.color}1A;color:${t.color};border:1.5px dashed ${t.color}80;padding:2px 9px;border-radius:999px;font-size:10.5px;font-weight:800;line-height:1.4;letter-spacing:0.03em;">${escapeHtml(t.label)}<span style="font-size:8px;margin-left:3px;opacity:0.7;">AI</span></span>`).join('');
+                  const manualHtml = myTags.map(t => { const col = validColor(t.color); return `<span style="background:${col};color:#fff;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:800;line-height:1.4;letter-spacing:0.03em;box-shadow:0 2px 6px ${col}66;">${escapeHtml(t.label)}</span>`; }).join('');
+                  const autoHtml = autoUniq.map(t => { const col = validColor(t.color); return `<span title="議事録から AI 自動抽出" style="background:${col}1A;color:${col};border:1.5px dashed ${col}80;padding:2px 9px;border-radius:999px;font-size:10.5px;font-weight:800;line-height:1.4;letter-spacing:0.03em;">${escapeHtml(t.label)}<span style="font-size:8px;margin-left:3px;opacity:0.7;">AI</span></span>`; }).join('');
                   return `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;">${manualHtml}${autoHtml}</div>`;
                 })()}
               </div>
@@ -1433,6 +1444,20 @@
         </tr>
       `;
     }).join('');
+    // ★ XSS fix (2026-06-25): inline onerror= を廃止し addEventListener('error') へ移管
+    //   顧客名/initial を文字列連結で属性に焼き付ける旧実装は 顧客名に '" を入れると JS実行可能だった
+    tbody.querySelectorAll('img[data-fallback-initial]').forEach(img => {
+      img.addEventListener('error', () => {
+        const parent = img.parentNode;
+        if (!parent) return;
+        const initial = img.dataset.fallbackInitial || '?';
+        const hueVal = parseInt(img.dataset.fallbackHue || '0', 10) || 0;
+        // textContent を使うので innerHTML 連結より安全
+        parent.textContent = initial;
+        parent.style.background = 'hsl(' + hueVal + ',60%,55%)';
+        parent.style.color = '#fff';
+      }, { once: true });
+    });
     tbody.querySelectorAll('tr').forEach(tr => {
       tr.addEventListener('click', (e) => {
         if (e.target.closest('.fp-task-badge')) return; // バッジクリックは別処理
@@ -2935,7 +2960,7 @@
                 const master = getTagsMaster();
                 const myTagIds = getClientTags(c.id);
                 const myTags = myTagIds.map(id => master.find(t => t.id === id)).filter(Boolean);
-                return myTags.map(t => `<span style="display:inline-flex;align-items:center;background:${t.color};color:#fff;padding:4px 12px;border-radius:999px;font-size:11.5px;font-weight:800;letter-spacing:0.04em;line-height:1.4;">${escapeHtml(t.label)}</span>`).join('');
+                return myTags.map(t => { const col = validColor(t.color); return `<span style="display:inline-flex;align-items:center;background:${col};color:#fff;padding:4px 12px;border-radius:999px;font-size:11.5px;font-weight:800;letter-spacing:0.04em;line-height:1.4;">${escapeHtml(t.label)}</span>`; }).join('');
               })()}
             </div>
           </div>
@@ -3430,48 +3455,100 @@
     if (delBtn) delBtn.addEventListener('click', async () => {
       if (!confirm('⚠ ' + c.name + ' さんを削除します。\n\nこの顧客に関連するすべてのデータ:\n・LINE 履歴 / 客返信\n・Zoom 予約\n・AI 議事録 / タスク\n・成果物 編集中\n・アンケート回答\n\nを削除します。元に戻せません。\n\n本当に削除しますか?')) return;
       delBtn.disabled = true; delBtn.innerHTML = '削除中…';
+      // ★ 削除統一 (2026-06-25): Cloud Function callable + GAS + localStorage の3点同時実行
+      //   どれか欠けると Firestore / GAS / ブラウザ で 状態がズレ「消したのに残る」事故。
+      //   3経路全部 await し、 1個でも失敗したらロールバック方法を showCenterToast で出す。
+      const cid = c.id;
+      const lfid = c.lineFriendId;
+      const cname = c.name;
+      const results = { callable: null, gas: null, local: null };
       try {
-        // ① GAS 側の関連データ削除 (Cloud Run 経由)
-        if (c.lineFriendId) {
+        // ① Cloud Function callable (deleteCustomer) — Firestore tenant 側の正本削除
+        let callablePromise = Promise.resolve({ skipped: 'no-fp' });
+        if (window.__fp && window.__fp.functions) {
+          callablePromise = (async () => {
+            const { httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-functions.js');
+            const fn = httpsCallable(window.__fp.functions, 'deleteCustomer');
+            return await fn({ clientId: cid, lineFriendId: lfid || null, name: cname });
+          })();
+        }
+        // ② GAS proxy (Cloud Run /api/delete-customer) — legacy 側の関連シート削除
+        let gasPromise = Promise.resolve({ skipped: 'no-lineFriendId' });
+        if (lfid) {
+          gasPromise = fetch('https://fp-compass-webhook-527726449426.asia-northeast1.run.app/api/delete-customer?userId=' + encodeURIComponent(lfid), { method: 'POST' })
+            .then(r => r.ok ? r.json().catch(() => ({ ok: true })) : Promise.reject(new Error('HTTP ' + r.status)));
+        }
+        // ③ localStorage cleanup — bookingTs lookup で fp-ai-backup-* も全消し
+        const localPromise = (async () => {
+          // c.bookings から bookingTs を集めて fp-ai-backup-{bookingTs} を全消し対象に
+          const bookingTsList = [];
           try {
-            await fetch('https://fp-compass-webhook-527726449426.asia-northeast1.run.app/api/delete-customer?userId=' + encodeURIComponent(c.lineFriendId), { method: 'POST' });
-          } catch (gasErr) { console.warn('GAS delete fail:', gasErr); }
-        }
-        // ② localStorage 関連キー削除 (LINE履歴/議事録/成果物/既読/トラッキング)
-        const cid = c.id;
-        const lfid = c.lineFriendId;
-        const cname = c.name;
-        const keysToRemove = [];
-        for (let i = 0; i < localStorage.length; i++) {
-          const k = localStorage.key(i);
-          if (!k) continue;
-          if (k === 'fp-line-history-' + cid ||
-              k === 'fp-line-read-' + cid ||
-              k.startsWith('fp-deliv-edit-' + cid + '-') ||
-              k === 'fp-ai-' + cid ||
-              (lfid && k === 'fp-ai-' + lfid) ||
-              k === 'fp-ai-' + cname ||
-              k === 'fp-tasks-' + cid ||
-              (lfid && k === 'fp-tasks-' + lfid) ||
-              k === 'fp-tasks-' + cname) {
-            keysToRemove.push(k);
+            const bks = Array.isArray(c.bookings) ? c.bookings : [];
+            bks.forEach(b => {
+              if (b && b.ts) bookingTsList.push(String(b.ts));
+              if (b && b.bookingTs) bookingTsList.push(String(b.bookingTs));
+            });
+          } catch (_) {}
+          const keysToRemove = [];
+          for (let i = 0; i < localStorage.length; i++) {
+            const k = localStorage.key(i);
+            if (!k) continue;
+            if (k === 'fp-line-history-' + cid ||
+                (lfid && k === 'fp-line-history-' + lfid) ||
+                k === 'fp-line-read-' + cid ||
+                k.startsWith('fp-deliv-edit-' + cid + '-') ||
+                (lfid && k.startsWith('fp-deliv-edit-' + lfid + '-')) ||
+                k === 'fp-ai-' + cid ||
+                (lfid && k === 'fp-ai-' + lfid) ||
+                k === 'fp-ai-' + cname ||
+                k === 'fp-tasks-' + cid ||
+                (lfid && k === 'fp-tasks-' + lfid) ||
+                k === 'fp-tasks-' + cname) {
+              keysToRemove.push(k);
+              continue;
+            }
+            // fp-ai-backup-{bookingTs} — bookingTs lookup で全消し
+            if (k.startsWith('fp-ai-backup-') && bookingTsList.some(ts => k === 'fp-ai-backup-' + ts || k.startsWith('fp-ai-backup-' + ts + '-'))) {
+              keysToRemove.push(k);
+            }
           }
-        }
-        keysToRemove.forEach(k => localStorage.removeItem(k));
-        // tracking 内 該当客削除
-        try {
-          const tr = JSON.parse(localStorage.getItem('fp-draft-tracking') || '{}');
-          delete tr[cid];
-          localStorage.setItem('fp-draft-tracking', JSON.stringify(tr));
-        } catch (_) {}
-        // ③ clients から除外 + 永続化
+          keysToRemove.forEach(k => localStorage.removeItem(k));
+          // tracking 内 該当客削除
+          try {
+            const tr = JSON.parse(localStorage.getItem('fp-draft-tracking') || '{}');
+            delete tr[cid];
+            localStorage.setItem('fp-draft-tracking', JSON.stringify(tr));
+          } catch (_) {}
+          return { removedKeys: keysToRemove.length };
+        })();
+
+        // 3経路 並行 + allSettled で 失敗特定可能に
+        const [r1, r2, r3] = await Promise.allSettled([callablePromise, gasPromise, localPromise]);
+        results.callable = r1; results.gas = r2; results.local = r3;
+        const failed = [];
+        if (r1.status === 'rejected') failed.push('Firestore (callable): ' + (r1.reason && r1.reason.message || r1.reason));
+        if (r2.status === 'rejected') failed.push('GAS (/api/delete-customer): ' + (r2.reason && r2.reason.message || r2.reason));
+        if (r3.status === 'rejected') failed.push('localStorage: ' + (r3.reason && r3.reason.message || r3.reason));
+
+        // clients から除外 + 永続化 (3経路が完全成功でなくても UI からは消す。残ったデータは reimport で復活)
         const idx = clients.findIndex(x => x.id === cid);
         if (idx >= 0) clients.splice(idx, 1);
         try { localStorage.setItem('fp-crm-clients-v1', JSON.stringify(window.DUMMY_CLIENTS || clients)); } catch (_) {}
-        // ④ モーダル閉じる + 一覧再描画
         closeModal();
-        if (window.FPCrmRefreshClients) window.FPCrmRefreshClients();
-        alert('✓ ' + cname + ' さん を削除しました。\n(localStorage ' + keysToRemove.length + '件 + GAS関連データ)');
+        if (window.FPCrmRefreshClients) window.FPCrmRefreshClients({ immediate: true });
+
+        if (failed.length === 0) {
+          const removedN = (r3.value && r3.value.removedKeys) || 0;
+          alert('✓ ' + cname + ' さん を削除しました。\n(Firestore + GAS + localStorage ' + removedN + '件)');
+        } else {
+          // 部分失敗 → ロールバック手順 を toast で出す (showCenterToast は line-app.js に存在)
+          const msg = '一部経路で削除失敗:\n' + failed.join('\n') + '\n\nロールバック方法:\n1) 「設定 → 実モード」で 実客 再登録\n2) 失敗経路を CEO室_Jobs/引き継ぎ/事業別/FP-Compass.md に記録して Jobs へ報告';
+          if (typeof window.showCenterToast === 'function') {
+            window.showCenterToast('削除 部分失敗', msg, { tone: 'success', duration: 0 });
+          } else {
+            alert('⚠ ' + cname + ' さん の削除は 部分失敗\n\n' + msg);
+          }
+        }
       } catch (e) {
         alert('削除失敗: ' + e.message);
         delBtn.disabled = false;
@@ -4547,7 +4624,7 @@ ${ctxText}${surveyTxt}`;
         ts: m.ts || m.date || '',
       }));
       const r = await fetch('https://fp-compass-webhook-527726449426.asia-northeast1.run.app/api/classify-questions', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: await (window.getFpAuthHeaders ? window.getFpAuthHeaders() : Promise.resolve({ 'Content-Type': 'application/json' })),
         body: JSON.stringify({
           messages, customerName: client.name,
           customerContext: ctx,
@@ -7089,7 +7166,7 @@ ${JSON.stringify(jsonPayload, null, 2)}
         try {
           const r = await fetch('https://fp-compass-webhook-527726449426.asia-northeast1.run.app/api/generate-line-draft', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: await (window.getFpAuthHeaders ? window.getFpAuthHeaders() : Promise.resolve({ 'Content-Type': 'application/json' })),
             body: JSON.stringify({
               prompt,
               model: modelPref === 'sonnet' ? 'sonnet' : 'groq',
@@ -7934,7 +8011,7 @@ ${client.name}さん、ありがとうございます。
 
       try {
         const r = await fetch('https://fp-compass-webhook-527726449426.asia-northeast1.run.app/api/generate-deliverable', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          method: 'POST', headers: await (window.getFpAuthHeaders ? window.getFpAuthHeaders() : Promise.resolve({ 'Content-Type': 'application/json' })),
           body: JSON.stringify({ type: 'custom', clientName: client.name, clientCtx: `${ageDisp || '?'}歳 / ${client.occupation || ''} / ${familyDisp}`, summary: aiCtx, transcript: '', taskTitle }),
         });
         const d = await r.json();
@@ -9029,9 +9106,10 @@ ${client.name}さん、ありがとうございます。
     state.tagFilter = state.tagFilter || [];
     chipsEl.innerHTML = visible.map(t => {
       const on = state.tagFilter.includes(t.id);
-      const bg = on ? (t.color || '#9A5A18') : '#fff';
-      const fg = on ? '#fff' : (t.color || '#1F2A3F');
-      const border = t.color || '#9A5A18';
+      const col = validColor(t.color);
+      const bg = on ? col : '#fff';
+      const fg = on ? '#fff' : col;
+      const border = col;
       return `<button data-client-tag-filter="${escapeHtml(t.id)}" style="background:${bg};color:${fg};border:1.5px solid ${border};padding:5px 12px;border-radius:99px;font-size:11.5px;font-weight:800;cursor:pointer;font-family:'Hiragino Sans',sans-serif;letter-spacing:0.02em;display:inline-flex;align-items:center;gap:5px;transition:all .12s;">${escapeHtml(t.label || t.id)}<span style="opacity:.75;font-weight:700;font-size:10.5px;">${tagCount[t.id]}</span></button>`;
     }).join('');
     clearBtn.style.display = state.tagFilter.length > 0 ? '' : 'none';
@@ -9069,11 +9147,11 @@ ${client.name}さん、ありがとうございます。
       wrap.innerHTML = '<div style="font-size:11px;color:#94A3B8;font-style:italic;">タグなし — 「+ 追加 / 編集」 から付けてみる</div>';
       return;
     }
-    wrap.innerHTML = myTags.map(t => `
-      <span style="display:inline-flex;align-items:center;gap:6px;background:${t.color}1A;color:${t.color};border:1px solid ${t.color}55;padding:4px 10px;border-radius:999px;font-size:11.5px;font-weight:700;">
+    wrap.innerHTML = myTags.map(t => { const col = validColor(t.color); return `
+      <span style="display:inline-flex;align-items:center;gap:6px;background:${col}1A;color:${col};border:1px solid ${col}55;padding:4px 10px;border-radius:999px;font-size:11.5px;font-weight:700;">
         ${escapeHtml(t.label)}
       </span>
-    `).join('');
+    `; }).join('');
   }
   function openTagEditor(clientId) {
     const master = getTagsMaster();
@@ -9104,7 +9182,8 @@ ${client.name}さん、ありがとうございます。
               ${m.length === 0 ? '<div style="font-size:11.5px;color:#94A3B8;font-style:italic;">まだタグがありません — 下から作ってください</div>' :
                 m.map(t => {
                   const on = mySet.has(t.id);
-                  return `<button data-tag="${t.id}" class="fp-tag-toggle" style="background:${on ? t.color : t.color+'1A'};color:${on ? '#fff' : t.color};border:1px solid ${t.color}${on ? '' : '55'};padding:6px 14px;border-radius:999px;font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit;">${on ? '✓ ' : ''}${escapeHtml(t.label)}</button>`;
+                  const col = validColor(t.color);
+                  return `<button data-tag="${escapeHtml(t.id)}" class="fp-tag-toggle" style="background:${on ? col : col+'1A'};color:${on ? '#fff' : col};border:1px solid ${col}${on ? '' : '55'};padding:6px 14px;border-radius:999px;font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit;">${on ? '✓ ' : ''}${escapeHtml(t.label)}</button>`;
                 }).join('')}
             </div>
 
@@ -9194,6 +9273,12 @@ ${client.name}さん、ありがとうございます。
     return String(s || '').replace(/[&<>"']/g, m => ({
       '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
     }[m]));
+  }
+  // ★ CSS injection fix (2026-06-25): タグ color 値が #rgb / #rrggbb / #rrggbbaa 以外なら 中立色にfallback
+  //   ユーザー入力 color を style に直入れすると `red;background:url(...)` 等で 別CSS差込 可能
+  function validColor(c) {
+    if (typeof c !== 'string') return '#888';
+    return /^#[0-9a-fA-F]{3,8}$/.test(c) ? c : '#888';
   }
 
   // ============================

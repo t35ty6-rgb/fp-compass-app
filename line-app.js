@@ -3407,7 +3407,20 @@
               live.ai_tasks.push(t);
             }
           });
-          try { localStorage.setItem(LIVE_CACHE_KEY, JSON.stringify(live)); } catch (_) {}
+          // ★ Critical-C: transcript は メモリ (window.LineAppLiveData) には 残すが localStorage には strip
+          try {
+            const _copy = { ...live };
+            if (Array.isArray(_copy.ai_results)) {
+              _copy.ai_results = _copy.ai_results.map(a => {
+                if (a && a.transcript) {
+                  const { transcript, ...rest } = a;
+                  return { ...rest, _transcriptStripped: true };
+                }
+                return a;
+              });
+            }
+            localStorage.setItem(LIVE_CACHE_KEY, JSON.stringify(_copy));
+          } catch (_) {}
         };
         // ★ 2026-06-25 新議事録 即時反映 (オーナーfb)
         try {
@@ -3528,7 +3541,7 @@
       const tid = setTimeout(() => controller.abort(), 10 * 60 * 1000);
       const r = await fetch(CLOUD_RUN_BASE + '/api/process-recording', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: await (window.getFpAuthHeaders ? window.getFpAuthHeaders() : Promise.resolve({ 'Content-Type': 'application/json' })),
         body: JSON.stringify({
           base64, mimeType: blob.type || 'audio/webm',
           customerName, customerContext: ctx,
@@ -3581,7 +3594,7 @@
         try {
           r = await fetch(CLOUD_RUN_BASE + '/api/process-recording', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: await (window.getFpAuthHeaders ? window.getFpAuthHeaders() : Promise.resolve({ 'Content-Type': 'application/json' })),
             body: JSON.stringify({
               base64, mimeType: blob.type || 'audio/webm',
               customerName: customerName + ` (chunk ${i+1}/${chunks.length})`,
@@ -4422,16 +4435,31 @@
     const handle = document.getElementById('fp-cal-resize-v3');
     handle.addEventListener('mouseenter', () => { handle.style.background = 'rgba(184,137,61,0.4)'; });
     handle.addEventListener('mouseleave', () => { handle.style.background = 'transparent'; });
+    // ★ memory leak fix (2026-06-25): document.addEventListener を mousedown 時に追加 → mouseup で remove
+    //   従来は setupCalendarSide が呼ばれる度に listener が永続蓄積し ブラウザ重くなっていた
     let dragging = false;
-    handle.addEventListener('mousedown', (e) => { dragging = true; e.preventDefault(); document.body.style.userSelect = 'none'; });
-    document.addEventListener('mousemove', (e) => {
+    const onCalDragMove = (e) => {
       if (!dragging) return;
       const w = Math.max(320, Math.min(window.innerWidth - 360, window.innerWidth - e.clientX));
       panel.style.width = w + 'px';
       document.body.style.paddingRight = w + 'px';
       localStorage.setItem('fp-cal-side-width', String(w));
+    };
+    const onCalDragUp = () => {
+      if (dragging) { dragging = false; document.body.style.userSelect = ''; }
+      document.removeEventListener('mousemove', onCalDragMove);
+      document.removeEventListener('mouseup', onCalDragUp);
+    };
+    handle.addEventListener('mousedown', (e) => {
+      dragging = true;
+      e.preventDefault();
+      document.body.style.userSelect = 'none';
+      // 既存 listener が居たら先に剥がす (二重bind 防止)
+      document.removeEventListener('mousemove', onCalDragMove);
+      document.removeEventListener('mouseup', onCalDragUp);
+      document.addEventListener('mousemove', onCalDragMove);
+      document.addEventListener('mouseup', onCalDragUp);
     });
-    document.addEventListener('mouseup', () => { if (dragging) { dragging = false; document.body.style.userSelect = ''; } });
   }
 
   function ensureCalendarSidePanel() { /* 後方互換ダミー */ }
@@ -5491,7 +5519,21 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
       //   → GAS resetAll で実データを消したので強制上書き不要。
       //   → リセット後に新規予約しても、この強制上書きで消えてしまうバグの原因だった。
       window.LineAppLiveData = liveData;
-      try { localStorage.setItem(LIVE_CACHE_KEY, JSON.stringify(liveData)); } catch (_) {}
+      // ★ Critical-C: localStorage に transcript (全文書き起こし) を 残さない (PII 漏洩防止)
+      //   モーダル開時に GAS から hydrate するので 業務影響ゼロ
+      try {
+        const _liveCacheCopy = { ...liveData };
+        if (Array.isArray(_liveCacheCopy.ai_results)) {
+          _liveCacheCopy.ai_results = _liveCacheCopy.ai_results.map(a => {
+            if (a && a.transcript) {
+              const { transcript, ...rest } = a;
+              return { ...rest, _transcriptStripped: true };
+            }
+            return a;
+          });
+        }
+        localStorage.setItem(LIVE_CACHE_KEY, JSON.stringify(_liveCacheCopy));
+      } catch (_) {}
       // ★ オーナーfb「客返信が CRM に反映されない」: line_messages を各顧客 lineHistory にマージ
       try {
         const msgs = liveData.line_messages || [];
