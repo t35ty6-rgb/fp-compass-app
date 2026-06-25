@@ -3469,14 +3469,17 @@
           callablePromise = (async () => {
             const { httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-functions.js');
             const fn = httpsCallable(window.__fp.functions, 'deleteCustomer');
-            return await fn({ clientId: cid, lineFriendId: lfid || null, name: cname });
+            return await fn({ customerId: cid, clientId: cid, lineFriendId: lfid || null, name: cname });
           })();
         }
         // ② GAS proxy (Cloud Run /api/delete-customer) — legacy 側の関連シート削除
         let gasPromise = Promise.resolve({ skipped: 'no-lineFriendId' });
         if (lfid) {
-          gasPromise = fetch('https://fp-compass-webhook-527726449426.asia-northeast1.run.app/api/delete-customer?userId=' + encodeURIComponent(lfid), { method: 'POST' })
-            .then(r => r.ok ? r.json().catch(() => ({ ok: true })) : Promise.reject(new Error('HTTP ' + r.status)));
+          gasPromise = (async () => {
+            const h = window.getFpAuthHeaders ? await window.getFpAuthHeaders() : { 'Content-Type': 'application/json' };
+            return fetch('https://fp-compass-webhook-527726449426.asia-northeast1.run.app/api/delete-customer?userId=' + encodeURIComponent(lfid), { method: 'POST', headers: h })
+              .then(r => r.ok ? r.json().catch(() => ({ ok: true })) : Promise.reject(new Error('HTTP ' + r.status)));
+          })();
         }
         // ③ localStorage cleanup — bookingTs lookup で fp-ai-backup-* も全消し
         const localPromise = (async () => {
@@ -3719,7 +3722,7 @@
           };
           const res = await fetch('https://fp-compass-webhook-527726449426.asia-northeast1.run.app/api/save-ai-result', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: await (window.getFpAuthHeaders ? window.getFpAuthHeaders() : Promise.resolve({ 'Content-Type': 'application/json' })),
             body: JSON.stringify({ entry, tasks: [] }),
           });
           const data = await res.json();
@@ -4455,7 +4458,7 @@ ${ctxText}${surveyTxt}`;
         try {
           const r = await fetch('https://fp-compass-webhook-527726449426.asia-northeast1.run.app/api/send-line', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: await (window.getFpAuthHeaders ? window.getFpAuthHeaders() : Promise.resolve({ 'Content-Type': 'application/json' })),
             body: JSON.stringify({ userId: uid, text: finalMsg }),
           });
           const data = await r.json();
@@ -5649,7 +5652,7 @@ ${ctxText}${surveyTxt}`;
       btn.disabled = true; btn.textContent = '送信中…';
       try {
         const r = await fetch('https://fp-compass-webhook-527726449426.asia-northeast1.run.app/api/send-line', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          method: 'POST', headers: await (window.getFpAuthHeaders ? window.getFpAuthHeaders() : Promise.resolve({ 'Content-Type': 'application/json' })),
           body: JSON.stringify({ userId: uid, text }),
         });
         const d = await r.json();
@@ -5763,7 +5766,7 @@ ${ctxText}${surveyTxt}`;
       btn.disabled = true; btn.textContent = '送信中…';
       try {
         const r = await fetch('https://fp-compass-webhook-527726449426.asia-northeast1.run.app/api/send-line', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          method: 'POST', headers: await (window.getFpAuthHeaders ? window.getFpAuthHeaders() : Promise.resolve({ 'Content-Type': 'application/json' })),
           body: JSON.stringify({ userId: uid, text, deliverableHtml: hasAttachment ? editedHtml : undefined, deliverableType: type, deliverableTitle: taskTitle, customerName: client.name }),
         });
         const d = await r.json();

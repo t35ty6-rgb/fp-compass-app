@@ -1116,7 +1116,7 @@
         try {
           const r = await fetch(CLOUD_RUN_BASE + '/api/send-line', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: await (window.getFpAuthHeaders ? window.getFpAuthHeaders() : Promise.resolve({ 'Content-Type': 'application/json' })),
             body: JSON.stringify({ userId: uid, text: msg }),
           });
           const data = await r.json();
@@ -1958,7 +1958,7 @@
         // ─── 本物のLIVEデータは Cloud Run へ ───
         try {
           const r = await fetch(CLOUD_RUN_BASE + '/api/confirm-slot', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            method: 'POST', headers: await (window.getFpAuthHeaders ? window.getFpAuthHeaders() : Promise.resolve({ 'Content-Type': 'application/json' })),
             body: JSON.stringify({ userId: uid, dateStr: dateStr, slotStr: slotStr }),
           });
           const data = await r.json();
@@ -2146,7 +2146,7 @@
         try {
           if (booking.id || booking.ts) {
             await fetch(CLOUD_RUN_BASE + '/api/cancel-booking', {
-              method: 'POST', headers: { 'Content-Type': 'application/json' },
+              method: 'POST', headers: await (window.getFpAuthHeaders ? window.getFpAuthHeaders() : Promise.resolve({ 'Content-Type': 'application/json' })),
               body: JSON.stringify({ bookingId: booking.id || '', ts: booking.ts || '', userId: uid }),
             }).catch(() => {});
           }
@@ -2162,7 +2162,7 @@
       try {
         // 1) LINE 送信
         const r1 = await fetch(CLOUD_RUN_BASE + '/api/send-line', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          method: 'POST', headers: await (window.getFpAuthHeaders ? window.getFpAuthHeaders() : Promise.resolve({ 'Content-Type': 'application/json' })),
           body: JSON.stringify({ userId: uid, text: msg }),
         });
         const d1 = await r1.json();
@@ -2170,7 +2170,7 @@
         // 2) 予約 status を cancelled に
         if (booking.id || booking.ts) {
           await fetch(CLOUD_RUN_BASE + '/api/cancel-booking', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            method: 'POST', headers: await (window.getFpAuthHeaders ? window.getFpAuthHeaders() : Promise.resolve({ 'Content-Type': 'application/json' })),
             body: JSON.stringify({ bookingId: booking.id || '', ts: booking.ts || '', userId: uid }),
           }).catch(() => {/* best effort */});
         }
@@ -2306,7 +2306,7 @@
         }
         // legacy proxy
         const r = await fetch(CLOUD_RUN_BASE + '/api/request-reschedule', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          method: 'POST', headers: await (window.getFpAuthHeaders ? window.getFpAuthHeaders() : Promise.resolve({ 'Content-Type': 'application/json' })),
           body: JSON.stringify({ userId: uid, name: name, fullMessage: msg }),
         });
         const data = await r.json();
@@ -3366,7 +3366,7 @@
         try {
           const r = await fetch(CLOUD_RUN_BASE + '/api/save-ai-result', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: await (window.getFpAuthHeaders ? window.getFpAuthHeaders() : Promise.resolve({ 'Content-Type': 'application/json' })),
             body: JSON.stringify({ entry, tasks: newTasks }),
           });
           const d = await r.json();
@@ -3485,7 +3485,7 @@
       try {
         const r = await fetch(CLOUD_RUN_BASE + '/api/save-ai-result', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: await (window.getFpAuthHeaders ? window.getFpAuthHeaders() : Promise.resolve({ 'Content-Type': 'application/json' })),
           body: JSON.stringify({ entry: p.entry, tasks: p.tasks || [] }),
         });
         const d = await r.json();
@@ -3725,7 +3725,7 @@
         btn.disabled = true; btn.textContent = '送信中...';
         try {
           const r = await fetch(CLOUD_RUN_BASE + '/api/send-line', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            method: 'POST', headers: await (window.getFpAuthHeaders ? window.getFpAuthHeaders() : Promise.resolve({ 'Content-Type': 'application/json' })),
             body: JSON.stringify({ userId: uid, text: finalMsg }),
           });
           const d = await r.json();
@@ -3749,7 +3749,7 @@
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 5 * 60 * 1000);
     const r = await fetch(CLOUD_RUN_BASE + '/api/upload-recording', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: await (window.getFpAuthHeaders ? window.getFpAuthHeaders() : Promise.resolve({ 'Content-Type': 'application/json' })),
       body: JSON.stringify({ ts: bookingTs, customerName, filename, mimeType: 'audio/webm', base64 }),
       signal: controller.signal,
     });
@@ -4362,7 +4362,7 @@
             // legacy proxy 顧客
             const r = await fetch(CLOUD_RUN_BASE + '/api/confirm-slot', {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: await (window.getFpAuthHeaders ? window.getFpAuthHeaders() : Promise.resolve({ 'Content-Type': 'application/json' })),
               body: JSON.stringify({ userId, dateStr, slotStr, name }),
             });
             const data = await r.json();
@@ -5258,7 +5258,7 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
       fd.forEach((v, k) => payload[k] = v);
       try {
         const r = await fetch(CLOUD_RUN_BASE + '/api/fp-register', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          method: 'POST', headers: await (window.getFpAuthHeaders ? window.getFpAuthHeaders() : Promise.resolve({ 'Content-Type': 'application/json' })),
           body: JSON.stringify(payload),
         });
         const d = await r.json();
@@ -5721,7 +5721,7 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
       statusEl.style.color = '#5B5BF0'; statusEl.textContent = 'Zoom URL を発行・カレンダー登録中…';
       try {
         const r = await fetch(CLOUD_RUN_BASE + '/api/confirm-slot', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          method: 'POST', headers: await (window.getFpAuthHeaders ? window.getFpAuthHeaders() : Promise.resolve({ 'Content-Type': 'application/json' })),
           body: JSON.stringify({ userId, dateStr, slotStr, name: userName }),
         });
         const d = await r.json();
@@ -6070,7 +6070,7 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
         try {
           const r = await fetch(CLOUD_RUN_BASE + '/api/confirm-slot', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: await (window.getFpAuthHeaders ? window.getFpAuthHeaders() : Promise.resolve({ 'Content-Type': 'application/json' })),
             body: JSON.stringify({ userId: uid, dateStr: dateStr, slotStr: slotStr }),
           });
           const data = await r.json();
