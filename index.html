@@ -130,8 +130,10 @@
     getFunctions, httpsCallable,
   } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-functions.js";
 
-  // 環境自動切替: hostname に "staging" 含まれてれば staging プロジェクトに接続
-  const __isStaging = /staging|skeleton-fp-compass-staging/.test(location.hostname);
+  // 環境自動切替: hostname が stg.* / staging / skeleton-fp-compass-staging なら staging プロジェクトに接続
+  // 注: 本番 stg URL は `stg.app.skeleton-inc.jp` (staging文字列を含まない) → ^stg\. prefix で拾う
+  const __isStaging = /^stg\.|staging|skeleton-fp-compass-staging/.test(location.hostname);
+  console.log('[fp-compass env]', { hostname: location.hostname, isStaging: __isStaging, projectId: __isStaging ? 'skeleton-fp-compass-staging' : 'skeleton-fp-compass-632026' });
   const firebaseConfig = __isStaging ? {
     apiKey: "AIzaSyAV9SEZZ5Tqu8pHUmmjMZ3RhrN_jFgMevs",
     authDomain: "skeleton-fp-compass-staging.firebaseapp.com",
@@ -1286,7 +1288,7 @@ window.fpReadyAfterAuth = function() {
     });
   })();
 
-  const ver = "20260626J-modal-lookup-broaden";
+  const ver = "20260629A-mic-only-recording";
   // ★ 2026-06-26 perf: critical (画面初期表示に必須) と deferred (LINE/charts) を 分離
   // critical: 顧客台帳・ホーム描画に必須
   // deferred: LINE タブ (line-app.js 555KB) / dashboard charts (charts.js) → idle で 後ロード
@@ -2016,7 +2018,7 @@ window.fpReadyAfterAuth = function() {
 <script>
 (function(){
   // 最新の ver を 1 箇所に集約 (fpReadyAfterAuth 側と一致させる必要あり)
-  const FP_VERSION = "20260626J-modal-lookup-broaden";
+  const FP_VERSION = "20260629A-mic-only-recording";
   try { window.FP_VERSION = FP_VERSION; } catch(_) {}
   const loadTime = new Date();
   const hhmm = String(loadTime.getHours()).padStart(2,'0') + ':' + String(loadTime.getMinutes()).padStart(2,'0');
