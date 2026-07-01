@@ -1288,7 +1288,7 @@ window.fpReadyAfterAuth = function() {
     });
   })();
 
-  const ver = "20260629A-mic-only-recording";
+  const ver = "20260701A-mebuki-auth-fix";
   // ★ 2026-06-26 perf: critical (画面初期表示に必須) と deferred (LINE/charts) を 分離
   // critical: 顧客台帳・ホーム描画に必須
   // deferred: LINE タブ (line-app.js 555KB) / dashboard charts (charts.js) → idle で 後ロード
@@ -2018,7 +2018,7 @@ window.fpReadyAfterAuth = function() {
 <script>
 (function(){
   // 最新の ver を 1 箇所に集約 (fpReadyAfterAuth 側と一致させる必要あり)
-  const FP_VERSION = "20260629A-mic-only-recording";
+  const FP_VERSION = "20260701A-mebuki-auth-fix";
   try { window.FP_VERSION = FP_VERSION; } catch(_) {}
   const loadTime = new Date();
   const hhmm = String(loadTime.getHours()).padStart(2,'0') + ':' + String(loadTime.getMinutes()).padStart(2,'0');
@@ -2321,9 +2321,13 @@ window.fpReadyAfterAuth = function() {
     send.disabled = true;
     const bubble = addMsg('bot', '', true);
     try {
+      // ★ 2026-07-01 fix: Bearer ID token 送信 (chatFpCounselor が context.auth 要求 → 未送信で 「ログインが必要」 応答バグ)
+      const headers = (typeof window.getFpAuthHeaders === 'function')
+        ? await window.getFpAuthHeaders()
+        : { 'Content-Type': 'application/json' };
       const res = await fetch(CF_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ data: { message: q, history: history.slice(-11, -1) } }),
       });
       const json = await res.json();

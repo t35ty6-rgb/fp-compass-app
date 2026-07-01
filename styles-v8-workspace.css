@@ -5545,6 +5545,19 @@ button.primary:hover::before { left: 130%; }
   box-shadow: 0 1px 0 rgba(26,33,56,0.03), 0 6px 16px rgba(26,33,56,0.04);
   border-radius: 4px;
   position: relative;
+  /* ★ 2026-06-29 速度改善: paint isolation で スクロール時 他カード 再描画 防止 */
+  contain: layout style paint;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 280px;
+}
+/* ★ 議事録 タブ panel: スムーズスクロール GPU合成 */
+[data-cdpanel="meetings"] {
+  contain: layout style;
+  will-change: scroll-position;
+}
+/* ★ モーダル本体 isolation */
+.cd-modal {
+  contain: layout style;
 }
 .fp-meeting-card-head {
   display: flex; justify-content: space-between; align-items: flex-start;

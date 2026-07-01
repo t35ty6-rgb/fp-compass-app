@@ -3424,15 +3424,14 @@
             </div>
 
             <!-- TIMELINE -->
-            <div class="cd-tabpanel" data-cdpanel="timeline" hidden>
-              ${lifeCtaCard}
-              <div class="cd-tl-list">${timelineHtml2}</div>
-              ${events.length > 12 ? `<div class="cd-tl-more">他 ${events.length - 12} 件...</div>` : ''}
+            <!-- ★ 2026-06-29 速度改善: lazy render — overview/line のみ初期render、他はタブ click時に build -->
+            <div class="cd-tabpanel" data-cdpanel="timeline" hidden data-lazy-render="timeline">
+              <div class="cd-empty" style="padding:24px;color:#94A3B8;font-size:12px;">読込中…</div>
             </div>
 
             <!-- MEETINGS -->
-            <div class="cd-tabpanel" data-cdpanel="meetings" hidden>
-              ${renderMeetingRecordsBlock(c) || '<div class="cd-empty">面談録なし</div>'}
+            <div class="cd-tabpanel" data-cdpanel="meetings" hidden data-lazy-render="meetings">
+              <div class="cd-empty" style="padding:24px;color:#94A3B8;font-size:12px;">読込中…</div>
             </div>
 
             <!-- Q&A (Phase 2: LINE質問 自動分類) -->
@@ -3445,8 +3444,8 @@
             </div>
 
             <!-- FAMILY 家系図 -->
-            <div class="cd-tabpanel" data-cdpanel="family" hidden>
-              ${renderFamilyTreeBlock(c)}
+            <div class="cd-tabpanel" data-cdpanel="family" hidden data-lazy-render="family">
+              <div class="cd-empty" style="padding:24px;color:#94A3B8;font-size:12px;">読込中…</div>
             </div>
           </div>
 
@@ -4080,13 +4079,32 @@ ${ctxText}${surveyTxt}`;
           if (p.dataset.cdpanel === key) p.removeAttribute('hidden');
           else p.setAttribute('hidden', '');
         });
-        // ★ 2026-06-27: 議事録タブ open時 latest liveData から panel 再生成 (hydrate後の最新議事録 反映)
-        if (key === 'meetings' && typeof renderMeetingRecordsBlock === 'function') {
-          try {
-            const panel = document.querySelector('[data-cdpanel="meetings"]');
-            if (panel) panel.innerHTML = renderMeetingRecordsBlock(c) || '<div class="cd-empty">面談録なし</div>';
-          } catch (_) {}
-        }
+        // ★ 2026-06-29: lazy render — タブclick時 初めて panel 中身 build
+        try {
+          const panel = document.querySelector(`[data-cdpanel="${key}"]`);
+          if (panel && panel.dataset.lazyRender) {
+            if (key === 'meetings' && typeof renderMeetingRecordsBlock === 'function') {
+              const live = window.LineAppLiveData || {};
+              const aiCount = (live.ai_results || []).filter(a =>
+                a.userId === c.id || a.userId === c.lineFriendId || a.customerName === c.name
+              ).length;
+              const cacheKey = `${c.id}|${aiCount}|${(c.lineHistory||[]).length}`;
+              if (panel.dataset.cacheKey !== cacheKey || panel.dataset.cacheHasContent !== '1') {
+                panel.innerHTML = renderMeetingRecordsBlock(c) || '<div class="cd-empty">面談録なし</div>';
+                panel.dataset.cacheKey = cacheKey;
+                panel.dataset.cacheHasContent = '1';
+              }
+            } else if (key === 'timeline' && panel.dataset.cacheHasContent !== '1') {
+              panel.innerHTML = `${lifeCtaCard}<div class="cd-tl-list">${timelineHtml2}</div>${events.length > 12 ? `<div class="cd-tl-more">他 ${events.length - 12} 件...</div>` : ''}`;
+              panel.dataset.cacheHasContent = '1';
+            } else if (key === 'family' && typeof renderFamilyTreeBlock === 'function' && panel.dataset.cacheHasContent !== '1') {
+              panel.innerHTML = renderFamilyTreeBlock(c);
+              panel.dataset.cacheHasContent = '1';
+              // family は内部で bindFamilyHandlers 必要なので 再bind
+              if (typeof bindFamilyHandlers === 'function') bindFamilyHandlers();
+            }
+          }
+        } catch (_) {}
         // ★ URL routing Phase3: モーダル内タブ → ?tab=key
         try {
           const cur = window._fpCurrentClient;
