@@ -4167,6 +4167,11 @@ ${ctxText}${surveyTxt}`;
                 panel.dataset.cacheKey = cacheKey;
                 panel.dataset.cacheHasContent = '1';
               }
+              // ★ 2026-07-02 fix: lazy-render 後に count badge 同期 (直接 meetings タブ 開いた時 0 表示バグ)
+              try {
+                const cntEl = document.getElementById('cd-meetings-count');
+                if (cntEl) cntEl.textContent = panel.querySelectorAll('.fp-meeting-card').length;
+              } catch (_) {}
             } else if (key === 'timeline' && panel.dataset.cacheHasContent !== '1') {
               panel.innerHTML = `${lifeCtaCard}<div class="cd-tl-list">${timelineHtml2}</div>${events.length > 12 ? `<div class="cd-tl-more">他 ${events.length - 12} 件...</div>` : ''}`;
               panel.dataset.cacheHasContent = '1';
