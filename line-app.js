@@ -1308,17 +1308,16 @@
   //   優先2: 直接 Firestore fetch (DUMMY_CLIENTS 未ロード時の fallback)
   async function refreshFirestoreCustomers() {
     try {
-      // 優先1 (cache hit): DUMMY_CLIENTS に line_survey 顧客 があれば 暫定 表示用に セット
-      //   (return しない — Firestore を 一次ソース に 必ず fetch + sync する。
-      //    旧コード: DUMMY_CLIENTS cache hit で 早期return → Firestore の新規顧客 (例: 「お」)
-      //    が DUMMY_CLIENTS に sync されず → openClientModal で clients.find undefined → 「クリック で何も起きない」)
+      // 優先1 (cache hit): DUMMY_CLIENTS に line 由来 顧客 があれば 暫定 表示用に セット
+      //   2026-07-02 persist-fix: line_survey に限定していた filter を line_follow 含む LINE 経由全体に拡張
+      //   (QR登録直後の アンケ未回答客 が cache path で 消えていた 症状 対応)
       if (Array.isArray(window.DUMMY_CLIENTS) && window.DUMMY_CLIENTS.length > 0) {
-        const lineSurvey = window.DUMMY_CLIENTS.filter(c => c.source === 'line_survey');
-        if (lineSurvey.length > 0) {
-          window._fpFirestoreCustomers = lineSurvey
+        const lineOrigin = window.DUMMY_CLIENTS.filter(c => c.source === 'line_survey' || c.source === 'line_follow');
+        if (lineOrigin.length > 0) {
+          window._fpFirestoreCustomers = lineOrigin
             .filter(c => (c.meetingCandidates||[]).length > 0 && !c.confirmedSlot)
             .map(c => ({ docId: c.id, ...c }));
-          window._fpFirestoreConfirmed = lineSurvey
+          window._fpFirestoreConfirmed = lineOrigin
             .filter(c => c.confirmedSlot && c.zoomUrl)
             .map(c => ({ docId: c.id, ...c }));
         }
@@ -1408,7 +1407,10 @@
         occupation: c.occupation || '',
         family: c.family || [],
         proposals: [],
-        source: 'line_survey',
+        // 2026-07-02 persist-fix: 元 source を保持 (旧: 全部 'line_survey' で上書き
+        // → 「アンケ未回答」バッジ表示や QR登録直後の状態判別が UI で できなかった)
+        source: c.source || 'line_survey',
+        surveyStatus: c.source === 'line_follow' ? 'pending' : 'answered',
         status: c.confirmedSlot ? 'active' : 'new',
         aum: c.aum || 0,
         lineFriendId: c.lineFriendId || c.userId || '',
@@ -8639,9 +8641,22 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
         .map(r => {
           const rTs = r.bookingTs || r.ts || r.createdAt;
           const d = new Date(String(rTs).replace(' ', 'T'));
+          // 2026-07-02 persist-fix: bookingTs/ts/createdAt から日付を抽出できない場合、
+          //   「gas-<ISO>」等の埋め込み日付、それも無ければ今日を fallback として使う。
+          //   面談履歴タブの「日付未定」バケット行きを回避 (app.js:5087 と同パターン)。
+          const _pickIsoDay = (v) => {
+            if (!v) return '';
+            const m = String(v).match(/(\d{4}-\d{2}-\d{2})/);
+            return m ? m[1] : '';
+          };
+          const fallbackDate = r.date
+            || (isNaN(d.getTime()) ? '' : d.toISOString().slice(0, 10))
+            || _pickIsoDay(rTs)
+            || _pickIsoDay(r.createdAt)
+            || new Date().toISOString().slice(0, 10);
           return {
             ts: rTs,
-            date: r.date || (isNaN(d.getTime()) ? '' : d.toISOString().slice(0, 10)),
+            date: fallbackDate,
             time: isNaN(d.getTime()) ? '' : d.toISOString().slice(11, 16),
             name: (r.customerName || 'お客様') + (String(r.customerName || '').endsWith('様') ? '' : ' 様'),
             userId: r.userId || '',

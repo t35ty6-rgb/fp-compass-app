@@ -951,7 +951,7 @@
     document.getElementById('form-close-btn').addEventListener('click', close);
     document.getElementById('form-cancel-btn').addEventListener('click', close);
 
-    document.getElementById('form-save-btn').addEventListener('click', () => {
+    document.getElementById('form-save-btn').addEventListener('click', async () => {
       const name = document.getElementById('f-name').value.trim();
       const birth = document.getElementById('f-birth').value;
       if (!name || !birth) {
@@ -986,6 +986,9 @@
         if (idx >= 0) clients[idx] = c;
       }
       saveClientsToLS();
+      // 2026-07-02 persist-fix: 編集を Firestore に同期 (再ログイン/別端末で消える bug 対応)
+      try { await persistClientToFirestore(c); }
+      catch (e) { console.warn('[persist] Firestore sync fail:', e); }
       close();
       // モーダルが開いていれば閉じる
       document.getElementById('modal-overlay').style.display = 'none';
@@ -993,11 +996,16 @@
     });
 
     const delBtn = document.getElementById('form-delete-btn');
-    if (delBtn) delBtn.addEventListener('click', () => {
+    if (delBtn) delBtn.addEventListener('click', async () => {
       if (!confirm('この顧客を削除しますか?')) return;
       const idx = clients.findIndex(x => x.id === clientId);
+      const target = idx >= 0 ? clients[idx] : null;
       if (idx >= 0) clients.splice(idx, 1);
       saveClientsToLS();
+      if (target) {
+        try { await persistClientDeleteToFirestore(target); }
+        catch (e) { console.warn('[persist] Firestore delete fail:', e); }
+      }
       close();
       document.getElementById('modal-overlay').style.display = 'none';
       activateTab(state.activeTab);
@@ -1006,6 +1014,71 @@
 
   function saveClientsToLS() {
     try { localStorage.setItem('fp-crm-clients-v1', JSON.stringify(clients)); } catch (e) {}
+  }
+
+  // 2026-07-02 persist-fix: 顧客編集/新規/削除 を Firestore と 同期
+  //   経緯: openClientForm の save は localStorage のみ書込 → 再ログイン/別端末で消失。
+  //   実顧客 (福田様 tenants/fukuda) の 2026-07-02 07:22 報告 が発端。
+  //   memory: feedback_demo_to_prod_save_path_audit.md
+  async function _persistLoadFirebase() {
+    const [{ getFirestore, doc, setDoc, deleteDoc, serverTimestamp }, { initializeApp, getApps }] = await Promise.all([
+      import('https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js'),
+      import('https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js'),
+    ]);
+    const app = getApps()[0] || initializeApp({
+      apiKey: 'AIzaSyAmVAEe9l9e1Yo_dzzJdbTVU35wWKd2sH4',
+      authDomain: 'skeleton-fp-compass-632026.firebaseapp.com',
+      projectId: 'skeleton-fp-compass-632026',
+    });
+    return { db: getFirestore(app), doc, setDoc, deleteDoc, serverTimestamp };
+  }
+  function _persistTenantId() {
+    return (window.__fp && window.__fp.tenantId)
+      || (window.AccountInfo && window.AccountInfo.tenantId)
+      || localStorage.getItem('fp-tenantId')
+      || '';
+  }
+  function _persistFsDocId(c) {
+    // Firestore 由来 → 手動作成 id (fs- prefix は Firestore 側 docId に落とす)
+    if (c._fsCustomerId) return c._fsCustomerId;
+    if (c.docId) return c.docId;
+    if (c.id && String(c.id).startsWith('fs-')) return String(c.id).slice(3);
+    return c.id || '';
+  }
+  async function persistClientToFirestore(c) {
+    const tenantId = _persistTenantId();
+    if (!tenantId) return;
+    const fsId = _persistFsDocId(c);
+    if (!fsId) return;
+    const { db, doc, setDoc, serverTimestamp } = await _persistLoadFirebase();
+    const payload = {
+      name: c.name || '',
+      kana: c.kana || '',
+      birth: c.birth || '',
+      gender: c.gender || '',
+      occupation: c.occupation || '',
+      source: c.source || 'manual',
+      status: c.status || 'new',
+      aum: c.aum || 0,
+      lastContact: c.lastContact || '',
+      note: c.note || '',
+      lineFriendId: c.lineFriendId || '',
+      lineSubscribed: !!c.lineSubscribed,
+      family: c.family || [],
+      updatedAt: serverTimestamp(),
+    };
+    if (c.mortgage) payload.mortgage = c.mortgage;
+    await setDoc(doc(db, 'tenants', tenantId, 'customers', fsId), payload, { merge: true });
+    console.log('[persist] Firestore write OK', tenantId, fsId);
+  }
+  async function persistClientDeleteToFirestore(c) {
+    const tenantId = _persistTenantId();
+    if (!tenantId) return;
+    const fsId = _persistFsDocId(c);
+    if (!fsId) return;
+    const { db, doc, deleteDoc } = await _persistLoadFirebase();
+    await deleteDoc(doc(db, 'tenants', tenantId, 'customers', fsId));
+    console.log('[persist] Firestore delete OK', tenantId, fsId);
   }
   function loadClientsFromLS() {
     try {
@@ -1377,7 +1450,7 @@
                 ? `<span class="avatar avatar-sm" style="position:relative;padding:0;background:none;border:1.5px solid #06c755;overflow:visible;"><img src="${escapeHtml(c.linePictureUrl)}" data-fallback-initial="${escapeHtml(initial)}" data-fallback-hue="${hue}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;"><span title="LINE友だち" style="position:absolute;bottom:-3px;right:-3px;background:#06c755;color:#fff;width:14px;height:14px;border-radius:50%;font-size:8px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid #fff;font-family:inherit;">L</span></span>`
                 : `<span class="avatar avatar-sm" style="--avh:${hue};position:relative;">${escapeHtml(initial)}${c.lineFriendId ? '<span title="LINE友だち" style="position:absolute;bottom:-3px;right:-3px;background:#06c755;color:#fff;width:14px;height:14px;border-radius:50%;font-size:8px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid #fff;font-family:inherit;">L</span>' : ''}</span>`}
               <div>
-                <strong>${escapeHtml(c.name)}</strong>${c.lineFriendId ? '<span style="font-size:9.5px;color:#06c755;font-weight:700;margin-left:5px;background:#dcfce7;padding:1px 5px;border-radius:6px;letter-spacing:0.05em;">LINE</span>' : ''}
+                <strong>${escapeHtml(c.name)}</strong>${c.lineFriendId ? '<span style="font-size:9.5px;color:#06c755;font-weight:700;margin-left:5px;background:#dcfce7;padding:1px 5px;border-radius:6px;letter-spacing:0.05em;">LINE</span>' : ''}${c.source === 'line_follow' ? '<span title="友だち追加済みだが 事前アンケート 未回答" style="font-size:9.5px;color:#9A3412;font-weight:700;margin-left:5px;background:#FFEDD5;padding:1px 5px;border-radius:6px;letter-spacing:0.05em;">アンケ未回答</span>' : ''}
                 <div style="font-size:11px;color:var(--muted);letter-spacing:0.02em;">${escapeHtml(c.kana)}</div>
                 ${(function(){
                   const master = getTagsMaster();
@@ -5084,13 +5157,23 @@ ${ctxText}${surveyTxt}`;
         bookingTs = (latest && latest.ts) || ('gas-' + (r.ts || r.createdAt || Date.now()));
       }
       if (!bookingTs) bookingTs = 'gas-' + (r.ts || r.createdAt || Date.now());
+      // 2026-07-02 persist-fix: 録音日 fallback を強化。
+      //   r.date / r.ts / r.createdAt が空でも、 bookingTs から 「gas-<ISO>」 系の日付を拾い、
+      //   最終的に 現在日 まで fallback して 「日付未定」バケット行きを回避。
+      const _pickIsoDay = (v) => {
+        if (!v) return '';
+        const s = String(v);
+        const m = s.match(/(\d{4}-\d{2}-\d{2})/);
+        return m ? m[1] : '';
+      };
+      const rDate = r.date || _pickIsoDay(r.ts) || _pickIsoDay(r.createdAt) || _pickIsoDay(bookingTs) || new Date().toISOString().slice(0,10);
       aiResults.push({
         bookingTs,
         ts: r.ts || r.createdAt || '', // ★ 録画時刻 を 保持 (dedup/orphan filter用)
         createdAt: r.createdAt || r.ts || '',
         userId: r.userId || client.lineFriendId,
         customerName: r.customerName || client.name,
-        date: r.date || (r.ts || '').slice(0,10),
+        date: rDate,
         transcript: r.transcript || '',
         summary: r.summary || '',
         transcript_summary: r.transcript_summary || '',
