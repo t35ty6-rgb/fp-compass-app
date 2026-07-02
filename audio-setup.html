@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>音声設定ガイド · FP Compass</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #F8F9FB; color: #0F172A; font-family: 'Hiragino Kaku Gothic ProN', 'Yu Gothic', system-ui, sans-serif; font-size: 15px; line-height: 1.85; -webkit-font-smoothing: antialiased; }
+  .head { background: #0E1116; color: #F5F5F0; padding: 42px 32px 32px; }
+  .head-wrap { max-width: 780px; margin: 0 auto; }
+  .head h1 { margin: 0 0 8px; font-size: 26px; font-weight: 800; letter-spacing: 0.02em; }
+  .head p { margin: 0; color: #B5B5B0; font-size: 14px; }
+  main { max-width: 780px; margin: 0 auto; padding: 32px; }
+  .warn { background: #FFF7E6; border-left: 4px solid #D97706; padding: 16px 20px; border-radius: 4px; margin-bottom: 24px; font-size: 14px; }
+  .warn strong { color: #92400E; }
+  h2 { font-size: 20px; font-weight: 800; margin: 32px 0 14px; padding-left: 12px; border-left: 4px solid #C1462C; letter-spacing: 0.01em; }
+  h3 { font-size: 16px; font-weight: 700; margin: 22px 0 10px; color: #1e3a5f; }
+  .step { background: #fff; border: 1px solid #e3e7ee; border-radius: 8px; padding: 20px 24px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,.03); }
+  .step-num { display: inline-block; background: #C1462C; color: #fff; width: 26px; height: 26px; border-radius: 50%; text-align: center; line-height: 26px; font-weight: 800; font-size: 13px; margin-right: 10px; }
+  code { background: #F1F5F9; padding: 3px 8px; border-radius: 4px; font-family: 'SF Mono', Menlo, monospace; font-size: 13px; color: #DC2626; }
+  pre { background: #0F172A; color: #E2E8F0; padding: 16px 20px; border-radius: 6px; overflow-x: auto; font-family: 'SF Mono', Menlo, monospace; font-size: 13px; line-height: 1.6; }
+  .btn { display: inline-block; background: #C1462C; color: #fff; padding: 12px 22px; border-radius: 6px; text-decoration: none; font-weight: 700; margin-top: 8px; }
+  .btn:hover { background: #a53b23; }
+  ul { padding-left: 22px; }
+  li { margin-bottom: 6px; }
+  .cap { color: #64748B; font-size: 13px; margin-top: 6px; }
+  a { color: #C1462C; }
+  .faq { background: #F1F5F9; border-radius: 6px; padding: 14px 18px; margin-bottom: 10px; }
+  .faq strong { color: #1e3a5f; }
+</style>
+</head>
+<body>
+
+<header class="head">
+  <div class="head-wrap">
+    <h1>音声設定ガイド</h1>
+    <p>Bluetooth ヘッドホン (AirPods 等) 使用時に、 Zoom 相手の声 も 議事録録音 する 設定</p>
+  </div>
+</header>
+
+<main>
+
+<div class="warn">
+  <strong>症状:</strong> Zoom を Bluetooth ヘッドホン で 使うと、 FP Compass の 議事録録音 に <strong>自分の声しか 入らない</strong>。 これは Mac の 仕様 で、 相手の音声 は ヘッドホン に 直行し PC マイク が 拾えない ため。
+  <br><br>
+  <strong>解:</strong> BlackHole (仮想オーディオ 出力) を 挟んで、 相手の声 を 「マイク入力」 として 拾えるようにする。 一度 設定すれば 以降 自動。
+</div>
+
+<h2>手順 (所要 5 分)</h2>
+
+<div class="step">
+  <h3><span class="step-num">1</span>BlackHole を インストール</h3>
+  <p>ターミナル.app で 以下 を コピペ 実行 (Homebrew 未導入 なら 事前に <a href="https://brew.sh" target="_blank">brew.sh</a>):</p>
+  <pre>brew install --cask blackhole-2ch</pre>
+  <p class="cap">パスワード 入力 プロンプト が 出たら Mac の 起動 パスワード。</p>
+</div>
+
+<div class="step">
+  <h3><span class="step-num">2</span>Audio MIDI 設定 で 「Multi-Output Device」 作成 (相手の声 を Bluetooth と BlackHole に 同時 出力)</h3>
+  <ul>
+    <li>Spotlight (⌘+Space) で <code>Audio MIDI</code> と 入力 → 「Audio MIDI 設定」 を 開く</li>
+    <li>左下 の <strong>+</strong> ボタン → 「Multi-Output Device を 作成」</li>
+    <li>右側 で <strong>AirPods (or 使用中の Bluetooth ヘッドホン)</strong> と <strong>BlackHole 2ch</strong> の 両方 に チェック</li>
+    <li>左側 リスト の この 新しい 機器 を 右クリック → 名前 を <code>FP Compass 出力</code> に 変更</li>
+  </ul>
+</div>
+
+<div class="step">
+  <h3><span class="step-num">3</span>「機器セット」 を 作成 (自分の声 + 相手の声 を 合成)</h3>
+  <ul>
+    <li>Audio MIDI 設定 の <strong>+</strong> → 「機器セット を 作成」</li>
+    <li>右側 で <strong>内蔵マイク</strong> と <strong>BlackHole 2ch</strong> の 両方 に チェック</li>
+    <li>名前 を <code>FP Compass 入力</code> に 変更</li>
+  </ul>
+</div>
+
+<div class="step">
+  <h3><span class="step-num">4</span>Zoom の スピーカー を 切替</h3>
+  <ul>
+    <li>Zoom → 設定 → オーディオ</li>
+    <li><strong>スピーカー</strong> を <code>FP Compass 出力</code> に 変更</li>
+    <li>マイク は そのまま (内蔵マイク or AirPods マイク)</li>
+  </ul>
+  <p class="cap">これで Bluetooth ヘッドホン から 相手の声 が 聞こえつつ、 BlackHole にも 同じ 音 が 流れる。</p>
+</div>
+
+<div class="step">
+  <h3><span class="step-num">5</span>FP Compass で マイク を 切替</h3>
+  <ul>
+    <li>FP Compass で 議事録録音 開始 時 の マイク 選択 で <code>FP Compass 入力</code> を 選ぶ</li>
+    <li>Chrome の 「マイク の 使用 許可」 は 初回 のみ</li>
+  </ul>
+  <p class="cap">以降、 議事録録音 は 自動で 「自分 + 相手」 の 両声 を 拾う。</p>
+</div>
+
+<h2>FAQ</h2>
+
+<div class="faq">
+  <strong>Q: 有線 ヘッドホン なら 設定 不要?</strong><br>
+  A: 有線 の 場合、 PC の スピーカー から も 相手 の 音 が 漏れる ので、 内蔵マイク が それ を 拾い、 録音 できる ことが 多い。 ただし 環境 によって 不安定 なので、 上記 設定 を 推奨。
+</div>
+
+<div class="faq">
+  <strong>Q: 対面 面談 (Zoom なし) の 録音 も 影響 する?</strong><br>
+  A: しない。 対面 の 場合 は 内蔵マイク (or 外付けマイク) が 両者 の 声 を 拾う。 上記 設定 は Zoom 時 のみ 有効。
+</div>
+
+<div class="faq">
+  <strong>Q: Windows でも 同じ 手順?</strong><br>
+  A: 違う。 Windows は <a href="https://vb-audio.com/Cable/" target="_blank">VB-CABLE</a> という 類似 ツール で 同等 の 設定 が 可能。 別ガイド 準備中。
+</div>
+
+<div class="faq">
+  <strong>Q: 設定 が うまく いか ない</strong><br>
+  A: <a href="mailto:jobs@skeleton-inc.jp">jobs@skeleton-inc.jp</a> まで 連絡 (画面録画 添付 だと 早い)。
+</div>
+
+<p style="margin-top: 40px; text-align: center; color: #94A3B8; font-size: 13px;">
+  FP Compass · Skeleton Inc.
+</p>
+
+</main>
+
+</body>
+</html>

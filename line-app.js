@@ -1177,6 +1177,11 @@
         </div>
 
         <!-- ★ 急遽 開始 — 2モード (Zoom即発行 / 対面録音) — カメラ/マイク権限は対面のみ必要 -->
+        <!-- 音声設定 案内 (Bluetooth ヘッドホン 使用時の 相手声録音対策) -->
+        <div id="fp-audio-setup-hint" style="background:#FFF7E6;border-left:3px solid #D97706;padding:10px 14px;border-radius:4px;margin-bottom:14px;font-size:12px;line-height:1.6;color:#78350F;">
+          <strong style="color:#92400E;">💡 AirPods 等 Bluetooth ヘッドホン 使用時 は 事前 に <a href="/audio-setup.html" target="_blank" style="color:#C1462C;font-weight:700;">音声設定 (5分)</a> が 必要 です。</strong>
+          <span style="color:#92400E;">未設定 だと 議事録 に 相手 の 声 が 入りません。</span>
+        </div>
         <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;letter-spacing:0.04em;margin-bottom:8px;">面談スタイル</label>
         <div id="fp-qi-mode-grid" style="display:grid;grid-template-columns:1fr;gap:8px;margin-bottom:16px;">
           <label class="fp-qi-mode" data-mode="zoom" style="display:flex;gap:12px;padding:16px 18px;border:1.5px solid #E5E7EB;border-radius:10px;cursor:pointer;background:#fff;transition:border-color .12s,background .12s;">
