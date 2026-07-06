@@ -2362,14 +2362,64 @@
     });
   }
 
+  // ★ 2026-07-06: マイク 適応選択
+  //   PC (Mac) → Continuity iPhone/iPad マイク を 除外 (携帯閉じで 音声途切れ 防止)
+  //   Mobile (iPhone/iPad Safari) → デフォルト の 内蔵マイク を そのまま使う
+  function isMobileDevice() {
+    const ua = navigator.userAgent || '';
+    // iPad Pro on iPadOS 13+ で iPhone/iPad が UA に出ない → maxTouchPoints で 補助判定
+    return /iPhone|iPad|iPod|Android/i.test(ua) ||
+           (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  }
+  async function getPreferredMicConstraint() {
+    // Mobile 端末なら 内蔵マイク を そのまま使う (フィルタ 不要)
+    if (isMobileDevice()) {
+      console.log('[mic] mobile device — use default mic');
+      return { echoCancellation: true, noiseSuppression: true, sampleRate: 44100 };
+    }
+    // PC (Mac/Windows) → Continuity iPhone マイク を 除外
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const audioIns = devices.filter(d => d.kind === 'audioinput');
+      const excludePattern = /iPhone|iPad|Continuity|Handoff/i;
+      const builtin = audioIns.find(d => !excludePattern.test(d.label) && /Built-in|MacBook|iMac|内蔵|Mac|Studio Display/i.test(d.label));
+      const nonIphone = builtin || audioIns.find(d => !excludePattern.test(d.label));
+      if (nonIphone && nonIphone.deviceId) {
+        console.log('[mic] preferred:', nonIphone.label, nonIphone.deviceId.slice(0, 8));
+        return { deviceId: { exact: nonIphone.deviceId }, echoCancellation: true, noiseSuppression: true, sampleRate: 44100 };
+      }
+    } catch (e) {
+      console.warn('[mic] enumerateDevices failed:', e);
+    }
+    return { echoCancellation: true, noiseSuppression: true, sampleRate: 44100 };
+  }
+  // ★ MediaRecorder MIME type 適応選択 (iOS Safari は webm 非対応 → mp4/aac)
+  function getPreferredRecorderMime() {
+    const candidates = [
+      'video/webm;codecs=vp9,opus',
+      'video/webm;codecs=vp8,opus',
+      'video/webm',
+      'video/mp4;codecs=avc1.42E01E,mp4a.40.2',  // iOS Safari
+      'video/mp4',
+      'audio/webm;codecs=opus',
+      'audio/mp4;codecs=mp4a.40.2',  // iOS Safari audio-only
+      'audio/mp4',
+    ];
+    for (const m of candidates) {
+      try { if (MediaRecorder.isTypeSupported(m)) return m; } catch (_) {}
+    }
+    return '';  // browser default
+  }
+
   // 対面モード録画: webcam + マイクで録画 → 同じ AI議事録パイプラインへ
   async function startWebcamRecording(bookingTs) {
     const R = window._fpRecorder;
     let stream;
     try {
+      const audioConstraint = await getPreferredMicConstraint();
       stream = await navigator.mediaDevices.getUserMedia({
         video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' },
-        audio: { echoCancellation: true, noiseSuppression: true, sampleRate: 44100 },
+        audio: audioConstraint,
       });
     } catch (e) {
       // ★ オーナーfb 2026-06-22 (roundG): カメラ/マイク 失敗時に 進める fallback を 3 つ提示
@@ -2768,9 +2818,8 @@
     const R = window._fpRecorder;
     let stream;
     try {
-      stream = await navigator.mediaDevices.getUserMedia({
-        audio: { echoCancellation: true, noiseSuppression: true, sampleRate: 44100 },
-      });
+      const audioConstraint = await getPreferredMicConstraint();
+      stream = await navigator.mediaDevices.getUserMedia({ audio: audioConstraint });
     } catch (e) {
       alert('マイク も アクセス不可 です。\n\nMac の場合: システム設定 → プライバシーとセキュリティ → マイク で ブラウザ を ON にしてください。\n\n技術: ' + (e?.name || e?.message || e));
       return;
@@ -2802,11 +2851,14 @@
     }, 1000);
 
     const chunks = [];
+    // iOS Safari は webm 非対応 → mp4/aac に fallback
     const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus'
-      : MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4';
+      : MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm'
+      : MediaRecorder.isTypeSupported('audio/mp4;codecs=mp4a.40.2') ? 'audio/mp4;codecs=mp4a.40.2'
+      : MediaRecorder.isTypeSupported('audio/mp4') ? 'audio/mp4' : '';
     // ★ オーナーfb 2026-06-23: 長録画 (30/60分) を Cloud Run 32MB 制限に収めるため
     // bitrate を 24kbps に 下げる (音声明瞭度は維持されつつ 60分=10MB に収まる)
-    const mr = new MediaRecorder(stream, { mimeType, audioBitsPerSecond: 24000 });
+    const mr = new MediaRecorder(stream, mimeType ? { mimeType, audioBitsPerSecond: 24000 } : { audioBitsPerSecond: 24000 });
     mr.ondataavailable = e => { if (e.data && e.data.size > 0) chunks.push(e.data); };
     mr.onstop = async () => {
       stream.getTracks().forEach(t => t.stop());
@@ -2897,9 +2949,10 @@
     try {
       let stream;
       try {
-        stream = await navigator.mediaDevices.getUserMedia({
-          audio: { echoCancellation: false, noiseSuppression: true, sampleRate: 44100 },
-        });
+        const audioConstraint = await getPreferredMicConstraint();
+        // Zoom 用途: echoCancellation=false (元コード踏襲)
+        audioConstraint.echoCancellation = false;
+        stream = await navigator.mediaDevices.getUserMedia({ audio: audioConstraint });
       } catch (e) {
         alert('🎤 マイク アクセス できません\n\n' +
               'Mac の場合: システム設定 → プライバシーとセキュリティ → マイク で Chrome を ON\n\n' +
@@ -2986,8 +3039,13 @@
       // 音声のみで録音 (動画は不要、Drive用もAI用も同じ音声ファイル)
       // 1時間 ≒ 8MB に収まる
       const audioOnlyStream = new MediaStream(combined.getAudioTracks());
-      const audioMime = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : 'audio/webm';
-      R.mediaRecorder = new MediaRecorder(audioOnlyStream, { mimeType: audioMime, audioBitsPerSecond: 24000 });
+      // ★ iOS Safari は webm 非対応 → mp4/aac に fallback
+      const audioMime = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus'
+        : MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm'
+        : MediaRecorder.isTypeSupported('audio/mp4;codecs=mp4a.40.2') ? 'audio/mp4;codecs=mp4a.40.2'
+        : MediaRecorder.isTypeSupported('audio/mp4') ? 'audio/mp4'
+        : '';
+      R.mediaRecorder = new MediaRecorder(audioOnlyStream, audioMime ? { mimeType: audioMime, audioBitsPerSecond: 24000 } : { audioBitsPerSecond: 24000 });
       R.mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) R.chunks.push(e.data); };
       R.mediaRecorder.onstop = async () => {
         const blob = new Blob(R.chunks, { type: 'audio/webm' });

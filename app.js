@@ -5328,8 +5328,8 @@ ${ctxText}${surveyTxt}`;
               ${aiData.transcript ? `
                 <div class="fp-meeting-block">
                   <div class="fp-meeting-block-label">AI 文字起こし (Whisper)</div>
-                  <details style="background:#fff;border:1px solid var(--fp-line);">
-                    <summary style="padding:11px 16px;cursor:pointer;font-size:12px;color:var(--fp-ink);font-weight:700;background:var(--fp-paper);border-bottom:1px solid var(--fp-line);font-family:Manrope,sans-serif;letter-spacing:0.04em;">全文を見る (${(aiData.transcript||'').length}文字)</summary>
+                  <details open style="background:#fff;border:1px solid var(--fp-line);">
+                    <summary style="padding:11px 16px;cursor:pointer;font-size:12px;color:var(--fp-ink);font-weight:700;background:var(--fp-paper);border-bottom:1px solid var(--fp-line);font-family:Manrope,sans-serif;letter-spacing:0.04em;">AI 文字起こし 全文 (${(aiData.transcript||'').length}文字) — クリックで折りたたみ</summary>
                     <div style="padding:14px 18px;font-size:12.5px;line-height:1.95;white-space:pre-wrap;max-height:320px;overflow-y:auto;color:var(--fp-ink);">${escapeHtml(aiData.transcript)}</div>
                   </details>
                 </div>` : ''}
@@ -5420,8 +5420,8 @@ ${ctxText}${surveyTxt}`;
                 ${a.transcript ? `
                   <div class="fp-meeting-block">
                     <div class="fp-meeting-block-label">AI 文字起こし (Whisper)</div>
-                    <details style="background:#fff;border:1px solid var(--fp-line);">
-                      <summary style="padding:11px 16px;cursor:pointer;font-size:12px;color:var(--fp-ink);font-weight:700;background:var(--fp-paper);border-bottom:1px solid var(--fp-line);font-family:Manrope,sans-serif;letter-spacing:0.04em;">全文を見る (${(a.transcript||'').length}文字)</summary>
+                    <details open style="background:#fff;border:1px solid var(--fp-line);">
+                      <summary style="padding:11px 16px;cursor:pointer;font-size:12px;color:var(--fp-ink);font-weight:700;background:var(--fp-paper);border-bottom:1px solid var(--fp-line);font-family:Manrope,sans-serif;letter-spacing:0.04em;">AI 文字起こし 全文 (${(a.transcript||'').length}文字) — クリックで折りたたみ</summary>
                       <div style="padding:14px 18px;font-size:12.5px;line-height:1.95;white-space:pre-wrap;max-height:320px;overflow-y:auto;color:var(--fp-ink);">${escapeHtml(a.transcript)}</div>
                     </details>
                   </div>` : ''}
