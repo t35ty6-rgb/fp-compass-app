@@ -2656,7 +2656,6 @@
       try { if (typeof renderMeetingHistory === 'function') renderMeetingHistory(); } catch(_){}
     };
     mr.start(3000);
-    startBackgroundKeepAlive();
     R.mediaRecorder = mr;
     R.bookingTs = bookingTs;
     R.blob = null;
@@ -2931,7 +2930,6 @@
     const mr = new MediaRecorder(stream, mimeType ? { mimeType, audioBitsPerSecond: 24000 } : { audioBitsPerSecond: 24000 });
     mr.ondataavailable = e => { if (e.data && e.data.size > 0) chunks.push(e.data); };
     mr.onstop = async () => {
-      stopBackgroundKeepAlive();
       stream.getTracks().forEach(t => t.stop());
       clearInterval(timerInterval);
       if (indicator) indicator.remove();
@@ -2999,7 +2997,6 @@
       }
     });
     mr.start(3000);
-    startBackgroundKeepAlive();
     R.mediaRecorder = mr;
     R.bookingTs = bookingTs;
     R.blob = null;
@@ -3120,7 +3117,6 @@
       R.mediaRecorder = new MediaRecorder(audioOnlyStream, audioMime ? { mimeType: audioMime, audioBitsPerSecond: 24000 } : { audioBitsPerSecond: 24000 });
       R.mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) R.chunks.push(e.data); };
       R.mediaRecorder.onstop = async () => {
-        stopBackgroundKeepAlive();
         const blob = new Blob(R.chunks, { type: 'audio/webm' });
         R.blobUrl = URL.createObjectURL(blob);
         combined.getTracks().forEach(t => t.stop());
@@ -3171,7 +3167,6 @@
         await onRecordingComplete(R.bookingTs, blob, R.blobUrl);
       };
       R.mediaRecorder.start(1000);
-      startBackgroundKeepAlive();
 
       showRecordingBorder();
       fetch(CLOUD_RUN_BASE + '/api/recording/start?ts=' + encodeURIComponent(bookingTs), { method: 'POST' }).catch(() => {});
