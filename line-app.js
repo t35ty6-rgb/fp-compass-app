@@ -2372,22 +2372,36 @@
            (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   }
   async function getPreferredMicConstraint() {
-    // Mobile 端末なら 内蔵マイク を そのまま使う (フィルタ 不要)
     if (isMobileDevice()) {
       console.log('[mic] mobile device — use default mic');
       return { echoCancellation: true, noiseSuppression: true, sampleRate: 44100 };
     }
-    // PC (Mac/Windows) → Continuity iPhone マイク を 除外
+    // ★ enumerateDevices の label は 「マイク許可」 前 は 空 → 先に dummy getUserMedia で 許可 取得 → 再列挙
     try {
-      const devices = await navigator.mediaDevices.enumerateDevices();
-      const audioIns = devices.filter(d => d.kind === 'audioinput');
-      const excludePattern = /iPhone|iPad|Continuity|Handoff/i;
-      const builtin = audioIns.find(d => !excludePattern.test(d.label) && /Built-in|MacBook|iMac|内蔵|Mac|Studio Display/i.test(d.label));
-      const nonIphone = builtin || audioIns.find(d => !excludePattern.test(d.label));
+      let devices = await navigator.mediaDevices.enumerateDevices();
+      let audioIns = devices.filter(d => d.kind === 'audioinput');
+      const anyLabel = audioIns.some(d => d.label && d.label.length > 0);
+      if (!anyLabel) {
+        console.log('[mic] no labels — requesting permission first');
+        try {
+          const dummy = await navigator.mediaDevices.getUserMedia({ audio: true });
+          dummy.getTracks().forEach(t => t.stop());
+          devices = await navigator.mediaDevices.enumerateDevices();
+          audioIns = devices.filter(d => d.kind === 'audioinput');
+        } catch (permErr) {
+          console.warn('[mic] permission err:', permErr);
+        }
+      }
+      console.log('[mic] devices:', audioIns.map(d => `${d.label}(${d.deviceId.slice(0,8)})`).join(', '));
+      const excludePattern = /iPhone|iPad|Continuity|Handoff|携帯|スマホ/i;
+      const builtinPattern = /Built-in|MacBook|iMac|内蔵|Mac (mini|Studio|Pro)|Studio Display|外部マイク/i;
+      const builtin = audioIns.find(d => d.label && !excludePattern.test(d.label) && builtinPattern.test(d.label));
+      const nonIphone = builtin || audioIns.find(d => d.label && !excludePattern.test(d.label));
       if (nonIphone && nonIphone.deviceId) {
-        console.log('[mic] preferred:', nonIphone.label, nonIphone.deviceId.slice(0, 8));
+        console.log('[mic] ✓ selected:', nonIphone.label);
         return { deviceId: { exact: nonIphone.deviceId }, echoCancellation: true, noiseSuppression: true, sampleRate: 44100 };
       }
+      console.warn('[mic] no non-iPhone mic — fallback default');
     } catch (e) {
       console.warn('[mic] enumerateDevices failed:', e);
     }
