@@ -3528,8 +3528,12 @@
     `;
     document.getElementById('modal-overlay').style.display = 'flex';
     // ★ 2026-07-10: 顧客モーダル 開いてる 間 は コンパちゃん fab / hint 非表示 (右下 被り 対策)
-    try { document.getElementById('mbFab')?.classList.add('hidden'); } catch (_) {}
-    try { document.querySelectorAll('.mb-fab-hint, .mb-fab-badge').forEach(el => el.style.display = 'none'); } catch (_) {}
+    // ★ 2026-07-10 v2: 単なる .hidden class では 効かない ケース対策 → 直接 inline !important
+    try {
+      const fab = document.getElementById('mbFab');
+      if (fab) fab.style.setProperty('display', 'none', 'important');
+      document.querySelectorAll('.mb-fab-hint, .mb-fab-badge, .mb-fab-pulse, .mb-panel').forEach(el => el.style.setProperty('display', 'none', 'important'));
+    } catch (_) {}
     // ★ オーナーfb 2026-06-25: cd-line-chat が 出現 / 再描画 されたら 必ず 最新へ scroll
     // (タブclick だけだと URL ?tab=line 復元 / hydrate 再render の時 漏れる)
     const _scrollLineChatBottom = () => {
@@ -8977,9 +8981,12 @@ ${client.name}さん、ありがとうございます。
   function closeModal(options) {
     options = options || {};
     document.getElementById('modal-overlay').style.display = 'none';
-    // ★ 2026-07-10: モーダル閉じたら コンパちゃん fab 復活
-    try { document.getElementById('mbFab')?.classList.remove('hidden'); } catch (_) {}
-    try { document.querySelectorAll('.mb-fab-hint, .mb-fab-badge').forEach(el => el.style.display = ''); } catch (_) {}
+    // ★ 2026-07-10 v2: モーダル閉じたら コンパちゃん fab 復活 (inline !important 削除)
+    try {
+      const fab = document.getElementById('mbFab');
+      if (fab) { fab.style.removeProperty('display'); fab.classList.remove('hidden'); }
+      document.querySelectorAll('.mb-fab-hint, .mb-fab-badge, .mb-fab-pulse, .mb-panel').forEach(el => el.style.removeProperty('display'));
+    } catch (_) {}
     // ★ 閉じたら復元 flag クリア
     try {
       localStorage.removeItem('fp-last-open-client');

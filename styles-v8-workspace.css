@@ -107,6 +107,15 @@ body, table, .kpi-value, .num, .funnel-value, .task-count,
   grid-template-columns: 308px 1fr;
   height: 100vh;
   width: 100vw;
+  max-width: 100vw;
+  overflow: hidden;
+}
+/* 2026-07-10: notebook viewport (1440px以下) で sidebar 幅 削減 → 途切れ防止 */
+@media (max-width: 1500px) {
+  .shell { grid-template-columns: 260px 1fr; }
+}
+@media (max-width: 1280px) {
+  .shell { grid-template-columns: 232px 1fr; }
 }
 
 /* ==================================================================
