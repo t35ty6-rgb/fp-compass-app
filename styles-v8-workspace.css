@@ -403,7 +403,24 @@ body, table, .kpi-value, .num, .funnel-value, .task-count,
 }
 
 /* -------- Sidebar foot -------- */
-.sidebar-foot { margin-top: auto; padding-top: 10px; border-top: 1px solid var(--hairline); }
+/* 2026-07-10 owner FB: notebook viewport で FP事業者/Owner footer が切れる → sticky bottom + 背景で常時可視 */
+.sidebar-foot {
+  margin-top: auto;
+  padding-top: 10px;
+  padding-bottom: 6px;
+  border-top: 1px solid var(--hairline);
+  position: sticky;
+  bottom: 0;
+  background: #FFFFFF;
+  z-index: 2;
+}
+/* 更に viewport 高さ が 700px 以下 なら upgrade-mini を 折りたたむ (foot 縦圧縮) */
+@media (max-height: 720px) {
+  .upgrade-mini { padding: 8px 10px; }
+  .upgrade-mini-text { font-size: 11px; }
+  .real-mode-toggle { padding: 6px 10px; }
+  .sidebar-foot { padding-top: 6px; padding-bottom: 4px; }
+}
 
 /* Real mode toggle (デモ⇄実モード) */
 .real-mode-toggle {
