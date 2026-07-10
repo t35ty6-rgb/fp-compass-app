@@ -3782,16 +3782,21 @@
       }
     } catch (_) {}
 
-    // ★ 2026-07-10: 議事録 カード 削除 (手動 追加/AI 生成 両方 対応)
-    document.querySelectorAll('.fp-meeting-delete').forEach(btn => {
-      btn.addEventListener('click', async () => {
+    // ★ 2026-07-10: 議事録 カード 削除 — event delegation (lazy-render 後にも 反応する)
+    //   注意: この関数 (openClientModal) は modal 開くたび に走るが、 delegation handler は 1回だけ 登録
+    if (!window._fpMeetingDeleteHandlerBound) {
+      window._fpMeetingDeleteHandlerBound = true;
+      document.body.addEventListener('click', async (ev) => {
+        const btn = ev.target && ev.target.closest && ev.target.closest('.fp-meeting-delete');
+        if (!btn) return;
+        ev.preventDefault();
+        ev.stopPropagation();
         if (!confirm('この 議事録 を 削除しますか?\n\n削除する項目:\n・議事録 サマリー\n・文字起こし 全文\n・タスク / 提案\n\n元に戻せません。')) return;
         const bookingTs = btn.dataset.bookingTs || '';
         const aiTs = btn.dataset.aiTs || '';
         btn.disabled = true;
         btn.textContent = '削除中…';
         try {
-          // 1) in-memory ai_results から 削除
           const live = window.LineAppLiveData || {};
           if (Array.isArray(live.ai_results)) {
             live.ai_results = live.ai_results.filter(r => {
@@ -3800,7 +3805,6 @@
               return !(rBk === bookingTs && rTs === aiTs);
             });
           }
-          // 2) localStorage cache 更新 (main.js の cache key)
           try {
             const client = window._fpCurrentClient;
             if (client) {
@@ -3815,7 +3819,6 @@
               });
             }
           } catch (_) {}
-          // 3) GAS 側 も 削除 (save-ai-result with deleted flag)
           try {
             const CLOUD_RUN = 'https://fp-compass-webhook-527726449426.asia-northeast1.run.app';
             const h = window.getFpAuthHeaders ? await window.getFpAuthHeaders() : { 'Content-Type': 'application/json' };
@@ -3826,14 +3829,19 @@
                 bookingTs, ts: aiTs, deleted: true,
                 tenantId: (window.__fp && window.__fp.tenantId) || '',
               }),
-            }).catch(() => {});  // GAS 削除は best-effort (endpoint 未対応 でも UI 側は削除)
+            }).catch(() => {});
           } catch (_) {}
-          // 4) UI 再描画
+          // panel 直接 innerHTML 再描画 (openClientModal 全体再描画 だと URL 履歴 邪魔になる)
           const client = window._fpCurrentClient;
-          if (client && typeof openClientModal === 'function') {
-            openClientModal(client.id, { keepTab: 'meetings' });
+          const panel = document.querySelector('[data-cdpanel="meetings"]');
+          if (client && panel && typeof renderMeetingRecordsBlock === 'function') {
+            panel.innerHTML = renderMeetingRecordsBlock(client) || '<div class="cd-empty">面談録なし</div>';
+            panel.dataset.cacheKey = '';
+            panel.dataset.cacheHasContent = '1';
+            // count 更新
+            const cntEl = document.getElementById('cd-meetings-count');
+            if (cntEl) cntEl.textContent = panel.querySelectorAll('.fp-meeting-card').length;
           } else {
-            // fallback: カード だけ 消す
             btn.closest('.fp-meeting-card')?.remove();
           }
         } catch (e) {
@@ -3842,7 +3850,7 @@
           btn.textContent = '🗑 削除';
         }
       });
-    });
+    }
 
     // ★ 議事録 編集 / 保存 (CLOUD_RUN_BASE/api/save-ai-result 経由で GAS sheet 上書き)
     document.querySelectorAll('[data-minutes-editor]').forEach(wrap => {
