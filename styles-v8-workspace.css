@@ -122,21 +122,42 @@ body, table, .kpi-value, .num, .funnel-value, .task-count,
    SIDEBAR (light, calm) — v3 simplified
    業務系CRMに合わせて light bg、装飾を最小限に
    ================================================================== */
+/* 2026-07-10 impeccable 再設計: 3-zone flex (header / scroll / foot)
+   固定ヘッダー (brand+search+quick-rec) + スクロール中間 + 固定フッター
+   → foot が どんな viewport でも 常に 見える (sticky に頼らず 構造的に解決) */
 .sidebar {
   background: #FFFFFF;
   color: var(--ink);
   display: flex; flex-direction: column;
-  padding: 16px 12px 12px;
+  padding: 14px 12px 10px;
   border-right: 1px solid var(--hairline);
-  overflow-y: auto;
-  /* 2026-07-10 fix: 内容が 幅超過 で 切れる 問題 → 縦スクロールのみ、 横は 折り返し */
-  overflow-x: hidden;
+  overflow: hidden;              /* scroll は 内側 の .sidebar-scroll が担当 */
   min-width: 0;
   position: relative;
   box-sizing: border-box;
 }
 .sidebar * { max-width: 100%; box-sizing: border-box; }
 .sidebar input, .sidebar button, .sidebar a { min-width: 0; }
+/* 固定ゾーン: shrink しない */
+.sidebar-brand,
+.sidebar-search,
+.sidebar-quick-rec,
+.sidebar-foot { flex-shrink: 0; }
+/* 中間スクロールゾーン */
+.sidebar-scroll {
+  flex: 1;
+  min-height: 0;                 /* 重要: flex子 の overflow を 有効化 */
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 8px -4px;
+  padding: 0 4px;
+}
+.sidebar-scroll::-webkit-scrollbar { width: 5px; }
+.sidebar-scroll::-webkit-scrollbar-thumb { background: var(--hairline-2); border-radius: 3px; }
+.sidebar-scroll::-webkit-scrollbar-track { background: transparent; }
 .sidebar::-webkit-scrollbar { width: 5px; }
 .sidebar::-webkit-scrollbar-thumb { background: var(--hairline-2); border-radius: 3px; }
 .sidebar::-webkit-scrollbar-track { background: transparent; }
@@ -403,23 +424,36 @@ body, table, .kpi-value, .num, .funnel-value, .task-count,
 }
 
 /* -------- Sidebar foot -------- */
-/* 2026-07-10 owner FB: notebook viewport で FP事業者/Owner footer が切れる → sticky bottom + 背景で常時可視 */
+/* 2026-07-10 impeccable 再設計: sticky 廃止 → 3-zone flex で 構造的に foot 固定
+   sidebar-foot は 常に flex column の 最下段 (flex-shrink:0 + margin-top:auto の fallback) */
 .sidebar-foot {
-  margin-top: auto;
-  padding-top: 10px;
-  padding-bottom: 6px;
+  margin-top: auto;              /* fallback: scroll 空でも 下に押し出し */
+  padding: 10px 0 4px;
   border-top: 1px solid var(--hairline);
-  position: sticky;
-  bottom: 0;
-  background: #FFFFFF;
-  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
-/* 更に viewport 高さ が 700px 以下 なら upgrade-mini を 折りたたむ (foot 縦圧縮) */
+
+/* Short viewport (< 720px) — foot 密度化 (削除せず 圧縮) */
 @media (max-height: 720px) {
-  .upgrade-mini { padding: 8px 10px; }
-  .upgrade-mini-text { font-size: 11px; }
-  .real-mode-toggle { padding: 6px 10px; }
-  .sidebar-foot { padding-top: 6px; padding-bottom: 4px; }
+  .sidebar-foot { gap: 4px; padding-top: 8px; }
+  .upgrade-mini { padding: 6px 10px; }
+  .upgrade-mini-text { font-size: 11px; line-height: 1.35; }
+  .upgrade-mini-title { font-size: 10.5px; }
+  .real-mode-toggle { padding: 6px 10px; font-size: 11.5px; }
+  .sidebar-user { padding: 6px 8px; margin-top: 0; }
+  .user-avatar { width: 28px; height: 28px; font-size: 11px; }
+  .user-name { font-size: 12.5px; }
+  .user-role { font-size: 10.5px; }
+}
+
+/* Even shorter (< 600px) — real-mode label と upgrade bar を hide */
+@media (max-height: 600px) {
+  .real-mode-label { display: none; }
+  .real-mode-toggle { justify-content: center; }
+  .upgrade-mini-bar { display: none; }
+  .upgrade-mini-text { display: flex; align-items: center; gap: 6px; }
 }
 
 /* Real mode toggle (デモ⇄実モード) */
@@ -7459,6 +7493,8 @@ body.mobile-nav-open #mobile-hamburger .mh-bar:nth-child(3) { transform: transla
 
 /* m-only 要素 は PC では隠す */
 .m-only { display: none; }
+/* 2026-07-10 fix: #mobile-fab-new-client は button default display=inline-block で PC でも 39px 占有 → shell を 押し下げてた → PC で 完全 hide */
+#mobile-fab-new-client { display: none; }
 
 /* ───── < 768px = モバイル ───── */
 @media (max-width: 768px) {

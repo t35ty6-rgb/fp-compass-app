@@ -20,10 +20,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20260710H-sidebar-foot-sticky">
-<link rel="stylesheet" href="styles-v2.css?v=20260710H-sidebar-foot-sticky">
-<link rel="stylesheet" href="styles-v3.css?v=20260710H-sidebar-foot-sticky">
-<link rel="stylesheet" href="styles-v8-workspace.css?v=20260710H-sidebar-foot-sticky">
+<link rel="stylesheet" href="styles.css?v=20260710J-mobile-fab-desktop-hide">
+<link rel="stylesheet" href="styles-v2.css?v=20260710J-mobile-fab-desktop-hide">
+<link rel="stylesheet" href="styles-v3.css?v=20260710J-mobile-fab-desktop-hide">
+<link rel="stylesheet" href="styles-v8-workspace.css?v=20260710J-mobile-fab-desktop-hide">
 <!-- ★ 2026-06-26 perf: lucide(350KB) と chart.js(201KB) を defer 化 -->
 <!--   どちらも DOMContentLoaded 後ハイドレートで OK (lucide: setInterval scan / chart: tryRender polling) -->
 <script defer src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
@@ -784,6 +784,8 @@
       <span class="sidebar-quick-rec-pill">予約不要</span>
     </button>
 
+    <!-- 2026-07-10 impeccable 再設計: 3-zone flex (header / scroll / foot) → foot が どんな viewport でも 切れない -->
+    <div class="sidebar-scroll">
     <div class="sidebar-group">
       <div class="sidebar-label">
         <i data-lucide="layout"></i><span>ワークスペース</span>
@@ -856,6 +858,7 @@
         </div>
       </nav>
     </div>
+    </div><!-- /sidebar-scroll -->
 
     <div class="sidebar-foot">
       <button class="real-mode-toggle" id="real-mode-btn" title="実モード ⇄ 本番モード">
@@ -2018,7 +2021,7 @@ window.fpReadyAfterAuth = function() {
 <script>
 (function(){
   // 最新の ver を 1 箇所に集約 (fpReadyAfterAuth 側と一致させる必要あり)
-  const FP_VERSION = "20260710H-sidebar-foot-sticky";
+  const FP_VERSION = "20260710J-mobile-fab-desktop-hide";
   try { window.FP_VERSION = FP_VERSION; } catch(_) {}
   const loadTime = new Date();
   const hhmm = String(loadTime.getHours()).padStart(2,'0') + ':' + String(loadTime.getMinutes()).padStart(2,'0');
