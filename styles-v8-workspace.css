@@ -6477,8 +6477,8 @@ button.fp-draft-cta {
 }
 
 
-/* ★ 本番モード (data-prod="1") では デモ/削除/開発系UIを完全非表示 */
-body[data-prod="1"] #modal-delete-btn,
+/* ★ 本番モード (data-prod="1") では デモ/開発系UIを完全非表示
+   2026-07-11: #modal-delete-btn は owner request で 復活 (誤って作成した顧客 削除できるよう) */
 body[data-prod="1"] #fp-reset-all-data,
 body[data-prod="1"] #fp-reset-all-data-top,
 body[data-prod="1"] .real-mode-toggle,
@@ -10301,6 +10301,17 @@ body.modal-open {
     border-bottom: 1px solid #ECE6D6 !important;
     -webkit-overflow-scrolling: touch !important;
     margin: 0 !important;
+    /* 2026-07-11: sticky cd-tabs で 白背景 に 影 で 下の 削除ボタン と 明確 分離 */
+    box-shadow: 0 4px 8px -4px rgba(0, 0, 0, 0.12) !important;
+  }
+  /* 2026-07-11: 議事録カード の 削除ボタン が sticky タブ で 覆われない よう scroll-margin-top で 隙間 確保 */
+  .cd-modal .fp-meeting-card {
+    scroll-margin-top: 56px !important;
+  }
+  /* 2026-07-11: 削除ボタン に z-index で FAB系 との 前後関係 明示 (sticky tabs=50 の下、 コンテンツ の上) */
+  .fp-meeting-delete {
+    position: relative !important;
+    z-index: 5 !important;
   }
   .modal-overlay {
     overflow-y: auto !important;
