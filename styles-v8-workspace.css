@@ -253,6 +253,12 @@ body, table, .kpi-value, .num, .funnel-value, .task-count,
   letter-spacing: 0.06em;
   flex-shrink: 0;
 }
+/* 2026-07-10 qa-reviewer FAIL#1 fix: 1280px以下 で 「急遽 面談スタート」 ボタン が 2行折り返し → pill 消して label ellipsis */
+@media (max-width: 1280px) {
+  .sidebar-quick-rec-pill { display: none; }
+  .sidebar-quick-rec { padding: 10px 12px; gap: 8px; }
+  .sidebar-quick-rec-label { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+}
 .sidebar-search:focus-within {
   border-color: var(--accent);
   background: var(--surface);
