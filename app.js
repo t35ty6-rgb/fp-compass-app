@@ -3782,6 +3782,68 @@
       }
     } catch (_) {}
 
+    // ★ 2026-07-10: 議事録 カード 削除 (手動 追加/AI 生成 両方 対応)
+    document.querySelectorAll('.fp-meeting-delete').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('この 議事録 を 削除しますか?\n\n削除する項目:\n・議事録 サマリー\n・文字起こし 全文\n・タスク / 提案\n\n元に戻せません。')) return;
+        const bookingTs = btn.dataset.bookingTs || '';
+        const aiTs = btn.dataset.aiTs || '';
+        btn.disabled = true;
+        btn.textContent = '削除中…';
+        try {
+          // 1) in-memory ai_results から 削除
+          const live = window.LineAppLiveData || {};
+          if (Array.isArray(live.ai_results)) {
+            live.ai_results = live.ai_results.filter(r => {
+              const rBk = r.bookingTs || '';
+              const rTs = r.ts || r.createdAt || '';
+              return !(rBk === bookingTs && rTs === aiTs);
+            });
+          }
+          // 2) localStorage cache 更新 (main.js の cache key)
+          try {
+            const client = window._fpCurrentClient;
+            if (client) {
+              const keys = ['fp-ai-' + (client.lineFriendId || ''), 'fp-ai-' + (client.id || '')];
+              keys.forEach(k => {
+                if (!k || k.endsWith('-')) return;
+                try {
+                  const arr = JSON.parse(localStorage.getItem(k) || '[]');
+                  const filtered = arr.filter(r => (r.bookingTs || '') !== bookingTs || (r.ts || r.createdAt || '') !== aiTs);
+                  localStorage.setItem(k, JSON.stringify(filtered));
+                } catch (_) {}
+              });
+            }
+          } catch (_) {}
+          // 3) GAS 側 も 削除 (save-ai-result with deleted flag)
+          try {
+            const CLOUD_RUN = 'https://fp-compass-webhook-527726449426.asia-northeast1.run.app';
+            const h = window.getFpAuthHeaders ? await window.getFpAuthHeaders() : { 'Content-Type': 'application/json' };
+            await fetch(CLOUD_RUN + '/api/save-ai-result', {
+              method: 'POST',
+              headers: h,
+              body: JSON.stringify({
+                bookingTs, ts: aiTs, deleted: true,
+                tenantId: (window.__fp && window.__fp.tenantId) || '',
+              }),
+            }).catch(() => {});  // GAS 削除は best-effort (endpoint 未対応 でも UI 側は削除)
+          } catch (_) {}
+          // 4) UI 再描画
+          const client = window._fpCurrentClient;
+          if (client && typeof openClientModal === 'function') {
+            openClientModal(client.id, { keepTab: 'meetings' });
+          } else {
+            // fallback: カード だけ 消す
+            btn.closest('.fp-meeting-card')?.remove();
+          }
+        } catch (e) {
+          alert('削除失敗: ' + (e.message || e));
+          btn.disabled = false;
+          btn.textContent = '🗑 削除';
+        }
+      });
+    });
+
     // ★ 議事録 編集 / 保存 (CLOUD_RUN_BASE/api/save-ai-result 経由で GAS sheet 上書き)
     document.querySelectorAll('[data-minutes-editor]').forEach(wrap => {
       const editBtn = wrap.querySelector('.fp-minutes-edit');
@@ -5323,6 +5385,7 @@ ${ctxText}${surveyTxt}`;
                 </div>
                 <div class="fp-meeting-card-actions" style="display:flex;gap:6px;flex-wrap:wrap;">
                   ${b.driveUrl ? `<a href="${escapeHtml(b.driveUrl)}" target="_blank" class="fp-btn fp-btn-sm fp-btn-gold">🎥 録画を見る</a>` : ''}
+                  <button class="fp-meeting-delete" data-booking-ts="${escapeHtml(b.ts || '')}" data-ai-ts="${escapeHtml(aiData.ts || aiData.createdAt || '')}" style="background:#fff;border:1.5px solid #FCA5A5;color:#DC2626;font-size:11.5px;font-weight:700;padding:5px 11px;border-radius:5px;cursor:pointer;font-family:inherit;">🗑 削除</button>
                 </div>
               </div>
               ${aiData.transcript ? `
@@ -5415,6 +5478,9 @@ ${ctxText}${surveyTxt}`;
                     <div class="fp-meeting-card-eyebrow" style="font-size:13px !important;font-weight:900 !important;color:#1B3A5C !important;letter-spacing:0 !important;">📹 Zoom ${zN}回目 ${a.ts || a.createdAt ? `<span style="font-size:11px;color:#9CA3AF;font-weight:700;margin-left:8px;font-family:Menlo,monospace;">#${(()=>{ const d=new Date(a.ts || a.createdAt); return d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0')+'-'+String(d.getHours()).padStart(2,'0')+String(d.getMinutes()).padStart(2,'0'); })()}</span>` : ''}</div>
                     <div class="fp-meeting-card-date" style="font-size:14px;font-weight:700;">${escapeHtml(fmtDateRobust(a.ts || a.createdAt) || fmtDateRobust(a.date))} ${escapeHtml(fmtJstTime(a.ts || a.createdAt))} 面談</div>
                     ${a.ts || a.createdAt ? `<div class="fp-meeting-card-recstart" style="font-size:11.5px;color:#6B7280;font-weight:600;margin-top:3px;">録画開始: ${escapeHtml(fmtJstTime(a.ts || a.createdAt))} (${escapeHtml(fmtDateRobust(a.ts || a.createdAt))})</div>` : ''}
+                  </div>
+                  <div class="fp-meeting-card-actions" style="display:flex;gap:6px;flex-wrap:wrap;">
+                    <button class="fp-meeting-delete" data-booking-ts="${escapeHtml(a.bookingTs || '')}" data-ai-ts="${escapeHtml(a.ts || a.createdAt || '')}" style="background:#fff;border:1.5px solid #FCA5A5;color:#DC2626;font-size:11.5px;font-weight:700;padding:5px 11px;border-radius:5px;cursor:pointer;font-family:inherit;">🗑 削除</button>
                   </div>
                 </div>
                 ${a.transcript ? `
