@@ -120,8 +120,14 @@ body, table, .kpi-value, .num, .funnel-value, .task-count,
   padding: 16px 12px 12px;
   border-right: 1px solid var(--hairline);
   overflow-y: auto;
+  /* 2026-07-10 fix: 内容が 幅超過 で 切れる 問題 → 縦スクロールのみ、 横は 折り返し */
+  overflow-x: hidden;
+  min-width: 0;
   position: relative;
+  box-sizing: border-box;
 }
+.sidebar * { max-width: 100%; box-sizing: border-box; }
+.sidebar input, .sidebar button, .sidebar a { min-width: 0; }
 .sidebar::-webkit-scrollbar { width: 5px; }
 .sidebar::-webkit-scrollbar-thumb { background: var(--hairline-2); border-radius: 3px; }
 .sidebar::-webkit-scrollbar-track { background: transparent; }

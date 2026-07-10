@@ -3527,6 +3527,9 @@
       </div>
     `;
     document.getElementById('modal-overlay').style.display = 'flex';
+    // ★ 2026-07-10: 顧客モーダル 開いてる 間 は コンパちゃん fab / hint 非表示 (右下 被り 対策)
+    try { document.getElementById('mbFab')?.classList.add('hidden'); } catch (_) {}
+    try { document.querySelectorAll('.mb-fab-hint, .mb-fab-badge').forEach(el => el.style.display = 'none'); } catch (_) {}
     // ★ オーナーfb 2026-06-25: cd-line-chat が 出現 / 再描画 されたら 必ず 最新へ scroll
     // (タブclick だけだと URL ?tab=line 復元 / hydrate 再render の時 漏れる)
     const _scrollLineChatBottom = () => {
@@ -8974,6 +8977,9 @@ ${client.name}さん、ありがとうございます。
   function closeModal(options) {
     options = options || {};
     document.getElementById('modal-overlay').style.display = 'none';
+    // ★ 2026-07-10: モーダル閉じたら コンパちゃん fab 復活
+    try { document.getElementById('mbFab')?.classList.remove('hidden'); } catch (_) {}
+    try { document.querySelectorAll('.mb-fab-hint, .mb-fab-badge').forEach(el => el.style.display = ''); } catch (_) {}
     // ★ 閉じたら復元 flag クリア
     try {
       localStorage.removeItem('fp-last-open-client');
