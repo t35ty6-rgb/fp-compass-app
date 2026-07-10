@@ -20,10 +20,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20260711A-customer-delete-tabs-shadow">
-<link rel="stylesheet" href="styles-v2.css?v=20260711A-customer-delete-tabs-shadow">
-<link rel="stylesheet" href="styles-v3.css?v=20260711A-customer-delete-tabs-shadow">
-<link rel="stylesheet" href="styles-v8-workspace.css?v=20260711A-customer-delete-tabs-shadow">
+<link rel="stylesheet" href="styles.css?v=20260711B-pill-reposition-sidebar-delete">
+<link rel="stylesheet" href="styles-v2.css?v=20260711B-pill-reposition-sidebar-delete">
+<link rel="stylesheet" href="styles-v3.css?v=20260711B-pill-reposition-sidebar-delete">
+<link rel="stylesheet" href="styles-v8-workspace.css?v=20260711B-pill-reposition-sidebar-delete">
 <!-- ★ 2026-06-26 perf: lucide(350KB) と chart.js(201KB) を defer 化 -->
 <!--   どちらも DOMContentLoaded 後ハイドレートで OK (lucide: setInterval scan / chart: tryRender polling) -->
 <script defer src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
@@ -861,6 +861,11 @@
     </div><!-- /sidebar-scroll -->
 
     <div class="sidebar-foot">
+      <!-- 2026-07-11 owner FB: 顧客モーダル 開いてる 間 「この顧客 を 削除」 を foot に 大きく 表示 (JS が openClientModal で 表示 / closeModal で 非表示 制御) -->
+      <button id="sidebar-customer-delete" style="display:none;background:#fff;color:#DC2626;border:1.5px solid #FCA5A5;padding:10px 12px;border-radius:8px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit;margin-bottom:8px;text-align:left;align-items:center;gap:8px;width:100%;">
+        <span style="font-size:15px;">🗑</span>
+        <span style="flex:1;">この顧客 を 削除</span>
+      </button>
       <button class="real-mode-toggle" id="real-mode-btn" title="実モード ⇄ 本番モード">
         <i data-lucide="users-round"></i>
         <span class="real-mode-label" id="real-mode-label">本番モード (30名)</span>
@@ -1325,7 +1330,7 @@ window.fpReadyAfterAuth = function() {
     });
   })();
 
-  const ver = "20260711A";
+  const ver = "20260711B";
   // ★ 2026-06-26 perf: critical (画面初期表示に必須) と deferred (LINE/charts) を 分離
   // critical: 顧客台帳・ホーム描画に必須
   // deferred: LINE タブ (line-app.js 555KB) / dashboard charts (charts.js) → idle で 後ロード
@@ -2055,7 +2060,7 @@ window.fpReadyAfterAuth = function() {
 <script>
 (function(){
   // 最新の ver を 1 箇所に集約 (fpReadyAfterAuth 側と一致させる必要あり)
-  const FP_VERSION = "20260711A-customer-delete-tabs-shadow";
+  const FP_VERSION = "20260711B-pill-reposition-sidebar-delete";
   try { window.FP_VERSION = FP_VERSION; } catch(_) {}
   const loadTime = new Date();
   const hhmm = String(loadTime.getHours()).padStart(2,'0') + ':' + String(loadTime.getMinutes()).padStart(2,'0');

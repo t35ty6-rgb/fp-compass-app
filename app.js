@@ -3544,6 +3544,21 @@
     setTimeout(_scrollLineChatBottom, 250);
     setTimeout(_scrollLineChatBottom, 800);
     document.getElementById('modal-close-btn').addEventListener('click', closeModal);
+    // ★ 2026-07-11 owner FB: サイドバー の 「この顧客を削除」 ボタン 表示 (顧客モーダル 開いてる 間 のみ)
+    try {
+      const sideDelBtn = document.getElementById('sidebar-customer-delete');
+      if (sideDelBtn) {
+        sideDelBtn.style.display = 'flex';
+        // 既に登録 済 listener を 上書き しない よう flag
+        if (!sideDelBtn._boundOnce) {
+          sideDelBtn._boundOnce = true;
+          sideDelBtn.addEventListener('click', () => {
+            const modalBtn = document.getElementById('modal-delete-btn');
+            if (modalBtn) modalBtn.click();
+          });
+        }
+      }
+    } catch (_) {}
     // ★ 顧客削除ボタン
     const delBtn = document.getElementById('modal-delete-btn');
     if (delBtn) delBtn.addEventListener('click', async () => {
@@ -8986,6 +9001,11 @@ ${client.name}さん、ありがとうございます。
       const fab = document.getElementById('mbFab');
       if (fab) { fab.style.removeProperty('display'); fab.classList.remove('hidden'); }
       document.querySelectorAll('.mb-fab-hint, .mb-fab-badge, .mb-fab-pulse, .mb-panel').forEach(el => el.style.removeProperty('display'));
+    } catch (_) {}
+    // ★ 2026-07-11: サイドバー の 顧客削除ボタン 非表示 に戻す
+    try {
+      const sideDelBtn = document.getElementById('sidebar-customer-delete');
+      if (sideDelBtn) sideDelBtn.style.display = 'none';
     } catch (_) {}
     // ★ 閉じたら復元 flag クリア
     try {
