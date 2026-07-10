@@ -158,6 +158,19 @@ body, table, .kpi-value, .num, .funnel-value, .task-count,
 .sidebar-scroll::-webkit-scrollbar { width: 5px; }
 .sidebar-scroll::-webkit-scrollbar-thumb { background: var(--hairline-2); border-radius: 3px; }
 .sidebar-scroll::-webkit-scrollbar-track { background: transparent; }
+/* 2026-07-10 design-reviewer Critical#2: 下に隠れてるタブに気付ける よう scroll shadow mask (JS で has-more class 付与) */
+.sidebar-scroll { position: relative; }
+.sidebar-scroll.has-more::after {
+  content: '';
+  position: sticky;
+  bottom: 0; left: 0; right: 0;
+  height: 28px;
+  margin-top: -28px;
+  background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.92));
+  pointer-events: none;
+  flex-shrink: 0;
+  display: block;
+}
 .sidebar::-webkit-scrollbar { width: 5px; }
 .sidebar::-webkit-scrollbar-thumb { background: var(--hairline-2); border-radius: 3px; }
 .sidebar::-webkit-scrollbar-track { background: transparent; }
@@ -279,6 +292,20 @@ body, table, .kpi-value, .num, .funnel-value, .task-count,
   .sidebar-quick-rec-pill { display: none; }
   .sidebar-quick-rec { padding: 10px 12px; gap: 8px; }
   .sidebar-quick-rec-label { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  /* 2026-07-10 design-reviewer Critical#1: 11タブ が 232px sidebar に収まる ように 高さ 圧縮
+     base rule に !important 付いてる ので override も !important 必要 */
+  .sidebar-nav .tab {
+    padding: 6px 10px !important;
+    font-size: 12.5px !important;
+    min-height: 34px !important;
+    gap: 10px !important;
+  }
+  .sidebar-nav .tab i[data-lucide], .sidebar-nav .tab svg.lucide {
+    width: 15px !important; height: 15px !important;
+  }
+  .sidebar-label { margin-top: 6px; margin-bottom: 4px; font-size: 10px; padding: 4px 12px 4px; }
+  .sidebar-group { margin-bottom: 8px; }
+  .sidebar-scroll { gap: 6px; }
 }
 .sidebar-search:focus-within {
   border-color: var(--accent);
@@ -837,9 +864,10 @@ body, table, .kpi-value, .num, .funnel-value, .task-count,
   color: var(--ink); letter-spacing: -0.005em;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
+/* 2026-07-10 design-reviewer Important#1: WCAG AA 対応 (11px + ink-3=3.2:1 → 11.5px + 70%不透明=4.6:1) */
 .user-role {
   display: flex; align-items: center; gap: 4px;
-  font-size: 11px; color: var(--ink-3);
+  font-size: 11.5px; color: rgba(0, 0, 0, 0.7);
   margin-top: 1px;
 }
 .user-role i[data-lucide], .user-role svg.lucide {
@@ -10288,3 +10316,30 @@ body.modal-open {
   }
 }
 /* ===== /roundX list style ===== */
+
+/* ═══════════════════════════════════════════════════════
+   2026-07-10 design-reviewer Critical#1 — 順序修正 版
+   base .sidebar-nav .tab (line 360) が 後方 で !important 上書き してた ので
+   ファイル末尾 に 置いて cascade で 勝たせる (媒体クエリ 同specificity=source order)
+   ═══════════════════════════════════════════════════════ */
+@media (max-width: 1280px) {
+  .sidebar-nav .tab {
+    padding: 6px 10px !important;
+    font-size: 12.5px !important;
+    min-height: 34px !important;
+    gap: 10px !important;
+  }
+  .sidebar-nav .tab i[data-lucide],
+  .sidebar-nav .tab svg.lucide {
+    width: 15px !important;
+    height: 15px !important;
+  }
+  .sidebar-label {
+    margin-top: 6px !important;
+    margin-bottom: 4px !important;
+    font-size: 10px !important;
+    padding: 4px 12px 4px !important;
+  }
+  .sidebar-group { margin-bottom: 8px !important; }
+  .sidebar-scroll { gap: 6px !important; }
+}

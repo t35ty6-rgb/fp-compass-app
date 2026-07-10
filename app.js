@@ -9549,6 +9549,7 @@ ${client.name}さん、ありがとうございます。
   // 初期化
   // ============================
   document.addEventListener('DOMContentLoaded', () => {
+    // scroll mask 初期化 は DOMContentLoaded 外 に 移動 (app.js が遅延loadされるので DCL 既に発火済ケース対策)
     // メタ
     document.getElementById('app-meta').textContent =
       `デモデータ ${clients.length}名 / 基準日 ${fmtDate(TODAY)}`;
@@ -9694,4 +9695,41 @@ ${client.name}さん、ありがとうございます。
       }
     } catch (_) {}
   });
+})();
+
+// ═══════════════════════════════════════════════════════
+// 2026-07-10 design-reviewer Critical#2: sidebar-scroll shadow mask
+// DOMContentLoaded 外 (app.js は 遅延load される ので DCL 既発火 が普通)
+// ═══════════════════════════════════════════════════════
+window._fpMaskCode = 'loaded';
+(function () {
+  window._fpMaskCode = 'IIFE-entered';
+  const bindMask = () => {
+    const sc = document.querySelector('.sidebar-scroll');
+    window._fpMaskLastCheck = { hasSC: !!sc, at: Date.now() };
+    if (!sc) return false;
+    const updateMask = () => {
+      try {
+        const hasMore = sc.scrollTop < sc.scrollHeight - sc.clientHeight - 4;
+        sc.classList.toggle('has-more', hasMore);
+      } catch (_) {}
+    };
+    if (!sc._maskBound) {
+      sc._maskBound = true;
+      sc.addEventListener('scroll', updateMask, { passive: true });
+      window.addEventListener('resize', updateMask);
+      if (typeof ResizeObserver !== 'undefined') {
+        try { new ResizeObserver(updateMask).observe(sc); } catch (_) {}
+      }
+    }
+    updateMask();
+    return true;
+  };
+  bindMask();
+  [100, 500, 1500, 3000, 6000, 10000].forEach(ms => setTimeout(bindMask, ms));
+  try {
+    const obs = new MutationObserver(() => bindMask());
+    obs.observe(document.documentElement, { childList: true, subtree: true, attributes: true });
+    setTimeout(() => { try { obs.disconnect(); } catch (_) {} }, 30000);
+  } catch (_) {}
 })();
