@@ -10403,3 +10403,72 @@ body.modal-open {
     z-index: 3 !important;
   }
 }
+
+/* ============================================================================
+   2026-07-12 v10 100人audit fix pass (cross-cutting reviewer 30件 検出)
+   Critical: font-size < 12px を 12px+ に、 nav contrast WCAG AA、 badge white/white 修正
+   ============================================================================ */
+@media (max-width: 768px) {
+  /* Critical: bottom nav label 10px → 12px (WCAG 可読 最低ライン) */
+  #mobile-bottomnav .m-tab {
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.02em !important;
+    color: #475569 !important; /* CR ~7:1 vs #fff */
+  }
+  #mobile-bottomnav .m-tab.is-active {
+    color: #78350F !important; /* 濃い茶 = CR ~7:1 vs 金色 pill/white */
+  }
+  /* topbar eyebrow 「FP COMPASS」 9px → 削除 (装飾で 可読性 犠牲) */
+  .mobile-topbar .m-eyebrow,
+  .m-topbar-eyebrow,
+  [class*="m-eyebrow"] {
+    display: none !important;
+  }
+  /* 「業務のこと 何でも」 10.5px → 12px */
+  #sidebar-kompa-trigger span[style*="font-size:10.5px"],
+  #sidebar-kompa-trigger span[style*="font-size: 10.5px"] {
+    font-size: 12px !important;
+    line-height: 1.5 !important;
+  }
+  /* 「7/12 (日)」 date + 「名 フォロー待ち」 10-10.5px → 12px */
+  .m-greet-date, .m-greet-unit {
+    font-size: 12px !important;
+  }
+  /* form input iOS ズーム 防止 (16px 未満 で 自動ズーム 発生) */
+  input[type="text"], input[type="email"], input[type="password"],
+  input[type="search"], input[type="tel"], input[type="number"],
+  textarea, select {
+    font-size: 16px !important;
+  }
+}
+
+/* PC + mobile 両方: nav inactive contrast (CR 2.01 → 4.5+) */
+.sidebar-nav .tab {
+  color: #334155 !important; /* CR 8.5:1 vs #fff */
+}
+.sidebar-nav .tab:hover {
+  color: #0F172A !important;
+}
+.sidebar-nav .tab.is-active {
+  color: #4338CA !important; /* CR 6.6:1 vs #fff (前 の 66,66,201 は CR 2.85) */
+}
+.sidebar-label {
+  color: #64748B !important; /* CR 5.5:1 vs #fff (前 の #6B6B6B は 3.94) */
+  font-size: 12px !important; /* 11.5 → 12 */
+}
+
+/* 「予約不要」 badge white/white CR 1.00 → 修正 */
+.sidebar-quick-rec-pill {
+  background: rgba(255, 255, 255, 0.95) !important;
+  color: #5B21B6 !important; /* CR ~9:1 vs white */
+  font-weight: 800 !important;
+  font-size: 11px !important;
+  letter-spacing: 0.04em !important;
+  padding: 3px 8px !important;
+}
+
+/* コンパちゃん line-height 1.35 → 1.55 */
+#sidebar-kompa-trigger span {
+  line-height: 1.55 !important;
+}

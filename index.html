@@ -20,10 +20,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20260711K-mobile-sidebar-cutoff-fix">
-<link rel="stylesheet" href="styles-v2.css?v=20260711K-mobile-sidebar-cutoff-fix">
-<link rel="stylesheet" href="styles-v3.css?v=20260711K-mobile-sidebar-cutoff-fix">
-<link rel="stylesheet" href="styles-v8-workspace.css?v=20260711K-mobile-sidebar-cutoff-fix">
+<link rel="stylesheet" href="styles.css?v=20260712A-audit-100-round1-critical">
+<link rel="stylesheet" href="styles-v2.css?v=20260712A-audit-100-round1-critical">
+<link rel="stylesheet" href="styles-v3.css?v=20260712A-audit-100-round1-critical">
+<link rel="stylesheet" href="styles-v8-workspace.css?v=20260712A-audit-100-round1-critical">
 <!-- ★ 2026-06-26 perf: lucide(350KB) と chart.js(201KB) を defer 化 -->
 <!--   どちらも DOMContentLoaded 後ハイドレートで OK (lucide: setInterval scan / chart: tryRender polling) -->
 <script defer src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
@@ -1256,14 +1256,54 @@
 </div>
 
 <!-- 顧客フォームモーダル -->
-<div class="modal-overlay" id="form-overlay" style="display:none;">
+<div class="modal-overlay" id="form-overlay" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="form-overlay-title" tabindex="-1">
   <div class="modal" id="form-content"></div>
 </div>
 
 <!-- 顧客詳細モーダル -->
-<div class="modal-overlay" id="modal-overlay" style="display:none;">
+<div class="modal-overlay" id="modal-overlay" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="modal-overlay-title" tabindex="-1">
   <div class="modal" id="modal-content"></div>
 </div>
+<script>
+  // 2026-07-12 v10 a11y: Esc で モーダル 閉じる + focus trap
+  (function(){
+    let lastFocused = null;
+    const closeOverlay = (ovId) => {
+      const ov = document.getElementById(ovId);
+      if (!ov || ov.style.display === 'none') return false;
+      // 既存 close btn を click (state clean up される)
+      const closeBtn = ov.querySelector('#modal-close-btn, .cd-close, .modal-close, [data-modal-close]');
+      if (closeBtn) closeBtn.click();
+      else { ov.style.display = 'none'; document.body.style.overflow = ''; }
+      if (lastFocused && lastFocused.focus) { try { lastFocused.focus(); } catch(_) {} }
+      return true;
+    };
+    document.addEventListener('keydown', (ev) => {
+      if (ev.key !== 'Escape') return;
+      if (closeOverlay('modal-overlay')) { ev.preventDefault(); return; }
+      if (closeOverlay('form-overlay')) { ev.preventDefault(); return; }
+    });
+    // モーダル open 時 に focus を モーダル 内 first focusable に 移す
+    const observer = new MutationObserver((muts) => {
+      for (const m of muts) {
+        if (m.type !== 'attributes' || m.attributeName !== 'style') continue;
+        const el = m.target;
+        if (el.id !== 'modal-overlay' && el.id !== 'form-overlay') continue;
+        if (getComputedStyle(el).display === 'none') continue;
+        // opening
+        lastFocused = document.activeElement;
+        setTimeout(() => {
+          const first = el.querySelector('button, [href], input:not([type="hidden"]), textarea, select, [tabindex]:not([tabindex="-1"])');
+          if (first && first.focus) { try { first.focus(); } catch(_) {} }
+        }, 100);
+      }
+    });
+    ['modal-overlay','form-overlay'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el, { attributes: true, attributeFilter: ['style'] });
+    });
+  })();
+</script>
 
 <script>
 // Firebase 認証完了後にこの関数が呼ばれて、 CRM スクリプト一式を順次注入する。
@@ -1332,7 +1372,7 @@ window.fpReadyAfterAuth = function() {
     });
   })();
 
-  const ver = "20260711K";
+  const ver = "20260712A";
   // ★ 2026-06-26 perf: critical (画面初期表示に必須) と deferred (LINE/charts) を 分離
   // critical: 顧客台帳・ホーム描画に必須
   // deferred: LINE タブ (line-app.js 555KB) / dashboard charts (charts.js) → idle で 後ロード
@@ -1957,12 +1997,23 @@ window.fpReadyAfterAuth = function() {
     });
 
     // Top priority
-    const tops = window.Recommender.topAcrossClients(window.DUMMY_CLIENTS, 8);
+    const tops = window.Recommender?.topAcrossClients?.(window.DUMMY_CLIENTS || [], 8) || [];
     const topCount = tops.length;
     const setText = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
-    setText('mega-hero-num', topCount);
-    setText('mh-stat-week', topCount);
-    setText('mh-stat-events', count30);
+    // 2026-07-12 v9 audit fix: em-dash 「—」 が 出っぱなし にならないよう 0 は 数字 で 出す
+    setText('mega-hero-num', String(topCount));
+    setText('mh-stat-week', String(topCount));
+    setText('mh-stat-events', String(count30));
+    // 0件 なら 「今日は」 テキスト を 差替えて em-dash 誤解 を 消す
+    try {
+      const titleEl = document.querySelector('.mega-hero-title');
+      const leadEl = document.getElementById('mega-hero-lead');
+      if (titleEl && topCount === 0 && count30 === 0) {
+        const nameSpan = titleEl.querySelector('#mega-hero-name')?.outerHTML || '<span id="mega-hero-name">先生</span>';
+        titleEl.innerHTML = `おはようございます、${nameSpan}。<br>今日 は お客様 を 待つ 準備 が できて います。`;
+        if (leadEl) leadEl.textContent = '「+ 新規顧客」 で 客 を 登録、 「急遽 面談」 で Zoom も 対面 も 即 起動 できます。';
+      }
+    } catch(_) {}
 
     // Date label (今日に直す)
     const W = ['日','月','火','水','木','金','土'];
@@ -2062,7 +2113,7 @@ window.fpReadyAfterAuth = function() {
 <script>
 (function(){
   // 最新の ver を 1 箇所に集約 (fpReadyAfterAuth 側と一致させる必要あり)
-  const FP_VERSION = "20260711K-mobile-sidebar-cutoff-fix";
+  const FP_VERSION = "20260712A-audit-100-round1-critical";
   try { window.FP_VERSION = FP_VERSION; } catch(_) {}
   const loadTime = new Date();
   const hhmm = String(loadTime.getHours()).padStart(2,'0') + ':' + String(loadTime.getMinutes()).padStart(2,'0');
