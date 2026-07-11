@@ -338,7 +338,7 @@
     setPersistence, browserLocalPersistence,
   } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
   import {
-    getFirestore, doc, getDoc, collection, query, where, getDocs, orderBy,
+    getFirestore, initializeFirestore, doc, getDoc, collection, query, where, getDocs, orderBy,
   } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -351,7 +351,10 @@
   };
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
-  const db = getFirestore(app);
+  // memory: feedback_firestore_webchannel_blocked_longpolling.md
+  let db;
+  try { db = initializeFirestore(app, { experimentalAutoDetectLongPolling: true }); }
+  catch (_) { db = getFirestore(app); }
   setPersistence(auth, browserLocalPersistence).catch(console.error);
 
   const $ = (id) => document.getElementById(id);

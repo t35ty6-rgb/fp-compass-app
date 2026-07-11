@@ -1332,14 +1332,17 @@
         || (window.AccountInfo && window.AccountInfo.tenantId)
         || localStorage.getItem('fp-tenantId');
       if (!tenantId) return;
-      const { getFirestore, collection, getDocs } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js');
+      const { getFirestore, initializeFirestore, collection, getDocs } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js');
       const { initializeApp, getApps } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js');
       const app = getApps()[0] || initializeApp({
         apiKey: 'AIzaSyAmVAEe9l9e1Yo_dzzJdbTVU35wWKd2sH4',
         authDomain: 'skeleton-fp-compass-632026.firebaseapp.com',
         projectId: 'skeleton-fp-compass-632026',
       });
-      const db = getFirestore(app);
+      // memory: feedback_firestore_webchannel_blocked_longpolling.md
+      let db;
+      try { db = initializeFirestore(app, { experimentalAutoDetectLongPolling: true }); }
+      catch (_) { db = getFirestore(app); }
       const snap = await getDocs(collection(db, 'tenants', tenantId, 'customers'));
       const pendingFs = [];
       const confirmedFs = [];

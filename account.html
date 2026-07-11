@@ -344,7 +344,7 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
   import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut,
     setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
-  import { getFirestore, doc, getDoc, updateDoc, collection, getDocs, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+  import { getFirestore, initializeFirestore, doc, getDoc, updateDoc, collection, getDocs, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
   import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-functions.js";
 
   const __isStaging = /staging|skeleton-fp-compass-staging/.test(location.hostname);
@@ -365,7 +365,10 @@
   };
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
-  const db = getFirestore(app);
+  // memory: feedback_firestore_webchannel_blocked_longpolling.md
+  let db;
+  try { db = initializeFirestore(app, { experimentalAutoDetectLongPolling: true }); }
+  catch (_) { db = getFirestore(app); }
   const functions = getFunctions(app, "asia-northeast1");
   setPersistence(auth, browserLocalPersistence).catch(console.error);
 
@@ -542,8 +545,8 @@
   async function loadLineStatus() {
     if (!currentTenantId) return;
     try {
-      const { getFirestore, doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js');
-      const db = getFirestore(app);
+      const { doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js');
+      // longPolling 化された module scope の db を使う (feedback_firestore_webchannel_blocked_longpolling.md)
       const tSnap = await getDoc(doc(db, 'tenants', currentTenantId));
       const tdata = tSnap.exists() ? tSnap.data() : {};
       const line = tdata.line || {};
@@ -660,8 +663,8 @@
   async function loadZoomStatus() {
     if (!currentTenantId) return;
     try {
-      const { getFirestore, doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js');
-      const db = getFirestore(app);
+      const { doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js');
+      // longPolling 化された module scope の db を使う (feedback_firestore_webchannel_blocked_longpolling.md)
       const tSnap = await getDoc(doc(db, 'tenants', currentTenantId));
       const z = tSnap.exists() ? (tSnap.data().zoom || {}) : {};
       const statusEl = document.getElementById('zoom-status');

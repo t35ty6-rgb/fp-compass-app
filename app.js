@@ -1021,7 +1021,7 @@
   //   実顧客 (福田様 tenants/fukuda) の 2026-07-02 07:22 報告 が発端。
   //   memory: feedback_demo_to_prod_save_path_audit.md
   async function _persistLoadFirebase() {
-    const [{ getFirestore, doc, setDoc, deleteDoc, serverTimestamp }, { initializeApp, getApps }] = await Promise.all([
+    const [{ getFirestore, initializeFirestore, doc, setDoc, deleteDoc, serverTimestamp }, { initializeApp, getApps }] = await Promise.all([
       import('https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js'),
       import('https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js'),
     ]);
@@ -1030,7 +1030,11 @@
       authDomain: 'skeleton-fp-compass-632026.firebaseapp.com',
       projectId: 'skeleton-fp-compass-632026',
     });
-    return { db: getFirestore(app), doc, setDoc, deleteDoc, serverTimestamp };
+    // memory: feedback_firestore_webchannel_blocked_longpolling.md
+    let db;
+    try { db = initializeFirestore(app, { experimentalAutoDetectLongPolling: true }); }
+    catch (_) { db = getFirestore(app); }
+    return { db, doc, setDoc, deleteDoc, serverTimestamp };
   }
   function _persistTenantId() {
     return (window.__fp && window.__fp.tenantId)
@@ -7561,8 +7565,12 @@ ${JSON.stringify(jsonPayload, null, 2)}
       try {
         if (!window._fpQACache) window._fpQACache = {};
         if (window._fpQACache[client.id] || !client.lineFriendId) return;
-        const { getFirestore, doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js');
-        const fs = getFirestore(window.__fp.app || window.__fp.firebaseApp || undefined);
+        const { getFirestore, initializeFirestore, doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js');
+        // memory: feedback_firestore_webchannel_blocked_longpolling.md
+        const _app = window.__fp.app || window.__fp.firebaseApp || undefined;
+        let fs;
+        try { fs = initializeFirestore(_app, { experimentalAutoDetectLongPolling: true }); }
+        catch (_) { fs = getFirestore(_app); }
         const tid = (window.__fp && window.__fp.tenantId) || '';
         if (!tid) return;
         const ref = doc(fs, 'customer_qa_summary', `${tid}__${client.lineFriendId}`);

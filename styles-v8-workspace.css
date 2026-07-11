@@ -10377,3 +10377,29 @@ body.modal-open {
   .sidebar-group { margin-bottom: 8px !important; }
   .sidebar-scroll { gap: 6px !important; }
 }
+
+/* ============================================================================
+   2026-07-11 v9 mobile audit fix (design-reviewer で 検出)
+   - sidebar-foot が bottom-nav (fixed 64px) に 48px 隠れて コンパちゃん 押せない
+   - 「設定」「年末配布」 が scroll しないと 見えない
+   - sidebar-quick-inperson が drawer 閉じてる 時 も click 対象
+   ============================================================================ */
+@media (max-width: 768px) {
+  /* Critical#1: コンパちゃん を bottom-nav (64px + safe-area) 上 に 押し出す */
+  .sidebar-foot {
+    padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px) + 12px) !important;
+  }
+  /* Critical#2: sidebar-scroll の 実効高 を 修正 → 「設定」 まで 初期表示 に 入る */
+  .sidebar-scroll {
+    max-height: calc(100vh - 56px - 220px - 64px - env(safe-area-inset-bottom, 0px)) !important;
+    min-height: 200px !important;
+  }
+  /* Important#3: drawer 閉じてる 時 は quick-inperson 無効化 (JS click が 誤射 しない) */
+  .sidebar:not(.open):not(.is-open) .sidebar-quick-rec {
+    pointer-events: none !important;
+  }
+  /* Polish#5: scroll shadow が sidebar-foot に 埋もれ ない よう z-index UP */
+  .sidebar-scroll.has-more::after {
+    z-index: 3 !important;
+  }
+}

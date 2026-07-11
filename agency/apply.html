@@ -368,7 +368,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
-  import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+  import { getFirestore, initializeFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
   const firebaseConfig = {
     apiKey: "AIzaSyAmVAEe9l9e1Yo_dzzJdbTVU35wWKd2sH4",
     authDomain: "skeleton-fp-compass-632026.firebaseapp.com",
@@ -378,7 +378,10 @@
     appId: "1:833972948597:web:b7310cc22ce41d9738f23c",
   };
   const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+  // memory: feedback_firestore_webchannel_blocked_longpolling.md
+  let db;
+  try { db = initializeFirestore(app, { experimentalAutoDetectLongPolling: true }); }
+  catch (_) { db = getFirestore(app); }
   const $ = (id) => document.getElementById(id);
   const msgEl = $("msg");
   function msg(kind, text) { msgEl.className = "msg " + kind; msgEl.textContent = text; }

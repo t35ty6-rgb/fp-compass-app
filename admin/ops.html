@@ -429,7 +429,7 @@ table.ledger tbody td.rank { font-family: var(--num); font-size: 11px; color: va
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
   import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut, browserLocalPersistence, setPersistence } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
-  import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+  import { getFirestore, initializeFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyAmVAEe9l9e1Yo_dzzJdbTVU35wWKd2sH4",
@@ -441,7 +441,10 @@ table.ledger tbody td.rank { font-family: var(--num); font-size: 11px; color: va
   };
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
-  const db = getFirestore(app);
+  // memory: feedback_firestore_webchannel_blocked_longpolling.md
+  let db;
+  try { db = initializeFirestore(app, { experimentalAutoDetectLongPolling: true }); }
+  catch (_) { db = getFirestore(app); }
   await setPersistence(auth, browserLocalPersistence);
 
   const OWNER_EMAILS = ['t3.5ty6@gmail.com'];
