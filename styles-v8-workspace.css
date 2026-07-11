@@ -10472,3 +10472,40 @@ body.modal-open {
 #sidebar-kompa-trigger span {
   line-height: 1.55 !important;
 }
+
+/* 2026-07-12 v10 Round2: 家系図 / table 横あふれ対策 (owner 「切れる」 激怒 の 追撃 fix) */
+.family-tree,
+.genogram-wrap,
+[data-cdpanel="family"] > * ,
+[class*="family"][class*="tree"] {
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch;
+  max-width: 100% !important;
+}
+
+/* table を wrapper で 覆う 代替: table 自身 に overflow を 継承 させる */
+@media (max-width: 768px) {
+  .cd-right table,
+  table.clients,
+  main table {
+    display: block !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100% !important;
+  }
+}
+
+/* -webkit-tap-highlight: iOS の 青ハイライト 除去 (見た目 の ノイズ) */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* prefers-reduced-motion 対応 (a11y) */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

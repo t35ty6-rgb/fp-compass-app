@@ -20,10 +20,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20260712A-audit-100-round1-critical">
-<link rel="stylesheet" href="styles-v2.css?v=20260712A-audit-100-round1-critical">
-<link rel="stylesheet" href="styles-v3.css?v=20260712A-audit-100-round1-critical">
-<link rel="stylesheet" href="styles-v8-workspace.css?v=20260712A-audit-100-round1-critical">
+<link rel="stylesheet" href="styles.css?v=20260712B-audit-100-round2-mobile-gate-iOS-zoom">
+<link rel="stylesheet" href="styles-v2.css?v=20260712B-audit-100-round2-mobile-gate-iOS-zoom">
+<link rel="stylesheet" href="styles-v3.css?v=20260712B-audit-100-round2-mobile-gate-iOS-zoom">
+<link rel="stylesheet" href="styles-v8-workspace.css?v=20260712B-audit-100-round2-mobile-gate-iOS-zoom">
 <!-- ★ 2026-06-26 perf: lucide(350KB) と chart.js(201KB) を defer 化 -->
 <!--   どちらも DOMContentLoaded 後ハイドレートで OK (lucide: setInterval scan / chart: tryRender polling) -->
 <script defer src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
@@ -45,15 +45,15 @@
 <style id="fp-gate-css">
 #fp-gate-overlay{position:fixed;inset:0;background:linear-gradient(135deg,#0F172A 0%,#1B2658 60%,#3838CC 100%);z-index:2147483647;display:flex;align-items:center;justify-content:center;font-family:'Noto Sans JP','Manrope',sans-serif;color:#fff}
 #fp-gate-card{max-width:440px;width:90%;background:rgba(255,255,255,0.06);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.18);border-radius:16px;padding:42px 38px;box-shadow:0 24px 64px rgba(0,0,0,0.4)}
-#fp-gate-brand{font-family:'Manrope',sans-serif;font-size:11px;letter-spacing:0.32em;text-transform:uppercase;opacity:0.85;margin-bottom:14px;font-weight:700}
+#fp-gate-brand{font-family:'Manrope',sans-serif;font-size:12px;letter-spacing:0.28em;text-transform:uppercase;opacity:0.92;margin-bottom:14px;font-weight:700}
 #fp-gate-tabs{display:flex;gap:4px;background:rgba(255,255,255,0.06);border-radius:8px;padding:3px;margin-bottom:20px}
-#fp-gate-tabs button{flex:1;padding:9px;border:none;background:transparent;color:rgba(255,255,255,0.7);border-radius:6px;cursor:pointer;font-family:'Manrope',sans-serif;font-weight:700;font-size:12.5px}
+#fp-gate-tabs button{flex:1;padding:11px;border:none;background:transparent;color:rgba(255,255,255,0.82);border-radius:6px;cursor:pointer;font-family:'Manrope',sans-serif;font-weight:700;font-size:14px;min-height:44px}
 #fp-gate-tabs button.on{background:rgba(255,255,255,0.16);color:#fff}
 #fp-gate-title{font-family:'Manrope',sans-serif;font-size:22px;font-weight:800;letter-spacing:-0.01em;margin-bottom:6px;line-height:1.35}
-#fp-gate-sub{font-size:13px;opacity:0.85;margin-bottom:22px;line-height:1.7}
-.fp-gate-label{display:block;font-size:11.5px;font-weight:700;margin:14px 0 6px;letter-spacing:0.04em;opacity:0.85}
-.fp-gate-input{width:100%;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.3);border-radius:8px;padding:12px 14px;font-size:14px;color:#fff;font-family:inherit;outline:none}
-.fp-gate-input::placeholder{color:rgba(255,255,255,0.45)}
+#fp-gate-sub{font-size:13px;opacity:0.92;margin-bottom:22px;line-height:1.7}
+.fp-gate-label{display:block;font-size:12px;font-weight:700;margin:14px 0 6px;letter-spacing:0.04em;opacity:0.92}
+.fp-gate-input{width:100%;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.3);border-radius:8px;padding:12px 14px;font-size:16px;color:#fff;font-family:inherit;outline:none}
+.fp-gate-input::placeholder{color:rgba(255,255,255,0.68)}
 .fp-gate-input:focus{border-color:#FFE9A8;background:rgba(255,255,255,0.12)}
 #fp-gate-btn{width:100%;background:#FFE9A8;color:#0F172A;border:none;border-radius:8px;padding:14px;margin-top:18px;font-size:14px;font-weight:800;letter-spacing:0.08em;cursor:pointer;font-family:'Manrope',sans-serif;text-transform:uppercase;transition:all 0.15s}
 #fp-gate-btn:hover:not(:disabled){background:#fff;transform:translateY(-1px)}
@@ -95,7 +95,7 @@
       </label>
     </div>
     <div id="fp-row-forgot" style="text-align:right;margin-top:8px;">
-      <a id="fp-forgot-link" href="#" style="font-size:11.5px;color:rgba(255,255,255,0.75);text-decoration:underline;cursor:pointer;">パスワードを忘れた方</a>
+      <a id="fp-forgot-link" href="#" style="font-size:13px;color:rgba(255,255,255,0.88);text-decoration:underline;cursor:pointer;display:inline-block;padding:12px 4px;min-height:44px;line-height:20px;">パスワードを忘れた方</a>
     </div>
 
     <button id="fp-gate-btn">ログイン</button>
@@ -107,11 +107,11 @@
     </div>
     <div id="fp-gate-msg"></div>
     <div id="fp-gate-help">サポート → <a href="mailto:support@skeleton-inc.jp">support@skeleton-inc.jp</a></div>
-    <div id="fp-gate-legal" style="margin-top:14px;font-size:11px;opacity:0.65;text-align:center;line-height:1.7;">
-      申込前に必ずご確認ください:
-      <a href="./legal/specified-commercial.html" style="color:rgba(255,255,255,0.85);text-decoration:underline;margin:0 4px;">特商法表記</a>·
-      <a href="./legal/privacy.html" style="color:rgba(255,255,255,0.85);text-decoration:underline;margin:0 4px;">プライバシー</a>·
-      <a href="./legal/index.html" style="color:rgba(255,255,255,0.85);text-decoration:underline;margin:0 4px;">利用規約</a>
+    <div id="fp-gate-legal" style="margin-top:14px;font-size:12px;opacity:0.82;text-align:center;line-height:1.9;">
+      申込前に必ずご確認ください:<br>
+      <a href="./legal/specified-commercial.html" style="color:rgba(255,255,255,0.95);text-decoration:underline;display:inline-block;padding:10px 8px;min-height:44px;line-height:24px;">特商法表記</a>
+      <a href="./legal/privacy.html" style="color:rgba(255,255,255,0.95);text-decoration:underline;display:inline-block;padding:10px 8px;min-height:44px;line-height:24px;">プライバシー</a>
+      <a href="./legal/index.html" style="color:rgba(255,255,255,0.95);text-decoration:underline;display:inline-block;padding:10px 8px;min-height:44px;line-height:24px;">利用規約</a>
     </div>
   </div>
 </div>
@@ -965,7 +965,7 @@
                 <div class="mega-hero-date" id="mega-hero-date">2026年5月27日 水曜日</div>
                 <h1 class="mega-hero-title">
                   おはようございます、<span class="mega-hero-name" id="mega-hero-name">先生</span>。<br>
-                  今日は <span class="mega-hero-highlight" id="mega-hero-num">—</span> 人のお客様が<br>あなたを必要としています。
+                  今日は <span class="mega-hero-highlight" id="mega-hero-num">0</span> 人のお客様が<br>あなたを必要としています。
                 </h1>
                 <p class="mega-hero-lead" id="mega-hero-lead">優先度の高い順に、AI が次に取るべきアクションをまとめました。</p>
 
@@ -1372,7 +1372,7 @@ window.fpReadyAfterAuth = function() {
     });
   })();
 
-  const ver = "20260712A";
+  const ver = "20260712B";
   // ★ 2026-06-26 perf: critical (画面初期表示に必須) と deferred (LINE/charts) を 分離
   // critical: 顧客台帳・ホーム描画に必須
   // deferred: LINE タブ (line-app.js 555KB) / dashboard charts (charts.js) → idle で 後ロード
@@ -2113,7 +2113,7 @@ window.fpReadyAfterAuth = function() {
 <script>
 (function(){
   // 最新の ver を 1 箇所に集約 (fpReadyAfterAuth 側と一致させる必要あり)
-  const FP_VERSION = "20260712A-audit-100-round1-critical";
+  const FP_VERSION = "20260712B-audit-100-round2-mobile-gate-iOS-zoom";
   try { window.FP_VERSION = FP_VERSION; } catch(_) {}
   const loadTime = new Date();
   const hhmm = String(loadTime.getHours()).padStart(2,'0') + ':' + String(loadTime.getMinutes()).padStart(2,'0');

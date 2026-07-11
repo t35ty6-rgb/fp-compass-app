@@ -24,8 +24,12 @@
   .login-card { max-width:420px; width:100%; background:#fff; border:1px solid var(--line);
     border-radius:18px; padding:36px 32px; box-shadow:0 20px 50px rgba(15,23,42,0.10); }
   .lbl { display:block; font-weight:700; font-size:12px; margin:14px 0 6px; }
-  .lin { width:100%; padding:12px 14px; font-size:14px; border:1.5px solid var(--line);
+  .lin { width:100%; padding:12px 14px; font-size:16px; border:1.5px solid var(--line);
     border-radius:10px; font-family:inherit; }
+  /* iOS zoom prevention on mobile */
+  @media (max-width: 768px) {
+    input, textarea, select { font-size: 16px !important; }
+  }
   .lin:focus { outline:none; border-color:var(--indigo); box-shadow:0 0 0 4px rgba(91,91,240,0.12); }
   .lbtn { width:100%; padding:13px; margin-top:18px; background:var(--ink); color:#fff;
     border:none; border-radius:10px; font-family:'Manrope',sans-serif; font-weight:800;
