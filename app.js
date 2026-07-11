@@ -3819,6 +3819,37 @@
       }
     } catch (_) {}
 
+    // 2026-07-11 v6: transcript 会話/プレーン toggle delegation
+    if (!window._fpTranscriptToggleBound) {
+      window._fpTranscriptToggleBound = true;
+      document.body.addEventListener('click', (ev) => {
+        const b = ev.target && ev.target.closest && ev.target.closest('.fp-tv-btn');
+        if (!b) return;
+        const toggle = b.closest('[data-transcript-toggle]');
+        const block = toggle?.closest('.fp-meeting-block');
+        if (!block) return;
+        const mode = b.dataset.tvMode;
+        // update button styles
+        toggle.querySelectorAll('.fp-tv-btn').forEach(btn => {
+          btn.classList.remove('fp-tv-active');
+          btn.style.background = 'transparent';
+          btn.style.color = '#64748B';
+          btn.style.boxShadow = 'none';
+        });
+        b.classList.add('fp-tv-active');
+        b.style.background = '#fff';
+        b.style.color = '#0F172A';
+        b.style.boxShadow = '0 1px 3px rgba(15,23,42,0.08)';
+        // swap content panels
+        const chat = block.querySelector('.fp-transcript-chat');
+        const raw = block.querySelector('.fp-transcript-raw');
+        if (chat && raw) {
+          chat.style.display = mode === 'chat' ? '' : 'none';
+          raw.style.display = mode === 'raw' ? '' : 'none';
+        }
+      });
+    }
+
     // ★ 2026-07-10: 議事録 カード 削除 — event delegation (lazy-render 後にも 反応する)
     //   注意: この関数 (openClientModal) は modal 開くたび に走るが、 delegation handler は 1回だけ 登録
     if (!window._fpMeetingDeleteHandlerBound) {
@@ -5435,10 +5466,23 @@ ${ctxText}${surveyTxt}`;
               </div>
               ${aiData.transcript ? `
                 <div class="fp-meeting-block">
-                  <div class="fp-meeting-block-label">AI 文字起こし (Whisper)</div>
+                  <div class="fp-meeting-block-label" style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
+                    <span>AI 文字起こし (Whisper)</span>
+                    <div class="fp-transcript-view-toggle" data-transcript-toggle style="display:inline-flex;background:#F1F5F9;border-radius:8px;padding:2px;gap:2px;font-family:inherit;">
+                      <button type="button" class="fp-tv-btn fp-tv-active" data-tv-mode="chat" style="background:#fff;color:#0F172A;border:none;padding:5px 12px;border-radius:6px;font-size:11px;font-weight:800;letter-spacing:0.04em;cursor:pointer;box-shadow:0 1px 3px rgba(15,23,42,0.08);font-family:inherit;">💬 会話</button>
+                      <button type="button" class="fp-tv-btn" data-tv-mode="raw" style="background:transparent;color:#64748B;border:none;padding:5px 12px;border-radius:6px;font-size:11px;font-weight:700;letter-spacing:0.04em;cursor:pointer;font-family:inherit;">📄 プレーン</button>
+                    </div>
+                  </div>
                   <details open style="background:#fff;border:1px solid var(--fp-line);">
                     <summary style="padding:11px 16px;cursor:pointer;font-size:12px;color:var(--fp-ink);font-weight:700;background:var(--fp-paper);border-bottom:1px solid var(--fp-line);font-family:Manrope,sans-serif;letter-spacing:0.04em;">AI 文字起こし 全文 (${(aiData.transcript||'').length}文字) — クリックで折りたたみ</summary>
-                    <div style="padding:14px 18px;font-size:12.5px;line-height:1.95;white-space:pre-wrap;max-height:320px;overflow-y:auto;color:var(--fp-ink);">${escapeHtml(aiData.transcript)}</div>
+                    <div class="fp-transcript-chat" style="padding:14px 18px;max-height:420px;overflow-y:auto;background:linear-gradient(180deg,#F8FAFC 0%,#F1F5F9 100%);">
+                      ${splitTranscriptToTurns(aiData.transcript).map((turn, i) => turn.speaker === 'fp'
+                        ? `<div style="display:flex;justify-content:flex-end;margin-bottom:10px;"><div style="max-width:78%;background:linear-gradient(135deg,#059669,#047857);color:#fff;padding:9px 13px;border-radius:14px 14px 4px 14px;font-size:12.5px;line-height:1.7;box-shadow:0 2px 6px rgba(5,150,105,0.22);"><div style="font-size:10px;font-weight:800;opacity:0.9;letter-spacing:0.08em;margin-bottom:3px;">FP先生</div><div>${escapeHtml(turn.text)}</div></div></div>`
+                        : `<div style="display:flex;justify-content:flex-start;margin-bottom:10px;"><div style="max-width:78%;background:#fff;color:#0F172A;padding:9px 13px;border-radius:14px 14px 14px 4px;font-size:12.5px;line-height:1.7;box-shadow:0 1px 3px rgba(15,23,42,0.10);border:1px solid #E2E8F0;"><div style="font-size:10px;font-weight:800;color:#64748B;letter-spacing:0.08em;margin-bottom:3px;">お客様</div><div>${escapeHtml(turn.text)}</div></div></div>`
+                      ).join('')}
+                    </div>
+                    <div class="fp-transcript-raw" style="display:none;padding:14px 18px;font-size:12.5px;line-height:1.95;white-space:pre-wrap;max-height:420px;overflow-y:auto;color:var(--fp-ink);">${escapeHtml(aiData.transcript)}</div>
+                    <div style="padding:6px 16px;background:#F8FAFC;border-top:1px solid var(--fp-line);font-size:10.5px;color:#94A3B8;font-style:italic;letter-spacing:0.02em;">※ 話者 は AI が 会話 の 流れ から 推定。 実際 と 違う 場合 は 「📄 プレーン」 で 全文 確認 を。</div>
                   </details>
                 </div>` : ''}
               <div class="fp-meeting-block" data-minutes-editor data-booking-ts="${escapeHtml(b.ts || '')}" data-client-id="${escapeHtml(client.id)}">
@@ -9569,6 +9613,45 @@ ${client.name}さん、ありがとうございます。
       '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
     }[m]));
   }
+
+  // 2026-07-11 v6: transcript を 話者ターン に heuristic 分割 (Whisper 出力 に 話者情報 が 無い ので 推定)
+  // ルール: (1) 段落改行 で 区切る → (2) 「?」 で 終わる 短文 は 質問 = 上位ターン から 交互、 (3) 「はい」「そうですね」「うーん」 で 始まる ターン は 応答 = 反対側、 (4) デフォルト は 交互 で FP先生(右) 開始
+  window.splitTranscriptToTurns = function splitTranscriptToTurns(text) {
+    const raw = String(text || '').trim();
+    if (!raw) return [];
+    // paragraph split
+    let paragraphs = raw.split(/\n{2,}/).map(p => p.trim()).filter(Boolean);
+    if (paragraphs.length < 3) {
+      // fallback: split on single newline OR sentence-groups
+      paragraphs = raw.split(/\n+/).map(p => p.trim()).filter(Boolean);
+    }
+    if (paragraphs.length < 3) {
+      // sentence split — group 2 sentences per turn
+      const sentences = raw.split(/(?<=[。?!?!])\s*/).map(s => s.trim()).filter(Boolean);
+      paragraphs = [];
+      for (let i = 0; i < sentences.length; i += 2) {
+        paragraphs.push(sentences.slice(i, i + 2).join(' '));
+      }
+    }
+    const ackStart = /^(はい|うーん|えっと|えー|そうですね|そうそう|なるほど|ああ|うん|そうなんです|わかりました)/;
+    const questionEnd = /[??]\s*$/;
+    const turns = [];
+    let speaker = 'fp'; // FP先生 first (right side)
+    for (let i = 0; i < paragraphs.length; i++) {
+      const p = paragraphs[i];
+      const isAck = ackStart.test(p);
+      const isQuestion = questionEnd.test(p);
+      if (i > 0) {
+        // heuristic: if starts with ack, this is response = opposite of previous
+        if (isAck) speaker = turns[i - 1].speaker === 'fp' ? 'client' : 'fp';
+        // if previous was a short question, this is answer = opposite
+        else if (turns[i - 1] && questionEnd.test(turns[i - 1].text) && turns[i - 1].text.length < 40) speaker = turns[i - 1].speaker === 'fp' ? 'client' : 'fp';
+        else speaker = turns[i - 1].speaker === 'fp' ? 'client' : 'fp';
+      }
+      turns.push({ speaker, text: p, hint: isQuestion ? 'q' : (isAck ? 'a' : '') });
+    }
+    return turns;
+  };
   // ★ CSS injection fix (2026-06-25): タグ color 値が #rgb / #rrggbb / #rrggbbaa 以外なら 中立色にfallback
   //   ユーザー入力 color を style に直入れすると `red;background:url(...)` 等で 別CSS差込 可能
   function validColor(c) {
