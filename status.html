@@ -125,7 +125,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
-  import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+  import { getFirestore, initializeFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
 
   const __isStaging = /staging|skeleton-fp-compass-staging/.test(location.hostname);
   const firebaseConfig = __isStaging ? {
@@ -138,7 +138,10 @@
     projectId: "skeleton-fp-compass-632026",
   };
   const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+  // memory: feedback_firestore_webchannel_blocked_longpolling.md
+  let db;
+  try { db = initializeFirestore(app, { experimentalAutoDetectLongPolling: true }); }
+  catch (_) { db = getFirestore(app); }
 
   const labelMap = {
     operational: { text:"全機能 正常稼働中", kind:"ok", sub:"All systems operational" },

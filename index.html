@@ -20,10 +20,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20260711H-overview-tab-info-density">
-<link rel="stylesheet" href="styles-v2.css?v=20260711H-overview-tab-info-density">
-<link rel="stylesheet" href="styles-v3.css?v=20260711H-overview-tab-info-density">
-<link rel="stylesheet" href="styles-v8-workspace.css?v=20260711H-overview-tab-info-density">
+<link rel="stylesheet" href="styles.css?v=20260711I-cd-right-scroll-fix">
+<link rel="stylesheet" href="styles-v2.css?v=20260711I-cd-right-scroll-fix">
+<link rel="stylesheet" href="styles-v3.css?v=20260711I-cd-right-scroll-fix">
+<link rel="stylesheet" href="styles-v8-workspace.css?v=20260711I-cd-right-scroll-fix">
 <!-- ★ 2026-06-26 perf: lucide(350KB) と chart.js(201KB) を defer 化 -->
 <!--   どちらも DOMContentLoaded 後ハイドレートで OK (lucide: setInterval scan / chart: tryRender polling) -->
 <script defer src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
@@ -123,7 +123,7 @@
     onAuthStateChanged, signOut, setPersistence, browserSessionPersistence,
   } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
   import {
-    getFirestore, doc, getDoc, setDoc, serverTimestamp, collection, getDocs, addDoc,
+    getFirestore, initializeFirestore, doc, getDoc, setDoc, serverTimestamp, collection, getDocs, addDoc,
     query, where, orderBy, limit,
   } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
   import {
@@ -152,7 +152,10 @@
   if (__isStaging) console.log("[FP Compass] STAGING 環境で接続中:", firebaseConfig.projectId);
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
-  const db = getFirestore(app);
+  // memory: feedback_firestore_webchannel_blocked_longpolling.md
+  let db;
+  try { db = initializeFirestore(app, { experimentalAutoDetectLongPolling: true }); }
+  catch (_) { db = getFirestore(app); }
   const functions = getFunctions(app, "asia-northeast1");
   // ★ オーナーfb: 「勝手にログインまでしなくていい」 → タブ閉じると自動でログアウト (session 限定)
   setPersistence(auth, browserSessionPersistence).catch(console.error);
@@ -1329,7 +1332,7 @@ window.fpReadyAfterAuth = function() {
     });
   })();
 
-  const ver = "20260711H";
+  const ver = "20260711I";
   // ★ 2026-06-26 perf: critical (画面初期表示に必須) と deferred (LINE/charts) を 分離
   // critical: 顧客台帳・ホーム描画に必須
   // deferred: LINE タブ (line-app.js 555KB) / dashboard charts (charts.js) → idle で 後ロード
@@ -2059,7 +2062,7 @@ window.fpReadyAfterAuth = function() {
 <script>
 (function(){
   // 最新の ver を 1 箇所に集約 (fpReadyAfterAuth 側と一致させる必要あり)
-  const FP_VERSION = "20260711H-overview-tab-info-density";
+  const FP_VERSION = "20260711I-cd-right-scroll-fix";
   try { window.FP_VERSION = FP_VERSION; } catch(_) {}
   const loadTime = new Date();
   const hhmm = String(loadTime.getHours()).padStart(2,'0') + ':' + String(loadTime.getMinutes()).padStart(2,'0');

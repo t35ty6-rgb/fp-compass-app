@@ -6,7 +6,7 @@ import {
   onAuthStateChanged, signOut, setPersistence, browserLocalPersistence,
 } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
 import {
-  getFirestore, doc, getDoc, setDoc, serverTimestamp, collection, getDocs,
+  getFirestore, initializeFirestore, doc, getDoc, setDoc, serverTimestamp, collection, getDocs,
 } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -20,7 +20,15 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const db = getFirestore(app);
+// 🚨 experimentalAutoDetectLongPolling: Chrome拡張/NW で onSnapshot WebChannel が silent block される罠対策
+// memory: feedback_firestore_webchannel_blocked_longpolling.md
+let db;
+try {
+  db = initializeFirestore(app, { experimentalAutoDetectLongPolling: true });
+} catch (_) {
+  // 既に別モジュールで initialize 済みの場合は getFirestore で取得
+  db = getFirestore(app);
+}
 // ブラウザを閉じても (30日まで) 自動ログイン維持
 setPersistence(auth, browserLocalPersistence).catch(console.error);
 

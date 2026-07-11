@@ -3878,6 +3878,24 @@
       });
     }
 
+    // 2026-07-11 v8: cd-right の scroll 位置 で 「まだ 続く」 fade を toggle
+    try {
+      const rightEl = document.querySelector('.cd-right');
+      if (rightEl && !rightEl._boundScroll) {
+        rightEl._boundScroll = true;
+        const update = () => {
+          const canScroll = rightEl.scrollHeight - rightEl.clientHeight > 4;
+          const nearBottom = rightEl.scrollTop + rightEl.clientHeight >= rightEl.scrollHeight - 20;
+          rightEl.classList.toggle('has-more-below', canScroll && !nearBottom);
+        };
+        rightEl.addEventListener('scroll', update, { passive: true });
+        new ResizeObserver(update).observe(rightEl);
+        setTimeout(update, 100);
+        setTimeout(update, 400);
+        setTimeout(update, 1200);
+      }
+    } catch(_) {}
+
     // 2026-07-11 v6: transcript 会話/プレーン toggle delegation
     if (!window._fpTranscriptToggleBound) {
       window._fpTranscriptToggleBound = true;
@@ -6672,6 +6690,21 @@ STEP C: 結果報告
           resolve({ json: async () => ({ ok: false, error: 'Mac mini 生成失敗: ' + (data.errorMessage || '不明') }) });
         }
         // processing 中は 何もしない (subscription 継続)
+      }, (err) => {
+        // 🚨 memory: feedback_firestore_permission_denied_silent_kpi_empty.md
+        // onSnapshot の第2引数 error callback を必ず実装 (silent fail 防止)
+        console.error('[deliverable onSnapshot] permission-denied or network error:', err);
+        clearTimeout(timeoutId); try { unsub && unsub(); } catch(_) {}
+        try {
+          const dbg = document.getElementById('__fp_debug') || (() => {
+            const d = document.createElement('div');
+            d.id = '__fp_debug';
+            d.style.cssText = 'position:fixed;bottom:8px;left:8px;background:#fee;border:1px solid #f66;color:#900;padding:6px 10px;font:11px monospace;z-index:99999;max-width:60%;';
+            document.body.appendChild(d); return d;
+          })();
+          dbg.textContent = '[deliverable] ' + (err.code || err.message);
+        } catch (_) {}
+        resolve({ json: async () => ({ ok: false, error: 'Firestore 監視エラー: ' + (err.code || err.message) }) });
       });
     });
   }
