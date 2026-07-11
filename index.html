@@ -20,10 +20,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20260711B-pill-reposition-sidebar-delete">
-<link rel="stylesheet" href="styles-v2.css?v=20260711B-pill-reposition-sidebar-delete">
-<link rel="stylesheet" href="styles-v3.css?v=20260711B-pill-reposition-sidebar-delete">
-<link rel="stylesheet" href="styles-v8-workspace.css?v=20260711B-pill-reposition-sidebar-delete">
+<link rel="stylesheet" href="styles.css?v=20260711F-sidebar-kompa-replace-user">
+<link rel="stylesheet" href="styles-v2.css?v=20260711F-sidebar-kompa-replace-user">
+<link rel="stylesheet" href="styles-v3.css?v=20260711F-sidebar-kompa-replace-user">
+<link rel="stylesheet" href="styles-v8-workspace.css?v=20260711F-sidebar-kompa-replace-user">
 <!-- ★ 2026-06-26 perf: lucide(350KB) と chart.js(201KB) を defer 化 -->
 <!--   どちらも DOMContentLoaded 後ハイドレートで OK (lucide: setInterval scan / chart: tryRender polling) -->
 <script defer src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
@@ -861,11 +861,6 @@
     </div><!-- /sidebar-scroll -->
 
     <div class="sidebar-foot">
-      <!-- 2026-07-11 owner FB: 顧客モーダル 開いてる 間 「この顧客 を 削除」 を foot に 大きく 表示 (JS が openClientModal で 表示 / closeModal で 非表示 制御) -->
-      <button id="sidebar-customer-delete" style="display:none;background:#fff;color:#DC2626;border:1.5px solid #FCA5A5;padding:10px 12px;border-radius:8px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit;margin-bottom:8px;text-align:left;align-items:center;gap:8px;width:100%;">
-        <span style="font-size:15px;">🗑</span>
-        <span style="flex:1;">この顧客 を 削除</span>
-      </button>
       <button class="real-mode-toggle" id="real-mode-btn" title="実モード ⇄ 本番モード">
         <i data-lucide="users-round"></i>
         <span class="real-mode-label" id="real-mode-label">本番モード (30名)</span>
@@ -879,16 +874,20 @@
         </span>
         <i data-lucide="chevron-right" class="upgrade-mini-chev"></i>
       </button>
-      <div class="sidebar-user">
-        <div class="user-avatar-wrap">
-          <div class="user-avatar" id="sidebar-avatar">—</div>
-          <span class="user-status-dot"></span>
-        </div>
-        <div class="user-text">
-          <div class="user-name" id="sidebar-user-name">FP事業者</div>
-          <div class="user-role"><i data-lucide="shield-check"></i><span>Owner</span></div>
-        </div>
-        <i data-lucide="chevrons-up-down" class="user-chevron"></i>
+      <!-- 2026-07-11 v5 owner FB: 「FP事業者 / Owner」 の user カード は 不要 → コンパちゃん に 差し替え (左下 固定 領域) -->
+      <button id="sidebar-kompa-trigger" title="コンパちゃん に 業務相談 する" style="width:100%;background:linear-gradient(135deg,#F0FDFA 0%,#ECFEFF 100%);border:1.5px solid #14B8A6;padding:10px 12px;border-radius:12px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:10px;transition:transform .12s,box-shadow .15s;box-shadow:0 2px 8px rgba(20,184,166,0.16);">
+        <span style="position:relative;flex-shrink:0;width:42px;height:42px;border-radius:50%;background:radial-gradient(ellipse at 50% 60%,#fff 0%,#ECFEFF 70%,#CFFAFE 100%);border:2px solid #14B8A6;overflow:hidden;display:flex;align-items:center;justify-content:center;">
+          <img src="/img/mebuki-kun-400.jpg" alt="" style="width:36px;height:36px;object-fit:contain;border-radius:50%;">
+        </span>
+        <span style="flex:1;text-align:left;min-width:0;">
+          <span style="display:block;font-family:'Noto Sans JP',sans-serif;font-weight:800;font-size:13px;color:#0F172A;letter-spacing:0.02em;">コンパちゃん</span>
+          <span style="display:block;font-size:10.5px;font-weight:600;color:#0F766E;letter-spacing:0.04em;margin-top:2px;">業務のこと 何でも 聞いて ♪</span>
+        </span>
+      </button>
+      <!-- 旧 user カード: hidden で name state は Firestore 更新用 に 残す -->
+      <div class="sidebar-user" style="display:none;">
+        <div class="user-name" id="sidebar-user-name">FP事業者</div>
+        <div class="user-avatar" id="sidebar-avatar">—</div>
       </div>
     </div>
   </aside>
@@ -1330,7 +1329,7 @@ window.fpReadyAfterAuth = function() {
     });
   })();
 
-  const ver = "20260711B";
+  const ver = "20260711F";
   // ★ 2026-06-26 perf: critical (画面初期表示に必須) と deferred (LINE/charts) を 分離
   // critical: 顧客台帳・ホーム描画に必須
   // deferred: LINE タブ (line-app.js 555KB) / dashboard charts (charts.js) → idle で 後ロード
@@ -2060,7 +2059,7 @@ window.fpReadyAfterAuth = function() {
 <script>
 (function(){
   // 最新の ver を 1 箇所に集約 (fpReadyAfterAuth 側と一致させる必要あり)
-  const FP_VERSION = "20260711B-pill-reposition-sidebar-delete";
+  const FP_VERSION = "20260711F-sidebar-kompa-replace-user";
   try { window.FP_VERSION = FP_VERSION; } catch(_) {}
   const loadTime = new Date();
   const hhmm = String(loadTime.getHours()).padStart(2,'0') + ':' + String(loadTime.getMinutes()).padStart(2,'0');
@@ -2109,7 +2108,8 @@ window.fpReadyAfterAuth = function() {
     [class*="-pulse"], [class*="pulse-"] { animation: none !important; }
     * { transition-duration: 0.01ms !important; }
   }
-  .mb-fab{position:fixed;right:24px;bottom:24px;z-index:9990;cursor:pointer;display:flex;flex-direction:column;align-items:center;user-select:none;animation:mbFabFloat 3s ease-in-out infinite;}
+  .mb-fab{display:none !important;} /* 2026-07-11 v5: 右下 floating 廃止、 サイドバー左下 の #sidebar-kompa-trigger に 統合 */
+  .mb-fab-legacy{position:fixed;right:24px;bottom:24px;z-index:9990;cursor:pointer;display:flex;flex-direction:column;align-items:center;user-select:none;animation:mbFabFloat 3s ease-in-out infinite;}
   /* マークダウン 装飾 */
   .mb-bubble strong, .mb-bubble b{color:#DC2626;font-weight:900;}
   .mb-bubble em, .mb-bubble i{color:#0F766E;font-style:normal;font-weight:700;background:linear-gradient(transparent 60%, rgba(20,184,166,0.18) 60%);padding:0 2px;}
@@ -2252,6 +2252,22 @@ window.fpReadyAfterAuth = function() {
     panel.classList.remove('open');
     fab.classList.remove('hidden');
   });
+  // 2026-07-11 v5: sidebar-kompa-trigger も 同じ mbPanel を 開く
+  const sideKompa = document.getElementById('sidebar-kompa-trigger');
+  if (sideKompa) {
+    sideKompa.addEventListener('click', () => {
+      panel.classList.add('open');
+      setTimeout(() => input.focus(), 100);
+    });
+    sideKompa.addEventListener('mouseenter', () => {
+      sideKompa.style.transform = 'translateY(-1px)';
+      sideKompa.style.boxShadow = '0 6px 16px rgba(20,184,166,0.28)';
+    });
+    sideKompa.addEventListener('mouseleave', () => {
+      sideKompa.style.transform = 'translateY(0)';
+      sideKompa.style.boxShadow = '0 2px 8px rgba(20,184,166,0.16)';
+    });
+  }
 
   // ★ リサイズ ハンドル (左上 ドラッグ で 拡縮)
   const resize = document.getElementById('mbResize');

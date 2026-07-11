@@ -3190,6 +3190,16 @@
             <div class="cd-section-label">メモ</div>
             <div class="cd-note">${escapeHtml(c.note)}</div>
           </div>` : ''}
+
+          <!-- 2026-07-11 v4 owner FB: 削除ボタン は 顧客モーダル 左タブ 一番下 (この画面 = この客 の 削除 と 文脈 明瞭) -->
+          <div class="cd-left-delete-zone" style="margin-top:auto;padding-top:24px;border-top:1px solid rgba(148,163,184,0.22);">
+            <div style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;">danger zone</div>
+            <button id="cd-left-delete-btn" data-cid="${escapeHtml(c.id)}" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;background:#fff;color:#DC2626;border:1.5px solid #FCA5A5;padding:11px 14px;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:0.02em;transition:background .15s,border-color .15s,box-shadow .15s;">
+              <span style="font-size:15px;">🗑</span>
+              <span>${escapeHtml(c.name)} さん を 削除</span>
+            </button>
+            <div style="font-size:11px;color:#94A3B8;margin-top:6px;line-height:1.5;">この客 の LINE / 議事録 / 予約 / 資料 が すべて 消えます。 元 に 戻せません。</div>
+          </div>
         </aside>
 
         <!-- ============= RIGHT: Activity column ============= -->
@@ -3330,9 +3340,8 @@
               </style>
             </div>
 
-            <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;justify-content:flex-end;">
-              <button id="modal-delete-btn" style="background:transparent;color:#94A3B8;border:none;padding:6px 8px;font-size:11.5px;font-weight:600;cursor:pointer;font-family:inherit;text-decoration:underline;">この顧客を削除</button>
-            </div>
+            <!-- 2026-07-11 v3: modal 内 grey 「この顧客を削除」 削除。 削除 は 左サイドバー の 大きな 赤ボタン から (owner 明示指示) -->
+            <button id="modal-delete-btn" style="display:none;"></button>
           </div>` : `
           <div class="cd-flow cd-flow-empty">
             <div class="cd-flow-eyebrow"><span class="cd-flow-eyebrow-pill">AI推奨</span></div>
@@ -3352,7 +3361,7 @@
               <button class="modal-brief-btn" data-line-brief="${c.id}" style="background:linear-gradient(135deg,#10B981,#059669);color:#fff;border:none;padding:9px 16px;border-radius:7px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;letter-spacing:0.04em;box-shadow:0 4px 12px rgba(16,185,129,0.32);">✍ 伝えたいことから 下書き</button>
               <button id="modal-deliv-btn" style="background:linear-gradient(135deg,#5B5BF0,#6D6DEF);color:#fff;border:none;padding:9px 16px;border-radius:7px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;letter-spacing:0.04em;box-shadow:0 4px 12px rgba(91,91,240,0.32);">📎 資料パッケージを ダウンロード</button>
               <button class="cd-flow-edit ghost-btn" id="modal-edit-btn"><i data-lucide="pencil"></i><span>顧客情報を編集</span></button>
-              <button id="modal-delete-btn" style="background:#fff;color:#dc2626;border:1px solid #fecaca;padding:8px 14px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;"><i data-lucide="trash-2" style="width:14px;height:14px;"></i><span>この顧客を削除</span></button>
+              <button id="modal-delete-btn" style="display:none;"></button>
             </div>
           </div>`}
 
@@ -3544,19 +3553,25 @@
     setTimeout(_scrollLineChatBottom, 250);
     setTimeout(_scrollLineChatBottom, 800);
     document.getElementById('modal-close-btn').addEventListener('click', closeModal);
-    // ★ 2026-07-11 owner FB: サイドバー の 「この顧客を削除」 ボタン 表示 (顧客モーダル 開いてる 間 のみ)
+    // ★ 2026-07-11 v4: cd-left 内 の 削除ボタン → modal-delete-btn に forward
     try {
-      const sideDelBtn = document.getElementById('sidebar-customer-delete');
-      if (sideDelBtn) {
-        sideDelBtn.style.display = 'flex';
-        // 既に登録 済 listener を 上書き しない よう flag
-        if (!sideDelBtn._boundOnce) {
-          sideDelBtn._boundOnce = true;
-          sideDelBtn.addEventListener('click', () => {
-            const modalBtn = document.getElementById('modal-delete-btn');
-            if (modalBtn) modalBtn.click();
-          });
-        }
+      const cdDelBtn = document.getElementById('cd-left-delete-btn');
+      if (cdDelBtn && !cdDelBtn._boundOnce) {
+        cdDelBtn._boundOnce = true;
+        cdDelBtn.addEventListener('click', () => {
+          const modalBtn = document.getElementById('modal-delete-btn');
+          if (modalBtn) modalBtn.click();
+        });
+        cdDelBtn.addEventListener('mouseenter', () => {
+          cdDelBtn.style.background = '#FEF2F2';
+          cdDelBtn.style.borderColor = '#F87171';
+          cdDelBtn.style.boxShadow = '0 4px 12px rgba(220,38,38,0.15)';
+        });
+        cdDelBtn.addEventListener('mouseleave', () => {
+          cdDelBtn.style.background = '#fff';
+          cdDelBtn.style.borderColor = '#FCA5A5';
+          cdDelBtn.style.boxShadow = 'none';
+        });
       }
     } catch (_) {}
     // ★ 顧客削除ボタン
@@ -9002,11 +9017,7 @@ ${client.name}さん、ありがとうございます。
       if (fab) { fab.style.removeProperty('display'); fab.classList.remove('hidden'); }
       document.querySelectorAll('.mb-fab-hint, .mb-fab-badge, .mb-fab-pulse, .mb-panel').forEach(el => el.style.removeProperty('display'));
     } catch (_) {}
-    // ★ 2026-07-11: サイドバー の 顧客削除ボタン 非表示 に戻す
-    try {
-      const sideDelBtn = document.getElementById('sidebar-customer-delete');
-      if (sideDelBtn) sideDelBtn.style.display = 'none';
-    } catch (_) {}
+    // (v4: cd-left 内 削除ボタン は 顧客モーダル と 一緒 に destroy される ので cleanup 不要)
     // ★ 閉じたら復元 flag クリア
     try {
       localStorage.removeItem('fp-last-open-client');

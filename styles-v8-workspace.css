@@ -1897,6 +1897,8 @@ table.clients [class*="avatar"],
   border-right: 1px solid var(--hairline);
   padding: 32px 24px 24px;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 }
 .cd-profile-head { text-align: center; margin-bottom: 20px; }
 .cd-profile-avatar {
