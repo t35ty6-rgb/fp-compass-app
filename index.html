@@ -20,10 +20,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20260712B-audit-100-round2-mobile-gate-iOS-zoom">
-<link rel="stylesheet" href="styles-v2.css?v=20260712B-audit-100-round2-mobile-gate-iOS-zoom">
-<link rel="stylesheet" href="styles-v3.css?v=20260712B-audit-100-round2-mobile-gate-iOS-zoom">
-<link rel="stylesheet" href="styles-v8-workspace.css?v=20260712B-audit-100-round2-mobile-gate-iOS-zoom">
+<link rel="stylesheet" href="styles.css?v=20260713A-audit-100-round3-copy-friendly-errors">
+<link rel="stylesheet" href="styles-v2.css?v=20260713A-audit-100-round3-copy-friendly-errors">
+<link rel="stylesheet" href="styles-v3.css?v=20260713A-audit-100-round3-copy-friendly-errors">
+<link rel="stylesheet" href="styles-v8-workspace.css?v=20260713A-audit-100-round3-copy-friendly-errors">
 <!-- ★ 2026-06-26 perf: lucide(350KB) と chart.js(201KB) を defer 化 -->
 <!--   どちらも DOMContentLoaded 後ハイドレートで OK (lucide: setInterval scan / chart: tryRender polling) -->
 <script defer src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
@@ -71,7 +71,7 @@
       <button id="fp-tab-login" class="on">ログイン</button>
       <button id="fp-tab-signup">新規登録</button>
     </div>
-    <div id="fp-gate-title">ようこそ</div>
+    <div id="fp-gate-title">FP Compass へ</div>
     <div id="fp-gate-sub" data-login="登録済みのメアドとパスワードで入ってください。30日間ログイン維持。" data-signup="あなた専用の管理画面が30秒で作れます。">登録済みのメアドとパスワードで入ってください。30日間ログイン維持。</div>
 
     <div id="fp-row-fpname" style="display:none;">
@@ -965,9 +965,9 @@
                 <div class="mega-hero-date" id="mega-hero-date">2026年5月27日 水曜日</div>
                 <h1 class="mega-hero-title">
                   おはようございます、<span class="mega-hero-name" id="mega-hero-name">先生</span>。<br>
-                  今日は <span class="mega-hero-highlight" id="mega-hero-num">0</span> 人のお客様が<br>あなたを必要としています。
+                  <span class="mega-hero-highlight" id="mega-hero-num">0</span> 人、今日 話す べき 方 が います。
                 </h1>
-                <p class="mega-hero-lead" id="mega-hero-lead">優先度の高い順に、AI が次に取るべきアクションをまとめました。</p>
+                <p class="mega-hero-lead" id="mega-hero-lead">ライフイベント × 接触頻度 × 未返信 を 合算 した 順。</p>
 
                 <div class="mega-hero-stats">
                   <div class="mega-hero-stat">
@@ -1372,7 +1372,7 @@ window.fpReadyAfterAuth = function() {
     });
   })();
 
-  const ver = "20260712B";
+  const ver = "20260713A";
   // ★ 2026-06-26 perf: critical (画面初期表示に必須) と deferred (LINE/charts) を 分離
   // critical: 顧客台帳・ホーム描画に必須
   // deferred: LINE タブ (line-app.js 555KB) / dashboard charts (charts.js) → idle で 後ロード
@@ -2010,8 +2010,8 @@ window.fpReadyAfterAuth = function() {
       const leadEl = document.getElementById('mega-hero-lead');
       if (titleEl && topCount === 0 && count30 === 0) {
         const nameSpan = titleEl.querySelector('#mega-hero-name')?.outerHTML || '<span id="mega-hero-name">先生</span>';
-        titleEl.innerHTML = `おはようございます、${nameSpan}。<br>今日 は お客様 を 待つ 準備 が できて います。`;
-        if (leadEl) leadEl.textContent = '「+ 新規顧客」 で 客 を 登録、 「急遽 面談」 で Zoom も 対面 も 即 起動 できます。';
+        titleEl.innerHTML = `おはようございます、${nameSpan}。<br>まず 顧客 を 1人 登録 して ください。`;
+        if (leadEl) leadEl.textContent = '家族 の 生年月日 まで 入れると、 30年分 の ライフイベント が 自動 で 展開 されます。';
       }
     } catch(_) {}
 
@@ -2113,7 +2113,7 @@ window.fpReadyAfterAuth = function() {
 <script>
 (function(){
   // 最新の ver を 1 箇所に集約 (fpReadyAfterAuth 側と一致させる必要あり)
-  const FP_VERSION = "20260712B-audit-100-round2-mobile-gate-iOS-zoom";
+  const FP_VERSION = "20260713A-audit-100-round3-copy-friendly-errors";
   try { window.FP_VERSION = FP_VERSION; } catch(_) {}
   const loadTime = new Date();
   const hhmm = String(loadTime.getHours()).padStart(2,'0') + ':' + String(loadTime.getMinutes()).padStart(2,'0');

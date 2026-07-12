@@ -997,9 +997,12 @@
 
     const delBtn = document.getElementById('form-delete-btn');
     if (delBtn) delBtn.addEventListener('click', async () => {
-      if (!confirm('この顧客を削除しますか?')) return;
-      const idx = clients.findIndex(x => x.id === clientId);
-      const target = idx >= 0 ? clients[idx] : null;
+      const _tgtIdx = clients.findIndex(x => x.id === clientId);
+      const _tgt = _tgtIdx >= 0 ? clients[_tgtIdx] : null;
+      const _tgtName = _tgt?.name || 'この顧客';
+      if (!confirm('⚠ ' + _tgtName + ' さん を 削除 します。\n\nこの 客 に 紐付く LINE 履歴 / Zoom 予約 / 議事録 が すべて 消えます。\n元 に 戻せません。\n\n本当 に 削除 しますか?')) return;
+      const idx = _tgtIdx;
+      const target = _tgt;
       if (idx >= 0) clients.splice(idx, 1);
       saveClientsToLS();
       if (target) {
@@ -4267,7 +4270,8 @@
       });
       const delBtn = overlay.querySelector('#fp-fam-delete');
       if (delBtn) delBtn.addEventListener('click', () => {
-        if (!confirm('この家族を削除しますか?')) return;
+        const _famName = c.family?.[memberIdx]?.name || 'この家族';
+        if (!confirm('⚠ ' + _famName + ' を 削除 します。 元 に 戻せません。\n\n本当 に 削除 しますか?')) return;
         c.family.splice(memberIdx, 1);
         persistFamily();
         overlay.remove();
@@ -4660,7 +4664,7 @@ ${ctxText}${surveyTxt}`;
           } catch (_) {}
           setTimeout(() => { try { openClientModal(cid); } catch (_) {} }, 1500);
         } catch (e) {
-          msg.textContent = '✗ 紐付け失敗: ' + (e.message || e);
+          console.error('紐付け 失敗:', e); msg.textContent = '❌ 紐付け できませんでした。 客 の LINE userId を 確認 して ください。';
           msg.style.color = '#B91C1C';
           lineidBtn.disabled = false;
         }
@@ -4783,12 +4787,12 @@ ${ctxText}${surveyTxt}`;
             appendLocalMessage(text);
             input.value = '';
           } else {
-            statusEl.textContent = '✕ 送信失敗: 戻り値異常';
+            console.error('送信 戻り値 異常'); statusEl.textContent = '❌ LINE で 送信 できません でした。 再度 お試し ください。';
             statusEl.style.color = 'var(--critical)';
           }
         } catch (e) {
           // HttpsError は e.message に 親切な文言 (友だち未追加 等) が 入ってる
-          statusEl.textContent = '✕ 送信失敗: ' + (e.message || e.code || '不明なエラー');
+          console.error('送信 例外:', e); statusEl.textContent = '❌ LINE で 送信 できませんでした。 通信 状態 を 確認 して 再度 お試し ください。';
           statusEl.style.color = 'var(--critical)';
         } finally {
           sendBtn.disabled = false;
@@ -4819,8 +4823,8 @@ ${ctxText}${surveyTxt}`;
           });
           const data = await r.json();
           if (data.ok) { btn.textContent = '✓ 送信済'; btn.style.background = '#94a3b8'; }
-          else { alert('失敗: ' + (data.error || '')); btn.disabled = false; btn.textContent = '→ LINEで送信'; }
-        } catch (e) { alert('失敗: ' + e.message); btn.disabled = false; btn.textContent = '→ LINEで送信'; }
+          else { console.error('LINE 送信 失敗 (server):', data.error); alert('LINE で 送信 できませんでした。 通信 か LINE 連携 設定 を 確認 して 再度 お試し ください。'); btn.disabled = false; btn.textContent = '→ LINEで送信'; }
+        } catch (e) { console.error('LINE 送信 例外:', e); alert('LINE で 送信 できませんでした。 通信 状態 を 確認 して 再度 お試し ください。'); btn.disabled = false; btn.textContent = '→ LINEで送信'; }
       });
     });
     // ★ 生成済 資料 の「再開 / 削除」 ボタン
@@ -6086,8 +6090,8 @@ ${ctxText}${surveyTxt}`;
           t.innerHTML = `<strong style="font-size:14px;">✓ ${escapeHtml(client.name)} 様 に送信完了</strong><div style="font-size:12px;color:#6b7280;margin-top:4px;">LINE 履歴に追加済 — 次の提案で Jobs が参照します</div>`;
           document.body.appendChild(t);
           setTimeout(() => t.remove(), 4000);
-        } else { alert('失敗: ' + (d.error || '')); btn.disabled = false; btn.textContent = '📤 LINE 送信'; }
-      } catch (e) { alert('失敗: ' + e.message); btn.disabled = false; btn.textContent = '📤 LINE 送信'; }
+        } else { console.error('LINE 送信 失敗 (server):', d.error); alert('LINE で 送信 できませんでした。 通信 か LINE 連携 設定 を 確認 して 再度 お試し ください。'); btn.disabled = false; btn.textContent = '📤 LINE 送信'; }
+      } catch (e) { console.error('LINE 送信 例外:', e); alert('LINE で 送信 できませんでした。 通信 状態 を 確認 して 再度 お試し ください。'); btn.disabled = false; btn.textContent = '📤 LINE 送信'; }
     });
   }
 
@@ -6187,8 +6191,8 @@ ${ctxText}${surveyTxt}`;
           t.innerHTML = `<strong style="font-size:14px;">✓ ${escapeHtml(client.name)} 様 に送信完了</strong>`;
           document.body.appendChild(t);
           setTimeout(() => t.remove(), 4000);
-        } else { alert('失敗: ' + (d.error || '')); btn.disabled = false; btn.textContent = '📤 LINEで送信'; }
-      } catch (e) { alert('失敗: ' + e.message); btn.disabled = false; btn.textContent = '📤 LINEで送信'; }
+        } else { console.error('LINE 送信 失敗 (server):', d.error); alert('LINE で 送信 できませんでした。 通信 か LINE 連携 設定 を 確認 して 再度 お試し ください。'); btn.disabled = false; btn.textContent = '📤 LINEで送信'; }
+      } catch (e) { console.error('LINE 送信 例外:', e); alert('LINE で 送信 できませんでした。 通信 状態 を 確認 して 再度 お試し ください。'); btn.disabled = false; btn.textContent = '📤 LINEで送信'; }
     });
   }
 
