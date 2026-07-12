@@ -238,41 +238,39 @@ body, table, .kpi-value, .num, .funnel-value, .task-count,
 
 /* -------- Sidebar Quick Recording Button -------- */
 /* どこからでも 1クリックで対面録画開始できる action ボタン (nav tab ではない) */
+/* 2026-07-13 v11 elite critic 修正: 紫グラデ + pulse → 紺ベタ 業務感 (Vercel Deploy風 削除) */
 .sidebar-quick-rec {
   display: flex; align-items: center; gap: 10px;
   width: 100%;
-  background: linear-gradient(135deg, #7C3AED 0%, #5B21B6 100%);
+  background: #1E3A5F;
   color: #fff;
   border: none;
-  border-radius: 9px;
+  border-radius: 8px;
   padding: 11px 14px;
   margin: 0 0 18px;
-  font-family: 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+  font-family: 'Noto Sans JP', sans-serif;
   font-weight: 700;
   font-size: 13px;
   letter-spacing: 0.02em;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.28);
-  transition: transform .12s, box-shadow .15s;
+  box-shadow: 0 1px 3px rgba(26,33,56,0.10);
+  transition: background .15s;
 }
 .sidebar-quick-rec:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 22px rgba(124, 58, 237, 0.42);
+  background: #152B48;
 }
 .sidebar-quick-rec:active {
-  transform: translateY(0);
+  background: #0F2038;
 }
 .sidebar-quick-rec-dot {
-  width: 9px; height: 9px;
-  background: #FCA5A5;
+  width: 8px; height: 8px;
+  background: #DC2626;
   border-radius: 50%;
   flex-shrink: 0;
-  box-shadow: 0 0 0 2px rgba(252, 165, 165, 0.3);
-  animation: sidebar-quick-rec-pulse 2.5s ease-in-out infinite;
 }
+/* pulse animation は elite critic の 指摘 で 撤廃 */
 @keyframes sidebar-quick-rec-pulse {
-  0%, 100% { opacity: 1; box-shadow: 0 0 0 2px rgba(252, 165, 165, 0.3); }
-  50% { opacity: 0.7; box-shadow: 0 0 0 4px rgba(252, 165, 165, 0.5); }
+  0%, 100% { opacity: 1; }
 }
 .sidebar-quick-rec-label {
   flex: 1;

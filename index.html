@@ -4,14 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>FP Compass — ファイナンシャルプランナー向け 顧客管理 SaaS</title>
-<meta name="description" content="FP事業者特化型の顧客管理SaaS。議事録自動化・LINE統合・AI推奨提案で月¥19,800、業務時間7割削減。">
+<meta name="description" content="FP事業者向け 顧客管理 SaaS。 議事録 自動化 / LINE 統合 / 家族 タイムライン。 月¥19,800。 Skeleton Inc.">
 <link rel="icon" type="image/svg+xml" href="./favicon.svg">
 <link rel="apple-touch-icon" href="./favicon.svg">
 <meta name="theme-color" content="#0E1116">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://app.skeleton-inc.jp/">
 <meta property="og:title" content="FP Compass — FP事業者特化型 顧客管理 SaaS">
-<meta property="og:description" content="議事録自動化・LINE統合・AI推奨提案で月¥19,800。業務時間7割削減。Skeleton Inc.">
+<meta property="og:description" content="議事録 自動化 / LINE 統合 / 家族 タイムライン。 月¥19,800。 Skeleton Inc.">
 <meta property="og:site_name" content="FP Compass">
 <meta property="og:locale" content="ja_JP">
 <meta name="twitter:card" content="summary_large_image">
@@ -20,10 +20,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20260713A-audit-100-round3-copy-friendly-errors">
-<link rel="stylesheet" href="styles-v2.css?v=20260713A-audit-100-round3-copy-friendly-errors">
-<link rel="stylesheet" href="styles-v3.css?v=20260713A-audit-100-round3-copy-friendly-errors">
-<link rel="stylesheet" href="styles-v8-workspace.css?v=20260713A-audit-100-round3-copy-friendly-errors">
+<link rel="stylesheet" href="styles.css?v=20260713B-elite-critic-round4-gate-redesign-JP-eyebrows">
+<link rel="stylesheet" href="styles-v2.css?v=20260713B-elite-critic-round4-gate-redesign-JP-eyebrows">
+<link rel="stylesheet" href="styles-v3.css?v=20260713B-elite-critic-round4-gate-redesign-JP-eyebrows">
+<link rel="stylesheet" href="styles-v8-workspace.css?v=20260713B-elite-critic-round4-gate-redesign-JP-eyebrows">
 <!-- ★ 2026-06-26 perf: lucide(350KB) と chart.js(201KB) を defer 化 -->
 <!--   どちらも DOMContentLoaded 後ハイドレートで OK (lucide: setInterval scan / chart: tryRender polling) -->
 <script defer src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
@@ -43,26 +43,28 @@
 </script>
 
 <style id="fp-gate-css">
-#fp-gate-overlay{position:fixed;inset:0;background:linear-gradient(135deg,#0F172A 0%,#1B2658 60%,#3838CC 100%);z-index:2147483647;display:flex;align-items:center;justify-content:center;font-family:'Noto Sans JP','Manrope',sans-serif;color:#fff}
-#fp-gate-card{max-width:440px;width:90%;background:rgba(255,255,255,0.06);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.18);border-radius:16px;padding:42px 38px;box-shadow:0 24px 64px rgba(0,0,0,0.4)}
-#fp-gate-brand{font-family:'Manrope',sans-serif;font-size:12px;letter-spacing:0.28em;text-transform:uppercase;opacity:0.92;margin-bottom:14px;font-weight:700}
-#fp-gate-tabs{display:flex;gap:4px;background:rgba(255,255,255,0.06);border-radius:8px;padding:3px;margin-bottom:20px}
-#fp-gate-tabs button{flex:1;padding:11px;border:none;background:transparent;color:rgba(255,255,255,0.82);border-radius:6px;cursor:pointer;font-family:'Manrope',sans-serif;font-weight:700;font-size:14px;min-height:44px}
-#fp-gate-tabs button.on{background:rgba(255,255,255,0.16);color:#fff}
-#fp-gate-title{font-family:'Manrope',sans-serif;font-size:22px;font-weight:800;letter-spacing:-0.01em;margin-bottom:6px;line-height:1.35}
-#fp-gate-sub{font-size:13px;opacity:0.92;margin-bottom:22px;line-height:1.7}
-.fp-gate-label{display:block;font-size:12px;font-weight:700;margin:14px 0 6px;letter-spacing:0.04em;opacity:0.92}
-.fp-gate-input{width:100%;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.3);border-radius:8px;padding:12px 14px;font-size:16px;color:#fff;font-family:inherit;outline:none}
-.fp-gate-input::placeholder{color:rgba(255,255,255,0.68)}
-.fp-gate-input:focus{border-color:#FFE9A8;background:rgba(255,255,255,0.12)}
-#fp-gate-btn{width:100%;background:#FFE9A8;color:#0F172A;border:none;border-radius:8px;padding:14px;margin-top:18px;font-size:14px;font-weight:800;letter-spacing:0.08em;cursor:pointer;font-family:'Manrope',sans-serif;text-transform:uppercase;transition:all 0.15s}
-#fp-gate-btn:hover:not(:disabled){background:#fff;transform:translateY(-1px)}
+/* 2026-07-13 v11 elite critic 修正: dark navy → 業務ツール 白 base + 紺 accent (信頼感) */
+#fp-gate-overlay{position:fixed;inset:0;background:#F7F6F2;z-index:2147483647;display:flex;align-items:center;justify-content:center;font-family:'Noto Sans JP',-apple-system,sans-serif;color:#1A2138;padding:20px}
+#fp-gate-overlay::before{content:'';position:absolute;top:0;left:0;width:8px;height:100%;background:#1E3A5F;pointer-events:none}
+#fp-gate-card{max-width:440px;width:100%;background:#fff;border:1px solid #E8E3D8;border-radius:12px;padding:36px 32px;box-shadow:0 4px 18px rgba(26,33,56,0.08)}
+#fp-gate-brand{font-family:'Inter','Manrope',sans-serif;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:#6B7280;margin-bottom:14px;font-weight:700}
+#fp-gate-tabs{display:flex;gap:0;background:#F1F0EA;border-radius:8px;padding:3px;margin-bottom:20px}
+#fp-gate-tabs button{flex:1;padding:11px;border:none;background:transparent;color:#6B7280;border-radius:6px;cursor:pointer;font-family:'Noto Sans JP',sans-serif;font-weight:700;font-size:14px;min-height:44px;transition:background .15s,color .15s}
+#fp-gate-tabs button.on{background:#fff;color:#1A2138;box-shadow:0 1px 3px rgba(26,33,56,0.06)}
+#fp-gate-title{font-family:'Noto Sans JP',sans-serif;font-size:22px;font-weight:800;letter-spacing:-0.01em;margin-bottom:6px;line-height:1.35;color:#1A2138}
+#fp-gate-sub{font-size:13px;color:#6B7280;margin-bottom:22px;line-height:1.7}
+.fp-gate-label{display:block;font-size:12px;font-weight:700;margin:14px 0 6px;letter-spacing:0.02em;color:#3F4868}
+.fp-gate-input{width:100%;background:#fff;border:1.5px solid #E8E3D8;border-radius:8px;padding:12px 14px;font-size:16px;color:#1A2138;font-family:inherit;outline:none;transition:border-color .15s,box-shadow .15s}
+.fp-gate-input::placeholder{color:#94A3B8}
+.fp-gate-input:focus{border-color:#1E3A5F;box-shadow:0 0 0 3px rgba(30,58,95,0.10)}
+#fp-gate-btn{width:100%;background:#1E3A5F;color:#fff;border:none;border-radius:8px;padding:14px;margin-top:18px;font-size:14px;font-weight:800;letter-spacing:0.06em;cursor:pointer;font-family:'Noto Sans JP',sans-serif;transition:background .15s,transform .15s;min-height:44px}
+#fp-gate-btn:hover:not(:disabled){background:#152B48;transform:translateY(-1px)}
 #fp-gate-btn:disabled{opacity:0.55;cursor:not-allowed}
-#fp-gate-msg{margin-top:14px;font-size:12.5px;min-height:18px;text-align:center;line-height:1.6}
-#fp-gate-msg.ok{color:#86EFAC}
-#fp-gate-msg.err{color:#FFB5B5}
-#fp-gate-help{margin-top:24px;padding-top:18px;border-top:1px solid rgba(255,255,255,0.12);font-size:11.5px;opacity:0.7;line-height:1.7;text-align:center}
-#fp-gate-help a{color:#FFE9A8;text-decoration:none}
+#fp-gate-msg{margin-top:14px;font-size:13px;min-height:18px;text-align:center;line-height:1.6}
+#fp-gate-msg.ok{color:#047647}
+#fp-gate-msg.err{color:#B91C1C}
+#fp-gate-help{margin-top:24px;padding-top:18px;border-top:1px solid #E8E3D8;font-size:12px;color:#6B7280;line-height:1.7;text-align:center}
+#fp-gate-help a{color:#1E3A5F;text-decoration:none;font-weight:700}
 </style>
 <div id="fp-gate-overlay">
   <div id="fp-gate-card">
@@ -95,7 +97,7 @@
       </label>
     </div>
     <div id="fp-row-forgot" style="text-align:right;margin-top:8px;">
-      <a id="fp-forgot-link" href="#" style="font-size:13px;color:rgba(255,255,255,0.88);text-decoration:underline;cursor:pointer;display:inline-block;padding:12px 4px;min-height:44px;line-height:20px;">パスワードを忘れた方</a>
+      <a id="fp-forgot-link" href="#" style="font-size:13px;color:#1E3A5F;text-decoration:underline;cursor:pointer;display:inline-block;padding:12px 4px;min-height:44px;line-height:20px;font-weight:700;">パスワードを忘れた方</a>
     </div>
 
     <button id="fp-gate-btn">ログイン</button>
@@ -107,11 +109,11 @@
     </div>
     <div id="fp-gate-msg"></div>
     <div id="fp-gate-help">サポート → <a href="mailto:support@skeleton-inc.jp">support@skeleton-inc.jp</a></div>
-    <div id="fp-gate-legal" style="margin-top:14px;font-size:12px;opacity:0.82;text-align:center;line-height:1.9;">
+    <div id="fp-gate-legal" style="margin-top:14px;font-size:12px;color:#6B7280;text-align:center;line-height:1.9;">
       申込前に必ずご確認ください:<br>
-      <a href="./legal/specified-commercial.html" style="color:rgba(255,255,255,0.95);text-decoration:underline;display:inline-block;padding:10px 8px;min-height:44px;line-height:24px;">特商法表記</a>
-      <a href="./legal/privacy.html" style="color:rgba(255,255,255,0.95);text-decoration:underline;display:inline-block;padding:10px 8px;min-height:44px;line-height:24px;">プライバシー</a>
-      <a href="./legal/index.html" style="color:rgba(255,255,255,0.95);text-decoration:underline;display:inline-block;padding:10px 8px;min-height:44px;line-height:24px;">利用規約</a>
+      <a href="./legal/specified-commercial.html" style="color:#1E3A5F;text-decoration:underline;display:inline-block;padding:10px 8px;min-height:44px;line-height:24px;font-weight:700;">特商法表記</a>
+      <a href="./legal/privacy.html" style="color:#1E3A5F;text-decoration:underline;display:inline-block;padding:10px 8px;min-height:44px;line-height:24px;font-weight:700;">プライバシー</a>
+      <a href="./legal/index.html" style="color:#1E3A5F;text-decoration:underline;display:inline-block;padding:10px 8px;min-height:44px;line-height:24px;font-weight:700;">利用規約</a>
     </div>
   </div>
 </div>
@@ -1005,7 +1007,7 @@
           <div id="notice-area"></div>
 
           <!-- ===== Workflow guide — FPの1日の業務フロー ===== -->
-          <div class="section-title" data-eyebrow="Workflow">今日の進め方</div>
+          <div class="section-title">今日 の 進め方</div>
           <div class="section-sub">朝 → 面談前 → 面談中 → 面談後。各ステップで「次にやること」が明確になります。</div>
           <div class="workflow-grid">
             <div class="workflow-step workflow-step-active">
@@ -1047,7 +1049,7 @@
           <!-- ===== ★メイン: 今日やる事 (Senior Cards) ===== -->
           <div class="section-header">
             <div>
-              <div class="section-eyebrow-pill">TODAY</div>
+              <div class="section-eyebrow-pill">本日</div>
               <h2 class="section-big-title">今日 話すべき方</h2>
               <p class="section-big-sub">上から順番に対応すればOK。各カードの「文面を作って送る」を押すだけ。</p>
             </div>
@@ -1121,7 +1123,7 @@
         <section class="view" data-view="clients">
           <div class="page-head">
             <div>
-              <span class="hero-eyebrow">CLIENT LEDGER</span>
+              <span class="hero-eyebrow">顧客 台帳</span>
               <h1 class="hero-title">顧客台帳</h1>
               <p class="hero-sub">最終接触日が古い順。タップで詳細モーダル（家族構成・30年タイムライン・提案履歴）。</p>
             </div>
@@ -1207,7 +1209,7 @@
         <section class="view" data-view="kpi">
           <div class="page-head">
             <div>
-              <span class="hero-eyebrow">KPI BOARD</span>
+              <span class="hero-eyebrow">今週 の 数字</span>
               <h1 class="hero-title">業務 KPI とタスク</h1>
               <p class="hero-sub">月次の主要 KPI と、それを達成するための具体的アクション。タスクから顧客 1 人ずつアプローチできます。</p>
             </div>
@@ -1372,7 +1374,7 @@ window.fpReadyAfterAuth = function() {
     });
   })();
 
-  const ver = "20260713A";
+  const ver = "20260713B";
   // ★ 2026-06-26 perf: critical (画面初期表示に必須) と deferred (LINE/charts) を 分離
   // critical: 顧客台帳・ホーム描画に必須
   // deferred: LINE タブ (line-app.js 555KB) / dashboard charts (charts.js) → idle で 後ロード
@@ -1705,7 +1707,7 @@ window.fpReadyAfterAuth = function() {
 
         <!-- 3. today action -->
         <div class="m-today-box">
-          <div class="m-today-eyebrow">TODAY · 最優先 アクション</div>
+          <div class="m-today-eyebrow">本日 の 優先事項</div>
           ${top ? `
             <div class="m-today-name">${(top.name || top.client?.name || 'お客様')} 様</div>
             <div class="m-today-sub">${(top.subjectName ? '🎂 ' + top.subjectName + ' ' : '')}${top.info || top.reason || 'フォロー連絡 を おすすめします'}</div>
@@ -2113,7 +2115,7 @@ window.fpReadyAfterAuth = function() {
 <script>
 (function(){
   // 最新の ver を 1 箇所に集約 (fpReadyAfterAuth 側と一致させる必要あり)
-  const FP_VERSION = "20260713A-audit-100-round3-copy-friendly-errors";
+  const FP_VERSION = "20260713B-elite-critic-round4-gate-redesign-JP-eyebrows";
   try { window.FP_VERSION = FP_VERSION; } catch(_) {}
   const loadTime = new Date();
   const hhmm = String(loadTime.getHours()).padStart(2,'0') + ':' + String(loadTime.getMinutes()).padStart(2,'0');
