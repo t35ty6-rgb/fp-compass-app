@@ -43,11 +43,84 @@
 
 <div class="warn">
   <strong>症状:</strong> Zoom を Bluetooth ヘッドホン で 使うと、 FP Compass の 議事録録音 に <strong>自分の声しか 入らない</strong>。 これは Mac の 仕様 で、 相手の音声 は ヘッドホン に 直行し PC マイク が 拾えない ため。
-  <br><br>
-  <strong>解:</strong> BlackHole (仮想オーディオ 出力) を 挟んで、 相手の声 を 「マイク入力」 として 拾えるようにする。 一度 設定すれば 以降 自動。
 </div>
 
-<h2>手順 (所要 5 分)</h2>
+<h2>選べる 3方式</h2>
+<p style="margin-bottom:20px;color:#334155;">環境 に 合わせて 選んで ください。 <b>Chrome拡張 方式 が 推奨</b> (5分 の 設定 不要、 会社支給 Mac でも OK)。</p>
+
+<div class="step" style="border:2px solid #059669;background:#F0FDF4;">
+  <h3 style="color:#065F46;"><span class="step-num" style="background:#059669;">A</span>Chrome 拡張 方式 <span style="font-size:12px;font-weight:800;color:#059669;letter-spacing:0.08em;margin-left:8px;">推奨</span></h3>
+  <ul>
+    <li>設定 時間: <b>1分</b> (Chrome拡張 install だけ)</li>
+    <li>会社支給 Mac: <b>OK</b> (管理者権限 不要)</li>
+    <li>Zoom: <b>Web版 で 開く</b> (アプリ版 は 不可)</li>
+    <li>費用: <b>0円</b></li>
+  </ul>
+  <p style="margin-top:10px;">
+    <a class="btn" href="#chrome-ext" style="background:#059669;">→ Chrome 拡張 install 手順 を 見る</a>
+  </p>
+</div>
+
+<div class="step">
+  <h3><span class="step-num">B</span>BlackHole 方式 (従来)</h3>
+  <ul>
+    <li>設定 時間: <b>5分</b> (BlackHole install + Audio MIDI 設定)</li>
+    <li>会社支給 Mac: <b>NG</b> (管理者権限 必須)</li>
+    <li>Zoom: アプリ版 / Web版 どちら でも OK</li>
+    <li>費用: <b>0円</b></li>
+  </ul>
+  <p style="margin-top:10px;"><a href="#blackhole" style="color:#C1462C;font-weight:700;">→ BlackHole 手順 を 見る (下)</a></p>
+</div>
+
+<div class="step">
+  <h3><span class="step-num">C</span>Zoom Business プラン + AI Companion 方式 (追加 コスト)</h3>
+  <ul>
+    <li>設定 時間: <b>0分</b> (Zoom公式 の AI が 議事録 生成)</li>
+    <li>Zoom Business plan 月額: <b>約2,700-3,750円 / user</b></li>
+    <li>FP Compass への 反映: 未 対応 (今後 実装 予定)</li>
+  </ul>
+</div>
+
+<h2 id="chrome-ext" style="margin-top:44px;">A. Chrome 拡張 install 手順</h2>
+<p style="margin-bottom:16px;color:#334155;">FP Compass 事務局 に 連絡 頂ければ、 Chrome拡張 ファイル を お送りします (Chrome Web Store 公開 準備 中)。</p>
+
+<div class="step">
+  <h3><span class="step-num">1</span>拡張 ファイル を 受け取る</h3>
+  <p>下記 の いずれか から 入手:</p>
+  <ul>
+    <li>FP Compass アプリ 内 「アカウント」 → 「音声設定」 → 「Chrome拡張 を DL」 ボタン</li>
+    <li>Skeleton Inc. サポート に メール で 依頼 → <a href="mailto:support@skeleton-inc.jp">support@skeleton-inc.jp</a></li>
+  </ul>
+</div>
+
+<div class="step">
+  <h3><span class="step-num">2</span>Chrome の 拡張機能 画面 を 開く</h3>
+  <p>Chrome の アドレスバー に <code>chrome://extensions/</code> と 入力 → Enter</p>
+</div>
+
+<div class="step">
+  <h3><span class="step-num">3</span>デベロッパー モード を ON</h3>
+  <p>右上 の 「デベロッパー モード」 スイッチ を ON に する</p>
+</div>
+
+<div class="step">
+  <h3><span class="step-num">4</span>拡張 を 読み込む</h3>
+  <p>「パッケージ 化 されて いない 拡張機能 を 読み込む」 ボタン → 受け取った フォルダ を 選択</p>
+  <p class="cap">拡張 リスト に 「FP Compass 議事録レコーダー」 が 追加 されれば OK</p>
+</div>
+
+<div class="step">
+  <h3><span class="step-num">5</span>使い方</h3>
+  <ol>
+    <li>Zoom Web版 (zoom.us) を タブ で 開いて 面談 開始</li>
+    <li>Chrome 右上 の 拡張 アイコン クリック → 「Zoom タブ 録音 を 開始」</li>
+    <li>Chrome の 共有 ダイアログ で 該当 Zoom タブ を 選択</li>
+    <li>面談 終了 → 拡張 popup で 「録音 を 停止」</li>
+    <li>FP Compass に 音声 が 自動 送信 → Whisper で 議事録 生成</li>
+  </ol>
+</div>
+
+<h2 id="blackhole" style="margin-top:44px;">B. BlackHole 手順 (所要 5 分)</h2>
 
 <div class="step">
   <h3><span class="step-num">1</span>BlackHole を インストール</h3>
