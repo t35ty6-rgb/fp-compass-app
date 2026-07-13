@@ -144,13 +144,79 @@
     <div class="section">
       <div class="section-h">
         <div class="section-title">音声設定 (Zoom 議事録録音)</div>
-        <p class="section-sub">AirPods 等 Bluetooth ヘッドホン 使用時 に 相手 の 声 も 録音 するための 初期 設定</p>
+        <p class="section-sub">Bluetooth ヘッドホン 使用時 に 相手 の 声 も 録音 する 設定</p>
       </div>
       <div class="section-body">
-        <p style="font-size:13px;color:#475569;line-height:1.8;margin:0 0 14px;">
-          Bluetooth ヘッドホン (AirPods 等) で Zoom 面談 を 行う 場合、 相手 の 声 が ヘッドホン に 直接 送られる ため、 PC マイク が 拾えず、 議事録録音 に <strong style="color:#DC2626;">自分 の 声しか 入りません</strong>。 BlackHole (無料 の 仮想 オーディオ) を 使う 一度きり の 設定 (5 分) で 解消 します。
+        <p style="font-size:13px;color:#475569;line-height:1.8;margin:0 0 20px;">
+          Bluetooth ヘッドホン (AirPods 等) で Zoom 面談 を 行う 場合、 相手 の 声 が ヘッドホン に 直接 送られる ため、 議事録録音 に <strong style="color:#DC2626;">自分 の 声しか 入りません</strong>。 <br>2種類 の 方式 から 選べます (どちら も <b>無料</b>)。
         </p>
-        <a href="/audio-setup.html" target="_blank" style="display:inline-block;background:#0F172A;color:#fff;padding:12px 22px;border-radius:6px;text-decoration:none;font-weight:700;font-size:14px;">音声設定 ガイド を 開く →</a>
+
+        <!-- 方式 A: Chrome拡張 (推奨) -->
+        <div id="fp-audio-method-a" style="border:2px solid #059669;background:#F0FDF4;border-radius:12px;padding:20px 22px;margin-bottom:14px;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+            <span style="background:#059669;color:#fff;font-size:10.5px;font-weight:800;letter-spacing:0.1em;padding:3px 10px;border-radius:99px;text-transform:uppercase;">推奨</span>
+            <h3 style="font-size:16px;font-weight:800;color:#065F46;margin:0;">A. Chrome 拡張 方式</h3>
+          </div>
+          <ul style="font-size:13px;color:#065F46;line-height:1.85;margin:6px 0 14px;padding-left:20px;">
+            <li>設定 時間: <b>1分</b> (拡張 install だけ)</li>
+            <li>会社支給 Mac でも <b>OK</b> (管理者権限 不要)</li>
+            <li>Zoom は Web版 (zoom.us) を 使う</li>
+          </ul>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <a href="/chrome-ext-install.html" target="_blank" style="display:inline-block;background:#059669;color:#fff;padding:11px 20px;border-radius:6px;text-decoration:none;font-weight:800;font-size:13.5px;letter-spacing:0.02em;">📖 install 手順 を 見る (5分)</a>
+            <a href="/FP-Compass-拡張機能.zip" download style="display:inline-block;background:#fff;color:#059669;padding:11px 20px;border-radius:6px;text-decoration:none;font-weight:800;font-size:13.5px;letter-spacing:0.02em;border:1.5px solid #059669;">⬇ 拡張ファイル (10KB)</a>
+          </div>
+          <div id="fp-audio-ext-status" style="margin-top:12px;font-size:12px;font-weight:700;padding:8px 12px;border-radius:6px;display:none;"></div>
+        </div>
+
+        <!-- 方式 B: BlackHole (従来) -->
+        <div style="border:1px solid #E2E8F0;background:#fff;border-radius:12px;padding:20px 22px;">
+          <h3 style="font-size:16px;font-weight:800;color:#0F172A;margin:0 0 8px;">B. BlackHole 方式 (従来)</h3>
+          <ul style="font-size:13px;color:#475569;line-height:1.85;margin:6px 0 14px;padding-left:20px;">
+            <li>設定 時間: <b>5分</b> (BlackHole install + Audio MIDI 設定)</li>
+            <li>会社支給 Mac は <b>NG</b> (管理者権限 が 要る)</li>
+            <li>Zoom は アプリ版 / Web版 どちらでも OK</li>
+          </ul>
+          <a href="/audio-setup.html" target="_blank" style="display:inline-block;background:#0F172A;color:#fff;padding:11px 20px;border-radius:6px;text-decoration:none;font-weight:800;font-size:13.5px;letter-spacing:0.02em;">📖 BlackHole 手順 を 見る →</a>
+        </div>
+
+        <script>
+          // 2026-07-14 v11: Chrome拡張 install 有無 を 表示
+          (function(){
+            const el = document.getElementById('fp-audio-ext-status');
+            if (!el) return;
+            const check = async () => {
+              // ping response 待つ
+              return new Promise((resolve) => {
+                let done = false;
+                const finish = (v) => { if (done) return; done = true; resolve(v); };
+                const handler = (ev) => {
+                  if (ev.source !== window) return;
+                  const d = ev.data;
+                  if (d?.source === 'fp-tab-recorder' && d.type === 'PONG') finish(d.payload?.version);
+                };
+                window.addEventListener('message', handler);
+                window.postMessage({ source: 'fp-compass', type: 'PING_TAB_RECORDER' }, '*');
+                setTimeout(() => finish(null), 1500);
+              });
+            };
+            check().then(v => {
+              if (v) {
+                el.style.display = 'block';
+                el.style.background = '#ECFDF3';
+                el.style.color = '#065F46';
+                el.style.border = '1px solid rgba(4,118,71,0.30)';
+                el.innerHTML = '✓ Chrome拡張 install 済 (v' + v + ') — 使える 状態';
+              } else {
+                el.style.display = 'block';
+                el.style.background = '#FEF9E7';
+                el.style.color = '#78450F';
+                el.style.border = '1px solid rgba(181,83,15,0.30)';
+                el.innerHTML = 'ℹ Chrome拡張 は まだ install されて いません。 上 の 「install 手順」 を 見て ください。';
+              }
+            });
+          })();
+        </script>
       </div>
     </div>
 

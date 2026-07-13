@@ -1,0 +1,480 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FP Compass 拡張機能 の 入れ方 (中学生向け)</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: #F7F6F2;
+    color: #1A2138;
+    font-family: 'Noto Sans JP', -apple-system, "Hiragino Sans", sans-serif;
+    font-size: 17px;
+    line-height: 1.9;
+    margin: 0;
+    padding: 0;
+  }
+  .container { max-width: 720px; margin: 0 auto; padding: 40px 24px 80px; }
+
+  header {
+    background: #1E3A5F;
+    color: #fff;
+    padding: 32px 24px;
+    border-radius: 16px;
+    margin-bottom: 32px;
+    text-align: center;
+  }
+  header .kicker {
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    opacity: 0.7;
+    margin-bottom: 8px;
+    font-weight: 700;
+  }
+  header h1 {
+    font-size: 26px;
+    font-weight: 800;
+    margin: 0 0 8px;
+    letter-spacing: -0.01em;
+  }
+  header .sub {
+    font-size: 15px;
+    opacity: 0.85;
+    margin: 0;
+    line-height: 1.7;
+  }
+  .toc {
+    background: #fff;
+    border: 1px solid #E8E3D8;
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-bottom: 32px;
+  }
+  .toc h2 { font-size: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: #6B7280; margin: 0 0 12px; font-weight: 800; }
+  .toc ol { padding-left: 22px; margin: 0; }
+  .toc li { padding: 4px 0; font-size: 15px; }
+  .toc a { color: #1E3A5F; text-decoration: none; font-weight: 700; }
+  .toc a:hover { text-decoration: underline; }
+
+  .step {
+    background: #fff;
+    border: 1px solid #E8E3D8;
+    border-radius: 14px;
+    padding: 28px 28px 24px;
+    margin: 24px 0;
+    box-shadow: 0 1px 3px rgba(26,33,56,0.05);
+  }
+  .step-head {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+  .step-num {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    background: #1E3A5F;
+    color: #fff;
+    border-radius: 50%;
+    font-family: 'Inter', sans-serif;
+    font-weight: 900;
+    font-size: 20px;
+    letter-spacing: -0.02em;
+  }
+  .step-title {
+    font-size: 20px;
+    font-weight: 800;
+    color: #1A2138;
+    letter-spacing: -0.01em;
+    line-height: 1.4;
+  }
+  .step-time {
+    display: inline-block;
+    background: #EBF0F8;
+    color: #1E3A5F;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    padding: 3px 10px;
+    border-radius: 99px;
+    margin-left: 6px;
+    text-transform: uppercase;
+  }
+  .step-desc { font-size: 16px; color: #3F4868; margin: 0 0 14px; line-height: 1.85; }
+  .step-desc code {
+    background: #EBF0F8;
+    color: #1E3A5F;
+    padding: 3px 10px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 14px;
+    font-weight: 700;
+    word-break: break-all;
+  }
+  .step-desc kbd {
+    background: #1A2138;
+    color: #fff;
+    padding: 2px 9px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    display: inline-block;
+    line-height: 1.6;
+  }
+
+  .visual {
+    background: #F7F6F2;
+    border: 2px dashed #E8E3D8;
+    border-radius: 10px;
+    padding: 18px 22px;
+    margin: 14px 0;
+    font-size: 14.5px;
+    line-height: 1.85;
+    color: #3F4868;
+  }
+  .visual .label {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #B5530F;
+    margin-bottom: 8px;
+  }
+  .visual .mock {
+    background: #fff;
+    border: 1px solid #E8E3D8;
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin: 8px 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: #1A2138;
+  }
+
+  .warn {
+    background: #FFF6E5;
+    border-left: 4px solid #B5530F;
+    padding: 14px 18px;
+    border-radius: 4px 8px 8px 4px;
+    margin: 14px 0;
+    font-size: 14px;
+    color: #78450F;
+    line-height: 1.75;
+  }
+  .warn b { color: #78450F; }
+  .ok {
+    background: #ECFDF3;
+    border-left: 4px solid #047647;
+    padding: 14px 18px;
+    border-radius: 4px 8px 8px 4px;
+    margin: 14px 0;
+    font-size: 14px;
+    color: #065F46;
+    line-height: 1.75;
+  }
+
+  .copy-block {
+    background: #1A2138;
+    color: #E2E8F0;
+    padding: 14px 18px;
+    border-radius: 8px;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 14px;
+    letter-spacing: 0.02em;
+    margin: 12px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .copy-block button {
+    background: #1E3A5F;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 14px;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+    font-family: 'Noto Sans JP', sans-serif;
+    flex-shrink: 0;
+    min-height: 36px;
+  }
+  .copy-block button:hover { background: #2A4A75; }
+  .copy-block button.done { background: #047647; }
+
+  .success-check {
+    background: #ECFDF3;
+    border: 2px solid #047647;
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin: 18px 0;
+  }
+  .success-check .title {
+    font-size: 15px;
+    font-weight: 800;
+    color: #047647;
+    margin-bottom: 8px;
+    letter-spacing: 0.02em;
+  }
+  .success-check .title::before { content: '✓ '; }
+  .success-check ul { padding-left: 20px; margin: 6px 0 0; color: #065F46; }
+  .success-check li { padding: 3px 0; }
+
+  .final {
+    background: linear-gradient(135deg, #ECFDF3 0%, #DCFCE7 100%);
+    border: 2px solid #047647;
+    border-radius: 16px;
+    padding: 32px 28px;
+    margin: 40px 0 20px;
+    text-align: center;
+  }
+  .final h2 {
+    font-size: 22px;
+    color: #065F46;
+    margin: 0 0 8px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+  }
+  .final .emoji { font-size: 40px; margin-bottom: 8px; display: block; }
+
+  .trouble {
+    background: #FEF2F2;
+    border: 1px solid rgba(185,28,28,0.30);
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin: 40px 0 20px;
+  }
+  .trouble h2 { font-size: 17px; color: #991B1B; margin: 0 0 12px; font-weight: 800; letter-spacing: 0; }
+  .trouble details { margin: 8px 0; }
+  .trouble summary { font-size: 15px; font-weight: 700; color: #991B1B; cursor: pointer; padding: 6px 0; }
+  .trouble details p { margin: 6px 0 6px 20px; font-size: 14.5px; color: #7F1D1D; line-height: 1.8; }
+
+  footer { margin-top: 60px; padding-top: 24px; border-top: 1px solid #E8E3D8; font-size: 12px; color: #6B7280; text-align: center; line-height: 1.75; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <div class="kicker">FP Compass</div>
+  <h1>Chrome 拡張機能 の 入れ方</h1>
+  <p class="sub">Zoom で 相手 の 声 も 議事録 に 入る ように する 設定<br>所要 時間 <b>5分</b> / 費用 <b>0円</b></p>
+</header>
+
+<div class="toc">
+  <h2>この 手順 の 流れ (全 6 ステップ)</h2>
+  <ol>
+    <li><a href="#s1">Chrome を 開く</a></li>
+    <li><a href="#s2">拡張機能 の 設定 画面 に 行く</a></li>
+    <li><a href="#s3">「デベロッパー モード」 を ON に する</a></li>
+    <li><a href="#s4">フォルダ を 読み込む</a></li>
+    <li><a href="#s5">ツールバー に ピン 留め する</a></li>
+    <li><a href="#s6">動作 テスト を する</a></li>
+  </ol>
+</div>
+
+<!-- STEP 1 -->
+<div class="step" id="s1">
+  <div class="step-head">
+    <div class="step-num">1</div>
+    <div class="step-title">Chrome を 開く <span class="step-time">10秒</span></div>
+  </div>
+  <p class="step-desc">
+    Mac の Dock (画面下 の アプリ列) から <b>Google Chrome</b> を クリック して 開いて ください。 Chrome が Mac に 入って ない 場合 は <a href="https://www.google.com/chrome/" target="_blank" style="color:#1E3A5F;font-weight:700;">こちら から DL</a>。
+  </p>
+  <div class="visual">
+    <div class="label">こんな アイコン</div>
+    赤 / 黄 / 緑 の 3色 の 丸い アイコン。 「Google Chrome」 と 書いて ある。
+  </div>
+</div>
+
+<!-- STEP 2 -->
+<div class="step" id="s2">
+  <div class="step-head">
+    <div class="step-num">2</div>
+    <div class="step-title">拡張機能 の 設定 画面 に 行く <span class="step-time">10秒</span></div>
+  </div>
+  <p class="step-desc">
+    Chrome 上部 の <b>URL バー</b> (Web ページ の アドレス が 出る 場所) に、 下 の 文字 を そのまま <b>コピー</b> して 貼り付けて Enter キー を 押す。
+  </p>
+  <div class="copy-block">
+    <span>chrome://extensions/</span>
+    <button onclick="navigator.clipboard.writeText('chrome://extensions/'); this.textContent='✓ コピー 済'; this.classList.add('done');">📋 コピー</button>
+  </div>
+  <div class="visual">
+    <div class="label">こんな 画面 が 出る</div>
+    タイトル に 「拡張機能」 と 書いて ある。 既に 入って いる 拡張 が 一覧 で 出て いる 場合 も ある。
+  </div>
+</div>
+
+<!-- STEP 3 -->
+<div class="step" id="s3">
+  <div class="step-head">
+    <div class="step-num">3</div>
+    <div class="step-title">「デベロッパー モード」 を ON に する <span class="step-time">5秒</span></div>
+  </div>
+  <p class="step-desc">
+    「拡張機能」 の 画面 の <b>右上</b> に <b>「デベロッパー モード」</b> と いう スイッチ が ある。 それ を クリック して ON に する (青く なる)。
+  </p>
+  <div class="visual">
+    <div class="label">画面 右上 の こんな スイッチ</div>
+    <div class="mock">
+      拡張機能 &nbsp; &nbsp; &nbsp; &nbsp; デベロッパー モード <span style="background:#1E3A5F;color:#fff;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:700;">ON</span>
+    </div>
+  </div>
+  <div class="warn">
+    <b>これ で 「読み込み」 ボタン が 表示 されます。</b> 心配 しないで、 ONに する だけ で 何 も 壊れません。
+  </div>
+</div>
+
+<!-- STEP 4 -->
+<div class="step" id="s4">
+  <div class="step-head">
+    <div class="step-num">4</div>
+    <div class="step-title">フォルダ を 読み込む <span class="step-time">30秒</span></div>
+  </div>
+  <p class="step-desc">
+    ステップ 3 で 出て きた 左上 の <b>「パッケージ 化 されて いない 拡張機能 を 読み込む」</b> ボタン を クリック。 <br><br>
+    Finder が 開く の で、 <b>デスクトップ</b> → <b>「FP-Compass-拡張機能」</b> フォルダ を 選んで <b>「選択」</b> ボタン。
+  </p>
+  <div class="visual">
+    <div class="label">選ぶ フォルダ の 場所</div>
+    <div class="mock" style="font-family:'Noto Sans JP',sans-serif;">
+      📁 デスクトップ<br>
+      &nbsp;&nbsp;└ 📁 <b>FP-Compass-拡張機能</b> ← これ を クリック して 「選択」
+    </div>
+  </div>
+  <div class="warn">
+    <b>もし デスクトップ に 「FP-Compass-拡張機能」 が 無い 場合:</b><br>
+    Finder で <kbd>⌘</kbd> + <kbd>⇧</kbd> + <kbd>G</kbd> を 押して、 出て きた 入力欄 に 下 を コピペ:
+    <div class="copy-block" style="margin-top:10px;">
+      <span>~/.skeleton-fp-compass-chrome-ext</span>
+      <button onclick="navigator.clipboard.writeText('~/.skeleton-fp-compass-chrome-ext'); this.textContent='✓ コピー 済'; this.classList.add('done');">📋 コピー</button>
+    </div>
+  </div>
+  <div class="success-check">
+    <div class="title">こう 出れば 成功</div>
+    <ul>
+      <li>拡張機能 の 一覧 に <b>「FP Compass 議事録レコーダー」</b> が 追加 された</li>
+      <li>version <b>1.0.0</b> が 表示 されて いる</li>
+      <li>スイッチ が <b>ON</b> (青) に なって いる</li>
+    </ul>
+  </div>
+</div>
+
+<!-- STEP 5 -->
+<div class="step" id="s5">
+  <div class="step-head">
+    <div class="step-num">5</div>
+    <div class="step-title">ツールバー に ピン 留め する <span class="step-time">15秒</span></div>
+  </div>
+  <p class="step-desc">
+    Chrome の <b>右上</b> に <b>パズル ピース の アイコン</b> (🧩 みたいな 形) が ある の で クリック。 <br><br>
+    出て きた リスト の 「FP Compass 議事録レコーダー」 の 横 の <b>📌 ピン アイコン</b> を クリック。
+  </p>
+  <div class="visual">
+    <div class="label">ピン 留め すると こう なる</div>
+    <div class="mock">
+      🧩 &nbsp; 🔵 <span style="background:#1E3A5F;color:#fff;padding:2px 6px;border-radius:4px;font-size:11px;">FP</span> &nbsp; ...ほか の アイコン
+    </div>
+    ツールバー に FP の アイコン が 常に 出て、 いつでも クリック できる 状態 に なる。
+  </div>
+</div>
+
+<!-- STEP 6 -->
+<div class="step" id="s6">
+  <div class="step-head">
+    <div class="step-num">6</div>
+    <div class="step-title">動作 テスト を する <span class="step-time">2分</span></div>
+  </div>
+  <p class="step-desc">
+    実際 に 録音 が 動く か 試して みる。 <b>Zoom じゃ なくて YouTube で テスト</b> できる ので 手軽。
+  </p>
+  <ol style="font-size:16px;line-height:2;padding-left:24px;">
+    <li><b>YouTube</b> で 適当 な 動画 を 開いて 再生 (音 が 出て いれば OK)</li>
+    <li>ツールバー の <b>🔵 FP アイコン</b> クリック</li>
+    <li>popup で <b>「🎙 Zoom タブ 録音 を 開始」</b> クリック</li>
+    <li>「共有 する タブ を 選択」 の dialog で <b>YouTube タブ を 選ぶ</b> → 「共有」</li>
+    <li>マイク の 許可 dialog が 出たら <b>「許可」</b></li>
+    <li>アイコン に <b>赤 の「REC」バッジ</b> が 出れば 録音 中</li>
+    <li>10秒 くらい 待って、 popup を もう一度 開いて <b>「■ 録音 を 停止」</b> クリック</li>
+    <li>「✓ 停止 しました」 と 出れば 成功</li>
+  </ol>
+  <div class="success-check">
+    <div class="title">こう なれば 完璧</div>
+    <ul>
+      <li>録音 中 に <b>REC</b> バッジ が 出た</li>
+      <li>停止 で エラー なく 完了</li>
+      <li>popup に 「送信 中…」 の 緑 メッセージ</li>
+    </ul>
+  </div>
+</div>
+
+<!-- 完了 -->
+<div class="final">
+  <span class="emoji">🎉</span>
+  <h2>設定 完了 !</h2>
+  <p style="margin:6px 0 0;color:#065F46;font-size:14.5px;">
+    これで Zoom で AirPods 使って も 相手 の 声 が 議事録 に 入る よう に なりました。<br>
+    <b>次 の Zoom 面談 の 時 に:</b> Zoom Web 版 (zoom.us) で 面談 開始 → 拡張 アイコン → 録音 開始。
+  </p>
+</div>
+
+<!-- トラブル -->
+<div class="trouble">
+  <h2>⚠ うまく いかない 時</h2>
+
+  <details>
+    <summary>Q. 「拡張機能」 の 画面 が 出ない</summary>
+    <p>Chrome の URL バー に <code>chrome://extensions/</code> が 正しく 入って いるか 確認。 コピペ の 時 に 空白 が 入って ない か チェック。 それでも ダメ なら Chrome を 再起動。</p>
+  </details>
+
+  <details>
+    <summary>Q. デスクトップ に フォルダ が 無い</summary>
+    <p>Step 4 の 「もし デスクトップ に 無い 場合」 の 手順 を 実行。 Finder で <kbd>⌘</kbd>+<kbd>⇧</kbd>+<kbd>G</kbd> → <code>~/.skeleton-fp-compass-chrome-ext</code> を 貼り付けて Enter。</p>
+  </details>
+
+  <details>
+    <summary>Q. 「読み込み エラー」 が 出る</summary>
+    <p>選んだ フォルダ が 間違って いる 可能性。 <b>フォルダ の 中 に「manifest.json」 が ある か</b> 確認。 無い なら 1つ 上 の フォルダ を 選び直す。</p>
+  </details>
+
+  <details>
+    <summary>Q. タブ 選択 dialog が 出ない</summary>
+    <p>Chrome を 最新版 に 更新 (Chrome メニュー → 「Google Chrome について」)。 Chrome 100 以上 が 必要。</p>
+  </details>
+
+  <details>
+    <summary>Q. マイク許可 dialog が 出ない</summary>
+    <p>Chrome 設定 → プライバシー と セキュリティ → サイト設定 → マイク で 「サイト は マイク を リクエスト できる」 が ON か 確認。</p>
+  </details>
+
+  <details>
+    <summary>Q. REC バッジ が 出ない</summary>
+    <p>popup を 一度 閉じて、 拡張 アイコン を もう 一度 クリック して 状態 を 再確認。 それでも ダメ なら Chrome を 再起動 して 再度 試す。</p>
+  </details>
+
+  <details>
+    <summary>Q. 全部 ダメ</summary>
+    <p>Chrome の <kbd>F12</kbd> (もしくは <kbd>⌥</kbd>+<kbd>⌘</kbd>+<kbd>I</kbd>) で 「Console」 タブ を 開いて、 赤い エラー メッセージ を 全部 スクショ 撮って Jobs に 送って ください。</p>
+  </details>
+</div>
+
+<footer>
+  <p>FP Compass 拡張機能 v1.0.0 — 2026-07-13</p>
+  <p>Skeleton Inc. / support@skeleton-inc.jp</p>
+</footer>
+
+</div>
+</body>
+</html>
