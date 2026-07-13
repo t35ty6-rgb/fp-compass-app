@@ -2885,6 +2885,47 @@
     });
   }
 
+  // ★ 2026-07-14 v11: Chrome拡張 (Zoom タブ音声レコーダー) から の 録音 blob 受信
+  //   content.js が postMessage で FP_RECORDING_DONE を 送って くる → 音声 を 既存 onRecordingComplete パイプライン に 流す
+  if (!window._fpTabRecorderListener) {
+    window._fpTabRecorderListener = true;
+    window.addEventListener('message', async (ev) => {
+      if (ev.source !== window) return;
+      const d = ev.data;
+      if (!d || d.source !== 'fp-tab-recorder' || d.type !== 'RECORDING_DONE') return;
+      const payload = d.payload || {};
+      console.log('[fp-tab-recorder] 受信:', payload.size, 'bytes,', Math.round(payload.durationMs / 1000), '秒');
+      try {
+        // base64 → Blob
+        const bin = atob(payload.base64 || '');
+        const arr = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+        const blob = new Blob([arr], { type: payload.mime || 'audio/webm' });
+        const blobUrl = URL.createObjectURL(blob);
+        // bookingTs 新規発行 (拡張 起点 の 場合 は 客カルテ 未紐付 → 「未分類」 で 保存 → 後で UI で 紐付け)
+        const bookingTs = payload.meta?.bookingTs || (new Date().toISOString().replace(/[:.]/g, '-') + '-tabrec');
+        // トースト 通知
+        try {
+          const t = document.createElement('div');
+          t.textContent = '✓ Chrome拡張 から 音声 受信 (' + Math.round(blob.size/1024) + 'KB, ' + Math.round(payload.durationMs/1000) + '秒)。 議事録 生成 中…';
+          t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#059669;color:#fff;padding:12px 22px;border-radius:8px;font-size:13px;font-weight:800;z-index:99999;box-shadow:0 4px 12px rgba(0,0,0,.25);';
+          document.body.appendChild(t);
+          setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity .3s'; }, 4000);
+          setTimeout(() => t.remove(), 4500);
+        } catch(_) {}
+        // 既存 パイプライン に 流す
+        if (typeof onRecordingComplete === 'function') {
+          await onRecordingComplete(bookingTs, blob, blobUrl);
+        } else {
+          console.warn('[fp-tab-recorder] onRecordingComplete 未定義、 blob only');
+        }
+      } catch (e) {
+        console.error('[fp-tab-recorder] 処理 失敗:', e);
+        alert('拡張 から の 音声 受信 に 失敗 しました。 通信 or 拡張 の 状態 を 確認 して ください。');
+      }
+    });
+  }
+
   // ★ 2026-06-22 roundG: マイクのみ録音 fallback (カメラ NotFound / 不要 時)
   //   音声 → 同じパイプライン (upload → AI議事録)
   async function startAudioOnlyRecording(bookingTs) {
