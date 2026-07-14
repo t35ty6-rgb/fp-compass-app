@@ -130,6 +130,17 @@ button:focus-visible, a:focus-visible, input:focus-visible {
   .proto-banner span:first-child { font-size: 10px; }
   .proto-banner .badge { padding: 1px 6px; font-size: 9px; }
   .proto-banner .to-live { display: none; }
+  /* topbar: search 隠す, crumb 縮小、 overflow 防止 */
+  .topbar { padding: 0 12px; overflow: hidden; }
+  .topbar .search { display: none; }
+  .topbar .crumb { font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .topbar-actions { gap: 8px; }
+  .user-chip .name { display: none; }
+  .user-chip { padding: 4px; }
+  /* app: prevent horizontal overflow globally */
+  html, body { overflow-x: hidden; max-width: 100vw; }
+  .app, .main { max-width: 100vw; }
+  /* kompa panel full-width already handled elsewhere */
 }
 
 /* ===== Brand cell ===== */
