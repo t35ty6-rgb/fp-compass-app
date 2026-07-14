@@ -10586,3 +10586,113 @@ button[class*="btn-cta"] *,
 
 /* pill 内 の ● dot は 90% 透過 白 (既 rule 適用済) */
 
+/* ============================================================
+   2026-07-15 decoration tone 統一 (owner FB: 各 タブ ページ で UI 統一感 なし)
+   impeccable skill 適用 の 装飾層 統一 pass
+   ------------------------------------------------------------
+   共通 tokens (この block で 完結、 既存 CSS を 触らない override):
+     radius = 10px (card / section)
+     shadow = subtle single layer
+     border = 1px #E2E8F0
+     bg = #fff (card) / #F8FAFC (section subtle)
+     ink text = #1E293B (headings) / #475569 (body) / #64748B (dim)
+   ============================================================ */
+
+/* 「読込中…」 プレースホルダー を 読める コントラスト に */
+[data-line-view] > div[style*="読込中"],
+div[style*="color:#94a3b8"][style*="読込中"],
+div[style*="color: #94a3b8"] {
+  color: #475569 !important;
+  font-family: var(--font-body) !important;
+  font-size: 13px !important;
+  padding: 32px 20px !important;
+  text-align: center !important;
+  background: #F8FAFC !important;
+  border: 1px dashed #CBD5E1 !important;
+  border-radius: 10px !important;
+}
+
+/* hub-section-title 統一 (settings hub の 「🏢 FP切替」 「🔌 LINE 公式アカウント接続」 等) */
+.hub-section-title {
+  font-family: var(--font-body) !important;
+  font-size: 15.5px !important;
+  font-weight: 800 !important;
+  color: #1E293B !important;
+  letter-spacing: -0.01em !important;
+  border-bottom: 2px solid #E2E8F0 !important;
+  padding: 0 0 10px !important;
+  margin: 28px 0 16px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  line-height: 1.5 !important;
+}
+.hub-section-title:first-child { margin-top: 0 !important; }
+
+/* section head/title 汎用: 統一 タイポ + 下線 */
+.section-title, .sec-head h2 {
+  font-family: var(--font-body) !important;
+  font-weight: 800 !important;
+  color: #1E293B !important;
+  letter-spacing: -0.01em !important;
+}
+.section-title { font-size: 15px !important; }
+
+/* card 汎用: 統一 radius + border + subtle shadow + bg */
+.cd-card, .kpi, .list-card, .info-card, .fp-meeting-card,
+[class*="card"]:not([class*="card-mini"]):not([class*="cards"]):not([class*="card-header"]) {
+  border-radius: 10px !important;
+}
+
+/* quick-jump アンカー ボタン (「🏢 FP切替・新規追加」 「🔌 LINE接続」 「👥 セグメント」) 統一 */
+.quick-jump {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 8px 14px !important;
+  background: #F1F5F9 !important;
+  border: 1px solid #E2E8F0 !important;
+  border-radius: 999px !important;
+  color: #1E293B !important;
+  font-family: var(--font-body) !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.02em !important;
+  text-decoration: none !important;
+  transition: background 120ms, border-color 120ms;
+  min-height: 36px !important;
+}
+.quick-jump:hover {
+  background: #E2E8F0 !important;
+  border-color: #94A3B8 !important;
+  color: #0F172A !important;
+}
+
+/* section 汎用 padding rhythm (empty state / 説明 text) */
+section[id^="set-"], section[id^="fp-"] {
+  margin-bottom: 32px !important;
+}
+section[id^="set-"] > div[data-line-view] {
+  background: transparent !important;
+}
+
+/* 内 の 白 card 統一 (設定ハブ の 各 section 内 の 白 card) */
+section > div[data-line-view] > div[style*="background:#fff"],
+section > div[data-line-view] > div[style*="background: #fff"] {
+  border-radius: 10px !important;
+  border: 1px solid #E2E8F0 !important;
+  box-shadow: 0 1px 3px rgba(15,23,42,0.04) !important;
+}
+
+/* howto-banner (settings hub 上部 dark bg) 統一 padding + 角丸 */
+.howto-banner {
+  border-radius: 10px !important;
+  box-shadow: 0 4px 12px rgba(15,23,42,0.10) !important;
+}
+
+/* 汎用: 白背景 or 明るい bg の 上 の text-secondary (説明文) */
+.section-sub, .card-sub, .list-sub, .field-hint,
+[class*="sub"]:not(input):not(select):not(button):not([class*="submit"]):not([class*="subject"]) {
+  color: #475569;  /* WCAG AA 5:1 vs #fff */
+}
+
