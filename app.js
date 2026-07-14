@@ -7367,7 +7367,7 @@ STEP C: 結果報告
         }
       } catch (e) {
         console.error('[slots-send]', e);
-        status.style.color = '#DC2626'; status.textContent = '送信失敗: ' + (e.message || e).slice(0, 200);
+        status.style.color = '#DC2626'; console.error('LINE 送信 失敗:', e); status.textContent = '❌ LINE 送信 できませんでした。 LINE 連携 設定 の access token を 確認 して ください (設定 → LINE公式アカウント接続)。';
         sendBtn.disabled = false; sendBtn.textContent = '📤 この内容で LINE 送信';
       }
     });
@@ -7753,7 +7753,7 @@ ${JSON.stringify(jsonPayload, null, 2)}
           } else { throw new Error((res.data && res.data.error) || 'LINE送信失敗'); }
         } catch (e) {
           console.error('[brief send line]', e);
-          msgEl.style.color = '#B91C1C'; msgEl.textContent = '❌ 送信失敗: ' + (e.message || String(e)).slice(0, 100);
+          msgEl.style.color = '#B91C1C'; console.error('LINE 送信 例外:', e); msgEl.textContent = '❌ LINE 送信 できませんでした。 LINE 連携 設定 の access token を 確認 して ください。';
           sendBtn.disabled = false; sendBtn.textContent = '📤 LINE で 送信';
         }
       });
@@ -8196,13 +8196,13 @@ ${JSON.stringify(jsonPayload, null, 2)}
           });
         } else {
           msg.style.color = 'var(--red)';
-          msg.textContent = '❌ 送信失敗: ' + (data.error || '原因不明');
+          console.error('LINE 送信 失敗 (server):', data.error); msg.textContent = '❌ LINE 送信 できませんでした。 LINE 連携 の 認証 が 切れて いる 可能性 が あります。 設定 で 再接続 して ください。';
           sendBtn.disabled = false;
           sendBtn.textContent = '📨 この内容で LINE 送信';
         }
       } catch (e) {
         msg.style.color = 'var(--red)';
-        msg.textContent = '❌ 送信失敗: ' + e.message;
+        console.error('LINE 送信 例外:', e); msg.textContent = '❌ LINE 送信 できませんでした。 通信 状態 と LINE 連携 設定 を 確認 して ください。';
         sendBtn.disabled = false;
         sendBtn.textContent = '📨 この内容で LINE 送信';
       }

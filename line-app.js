@@ -1126,11 +1126,11 @@
             await fetchLiveData();
             renderLeadHubInner();
           } else {
-            alert('送信失敗: ' + (data.error || ''));
+            console.error('送信 失敗 (server):', data.error); alert('❌ 送信 できませんでした。 通信 状態 と LINE 連携 設定 を 確認 して 再度 お試し ください。');
             btn.disabled = false; btn.innerHTML = '<i data-lucide="send"></i><span>LINE追撃</span>'; if (window.lucide) lucide.createIcons();
           }
         } catch (e) {
-          alert('送信失敗: ' + e.message);
+          console.error('送信 例外:', e); alert('❌ 送信 できませんでした。 通信 状態 を 確認 して 再度 お試し ください。');
           btn.disabled = false; btn.innerHTML = '<i data-lucide="send"></i><span>LINE追撃</span>'; if (window.lucide) lucide.createIcons();
         }
       });
