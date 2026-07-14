@@ -10576,3 +10576,13 @@ button[class*="btn-cta"] *,
 [class*="pill"][style*="background"][style*="rgb"] {
   color: #fff;  /* 弱い hint、 明示 style が あれば override 可 */
 }
+
+/* Round 2 — 実測 WCAG AA (4.5+) 未達 の pill 色 を 深い 色 に 差替 */
+.status-pill.new       { background: #BE185D !important; }  /* pink 800 → white 5.72 AA */
+.status-pill.dormant   { background: #475569 !important; }  /* slate 600 → white 7.05 AAA */
+.status-pill.pending,
+.status-pill.warn      { background: #B45309 !important; }  /* amber 700 → white 5.16 AA */
+.status-pill.recording { background: #0891B2 !important; }  /* cyan 700 → white 4.83 AA */
+
+/* pill 内 の ● dot は 90% 透過 白 (既 rule 適用済) */
+
