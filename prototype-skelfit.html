@@ -748,6 +748,343 @@ button:focus-visible, a:focus-visible, input:focus-visible {
 .a-pink { background: #ec4899; }
 .a-green { background: #16a34a; }
 .a-yellow { background: #ca8a04; }
+
+/* ==================================================================
+   USABILITY LAYER (試用 で 実際 操作 できる 状態 に する)
+   ================================================================== */
+
+/* View switching (nav item click で main の 中身 が 切替) */
+.view { display: none; animation: view-in 200ms cubic-bezier(0.22,1,0.36,1) both; }
+.view.active { display: block; }
+@keyframes view-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* 顧客台帳 view */
+.clients-table {
+  background: #fff; border: 1px solid var(--rule); border-radius: var(--rad-3); overflow: hidden;
+}
+.ct-row {
+  display: grid; grid-template-columns: 44px 1fr 120px 80px 100px 80px;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--rule);
+  align-items: center; gap: 10px;
+  cursor: pointer;
+  transition: background 120ms;
+}
+.ct-row:hover { background: var(--surface-2); }
+.ct-row:last-child { border-bottom: none; }
+.ct-row.head {
+  background: var(--surface-2);
+  font-size: 11px; font-weight: 700; letter-spacing: 0.04em;
+  text-transform: uppercase; color: var(--dim);
+  cursor: default;
+}
+.ct-row .a-dot { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 11px; }
+.ct-row .name { font-size: 14px; font-weight: 700; color: var(--ink); }
+.ct-row .sub { font-size: 11.5px; color: var(--dim); }
+.ct-row .val { font-family: var(--font-mono); font-size: 12px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.ct-row .status-p { font-size: 11px; font-weight: 700; font-family: var(--font-mono); padding: 3px 10px; border-radius: var(--rad-full); }
+.ct-row .status-p.active { background: var(--vital-soft); color: var(--vital-hi); }
+.ct-row .status-p.new { background: #fef3c7; color: #78450F; }
+.ct-row .status-p.dormant { background: var(--surface-2); color: var(--dim); }
+
+/* toolbar (view 上部 の filter+検索) */
+.toolbar {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 20px; flex-wrap: wrap;
+}
+.toolbar-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip {
+  padding: 7px 14px; background: #fff;
+  border: 1px solid var(--rule); border-radius: var(--rad-full);
+  font-size: 12.5px; font-weight: 600;
+  cursor: pointer;
+  color: var(--ink-2);
+  font-family: inherit;
+  transition: background 120ms, border-color 120ms, color 120ms;
+}
+.chip:hover { background: var(--surface-2); }
+.chip.active { background: var(--ink); color: #fff; border-color: var(--ink); }
+
+/* Primary action button */
+.btn-primary {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 18px;
+  background: var(--ink); color: #fff;
+  border: none; border-radius: var(--rad-2);
+  font-size: 13px; font-weight: 800;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 120ms;
+  min-height: 40px;
+}
+.btn-primary:hover { background: var(--ink-2); }
+.btn-primary.vital { background: var(--vital-hi); }
+.btn-primary.vital:hover { background: #056d3c; }
+
+.btn-secondary {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 18px;
+  background: #fff; color: var(--ink);
+  border: 1px solid var(--rule); border-radius: var(--rad-2);
+  font-size: 13px; font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  min-height: 40px;
+  transition: background 120ms, border-color 120ms;
+}
+.btn-secondary:hover { background: var(--surface-2); border-color: var(--ink-3); }
+
+/* Client detail modal */
+.cd-overlay {
+  position: fixed; inset: 0;
+  background: rgba(15, 23, 41, 0.48);
+  backdrop-filter: blur(2px);
+  z-index: 10500;
+  display: none;
+  align-items: center; justify-content: center;
+  padding: 24px;
+  animation: cd-fade 180ms ease-out both;
+}
+.cd-overlay.open { display: flex; }
+@keyframes cd-fade { from { opacity: 0; } to { opacity: 1; } }
+.cd-modal-box {
+  background: #fff;
+  border-radius: var(--rad-4);
+  box-shadow: var(--elev-3);
+  width: 100%; max-width: 960px;
+  max-height: 88vh;
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  overflow: hidden;
+  animation: cd-in 260ms cubic-bezier(0.22,1,0.36,1) both;
+}
+@keyframes cd-in { from { opacity: 0; transform: translateY(12px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@media (max-width: 780px) {
+  .cd-modal-box { grid-template-columns: 1fr; max-height: 92vh; }
+  .cd-overlay { padding: 8px; }
+  .cd-sidebar { border-right: none !important; border-bottom: 1px solid var(--rule); }
+}
+.cd-sidebar {
+  background: var(--surface-2);
+  border-right: 1px solid var(--rule);
+  padding: 24px 20px;
+  overflow-y: auto;
+}
+.cd-sidebar .a-lg {
+  width: 64px; height: 64px; border-radius: 50%;
+  color: #fff; font-weight: 800; font-size: 20px;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 12px;
+}
+.cd-name {
+  text-align: center; font-size: 17px; font-weight: 800;
+  letter-spacing: -0.01em; color: var(--ink);
+  margin-bottom: 4px;
+}
+.cd-name .hon { font-size: 13px; color: var(--dim); margin-left: 4px; font-weight: 500; }
+.cd-kana {
+  text-align: center; font-size: 11.5px; color: var(--dim);
+  font-family: var(--font-mono);
+  margin-bottom: 16px;
+}
+.cd-facts {
+  background: #fff; border: 1px solid var(--rule); border-radius: var(--rad-2);
+  padding: 12px 14px;
+  display: grid; grid-template-columns: 1fr; gap: 8px;
+  font-size: 12px;
+  margin-bottom: 14px;
+}
+.cd-fact { display: flex; justify-content: space-between; }
+.cd-fact .k { color: var(--dim); }
+.cd-fact .v { color: var(--ink); font-weight: 700; }
+.cd-actions { display: grid; gap: 6px; }
+.cd-actions button {
+  padding: 9px 12px;
+  border-radius: var(--rad-2);
+  border: 1px solid var(--rule);
+  background: #fff; color: var(--ink);
+  font-family: inherit; font-size: 12.5px; font-weight: 700;
+  cursor: pointer;
+  transition: background 120ms, border-color 120ms;
+  text-align: left;
+  display: flex; align-items: center; gap: 6px;
+}
+.cd-actions button:hover { background: var(--vital-soft); border-color: var(--vital); color: var(--vital-hi); }
+
+.cd-main { display: flex; flex-direction: column; overflow: hidden; }
+.cd-tabs {
+  display: flex; overflow-x: auto;
+  border-bottom: 1px solid var(--rule);
+  background: #fff;
+  padding: 0 20px;
+  flex-shrink: 0;
+}
+.cd-tab {
+  padding: 14px 14px 12px;
+  border: none; background: transparent;
+  font-family: inherit; font-size: 13px; font-weight: 700;
+  color: var(--dim);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+  transition: color 120ms, border-color 120ms;
+}
+.cd-tab:hover { color: var(--ink); }
+.cd-tab.active { color: var(--ink); border-bottom-color: var(--vital); }
+.cd-tab .count {
+  margin-left: 4px;
+  padding: 1px 7px;
+  background: var(--surface-2);
+  border-radius: var(--rad-full);
+  font-size: 11px; font-family: var(--font-mono);
+  font-weight: 600; color: var(--dim);
+}
+.cd-tab.active .count { background: var(--vital-soft); color: var(--vital-hi); }
+.cd-body { padding: 24px; overflow-y: auto; flex: 1; }
+.cd-panel { display: none; }
+.cd-panel.active { display: block; animation: view-in 200ms ease-out both; }
+.cd-close-btn {
+  position: absolute; top: 14px; right: 18px;
+  background: transparent; border: none;
+  font-size: 22px; color: var(--dim);
+  padding: 6px 10px; cursor: pointer;
+  border-radius: var(--rad-2);
+  line-height: 1;
+  z-index: 2;
+}
+.cd-close-btn:hover { background: var(--surface-2); color: var(--ink); }
+
+/* 議事録 summary card */
+.minutes-card {
+  background: #fff; border: 1px solid var(--rule); border-radius: var(--rad-3);
+  padding: 18px 20px; margin-bottom: 14px;
+}
+.minutes-card .hd { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.minutes-card .hd .date { font-size: 13px; font-weight: 700; color: var(--ink); font-family: var(--font-mono); }
+.minutes-card .hd .tag { background: var(--vital-soft); color: var(--vital-hi); padding: 3px 10px; border-radius: var(--rad-full); font-size: 11px; font-weight: 700; }
+.minutes-card .body { font-size: 13.5px; color: var(--ink-2); line-height: 1.75; }
+
+/* LINE tab: chat log */
+.chat-log { display: flex; flex-direction: column; gap: 8px; }
+.chat-log .msg { display: flex; }
+.chat-log .msg .bub { padding: 10px 14px; border-radius: 14px; font-size: 13px; line-height: 1.65; max-width: 68%; }
+.chat-log .msg.in .bub { background: var(--surface-2); border: 1px solid var(--rule); border-bottom-left-radius: 4px; }
+.chat-log .msg.out { justify-content: flex-end; }
+.chat-log .msg.out .bub { background: #06c755; color: #fff; border-bottom-right-radius: 4px; }
+.chat-log .msg .time { align-self: flex-end; font-family: var(--font-mono); font-size: 10px; color: var(--dim); padding: 0 8px; }
+
+/* 急遽 面談 modal */
+.qs-overlay {
+  position: fixed; inset: 0;
+  background: rgba(15, 23, 41, 0.48);
+  z-index: 10500;
+  display: none;
+  align-items: center; justify-content: center;
+  padding: 24px;
+  animation: cd-fade 180ms ease-out both;
+}
+.qs-overlay.open { display: flex; }
+.qs-box {
+  background: #fff;
+  border-radius: var(--rad-4);
+  padding: 32px 32px 24px;
+  width: 100%; max-width: 520px;
+  animation: cd-in 260ms cubic-bezier(0.22,1,0.36,1) both;
+  box-shadow: var(--elev-3);
+}
+.qs-title { font-size: 20px; font-weight: 900; letter-spacing: -0.02em; margin: 0 0 6px; }
+.qs-sub { font-size: 13px; color: var(--dim); margin: 0 0 20px; }
+.qs-modes { display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 20px; }
+.qs-mode {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 14px 16px;
+  border: 1.5px solid var(--rule);
+  border-radius: var(--rad-3);
+  cursor: pointer;
+  background: #fff;
+  transition: border-color 140ms, background 140ms;
+}
+.qs-mode:hover { background: var(--surface-2); }
+.qs-mode.selected { border-color: var(--vital); background: var(--vital-soft); }
+.qs-mode .icon {
+  flex-shrink: 0;
+  width: 40px; height: 40px; border-radius: var(--rad-2);
+  background: var(--surface-2);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 20px;
+}
+.qs-mode.selected .icon { background: #fff; }
+.qs-mode .t { font-size: 14px; font-weight: 800; color: var(--ink); }
+.qs-mode .d { font-size: 12px; color: var(--dim); margin-top: 2px; line-height: 1.6; }
+.qs-actions { display: flex; gap: 10px; justify-content: flex-end; }
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 30px; left: 50%; transform: translateX(-50%) translateY(20px);
+  background: var(--ink); color: #fff;
+  padding: 12px 20px;
+  border-radius: var(--rad-2);
+  font-size: 13px; font-weight: 600;
+  box-shadow: var(--elev-3);
+  opacity: 0;
+  transition: opacity 200ms, transform 200ms cubic-bezier(0.22,1,0.36,1);
+  z-index: 10999;
+  pointer-events: none;
+  display: flex; align-items: center; gap: 8px;
+}
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+.toast .icon { color: var(--vital); font-weight: 900; }
+
+/* Mobile bottom nav (優先 4画面 直遷移) */
+.mnav {
+  display: none;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: #fff;
+  border-top: 1px solid var(--rule);
+  z-index: 100;
+  padding: 6px 0 calc(6px + env(safe-area-inset-bottom, 0px));
+  justify-content: space-around;
+}
+.mnav-item {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 3px;
+  padding: 6px 12px;
+  background: transparent; border: none;
+  font-family: inherit; font-size: 10.5px; font-weight: 700;
+  color: var(--dim);
+  cursor: pointer;
+  min-height: 44px;
+}
+.mnav-item.active { color: var(--ink); }
+.mnav-item svg { width: 22px; height: 22px; stroke-width: 2; }
+.mnav-item.active svg { color: var(--vital-hi); }
+
+@media (max-width: 780px) {
+  .mnav { display: flex; }
+  body { padding-bottom: 60px; }
+  .main { padding-bottom: 24px !important; }
+  .kompa-panel.open { bottom: 74px !important; }
+}
+
+/* Skeleton loading (data-loading state) */
+.skel {
+  background: linear-gradient(90deg, var(--surface-2) 25%, #eff2f7 50%, var(--surface-2) 75%);
+  background-size: 200% 100%;
+  animation: skel 1.4s ease-in-out infinite;
+  border-radius: var(--rad-1);
+}
+@keyframes skel {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
 </style>
 </head>
 <body>
@@ -875,9 +1212,16 @@ button:focus-visible, a:focus-visible, input:focus-visible {
 
   <!-- Main -->
   <main class="main">
+    <div class="view active" data-view="home">
     <div class="main-head">
       <h1>おはようございます、 徳佐 先生</h1>
-      <div class="today mono">2026/07/14 · 火曜日</div>
+      <div class="today mono" style="display:flex;align-items:center;gap:12px;">
+        <span>2026/07/15 · 水曜日</span>
+        <button class="btn-primary vital" id="btn-quick-session" type="button">
+          <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+          急遽 面談
+        </button>
+      </div>
     </div>
 
     <!-- KPI row -->
@@ -1046,6 +1390,223 @@ button:focus-visible, a:focus-visible, input:focus-visible {
         </div>
       </div>
     </div>
+    </div><!-- /view=home -->
+
+    <!-- 顧客台帳 view -->
+    <div class="view" data-view="clients">
+      <div class="main-head">
+        <h1>顧客 台帳</h1>
+        <div class="today mono" style="display:flex;align-items:center;gap:10px;">
+          <span>32 名 登録</span>
+          <button class="btn-primary" id="btn-add-client" type="button">
+            <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            新規 顧客 を 登録
+          </button>
+        </div>
+      </div>
+      <div class="toolbar">
+        <div class="toolbar-chips">
+          <button class="chip active" data-filter="all">全て (32)</button>
+          <button class="chip" data-filter="recent">直近 接触 (12)</button>
+          <button class="chip" data-filter="dormant">3ヶ月 以上 未接触 (5)</button>
+          <button class="chip" data-filter="new">今月 新規 (3)</button>
+        </div>
+      </div>
+      <div class="clients-table">
+        <div class="ct-row head">
+          <div></div>
+          <div>顧客</div>
+          <div>ステータス</div>
+          <div>面談 数</div>
+          <div>最終 接触</div>
+          <div>管理 資産</div>
+        </div>
+        <div class="ct-row" tabindex="0" role="button" data-client="ss">
+          <span class="a-dot a-blue">SS</span>
+          <div><div class="name">佐々木 涼子 様</div><div class="sub">36 歳 · 会社員 · 世帯 720万</div></div>
+          <div><span class="status-p active">面談 中</span></div>
+          <div class="val">3</div>
+          <div class="val">今日 10:00</div>
+          <div class="val">¥280 万</div>
+        </div>
+        <div class="ct-row" tabindex="0" role="button" data-client="tk">
+          <span class="a-dot a-orange">TK</span>
+          <div><div class="name">高橋 健一 様</div><div class="sub">42 歳 · 会社員 · 世帯 890万</div></div>
+          <div><span class="status-p active">既存</span></div>
+          <div class="val">5</div>
+          <div class="val">3 日 前</div>
+          <div class="val">¥1,240 万</div>
+        </div>
+        <div class="ct-row" tabindex="0" role="button" data-client="mn">
+          <span class="a-dot a-purple">MN</span>
+          <div><div class="name">松本 直美 様</div><div class="sub">58 歳 · 自営 · 世帯 550万</div></div>
+          <div><span class="status-p active">既存</span></div>
+          <div class="val">8</div>
+          <div class="val">1 週 前</div>
+          <div class="val">¥3,880 万</div>
+        </div>
+        <div class="ct-row" tabindex="0" role="button" data-client="ha">
+          <span class="a-dot a-pink">HA</span>
+          <div><div class="name">橋本 明日香 様</div><div class="sub">28 歳 · パート · 世帯 380万</div></div>
+          <div><span class="status-p new">新規</span></div>
+          <div class="val">0</div>
+          <div class="val">承認 待ち</div>
+          <div class="val">—</div>
+        </div>
+        <div class="ct-row" tabindex="0" role="button" data-client="ys">
+          <span class="a-dot a-green">YS</span>
+          <div><div class="name">山田 沙織 様</div><div class="sub">45 歳 · 会社員 · 世帯 720万</div></div>
+          <div><span class="status-p active">既存</span></div>
+          <div class="val">4</div>
+          <div class="val">2 日 前</div>
+          <div class="val">¥620 万</div>
+        </div>
+        <div class="ct-row" tabindex="0" role="button" data-client="nk">
+          <span class="a-dot a-yellow">NK</span>
+          <div><div class="name">中村 光子 様</div><div class="sub">62 歳 · 主婦 · 世帯 480万</div></div>
+          <div><span class="status-p dormant">3ヶ月 未接触</span></div>
+          <div class="val">2</div>
+          <div class="val">3 ヶ月 前</div>
+          <div class="val">¥180 万</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ライフイベント view -->
+    <div class="view" data-view="lifeevents">
+      <div class="main-head">
+        <h1>ライフ イベント</h1>
+        <div class="today mono">今後 90 日</div>
+      </div>
+      <div class="clients-table">
+        <div class="ct-row" tabindex="0" role="button" data-client="mn">
+          <span class="a-dot a-purple">MN</span>
+          <div><div class="name">松本 直美 様</div><div class="sub">お子様 (小6) 誕生日</div></div>
+          <div><span class="status-p new">近日</span></div>
+          <div class="val">07/22</div>
+          <div class="val">7 日 後</div>
+          <div class="val">🎂</div>
+        </div>
+        <div class="ct-row" tabindex="0" role="button" data-client="ha">
+          <span class="a-dot a-pink">HA</span>
+          <div><div class="name">橋本 明日香 様</div><div class="sub">住宅 ローン 更新 (10年 目)</div></div>
+          <div><span class="status-p new">近日</span></div>
+          <div class="val">07/28</div>
+          <div class="val">13 日 後</div>
+          <div class="val">🏠</div>
+        </div>
+        <div class="ct-row" tabindex="0" role="button" data-client="tk">
+          <span class="a-dot a-orange">TK</span>
+          <div><div class="name">高橋 健一 様</div><div class="sub">医療 保険 満期</div></div>
+          <div><span class="status-p active">要 提案</span></div>
+          <div class="val">08/05</div>
+          <div class="val">21 日 後</div>
+          <div class="val">🩺</div>
+        </div>
+        <div class="ct-row" tabindex="0" role="button" data-client="sw">
+          <span class="a-dot a-blue">SW</span>
+          <div><div class="name">鈴木 大輔 様</div><div class="sub">結婚 記念日 (10 周年)</div></div>
+          <div><span class="status-p active">お祝い</span></div>
+          <div class="val">08/12</div>
+          <div class="val">28 日 後</div>
+          <div class="val">💐</div>
+        </div>
+        <div class="ct-row" tabindex="0" role="button" data-client="ys">
+          <span class="a-dot a-green">YS</span>
+          <div><div class="name">山田 沙織 様</div><div class="sub">お子様 (中1) 塾 開始</div></div>
+          <div><span class="status-p active">教育資金</span></div>
+          <div class="val">09/01</div>
+          <div class="val">48 日 後</div>
+          <div class="val">📚</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 面談履歴 view -->
+    <div class="view" data-view="meetings">
+      <div class="main-head">
+        <h1>面談 履歴</h1>
+        <div class="today mono">直近 30 件</div>
+      </div>
+      <div class="clients-table">
+        <div class="ct-row" tabindex="0" role="button" data-client="ss">
+          <span class="a-dot a-blue">SS</span>
+          <div><div class="name">佐々木 涼子 様 · Zoom 面談</div><div class="sub">教育 資金 の 準備 方針 (NISA vs 学資保険)</div></div>
+          <div><span class="status-p active">Live</span></div>
+          <div class="val">45 分</div>
+          <div class="val">今日 10:00</div>
+          <div class="val">🎥</div>
+        </div>
+        <div class="ct-row" tabindex="0" role="button" data-client="tk">
+          <span class="a-dot a-orange">TK</span>
+          <div><div class="name">高橋 健一 様 · Zoom 面談</div><div class="sub">NISA 見直し / iDeCo 検討</div></div>
+          <div><span class="status-p active">完了</span></div>
+          <div class="val">52 分</div>
+          <div class="val">3 日 前</div>
+          <div class="val">🎥</div>
+        </div>
+        <div class="ct-row" tabindex="0" role="button" data-client="mn">
+          <span class="a-dot a-purple">MN</span>
+          <div><div class="name">松本 直美 様 · 対面 面談</div><div class="sub">相続 対策 の 方針 確認</div></div>
+          <div><span class="status-p active">完了</span></div>
+          <div class="val">73 分</div>
+          <div class="val">1 週 前</div>
+          <div class="val">🏢</div>
+        </div>
+        <div class="ct-row" tabindex="0" role="button" data-client="ys">
+          <span class="a-dot a-green">YS</span>
+          <div><div class="name">山田 沙織 様 · Zoom 面談</div><div class="sub">住宅ローン 借換 相談</div></div>
+          <div><span class="status-p active">完了</span></div>
+          <div class="val">38 分</div>
+          <div class="val">2 日 前</div>
+          <div class="val">🎥</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Placeholder views for remaining nav items -->
+    <div class="view" data-view="line-new">
+      <div class="main-head"><h1>新規 相談</h1><div class="today mono">LINE 経由 未対応 3件</div></div>
+      <div style="padding:60px 24px;text-align:center;background:#fff;border:1px solid var(--rule);border-radius:var(--rad-3);">
+        <div style="font-size:36px;margin-bottom:12px;">📥</div>
+        <div style="font-size:15px;font-weight:800;margin-bottom:6px;">新規 相談 が 3件 届いて います</div>
+        <div style="font-size:13px;color:var(--dim);line-height:1.7;">LINE から の 相談 予約 は ここ に 集約 されます。<br>受付 後 は 自動で 顧客台帳 に 追加 されます。</div>
+        <button class="btn-primary" style="margin-top:16px;">相談 を 確認 →</button>
+      </div>
+    </div>
+    <div class="view" data-view="line-broadcast">
+      <div class="main-head"><h1>LINE 配信</h1><div class="today mono">セグメント 別 配信 管理</div></div>
+      <div style="padding:60px 24px;text-align:center;background:#fff;border:1px solid var(--rule);border-radius:var(--rad-3);">
+        <div style="font-size:36px;margin-bottom:12px;">📢</div>
+        <div style="font-size:15px;font-weight:800;margin-bottom:6px;">LINE 配信 設定</div>
+        <div style="font-size:13px;color:var(--dim);line-height:1.7;">全 顧客 or セグメント 別 の 配信 が 可能。<br>下書き は AI に 相談 も できます。</div>
+      </div>
+    </div>
+    <div class="view" data-view="line-followup">
+      <div class="main-head"><h1>ご無沙汰 フォロー</h1><div class="today mono">3ヶ月 以上 未接触 の 客 に 一括 挨拶</div></div>
+      <div style="padding:60px 24px;text-align:center;background:#fff;border:1px solid var(--rule);border-radius:var(--rad-3);">
+        <div style="font-size:36px;margin-bottom:12px;">⏰</div>
+        <div style="font-size:15px;font-weight:800;margin-bottom:6px;">5 名 が 3ヶ月 以上 未 接触</div>
+        <div style="font-size:13px;color:var(--dim);line-height:1.7;">AI が 客 ごと の 会話 履歴 を 踏まえた 挨拶 下書き を 作成。<br>あなた の 承認 で 一括 送信 できます。</div>
+        <button class="btn-primary" style="margin-top:16px;">フォロー を 開始</button>
+      </div>
+    </div>
+    <div class="view" data-view="tags">
+      <div class="main-head"><h1>タグ 管理</h1><div class="today mono">セグメント 分類 に 使う ラベル</div></div>
+      <div style="padding:60px 24px;text-align:center;background:#fff;border:1px solid var(--rule);border-radius:var(--rad-3);">
+        <div style="font-size:36px;margin-bottom:12px;">🏷</div>
+        <div style="font-size:15px;font-weight:800;margin-bottom:6px;">タグ 管理</div>
+        <div style="font-size:13px;color:var(--dim);line-height:1.7;">「教育資金 相談中」「相続 準備 中」 等 の タグ を 客 に 付与 して<br>後で 一括 フォロー / 配信 の 対象 に できます。</div>
+      </div>
+    </div>
+    <div class="view" data-view="settings">
+      <div class="main-head"><h1>設定</h1><div class="today mono">アカウント / プラン / 音声 設定</div></div>
+      <div style="padding:60px 24px;text-align:center;background:#fff;border:1px solid var(--rule);border-radius:var(--rad-3);">
+        <div style="font-size:36px;margin-bottom:12px;">⚙</div>
+        <div style="font-size:15px;font-weight:800;margin-bottom:6px;">設定</div>
+        <div style="font-size:13px;color:var(--dim);line-height:1.7;">FP 事務所名 / プラン / 音声 設定 (BlackHole or Chrome 拡張)<br>データ ダウンロード / ログアウト</div>
+      </div>
+    </div>
   </main>
 
   <!-- Preview panel (selected client detail) -->
@@ -1105,22 +1666,355 @@ button:focus-visible, a:focus-visible, input:focus-visible {
   </aside>
 </div>
 
+<!-- Mobile bottom nav -->
+<nav class="mnav" role="navigation" aria-label="主要 メニュー">
+  <button class="mnav-item active" data-mnav="home">
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12L12 3l9 9"/><path d="M5 10v10a1 1 0 001 1h4v-6h4v6h4a1 1 0 001-1V10"/></svg>
+    ホーム
+  </button>
+  <button class="mnav-item" data-mnav="clients">
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/></svg>
+    顧客
+  </button>
+  <button class="mnav-item" data-mnav="meetings">
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>
+    履歴
+  </button>
+  <button class="mnav-item" data-mnav="line-new">
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+    相談
+  </button>
+</nav>
+
+<!-- 客 詳細 modal -->
+<div class="cd-overlay" id="cd-overlay" role="dialog" aria-modal="true" aria-labelledby="cd-title" style="position:fixed;">
+  <div class="cd-modal-box">
+    <button class="cd-close-btn" id="cd-close" aria-label="閉じる">×</button>
+    <aside class="cd-sidebar">
+      <div id="cd-avatar" class="a-lg a-blue">SS</div>
+      <div class="cd-name"><span id="cd-title">佐々木 涼子</span><span class="hon">様</span></div>
+      <div class="cd-kana" id="cd-kana">さ さ き りょう こ</div>
+
+      <div class="cd-facts" id="cd-facts">
+        <div class="cd-fact"><span class="k">年齢</span><span class="v">36 歳</span></div>
+        <div class="cd-fact"><span class="k">職業</span><span class="v">会社員</span></div>
+        <div class="cd-fact"><span class="k">世帯 年収</span><span class="v">¥720 万</span></div>
+        <div class="cd-fact"><span class="k">管理 資産</span><span class="v">¥280 万</span></div>
+        <div class="cd-fact"><span class="k">面談 回数</span><span class="v">3 回</span></div>
+        <div class="cd-fact"><span class="k">最終 接触</span><span class="v">今日 10:00</span></div>
+      </div>
+
+      <div class="cd-actions">
+        <button><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>Zoom で 面談 開始</button>
+        <button><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>LINE で 送信</button>
+        <button><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>顧客情報 を 編集</button>
+      </div>
+    </aside>
+    <div class="cd-main">
+      <div class="cd-tabs" role="tablist">
+        <button class="cd-tab active" data-cdtab="overview">概観</button>
+        <button class="cd-tab" data-cdtab="line">LINE <span class="count">18</span></button>
+        <button class="cd-tab" data-cdtab="timeline">履歴 <span class="count">12</span></button>
+        <button class="cd-tab" data-cdtab="minutes">議事録 <span class="count">3</span></button>
+        <button class="cd-tab" data-cdtab="family">家族 <span class="count">4</span></button>
+      </div>
+      <div class="cd-body">
+        <div class="cd-panel active" data-cdpanel="overview">
+          <div class="minutes-card">
+            <div class="hd">
+              <div class="date">2026/07/07 · Zoom 面談</div>
+              <span class="tag">最新</span>
+            </div>
+            <div class="body">
+              教育 資金 の 準備 方針 で <b>学資保険</b> と <b>積立 NISA</b> を 比較 検討。 涼子様 は 「NISA の 変動 が 心配」 と の こと。<br><br>
+              <strong>次回 の 課題:</strong> 実 シミュレーション を 用意 (子供 の 学齢 別 に 3パターン)、 リスク 許容度 を 確認 する チェック シート の 作成。
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div class="minutes-card" style="margin-bottom:0;">
+              <div class="hd"><div class="date" style="font-size:11px;letter-spacing:0.06em;color:var(--dim);text-transform:uppercase;">タグ</div></div>
+              <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                <span class="tag" style="background:#eff6ff;color:#1e40af;">教育資金 相談中</span>
+                <span class="tag" style="background:#fef3c7;color:#78450F;">要 フォロー</span>
+                <span class="tag" style="background:var(--vital-soft);color:var(--vital-hi);">NISA 提案 準備 中</span>
+              </div>
+            </div>
+            <div class="minutes-card" style="margin-bottom:0;">
+              <div class="hd"><div class="date" style="font-size:11px;letter-spacing:0.06em;color:var(--dim);text-transform:uppercase;">直近 の LINE</div></div>
+              <div class="body" style="font-size:12.5px;">「今日 の 面談 楽しみに して います!」<br><span style="color:var(--dim);font-family:var(--font-mono);font-size:11px;">今日 09:22</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="cd-panel" data-cdpanel="line">
+          <div class="chat-log">
+            <div class="msg in"><div class="bub">こんばんは。 教育資金 の 相談 で FP Compass の 案内 を 見て 連絡 しました。 面談 の 予約 は できますか?</div><div class="time">7/1 22:15</div></div>
+            <div class="msg out"><div class="time">7/2 07:40</div><div class="bub">こんにちは、 徳佐 です。 ご連絡 ありがとうございます。 まず 簡単 な アンケート に お答え ください: [URL]</div></div>
+            <div class="msg in"><div class="bub">回答 しました。 お願い します。</div><div class="time">7/3 12:03</div></div>
+            <div class="msg out"><div class="time">7/3 14:22</div><div class="bub">ありがとうございます。 7月 7日 (月) 10時 から Zoom で いかがでしょうか?</div></div>
+            <div class="msg in"><div class="bub">大丈夫 です! よろしく お願い します。</div><div class="time">7/3 15:41</div></div>
+            <div class="msg in"><div class="bub">おはようございます。 今日 の 面談 楽しみに して います!</div><div class="time">今日 09:22</div></div>
+            <div class="msg out"><div class="time">今日 09:28</div><div class="bub">こちら こそ よろしく お願い します。 資料 は 準備 して あります ので Zoom で お待ち して ます。</div></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px;">
+            <button class="btn-secondary" style="justify-content:center;">✨ AI で 下書き</button>
+            <button class="btn-primary" style="justify-content:center;background:#06c755;">LINE で 送信</button>
+          </div>
+        </div>
+        <div class="cd-panel" data-cdpanel="timeline">
+          <div style="border-left:2px solid var(--rule);padding-left:20px;position:relative;">
+            <div style="margin-bottom:16px;">
+              <div style="position:absolute;left:-6px;width:10px;height:10px;background:var(--vital);border-radius:50%;"></div>
+              <div style="font-family:var(--font-mono);font-size:11px;color:var(--dim);">今日 10:00</div>
+              <div style="font-weight:800;font-size:14px;margin-top:2px;">Zoom 面談 (進行 中)</div>
+              <div style="font-size:12.5px;color:var(--dim);line-height:1.7;">教育資金 の 準備 方針 (NISA vs 学資保険)</div>
+            </div>
+            <div style="margin-bottom:16px;">
+              <div style="position:absolute;left:-4px;width:6px;height:6px;background:var(--dim);border-radius:50%;"></div>
+              <div style="font-family:var(--font-mono);font-size:11px;color:var(--dim);">7/3 15:41</div>
+              <div style="font-weight:700;font-size:13.5px;margin-top:2px;">LINE 予約 確定</div>
+              <div style="font-size:12.5px;color:var(--dim);">面談 日時 確定 (今日 10:00)</div>
+            </div>
+            <div style="margin-bottom:16px;">
+              <div style="position:absolute;left:-4px;width:6px;height:6px;background:var(--dim);border-radius:50%;"></div>
+              <div style="font-family:var(--font-mono);font-size:11px;color:var(--dim);">7/3 12:03</div>
+              <div style="font-weight:700;font-size:13.5px;margin-top:2px;">アンケート 回答 受付</div>
+              <div style="font-size:12.5px;color:var(--dim);">教育資金 相談 (子供 2名、 世帯 720万)</div>
+            </div>
+            <div>
+              <div style="position:absolute;left:-4px;width:6px;height:6px;background:var(--dim);border-radius:50%;"></div>
+              <div style="font-family:var(--font-mono);font-size:11px;color:var(--dim);">7/1 22:15</div>
+              <div style="font-weight:700;font-size:13.5px;margin-top:2px;">LINE 初回 相談</div>
+              <div style="font-size:12.5px;color:var(--dim);">FP Compass の 案内 を 見て 連絡</div>
+            </div>
+          </div>
+        </div>
+        <div class="cd-panel" data-cdpanel="minutes">
+          <div class="minutes-card">
+            <div class="hd">
+              <div class="date">2026/07/07 · Zoom (45分)</div>
+              <span class="tag">Live</span>
+            </div>
+            <div class="body">教育資金 の 準備 方針。 学資保険 (安定) と 積立 NISA (成長) の 比較 を 説明。 涼子様 は 「NISA の 変動 が 心配」 と 発言。 次回 実 シミュレーション を 用意。</div>
+          </div>
+        </div>
+        <div class="cd-panel" data-cdpanel="family">
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;">
+            <div style="padding:14px;background:#fff;border:1px solid var(--rule);border-radius:var(--rad-3);">
+              <div style="font-weight:800;">佐々木 涼子 <span style="font-size:11px;color:var(--dim);font-weight:500;">本人</span></div>
+              <div style="font-size:12px;color:var(--dim);margin-top:4px;">36 歳 · 会社員</div>
+            </div>
+            <div style="padding:14px;background:#fff;border:1px solid var(--rule);border-radius:var(--rad-3);">
+              <div style="font-weight:800;">佐々木 智也 <span style="font-size:11px;color:var(--dim);font-weight:500;">配偶者</span></div>
+              <div style="font-size:12px;color:var(--dim);margin-top:4px;">38 歳 · 会社員</div>
+            </div>
+            <div style="padding:14px;background:#fff;border:1px solid var(--rule);border-radius:var(--rad-3);">
+              <div style="font-weight:800;">佐々木 咲 <span style="font-size:11px;color:var(--dim);font-weight:500;">長女</span></div>
+              <div style="font-size:12px;color:var(--dim);margin-top:4px;">8 歳 · 小学 2年</div>
+            </div>
+            <div style="padding:14px;background:#fff;border:1px solid var(--rule);border-radius:var(--rad-3);">
+              <div style="font-weight:800;">佐々木 蓮 <span style="font-size:11px;color:var(--dim);font-weight:500;">長男</span></div>
+              <div style="font-size:12px;color:var(--dim);margin-top:4px;">5 歳 · 保育園</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 急遽 面談 modal -->
+<div class="qs-overlay" id="qs-overlay" role="dialog" aria-modal="true" aria-labelledby="qs-title">
+  <div class="qs-box">
+    <h2 class="qs-title" id="qs-title">急遽 面談 を 始める</h2>
+    <p class="qs-sub">面談 方式 を 選ぶ と 顧客 が 未登録 でも 即 始められます。</p>
+    <div class="qs-modes">
+      <div class="qs-mode selected" data-mode="zoom">
+        <div class="icon">🎥</div>
+        <div>
+          <div class="t">Zoom で 遠隔 面談</div>
+          <div class="d">今 すぐ Zoom URL を 発行 して 客 に LINE で 送信。 議事録 も 自動 生成。</div>
+        </div>
+      </div>
+      <div class="qs-mode" data-mode="audio">
+        <div class="icon">🎤</div>
+        <div>
+          <div class="t">対面 で 音声 録音</div>
+          <div class="d">この 場 で 会話 を 録音 → 議事録 を 自動 生成。 客 が 目の前 に いる 時 に。</div>
+        </div>
+      </div>
+      <div class="qs-mode" data-mode="memo">
+        <div class="icon">📝</div>
+        <div>
+          <div class="t">メモ 手動 入力</div>
+          <div class="d">音声 なし で メモ を そのまま 議事録 として 保存。 電話 の 後 の 記録 に。</div>
+        </div>
+      </div>
+    </div>
+    <div class="qs-actions">
+      <button class="btn-secondary" id="qs-cancel">キャンセル</button>
+      <button class="btn-primary vital" id="qs-start">始める</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"><span class="icon">✓</span><span id="toast-text">保存 しました</span></div>
+
 <script>
-// interactive: click sched-row → toggle selected
+// interactive: click sched-row → toggle selected + open client detail
 document.querySelectorAll('.sched-row').forEach(r => {
   r.addEventListener('click', () => {
     document.querySelectorAll('.sched-row').forEach(x => x.classList.remove('selected'));
     r.classList.add('selected');
+    // 顧客カルテ を 開く (0.4秒 後、 選択 感 を 出す)
+    const clientKey = 'ss'; // sched-row の 1つ目 は 佐々木
+    setTimeout(() => openClientModal(clientKey), 200);
+  });
+  r.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); r.click(); }
   });
 });
-// nav-item click
+
+// nav-item click → view switch
+const NAV_TO_VIEW = {
+  'ホーム': 'home',
+  '顧客 台帳': 'clients',
+  'ライフ イベント': 'lifeevents',
+  '面談 履歴': 'meetings',
+  '新規 相談': 'line-new',
+  '配信': 'line-broadcast',
+  'ご無沙汰 フォロー': 'line-followup',
+  'タグ 管理': 'tags',
+  '設定': 'settings',
+};
+function switchView(viewName) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  const target = document.querySelector(`[data-view="${viewName}"]`);
+  if (target) target.classList.add('active');
+  // Nav 状態 同期
+  document.querySelectorAll('.nav-item').forEach(n => {
+    const label = n.innerText.trim().replace(/\s+\d+$/, '').trim();
+    n.classList.toggle('active', NAV_TO_VIEW[label] === viewName);
+  });
+  document.querySelectorAll('.mnav-item').forEach(m => m.classList.toggle('active', m.dataset.mnav === viewName));
+  // Breadcrumb 更新
+  const crumb = document.querySelector('.crumb strong');
+  if (crumb) crumb.textContent = Object.keys(NAV_TO_VIEW).find(k => NAV_TO_VIEW[k] === viewName) || 'ホーム';
+  document.querySelector('.main')?.scrollTo({ top: 0, behavior: 'smooth' });
+}
 document.querySelectorAll('.nav-item').forEach(n => {
   n.addEventListener('click', (e) => {
     e.preventDefault();
-    document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active'));
-    n.classList.add('active');
+    const label = n.innerText.trim().replace(/\s+\d+$/, '').trim();
+    const view = NAV_TO_VIEW[label];
+    if (view) switchView(view);
   });
 });
+document.querySelectorAll('.mnav-item').forEach(m => {
+  m.addEventListener('click', () => switchView(m.dataset.mnav));
+});
+
+// ===== 顧客 詳細 modal =====
+const CLIENT_DATA = {
+  ss: { name: '佐々木 涼子', kana: 'さ さ き りょう こ', initials: 'SS', color: 'a-blue', age: 36, job: '会社員', income: '¥720 万', asset: '¥280 万', mtg: 3, last: '今日 10:00' },
+  tk: { name: '高橋 健一', kana: 'たか はし けん いち', initials: 'TK', color: 'a-orange', age: 42, job: '会社員', income: '¥890 万', asset: '¥1,240 万', mtg: 5, last: '3 日 前' },
+  mn: { name: '松本 直美', kana: 'まつ もと なお み', initials: 'MN', color: 'a-purple', age: 58, job: '自営', income: '¥550 万', asset: '¥3,880 万', mtg: 8, last: '1 週 前' },
+  ha: { name: '橋本 明日香', kana: 'はし もと あす か', initials: 'HA', color: 'a-pink', age: 28, job: 'パート', income: '¥380 万', asset: '—', mtg: 0, last: '承認 待ち' },
+  ys: { name: '山田 沙織', kana: 'やま だ さ おり', initials: 'YS', color: 'a-green', age: 45, job: '会社員', income: '¥720 万', asset: '¥620 万', mtg: 4, last: '2 日 前' },
+  nk: { name: '中村 光子', kana: 'なか むら みつ こ', initials: 'NK', color: 'a-yellow', age: 62, job: '主婦', income: '¥480 万', asset: '¥180 万', mtg: 2, last: '3 ヶ月 前' },
+  sw: { name: '鈴木 大輔', kana: 'すず き だい すけ', initials: 'SW', color: 'a-blue', age: 41, job: '会社員', income: '¥680 万', asset: '¥450 万', mtg: 3, last: '10 日 前' },
+};
+function openClientModal(key) {
+  const c = CLIENT_DATA[key] || CLIENT_DATA.ss;
+  const ov = document.getElementById('cd-overlay');
+  document.getElementById('cd-title').textContent = c.name;
+  document.getElementById('cd-kana').textContent = c.kana;
+  const av = document.getElementById('cd-avatar');
+  av.className = `a-lg ${c.color}`;
+  av.textContent = c.initials;
+  document.getElementById('cd-facts').innerHTML = `
+    <div class="cd-fact"><span class="k">年齢</span><span class="v">${c.age} 歳</span></div>
+    <div class="cd-fact"><span class="k">職業</span><span class="v">${c.job}</span></div>
+    <div class="cd-fact"><span class="k">世帯 年収</span><span class="v">${c.income}</span></div>
+    <div class="cd-fact"><span class="k">管理 資産</span><span class="v">${c.asset}</span></div>
+    <div class="cd-fact"><span class="k">面談 回数</span><span class="v">${c.mtg} 回</span></div>
+    <div class="cd-fact"><span class="k">最終 接触</span><span class="v">${c.last}</span></div>`;
+  ov.classList.add('open');
+  // Reset tab to overview
+  document.querySelectorAll('.cd-tab').forEach(t => t.classList.remove('active'));
+  document.querySelector('.cd-tab[data-cdtab="overview"]')?.classList.add('active');
+  document.querySelectorAll('.cd-panel').forEach(p => p.classList.remove('active'));
+  document.querySelector('.cd-panel[data-cdpanel="overview"]')?.classList.add('active');
+}
+function closeClientModal() {
+  document.getElementById('cd-overlay').classList.remove('open');
+}
+document.getElementById('cd-close')?.addEventListener('click', closeClientModal);
+document.getElementById('cd-overlay')?.addEventListener('click', (e) => {
+  if (e.target.id === 'cd-overlay') closeClientModal();
+});
+// Click ct-row / mini-row → open modal
+document.querySelectorAll('.ct-row[data-client], .mini-row').forEach(r => {
+  r.addEventListener('click', () => {
+    const key = r.dataset.client || 'ss';
+    openClientModal(key);
+  });
+  r.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); r.click(); }
+  });
+});
+// cd tabs
+document.querySelectorAll('.cd-tab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('.cd-tab').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.cd-panel').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    document.querySelector(`.cd-panel[data-cdpanel="${t.dataset.cdtab}"]`)?.classList.add('active');
+  });
+});
+
+// ===== 急遽 面談 modal =====
+const qsOv = document.getElementById('qs-overlay');
+document.getElementById('btn-quick-session')?.addEventListener('click', () => qsOv.classList.add('open'));
+document.getElementById('qs-cancel')?.addEventListener('click', () => qsOv.classList.remove('open'));
+qsOv?.addEventListener('click', (e) => { if (e.target.id === 'qs-overlay') qsOv.classList.remove('open'); });
+document.querySelectorAll('.qs-mode').forEach(m => {
+  m.addEventListener('click', () => {
+    document.querySelectorAll('.qs-mode').forEach(x => x.classList.remove('selected'));
+    m.classList.add('selected');
+  });
+});
+document.getElementById('qs-start')?.addEventListener('click', () => {
+  const mode = document.querySelector('.qs-mode.selected')?.dataset.mode || 'zoom';
+  const label = { zoom: 'Zoom 面談', audio: '対面 録音', memo: 'メモ 入力' }[mode];
+  qsOv.classList.remove('open');
+  showToast(`${label} を 開始 しました`);
+});
+
+// New client button
+document.getElementById('btn-add-client')?.addEventListener('click', () => {
+  showToast('新規 顧客 の 登録 画面 (プロト 未実装)');
+});
+
+// notif-btn
+document.querySelector('.notif-btn')?.addEventListener('click', () => showToast('通知 3件 (プロト 未実装)'));
+
+// Global Escape close
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  if (document.getElementById('cd-overlay').classList.contains('open')) { closeClientModal(); return; }
+  if (qsOv.classList.contains('open')) { qsOv.classList.remove('open'); return; }
+});
+
+// ===== Toast =====
+let toastTimer = null;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-text').textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
+}
 
 // ===== コンパちゃん chat panel (+ focus trap + ARIA) =====
 (function(){
