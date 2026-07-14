@@ -1857,6 +1857,90 @@ button:focus-visible, a:focus-visible, input:focus-visible {
   </div>
 </div>
 
+<!-- 新規 顧客 登録 modal -->
+<div class="qs-overlay" id="nc-overlay" role="dialog" aria-modal="true" aria-labelledby="nc-title">
+  <div class="qs-box">
+    <h2 class="qs-title" id="nc-title">新規 顧客 を 登録</h2>
+    <p class="qs-sub">最低 限 「名前」 だけ で OK。 後 で 家族 情報 と タグ を 追加 できます。</p>
+    <form id="nc-form" style="display:grid;gap:14px;">
+      <label style="display:grid;gap:4px;font-size:12px;color:var(--dim);font-weight:700;">
+        お名前 (必須)
+        <input id="nc-name" type="text" required placeholder="例: 田中 太郎" style="padding:12px 14px;border:1.5px solid var(--sk-rule);border-radius:var(--rad-2);font-size:16px;font-family:inherit;">
+      </label>
+      <label style="display:grid;gap:4px;font-size:12px;color:var(--dim);font-weight:700;">
+        年齢
+        <input id="nc-age" type="number" min="0" max="120" placeholder="例: 42" style="padding:12px 14px;border:1.5px solid var(--sk-rule);border-radius:var(--rad-2);font-size:16px;font-family:inherit;">
+      </label>
+      <label style="display:grid;gap:4px;font-size:12px;color:var(--dim);font-weight:700;">
+        職業
+        <input id="nc-job" type="text" placeholder="例: 会社員" style="padding:12px 14px;border:1.5px solid var(--sk-rule);border-radius:var(--rad-2);font-size:16px;font-family:inherit;">
+      </label>
+      <label style="display:grid;gap:4px;font-size:12px;color:var(--dim);font-weight:700;">
+        流入経路
+        <select id="nc-source" style="padding:12px 14px;border:1.5px solid var(--sk-rule);border-radius:var(--rad-2);font-size:16px;font-family:inherit;background:#fff;">
+          <option>LINE 問合せ</option>
+          <option>紹介</option>
+          <option>Web サイト</option>
+          <option>セミナー</option>
+          <option>その他</option>
+        </select>
+      </label>
+      <div class="qs-actions">
+        <button type="button" class="btn-secondary" id="nc-cancel">キャンセル</button>
+        <button type="submit" class="btn-primary vital">登録 する</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- 録音 中 widget (fake) -->
+<div class="qs-overlay" id="rec-overlay" role="dialog" aria-modal="true" aria-labelledby="rec-title">
+  <div class="qs-box" style="text-align:center;">
+    <div style="width:80px;height:80px;background:var(--pulse);border-radius:50%;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:36px;animation:rec-pulse 1.4s ease-in-out infinite;">🎤</div>
+    <h2 class="qs-title" id="rec-title">録音 中</h2>
+    <p class="qs-sub" id="rec-status">面談 を 録音 して います…</p>
+    <div style="font-family:var(--font-mono);font-size:36px;font-weight:800;color:var(--ink);margin:16px 0 24px;font-variant-numeric:tabular-nums;" id="rec-timer">00:00</div>
+    <div class="qs-actions" style="justify-content:center;">
+      <button type="button" class="btn-primary" id="rec-stop" style="background:var(--pulse);">停止 して 議事録 生成</button>
+    </div>
+  </div>
+</div>
+<style>
+  @keyframes rec-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255,77,122,0.5); }
+    50% { box-shadow: 0 0 0 16px rgba(255,77,122,0); }
+  }
+  .sk-rule { background: var(--rule); }
+</style>
+
+<!-- 議事録 結果 modal (fake AI 出力) -->
+<div class="qs-overlay" id="mn-overlay" role="dialog" aria-modal="true" aria-labelledby="mn-title">
+  <div class="qs-box" style="max-width:640px;">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+      <span style="background:var(--vital-soft);color:var(--vital-hi);padding:3px 10px;border-radius:var(--rad-full);font-size:11px;font-weight:700;font-family:var(--font-mono);">AI 生成 完了</span>
+      <span style="font-family:var(--font-mono);font-size:11px;color:var(--dim);">Whisper + Claude · 8.3秒</span>
+    </div>
+    <h2 class="qs-title" id="mn-title">議事録 が 出来ました</h2>
+    <div style="background:var(--sk-surface-2);padding:16px 18px;border-radius:var(--rad-3);margin:16px 0;font-size:13.5px;line-height:1.85;color:var(--ink-2);">
+      <strong style="color:var(--ink);">要点</strong><br>
+      教育資金 相談。 学資保険 (安定) と 積立 NISA (成長) の 比較 を 説明。 客 は 「NISA の 変動 が 心配」 と 発言。<br><br>
+      <strong style="color:var(--ink);">次 の 打ち手</strong><br>
+      · 学齢 別 3パターン の シミュレーション 用意<br>
+      · リスク 許容度 チェック シート 作成<br>
+      · 3日 以内 に LINE で 資料 送付
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;">
+      <span class="chip" style="background:#eff6ff;color:#1e40af;border-color:transparent;">教育資金</span>
+      <span class="chip" style="background:var(--vital-soft);color:var(--vital-hi);border-color:transparent;">NISA 検討中</span>
+      <span class="chip" style="background:#fef3c7;color:#78450F;border-color:transparent;">要 フォロー</span>
+    </div>
+    <div class="qs-actions">
+      <button type="button" class="btn-secondary" id="mn-edit">編集</button>
+      <button type="button" class="btn-primary vital" id="mn-save">保存 して 客カルテ に 追加</button>
+    </div>
+  </div>
+</div>
+
 <!-- Toast -->
 <div class="toast" id="toast"><span class="icon">✓</span><span id="toast-text">保存 しました</span></div>
 
@@ -2014,6 +2098,155 @@ function showToast(msg) {
   t.classList.add('show');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
+}
+
+// ===== 新規 顧客 登録 (デモ demo state に 追加) =====
+const ncOv = document.getElementById('nc-overlay');
+document.getElementById('btn-add-client')?.removeEventListener?.('click', null);
+document.getElementById('btn-add-client')?.addEventListener('click', (e) => { e.preventDefault?.(); ncOv.classList.add('open'); setTimeout(() => document.getElementById('nc-name').focus(), 100); });
+document.getElementById('nc-cancel')?.addEventListener('click', () => ncOv.classList.remove('open'));
+ncOv?.addEventListener('click', (e) => { if (e.target.id === 'nc-overlay') ncOv.classList.remove('open'); });
+document.getElementById('nc-form')?.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const name = document.getElementById('nc-name').value.trim();
+  const age = document.getElementById('nc-age').value.trim();
+  const job = document.getElementById('nc-job').value.trim();
+  if (!name) return;
+  // append to CLIENT_DATA + inject row into ct-table if view active
+  const key = 'nc' + Date.now();
+  const initials = name.slice(0,2).toUpperCase();
+  const colors = ['a-blue','a-orange','a-purple','a-pink','a-green','a-yellow'];
+  const color = colors[Object.keys(CLIENT_DATA).length % 6];
+  CLIENT_DATA[key] = { name, kana: '', initials, color, age: age || '—', job: job || '—', income: '—', asset: '—', mtg: 0, last: '登録 直後' };
+  const table = document.querySelector('[data-view="clients"] .clients-table');
+  if (table) {
+    const newRow = document.createElement('div');
+    newRow.className = 'ct-row';
+    newRow.setAttribute('tabindex', '0'); newRow.setAttribute('role', 'button'); newRow.dataset.client = key;
+    newRow.innerHTML = `
+      <span class="a-dot ${color}">${initials}</span>
+      <div><div class="name">${name} 様</div><div class="sub">${age ? age+' 歳 · ' : ''}${job || '未設定'}</div></div>
+      <div><span class="status-p new">新規</span></div>
+      <div class="val">0</div>
+      <div class="val">今</div>
+      <div class="val">—</div>`;
+    table.appendChild(newRow);
+    newRow.addEventListener('click', () => openClientModal(key));
+    newRow.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); newRow.click(); }});
+  }
+  document.getElementById('nc-form').reset();
+  ncOv.classList.remove('open');
+  showToast(`「${name}」 様 を 登録 しました`);
+});
+
+// ===== 急遽 面談 の 動作 拡張: 選択 後 → 実 UI が 走る =====
+document.getElementById('qs-start')?.removeEventListener?.('click', null);
+const qsStartOrig = document.getElementById('qs-start');
+if (qsStartOrig) {
+  qsStartOrig.replaceWith(qsStartOrig.cloneNode(true));
+}
+document.getElementById('qs-start')?.addEventListener('click', () => {
+  const mode = document.querySelector('.qs-mode.selected')?.dataset.mode || 'zoom';
+  qsOv.classList.remove('open');
+  if (mode === 'zoom') {
+    showToast('Zoom URL 発行 · LINE で 客 に 送信 しました');
+    setTimeout(() => showToast('客 が 入室 しました。 議事録 録音 も 開始'), 2400);
+  } else if (mode === 'audio') {
+    startFakeRecording();
+  } else {
+    showToast('メモ 入力 画面 (プロト 未実装)');
+  }
+});
+
+// ===== Fake recording flow =====
+let recTimer = null; let recSec = 0;
+function startFakeRecording() {
+  const ov = document.getElementById('rec-overlay');
+  ov.classList.add('open');
+  recSec = 0;
+  document.getElementById('rec-timer').textContent = '00:00';
+  document.getElementById('rec-status').textContent = '面談 を 録音 して います…';
+  recTimer = setInterval(() => {
+    recSec++;
+    const mm = String(Math.floor(recSec / 60)).padStart(2, '0');
+    const ss = String(recSec % 60).padStart(2, '0');
+    document.getElementById('rec-timer').textContent = `${mm}:${ss}`;
+  }, 1000);
+}
+document.getElementById('rec-stop')?.addEventListener('click', () => {
+  clearInterval(recTimer);
+  document.getElementById('rec-status').textContent = 'AI が 議事録 を 生成 中…';
+  document.getElementById('rec-timer').textContent = '生成 中';
+  setTimeout(() => {
+    document.getElementById('rec-overlay').classList.remove('open');
+    document.getElementById('mn-overlay').classList.add('open');
+  }, 2400);
+});
+document.getElementById('mn-edit')?.addEventListener('click', () => {
+  document.getElementById('mn-overlay').classList.remove('open');
+  showToast('編集 モード に 切替 (プロト 未実装)');
+});
+document.getElementById('mn-save')?.addEventListener('click', () => {
+  document.getElementById('mn-overlay').classList.remove('open');
+  showToast('議事録 を 客カルテ に 保存 しました');
+});
+
+// ===== LINE 送信 の 動作 拡張 (客カルテ 内 の LINE tab) =====
+// 「AI 下書き」 と 「LINE 送信」 に demo 動作
+document.querySelectorAll('.cd-panel[data-cdpanel="line"] button').forEach(b => {
+  b.addEventListener('click', () => {
+    const t = b.textContent.trim();
+    if (t.includes('AI') || t.includes('下書き')) {
+      const chatLog = document.querySelector('.cd-panel[data-cdpanel="line"] .chat-log');
+      const draft = document.createElement('div');
+      draft.className = 'msg out';
+      draft.innerHTML = '<div class="time">今</div><div class="bub" style="background:#fef3c7;color:#78450F;border:1.5px dashed #f59e0b;">[AI 下書き] 佐々木 様、 昨日 の 面談 ありがとう ございました。 学齢 別 の シミュレーション 資料 が できました。 添付 の PDF を ご確認 ください。 質問 が あれば お気軽 に。</div>';
+      chatLog?.appendChild(draft);
+      chatLog?.scrollTo(0, chatLog.scrollHeight);
+      showToast('AI が 下書き を 作成 しました');
+    } else if (t.includes('送信')) {
+      showToast('LINE で 送信 しました ✓');
+    }
+  });
+});
+
+// ===== 顧客カルテ 内 の 「Zoom 面談 開始」 「LINE 送信」 サイドバー action =====
+document.querySelectorAll('.cd-actions button').forEach(b => {
+  b.addEventListener('click', () => {
+    const t = b.textContent.trim();
+    if (t.includes('Zoom')) showToast('Zoom URL 発行 · LINE で 送信 しました');
+    else if (t.includes('LINE')) {
+      document.querySelector('.cd-tab[data-cdtab="line"]')?.click();
+    } else if (t.includes('編集')) showToast('顧客 情報 編集 モード (プロト 未実装)');
+  });
+});
+
+// ===== コンパちゃん label 更新 (demo 名 挿入) =====
+// (already handled elsewhere)
+
+// ===== Login gate (fake, prototype 用 の 簡易 ゲート) =====
+// 現状 は なし で 直接 開く 状態。 owner が login flow も 体感 したい なら true に
+const REQUIRE_LOGIN = false;
+if (REQUIRE_LOGIN && !localStorage.getItem('proto-logged-in')) {
+  const ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;background:#f5f7fa;z-index:99999;display:flex;align-items:center;justify-content:center;padding:24px;';
+  ov.innerHTML = `
+    <div style="background:#fff;border:1px solid var(--sk-rule);border-radius:16px;padding:36px 32px;max-width:400px;width:100%;box-shadow:var(--elev-2);">
+      <div style="font-family:var(--font-latin);font-size:12px;letter-spacing:0.2em;color:var(--dim);font-weight:700;margin-bottom:14px;">FP COMPASS · SKELETON INC.</div>
+      <h2 style="font-size:22px;font-weight:800;margin:0 0 6px;letter-spacing:-0.01em;">FP Compass へ</h2>
+      <p style="font-size:13px;color:var(--dim);margin:0 0 22px;">デモ版 · どの メール/パス でも 入れます</p>
+      <label style="display:block;font-size:12px;font-weight:700;color:var(--ink-2);margin-bottom:6px;">メールアドレス</label>
+      <input id="p-email" style="width:100%;padding:12px 14px;font-size:16px;border:1.5px solid var(--sk-rule);border-radius:8px;margin-bottom:14px;" value="demo@example.com">
+      <label style="display:block;font-size:12px;font-weight:700;color:var(--ink-2);margin-bottom:6px;">パスワード</label>
+      <input id="p-pw" type="password" style="width:100%;padding:12px 14px;font-size:16px;border:1.5px solid var(--sk-rule);border-radius:8px;margin-bottom:20px;" value="demo">
+      <button id="p-login-btn" style="width:100%;padding:14px;background:var(--ink);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:800;cursor:pointer;letter-spacing:0.02em;">ログイン</button>
+    </div>`;
+  document.body.appendChild(ov);
+  document.getElementById('p-login-btn').addEventListener('click', () => {
+    localStorage.setItem('proto-logged-in', '1');
+    ov.remove();
+    showToast('ログイン 成功 · SkelFit デモ を お楽しみ ください');
+  });
 }
 
 // ===== コンパちゃん chat panel (+ focus trap + ARIA) =====
