@@ -1,0 +1,891 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FP Compass — SkelFit プロトタイプ (プレビュー のみ、 本番 影響 なし)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Noto+Sans+JP:wght@500;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* =====================================================================
+   FP Compass — SkelFit design language プロトタイプ
+   ---------------------------------------------------------------------
+   これ は プロトタイプ で、 本番 の app.skeleton-inc.jp に は 一切 影響 しません。
+   /prototype-skelfit.html で 独立 host。 気に入った ら 本番置換 を 検討。
+   ===================================================================== */
+
+:root {
+  /* ink scale (navy black, not pure black) */
+  --ink:        #0f1729;
+  --ink-2:      #1e2740;
+  --ink-3:      #3a4560;
+  --dim:        #5f6a86;
+  --muted:      #6f7891;
+  --rule:       #e4e7ee;
+  --rule-2:     #eef0f5;
+
+  /* surfaces */
+  --bg:         #fbfbfd;
+  --surface:    #ffffff;
+  --surface-2:  #f5f7fa;
+
+  /* vital: signal green for state=live/active/healthy */
+  --vital:      #00c96a;
+  --vital-hi:   #00844a;
+  --vital-soft: #cff2df;
+  --vital-ring: rgba(0, 201, 106, 0.20);
+
+  /* pulse: heartbeat magenta accent */
+  --pulse:      #ff4d7a;
+  --pulse-soft: #ffe4ec;
+
+  /* semantic */
+  --danger:     #ef4444;
+  --warn:       #f59e0b;
+  --info:       #3b82f6;
+
+  /* type */
+  --font-jp:    "Noto Sans JP", "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-latin: "Inter", "Noto Sans JP", -apple-system, sans-serif;
+  --font-mono:  "JetBrains Mono", ui-monospace, Menlo, monospace;
+
+  /* rhythm (8px grid) */
+  --r-1: 4px; --r-2: 8px; --r-3: 12px; --r-4: 16px;
+  --r-5: 24px; --r-6: 32px; --r-7: 48px; --r-8: 64px;
+
+  /* radius */
+  --rad-1: 4px; --rad-2: 8px; --rad-3: 12px; --rad-4: 16px; --rad-full: 999px;
+
+  /* elevation */
+  --elev-1: 0 1px 2px rgba(15, 23, 41, 0.04), 0 1px 3px rgba(15, 23, 41, 0.06);
+  --elev-2: 0 4px 12px rgba(15, 23, 41, 0.06), 0 2px 4px rgba(15, 23, 41, 0.04);
+  --elev-3: 0 12px 28px rgba(15, 23, 41, 0.10), 0 4px 8px rgba(15, 23, 41, 0.06);
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  font-family: var(--font-jp);
+  font-weight: 500;
+  color: var(--ink);
+  background: var(--surface-2);
+  line-height: 1.6;
+  letter-spacing: -0.005em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+a { color: inherit; text-decoration: none; }
+button { font-family: inherit; }
+
+/* a11y */
+:focus { outline: none; }
+button:focus-visible, a:focus-visible, input:focus-visible {
+  outline: 2px solid var(--vital); outline-offset: 2px; border-radius: var(--rad-2);
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ===== Grid layout ===== */
+.app {
+  display: grid;
+  grid-template-columns: 240px 1fr 420px;
+  grid-template-rows: 56px 1fr;
+  grid-template-areas:
+    "brand   topbar  topbar"
+    "sidebar main    preview";
+  height: 100vh;
+  overflow: hidden;
+}
+@media (max-width: 1280px) {
+  .app { grid-template-columns: 240px 1fr; grid-template-areas: "brand topbar" "sidebar main"; }
+  .preview { display: none; }
+}
+@media (max-width: 780px) {
+  .app { grid-template-columns: 1fr; grid-template-rows: 56px 1fr; grid-template-areas: "topbar" "main"; }
+  .brand, .sidebar { display: none; }
+}
+
+/* ===== Brand cell ===== */
+.brand {
+  grid-area: brand;
+  background: var(--ink);
+  color: #fff;
+  display: flex; align-items: center;
+  padding: 0 20px;
+  font-weight: 900; font-size: 16px; gap: 10px;
+  letter-spacing: -0.02em;
+  font-family: var(--font-latin);
+}
+.brand .dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--vital);
+  box-shadow: 0 0 0 3px rgba(0, 201, 106, 0.24);
+  animation: brand-pulse 2s ease-in-out infinite;
+}
+@keyframes brand-pulse {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(0, 201, 106, 0.24); }
+  50% { box-shadow: 0 0 0 5px rgba(0, 201, 106, 0.10); }
+}
+
+/* ===== Topbar ===== */
+.topbar {
+  grid-area: topbar;
+  background: #fff;
+  border-bottom: 1px solid var(--rule);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 24px;
+}
+.crumb {
+  font-size: 13px; color: var(--dim);
+  display: flex; align-items: center; gap: 8px;
+}
+.crumb strong { color: var(--ink); font-weight: 700; }
+.crumb-sep { color: var(--muted); }
+.topbar-actions { display: flex; align-items: center; gap: 12px; }
+.search {
+  padding: 8px 12px 8px 34px;
+  background: var(--surface-2);
+  border: 1px solid var(--rule);
+  border-radius: var(--rad-2);
+  font-size: 13px;
+  width: 280px;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7594' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><circle cx='11' cy='11' r='8'/><line x1='21' y1='21' x2='16.65' y2='16.65'/></svg>");
+  background-repeat: no-repeat;
+  background-position: 12px center;
+  font-family: inherit;
+}
+.search:focus { outline: none; border-color: var(--vital); box-shadow: 0 0 0 3px var(--vital-ring); }
+.notif-btn {
+  width: 36px; height: 36px; border-radius: var(--rad-2);
+  background: var(--surface-2); border: 1px solid var(--rule);
+  display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer; position: relative; color: var(--ink-2);
+}
+.notif-btn::after {
+  content: ""; position: absolute; top: 6px; right: 8px;
+  width: 8px; height: 8px; border-radius: 50%; background: var(--pulse);
+  box-shadow: 0 0 0 2px #fff;
+}
+.user-chip {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 4px 12px 4px 4px;
+  border: 1px solid var(--rule);
+  border-radius: var(--rad-full);
+  cursor: pointer;
+}
+.user-chip .avatar {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: linear-gradient(135deg, #a4c9ff, #4a7ee0);
+  color: #fff; font-weight: 700; font-size: 12px;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.user-chip .name { font-size: 13px; font-weight: 700; color: var(--ink); }
+
+/* ===== Sidebar ===== */
+.sidebar {
+  grid-area: sidebar;
+  background: #fff;
+  border-right: 1px solid var(--rule);
+  padding: 20px 12px;
+  overflow-y: auto;
+  display: flex; flex-direction: column;
+}
+.nav-group {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--muted);
+  padding: 12px 12px 6px;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px;
+  border-radius: var(--rad-2);
+  font-size: 14px; font-weight: 600; color: var(--ink-2);
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background 160ms ease-out, padding-left 160ms ease-out, color 160ms ease-out;
+}
+.nav-item:hover { background: var(--surface-2); padding-left: 16px; }
+.nav-item.active {
+  background: var(--surface-2);
+  color: var(--ink);
+  border-color: var(--rule);
+}
+.nav-item svg { width: 18px; height: 18px; color: var(--dim); stroke-width: 2; }
+.nav-item.active svg { color: var(--vital-hi); }
+.nav-item .badge {
+  margin-left: auto;
+  padding: 2px 8px; background: var(--vital-soft); color: var(--vital-hi);
+  border-radius: var(--rad-full); font-size: 11px; font-weight: 700; font-family: var(--font-mono);
+}
+.nav-item .badge.pulse { background: var(--pulse-soft); color: var(--pulse); }
+.sidebar-foot {
+  margin-top: auto;
+  padding: 16px 12px 4px;
+  border-top: 1px solid var(--rule);
+  font-size: 12px; color: var(--dim); line-height: 1.6;
+}
+.sidebar-foot .plan-name { color: var(--ink); font-weight: 700; }
+.sidebar-foot .upgrade {
+  display: block; margin-top: 8px;
+  padding: 8px 12px; background: var(--ink); color: #fff;
+  border-radius: var(--rad-2);
+  text-align: center; font-size: 12px; font-weight: 700;
+  border: none; cursor: pointer; width: 100%;
+}
+
+/* ===== Main ===== */
+.main {
+  grid-area: main;
+  overflow-y: auto;
+  padding: 24px 28px;
+}
+.main-head {
+  display: flex; justify-content: space-between; align-items: baseline;
+  margin-bottom: 24px;
+}
+.main-head h1 {
+  font-size: 24px; font-weight: 900; letter-spacing: -0.02em; margin: 0;
+}
+.main-head .today {
+  font-family: var(--font-mono); font-size: 13px; color: var(--dim);
+}
+
+/* KPI row */
+.kpi-row {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
+  margin-bottom: 32px;
+}
+@media (max-width: 1400px) { .kpi-row { grid-template-columns: repeat(2, 1fr); } }
+.kpi {
+  padding: 18px;
+  background: #fff;
+  border: 1px solid var(--rule);
+  border-radius: var(--rad-3);
+}
+.kpi-label {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px; font-weight: 700; color: var(--dim);
+  letter-spacing: 0.04em; text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.kpi-label svg { width: 14px; height: 14px; stroke-width: 2.2; }
+.kpi-value {
+  font-family: var(--font-latin); font-size: 28px; font-weight: 800;
+  letter-spacing: -0.02em; color: var(--ink); line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.kpi-value .unit { font-size: 14px; color: var(--dim); margin-left: 4px; font-weight: 500; }
+.kpi-delta {
+  margin-top: 10px; font-size: 12px; font-weight: 700;
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 8px; border-radius: var(--rad-full);
+  font-variant-numeric: tabular-nums;
+}
+.kpi-delta.up { background: var(--vital-soft); color: var(--vital-hi); }
+.kpi-delta.flat { background: var(--surface-2); color: var(--dim); }
+
+/* Section head */
+.sec-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 14px;
+}
+.sec-head h2 { font-size: 15px; font-weight: 800; margin: 0; letter-spacing: -0.01em; }
+.sec-head a { font-size: 13px; color: var(--vital-hi); font-weight: 700; }
+
+/* Today schedule */
+.schedule {
+  background: #fff;
+  border: 1px solid var(--rule);
+  border-radius: var(--rad-3);
+  overflow: hidden;
+  margin-bottom: 28px;
+}
+.sched-row {
+  display: grid;
+  grid-template-columns: 100px 1fr 140px 130px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--rule);
+  align-items: center;
+  cursor: pointer;
+  transition: background 120ms, border-left-color 120ms;
+  border-left: 3px solid transparent;
+}
+.sched-row:last-child { border-bottom: none; }
+.sched-row:hover { background: var(--surface-2); border-left-color: var(--vital); }
+.sched-row.selected { background: var(--vital-soft); border-left-color: var(--vital-hi); }
+.sched-time {
+  font-family: var(--font-mono); font-size: 13px; font-weight: 600;
+  color: var(--ink); font-variant-numeric: tabular-nums;
+}
+.sched-time .end { color: var(--dim); font-weight: 400; display: block; margin-top: 2px; }
+.sched-client { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 700; }
+.sched-client .a-dot {
+  width: 32px; height: 32px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: #fff; font-weight: 700; font-size: 11px;
+}
+.sched-client .sub { font-size: 12px; color: var(--dim); font-weight: 500; }
+.sched-topic { font-size: 12px; color: var(--ink-2); font-weight: 600; }
+.sched-status { text-align: right; }
+.tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 3px 10px;
+  border-radius: var(--rad-full);
+  font-size: 11px; font-weight: 700; font-family: var(--font-mono);
+}
+.tag.confirmed { background: var(--vital-soft); color: var(--vital-hi); }
+.tag.pending { background: #fef3c7; color: #a16207; }
+.tag.live {
+  background: var(--vital); color: #fff;
+  animation: tag-live-in 300ms cubic-bezier(0.22,1,0.36,1) both;
+}
+@keyframes tag-live-in {
+  from { transform: scale(0.9); opacity: 0.6; }
+  to   { transform: scale(1);   opacity: 1;   }
+}
+.tag.live::before {
+  content: ""; width: 6px; height: 6px; border-radius: 50%; background: #fff;
+  animation: live-dot 1.4s ease-out infinite;
+}
+@keyframes live-dot {
+  0%   { box-shadow: 0 0 0 0 rgba(255,255,255,0.6); }
+  70%  { box-shadow: 0 0 0 6px rgba(255,255,255,0); }
+  100% { box-shadow: 0 0 0 0 rgba(255,255,255,0); }
+}
+
+/* Lists 2col */
+.list-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+@media (max-width: 1400px) { .list-2col { grid-template-columns: 1fr; } }
+.list-card {
+  background: #fff; border: 1px solid var(--rule); border-radius: var(--rad-3);
+  padding: 16px 18px;
+}
+.list-card h3 { font-size: 14px; font-weight: 800; margin: 0 0 12px; letter-spacing: -0.01em; }
+.mini-row {
+  display: flex; align-items: center; padding: 10px 0;
+  border-bottom: 1px solid var(--rule-2);
+  gap: 10px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.mini-row:last-child { border-bottom: none; }
+.mini-row:hover { color: var(--vital-hi); }
+.mini-row .a-dot {
+  width: 30px; height: 30px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: #fff; font-weight: 700; font-size: 10px;
+}
+.mini-row .grow { flex: 1; }
+.mini-row .name { font-weight: 700; color: var(--ink); }
+.mini-row .sub { font-size: 11px; color: var(--dim); }
+.mini-row .val {
+  font-family: var(--font-mono); font-size: 12px; color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ===== Preview panel (right) ===== */
+.preview {
+  grid-area: preview;
+  background: #fff;
+  border-left: 1px solid var(--rule);
+  overflow-y: auto;
+  padding: 24px;
+}
+.preview-head {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--rule);
+  margin-bottom: 20px;
+}
+.preview-head .a-lg {
+  width: 56px; height: 56px; border-radius: 50%;
+  background: linear-gradient(135deg, #a4c9ff, #4a7ee0);
+  color: #fff; font-weight: 800; font-size: 20px;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.preview-head .info { flex: 1; padding: 0 16px; }
+.preview-head .info .n { font-size: 17px; font-weight: 800; margin: 0 0 4px; letter-spacing: -0.01em; }
+.preview-head .info .m { font-size: 12px; color: var(--dim); }
+.preview-head .close {
+  background: none; border: none; cursor: pointer; color: var(--dim);
+  font-size: 20px; padding: 4px 8px; line-height: 1;
+}
+
+.next-sess {
+  background: var(--ink);
+  color: #fff;
+  padding: 18px;
+  border-radius: var(--rad-3);
+  margin-bottom: 24px;
+  position: relative;
+  overflow: hidden;
+}
+.next-sess-label {
+  font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--vital); font-weight: 700; margin-bottom: 8px;
+  display: flex; align-items: center; gap: 6px;
+}
+.next-sess-label::before {
+  content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--vital);
+  animation: sess-pulse 2s ease-in-out infinite;
+}
+@keyframes sess-pulse {
+  0%, 100% { box-shadow: 0 0 0 3px var(--vital-ring); }
+  50%      { box-shadow: 0 0 0 6px rgba(0,201,106,0.10); }
+}
+.next-sess h4 { font-size: 17px; font-weight: 800; margin: 0 0 6px; }
+.next-sess .when {
+  font-family: var(--font-mono); font-size: 13px;
+  color: rgba(255,255,255,0.7); font-variant-numeric: tabular-nums;
+  margin-bottom: 14px;
+}
+.next-sess-actions { display: flex; gap: 8px; }
+.next-sess-btn {
+  flex: 1; padding: 10px; border-radius: var(--rad-2);
+  background: var(--vital); color: var(--ink); border: none;
+  font-weight: 800; font-size: 13px; cursor: pointer;
+}
+.next-sess-btn.ghost {
+  background: transparent; color: #fff;
+  border: 1px solid rgba(255,255,255,0.24);
+}
+
+.preview-stats {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+  margin-bottom: 24px;
+}
+.preview-stat {
+  padding: 12px;
+  background: var(--surface-2);
+  border-radius: var(--rad-2);
+  text-align: center;
+}
+.preview-stat .n {
+  font-family: var(--font-latin); font-size: 18px; font-weight: 800;
+  color: var(--ink); font-variant-numeric: tabular-nums; letter-spacing: -0.02em;
+}
+.preview-stat .l {
+  font-size: 10.5px; color: var(--muted); font-weight: 700;
+  letter-spacing: 0.04em; text-transform: uppercase; margin-top: 4px;
+}
+
+.line-preview {
+  border: 1px solid var(--rule);
+  border-radius: var(--rad-3);
+  padding: 14px 16px;
+  margin-bottom: 20px;
+}
+.line-preview h5 {
+  font-size: 12px; margin: 0 0 12px;
+  font-weight: 800; letter-spacing: 0.02em;
+  display: flex; align-items: center; gap: 6px;
+  color: var(--ink);
+}
+.line-preview h5 .line-dot {
+  width: 8px; height: 8px; border-radius: 50%; background: #06c755;
+}
+.msg { display: flex; margin-bottom: 8px; }
+.msg .bub {
+  padding: 8px 12px; border-radius: 12px;
+  font-size: 12.5px; line-height: 1.55; max-width: 82%;
+}
+.msg.in .bub { background: var(--surface-2); color: var(--ink-2); border-bottom-left-radius: 4px; }
+.msg.out { justify-content: flex-end; }
+.msg.out .bub { background: var(--ink); color: #fff; border-bottom-right-radius: 4px; }
+.msg .time {
+  font-family: var(--font-mono); font-size: 10px; color: var(--dim);
+  align-self: flex-end; padding: 0 6px;
+}
+
+.preview-actions {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+  margin-top: 12px;
+}
+.p-btn {
+  padding: 10px; border-radius: var(--rad-2);
+  border: 1px solid var(--rule); background: #fff; cursor: pointer;
+  font-size: 12.5px; font-weight: 700; font-family: inherit;
+  color: var(--ink-2);
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  transition: background 120ms, border-color 120ms;
+}
+.p-btn:hover { background: var(--vital-soft); border-color: var(--vital); color: var(--vital-hi); }
+.p-btn.primary { background: var(--ink); color: #fff; border-color: var(--ink); }
+.p-btn.primary:hover { background: var(--vital-hi); }
+
+/* prototype banner (shown at top) */
+.proto-banner {
+  position: fixed; top: 0; left: 0; right: 0;
+  background: linear-gradient(90deg, #0f1729 0%, #1e2740 100%);
+  color: #fff; padding: 6px 20px;
+  font-family: var(--font-mono); font-size: 11px;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  display: flex; align-items: center; justify-content: space-between;
+  z-index: 9999;
+  border-bottom: 1px solid rgba(0,201,106,0.30);
+}
+.proto-banner .badge {
+  padding: 2px 8px; background: var(--vital); color: var(--ink);
+  border-radius: var(--rad-full); font-weight: 800;
+}
+.proto-banner .to-live {
+  color: var(--vital); font-weight: 700; text-decoration: underline;
+}
+.app { margin-top: 34px; height: calc(100vh - 34px); }
+
+/* mono utility */
+.mono { font-family: var(--font-mono); letter-spacing: -0.01em; }
+.tabnum { font-variant-numeric: tabular-nums; }
+
+/* avatar palette */
+.a-blue { background: linear-gradient(135deg, #a4c9ff, #4a7ee0); }
+.a-orange { background: linear-gradient(135deg, #ffb84d, #ff7847); }
+.a-purple { background: linear-gradient(135deg, #d8b4fe, #9333ea); }
+.a-pink { background: linear-gradient(135deg, #fbcfe8, #ec4899); }
+.a-green { background: linear-gradient(135deg, #86efac, #16a34a); }
+.a-yellow { background: linear-gradient(135deg, #fef08a, #eab308); }
+</style>
+</head>
+<body>
+
+<!-- Prototype banner -->
+<div class="proto-banner">
+  <span><span class="badge">PROTOTYPE</span> &nbsp; SkelFit design language を FP Compass に 適用 した 検討用 モックアップ (本番 に は 影響 なし)</span>
+  <a class="to-live" href="/">現在 の 本番 → app.skeleton-inc.jp</a>
+</div>
+
+<div class="app">
+  <!-- Brand -->
+  <div class="brand">
+    <span class="dot"></span>
+    FP Compass
+  </div>
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="crumb">
+      <strong>ホーム</strong>
+      <span class="crumb-sep">/</span>
+      <span>今日 の 顧客</span>
+    </div>
+    <div class="topbar-actions">
+      <input class="search" type="search" placeholder="顧客 / 議事録 / タグ を 検索…">
+      <button class="notif-btn" aria-label="通知">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+      </button>
+      <div class="user-chip">
+        <span class="avatar">TO</span>
+        <span class="name">徳佐 拓朗</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="nav-group">Workspace</div>
+    <a class="nav-item active">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12L12 3l9 9"/><path d="M5 10v10a1 1 0 001 1h4v-6h4v6h4a1 1 0 001-1V10"/></svg>
+      ホーム
+    </a>
+    <a class="nav-item">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></svg>
+      顧客 台帳
+      <span class="badge">32</span>
+    </a>
+    <a class="nav-item">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      ライフ イベント
+    </a>
+    <a class="nav-item">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/></svg>
+      面談 履歴
+    </a>
+
+    <div class="nav-group" style="margin-top:14px;">Line 配信</div>
+    <a class="nav-item">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+      新規 相談
+      <span class="badge pulse">3</span>
+    </a>
+    <a class="nav-item">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+      配信
+    </a>
+    <a class="nav-item">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      ご無沙汰 フォロー
+    </a>
+    <a class="nav-item">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+      タグ 管理
+    </a>
+
+    <div class="nav-group" style="margin-top:14px;">その他</div>
+    <a class="nav-item">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      設定
+    </a>
+
+    <div class="sidebar-foot">
+      <div><span class="plan-name">Pro プラン</span> · 残 12 日</div>
+      <button class="upgrade">プラン を 詳しく 見る</button>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <div class="main-head">
+      <h1>おはようございます、 徳佐 先生</h1>
+      <div class="today mono">2026/07/14 · 火曜日</div>
+    </div>
+
+    <!-- KPI row -->
+    <div class="kpi-row">
+      <div class="kpi">
+        <div class="kpi-label">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>
+          今日 の 面談
+        </div>
+        <div class="kpi-value">4<span class="unit">件</span></div>
+        <div class="kpi-delta up">↑ 3 件 完了 待ち</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          未読 LINE
+        </div>
+        <div class="kpi-value">7<span class="unit">件</span></div>
+        <div class="kpi-delta up">↑ 昨日 比 +2</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          提案 中
+        </div>
+        <div class="kpi-value">12<span class="unit">件</span></div>
+        <div class="kpi-delta flat">→ 変動 なし</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+          今月 継続
+        </div>
+        <div class="kpi-value">28<span class="unit">/32</span></div>
+        <div class="kpi-delta up">87.5 %</div>
+      </div>
+    </div>
+
+    <!-- Today schedule -->
+    <div class="sec-head">
+      <h2>今日 の 面談</h2>
+      <a href="#">全 の カレンダー を 見る →</a>
+    </div>
+    <div class="schedule">
+      <div class="sched-row selected">
+        <div class="sched-time">10:00<span class="end">〜 10:45</span></div>
+        <div class="sched-client">
+          <span class="a-dot a-blue">SS</span>
+          <div>
+            <div>佐々木 涼子 <span style="color:var(--dim);font-weight:500;font-size:12px;">様</span></div>
+            <div class="sub">新規 相談 · 教育資金</div>
+          </div>
+        </div>
+        <div class="sched-topic">Zoom 面談 · 議題: 学資保険</div>
+        <div class="sched-status"><span class="tag live">Live</span></div>
+      </div>
+      <div class="sched-row">
+        <div class="sched-time">13:30<span class="end">〜 14:15</span></div>
+        <div class="sched-client">
+          <span class="a-dot a-orange">TK</span>
+          <div>
+            <div>高橋 健一 <span style="color:var(--dim);font-weight:500;font-size:12px;">様</span></div>
+            <div class="sub">既存 客 · 3回目</div>
+          </div>
+        </div>
+        <div class="sched-topic">対面 面談 · 議題: NISA 見直し</div>
+        <div class="sched-status"><span class="tag confirmed">確定</span></div>
+      </div>
+      <div class="sched-row">
+        <div class="sched-time">15:00<span class="end">〜 15:30</span></div>
+        <div class="sched-client">
+          <span class="a-dot a-purple">MN</span>
+          <div>
+            <div>松本 直美 <span style="color:var(--dim);font-weight:500;font-size:12px;">様</span></div>
+            <div class="sub">既存 客 · 定期</div>
+          </div>
+        </div>
+        <div class="sched-topic">Zoom 面談 · 議題: 老後 資金</div>
+        <div class="sched-status"><span class="tag confirmed">確定</span></div>
+      </div>
+      <div class="sched-row">
+        <div class="sched-time">16:30<span class="end">〜 17:15</span></div>
+        <div class="sched-client">
+          <span class="a-dot a-pink">HA</span>
+          <div>
+            <div>橋本 明日香 <span style="color:var(--dim);font-weight:500;font-size:12px;">様</span></div>
+            <div class="sub">新規 相談 · 保険 見直し</div>
+          </div>
+        </div>
+        <div class="sched-topic">Zoom 面談 · 議題: 医療保険</div>
+        <div class="sched-status"><span class="tag pending">承認 待ち</span></div>
+      </div>
+    </div>
+
+    <!-- Two-col lists -->
+    <div class="list-2col">
+      <div class="list-card">
+        <h3>優先 フォロー (AI 推奨)</h3>
+        <div class="mini-row">
+          <span class="a-dot a-orange">TK</span>
+          <div class="grow">
+            <div class="name">高橋 健一 様</div>
+            <div class="sub">議事録 で 「iDeCo 検討中」 発言 · 3日 経過</div>
+          </div>
+          <div class="val">72h</div>
+        </div>
+        <div class="mini-row">
+          <span class="a-dot a-green">YS</span>
+          <div class="grow">
+            <div class="name">山田 沙織 様</div>
+            <div class="sub">前回 面談 の 資料 未送付</div>
+          </div>
+          <div class="val">48h</div>
+        </div>
+        <div class="mini-row">
+          <span class="a-dot a-yellow">NK</span>
+          <div class="grow">
+            <div class="name">中村 光子 様</div>
+            <div class="sub">お子様 の 誕生日 が 明日</div>
+          </div>
+          <div class="val">24h</div>
+        </div>
+        <div class="mini-row">
+          <span class="a-dot a-blue">SS</span>
+          <div class="grow">
+            <div class="name">佐々木 涼子 様</div>
+            <div class="sub">アンケート 未回答 (送付 3日 経過)</div>
+          </div>
+          <div class="val">72h</div>
+        </div>
+      </div>
+
+      <div class="list-card">
+        <h3>直近 30日 の ライフ イベント</h3>
+        <div class="mini-row">
+          <span class="a-dot a-purple">MN</span>
+          <div class="grow">
+            <div class="name">松本 直美 様</div>
+            <div class="sub">お子様 誕生日 · 07/22</div>
+          </div>
+          <div class="val">8 日 後</div>
+        </div>
+        <div class="mini-row">
+          <span class="a-dot a-pink">HA</span>
+          <div class="grow">
+            <div class="name">橋本 明日香 様</div>
+            <div class="sub">住宅ローン 更新 · 07/28</div>
+          </div>
+          <div class="val">14 日 後</div>
+        </div>
+        <div class="mini-row">
+          <span class="a-dot a-orange">TK</span>
+          <div class="grow">
+            <div class="name">高橋 健一 様</div>
+            <div class="sub">保険 満期 · 08/05</div>
+          </div>
+          <div class="val">22 日 後</div>
+        </div>
+        <div class="mini-row">
+          <span class="a-dot a-blue">SW</span>
+          <div class="grow">
+            <div class="name">鈴木 大輔 様</div>
+            <div class="sub">結婚 記念日 · 08/12</div>
+          </div>
+          <div class="val">29 日 後</div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Preview panel (selected client detail) -->
+  <aside class="preview">
+    <div class="preview-head">
+      <span class="a-lg">SS</span>
+      <div class="info">
+        <div class="n">佐々木 涼子 様</div>
+        <div class="m">36 歳 · 会社員 · 世帯 年収 720 万</div>
+      </div>
+      <button class="close">×</button>
+    </div>
+
+    <div class="next-sess">
+      <div class="next-sess-label">今 進行 中</div>
+      <h4>Zoom 面談 · 教育資金</h4>
+      <div class="when">10:00 開始 · 残 32 分</div>
+      <div class="next-sess-actions">
+        <button class="next-sess-btn">Zoom 開く</button>
+        <button class="next-sess-btn ghost">録音 停止</button>
+      </div>
+    </div>
+
+    <div class="preview-stats">
+      <div class="preview-stat"><div class="n">3</div><div class="l">面談 回数</div></div>
+      <div class="preview-stat"><div class="n">18</div><div class="l">LINE 履歴</div></div>
+      <div class="preview-stat"><div class="n">4</div><div class="l">家族 人数</div></div>
+    </div>
+
+    <div class="line-preview">
+      <h5><span class="line-dot"></span>LINE 最新 の やり取り</h5>
+      <div class="msg in">
+        <div class="bub">おはようございます。 今日 の 面談 楽しみに して います!</div>
+        <div class="time">09:22</div>
+      </div>
+      <div class="msg out">
+        <div class="time">09:28</div>
+        <div class="bub">こちら こそ よろしく お願い します。 資料 は 準備 して あります ので Zoom で お待ち して ます。</div>
+      </div>
+      <div class="msg in">
+        <div class="bub">承知 しました。 10時 に 入り ます!</div>
+        <div class="time">09:31</div>
+      </div>
+      <div class="preview-actions">
+        <button class="p-btn">✨ AI 下書き</button>
+        <button class="p-btn primary">→ LINE で 送信</button>
+      </div>
+    </div>
+
+    <div class="sec-head">
+      <h2 style="font-size:13px;">最終 議事録 サマリー</h2>
+    </div>
+    <div style="font-size:13px;line-height:1.75;color:var(--ink-2);padding: 12px 14px;background:var(--surface-2);border-radius:var(--rad-2);border-left:3px solid var(--vital);">
+      <strong style="color:var(--ink);">2026/07/07</strong> · Zoom 面談<br>
+      教育 資金 の 準備 方針 で 学資保険 と 積立 NISA を 比較 検討。 涼子様 は 「NISA の 変動 が 心配」 と の こと。 次回 は 実 シミュレーション を 提示 予定。
+    </div>
+  </aside>
+</div>
+
+<script>
+// interactive: click sched-row → toggle selected
+document.querySelectorAll('.sched-row').forEach(r => {
+  r.addEventListener('click', () => {
+    document.querySelectorAll('.sched-row').forEach(x => x.classList.remove('selected'));
+    r.classList.add('selected');
+  });
+});
+// nav-item click
+document.querySelectorAll('.nav-item').forEach(n => {
+  n.addEventListener('click', (e) => {
+    e.preventDefault();
+    document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active'));
+    n.classList.add('active');
+  });
+});
+</script>
+
+</body>
+</html>
