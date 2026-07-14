@@ -1,0 +1,2494 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FP Compass · SkelFit — ファイナンシャルプランナー向け 顧客管理 SaaS</title>
+<meta name="description" content="FP事業者向け 顧客管理 SaaS。 議事録 自動化 / LINE 統合 / 家族 タイムライン。 月¥19,800。 Skeleton Inc.">
+<link rel="icon" type="image/svg+xml" href="./favicon.svg">
+<link rel="apple-touch-icon" href="./favicon.svg">
+<meta name="theme-color" content="#0E1116">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://app.skeleton-inc.jp/">
+<meta property="og:title" content="FP Compass — FP事業者特化型 顧客管理 SaaS">
+<meta property="og:description" content="議事録 自動化 / LINE 統合 / 家族 タイムライン。 月¥19,800。 Skeleton Inc.">
+<meta property="og:site_name" content="FP Compass">
+<meta property="og:locale" content="ja_JP">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="FP Compass — FP事業者特化型 顧客管理 SaaS">
+<meta name="twitter:description" content="議事録自動化・LINE統合・AI推奨提案で月¥19,800。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css?v=20260714C-chrome-ext-install-video-launched">
+<link rel="stylesheet" href="styles-v2.css?v=20260714C-chrome-ext-install-video-launched">
+<link rel="stylesheet" href="styles-v3.css?v=20260714C-chrome-ext-install-video-launched">
+<link rel="stylesheet" href="styles-v8-workspace.css?v=20260714C-chrome-ext-install-video-launched">
+<link rel="stylesheet" href="styles-skelfit.css?v=20260715A" id="skelfit-override">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<!-- ★ 2026-06-26 perf: lucide(350KB) と chart.js(201KB) を defer 化 -->
+<!--   どちらも DOMContentLoaded 後ハイドレートで OK (lucide: setInterval scan / chart: tryRender polling) -->
+<script defer src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<script>
+  // Force cache-bust: if URL has no nocache param, redirect with timestamp
+  (function(){
+    var u = new URL(window.location.href);
+    if (!u.searchParams.has('nocache')) {
+      u.searchParams.set('nocache', Date.now().toString(36));
+      window.location.replace(u.toString());
+    }
+  })();
+</script>
+
+<style id="fp-gate-css">
+/* 2026-07-13 v11 elite critic 修正: dark navy → 業務ツール 白 base + 紺 accent (信頼感) */
+#fp-gate-overlay{position:fixed;inset:0;background:#F7F6F2;z-index:2147483647;display:flex;align-items:center;justify-content:center;font-family:'Noto Sans JP',-apple-system,sans-serif;color:#1A2138;padding:20px}
+#fp-gate-overlay::before{content:'';position:absolute;top:0;left:0;width:8px;height:100%;background:#1E3A5F;pointer-events:none}
+#fp-gate-card{max-width:440px;width:100%;background:#fff;border:1px solid #E8E3D8;border-radius:12px;padding:36px 32px;box-shadow:0 4px 18px rgba(26,33,56,0.08)}
+#fp-gate-brand{font-family:'Inter','Manrope',sans-serif;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:#6B7280;margin-bottom:14px;font-weight:700}
+#fp-gate-tabs{display:flex;gap:0;background:#F1F0EA;border-radius:8px;padding:3px;margin-bottom:20px}
+#fp-gate-tabs button{flex:1;padding:11px;border:none;background:transparent;color:#6B7280;border-radius:6px;cursor:pointer;font-family:'Noto Sans JP',sans-serif;font-weight:700;font-size:14px;min-height:44px;transition:background .15s,color .15s}
+#fp-gate-tabs button.on{background:#fff;color:#1A2138;box-shadow:0 1px 3px rgba(26,33,56,0.06)}
+#fp-gate-title{font-family:'Noto Sans JP',sans-serif;font-size:22px;font-weight:800;letter-spacing:-0.01em;margin-bottom:6px;line-height:1.35;color:#1A2138}
+#fp-gate-sub{font-size:13px;color:#6B7280;margin-bottom:22px;line-height:1.7}
+.fp-gate-label{display:block;font-size:12px;font-weight:700;margin:14px 0 6px;letter-spacing:0.02em;color:#3F4868}
+.fp-gate-input{width:100%;background:#fff;border:1.5px solid #E8E3D8;border-radius:8px;padding:12px 14px;font-size:16px;color:#1A2138;font-family:inherit;outline:none;transition:border-color .15s,box-shadow .15s}
+.fp-gate-input::placeholder{color:#94A3B8}
+.fp-gate-input:focus{border-color:#1E3A5F;box-shadow:0 0 0 3px rgba(30,58,95,0.10)}
+#fp-gate-btn{width:100%;background:#1E3A5F;color:#fff;border:none;border-radius:8px;padding:14px;margin-top:18px;font-size:14px;font-weight:800;letter-spacing:0.06em;cursor:pointer;font-family:'Noto Sans JP',sans-serif;transition:background .15s,transform .15s;min-height:44px}
+#fp-gate-btn:hover:not(:disabled){background:#152B48;transform:translateY(-1px)}
+#fp-gate-btn:disabled{opacity:0.55;cursor:not-allowed}
+#fp-gate-msg{margin-top:14px;font-size:13px;min-height:18px;text-align:center;line-height:1.6}
+#fp-gate-msg.ok{color:#047647}
+#fp-gate-msg.err{color:#B91C1C}
+#fp-gate-help{margin-top:24px;padding-top:18px;border-top:1px solid #E8E3D8;font-size:12px;color:#6B7280;line-height:1.7;text-align:center}
+#fp-gate-help a{color:#1E3A5F;text-decoration:none;font-weight:700}
+</style>
+<div id="fp-gate-overlay">
+  <div id="fp-gate-card">
+    <div id="fp-gate-brand">FP COMPASS · Skeleton Inc.</div>
+    <div id="fp-gate-tabs">
+      <button id="fp-tab-login" class="on">ログイン</button>
+      <button id="fp-tab-signup">新規登録</button>
+    </div>
+    <div id="fp-gate-title">FP Compass へ</div>
+    <div id="fp-gate-sub" data-login="登録済みのメアドとパスワードで入ってください。30日間ログイン維持。" data-signup="あなた専用の管理画面が30秒で作れます。">登録済みのメアドとパスワードで入ってください。30日間ログイン維持。</div>
+
+    <div id="fp-row-fpname" style="display:none;">
+      <label class="fp-gate-label" for="fp-fpname-input">FP事務所名</label>
+      <input id="fp-fpname-input" type="text" class="fp-gate-input" placeholder="例: 田中FP事務所" autocomplete="organization">
+    </div>
+    <label class="fp-gate-label" for="fp-email-input">メールアドレス</label>
+    <input id="fp-email-input" type="email" class="fp-gate-input" placeholder="you@example.com" autocomplete="email">
+    <label class="fp-gate-label" for="fp-pw-input">パスワード</label>
+    <input id="fp-pw-input" type="password" class="fp-gate-input" placeholder="パスワード" autocomplete="current-password">
+    <div id="fp-row-pwconfirm" style="display:none;">
+      <label class="fp-gate-label" for="fp-pwconfirm-input">パスワード (確認)</label>
+      <input id="fp-pwconfirm-input" type="password" class="fp-gate-input" placeholder="もう一度入力" autocomplete="new-password">
+    </div>
+    <div id="fp-row-terms" style="display:none;margin-top:14px;padding:12px 14px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:8px;">
+      <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:12px;line-height:1.65;opacity:0.95;">
+        <input id="fp-terms-check" type="checkbox" style="margin-top:3px;width:16px;height:16px;flex-shrink:0;accent-color:#E63946;cursor:pointer;">
+        <span>
+          <a href="./legal/specified-commercial.html" target="_blank" style="color:#FFE9A8;text-decoration:underline;">特商法表記</a>・<a href="./legal/privacy.html" target="_blank" style="color:#FFE9A8;text-decoration:underline;">プライバシーポリシー</a>・<a href="./legal/index.html" target="_blank" style="color:#FFE9A8;text-decoration:underline;">利用規約</a>を確認し、 同意します
+        </span>
+      </label>
+    </div>
+    <div id="fp-row-forgot" style="text-align:right;margin-top:8px;">
+      <a id="fp-forgot-link" href="#" style="font-size:13px;color:#1E3A5F;text-decoration:underline;cursor:pointer;display:inline-block;padding:12px 4px;min-height:44px;line-height:20px;font-weight:700;">パスワードを忘れた方</a>
+    </div>
+
+    <button id="fp-gate-btn">ログイン</button>
+    <!-- ★ オーナーfb: 0円 デモ申込ボタン (URL に ?demo=1 で signup タブが押されたら表示) -->
+    <div id="fp-row-demo" style="display:none;margin-top:14px;padding:14px 16px;background:linear-gradient(135deg,rgba(16,185,129,0.18),rgba(5,150,105,0.14));border:1px solid rgba(16,185,129,0.55);border-radius:10px;text-align:center;">
+      <div style="font-size:11px;font-weight:800;letter-spacing:0.12em;color:#86EFAC;margin-bottom:4px;">✨ DEMO MODE</div>
+      <div style="font-size:13px;color:#fff;line-height:1.55;margin-bottom:10px;">¥0 で全機能を体験できます<br><span style="font-size:11px;opacity:0.85;">カード入力不要 / 後で有料プランへ切替可</span></div>
+      <button id="fp-demo-signup-btn" type="button" style="background:#10B981;color:#fff;border:none;padding:11px 22px;border-radius:7px;font-size:13px;font-weight:900;cursor:pointer;font-family:inherit;letter-spacing:0.06em;width:100%;box-shadow:0 4px 14px rgba(16,185,129,0.4);">¥0 デモ申込 →</button>
+    </div>
+    <div id="fp-gate-msg"></div>
+    <div id="fp-gate-help">サポート → <a href="mailto:support@skeleton-inc.jp">support@skeleton-inc.jp</a></div>
+    <div id="fp-gate-legal" style="margin-top:14px;font-size:12px;color:#6B7280;text-align:center;line-height:1.9;">
+      申込前に必ずご確認ください:<br>
+      <a href="./legal/specified-commercial.html" style="color:#1E3A5F;text-decoration:underline;display:inline-block;padding:10px 8px;min-height:44px;line-height:24px;font-weight:700;">特商法表記</a>
+      <a href="./legal/privacy.html" style="color:#1E3A5F;text-decoration:underline;display:inline-block;padding:10px 8px;min-height:44px;line-height:24px;font-weight:700;">プライバシー</a>
+      <a href="./legal/index.html" style="color:#1E3A5F;text-decoration:underline;display:inline-block;padding:10px 8px;min-height:44px;line-height:24px;font-weight:700;">利用規約</a>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+  import {
+    getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword,
+    onAuthStateChanged, signOut, setPersistence, browserSessionPersistence,
+  } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
+  import {
+    getFirestore, initializeFirestore, doc, getDoc, setDoc, serverTimestamp, collection, getDocs, addDoc,
+    query, where, orderBy, limit,
+  } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+  import {
+    getFunctions, httpsCallable,
+  } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-functions.js";
+
+  // 環境自動切替: hostname が stg.* / staging / skeleton-fp-compass-staging なら staging プロジェクトに接続
+  // 注: 本番 stg URL は `stg.app.skeleton-inc.jp` (staging文字列を含まない) → ^stg\. prefix で拾う
+  const __isStaging = /^stg\.|staging|skeleton-fp-compass-staging/.test(location.hostname);
+  console.log('[fp-compass env]', { hostname: location.hostname, isStaging: __isStaging, projectId: __isStaging ? 'skeleton-fp-compass-staging' : 'skeleton-fp-compass-632026' });
+  const firebaseConfig = __isStaging ? {
+    apiKey: "AIzaSyAV9SEZZ5Tqu8pHUmmjMZ3RhrN_jFgMevs",
+    authDomain: "skeleton-fp-compass-staging.firebaseapp.com",
+    projectId: "skeleton-fp-compass-staging",
+    storageBucket: "skeleton-fp-compass-staging.firebasestorage.app",
+    messagingSenderId: "991197809601",
+    appId: "1:991197809601:web:6f59df4d7c505e16bc3d40",
+  } : {
+    apiKey: "AIzaSyAmVAEe9l9e1Yo_dzzJdbTVU35wWKd2sH4",
+    authDomain: "skeleton-fp-compass-632026.firebaseapp.com",
+    projectId: "skeleton-fp-compass-632026",
+    storageBucket: "skeleton-fp-compass-632026.firebasestorage.app",
+    messagingSenderId: "833972948597",
+    appId: "1:833972948597:web:b7310cc22ce41d9738f23c",
+  };
+  if (__isStaging) console.log("[FP Compass] STAGING 環境で接続中:", firebaseConfig.projectId);
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  // memory: feedback_firestore_webchannel_blocked_longpolling.md
+  let db;
+  try { db = initializeFirestore(app, { experimentalAutoDetectLongPolling: true }); }
+  catch (_) { db = getFirestore(app); }
+  const functions = getFunctions(app, "asia-northeast1");
+  // ★ オーナーfb: 「勝手にログインまでしなくていい」 → タブ閉じると自動でログアウト (session 限定)
+  setPersistence(auth, browserSessionPersistence).catch(console.error);
+  window.__fp = { auth, db, functions, signOut };
+  // ★ 2026-06-26: Cloud Run AI endpoint Bearer auth helper (5箇所 fetch で 使用)
+  window.getFpAuthHeaders = async function (extra) {
+    const u = auth.currentUser;
+    if (!u) return Object.assign({ 'Content-Type': 'application/json' }, extra || {});
+    try {
+      const tok = await u.getIdToken();
+      return Object.assign({ 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok }, extra || {});
+    } catch (_) {
+      return Object.assign({ 'Content-Type': 'application/json' }, extra || {});
+    }
+  };
+
+  // ===== audit log (重要操作の記録) =====
+  async function audit(action, detail) {
+    const u = auth.currentUser;
+    if (!u) return;
+    try {
+      await addDoc(collection(db, "audit_logs"), {
+        uid: u.uid, email: u.email,
+        tenantId: window.__fp?.tenantId || null,
+        action, detail: detail || null,
+        userAgent: navigator.userAgent.slice(0, 200),
+        timestamp: serverTimestamp(),
+      });
+    } catch (e) { console.warn("audit log failed:", e); }
+  }
+  window.__fp.audit = audit;
+
+  // ===== 紹介パラメータ捕捉 (?ref / ?agent) + Stripe Checkout 戻り処理 =====
+  (function(){
+    try {
+      const u = new URL(window.location.href);
+      const ref = u.searchParams.get("ref");
+      const agent = u.searchParams.get("agent");
+      let captured = null;
+      if (ref) {
+        localStorage.setItem("fpc.ref", ref);
+        localStorage.setItem("fpc.ref.ts", String(Date.now()));
+        captured = { type: 'ref', code: ref };
+      }
+      if (agent) {
+        localStorage.setItem("fpc.agent", agent);
+        localStorage.setItem("fpc.agent.ts", String(Date.now()));
+        captured = captured || { type: 'agent', code: agent };
+      }
+      // ★ 紹介コード 捕捉時 視覚的バナー (お客様/オーナーが「効いた」 と分かる)
+      if (captured) {
+        sessionStorage.setItem("fpc.ref.captured", JSON.stringify(captured));
+      }
+      // Stripe Checkout 戻り処理
+      if (u.searchParams.get("signup_success")) {
+        sessionStorage.setItem("fpc.checkout.result", "success");
+        // ★ オーナーfb 2026-06-24: signup 直後 → 初回 onboarding tour を 表示する flag
+        sessionStorage.setItem("fp_new_signup", "1");
+      } else if (u.searchParams.get("signup_canceled")) {
+        sessionStorage.setItem("fpc.checkout.result", "canceled");
+      }
+      const cleanupKeys = ["ref","agent","signup_success","signup_canceled","session_id"];
+      let changed = false;
+      cleanupKeys.forEach(k => { if (u.searchParams.has(k)) { u.searchParams.delete(k); changed = true; } });
+      if (changed) history.replaceState(null, "", u.pathname + (u.search || ""));
+    } catch (e) {}
+  })();
+  // ★ 紹介コード捕捉 視覚バナー (DOM ready) + Firestore で 紹介者名 lookup
+  document.addEventListener('DOMContentLoaded', async () => {
+    try {
+      const raw = sessionStorage.getItem("fpc.ref.captured");
+      const persisted = localStorage.getItem("fpc.ref") || localStorage.getItem("fpc.agent");
+      const code = raw ? (JSON.parse(raw).code || '') : persisted;
+      if (!code) return;
+      if (raw) sessionStorage.removeItem("fpc.ref.captured");
+      const isJustCaptured = !!raw;
+
+      // ★ Cloud Function 経由 で 紹介者名 lookup (認証不要、name field のみ返却)
+      let referrerName = null;
+      try {
+        const fn = httpsCallable(functions, 'getReferrerName');
+        const res = await fn({ code });
+        referrerName = res?.data?.name || null;
+      } catch (e) { console.warn('referrer name lookup failed:', e.message); }
+
+      if (isJustCaptured) {
+        // 大バナー (URL を開いた瞬間 7秒表示)
+        const bigBanner = document.createElement('div');
+        bigBanner.style.cssText = `position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:2147483647;padding:18px 28px;border-radius:14px;font-family:'Hiragino Sans','Manrope',sans-serif;font-weight:700;font-size:14px;letter-spacing:0.02em;box-shadow:0 16px 40px rgba(15,118,110,0.32),0 0 0 5px rgba(16,185,129,0.18);background:linear-gradient(135deg,#10B981 0%,#059669 100%);color:#fff;display:flex;align-items:center;gap:14px;max-width:560px;`;
+        const nameHtml = referrerName
+          ? `<strong style="font-family:'Noto Serif JP',serif;font-size:17px;letter-spacing:0.04em;">${referrerName.replace(/[<>&]/g,'')} 様</strong> からの ご紹介リンク です`
+          : `紹介コード <span style="font-family:'JetBrains Mono',monospace;background:rgba(255,255,255,0.2);padding:2px 8px;border-radius:5px;">${code.replace(/[<>&]/g,'')}</span> を 記録しました`;
+        bigBanner.innerHTML = `<span style="font-size:30px;line-height:1;">🎁</span><div><div>${nameHtml}</div><div style="font-size:11px;opacity:0.9;font-weight:500;margin-top:4px;">このまま 新規登録 すると、 自動で 紹介者割引 が 適用されます</div></div>`;
+        document.body.appendChild(bigBanner);
+        setTimeout(() => { bigBanner.style.transition = 'opacity 0.6s,transform 0.6s'; bigBanner.style.opacity = '0'; bigBanner.style.transform = 'translateX(-50%) translateY(-20px)'; setTimeout(() => bigBanner.remove(), 700); }, 7000);
+      }
+      // 永続バッジ (右下、 常時表示、 referrerName あれば 名前表示)
+      showRefBadge(code, referrerName);
+    } catch (e) { console.warn('ref banner fail:', e); }
+  });
+  function showRefBadge(code, referrerName) {
+    if (document.getElementById('fpc-ref-badge')) return;
+    const b = document.createElement('div');
+    b.id = 'fpc-ref-badge';
+    b.style.cssText = `position:fixed;bottom:14px;right:14px;z-index:2147483647;background:#fff;border:1.5px solid #10B981;color:#065F46;padding:9px 16px;border-radius:99px;font-family:'Hiragino Sans',sans-serif;font-weight:700;font-size:12px;letter-spacing:0.02em;box-shadow:0 6px 20px rgba(16,185,129,0.28);display:flex;align-items:center;gap:8px;cursor:pointer;max-width:300px;`;
+    b.title = '登録時に この紹介者 に 紐付けされます。 クリックで 解除';
+    const safe = String(code||'').replace(/[<>&]/g,'');
+    b.innerHTML = referrerName
+      ? `<span style="color:#10B981;font-size:14px;">✓</span><div><div style="font-size:10.5px;opacity:0.7;font-weight:600;letter-spacing:0.08em;">REFERRER</div><div style="font-family:'Noto Serif JP',serif;font-size:13px;">${referrerName.replace(/[<>&]/g,'')} 様</div></div>`
+      : `<span style="color:#10B981;">✓</span>紹介コード: <span style="font-family:'JetBrains Mono',monospace;background:#ECFDF5;padding:1px 7px;border-radius:4px;font-size:11px;">${safe}</span>`;
+    b.addEventListener('click', () => {
+      if (!confirm('紹介コード を 解除しますか? (紹介者の割引 が 適用されなくなります)')) return;
+      localStorage.removeItem('fpc.ref');
+      localStorage.removeItem('fpc.ref.ts');
+      localStorage.removeItem('fpc.agent');
+      localStorage.removeItem('fpc.agent.ts');
+      b.remove();
+    });
+    document.body.appendChild(b);
+  }
+  // Checkout 結果の表示 (DOM ready 後に banner)
+  document.addEventListener('DOMContentLoaded', () => {
+    const r = sessionStorage.getItem("fpc.checkout.result");
+    if (!r) return;
+    sessionStorage.removeItem("fpc.checkout.result");
+    setTimeout(() => {
+      const banner = document.createElement('div');
+      banner.style.cssText = `position:fixed;top:60px;left:50%;transform:translateX(-50%);z-index:998;padding:14px 22px;border-radius:10px;font-family:'Manrope',sans-serif;font-weight:700;font-size:13.5px;box-shadow:0 12px 32px rgba(0,0,0,0.2);background:${r==='success'?'#10B981':'#F59E0B'};color:#fff;max-width:560px;text-align:center;`;
+      banner.textContent = r === 'success'
+        ? '✓ ご登録ありがとうございます。 ご利用開始です。'
+        : '⚠ 決済がキャンセルされました。 再登録の場合は再度サインアップしてください。';
+      document.body.appendChild(banner);
+      setTimeout(() => banner.style.transition = 'opacity 0.6s', 100);
+      setTimeout(() => banner.style.opacity = '0', 6000);
+      setTimeout(() => banner.remove(), 6800);
+    }, 1500);
+  });
+  function readReferral(){
+    const ref = localStorage.getItem("fpc.ref"), agent = localStorage.getItem("fpc.agent");
+    const NINETY = 90*24*3600*1000, now = Date.now();
+    return {
+      ref: (ref && now - Number(localStorage.getItem("fpc.ref.ts")||0) < NINETY) ? ref : null,
+      agent: (agent && now - Number(localStorage.getItem("fpc.agent.ts")||0) < NINETY) ? agent : null,
+    };
+  }
+  function clearReferral(){ ["fpc.ref","fpc.ref.ts","fpc.agent","fpc.agent.ts"].forEach(k => localStorage.removeItem(k)); }
+
+  const $ = (id) => document.getElementById(id);
+  const msgEl = $("fp-gate-msg");
+  function msg(kind, text) { msgEl.className = kind || ""; msgEl.textContent = text; }
+  function gateRemove() {
+    const el = $("fp-gate-overlay"); if (el) el.remove();
+    const css = $("fp-gate-css"); if (css) css.remove();
+  }
+
+  let mode = "login";
+  function setMode(m) {
+    mode = m;
+    $("fp-tab-login").classList.toggle("on", m === "login");
+    $("fp-tab-signup").classList.toggle("on", m === "signup");
+    $("fp-row-fpname").style.display = m === "signup" ? "" : "none";
+    $("fp-row-pwconfirm").style.display = m === "signup" ? "" : "none";
+    $("fp-row-terms").style.display = m === "signup" ? "" : "none";
+    $("fp-row-forgot").style.display = m === "signup" ? "none" : "";
+    // ★ 本番では ¥0デモボタン 完全非表示 (オーナーfb: 本番=¥19,800一律、デモはクーポンコード DEMOFREE/DEMO9800 で対応)
+    const _hideDemoBtn = location.host === 'app.skeleton-inc.jp';
+    $("fp-row-demo").style.display = (m === "signup" && !_hideDemoBtn) ? "" : "none";
+    $("fp-gate-btn").textContent = m === "signup" ? "アカウント作成" : "ログイン";
+    $("fp-pw-input").setAttribute("autocomplete", m === "signup" ? "new-password" : "current-password");
+    $("fp-gate-sub").textContent = $("fp-gate-sub").dataset[m];
+    msg("", "");
+  }
+  $("fp-tab-login").addEventListener("click", () => setMode("login"));
+  $("fp-tab-signup").addEventListener("click", () => setMode("signup"));
+  // ★ 0円 デモ申込ボタン → フラグ立てて signup フロー (既存の createCheckoutSession 経路) が demo:true を渡す
+  $("fp-demo-signup-btn").addEventListener("click", () => {
+    sessionStorage.setItem('fpDemoSignup', '1');
+    $("fp-gate-btn").click();
+  });
+  // ?demo=1 で来たら自動で signup タブを開く
+  if (new URL(location.href).searchParams.get('demo') === '1') {
+    setMode("signup");
+  }
+
+  // パスワードリセット導線
+  $("fp-forgot-link").addEventListener("click", async (e) => {
+    e.preventDefault();
+    const filled = $("fp-email-input").value.trim();
+    const target = filled || prompt("登録したメアドを入力:") || "";
+    if (!target.includes("@")) {
+      msg("err", "メアドの形式が正しくありません");
+      return;
+    }
+    msg("", "再設定メール送信中…");
+    try {
+      // Resend経由のCloud Function (Firebase デフォルト送信元が Gmail で silent drop される問題を回避)
+      const sendReset = httpsCallable(functions, "sendBrandedPasswordReset");
+      await sendReset({ email: target });
+      msg("ok", `✓ ${target} に再設定メールを送信しました。 メールのリンクから新しいパスワードを設定してください (届かない場合は迷惑メールフォルダもご確認ください)`);
+    } catch (e) {
+      const map = {
+        "functions/invalid-argument": "メアドの形式が正しくありません",
+        "functions/failed-precondition": "メール送信が未設定です。 管理者へお問い合わせください",
+        "functions/internal": "送信失敗、 少し時間をおいて再試行を",
+      };
+      msg("err", map[e.code] || (e.message || e.code));
+    }
+  });
+
+  async function submit() {
+    const email = $("fp-email-input").value.trim();
+    const pw = $("fp-pw-input").value;
+    if (!email.includes("@")) { msg("err", "メアドの形式が正しくありません"); return; }
+    if (!pw) { msg("err", "パスワードを入力してください"); return; }
+
+    const btn = $("fp-gate-btn"); btn.disabled = true; btn.textContent = "認証中…";
+    try {
+      if (mode === "signup") {
+        const fpName = $("fp-fpname-input").value.trim();
+        const pwc = $("fp-pwconfirm-input").value;
+        if (!fpName) throw { code: "_", message: "FP事務所名を入力してください" };
+        if (pw.length < 8) throw { code: "_", message: "パスワードは8文字以上" };
+        if (pw !== pwc) throw { code: "_", message: "パスワード確認が一致しません" };
+        if (!$("fp-terms-check").checked) {
+          throw { code: "_", message: "特商法表記・プライバシーポリシー・利用規約 への同意 が必要です" };
+        }
+        const termsAcceptedAt = new Date().toISOString();
+
+        const cred = await createUserWithEmailAndPassword(auth, email, pw);
+        const slug = email.split("@")[0].toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "").slice(0,24) || "tenant";
+        const tenantId = `${slug}-${cred.user.uid.slice(-6)}`;
+        const { ref, agent } = readReferral();
+        await setDoc(doc(db, "tenants", tenantId), {
+          name: fpName, plan: "starter", status: "active",
+          isDemo: false, isSelfSignup: true,
+          contractStartedAt: serverTimestamp(), createdAt: serverTimestamp(),
+          ownerEmail: email,
+          referralSource: agent ? "agent" : (ref ? "fp_referral" : "direct"),
+          referredByAgent: agent || null,
+          referredByFp: agent ? null : (ref || null),
+          termsAcceptedAt: termsAcceptedAt,
+          billing: {
+            baseMonthly: 19800, discountPerReferral: 3500,
+            currentDiscount: 0, nextMonthAmount: 19800,
+            stripeCustomerId: null, stripeSubscriptionId: null,
+            status: "trial", trialEndsAt: null,
+          },
+        });
+        // 約款同意のaudit_logs記録 (改正民法548条の2 約款合意要件のため法的証跡として永続保存)
+        try {
+          await addDoc(collection(db, "audit_logs"), {
+            uid: cred.user.uid, email,
+            action: "terms_accepted",
+            detail: { tenantId, termsAcceptedAt, userAgent: navigator.userAgent.slice(0,200), referrer: document.referrer || null },
+            timestamp: serverTimestamp(),
+          });
+        } catch (e) { console.warn("audit log failed:", e); }
+        await setDoc(doc(db, "users", cred.user.uid), {
+          email, role: "fp_owner", tenantId, createdAt: serverTimestamp(),
+        });
+        if (agent) {
+          await setDoc(doc(db, "referral_ledger", `agent_${agent}_${tenantId}`), {
+            type: "agent", agentCode: agent,
+            referredTenantId: tenantId, referredTenantName: fpName, referredEmail: email,
+            status: "trial", commissionPerMonth: 7000, signupBonus: 15000,
+            bonusEligibleAt: null, createdAt: serverTimestamp(),
+          });
+        } else if (ref) {
+          await setDoc(doc(db, "referral_ledger", `fp_${ref}_${tenantId}`), {
+            type: "fp_referral", referrerTenantId: ref,
+            referredTenantId: tenantId, referredTenantName: fpName, referredEmail: email,
+            status: "trial", discountPerMonth: 3500, createdAt: serverTimestamp(),
+          });
+        }
+        clearReferral();
+        // ★ サインアップ成功 → Stripe Checkout へリダイレクト
+        msg("ok", "アカウント作成完了。 決済画面に進みます…");
+        try {
+          // ★ デモモード: URL に ?demo=1 or sessionStorage に demoSignup=1 があれば 0円フロー
+          const isDemoSignup = new URL(window.location.href).searchParams.get('demo') === '1'
+                            || sessionStorage.getItem('fpDemoSignup') === '1';
+          const createSession = httpsCallable(functions, "createCheckoutSession");
+          const result = await createSession({ demo: isDemoSignup });
+          sessionStorage.removeItem('fpDemoSignup');
+          if (result.data?.url) {
+            window.location.href = result.data.url;
+            return;
+          } else {
+            throw new Error("Checkout URL が返されませんでした");
+          }
+        } catch (stripeErr) {
+          // Stripe 未設定の場合は通常ログインに進む (オーナー Stripe 開設前など)
+          console.warn("Stripe Checkout 起動失敗 (未設定の可能性):", stripeErr.message);
+          msg("ok", "アカウント作成完了。 (決済機能は本番稼働前のため、 トライアル無制限で利用可能)");
+        }
+      } else {
+        await signInWithEmailAndPassword(auth, email, pw);
+      }
+    } catch (e) {
+      console.error(e);
+      const map = {
+        "auth/invalid-credential": "メアド or パスワードが違います",
+        "auth/user-not-found": "未登録のメアドです",
+        "auth/wrong-password": "パスワードが違います",
+        "auth/email-already-in-use": "既に登録済 → ログインタブから入ってください",
+        "auth/too-many-requests": "試行回数超過、 少し時間をおいて再試行を",
+        "auth/network-request-failed": "ネットワーク接続を確認してください",
+      };
+      if (e.code === "auth/email-already-in-use") {
+        // 既存メアドの場合、ログインタブに 1 クリック切替できるボタンを表示
+        msgEl.className = "err";
+        msgEl.innerHTML = '既に登録済のメアドです。 <button id="fp-switch-login" style="margin-left:8px;background:#fff;color:#0E1116;border:none;padding:6px 14px;border-radius:4px;font-weight:700;font-size:12px;cursor:pointer;">→ ログインタブに切替</button>';
+        $("fp-switch-login").addEventListener("click", () => {
+          setMode("login");
+          // email と pw は保持されたまま、 PW 確認だけ消す
+          $("fp-pwconfirm-input").value = "";
+          msg("", "");
+          $("fp-pw-input").focus();
+        });
+      } else {
+        msg("err", map[e.code] || (e.message || e.code));
+      }
+      btn.disabled = false; btn.textContent = mode === "signup" ? "アカウント作成" : "ログイン";
+    }
+  }
+  $("fp-gate-btn").addEventListener("click", submit);
+  $("fp-pw-input").addEventListener("keydown", e => { if (e.key === "Enter") submit(); });
+  $("fp-pwconfirm-input").addEventListener("keydown", e => { if (e.key === "Enter") submit(); });
+
+  // ===== 認証状態の監視 + Firestore からデータ読み込み =====
+  let signupInProgress = false;
+  async function loadTenantData(tenantId) {
+    // ★ オーナーfb 2026-06-24 (重さ解消):
+    //   旧: 全顧客 × 全 line_messages を 初回ロードで 一括読込 → 顧客100名×msg100通=10,000docs で 重くなる
+    //   新: 初回は 顧客リスト + 最新20件 LINE のみ。 残り (= 顧客モーダル open 時) に lazy load
+    const snap = await getDocs(collection(db, "tenants", tenantId, "customers"));
+    const list = [];
+    for (const d of snap.docs) {
+      const c = { id: d.id, ...d.data() };
+      if (c.pictureUrl && !c.linePictureUrl) c.linePictureUrl = c.pictureUrl;
+      // ★ 初期ロード は 最新20件 + cancellations のみ (キャンセル件数は通常 少ない)
+      const [lineSnap, cxlSnap] = await Promise.all([
+        getDocs(query(
+          collection(db, "tenants", tenantId, "customers", d.id, "line_messages"),
+          orderBy("idx", "desc"), limit(20)
+        )).catch(() => null),
+        getDocs(collection(db, "tenants", tenantId, "customers", d.id, "cancellations")).catch(() => null),
+      ]);
+      const recent20 = lineSnap ? lineSnap.docs.map(x => x.data()).sort((a,b) => (a.idx||0) - (b.idx||0)) : [];
+      c.lineHistory = recent20;
+      c._lineHistoryPartial = recent20.length === 20; // フル取得 が 必要なら lazy load
+      c.cancellations = cxlSnap ? cxlSnap.docs.map(x => x.data()).sort((a,b) => (a.idx||0) - (b.idx||0)) : [];
+      list.push(c);
+    }
+    return list;
+  }
+
+  // ★ 顧客モーダル を 開いた時に フル LINE 履歴 を lazy load (重さ解消)
+  window.fetchFullLineHistory = async function(customerId) {
+    try {
+      const tenantId = window.__fp && window.__fp.tenantId;
+      if (!tenantId) return null;
+      const snap = await getDocs(query(
+        collection(db, "tenants", tenantId, "customers", customerId, "line_messages"),
+        orderBy("idx", "asc")
+      ));
+      return snap.docs.map(x => x.data());
+    } catch (e) { console.warn('fetchFullLineHistory fail', e.message); return null; }
+  };
+  function showBillingGate(status, tenantId) {
+    // 既存ゲートがあれば消す
+    const existing = document.getElementById("fp-billing-gate");
+    if (existing) existing.remove();
+    const label = {
+      "trial": { title: "決済が完了していません", sub: "アカウント作成は完了していますが、 決済手続きが未完了のため 管理画面を ご利用 いただけません。" },
+      "canceled": { title: "サブスクは解約済みです", sub: "再加入手続き で 引き続き ご利用いただけます (データは保持されています)。" },
+      "deleted": { title: "アカウントは削除されました", sub: "30 日間 のデータ保管期限が過ぎたため、 全データを削除済みです。 新規登録から お申込みください。" },
+    }[status || "trial"] || { title: "決済 状態を確認できません", sub: "サブスクの状態が確認できないため アクセスを 制限しています。 support@skeleton-inc.jp までご連絡ください。" };
+    const overlay = document.createElement("div");
+    overlay.id = "fp-billing-gate";
+    overlay.style.cssText = "position:fixed;inset:0;background:linear-gradient(135deg,#0F172A 0%,#1B2658 60%,#3838CC 100%);z-index:2147483647;display:flex;align-items:center;justify-content:center;font-family:'Noto Sans JP','Manrope',sans-serif;color:#fff;padding:24px;";
+    overlay.innerHTML = `
+      <div style="max-width:480px;width:100%;background:rgba(255,255,255,0.06);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.18);border-radius:16px;padding:36px 32px;box-shadow:0 24px 64px rgba(0,0,0,0.4);">
+        <div style="font-family:'Manrope',sans-serif;font-size:10.5px;letter-spacing:0.28em;text-transform:uppercase;color:#FFE9A8;margin-bottom:14px;font-weight:800;">サブスク 未契約</div>
+        <h2 style="font-family:'Noto Sans JP',sans-serif;font-weight:900;font-size:22px;line-height:1.35;margin:0 0 12px;letter-spacing:-0.01em;">${label.title}</h2>
+        <p style="font-size:13.5px;line-height:1.85;opacity:0.92;margin:0 0 24px;">${label.sub}</p>
+        <button id="fp-bgate-pay" style="width:100%;background:#E63946;color:#fff;border:none;border-radius:8px;padding:14px;font-size:14px;font-weight:800;letter-spacing:0.06em;cursor:pointer;font-family:'Manrope',sans-serif;text-transform:uppercase;transition:all 0.15s;">${status === "canceled" ? "サブスク再加入する" : "決済画面に進む"}</button>
+        <button id="fp-bgate-logout" style="width:100%;background:transparent;color:rgba(255,255,255,0.7);border:1px solid rgba(255,255,255,0.22);border-radius:8px;padding:11px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:'Manrope',sans-serif;margin-top:10px;">別のアカウントで ログイン</button>
+        <div id="fp-bgate-msg" style="margin-top:14px;font-size:11.5px;text-align:center;min-height:16px;line-height:1.6;"></div>
+        <div style="margin-top:18px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.12);font-size:11px;opacity:0.65;text-align:center;line-height:1.7;">
+          サポート → <a href="mailto:support@skeleton-inc.jp" style="color:#FFE9A8;text-decoration:none;">support@skeleton-inc.jp</a>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    const payBtn = document.getElementById("fp-bgate-pay");
+    const logoutBtn = document.getElementById("fp-bgate-logout");
+    const msgEl = document.getElementById("fp-bgate-msg");
+    payBtn.addEventListener("click", async () => {
+      payBtn.disabled = true; payBtn.textContent = "決済画面を準備中…";
+      try {
+        const fnName = status === "canceled" ? "resumeSubscription" : "createCheckoutSession";
+        const fn = httpsCallable(functions, fnName);
+        const result = await fn();
+        if (result.data?.url) location.href = result.data.url;
+        else throw new Error("URL 取得失敗");
+      } catch (e) {
+        msgEl.style.color = "#FFB5B5";
+        msgEl.textContent = "失敗: " + (e.message || e.code);
+        payBtn.disabled = false;
+        payBtn.textContent = status === "canceled" ? "サブスク再加入する" : "決済画面に進む";
+      }
+    });
+    logoutBtn.addEventListener("click", async () => {
+      await signOut(auth);
+      location.reload();
+    });
+  }
+
+  async function fetchUserDocWithRetry(uid, maxRetries) {
+    for (let i = 0; i < maxRetries; i++) {
+      const snap = await getDoc(doc(db, "users", uid));
+      if (snap.exists()) return snap;
+      if (i < maxRetries - 1) await new Promise(r => setTimeout(r, 800));
+    }
+    return null;
+  }
+
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) { return; }
+    // ★ テナント分離: uid または tenantId が変わったら localStorage を全消去 (前テナントの顧客/タスク/GASキャッシュ残骸防止)
+    try {
+      const lastUid = localStorage.getItem("fp-last-uid");
+      // uid 切替 OR ロールチェンジ (skeleton_admin → fp_owner) 両方検知
+      if (lastUid && lastUid !== user.uid) {
+        console.log("[fp] uid切替検知 → localStorage 全クリア:", lastUid, "→", user.uid);
+        const wipeKeys = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const k = localStorage.key(i);
+          if (k && /^fp[-:_]/.test(k) && k !== "fp-last-uid") wipeKeys.push(k);
+        }
+        wipeKeys.forEach(k => { try { localStorage.removeItem(k); } catch (_) {} });
+      }
+      localStorage.setItem("fp-last-uid", user.uid);
+    } catch (_) {}
+
+    const uDoc = await fetchUserDocWithRetry(user.uid, 4);
+    if (!uDoc) {
+      msg("err", `${user.email} (uid: ${user.uid.slice(0,10)}…) の users/ doc が見つかりません。サインアップ未完了の可能性。`);
+      console.error("[fp diag] user doc not found", { uid: user.uid, email: user.email });
+      await signOut(auth);
+      return;
+    }
+    const userData = uDoc.data();
+    // ★ 診断: tenantId が無いと後段で permission denied になるので明示エラー
+    if (!userData.tenantId && userData.role !== "skeleton_admin") {
+      msg("err", `アカウントに tenantId が紐付いていません (uid: ${user.uid.slice(0,10)}…)。support@skeleton-inc.jp までご連絡ください。`);
+      console.error("[fp diag] user doc missing tenantId", { uid: user.uid, userData });
+      await signOut(auth);
+      return;
+    }
+    if (userData.role === "skeleton_admin") {
+      // skeleton_admin は demo テナントを見せる (商談デモ用)
+      window.__fp.tenantId = "demo";
+      window.__fp.tenantName = "Skeleton 管理者 — DEMO ビュー";
+    } else {
+      window.__fp.tenantId = userData.tenantId;
+      // ★ オーナーfb: tenantId 切替時に localStorage 全クリア (前tenantの顧客残骸・GASキャッシュ排除)
+      try {
+        const lastTid = localStorage.getItem("fp-last-tenant");
+        if (lastTid && lastTid !== userData.tenantId) {
+          console.log("[fp] tenantId切替検知 → localStorage 全クリア:", lastTid, "→", userData.tenantId);
+          const wipeKeys = [];
+          for (let i = 0; i < localStorage.length; i++) {
+            const k = localStorage.key(i);
+            if (k && /^fp[-:_]/.test(k) && k !== "fp-last-uid" && k !== "fp-last-tenant") wipeKeys.push(k);
+          }
+          wipeKeys.forEach(k => { try { localStorage.removeItem(k); } catch (_) {} });
+        }
+        localStorage.setItem("fp-last-tenant", userData.tenantId);
+      } catch (_) {}
+      const tDoc = await getDoc(doc(db, "tenants", userData.tenantId));
+      window.__fp.tenantName = tDoc.exists() ? (tDoc.data().name || userData.tenantId) : userData.tenantId;
+      // ★ 決済 ゲート: billing.status='active' 以外は 管理画面 アクセス禁止 (決済バイパス防止)
+      const billingStatus = tDoc.exists() ? (tDoc.data().billing?.status || null) : null;
+      if (billingStatus !== "active" && billingStatus !== "past_due") {
+        showBillingGate(billingStatus, userData.tenantId);
+        return;
+      }
+    }
+    window.__fp.userEmail = user.email;
+    msg("ok", `${window.__fp.tenantName} のデータを読み込み中…`);
+
+    try {
+      console.log("[fp diag] loadTenantData start", { tenantId: window.__fp.tenantId, uid: user.uid });
+      const clients = await loadTenantData(window.__fp.tenantId);
+      console.log("[fp diag] loadTenantData success", { count: clients.length });
+      window.DUMMY_CLIENTS = clients;
+      window.DUMMY_CLIENTS_VERSION = `firestore-${window.__fp.tenantId}`;
+      window.UPCOMING_BOOKINGS = window.UPCOMING_BOOKINGS || [];
+      window.HOT_LEADS = window.HOT_LEADS || [];
+      window.LEAD_FUNNEL = window.LEAD_FUNNEL || { added:0, surveyed:0, booked:0, completed:0 };
+      window.LEAD_SCENARIO = window.LEAD_SCENARIO || {};
+      window.LEAD_FORM = window.LEAD_FORM || {};
+      gateRemove();
+      // audit log
+      audit("login", { tenantId: window.__fp.tenantId, clientCount: clients.length });
+      // 既存 CRM 初期化フックがあれば呼ぶ
+      if (typeof window.fpReadyAfterAuth === "function") window.fpReadyAfterAuth();
+      // top bar に user 情報表示 + ログアウトボタン挿入
+      setTimeout(() => attachUserBar(), 200);
+      // sidebar の user-name / avatar を Firestore tenant.name で更新
+      try {
+        const tn = window.__fp.tenantName || (t.name || 'FP事業者');
+        const nameEl = document.getElementById('sidebar-user-name');
+        const avEl = document.getElementById('sidebar-avatar');
+        if (nameEl) nameEl.textContent = tn;
+        if (avEl) {
+          // 名前から先頭2文字 (英数or漢字) を avatar に
+          const initials = tn.replace(/\s+/g,'').slice(0,2);
+          avEl.textContent = initials;
+        }
+      } catch (_) {}
+    } catch (e) {
+      console.error("[fp diag] loadTenantData failed:", e);
+      // 詳細なヒントを返す
+      let hint = e.message;
+      if ((e.message || '').includes('permissions')) {
+        hint = `Firestore 読み込み権限がありません。\nテナント ID: ${window.__fp.tenantId}\nUID: ${user.uid.slice(0,10)}…\n\nユーザー doc と tenants/${window.__fp.tenantId} の整合性が崩れている可能性。support@skeleton-inc.jp 宛に この画面のスクショ + コンソール (F12) のログを送ってください。`;
+      }
+      msg("err", "データ取得失敗: " + hint);
+    }
+  });
+
+  function attachUserBar() {
+    if (document.getElementById("fp-user-bar")) return;
+    const bar = document.createElement("div");
+    bar.id = "fp-user-bar";
+    bar.style.cssText = "position:fixed;top:12px;right:16px;z-index:999;background:rgba(15,23,42,0.92);color:#fff;padding:7px 14px;border-radius:999px;font-family:'Manrope',sans-serif;font-size:12px;display:flex;align-items:center;gap:10px;backdrop-filter:blur(8px);box-shadow:0 8px 24px rgba(0,0,0,0.2);";
+    bar.innerHTML = `
+      <span style="font-weight:600;">${window.__fp.userEmail || ""}</span>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:0.08em;color:#FFE9A8;">${(window.__fp.tenantId || "").toUpperCase()}</span>
+      <a href="./referral.html" style="background:rgba(255,233,168,0.18);color:#FFE9A8;padding:4px 10px;border-radius:6px;text-decoration:none;font-weight:700;font-size:11px;">🎁 紹介</a>
+      <a href="./account.html" style="background:rgba(255,255,255,0.1);color:#fff;padding:4px 10px;border-radius:6px;text-decoration:none;font-weight:700;font-size:11px;">⚙ アカウント</a>
+      <button id="fp-logout-btn" style="background:transparent;color:#FFB5B5;border:1px solid rgba(255,181,181,0.3);padding:4px 10px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:11px;font-weight:600;">ログアウト</button>
+    `;
+    document.body.appendChild(bar);
+    document.getElementById("fp-logout-btn").addEventListener("click", async () => {
+      await signOut(auth);
+      location.reload();
+    });
+  }
+</script>
+
+</head>
+<body data-prod="1">
+
+<!-- ★ 2026-06-22 roundP: モバイル トップバー (固定 56px) -->
+<header id="mobile-topbar" class="m-only">
+  <button id="mobile-hamburger" aria-label="メニュー" type="button">
+    <span class="mh-bar"></span><span class="mh-bar"></span><span class="mh-bar"></span>
+  </button>
+  <div id="mobile-title-wrap">
+    <div class="m-eyebrow">FP COMPASS</div>
+    <div id="mobile-current-title">ホーム</div>
+  </div>
+  <button id="mobile-user-btn" aria-label="アカウント" type="button">
+    <span id="mobile-user-avatar">FP</span>
+  </button>
+</header>
+
+<!-- ★ 2026-06-22 roundP: モバイル ボトムナビ (固定 5タブ) -->
+<nav id="mobile-bottomnav" class="m-only" aria-label="メイン">
+  <button class="m-tab" data-mtab="dashboard" data-target-tab="dashboard">
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9 12 2 21 9v11a2 2 0 0 1-2 2h-4v-7H10v7H5a2 2 0 0 1-2-2z"/></svg>
+    <span>ホーム</span>
+  </button>
+  <button class="m-tab" data-mtab="clients" data-target-tab="clients">
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    <span>顧客</span>
+  </button>
+  <button class="m-tab" data-mtab="meetingHistory" data-target-tab="meetingHistory">
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+    <span>履歴</span>
+  </button>
+  <button class="m-tab" data-mtab="leadHub" data-target-tab="leadHub">
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+    <span>相談</span>
+  </button>
+  <button class="m-tab" data-mtab="more" id="mtab-more">
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+    <span>もっと</span>
+  </button>
+</nav>
+
+<div id="mobile-backdrop" aria-hidden="true"></div>
+
+<!-- ★ 2026-06-22 roundR: モバイル 顧客タブ FAB「+ 新規顧客」 -->
+<button id="mobile-fab-new-client" aria-label="新規顧客を登録" type="button">+</button>
+
+<div class="shell">
+
+  <!-- ===== Sidebar (dark) ===== -->
+  <aside class="sidebar">
+    <div class="sidebar-glow"></div>
+
+    <div class="sidebar-brand">
+      <span class="brand-logo">
+        <span class="brand-logo-inner">FP</span>
+        <span class="brand-logo-glow"></span>
+      </span>
+      <div class="brand-text">
+        <div class="brand-name">FP Compass <span class="brand-badge">Pro</span></div>
+        <div class="brand-sub">Skeleton Inc.</div>
+      </div>
+    </div>
+
+    <div class="sidebar-search">
+      <i data-lucide="search"></i>
+      <input type="search" placeholder="顧客検索" id="sidebar-search-input">
+      <span class="kbd">⌘K</span>
+    </div>
+
+    <!-- ★ サイドバー直下: 急遽 面談開始 (Zoom即発行 or 対面録音 を選べる) -->
+    <button id="sidebar-quick-inperson" class="sidebar-quick-rec"
+      title="急にお客様から相談入った時 → Zoom 即発行 or 対面録音 を 選んで 即開始">
+      <span class="sidebar-quick-rec-dot"></span>
+      <span class="sidebar-quick-rec-label">急遽 面談スタート</span>
+      <span class="sidebar-quick-rec-pill">予約不要</span>
+    </button>
+
+    <!-- 2026-07-10 impeccable 再設計: 3-zone flex (header / scroll / foot) → foot が どんな viewport でも 切れない -->
+    <div class="sidebar-scroll">
+    <div class="sidebar-group">
+      <div class="sidebar-label">
+        <i data-lucide="layout"></i><span>ワークスペース</span>
+      </div>
+      <nav class="sidebar-nav tabs">
+        <div class="tab active" data-tab="dashboard">
+          <i data-lucide="home"></i>
+          <span>ホーム</span>
+        </div>
+        <div class="tab" data-tab="clients">
+          <i data-lucide="users"></i>
+          <span>顧客台帳</span>
+          <span class="nav-count" id="nav-count-clients"></span>
+        </div>
+        <div class="tab" data-tab="timeline">
+          <i data-lucide="git-commit-horizontal"></i>
+          <span>ライフイベント</span>
+        </div>
+        <div class="tab" data-tab="meetingHistory">
+          <i data-lucide="video"></i>
+          <span>面談履歴</span>
+          <span class="nav-count" id="nav-count-history"></span>
+        </div>
+      </nav>
+    </div>
+
+    <div class="sidebar-group">
+      <div class="sidebar-label">
+        <i data-lucide="zap"></i><span>LINE オートメーション</span>
+      </div>
+      <nav class="sidebar-nav tabs">
+        <div class="tab tab-line" data-tab="leadHub">
+          <i data-lucide="user-plus"></i>
+          <span>新規相談</span>
+          <span class="nav-count nav-count-alert" id="nav-count-lead"></span>
+        </div>
+
+        <div class="tab tab-line" data-tab="distributionHub">
+          <i data-lucide="send"></i>
+          <span>配信</span>
+        </div>
+        <div class="tab tab-line" data-tab="dormantFollowup">
+          <i data-lucide="alarm-clock"></i>
+          <span>ご無沙汰フォロー</span>
+          <span class="nav-count nav-count-alert" id="nav-count-dormant"></span>
+        </div>
+        <div class="tab tab-line" data-tab="tagsHub">
+          <svg width="18" height="18" viewBox="0 0 32 32" fill="none" style="flex-shrink:0;">
+            <path d="M15 9 L24 9 C25.1 9 26 9.9 26 11 L26 19 C26 19.5 25.8 20 25.4 20.4 L18.4 27.4 C17.6 28.2 16.3 28.2 15.5 27.4 L8.5 20.4 C7.7 19.6 7.7 18.3 8.5 17.5 L15 11 Z" fill="#E58FAE"/>
+            <circle cx="20.5" cy="14.5" r="2" fill="#14213D"/>
+            <path d="M11 5 L20 5 C21.1 5 22 5.9 22 7 L22 15 C22 15.5 21.8 16 21.4 16.4 L14.4 23.4 C13.6 24.2 12.3 24.2 11.5 23.4 L4.5 16.4 C3.7 15.6 3.7 14.3 4.5 13.5 L11 7 Z" fill="#fff" stroke="#14213D" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+            <circle cx="16.5" cy="10.5" r="1.6" fill="#14213D"/>
+          </svg>
+          <span>タグ管理</span>
+          <span class="nav-count" id="nav-count-tags"></span>
+        </div>
+        <div class="tab tab-line" data-tab="birthdayTab">
+          <i data-lucide="cake"></i>
+          <span>誕生日</span>
+          <span class="nav-count" id="nav-count-bday"></span>
+        </div>
+        <div class="tab tab-line" data-tab="calendarTab">
+          <i data-lucide="calendar-days"></i>
+          <span>年末配布</span>
+          <span class="nav-count nav-count-alert" id="nav-count-cal"></span>
+        </div>
+        <div class="tab tab-line" data-tab="settingsHub">
+          <i data-lucide="settings"></i>
+          <span>設定</span>
+        </div>
+      </nav>
+    </div>
+    </div><!-- /sidebar-scroll -->
+
+    <div class="sidebar-foot">
+      <button class="real-mode-toggle" id="real-mode-btn" title="実モード ⇄ 本番モード">
+        <i data-lucide="users-round"></i>
+        <span class="real-mode-label" id="real-mode-label">本番モード (30名)</span>
+        <span class="real-mode-switch"><span class="real-mode-switch-knob"></span></span>
+      </button>
+      <button class="upgrade-mini" id="upgrade-mini-btn" title="Pro Plan - 残り8日 (クリックで詳細)">
+        <span class="upgrade-mini-icon"><i data-lucide="sparkles"></i></span>
+        <span class="upgrade-mini-text">
+          <span class="upgrade-mini-title">Pro 残り 8 日</span>
+          <span class="upgrade-mini-bar"><span class="upgrade-mini-bar-fill" style="width:42%"></span></span>
+        </span>
+        <i data-lucide="chevron-right" class="upgrade-mini-chev"></i>
+      </button>
+      <!-- 2026-07-11 v5 owner FB: 「FP事業者 / Owner」 の user カード は 不要 → コンパちゃん に 差し替え (左下 固定 領域) -->
+      <button id="sidebar-kompa-trigger" title="コンパちゃん に 業務相談 する" style="width:100%;background:linear-gradient(135deg,#F0FDFA 0%,#ECFEFF 100%);border:1.5px solid #14B8A6;padding:10px 12px;border-radius:12px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:10px;transition:transform .12s,box-shadow .15s;box-shadow:0 2px 8px rgba(20,184,166,0.16);">
+        <span style="position:relative;flex-shrink:0;width:42px;height:42px;border-radius:50%;background:radial-gradient(ellipse at 50% 60%,#fff 0%,#ECFEFF 70%,#CFFAFE 100%);border:2px solid #14B8A6;overflow:hidden;display:flex;align-items:center;justify-content:center;">
+          <img src="/img/mebuki-kun-400.jpg" alt="" style="width:36px;height:36px;object-fit:contain;border-radius:50%;">
+        </span>
+        <span style="flex:1;text-align:left;min-width:0;">
+          <span style="display:block;font-family:'Noto Sans JP',sans-serif;font-weight:800;font-size:13px;color:#0F172A;letter-spacing:0.02em;">コンパちゃん</span>
+          <span style="display:block;font-size:10.5px;font-weight:600;color:#0F766E;letter-spacing:0.04em;margin-top:2px;">業務のこと 何でも 聞いて ♪</span>
+        </span>
+      </button>
+      <!-- 旧 user カード: hidden で name state は Firestore 更新用 に 残す -->
+      <div class="sidebar-user" style="display:none;">
+        <div class="user-name" id="sidebar-user-name">FP事業者</div>
+        <div class="user-avatar" id="sidebar-avatar">—</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- 2026-07-10 design-reviewer Critical#2: sidebar-scroll shadow mask 直接 inline (app.js に依存しない) -->
+  <script>
+  (function () {
+    const bindMask = () => {
+      const sc = document.querySelector('.sidebar-scroll');
+      if (!sc) return false;
+      const updateMask = () => {
+        try {
+          const hasMore = sc.scrollTop < sc.scrollHeight - sc.clientHeight - 4;
+          sc.classList.toggle('has-more', hasMore);
+        } catch (_) {}
+      };
+      if (!sc._maskBound) {
+        sc._maskBound = true;
+        sc.addEventListener('scroll', updateMask, { passive: true });
+        window.addEventListener('resize', updateMask);
+        if (typeof ResizeObserver !== 'undefined') {
+          try { new ResizeObserver(updateMask).observe(sc); } catch (_) {}
+        }
+      }
+      updateMask();
+      return true;
+    };
+    // 初回 + 遅延 + 監視
+    bindMask();
+    [100, 500, 1500, 3000, 6000, 10000].forEach(ms => setTimeout(bindMask, ms));
+    try {
+      const obs = new MutationObserver(() => bindMask());
+      obs.observe(document.documentElement, { childList: true, subtree: true, attributes: true });
+      setTimeout(() => { try { obs.disconnect(); } catch (_) {} }, 30000);
+    } catch (_) {}
+  })();
+  </script>
+
+  <!-- ===== Main ===== -->
+  <div class="main">
+
+    <!-- Top bar -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <div class="breadcrumb">
+          <span class="crumb">FP Compass</span>
+          <i data-lucide="chevron-right"></i>
+          <span class="crumb crumb-current" id="current-crumb">ホーム</span>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <span class="app-meta" id="app-meta">—</span>
+        <button class="icon-btn" title="通知"><i data-lucide="bell"></i></button>
+        <button class="icon-btn" title="ヘルプ"><i data-lucide="help-circle"></i></button>
+      </div>
+    </header>
+
+    <!-- Workspace -->
+    <main class="workspace">
+      <div class="container">
+
+        <!-- ===== ダッシュボード ===== -->
+        <section class="view active" data-view="dashboard">
+
+          <!-- ===== MEGA HERO ===== -->
+          <div class="mega-hero">
+            <div class="mega-hero-bg"></div>
+            <div class="mega-hero-grid">
+
+              <!-- Left: hero copy -->
+              <div class="mega-hero-left">
+                <div class="mega-hero-date" id="mega-hero-date">2026年5月27日 水曜日</div>
+                <h1 class="mega-hero-title">
+                  おはようございます、<span class="mega-hero-name" id="mega-hero-name">先生</span>。<br>
+                  <span class="mega-hero-highlight" id="mega-hero-num">0</span> 人、今日 話す べき 方 が います。
+                </h1>
+                <p class="mega-hero-lead" id="mega-hero-lead">ライフイベント × 接触頻度 × 未返信 を 合算 した 順。</p>
+
+                <div class="mega-hero-stats">
+                  <div class="mega-hero-stat">
+                    <span class="mega-hero-stat-label">今週フォロー</span>
+                    <span class="mega-hero-stat-value" id="mh-stat-week">—</span>
+                  </div>
+                  <div class="mega-hero-stat">
+                    <span class="mega-hero-stat-label">30日以内のイベント</span>
+                    <span class="mega-hero-stat-value" id="mh-stat-events">—</span>
+                  </div>
+                  <div class="mega-hero-stat">
+                    <span class="mega-hero-stat-label">未読LINE</span>
+                    <span class="mega-hero-stat-value">3</span>
+                  </div>
+                </div>
+
+                <div class="mega-hero-actions">
+                  <button class="primary primary-lg" id="hero-cta-new">
+                    <i data-lucide="user-plus"></i><span>新規顧客を登録</span>
+                  </button>
+                  <button class="ghost-btn ghost-btn-lg" id="hero-cta-broadcast">
+                    <i data-lucide="send"></i><span>一斉配信</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Right: featured next client card (hidden — Senior Cards 下にあるので重複削除) -->
+              <div class="mega-hero-right" style="display:none;">
+                <div class="featured-card" id="featured-card"></div>
+              </div>
+
+            </div>
+          </div>
+
+          <div id="notice-area"></div>
+
+          <!-- ===== Workflow guide — FPの1日の業務フロー ===== -->
+          <div class="section-title">今日 の 進め方</div>
+          <div class="section-sub">朝 → 面談前 → 面談中 → 面談後。各ステップで「次にやること」が明確になります。</div>
+          <div class="workflow-grid">
+            <div class="workflow-step workflow-step-active">
+              <div class="workflow-step-num">1</div>
+              <div class="workflow-step-icon"><i data-lucide="sun"></i></div>
+              <div class="workflow-step-title">朝のブリーフ</div>
+              <div class="workflow-step-desc">上の Hero で「今日話す客」を確認。優先順に1人ずつ。</div>
+              <div class="workflow-step-status">いま ここ</div>
+            </div>
+            <div class="workflow-step">
+              <div class="workflow-step-num">2</div>
+              <div class="workflow-step-icon"><i data-lucide="search"></i></div>
+              <div class="workflow-step-title">面談前リサーチ</div>
+              <div class="workflow-step-desc">該当客の詳細を開く → 家族構成・タイムライン・過去提案を10秒で再確認。</div>
+            </div>
+            <div class="workflow-step">
+              <div class="workflow-step-num">3</div>
+              <div class="workflow-step-icon"><i data-lucide="mic"></i></div>
+              <div class="workflow-step-title">面談・録画</div>
+              <div class="workflow-step-desc">Zoom面談 → 録画ボタンで自動収録 → Drive に保存。</div>
+            </div>
+            <div class="workflow-step">
+              <div class="workflow-step-num">4</div>
+              <div class="workflow-step-icon"><i data-lucide="file-text"></i></div>
+              <div class="workflow-step-title">文字起こし → タスク化</div>
+              <div class="workflow-step-desc">AI議事録ボタンで自動文字起こし。提案・調査・連絡タスクを抽出して保存。</div>
+            </div>
+            <div class="workflow-step">
+              <div class="workflow-step-num">5</div>
+              <div class="workflow-step-icon"><i data-lucide="message-square-text"></i></div>
+              <div class="workflow-step-title">フォローアップ</div>
+              <div class="workflow-step-desc">AI返信下書きで LINE 文面を作って送信。次回面談を予約。</div>
+            </div>
+          </div>
+
+          <!-- ===== 🔥 LINE 要返信 (最優先) ===== -->
+          <div id="home-unread-area"></div>
+
+          <!-- ===== ★メイン: 今日やる事 (Senior Cards) ===== -->
+          <div class="section-header">
+            <div>
+              <div class="section-eyebrow-pill">本日</div>
+              <h2 class="section-big-title">今日 話すべき方</h2>
+              <p class="section-big-sub">上から順番に対応すればOK。各カードの「文面を作って送る」を押すだけ。</p>
+            </div>
+            <div class="section-header-aside">
+              <span class="section-counter" id="senior-counter">—</span>
+            </div>
+          </div>
+          <div class="action-list" id="action-list"></div>
+
+          <!-- ===== 概況 (折り畳み可) ===== -->
+          <details class="home-collapsible" open>
+            <summary class="home-collapsible-summary">
+              <i data-lucide="bar-chart-2"></i>
+              <span>今月の数字</span>
+              <i data-lucide="chevron-down" class="home-collapsible-chev"></i>
+            </summary>
+            <div class="home-collapsible-body">
+              <div class="kpi-row" id="kpi-area"></div>
+            </div>
+          </details>
+
+          <!-- ===== 客層・資産分析 (折り畳み) ===== -->
+          <details class="home-collapsible">
+            <summary class="home-collapsible-summary">
+              <i data-lucide="pie-chart"></i>
+              <span>客層・資産分析</span>
+              <i data-lucide="chevron-down" class="home-collapsible-chev"></i>
+            </summary>
+            <div class="home-collapsible-body">
+              <div class="chart-grid">
+                <div class="chart-card">
+                  <div class="chart-card-head">
+                    <i data-lucide="pie-chart"></i>
+                    <div>
+                      <div class="chart-card-title">顧客ステータス構成</div>
+                      <div class="chart-card-sub">重点 / 管理中 / 新規 / 休眠</div>
+                    </div>
+                  </div>
+                  <div class="chart-canvas-wrap"><canvas id="chart-status"></canvas></div>
+                </div>
+                <div class="chart-card">
+                  <div class="chart-card-head">
+                    <i data-lucide="bar-chart-3"></i>
+                    <div>
+                      <div class="chart-card-title">年代別 管理資産</div>
+                      <div class="chart-card-sub">AUM 合計 (万円)</div>
+                    </div>
+                  </div>
+                  <div class="chart-canvas-wrap"><canvas id="chart-aum"></canvas></div>
+                </div>
+                <div class="chart-card chart-card-wide">
+                  <div class="chart-card-head">
+                    <i data-lucide="line-chart"></i>
+                    <div>
+                      <div class="chart-card-title">向こう12ヶ月のライフイベント</div>
+                      <div class="chart-card-sub">教育 / 退職・年金 / 住宅 / 相続 ほか</div>
+                    </div>
+                  </div>
+                  <div class="chart-canvas-wrap chart-canvas-wide"><canvas id="chart-events"></canvas></div>
+                </div>
+              </div>
+            </div>
+          </details>
+
+          <div class="footnote">
+            ※ 優先度は「ライフイベントの近さ × 重要度 × 最終接触からの経過」を組み合わせて自動算出しています。
+          </div>
+        </section>
+
+        <!-- ===== 顧客一覧 ===== -->
+        <section class="view" data-view="clients">
+          <div class="page-head">
+            <div>
+              <span class="hero-eyebrow">顧客 台帳</span>
+              <h1 class="hero-title">顧客台帳</h1>
+              <p class="hero-sub">最終接触日が古い順。タップで詳細モーダル（家族構成・30年タイムライン・提案履歴）。</p>
+            </div>
+            <div class="hero-actions" style="display:flex;gap:8px;align-items:center;">
+              <button id="export-csv-btn" data-hint="現在の顧客台帳をCSVで書き出し (Excelで開ける)" style="background:#fff;border:1px solid #C19A3A;color:#8B6F26;padding:9px 14px;border-radius:8px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:0.02em;display:inline-flex;align-items:center;gap:6px;">
+                <i data-lucide="download" style="width:14px;height:14px;"></i><span>CSV</span>
+              </button>
+              <button class="primary" id="add-client-btn" data-hint="新しい顧客をCRMに追加。家族の生年月日も入れるとライフイベントが30年自動展開">
+                <i data-lucide="plus"></i><span>新規顧客を登録</span>
+              </button>
+            </div>
+          </div>
+          <!-- ★ 2026-06-22 roundI: タグセグメントfilter (オーナーが作ったタグで絞り込み) -->
+          <div id="client-tag-segment-bar" style="display:none;align-items:center;gap:8px;flex-wrap:wrap;padding:12px 14px;background:#FBF5E3;border:1px solid #E8D9A8;border-radius:10px;margin-bottom:12px;">
+            <span style="font-size:11px;font-weight:800;color:#9A5A18;letter-spacing:0.12em;margin-right:4px;">🏷 タグで絞込</span>
+            <div id="client-tag-chips" style="display:flex;gap:6px;flex-wrap:wrap;flex:1;"></div>
+            <button id="client-tag-clear" class="btn-mini-action" style="display:none;font-size:10.5px;">クリア</button>
+          </div>
+          <div class="client-toolbar">
+            <input type="search" id="client-search" placeholder="名前 / 職業 / かな で検索">
+            <select id="status-filter">
+              <option value="all">全ステータス</option>
+              <option value="important">重点</option>
+              <option value="active">管理中</option>
+              <option value="new">新規</option>
+              <option value="dormant">休眠</option>
+            </select>
+            <select id="sort-by">
+              <option value="contact-asc">最終接触 — 新しい順 (直近接触)</option>
+              <option value="contact-desc">最終接触 — 古い順 (要フォロー)</option>
+              <option value="aum-desc">管理資産 — 多い順</option>
+              <option value="aum-asc">管理資産 — 少ない順</option>
+              <option value="age-desc">年齢 — 高い順</option>
+              <option value="age-asc">年齢 — 低い順</option>
+              <option value="name-asc">名前 — あいうえお順</option>
+              <option value="status">状態 — 重点優先</option>
+              <option value="event-near">直近ライフイベント 順</option>
+            </select>
+            <span class="count" id="client-count">—</span>
+            <button id="client-col-config" title="列の表示/非表示" style="margin-left:auto;background:#fff;border:1.5px solid #e3e7ee;color:#1B3A5C;padding:6px 12px;border-radius:7px;font-size:12.5px;font-weight:600;cursor:pointer;letter-spacing:0.04em;display:inline-flex;align-items:center;gap:4px;">⚙ 列</button>
+          </div>
+          <table class="clients">
+            <thead id="client-thead">
+              <tr>
+                <th>顧客</th>
+                <th>年齢</th>
+                <th class="hide-mobile col-occ">職業</th>
+                <th class="col-family">家族</th>
+                <th class="col-urgency" style="display:none;">緊急度</th>
+                <th class="col-worry" style="display:none;">一番の悩み</th>
+                <th class="col-goal" style="display:none;">5-10年後の希望</th>
+                <th class="col-products" style="display:none;">保有商品</th>
+                <th>状態</th>
+                <th class="col-aum" style="text-align:right;">管理資産</th>
+                <th>最終接触</th>
+              </tr>
+            </thead>
+            <tbody id="client-tbody"></tbody>
+          </table>
+        </section>
+
+        <!-- ===== ライフイベント・マップ ===== -->
+        <section class="view" data-view="timeline">
+          <div class="page-head">
+            <div>
+              <span class="hero-eyebrow">LIFE EVENTS</span>
+              <h1 class="hero-title">ライフイベント・マップ</h1>
+              <p class="hero-sub">家族構成と生年月日から、進学・退職・年金・後期高齢・住宅ローン完済を時系列に自動展開。</p>
+            </div>
+          </div>
+          <div id="timeline-area"></div>
+          <div class="footnote">
+            ※ 顧客の家族構成と生年月日から、進学・退職・年金・後期高齢・住宅ローン完済を自動展開。カードクリックで顧客詳細を開きます。
+          </div>
+        </section>
+
+        <!-- ===== 面談履歴 (Past Meetings) ===== -->
+        <section class="view" data-view="meetingHistory">
+          <div id="mh-root"></div>
+        </section>
+
+        <!-- ===== KPI / タスク管理 ===== -->
+        <section class="view" data-view="kpi">
+          <div class="page-head">
+            <div>
+              <span class="hero-eyebrow">今週 の 数字</span>
+              <h1 class="hero-title">業務 KPI とタスク</h1>
+              <p class="hero-sub">月次の主要 KPI と、それを達成するための具体的アクション。タスクから顧客 1 人ずつアプローチできます。</p>
+            </div>
+          </div>
+          <div id="kpi-board"></div>
+        </section>
+
+        <!-- ===== 新規相談 ===== -->
+        <section class="view" data-view="leadHub">
+          <div data-line-view="leadHub"></div>
+        </section>
+
+        <!-- ===== LINE配信 ===== -->
+        <section class="view" data-view="distributionHub">
+          <div data-line-view="distributionHub"></div>
+        </section>
+
+        <!-- ===== 誕生日メッセージ ===== -->
+        <section class="view" data-view="birthdayTab">
+          <div data-line-view="birthdayTab"></div>
+        </section>
+
+        <!-- ===== カレンダー配布 ===== -->
+        <section class="view" data-view="calendarTab">
+          <div data-line-view="calendarTab"></div>
+        </section>
+
+        <!-- ===== LINE設定 ===== -->
+        <section class="view" data-view="settingsHub">
+          <div data-line-view="settingsHub"></div>
+        </section>
+
+        <!-- ===== ご無沙汰フォロー ===== -->
+        <section class="view" data-view="dormantFollowup">
+          <div data-line-view="dormantFollowup"></div>
+        </section>
+
+        <!-- ===== タグ管理 ===== -->
+        <section class="view" data-view="tagsHub">
+          <div data-line-view="tagsHub"></div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- 顧客フォームモーダル -->
+<div class="modal-overlay" id="form-overlay" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="form-overlay-title" tabindex="-1">
+  <div class="modal" id="form-content"></div>
+</div>
+
+<!-- 顧客詳細モーダル -->
+<div class="modal-overlay" id="modal-overlay" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="modal-overlay-title" tabindex="-1">
+  <div class="modal" id="modal-content"></div>
+</div>
+<script>
+  // 2026-07-12 v10 a11y: Esc で モーダル 閉じる + focus trap
+  (function(){
+    let lastFocused = null;
+    const closeOverlay = (ovId) => {
+      const ov = document.getElementById(ovId);
+      if (!ov || ov.style.display === 'none') return false;
+      // 既存 close btn を click (state clean up される)
+      const closeBtn = ov.querySelector('#modal-close-btn, .cd-close, .modal-close, [data-modal-close]');
+      if (closeBtn) closeBtn.click();
+      else { ov.style.display = 'none'; document.body.style.overflow = ''; }
+      if (lastFocused && lastFocused.focus) { try { lastFocused.focus(); } catch(_) {} }
+      return true;
+    };
+    document.addEventListener('keydown', (ev) => {
+      if (ev.key !== 'Escape') return;
+      if (closeOverlay('modal-overlay')) { ev.preventDefault(); return; }
+      if (closeOverlay('form-overlay')) { ev.preventDefault(); return; }
+    });
+    // モーダル open 時 に focus を モーダル 内 first focusable に 移す
+    const observer = new MutationObserver((muts) => {
+      for (const m of muts) {
+        if (m.type !== 'attributes' || m.attributeName !== 'style') continue;
+        const el = m.target;
+        if (el.id !== 'modal-overlay' && el.id !== 'form-overlay') continue;
+        if (getComputedStyle(el).display === 'none') continue;
+        // opening
+        lastFocused = document.activeElement;
+        setTimeout(() => {
+          const first = el.querySelector('button, [href], input:not([type="hidden"]), textarea, select, [tabindex]:not([tabindex="-1"])');
+          if (first && first.focus) { try { first.focus(); } catch(_) {} }
+        }, 100);
+      }
+    });
+    ['modal-overlay','form-overlay'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el, { attributes: true, attributeFilter: ['style'] });
+    });
+  })();
+</script>
+
+<script>
+// Firebase 認証完了後にこの関数が呼ばれて、 CRM スクリプト一式を順次注入する。
+// app.js は読み込み時に window.DUMMY_CLIENTS をスナップショットするので、
+// 認証 → Firestore 読み込み → window.DUMMY_CLIENTS セット → スクリプト注入 の順序を守る。
+window.fpReadyAfterAuth = function() {
+  if (window.__fpScriptsLoaded) return;
+  window.__fpScriptsLoaded = true;
+
+  // ★ デモデータ leak 防止 — 認証済テナントは Firestore が信頼の単一ソース。
+  // 過去のデモモード由来で localStorage に 吉田恭聡 / 田中健一 等が残ると
+  // 新規 FP の 空テナント に 該当顧客が leak する → 明示的にクリア。
+  const legacyDemoKeys = [
+    'fp-crm-clients-v1',       // app.js が 起動時 読込む 顧客リストキャッシュ
+    'fp-crm-real-clients-v1',  // 旧 real-mode 顧客キャッシュ
+    'fp-crm-real-mode',         // 旧 real-mode フラグ
+    'fp-crm-state-v1',          // 旧アプリ状態キャッシュ
+    'fp-cleared-permanently',   // 旧クリアフラグ
+  ];
+  legacyDemoKeys.forEach(k => { try { localStorage.removeItem(k); } catch (_) {} });
+
+  // ★ エラーバウンダリ: 何か壊れたら 全画面 を「復旧中…」 に切替 + 30秒後 自動再読込
+  //   お客様に 真っ白画面 や 赤いJSエラー を 絶対 見せない
+  (function setupErrorBoundary() {
+    let shown = false;
+    function showRecoveryScreen() {
+      if (shown) return; shown = true;
+      try {
+        document.body.innerHTML = `
+          <div style="position:fixed;inset:0;background:linear-gradient(135deg,#1B3A5C,#284f7d);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'Hiragino Sans','Inter',sans-serif;padding:20px;text-align:center;z-index:999999;">
+            <div style="font-size:48px;margin-bottom:18px;">🛠</div>
+            <div style="font-family:'Noto Serif JP',serif;font-size:22px;font-weight:700;letter-spacing:0.06em;margin-bottom:10px;">復旧作業中です</div>
+            <div style="font-size:14px;line-height:1.7;opacity:0.85;max-width:420px;">システム更新作業を 行っております。<br>このページは <strong>30 秒後 に 自動 再読込</strong> されます。</div>
+            <button onclick="location.reload()" style="margin-top:24px;background:#FFE9A8;color:#1F1A12;border:none;padding:11px 28px;border-radius:7px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:0.04em;">今すぐ再読込</button>
+            <div style="margin-top:24px;font-size:11px;opacity:0.55;">10分以上 復旧しない場合は <a href="mailto:support@skeleton-inc.jp" style="color:#FFE9A8;text-decoration:underline;">support@skeleton-inc.jp</a> まで</div>
+          </div>
+        `;
+      } catch (_) {}
+      setTimeout(() => { try { location.reload(); } catch (_) {} }, 30000);
+    }
+    window.addEventListener('error', (e) => {
+      const msg = String(e?.message || '');
+      if (/ResizeObserver|Loading.*chunk|Loading CSS chunk|Script error\.?$/i.test(msg)) return;
+      console.error('[errorBoundary]', e);
+      // ★ 緩和: window.error 即発火 → 復旧画面 だと チャットbot等で 軽微エラー あっただけで 落ちる
+      //   3秒待って 画面要素 (ログイン/メイン) どっちも 無ければ 発火 (= 本当に 真っ白 時のみ)
+      setTimeout(() => {
+        const hasTabs = !!document.querySelector('.tab');
+        const hasLogin = !!document.querySelector('input[type="email"], #login, .login-card');
+        const hasMainContent = !!document.querySelector('.main, main, #app, .client-card, .sidebar');
+        if (!hasTabs && !hasLogin && !hasMainContent) showRecoveryScreen();
+      }, 3000);
+    });
+    window.addEventListener('unhandledrejection', (e) => {
+      const r = e?.reason; const msg = String(r?.message || r || '');
+      if (/AbortError|NetworkError when attempting/i.test(msg)) return;
+      console.error('[errorBoundary] unhandled rejection:', r);
+      // ★ 緩和 (オーナーfb): 2秒→15秒 + 「.tab も #login も 両方無い」 = 本当に 画面真っ白 時のみ
+      //   従来は チャットbot fetch失敗 / Firebase load遅延 で すぐ 復旧画面 = 誤検知
+      setTimeout(() => {
+        const hasTabs = !!document.querySelector('.tab');
+        const hasLogin = !!document.querySelector('input[type="email"], #login, .login-card');
+        const hasMainContent = !!document.querySelector('.main, main, #app, .client-card, .sidebar');
+        if (!hasTabs && !hasLogin && !hasMainContent) showRecoveryScreen();
+      }, 15000);
+    });
+  })();
+
+  const ver = "20260714C";
+  // ★ 2026-06-26 perf: critical (画面初期表示に必須) と deferred (LINE/charts) を 分離
+  // critical: 顧客台帳・ホーム描画に必須
+  // deferred: LINE タブ (line-app.js 555KB) / dashboard charts (charts.js) → idle で 後ロード
+  const critical = [
+    "life-events.js?v=" + ver,
+    "recommender.js?v=" + ver,
+    "line-data.js?v=" + ver,
+    "app.js?v=" + ver,
+  ];
+  const deferred = [
+    "line-app.js?v=" + ver,
+    "charts.js?v=" + ver,
+  ];
+  function loadCritical(i) {
+    if (i >= critical.length) {
+      window.UPCOMING_BOOKINGS = [];
+      window.HOT_LEADS = [];
+      window.LEAD_FUNNEL = { added: 0, surveyed: 0, booked: 0, completed: 0 };
+      window.LEAD_SCENARIO = {};
+      window.LEAD_FORM = {};
+      // 全部終わったら DOMContentLoaded を擬似発火 (app.js が listening)
+      document.dispatchEvent(new Event('DOMContentLoaded'));
+      // ★ critical 終わった後 idle で deferred を取りに行く
+      const startDeferred = () => loadDeferred(0);
+      if (window.requestIdleCallback) {
+        requestIdleCallback(startDeferred, { timeout: 2000 });
+      } else {
+        setTimeout(startDeferred, 100);
+      }
+      return;
+    }
+    const s = document.createElement('script');
+    s.src = critical[i];
+    s.onload = () => loadCritical(i + 1);
+    s.onerror = () => { console.error('script load failed:', critical[i]); loadCritical(i + 1); };
+    document.body.appendChild(s);
+  }
+  function loadDeferred(i) {
+    if (i >= deferred.length) {
+      // line-app.js が後乗りなので bootLiveData を念のため 1回呼ぶ (race 回避)
+      try { if (window.LineApp && window.LineApp.bootLiveData) window.LineApp.bootLiveData(); } catch(_) {}
+      // ★ deferred 完了前 に LINE タブ クリックされてた場合 フォローアップ
+      try {
+        if (window._pendingLineView && window.LineApp) {
+          if (!window._lineInited) { window.LineApp.init(); window._lineInited = true; }
+          window.LineApp.activateSubview(window._pendingLineView);
+          window._pendingLineView = null;
+        }
+      } catch(_) {}
+      return;
+    }
+    const s = document.createElement('script');
+    s.src = deferred[i];
+    s.async = true;
+    s.onload = () => loadDeferred(i + 1);
+    s.onerror = () => { console.error('deferred script load failed:', deferred[i]); loadDeferred(i + 1); };
+    document.body.appendChild(s);
+  }
+  loadCritical(0);
+};
+</script>
+<script>
+  // Lucide icon hydration
+  function hydrateIcons() {
+    if (document.hidden) return;
+    if (window.lucide && window.lucide.createIcons) {
+      window.lucide.createIcons({ attrs: { 'stroke-width': '1.6' } });
+    }
+  }
+  document.addEventListener('DOMContentLoaded', () => {
+    hydrateIcons();
+    // ★ 2026-06-25 軽量化: 1.2s → 4s, 非表示時 skip
+    setInterval(hydrateIcons, 4000);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) hydrateIcons(); });
+  });
+
+  // Howto banner: collapse by default + dismissible + persisted
+  function howtoKey(banner) {
+    const view = banner.closest('.view, [data-view], [data-line-view]');
+    const viewId = view ? (view.dataset.view || view.dataset.lineView || 'global') : 'global';
+    const title = (banner.querySelector('.howto-banner-title')?.textContent || '').trim();
+    return `fpcrm-howto-${viewId}-${title}`;
+  }
+  function setupHowtoBanner(banner) {
+    if (banner.dataset.howtoReady) return;
+    banner.dataset.howtoReady = '1';
+    const key = howtoKey(banner);
+    if (localStorage.getItem(key + '::dismissed') === '1') {
+      banner.classList.add('is-dismissed');
+      return;
+    }
+    // Add dismiss button if missing
+    if (!banner.querySelector('.howto-banner-dismiss')) {
+      const btn = document.createElement('button');
+      btn.className = 'howto-banner-dismiss';
+      btn.title = 'もう表示しない';
+      btn.setAttribute('aria-label', '閉じる');
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        banner.classList.add('is-dismissed');
+        localStorage.setItem(key + '::dismissed', '1');
+      });
+      banner.appendChild(btn);
+    }
+    // Toggle on header click
+    const head = banner.querySelector('.howto-banner-head');
+    if (head) {
+      head.addEventListener('click', () => banner.classList.toggle('is-open'));
+    }
+  }
+  function scanHowtoBanners() {
+    if (document.hidden) return;
+    document.querySelectorAll('.howto-banner').forEach(setupHowtoBanner);
+  }
+  document.addEventListener('DOMContentLoaded', () => {
+    scanHowtoBanners();
+    // ★ 2026-06-25 軽量化: 1.5s → 5s + 非表示時 skip
+    setInterval(scanHowtoBanners, 5000);
+  });
+
+  // Breadcrumb sync (current tab → top bar)
+  const CRUMB_MAP = {
+    dashboard: 'ホーム',
+    clients: '顧客台帳',
+    timeline: 'ライフイベント',
+    kpi: 'KPI / タスク',
+    leadHub: 'LINE / 新規相談',
+    distributionHub: 'LINE / 配信',
+    birthdayTab: 'LINE / 誕生日メッセージ',
+    calendarTab: 'LINE / カレンダー配布',
+    settingsHub: 'LINE / 設定',
+  };
+  document.addEventListener('click', (e) => {
+    const tab = e.target.closest('.tab[data-tab]');
+    if (tab) {
+      const crumb = CRUMB_MAP[tab.dataset.tab];
+      if (crumb) document.getElementById('current-crumb').textContent = crumb;
+    }
+    // ★ 2026-06-22 roundO: モバイルで タブ クリック後 サイドバー閉じる
+    if (e.target.closest('.tab[data-tab]')) {
+      document.body.classList.remove('mobile-nav-open');
+    }
+  });
+
+  // ★ モバイル ハンバーガー click → サイドバー slide-in/out
+  (function () {
+    const ham = document.getElementById('mobile-hamburger');
+    const backdrop = document.getElementById('mobile-backdrop');
+    if (!ham || !backdrop) return;
+    const toggle = (open) => {
+      const isOpen = open === undefined ? !document.body.classList.contains('mobile-nav-open') : open;
+      document.body.classList.toggle('mobile-nav-open', isOpen);
+      ham.setAttribute('aria-label', isOpen ? 'メニューを閉じる' : 'メニューを開く');
+    };
+    ham.addEventListener('click', () => toggle());
+    backdrop.addEventListener('click', () => toggle(false));
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') toggle(false); });
+
+    // ★ 2026-06-22 roundP: ボトムナビ クリック → 該当 .tab を 同期 click
+    document.querySelectorAll('.m-tab[data-target-tab]').forEach(mt => {
+      mt.addEventListener('click', () => {
+        const target = mt.dataset.targetTab;
+        const tab = document.querySelector('.tab[data-tab="'+target+'"]');
+        if (tab) tab.click();
+        // active state を 即時反映 (タブ click の async 待たない)
+        document.querySelectorAll('.m-tab').forEach(t => t.classList.toggle('is-active', t === mt));
+        // タイトル更新
+        const t = document.getElementById('mobile-current-title');
+        if (t) t.textContent = mt.querySelector('span')?.textContent || '';
+        toggle(false);
+      });
+    });
+    // 「もっと」 タブ → drawer 開く
+    document.getElementById('mtab-more')?.addEventListener('click', () => {
+      document.querySelectorAll('.m-tab').forEach(t => t.classList.toggle('is-active', t.id === 'mtab-more'));
+      toggle(true);
+    });
+
+    // 既存 .tab click → ボトムナビ active 同期 + トップバータイトル 更新
+    const tabLabelMap = {
+      dashboard: 'ホーム', clients: '顧客', timeline: 'ライフイベント', meetingHistory: '面談履歴',
+      leadHub: '新規相談', distributionHub: '配信', dormantFollowup: 'ご無沙汰',
+      tagsHub: 'タグ管理', birthdayTab: '誕生日', calendarTab: '年末配布', settingsHub: '設定',
+    };
+    document.querySelectorAll('.tab[data-tab]').forEach(t => {
+      t.addEventListener('click', () => {
+        const id = t.dataset.tab;
+        const mtab = document.querySelector('.m-tab[data-target-tab="'+id+'"]');
+        const tt = document.getElementById('mobile-current-title');
+        if (mtab) {
+          document.querySelectorAll('.m-tab').forEach(x => x.classList.toggle('is-active', x === mtab));
+          if (tt) tt.textContent = mtab.querySelector('span')?.textContent || '';
+        } else {
+          // ボトムナビに無いタブ (配信/ご無沙汰/タグ/誕生日/年末配布/設定) は 「もっと」 をアクティブにして タイトルだけ更新
+          const moreTab = document.getElementById('mtab-more');
+          if (moreTab) document.querySelectorAll('.m-tab').forEach(x => x.classList.toggle('is-active', x === moreTab));
+          if (tt) tt.textContent = tabLabelMap[id] || id;
+        }
+      });
+    });
+    // 初期: dashboard active
+    document.querySelector('.m-tab[data-target-tab="dashboard"]')?.classList.add('is-active');
+
+    // ★ モバイル ユーザーボタン → アカウントページへ
+    document.getElementById('mobile-user-btn')?.addEventListener('click', () => {
+      window.location.href = '/account.html';
+    });
+
+    // ★ スクロール検知 → トップバー frosted glass (signature subtle motion)
+    let ticking = false;
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          document.body.dataset.scrolled = window.scrollY > 4 ? '1' : '0';
+          ticking = false;
+        });
+        ticking = true;
+      }
+    }, { passive: true });
+
+    // ★ 2026-06-22 roundU: モーダル開閉 監視 → body scroll lock
+    (function () {
+      const checkModal = () => {
+        const ovs = [document.getElementById('modal-overlay'), document.getElementById('form-overlay')];
+        const anyOpen = ovs.some(o => o && (o.style.display === 'flex' || window.getComputedStyle(o).display === 'flex'));
+        document.body.classList.toggle('modal-open', anyOpen);
+      };
+      // MutationObserver で modal-overlay の style 変化を検知
+      ['modal-overlay', 'form-overlay'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) new MutationObserver(checkModal).observe(el, { attributes: true, attributeFilter: ['style'] });
+      });
+      setInterval(checkModal, 500);  // フォールバック
+    })();
+
+    // ★ 2026-06-22 roundT: モバイル専用 ボックス ホーム (greet 圧縮 + 2x2 stats + today + 2quick)
+    function buildMobileHome() {
+      if (window.innerWidth > 768) return;
+      const dashView = document.querySelector('.view[data-view="dashboard"]');
+      if (!dashView) return;
+      // 既存があれば撤去して再構築 (DUMMY_CLIENTS 更新後の再描画用)
+      dashView.querySelector('.m-screen-home')?.remove();
+
+      // ★ オーナーfb 2026-06-24: email username (k1122kk111...) ではなく tenant名 = 事務所名 を 出す
+      const name = (function() {
+        const t = (window.__fp && window.__fp.tenantName) ? String(window.__fp.tenantName) : '';
+        if (t) {
+          const m = t.replace(/ — DEMO ビュー/, '').match(/^([^\s(\[（【]+)/);
+          if (m) return m[1].slice(0, 14);
+        }
+        return ((window.__fp && window.__fp.userEmail) || 'FP').split('@')[0].slice(0, 10);
+      })();
+      const today = new Date();
+      const wdays = ['日','月','火','水','木','金','土'];
+      const md = `${today.getMonth()+1}/${today.getDate()} (${wdays[today.getDay()]})`;
+
+      const clients = window.DUMMY_CLIENTS || [];
+      const totalClients = clients.length;
+      // 今週 フォロー = lastContact 7日以内 or 不明
+      const today0 = today.getTime();
+      const weekFollow = clients.filter(c => {
+        if (!c.lastContact) return false;
+        const d = (today0 - new Date(c.lastContact).getTime()) / 86400000;
+        return d <= 7;
+      }).length;
+      // 未読 LINE = liveData.line_messages の direction='in' 全数 (簡易)
+      const lineMsgs = (window.LineAppLiveData?.line_messages || []).filter(m => m.direction === 'in').length;
+      // 完了 = bookings 過去日付
+      const bookings = window.LineAppLiveData?.bookings || [];
+      const completedM = bookings.filter(b => {
+        if (!b.date) return false;
+        const md = new Date(b.date + 'T00:00:00').getTime();
+        return md < today0;
+      }).length;
+      // フォロー待ち = recommender の TOP1
+      const recommended = (typeof window.recommendNext === 'function')
+        ? (window.recommendNext(clients) || []).slice(0, 1)
+        : [];
+      const top = recommended[0] || null;
+      const followCount = recommended.length > 0
+        ? Math.min(clients.filter(c => !c.lastContact || (today0 - new Date(c.lastContact).getTime()) / 86400000 > 30).length, 9)
+        : 0;
+
+      const root = document.createElement('div');
+      root.className = 'm-screen-home';
+      root.innerHTML = `
+        <!-- 1. greet -->
+        <div class="m-greet">
+          <div class="m-greet-l">
+            <div class="m-greet-date">${md}</div>
+            <div class="m-greet-msg">おはよう、 <span class="m-greet-name">${name}</span> さん。</div>
+          </div>
+          <div class="m-greet-r">
+            <div class="m-greet-num" id="m-greet-num">0</div>
+            <div class="m-greet-unit">名 フォロー待ち</div>
+          </div>
+        </div>
+
+        <!-- 2. stats 2x2 -->
+        <div class="m-stats-grid">
+          <div class="m-stat-box">
+            <div class="m-stat-top">
+              <span class="m-stat-icon">👥</span>
+              <span class="m-stat-num">${totalClients}</span>
+            </div>
+            <div class="m-stat-label">顧客 合計</div>
+          </div>
+          <div class="m-stat-box">
+            <div class="m-stat-top">
+              <span class="m-stat-icon" style="background:#DBEAFE;color:#1E3A5F;">📞</span>
+              <span class="m-stat-num">${weekFollow}</span>
+            </div>
+            <div class="m-stat-label">今週 フォロー</div>
+          </div>
+          <div class="m-stat-box">
+            <div class="m-stat-top">
+              <span class="m-stat-icon" style="background:#D1FAE5;color:#065F46;">💬</span>
+              <span class="m-stat-num">${lineMsgs}</span>
+            </div>
+            <div class="m-stat-label">LINE 受信</div>
+          </div>
+          <div class="m-stat-box">
+            <div class="m-stat-top">
+              <span class="m-stat-icon" style="background:#EDE9FE;color:#5B21B6;">✓</span>
+              <span class="m-stat-num">${completedM}</span>
+            </div>
+            <div class="m-stat-label">完了 面談</div>
+          </div>
+        </div>
+
+        <!-- 3. today action -->
+        <div class="m-today-box">
+          <div class="m-today-eyebrow">本日 の 優先事項</div>
+          ${top ? `
+            <div class="m-today-name">${(top.name || top.client?.name || 'お客様')} 様</div>
+            <div class="m-today-sub">${(top.subjectName ? '🎂 ' + top.subjectName + ' ' : '')}${top.info || top.reason || 'フォロー連絡 を おすすめします'}</div>
+            <button class="m-today-cta" data-target-client="${(top.id || top.client?.id || '')}">
+              <span>文面を 作って 送る</span>
+              <span>→</span>
+            </button>
+          ` : `
+            <div class="m-today-empty">今日 緊急の方は いません ✨</div>
+          `}
+        </div>
+
+        <!-- 4. quick row -->
+        <div class="m-quick-row">
+          <button class="m-qa2 is-primary" id="m-qa-meeting">
+            <span class="m-qa2-icon">⚡</span>
+            <span>急遽 面談</span>
+          </button>
+          <button class="m-qa2" id="m-qa-newcli">
+            <span class="m-qa2-icon">+</span>
+            <span>新規 顧客</span>
+          </button>
+        </div>
+      `;
+      dashView.insertBefore(root, dashView.firstChild);
+
+      // 大数字 カウントアップ
+      const numEl = document.getElementById('m-greet-num');
+      const target = Math.max(0, followCount);
+      let c = 0;
+      const tick = () => { c++; if (numEl) numEl.textContent = c; if (c < target) setTimeout(tick, 80); };
+      if (target > 0) setTimeout(tick, 250); else if (numEl) numEl.textContent = '0';
+
+      // クイック バインド
+      document.getElementById('m-qa-meeting')?.addEventListener('click', () => {
+        document.getElementById('sidebar-quick-inperson')?.click();
+      });
+      document.getElementById('m-qa-newcli')?.addEventListener('click', () => {
+        document.getElementById('add-client-btn')?.click();
+      });
+      // today CTA → 顧客モーダル openClientModal
+      const todayCta = root.querySelector('[data-target-client]');
+      if (todayCta) {
+        todayCta.addEventListener('click', () => {
+          const cid = todayCta.dataset.targetClient;
+          if (cid && typeof window.openClientModal === 'function') {
+            window.openClientModal(cid);
+          }
+        });
+      }
+    }
+    // 初回 + tab 切替時 に build
+    setTimeout(buildMobileHome, 1500);
+    document.querySelectorAll('.m-tab[data-target-tab="dashboard"], .tab[data-tab="dashboard"]').forEach(t => {
+      t.addEventListener('click', () => setTimeout(buildMobileHome, 300));
+    });
+    // ★ オーナーfb 2026-06-23: Firestore 顧客 が 後から ロードされた時 KPI を 更新
+    (function watchClientsLoad() {
+      let lastCount = -1, attempts = 0;
+      const interval = setInterval(() => {
+        attempts++;
+        const cur = (window.DUMMY_CLIENTS || []).length;
+        if (cur !== lastCount) {
+          lastCount = cur;
+          if (window.innerWidth <= 768) buildMobileHome();
+        }
+        if (attempts >= 60) clearInterval(interval);
+      }, 500);
+    })();
+
+    // ★ 2026-06-22 roundR: 顧客タブ active 時のみ FAB 表示 (body class で CSS切替)
+    function updateTabClassMobile() {
+      const active = document.querySelector('.tab.active[data-tab]');
+      document.body.classList.toggle('tab-clients-active', active?.dataset.tab === 'clients');
+    }
+    document.querySelectorAll('.tab[data-tab]').forEach(t => t.addEventListener('click', () => setTimeout(updateTabClassMobile, 100)));
+    document.querySelectorAll('.m-tab[data-target-tab]').forEach(t => t.addEventListener('click', () => setTimeout(updateTabClassMobile, 100)));
+    setTimeout(updateTabClassMobile, 500);
+
+    // FAB クリック → 既存「+新規顧客を登録」 ボタンを click (機能流用)
+    document.getElementById('mobile-fab-new-client')?.addEventListener('click', () => {
+      const btn = document.getElementById('add-client-btn');
+      if (btn) btn.click();
+    });
+  })();
+
+  // Sidebar search → focus client search and switch tab
+  document.getElementById('sidebar-search-input').addEventListener('focus', (e) => {
+    // Switch to clients tab if not already
+    const clientsTab = document.querySelector('.tab[data-tab="clients"]');
+    if (clientsTab && !clientsTab.classList.contains('active')) clientsTab.click();
+    setTimeout(() => {
+      const cs = document.getElementById('client-search');
+      if (cs) cs.focus();
+    }, 100);
+  });
+  document.getElementById('sidebar-search-input').addEventListener('input', (e) => {
+    const cs = document.getElementById('client-search');
+    if (cs) {
+      cs.value = e.target.value;
+      cs.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+  });
+
+  // ★ サイドバー急遽録画ボタン: どの画面からでも 1クリックで対面録画モーダル
+  const qiBtn = document.getElementById('sidebar-quick-inperson');
+  if (qiBtn) {
+    qiBtn.addEventListener('click', () => {
+      // LineApp が未初期化なら init してから呼ぶ
+      if (window.LineApp && window.LineApp.openQuickInpersonModal) {
+        window.LineApp.openQuickInpersonModal();
+      } else if (window.LineApp) {
+        // 念のためフォールバック: leadHub サブビューを activate して既存ボタンを click
+        try { window.LineApp.activateSubview('leadHub'); } catch (_) {}
+        setTimeout(() => {
+          const b = document.getElementById('fp-quick-inperson');
+          if (b) b.click();
+        }, 200);
+      } else {
+        alert('読み込み中です。少し待ってから再度押してください。');
+      }
+    });
+  }
+
+  // Hero CTAs
+  document.getElementById('hero-cta-new')?.addEventListener('click', () => {
+    document.querySelector('.tab[data-tab="clients"]')?.click();
+    setTimeout(() => document.getElementById('add-client-btn')?.click(), 100);
+  });
+  document.getElementById('hero-cta-broadcast')?.addEventListener('click', () => {
+    document.querySelector('.tab[data-tab="distributionHub"]')?.click();
+  });
+
+  // ★ オーナーfb: 「古いキャッシュ警告バナー」は誤動作 + 「最新読み込む」も効かないので撤去
+  // バージョン badge (右下) で十分。DUMMY_CLIENTS_VERSION チェックは console.log だけ残す
+  setTimeout(function () {
+    if (window.DUMMY_CLIENTS_VERSION) {
+      console.log('[FP Compass] DUMMY_CLIENTS_VERSION:', window.DUMMY_CLIENTS_VERSION);
+    }
+    // ⚠ デバッグチップは window.FP_DEBUG=true の時のみ
+    if (window.FP_DEBUG) {
+      try {
+        var c1 = (window.DUMMY_CLIENTS || []).find(function (x) { return x.id === 'c001'; });
+        var lhLen = (c1 && c1.lineHistory || []).length;
+        var lhKeys = c1 ? Object.keys(c1).filter(function (k) { return k.indexOf('line') >= 0; }).join(',') : 'no-c001';
+        var chip = document.createElement('div');
+        chip.id = 'fpc-debug-chip';
+        chip.style.cssText = 'position:fixed;bottom:8px;right:8px;z-index:9998;background:#0F1117;color:#A5B4FC;padding:6px 10px;border-radius:6px;font-family:ui-monospace,monospace;font-size:10.5px;border:1px solid #1E2330;opacity:0.85;cursor:pointer;';
+        chip.textContent = 'v=' + (window.DUMMY_CLIENTS_VERSION || 'none') + ' / c001.lh=' + lhLen;
+        document.body.appendChild(chip);
+      } catch (e) {}
+    }
+  }, 1500);
+
+  // Sidebar nav counts: 動的に計算
+  function updateNavCounts() {
+    const clients = window.DUMMY_CLIENTS || [];
+    if (!clients.length) return;
+    const today = (window.LifeEvents && window.LifeEvents.TODAY) || new Date('2026-05-27');
+    const daysFn = (d) => Math.floor((today - new Date(d)) / 86400000);
+    const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val || ''; };
+    setText('nav-count-clients', clients.length);
+    // KPI/タスク: アクション必要
+    let kpiAlert = 0;
+    clients.forEach(c => {
+      const dsl = daysFn(c.lastContact);
+      const lastCancel = (c.cancellations || []).slice().sort((a, b) => new Date(b.date) - new Date(a.date))[0];
+      if (lastCancel && daysFn(lastCancel.date) <= 30) { kpiAlert++; return; }
+      const stalled = (c.proposals || []).find(p => (p.result === '検討中' || p.result === '提案中') && daysFn(p.date) >= 30);
+      if (stalled) { kpiAlert++; return; }
+      if (c.status === 'dormant' || dsl >= 180) { kpiAlert++; return; }
+      if (dsl >= 30 && c.status !== 'dormant') { kpiAlert++; }
+    });
+    setText('nav-count-kpi', kpiAlert);
+    // 新規相談バッジ: 候補日確定待ち (アンケート回答+候補日3つ届いたが未確定) の実件数のみ
+    //   legacy survey_answers (GAS) + Firestore _fpFirestoreCustomers 両方 合算
+    try {
+      const surveys = (window.LineAppLiveData && window.LineAppLiveData.survey_answers) || [];
+      const isRealUid = (uid) => /^U[a-f0-9]{32}$/i.test(String(uid || ''));
+      const pendingLegacy = surveys.filter(s => !s.confirmedSlot && (s.q6_候補1 || s.q7_候補2 || s.q8_候補3 || s.q11_候補1) && isRealUid(s.userId)).length;
+      const pendingFs = (window._fpFirestoreCustomers || []).filter(c => (c.meetingCandidates||[]).length > 0 && !c.confirmedSlot).length;
+      const pendingConfirm = pendingLegacy + pendingFs;
+      setText('nav-count-lead', pendingConfirm > 0 ? pendingConfirm : '');
+    } catch (_) { setText('nav-count-lead', ''); }
+    const m = today.getMonth() + 1;
+    const bdayCount = clients.filter(c => c.birth && (new Date(c.birth).getMonth() + 1) === m).length;
+    setText('nav-count-bday', bdayCount);
+    setText('nav-count-cal', clients.length > 5 ? 4 : '');
+    // ご無沙汰フォロー: LINE連携 + 21日以上未接触
+    const dormantCount = clients.filter(c => c.lineFriendId && c.lastContact && daysFn(c.lastContact) >= 21).length;
+    setText('nav-count-dormant', dormantCount);
+  }
+  setTimeout(updateNavCounts, 800);
+  // ★ 2026-06-25 軽量化: 5s → 15s + 非表示時 skip
+  setInterval(() => { if (!document.hidden) updateNavCounts(); }, 15000);
+
+  // ★ オーナーfb 2026-06-24: 初回 signup 後 onboarding tour (1度だけ)
+  function maybeShowOnboarding() {
+    try {
+      // 表示条件: fp_new_signup フラグ あり OR 「再表示」 URL ?tour=1
+      const params = new URLSearchParams(location.search);
+      const force = params.has('tour');
+      const isNew = sessionStorage.getItem('fp_new_signup') === '1';
+      const alreadyDone = localStorage.getItem('fp_onboarding_done') === '1';
+      if (!force && (!isNew || alreadyDone)) return;
+      sessionStorage.removeItem('fp_new_signup');
+      const steps = [
+        {
+          icon: '✨', title: 'FP Compass へ ようこそ',
+          body: 'Zoom 面談を 録画 → AI が 文字起こし + 議事録 + LINE 文面を 自動生成。 月20件 商談 でも 月800円 (粗利95%) で 動きます。',
+          cta: '次へ',
+        },
+        {
+          icon: '👥', title: '① 顧客 を 登録 してみる',
+          body: '左サイドバー or 下部「+ 新規 顧客」 から 名前 だけで 追加 OK。 LINE 友だち追加 は 後から「LINE userId 紐付け」 で 統合できます。',
+          cta: '次へ',
+        },
+        {
+          icon: '🎥', title: '② Zoom or 対面 で 録画',
+          body: 'サイドバー「急遽 面談スタート」 → Zoom 即発行 / 対面 録音 を 選択。 終了で AI が 議事録 + タスク + LINE下書き を 自動生成 (60分 で 約30秒)。',
+          cta: '次へ',
+        },
+        {
+          icon: '💬', title: '③ AI で LINE 返信 を 作る',
+          body: '顧客モーダル → ✍ AI下書き で 議事録/家族/過去質問 を 踏まえた 文面 を 1秒で 生成。 「📤 LINE で 送信」 で その場で 客に push。',
+          cta: '次へ',
+        },
+        {
+          icon: '📖', title: '④ 困ったら マニュアル',
+          body: '右上「もっと」 → ヘルプ から 全機能解説。 オーナーへの 質問は support@skeleton-inc.jp で 24時間以内 返信。 では はじめましょう!',
+          cta: 'はじめる',
+        },
+      ];
+      let idx = 0;
+      const overlay = document.createElement('div');
+      overlay.id = 'fp-onboarding';
+      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.72);backdrop-filter:blur(8px);z-index:2147483645;display:flex;align-items:center;justify-content:center;padding:24px;font-family:"Noto Sans JP",sans-serif;';
+      function render() {
+        const s = steps[idx];
+        overlay.innerHTML = `
+          <div style="background:#FFFBF1;max-width:480px;width:100%;border-radius:18px;box-shadow:0 30px 80px rgba(0,0,0,0.4);overflow:hidden;border-top:6px solid #C19A3A;">
+            <div style="padding:34px 30px 22px;text-align:center;">
+              <div style="font-size:64px;line-height:1;margin-bottom:14px;">${s.icon}</div>
+              <div style="font-family:'Inter',sans-serif;font-size:10.5px;letter-spacing:0.22em;color:#8B7D5D;font-weight:800;text-transform:uppercase;margin-bottom:6px;">Step ${idx+1} / ${steps.length}</div>
+              <h2 style="font-family:'Noto Serif JP',serif;font-size:22px;font-weight:700;color:#1F2A3F;margin:0 0 12px;letter-spacing:0.01em;">${s.title}</h2>
+              <p style="font-size:13.5px;line-height:1.85;color:#4A556A;margin:0 0 24px;">${s.body}</p>
+              <button id="fp-onb-next" style="background:linear-gradient(135deg,#C19A3A,#8B6F26);color:#fff;border:none;padding:12px 32px;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:0.06em;box-shadow:0 6px 20px rgba(193,154,58,0.35);">${s.cta} →</button>
+              <div style="margin-top:18px;">
+                <button id="fp-onb-skip" style="background:transparent;border:none;color:#8B7D5D;font-size:11.5px;cursor:pointer;font-family:inherit;letter-spacing:0.04em;">スキップ</button>
+              </div>
+            </div>
+            <div style="display:flex;gap:6px;padding:0 30px 22px;justify-content:center;">
+              ${steps.map((_, i) => `<div style="width:${i === idx ? 24 : 8}px;height:6px;border-radius:3px;background:${i === idx ? '#C19A3A' : '#E8D9A8'};transition:width .3s;"></div>`).join('')}
+            </div>
+          </div>`;
+        overlay.querySelector('#fp-onb-next').addEventListener('click', () => {
+          idx++;
+          if (idx >= steps.length) finish();
+          else render();
+        });
+        overlay.querySelector('#fp-onb-skip').addEventListener('click', finish);
+      }
+      function finish() {
+        localStorage.setItem('fp_onboarding_done', '1');
+        overlay.remove();
+      }
+      document.body.appendChild(overlay);
+      render();
+    } catch (e) { console.warn('onboarding fail', e); }
+  }
+  setTimeout(maybeShowOnboarding, 2200);
+
+  // MEGA HERO hydration
+  function hydrateHero() {
+    if (!window.DUMMY_CLIENTS || !window.Recommender || !window.LifeEvents) return false;
+    const navCount = document.getElementById('nav-count-clients');
+    if (navCount) navCount.textContent = window.DUMMY_CLIENTS.length;
+
+    const today = new Date('2026-05-27');
+
+    // 30d events
+    const horizon = new Date(today); horizon.setDate(horizon.getDate() + 30);
+    let count30 = 0;
+    window.DUMMY_CLIENTS.forEach(c => {
+      window.LifeEvents.generate(c).forEach(ev => {
+        const ed = new Date(ev.date || ev.when || ev.d);
+        if (!isNaN(ed) && ed >= today && ed <= horizon) count30++;
+      });
+    });
+
+    // Top priority
+    const tops = window.Recommender?.topAcrossClients?.(window.DUMMY_CLIENTS || [], 8) || [];
+    const topCount = tops.length;
+    const setText = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    // 2026-07-12 v9 audit fix: em-dash 「—」 が 出っぱなし にならないよう 0 は 数字 で 出す
+    setText('mega-hero-num', String(topCount));
+    setText('mh-stat-week', String(topCount));
+    setText('mh-stat-events', String(count30));
+    // 0件 なら 「今日は」 テキスト を 差替えて em-dash 誤解 を 消す
+    try {
+      const titleEl = document.querySelector('.mega-hero-title');
+      const leadEl = document.getElementById('mega-hero-lead');
+      if (titleEl && topCount === 0 && count30 === 0) {
+        const nameSpan = titleEl.querySelector('#mega-hero-name')?.outerHTML || '<span id="mega-hero-name">先生</span>';
+        titleEl.innerHTML = `おはようございます、${nameSpan}。<br>まず 顧客 を 1人 登録 して ください。`;
+        if (leadEl) leadEl.textContent = '家族 の 生年月日 まで 入れると、 30年分 の ライフイベント が 自動 で 展開 されます。';
+      }
+    } catch(_) {}
+
+    // Date label (今日に直す)
+    const W = ['日','月','火','水','木','金','土'];
+    const d = new Date();
+    setText('mega-hero-date', `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日 ${W[d.getDay()]}曜日`);
+
+    // ★ オーナーfb: 「Tsukasa」 ハードコード → ログイン中の FP名 に置換
+    // tenantName は 「Skeleton (オーナー本番)」 等。 先頭の人名/事業所名だけ抽出
+    const tenantName = window.__fp?.tenantName || '';
+    const personName = (function(){
+      // 「Skeleton (オーナー本番)」 → 「Skeleton」 / 「田中FP事務所」 → 「田中FP事務所」
+      const m = tenantName.match(/^([^\s(\[（【]+)/);
+      return m ? m[1] : '先生';
+    })();
+    setText('mega-hero-name', personName);
+
+    // Featured card — top 1 client
+    if (topCount > 0) {
+      const t = tops[0];
+      const c = t.client;
+      const initial = (c.name || '?').replace(/\s+/g, '').slice(0, 1);
+      const reason = (t.reasons && t.reasons[0]) || (t.priorityLabel) || (t.label) || '優先対応';
+      const age = window.LifeEvents.currentAge(c);
+      const aumOku = (c.aum / 100000000).toFixed(2);
+      const aumMan = Math.round(c.aum / 10000);
+      const aumDisp = c.aum >= 100000000 ? `¥${aumOku}億` : `¥${aumMan.toLocaleString()}万`;
+      const childCount = (c.family || []).filter(m => m.rel === 'child').length;
+      const family = childCount > 0 ? `配偶者 + 子${childCount}` :
+        ((c.family || []).find(m => m.rel === 'spouse') ? '夫婦' : '単身');
+
+      // Next event
+      const evs = window.LifeEvents.generate(c);
+      const futureEv = evs.find(ev => new Date(ev.date) >= today);
+      const nextEvent = futureEv ? {
+        title: futureEv.title || futureEv.kind || futureEv.name || 'イベント',
+        rel: window.LifeEvents.formatRelative(new Date(futureEv.date))
+      } : null;
+
+      const daysFromContact = Math.max(0, Math.floor((today - new Date(c.lastContact)) / 86400000));
+
+      document.getElementById('featured-card').innerHTML = `
+        <div class="featured-rank">
+          <i data-lucide="flame"></i>
+          <span>NEXT BEST ACTION</span>
+        </div>
+        <div class="featured-head">
+          <div class="featured-avatar">${initial}</div>
+          <div class="featured-meta">
+            <div class="featured-name">${c.name} 様</div>
+            <div class="featured-sub">${age}歳 / ${c.occupation || '—'} / ${family}</div>
+          </div>
+          <div class="featured-aum">
+            <div class="featured-aum-label">管理資産</div>
+            <div class="featured-aum-value">${aumDisp}</div>
+          </div>
+        </div>
+        <div class="featured-reason">
+          <i data-lucide="sparkles"></i>
+          <span>${reason}</span>
+        </div>
+        <div class="featured-metrics">
+          <div class="featured-metric">
+            <span class="featured-metric-label">最終接触</span>
+            <span class="featured-metric-value">${daysFromContact}<span class="featured-metric-unit">日前</span></span>
+          </div>
+          <div class="featured-metric">
+            <span class="featured-metric-label">次のイベント</span>
+            <span class="featured-metric-value featured-metric-text">${nextEvent ? nextEvent.title : 'なし'}</span>
+            ${nextEvent ? `<span class="featured-metric-sub">${nextEvent.rel}</span>` : ''}
+          </div>
+        </div>
+        <button class="featured-cta primary" data-featured-open="${c.id}">
+          <i data-lucide="message-square-text"></i>
+          <span>この方の詳細を開く</span>
+        </button>
+      `;
+
+      document.querySelector('[data-featured-open]')?.addEventListener('click', () => {
+        document.querySelector('.tab[data-tab="clients"]')?.click();
+        setTimeout(() => {
+          const tr = document.querySelector(`tr[data-client-id="${c.id}"]`);
+          if (tr) tr.click();
+        }, 200);
+      });
+    }
+    return true;
+  }
+  let heroTries = 0;
+  function tryHero() {
+    if (hydrateHero()) return;
+    if (heroTries++ < 30) setTimeout(tryHero, 200);
+  }
+  setTimeout(tryHero, 400);
+</script>
+
+<!-- Version badge (キャッシュ確認用): 強制リロードで反映されたか オーナーが目視可能に -->
+<script>
+(function(){
+  // 最新の ver を 1 箇所に集約 (fpReadyAfterAuth 側と一致させる必要あり)
+  const FP_VERSION = "20260715A-skelfit-preview-alive";
+  try { window.FP_VERSION = FP_VERSION; } catch(_) {}
+
+  // 2026-07-13 v11: Chrome拡張 (Zoom タブ音声 レコーダー) 検知
+  // 拡張 が install 済 なら content.js が window.__fpTabRecorder に version を セット
+  window.__fpTabRecorderReady = new Promise((resolve) => {
+    let resolved = false;
+    const finish = (v) => { if (resolved) return; resolved = true; window.__fpTabRecorderVersion = v; resolve(v); };
+    // 直後 の grabber
+    setTimeout(() => finish(window.__fpTabRecorder || null), 400);
+    // ping ハンドシェイク
+    window.addEventListener('message', (ev) => {
+      if (ev.source !== window) return;
+      const d = ev.data;
+      if (d?.source === 'fp-tab-recorder' && d.type === 'PONG') finish(d.payload?.version || 'unknown');
+    });
+    window.postMessage({ source: 'fp-compass', type: 'PING_TAB_RECORDER' }, '*');
+    // fallback 3秒 で 未 install 確定
+    setTimeout(() => finish(window.__fpTabRecorder || null), 3000);
+  });
+  window.__fpTabRecorderReady.then(v => {
+    console.log('[FP] Chrome 拡張 (Zoom タブ 録音) :', v ? '✓ v' + v : '未 install');
+  });
+  const loadTime = new Date();
+  const hhmm = String(loadTime.getHours()).padStart(2,'0') + ':' + String(loadTime.getMinutes()).padStart(2,'0');
+  const dateLabel = (FP_VERSION.match(/^(\d{4})(\d{2})(\d{2})/) || []).slice(1).join('/').replace(/^(\d{4})\//,'$1/').replace(/\/(\d{2})\/(\d{2})$/,'/$1/$2') || FP_VERSION;
+  const badge = document.createElement('div');
+  badge.id = 'fp-version-badge';
+  badge.style.cssText = 'position:fixed;bottom:8px;right:10px;z-index:2147483646;background:rgba(15,23,42,0.78);color:rgba(255,255,255,0.92);padding:5px 11px;border-radius:5px;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:10.5px;letter-spacing:0.04em;line-height:1.4;backdrop-filter:blur(6px);cursor:pointer;user-select:none;box-shadow:0 4px 14px rgba(0,0,0,0.18);';
+  badge.innerHTML = '<span style="color:#FFE9A8;font-weight:700;">v ' + FP_VERSION.slice(0,9) + '</span> · 読込 ' + hhmm;
+  badge.title = '完全版: ' + FP_VERSION + ' / 強制リロード: Cmd+Shift+R';
+  badge.addEventListener('click', () => {
+    const detail = document.getElementById('fp-version-detail');
+    if (detail) { detail.remove(); return; }
+    const d = document.createElement('div');
+    d.id = 'fp-version-detail';
+    d.style.cssText = 'position:fixed;bottom:42px;right:10px;z-index:2147483646;background:#0E1116;color:#fff;padding:14px 18px;border-radius:8px;font-family:ui-sans-serif,system-ui,sans-serif;font-size:12px;line-height:1.7;max-width:280px;box-shadow:0 14px 36px rgba(0,0,0,0.32);';
+    d.innerHTML = '<div style="font-size:10px;letter-spacing:0.2em;color:#FFE9A8;font-weight:700;text-transform:uppercase;margin-bottom:6px;">Version Info</div>' +
+      '<div style="font-family:\'JetBrains Mono\',monospace;font-size:11.5px;margin-bottom:4px;"><strong>' + FP_VERSION + '</strong></div>' +
+      '<div style="opacity:0.7;font-size:11px;">この画面を読み込んだ時刻: ' + loadTime.toLocaleString('ja-JP') + '</div>' +
+      '<button onclick="location.reload(true)" style="margin-top:10px;background:#E63946;color:#fff;border:none;padding:7px 14px;border-radius:5px;font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit;">強制リロード</button>' +
+      '<div style="opacity:0.5;font-size:10.5px;margin-top:8px;line-height:1.6;">Jobs から「最新 v XXXX」 と言われたら<br>ここの v と一致してれば 反映済</div>';
+    document.body.appendChild(d);
+    setTimeout(() => d.remove(), 12000);
+  });
+  // ★ オーナーfb 2026-06-24: stg/本番 共に 非表示 デフォルト。
+  // 必要時は URL に ?debug=1 を 付けて 出す (or localStorage.fp_debug = '1')
+  const params = new URLSearchParams(location.search);
+  const debugOn = params.has('debug') || localStorage.getItem('fp_debug') === '1';
+  if (debugOn) {
+    document.addEventListener('DOMContentLoaded', () => document.body.appendChild(badge));
+    if (document.readyState !== 'loading') document.body.appendChild(badge);
+  }
+})();
+</script>
+
+<!-- ====================================================== -->
+<!-- 🌱 芽吹くん チャットボット (右下フローティング) v1.0     -->
+<!-- ====================================================== -->
+<style>
+  /* ★ オーナーfb 2026-06-24 Polish: アニメ緩和 (常時動くものを 落ち着かせる) */
+  .mb-fab-badge{animation-duration:3.2s !important;}
+  .mb-fab-hint{animation:none !important;}
+  .mb-fab{animation-duration:5s !important;}
+  .mb-fab-pulse{animation-duration:3.4s !important;opacity:0.5;}
+  @media (prefers-reduced-motion: reduce) {
+    .mb-fab, .mb-fab-badge, .mb-fab-hint, .mb-fab-pulse,
+    [class*="-pulse"], [class*="pulse-"] { animation: none !important; }
+    * { transition-duration: 0.01ms !important; }
+  }
+  .mb-fab{display:none !important;} /* 2026-07-11 v5: 右下 floating 廃止、 サイドバー左下 の #sidebar-kompa-trigger に 統合 */
+  .mb-fab-legacy{position:fixed;right:24px;bottom:24px;z-index:9990;cursor:pointer;display:flex;flex-direction:column;align-items:center;user-select:none;animation:mbFabFloat 3s ease-in-out infinite;}
+  /* マークダウン 装飾 */
+  .mb-bubble strong, .mb-bubble b{color:#DC2626;font-weight:900;}
+  .mb-bubble em, .mb-bubble i{color:#0F766E;font-style:normal;font-weight:700;background:linear-gradient(transparent 60%, rgba(20,184,166,0.18) 60%);padding:0 2px;}
+  .mb-bubble h1,.mb-bubble h2,.mb-bubble h3{font-size:14.5px;font-weight:900;margin:10px 0 6px;color:#0F172A;border-left:4px solid #14B8A6;padding-left:8px;line-height:1.4;}
+  .mb-bubble h1{font-size:15.5px;color:#0F766E;}
+  .mb-bubble h2{font-size:14.5px;}
+  .mb-bubble h3{font-size:13.5px;border-left-color:#34D399;}
+  .mb-bubble ul,.mb-bubble ol{margin:6px 0 8px 22px;padding:0;}
+  .mb-bubble li{margin:4px 0;line-height:1.7;}
+  .mb-bubble ul li::marker{color:#14B8A6;font-weight:900;}
+  .mb-bubble ol li::marker{color:#DC2626;font-weight:900;}
+  .mb-bubble hr{margin:10px 0;border:0;border-top:2px dashed #CFFAFE;}
+  .mb-bubble code{background:#F1F5F9;padding:2px 6px;border-radius:4px;font-size:12px;color:#0F766E;font-family:'JetBrains Mono',monospace;}
+  .mb-bubble blockquote{margin:8px 0;padding:8px 14px;background:#FEF3C7;border-left:4px solid #F59E0B;color:#78350F;border-radius:0 6px 6px 0;font-weight:600;}
+  .mb-bubble p{margin:6px 0;line-height:1.75;}
+  .mb-bubble p:first-child{margin-top:0;}
+  .mb-bubble p:last-child{margin-bottom:0;}
+  .mb-bubble .hl-key{background:#FEF3C7;padding:1px 6px;border-radius:4px;font-weight:800;color:#92400E;}
+  .mb-bubble .hl-num{color:#DC2626;font-weight:900;font-size:14px;}
+  /* リサイズ ハンドル */
+  .mb-resize{position:absolute;top:-3px;left:-3px;width:18px;height:18px;cursor:nwse-resize;z-index:10;background:linear-gradient(135deg,#14B8A6 0%,#14B8A6 30%,transparent 30%,transparent 50%,#14B8A6 50%,#14B8A6 60%,transparent 60%);opacity:0.7;border-radius:4px 0 0 0;}
+  .mb-resize:hover{opacity:1;}
+  .mb-panel.resizing{user-select:none;}
+  @keyframes mbFabFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+  .mb-fab-avatar{position:relative;width:96px;height:96px;background:radial-gradient(ellipse at 50% 60%, #fff 0%, #ECFEFF 70%, #CFFAFE 100%);border-radius:50%;box-shadow:0 10px 28px rgba(20,184,166,0.30),0 4px 10px rgba(15,23,42,0.20),inset 0 -4px 8px rgba(20,184,166,0.10);display:flex;align-items:center;justify-content:center;overflow:visible;border:3px solid #14B8A6;}
+  .mb-fab-img{width:80px;height:80px;object-fit:contain;border-radius:50%;display:block;}
+  .mb-fab-pulse{position:absolute;inset:-8px;border:3px solid #14B8A6;border-radius:50%;opacity:0;animation:mbPulse 2.2s ease-out infinite;pointer-events:none;}
+  @keyframes mbPulse{0%{transform:scale(0.85);opacity:0.7}100%{transform:scale(1.4);opacity:0}}
+  .mb-fab-badge{position:absolute;top:-4px;right:6px;width:26px;height:26px;background:#FBBF24;color:#0F172A;border:2px solid #fff;border-radius:50%;font-weight:900;font-size:15px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.30);animation:mbBadgePop 1.6s ease-in-out infinite;z-index:1;}
+  @keyframes mbBadgePop{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}
+  .mb-fab-label{margin-top:6px;background:#0F766E;color:#ECFEFF;padding:4px 10px;border-radius:12px;font-size:10.5px;font-weight:800;letter-spacing:0.08em;box-shadow:0 4px 12px rgba(15,23,42,0.30);}
+  .mb-fab-hint{position:absolute;right:114px;top:18px;background:#FBBF24;color:#0F172A;padding:10px 14px;border-radius:14px;font-size:12px;font-weight:800;line-height:1.35;box-shadow:0 6px 18px rgba(15,23,42,0.25);white-space:nowrap;animation:mbHintWiggle 2.8s ease-in-out infinite;}
+  @keyframes mbHintWiggle{0%,100%{transform:rotate(-1.5deg)}50%{transform:rotate(1.5deg)}}
+  .mb-fab-hint::after{content:'';position:absolute;right:-10px;top:50%;transform:translateY(-50%);width:0;height:0;border-left:12px solid #FBBF24;border-top:10px solid transparent;border-bottom:10px solid transparent;}
+  .mb-fab.hidden{display:none;}
+  @media (max-width:600px){
+    .mb-fab{right:14px;bottom:14px;}
+    .mb-fab-avatar{width:76px;height:76px;border-width:2px;}
+    .mb-fab-img{width:62px;height:62px;}
+    .mb-fab-badge{width:22px;height:22px;font-size:12px;}
+    .mb-fab-hint{display:none;}
+  }
+  .mb-panel{position:fixed;right:24px;bottom:24px;z-index:9995;width:460px;min-width:320px;max-width:calc(100vw - 32px);height:600px;min-height:400px;max-height:calc(100vh - 32px);background:#fff;border-radius:14px;box-shadow:0 20px 60px rgba(15,23,42,0.40),0 0 0 1px rgba(20,184,166,0.20);display:none;flex-direction:column;overflow:hidden;animation:mbPanelIn .22s cubic-bezier(.34,1.6,.64,1) both;font-family:'Noto Sans JP',sans-serif;}
+  @keyframes mbPanelIn{from{opacity:0;transform:scale(0.85) translateY(20px)}to{opacity:1;transform:scale(1) translateY(0)}}
+  .mb-panel.open{display:flex;}
+  @media (max-width:600px){.mb-panel{right:8px;bottom:8px;width:calc(100vw - 16px);max-height:85vh;}}
+  .mb-head{display:flex;align-items:center;gap:12px;padding:12px 16px;background:linear-gradient(135deg,#0F766E 0%,#0E7490 100%);color:#F0FDFA;border-bottom:1px solid #14B8A6;}
+  .mb-head-avatar{position:relative;width:42px;height:42px;background:radial-gradient(ellipse at 50% 60%, #fff 0%, #CFFAFE 100%);border:2px solid #14B8A6;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;}
+  .mb-head-img{width:36px;height:36px;object-fit:contain;display:block;}
+  .mb-title-wrap{flex:1;min-width:0;}
+  .mb-title{font-size:14px;font-weight:800;letter-spacing:0.02em;color:#F0FDFA;display:block;}
+  .mb-sub{font-size:10.5px;color:#A7F3D0;margin-top:2px;font-family:'JetBrains Mono',monospace;display:block;}
+  .mb-status-dot{display:inline-block;width:7px;height:7px;background:#34D399;border-radius:50%;margin-right:6px;box-shadow:0 0 0 3px rgba(52,211,153,0.20);}
+  .mb-close{width:30px;height:30px;background:transparent;color:#A7F3D0;border:1px solid #115E59;border-radius:6px;font-size:16px;cursor:pointer;font-family:inherit;}
+  .mb-close:hover{background:#DC2626;color:#fff;border-color:#DC2626;}
+  .mb-messages{padding:14px 16px;flex:1;overflow-y:auto;background:#FAFAFA;display:flex;flex-direction:column;gap:10px;}
+  .mb-msg{max-width:92%;animation:mbIn .25s ease-out both;}
+  @keyframes mbIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+  .mb-msg-bot{margin-right:auto;}
+  .mb-msg-user{margin-left:auto;}
+  .mb-bubble{padding:10px 14px;border-radius:10px;font-size:13px;line-height:1.65;color:#1F2937;white-space:pre-wrap;}
+  .mb-msg-bot .mb-bubble{background:#fff;border:1px solid #E5E7EB;border-left:3px solid #14B8A6;}
+  .mb-msg-user .mb-bubble{background:#0F766E;color:#F0FDFA;text-align:right;}
+  .mb-typing{display:inline-flex;gap:4px;padding:4px 0;}
+  .mb-typing span{width:6px;height:6px;background:#14B8A6;border-radius:50%;animation:mbBounce 1.2s ease-in-out infinite;}
+  .mb-typing span:nth-child(2){animation-delay:0.15s;}
+  .mb-typing span:nth-child(3){animation-delay:0.3s;}
+  @keyframes mbBounce{0%,80%,100%{transform:translateY(0);opacity:0.4}40%{transform:translateY(-4px);opacity:1}}
+  .mb-quick{display:flex;flex-wrap:wrap;gap:6px;padding:8px 12px;background:#fff;border-top:1px dashed #E5E7EB;}
+  .mb-q{padding:6px 10px;background:#ECFEFF;border:1px solid #67E8F9;color:#0E7490;border-radius:99px;font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;}
+  .mb-q:hover{background:#14B8A6;color:#fff;border-color:#14B8A6;}
+  .mb-input-row{display:flex;gap:8px;padding:10px 12px;background:#fff;border-top:1px solid #E5E7EB;}
+  .mb-input{flex:1;min-height:38px;max-height:120px;padding:8px 12px;border:1px solid #D1D5DB;border-radius:6px;font-size:13px;font-family:inherit;resize:vertical;}
+  .mb-input:focus{outline:0;border-color:#14B8A6;box-shadow:0 0 0 2px rgba(20,184,166,0.15);}
+  .mb-send{padding:0 18px;height:38px;background:#14B8A6;color:#fff;border:0;border-radius:6px;font-weight:800;font-size:13px;cursor:pointer;letter-spacing:0.04em;font-family:inherit;}
+  .mb-send:hover{background:#0F766E;}
+  .mb-send:disabled{background:#9CA3AF;cursor:not-allowed;}
+</style>
+
+<div class="mb-fab" id="mbFab" title="コンパちゃん に 業務相談 する">
+  <div class="mb-fab-hint" id="mbFabHint"><span>業務のこと<br>何でも聞いてね♪</span></div>
+  <div class="mb-fab-avatar">
+    <img class="mb-fab-img" src="/img/mebuki-kun-400.jpg" alt="コンパちゃん">
+    <span class="mb-fab-pulse"></span>
+    <span class="mb-fab-badge">?</span>
+  </div>
+  <span class="mb-fab-label">コンパちゃん</span>
+</div>
+
+<div class="mb-panel" id="mbPanel">
+  <div class="mb-resize" id="mbResize" title="ドラッグで サイズ変更"></div>
+  <div class="mb-head">
+    <div class="mb-head-avatar"><img class="mb-head-img" src="/img/mebuki-kun-400.jpg" alt="コンパちゃん"></div>
+    <div class="mb-title-wrap">
+      <span class="mb-title">コンパちゃん</span>
+      <span class="mb-sub"><span class="mb-status-dot"></span>オンライン / FP業務 全部 把握 🌱</span>
+    </div>
+    <button class="mb-close" id="mbClose" title="閉じる">×</button>
+  </div>
+  <div class="mb-messages" id="mbMessages">
+    <div class="mb-msg mb-msg-bot">
+      <div class="mb-bubble">こんにちは、 <strong>コンパちゃん</strong> だよ 🌱<br><br>FP業務 で 困った時 は 何でも 聞いてね。 お客様 説明用 の 文言 そのまま 出すよ ♪<br><br><b>こういう質問 ↓</b><br>・「40代主婦 教育費 提案 どうする?」<br>・「新NISA 配分 (30代会社員)」<br>・「保険見直し 切返し 文言」</div>
+    </div>
+  </div>
+  <div class="mb-quick">
+    <button class="mb-q" data-q="40代主婦・子供2人 (中学生・小学生) の 教育費 提案 のポイント を 3つ">教育費 40代</button>
+    <button class="mb-q" data-q="新NISA の 配分 を 30代会社員 (年収600万) の 場合 で 教えて">NISA 30代</button>
+    <button class="mb-q" data-q="50代経営者 に iDeCo を 勧めるべき? 切返し 文言">iDeCo 50代</button>
+    <button class="mb-q" data-q="保険見直し で 「今のままで いいや」 と 言う お客様 への 切返し">保険 切返し</button>
+  </div>
+  <div class="mb-input-row">
+    <textarea class="mb-input" id="mbInput" placeholder="聞きたいこと を 入力 (Cmd+Enter で 送信)" rows="1"></textarea>
+    <button class="mb-send" id="mbSend">▶ 送る</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  try {
+  const CF_URL = 'https://asia-northeast1-skeleton-fp-compass-632026.cloudfunctions.net/chatFpCounselor';
+  const fab = document.getElementById('mbFab');
+  const hint = document.getElementById('mbFabHint');
+  const panel = document.getElementById('mbPanel');
+  const closeBtn = document.getElementById('mbClose');
+  const messages = document.getElementById('mbMessages');
+  const input = document.getElementById('mbInput');
+  const send = document.getElementById('mbSend');
+  if (!fab || !panel || !messages || !input || !send) {
+    console.warn('[mebuki] elements not found, skip init');
+    return;
+  }
+  const history = [];
+
+  fab.addEventListener('click', () => {
+    panel.classList.add('open');
+    fab.classList.add('hidden');
+    setTimeout(() => input.focus(), 100);
+  });
+  closeBtn.addEventListener('click', () => {
+    panel.classList.remove('open');
+    fab.classList.remove('hidden');
+  });
+  // 2026-07-11 v5: sidebar-kompa-trigger も 同じ mbPanel を 開く
+  const sideKompa = document.getElementById('sidebar-kompa-trigger');
+  if (sideKompa) {
+    sideKompa.addEventListener('click', () => {
+      panel.classList.add('open');
+      setTimeout(() => input.focus(), 100);
+    });
+    sideKompa.addEventListener('mouseenter', () => {
+      sideKompa.style.transform = 'translateY(-1px)';
+      sideKompa.style.boxShadow = '0 6px 16px rgba(20,184,166,0.28)';
+    });
+    sideKompa.addEventListener('mouseleave', () => {
+      sideKompa.style.transform = 'translateY(0)';
+      sideKompa.style.boxShadow = '0 2px 8px rgba(20,184,166,0.16)';
+    });
+  }
+
+  // ★ リサイズ ハンドル (左上 ドラッグ で 拡縮)
+  const resize = document.getElementById('mbResize');
+  if (resize) {
+    let drag = null;
+    resize.addEventListener('mousedown', (e) => {
+      drag = { x: e.clientX, y: e.clientY, w: panel.offsetWidth, h: panel.offsetHeight, l: panel.offsetLeft, t: panel.offsetTop };
+      panel.classList.add('resizing');
+      e.preventDefault();
+    });
+    window.addEventListener('mousemove', (e) => {
+      if (!drag) return;
+      const dx = e.clientX - drag.x;
+      const dy = e.clientY - drag.y;
+      const newW = Math.max(320, Math.min(window.innerWidth - 16, drag.w - dx));
+      const newH = Math.max(400, Math.min(window.innerHeight - 16, drag.h - dy));
+      panel.style.width = newW + 'px';
+      panel.style.height = newH + 'px';
+    });
+    window.addEventListener('mouseup', () => {
+      if (!drag) return;
+      panel.classList.remove('resizing');
+      try { localStorage.setItem('mb-panel-size', JSON.stringify({ w: panel.offsetWidth, h: panel.offsetHeight })); } catch (_) {}
+      drag = null;
+    });
+    // 復元
+    try {
+      const saved = JSON.parse(localStorage.getItem('mb-panel-size') || 'null');
+      if (saved && saved.w && saved.h) {
+        panel.style.width = saved.w + 'px';
+        panel.style.height = saved.h + 'px';
+      }
+    } catch (_) {}
+  }
+
+  // ★ 簡易 マークダウン パーサ (太字 / 見出し / リスト / コード / blockquote / 強調)
+  function escapeHtml(s) { return s.replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
+  function md2html(text) {
+    let s = escapeHtml(String(text || ''));
+    // 見出し (###, ##, #)
+    s = s.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+    s = s.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+    s = s.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+    // 引用 (>)
+    s = s.replace(/^&gt; (.+)$/gm, '<blockquote>$1</blockquote>');
+    // 水平線 (---)
+    s = s.replace(/^---+$/gm, '<hr>');
+    // コード (`xxx`)
+    s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
+    // 太字 (**xxx** or __xxx__) — 赤くする
+    s = s.replace(/\*\*([^\*]+)\*\*/g, '<strong>$1</strong>');
+    s = s.replace(/__([^_]+)__/g, '<strong>$1</strong>');
+    // 斜体 (*xxx* or _xxx_) — 緑マーカー
+    s = s.replace(/(^|[^\*])\*([^\*\n]+)\*(?!\*)/g, '$1<em>$2</em>');
+    // 数字+万円/円 → 赤強調 (FP特有)
+    s = s.replace(/(\d{1,3}(?:,\d{3})*(?:\.\d+)?(?:万円|億|万|円|％|%))/g, '<span class="hl-num">$1</span>');
+    // 順序リスト (1. 2. 3.)
+    s = s.replace(/^(?:\d+\.\s+(.+)(?:\n|$))+/gm, function(block) {
+      const items = block.trim().split(/\n/).map(l => l.replace(/^\d+\.\s+/, '<li>') + '</li>').join('');
+      return '<ol>' + items + '</ol>';
+    });
+    // 箇条書き (- xxx, ・xxx)
+    s = s.replace(/^(?:[-・]\s+(.+)(?:\n|$))+/gm, function(block) {
+      const items = block.trim().split(/\n/).map(l => l.replace(/^[-・]\s+/, '<li>') + '</li>').join('');
+      return '<ul>' + items + '</ul>';
+    });
+    // 段落 (連続改行 → <p>)
+    s = s.split(/\n\n+/).map(p => {
+      if (/^<(h\d|ul|ol|hr|blockquote)/.test(p.trim())) return p;
+      return '<p>' + p.replace(/\n/g, '<br>') + '</p>';
+    }).join('');
+    return s;
+  }
+  // ヒント 自動消去 (5秒後)
+  setTimeout(() => { if (hint) hint.style.display = 'none'; }, 5000);
+
+  document.querySelectorAll('.mb-q').forEach(b => {
+    b.addEventListener('click', () => {
+      input.value = b.dataset.q;
+      doSend();
+    });
+  });
+
+  send.addEventListener('click', doSend);
+  input.addEventListener('keydown', e => {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); doSend(); }
+  });
+
+  function addMsg(role, text, isTyping) {
+    const wrap = document.createElement('div');
+    wrap.className = 'mb-msg ' + (role === 'user' ? 'mb-msg-user' : 'mb-msg-bot');
+    const bubble = document.createElement('div');
+    bubble.className = 'mb-bubble';
+    if (isTyping) bubble.innerHTML = '<span class="mb-typing"><span></span><span></span><span></span></span>';
+    else if (role === 'bot') bubble.innerHTML = md2html(text);
+    else bubble.textContent = text;
+    wrap.appendChild(bubble);
+    messages.appendChild(wrap);
+    messages.scrollTop = messages.scrollHeight;
+    return bubble;
+  }
+
+  async function doSend() {
+    const q = input.value.trim();
+    if (!q) return;
+    addMsg('user', q);
+    history.push({ role: 'user', content: q });
+    input.value = '';
+    send.disabled = true;
+    const bubble = addMsg('bot', '', true);
+    try {
+      // ★ 2026-07-01 fix: Bearer ID token 送信 (chatFpCounselor が context.auth 要求 → 未送信で 「ログインが必要」 応答バグ)
+      const headers = (typeof window.getFpAuthHeaders === 'function')
+        ? await window.getFpAuthHeaders()
+        : { 'Content-Type': 'application/json' };
+      const res = await fetch(CF_URL, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ data: { message: q, history: history.slice(-11, -1) } }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json?.result?.ok) {
+        throw new Error(json?.error?.message || json?.result?.error || res.status);
+      }
+      const reply = json.result.reply || '(空の返答)';
+      bubble.innerHTML = md2html(reply);
+      history.push({ role: 'assistant', content: reply });
+    } catch (e) {
+      bubble.innerHTML = '<span style="color:#DC2626;">⚠ エラー: ' + (e.message || e) + '</span>';
+      history.pop();
+    } finally {
+      send.disabled = false;
+      input.focus();
+    }
+  }
+  } catch (e) {
+    // ★ チャットbot 内 エラー は 親 ページ に 伝播させない (errorBoundary 巻添え 防止)
+    console.error('[mebuki] init failed (chatbot disabled):', e);
+  }
+})();
+</script>
+<!-- ====== /芽吹くん チャットボット ====== -->
+
+</body>
+</html>
