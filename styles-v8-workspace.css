@@ -10507,3 +10507,72 @@ body.modal-open {
     scroll-behavior: auto !important;
   }
 }
+
+/* ============================================================
+   2026-07-15 contrast pass: 塗り pill / badge / button の 文字色 統一
+   owner FB: 「管理中 の 青いピル に 黒い文字 で 見づらい」
+   line 1185 の color:ink-2 が 後段 の bg-blue と 合わさって 低 コントラスト。
+   全 塗り status-pill を 白 文字 に 統一。
+   ============================================================ */
+.status-pill.active,
+.status-pill.new,
+.status-pill.important,
+.status-pill.warn,
+.status-pill.pending,
+.status-pill.recording,
+.status-pill.done,
+.status-pill.complete,
+.status-pill.info,
+.status-pill.dormant {
+  color: #fff !important;
+}
+.status-pill.active::before,
+.status-pill.new::before,
+.status-pill.important::before,
+.status-pill.warn::before,
+.status-pill.pending::before,
+.status-pill.recording::before,
+.status-pill.done::before,
+.status-pill.complete::before,
+.status-pill.info::before,
+.status-pill.dormant::before {
+  background: rgba(255, 255, 255, 0.9) !important;
+}
+
+/* count-badge / .badge / .pill 系 も 塗り 時 は 白 文字 */
+.count-badge.indigo, .count-badge.active,
+.badge.indigo, .badge.active,
+.pill.indigo, .pill.active {
+  color: #fff !important;
+}
+
+/* 青系 button / CTA で 黒文字 に なってる 誤 combi 全部 fix */
+button.primary,
+button[class*="btn-primary"],
+button[class*="btn-cta"],
+a.btn-primary, a[class*="btn-cta"],
+.btn-cta-primary,
+.fp-btn-primary,
+.upgrade-mini,
+[data-cta-primary],
+[class*="vv-indigo"][class*="filled"] {
+  color: #fff !important;
+}
+button.primary *,
+button[class*="btn-primary"] *,
+button[class*="btn-cta"] *,
+.btn-cta-primary * {
+  color: inherit !important;
+}
+
+/* rec-pill / line-status-pill.on など 塗り 系 全部 白 */
+.rec-pill.recording,
+.rec-pill.saved,
+.line-status-pill.on {
+  color: #fff !important;
+}
+
+/* KPI badge / チャート凡例 で 塗り 円 の 中 text が dark に なる 罠 */
+[class*="pill"][style*="background"][style*="rgb"] {
+  color: #fff;  /* 弱い hint、 明示 style が あれば override 可 */
+}
