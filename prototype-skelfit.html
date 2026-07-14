@@ -104,10 +104,32 @@ button:focus-visible, a:focus-visible, input:focus-visible {
 @media (max-width: 1280px) {
   .app { grid-template-columns: 240px 1fr; grid-template-areas: "brand topbar" "sidebar main"; }
   .preview { display: none; }
+  .kpi-row { gap: 12px; }
+  .kpi { padding: 16px; }
 }
 @media (max-width: 780px) {
-  .app { grid-template-columns: 1fr; grid-template-rows: 56px 1fr; grid-template-areas: "topbar" "main"; }
+  .app {
+    grid-template-columns: 1fr;
+    grid-template-rows: 56px 1fr;
+    grid-template-areas: "topbar" "main";
+    min-height: 100vh;
+    height: auto;
+    overflow: visible;
+  }
   .brand, .sidebar { display: none; }
+  .main { overflow-y: auto; padding: 16px; }
+  .kpi-row { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .kpi { padding: 14px; }
+  .kpi-value { font-size: 22px; }
+  .sched-row { grid-template-columns: 76px 1fr; padding: 12px 14px; }
+  .sched-topic, .sched-status { display: none; }
+  .list-2col { grid-template-columns: 1fr; }
+  .main-head { flex-direction: column; align-items: flex-start; gap: 4px; }
+  .main-head h1 { font-size: 20px; }
+  .proto-banner { padding: 4px 12px; }
+  .proto-banner span:first-child { font-size: 10px; }
+  .proto-banner .badge { padding: 1px 6px; font-size: 9px; }
+  .proto-banner .to-live { display: none; }
 }
 
 /* ===== Brand cell ===== */
@@ -125,12 +147,8 @@ button:focus-visible, a:focus-visible, input:focus-visible {
   width: 8px; height: 8px; border-radius: 50%;
   background: var(--vital);
   box-shadow: 0 0 0 3px rgba(0, 201, 106, 0.24);
-  animation: brand-pulse 2s ease-in-out infinite;
 }
-@keyframes brand-pulse {
-  0%, 100% { box-shadow: 0 0 0 3px rgba(0, 201, 106, 0.24); }
-  50% { box-shadow: 0 0 0 5px rgba(0, 201, 106, 0.10); }
-}
+/* brand-pulse animation 削除 (a11y review 指摘: pulse 過剰) */
 
 /* ===== Topbar ===== */
 .topbar {
@@ -161,7 +179,7 @@ button:focus-visible, a:focus-visible, input:focus-visible {
 }
 .search:focus { outline: none; border-color: var(--vital); box-shadow: 0 0 0 3px var(--vital-ring); }
 .notif-btn {
-  width: 36px; height: 36px; border-radius: var(--rad-2);
+  width: 44px; height: 44px; border-radius: var(--rad-2);
   background: var(--surface-2); border: 1px solid var(--rule);
   display: inline-flex; align-items: center; justify-content: center;
   cursor: pointer; position: relative; color: var(--ink-2);
@@ -180,7 +198,7 @@ button:focus-visible, a:focus-visible, input:focus-visible {
 }
 .user-chip .avatar {
   width: 28px; height: 28px; border-radius: 50%;
-  background: linear-gradient(135deg, #a4c9ff, #4a7ee0);
+  background: var(--ink);
   color: #fff; font-weight: 700; font-size: 12px;
   display: inline-flex; align-items: center; justify-content: center;
 }
@@ -243,12 +261,13 @@ button:focus-visible, a:focus-visible, input:focus-visible {
   display: flex; align-items: center; gap: 10px;
   width: 100%;
   padding: 10px 12px;
-  background: linear-gradient(135deg, #fbfbfd 0%, #f0f7f3 100%);
-  border: 1px solid var(--vital-soft);
+  background: var(--vital-soft);
+  border: 1px solid var(--vital);
   border-radius: var(--rad-3);
   cursor: pointer;
   font-family: inherit;
   margin-bottom: 14px;
+  min-height: 56px;
   transition: transform 160ms, box-shadow 200ms, border-color 200ms;
   text-align: left;
 }
@@ -260,8 +279,8 @@ button:focus-visible, a:focus-visible, input:focus-visible {
 .kompa-trigger .k-avatar {
   flex-shrink: 0;
   width: 36px; height: 36px; border-radius: 50%;
-  background: radial-gradient(ellipse at 50% 60%, #ffffff 0%, #d6f5e2 60%, #cff2df 100%);
-  border: 2px solid var(--vital);
+  background: #fff;
+  border: 2px solid var(--vital-hi);
   display: inline-flex; align-items: center; justify-content: center;
   font-size: 18px;
   position: relative;
@@ -269,15 +288,10 @@ button:focus-visible, a:focus-visible, input:focus-visible {
 .kompa-trigger .k-avatar::after {
   content: ""; position: absolute; right: -2px; bottom: -2px;
   width: 10px; height: 10px; border-radius: 50%;
-  background: var(--vital);
+  background: var(--vital-hi);
   border: 2px solid #fff;
-  box-shadow: 0 0 0 2px rgba(0,201,106,0.30);
-  animation: kompa-online 2s ease-in-out infinite;
 }
-@keyframes kompa-online {
-  0%, 100% { box-shadow: 0 0 0 2px rgba(0,201,106,0.30); }
-  50% { box-shadow: 0 0 0 4px rgba(0,201,106,0.10); }
-}
+/* kompa-online animation 削除 (pulse 過剰) */
 .kompa-trigger .k-text { flex: 1; min-width: 0; }
 .kompa-trigger .k-name {
   font-size: 13px; font-weight: 800; color: var(--ink);
@@ -319,7 +333,7 @@ button:focus-visible, a:focus-visible, input:focus-visible {
 }
 .kompa-head .h-avatar {
   width: 34px; height: 34px; border-radius: 50%;
-  background: radial-gradient(ellipse at 50% 60%, #fff 0%, #cff2df 100%);
+  background: var(--vital-soft);
   border: 2px solid var(--vital);
   display: inline-flex; align-items: center; justify-content: center;
   font-size: 16px;
@@ -337,7 +351,6 @@ button:focus-visible, a:focus-visible, input:focus-visible {
 .kompa-head .h-status::before {
   content: ""; width: 6px; height: 6px; border-radius: 50%;
   background: var(--vital);
-  animation: kompa-online 2s ease-in-out infinite;
 }
 .kompa-head .h-close {
   background: transparent; border: none; color: rgba(255,255,255,0.6);
@@ -372,13 +385,15 @@ button:focus-visible, a:focus-visible, input:focus-visible {
   border-top: 1px solid var(--rule);
 }
 .kompa-q {
-  padding: 6px 12px;
+  padding: 8px 14px;
   background: #fff;
   border: 1px solid var(--rule);
   border-radius: var(--rad-full);
-  font-size: 11.5px; font-weight: 700; color: var(--ink-2);
+  font-size: 12px; font-weight: 600; color: var(--ink-2);
+  letter-spacing: -0.005em;
   cursor: pointer;
   font-family: inherit;
+  min-height: 32px;
   transition: background 120ms, border-color 120ms;
 }
 .kompa-q:hover { background: var(--vital-soft); border-color: var(--vital); color: var(--vital-hi); }
@@ -462,7 +477,8 @@ button:focus-visible, a:focus-visible, input:focus-visible {
   font-variant-numeric: tabular-nums;
 }
 .kpi-delta.up { background: var(--vital-soft); color: var(--vital-hi); }
-.kpi-delta.flat { background: var(--surface-2); color: var(--dim); }
+.kpi-delta.flat { background: var(--surface-2); color: var(--ink-2); }
+.kpi-delta.warn { background: #fef3c7; color: #78450F; }
 
 /* Section head */
 .sec-head {
@@ -482,7 +498,7 @@ button:focus-visible, a:focus-visible, input:focus-visible {
 }
 .sched-row {
   display: grid;
-  grid-template-columns: 100px 1fr 140px 130px;
+  grid-template-columns: 88px 1fr 196px 88px;
   padding: 14px 18px;
   border-bottom: 1px solid var(--rule);
   align-items: center;
@@ -516,7 +532,7 @@ button:focus-visible, a:focus-visible, input:focus-visible {
 .tag.confirmed { background: var(--vital-soft); color: var(--vital-hi); }
 .tag.pending { background: #fef3c7; color: #a16207; }
 .tag.live {
-  background: var(--vital); color: #fff;
+  background: var(--vital-hi); color: #fff;
   animation: tag-live-in 300ms cubic-bezier(0.22,1,0.36,1) both;
 }
 @keyframes tag-live-in {
@@ -579,7 +595,7 @@ button:focus-visible, a:focus-visible, input:focus-visible {
 }
 .preview-head .a-lg {
   width: 56px; height: 56px; border-radius: 50%;
-  background: linear-gradient(135deg, #a4c9ff, #4a7ee0);
+  background: #4a7ee0;
   color: #fff; font-weight: 800; font-size: 20px;
   display: inline-flex; align-items: center; justify-content: center;
 }
@@ -607,12 +623,9 @@ button:focus-visible, a:focus-visible, input:focus-visible {
 }
 .next-sess-label::before {
   content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--vital);
-  animation: sess-pulse 2s ease-in-out infinite;
+  box-shadow: 0 0 0 3px var(--vital-ring);
 }
-@keyframes sess-pulse {
-  0%, 100% { box-shadow: 0 0 0 3px var(--vital-ring); }
-  50%      { box-shadow: 0 0 0 6px rgba(0,201,106,0.10); }
-}
+/* sess-pulse animation 削除 (pulse 過剰、 LIVE tag のみ に 集約) */
 .next-sess h4 { font-size: 17px; font-weight: 800; margin: 0 0 6px; }
 .next-sess .when {
   font-family: var(--font-mono); font-size: 13px;
@@ -717,13 +730,13 @@ button:focus-visible, a:focus-visible, input:focus-visible {
 .mono { font-family: var(--font-mono); letter-spacing: -0.01em; }
 .tabnum { font-variant-numeric: tabular-nums; }
 
-/* avatar palette */
-.a-blue { background: linear-gradient(135deg, #a4c9ff, #4a7ee0); }
-.a-orange { background: linear-gradient(135deg, #ffb84d, #ff7847); }
-.a-purple { background: linear-gradient(135deg, #d8b4fe, #9333ea); }
-.a-pink { background: linear-gradient(135deg, #fbcfe8, #ec4899); }
-.a-green { background: linear-gradient(135deg, #86efac, #16a34a); }
-.a-yellow { background: linear-gradient(135deg, #fef08a, #eab308); }
+/* avatar palette (Tailwind 600 相当 単色、 グラデ 削除) */
+.a-blue { background: #4a7ee0; }
+.a-orange { background: #f97316; }
+.a-purple { background: #9333ea; }
+.a-pink { background: #ec4899; }
+.a-green { background: #16a34a; }
+.a-yellow { background: #ca8a04; }
 </style>
 </head>
 <body>
@@ -751,7 +764,7 @@ button:focus-visible, a:focus-visible, input:focus-visible {
     <div class="topbar-actions">
       <input class="search" type="search" placeholder="顧客 / 議事録 / タグ を 検索…">
       <button class="notif-btn" aria-label="通知">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+        <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
       </button>
       <div class="user-chip">
         <span class="avatar">TO</span>
@@ -763,56 +776,58 @@ button:focus-visible, a:focus-visible, input:focus-visible {
   <!-- Sidebar -->
   <aside class="sidebar">
     <div class="nav-group">Workspace</div>
-    <a class="nav-item active">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12L12 3l9 9"/><path d="M5 10v10a1 1 0 001 1h4v-6h4v6h4a1 1 0 001-1V10"/></svg>
+    <a class="nav-item active" href="#">
+      <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12L12 3l9 9"/><path d="M5 10v10a1 1 0 001 1h4v-6h4v6h4a1 1 0 001-1V10"/></svg>
       ホーム
     </a>
-    <a class="nav-item">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></svg>
+    <a class="nav-item" href="#">
+      <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></svg>
       顧客 台帳
       <span class="badge">32</span>
     </a>
-    <a class="nav-item">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    <a class="nav-item" href="#">
+      <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
       ライフ イベント
     </a>
-    <a class="nav-item">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/></svg>
+    <a class="nav-item" href="#">
+      <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/></svg>
       面談 履歴
     </a>
 
-    <div class="nav-group" style="margin-top:14px;">Line 配信</div>
-    <a class="nav-item">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+    <div class="nav-group" style="margin-top:14px;">LINE 配信</div>
+    <a class="nav-item" href="#">
+      <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
       新規 相談
       <span class="badge pulse">3</span>
     </a>
-    <a class="nav-item">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+    <a class="nav-item" href="#">
+      <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
       配信
     </a>
-    <a class="nav-item">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    <a class="nav-item" href="#">
+      <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
       ご無沙汰 フォロー
     </a>
-    <a class="nav-item">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+    <a class="nav-item" href="#">
+      <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
       タグ 管理
     </a>
 
     <div class="nav-group" style="margin-top:14px;">その他</div>
-    <a class="nav-item">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+    <a class="nav-item" href="#">
+      <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
       設定
     </a>
 
     <div class="sidebar-foot">
       <!-- コンパちゃん trigger (SkelFit design 版) -->
-      <button class="kompa-trigger" id="kompa-open" type="button">
-        <span class="k-avatar">🌱</span>
+      <button class="kompa-trigger" id="kompa-open" type="button"
+        aria-label="コンパちゃん (AI 相談・文案作成) を 開く"
+        aria-haspopup="dialog" aria-controls="kompa-panel" aria-expanded="false">
+        <span class="k-avatar" aria-hidden="true">🌱</span>
         <span class="k-text">
           <span class="k-name">コンパちゃん</span>
-          <span class="k-sub">AI 業務 相談 · 常時 オンライン</span>
+          <span class="k-sub">説明 文言 · 提案 下書き · フォロー 提案</span>
         </span>
       </button>
 
@@ -822,24 +837,24 @@ button:focus-visible, a:focus-visible, input:focus-visible {
   </aside>
 
   <!-- コンパちゃん chat panel (floating, hidden by default) -->
-  <div class="kompa-panel" id="kompa-panel">
+  <div class="kompa-panel" id="kompa-panel" role="dialog" aria-modal="true" aria-labelledby="kompa-title">
     <div class="kompa-head">
-      <span class="h-avatar">🌱</span>
+      <span class="h-avatar" aria-hidden="true">🌱</span>
       <div class="h-info">
-        <div class="h-name">コンパちゃん</div>
-        <div class="h-status">オンライン · FP 業務 全部 把握</div>
+        <div class="h-name" id="kompa-title">コンパちゃん</div>
+        <div class="h-status">説明 文言 · 提案 下書き · 次回 フォロー</div>
       </div>
-      <button class="h-close" id="kompa-close" aria-label="閉じる">×</button>
+      <button class="h-close" id="kompa-close" aria-label="コンパちゃん を 閉じる">×</button>
     </div>
     <div class="kompa-body" id="kompa-body">
       <div class="kompa-msg in">
-        <div class="bub">こんにちは、 <strong>コンパちゃん</strong> です 🌱<br><br>FP 業務 で 困った 時 は 何 でも 聞いて ください。 お客様 説明用 の 文言 も その まま 出せます ♪</div>
+        <div class="bub">こんにちは。 <strong>コンパちゃん</strong> です。<br><br>FP Compass に 入っている 情報 を もと に、 説明 文言 の 下書き / 次回 フォロー の タイミング / iDeCo や NISA の 比較 など、 業務 で 使える 形 で 答えます。</div>
       </div>
     </div>
     <div class="kompa-quick">
-      <button class="kompa-q" data-q="40代主婦・子供2人 の 教育費 提案">教育費 40代</button>
-      <button class="kompa-q" data-q="新NISA の 配分 を 30代会社員 で">NISA 30代</button>
-      <button class="kompa-q" data-q="保険 見直し の 切返し 文言">保険 切返し</button>
+      <button class="kompa-q" data-q="40代主婦・子供2人 の 教育費 提案">教育費 の 説明 文言</button>
+      <button class="kompa-q" data-q="新NISA の 配分 を 30代会社員 で">NISA 配分 の 比較</button>
+      <button class="kompa-q" data-q="保険 見直し の 切返し 文言">保険 見直し 切返し</button>
     </div>
     <form class="kompa-foot" id="kompa-form">
       <input class="kompa-input" id="kompa-input" placeholder="質問 を 入力…" autocomplete="off">
@@ -858,23 +873,23 @@ button:focus-visible, a:focus-visible, input:focus-visible {
     <div class="kpi-row">
       <div class="kpi">
         <div class="kpi-label">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>
+          <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>
           今日 の 面談
         </div>
         <div class="kpi-value">4<span class="unit">件</span></div>
-        <div class="kpi-delta up">↑ 3 件 完了 待ち</div>
+        <div class="kpi-delta flat">要 フォロー 3 件</div>
       </div>
       <div class="kpi">
         <div class="kpi-label">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
           未読 LINE
         </div>
         <div class="kpi-value">7<span class="unit">件</span></div>
-        <div class="kpi-delta up">↑ 昨日 比 +2</div>
+        <div class="kpi-delta warn">昨日 より +2 件</div>
       </div>
       <div class="kpi">
         <div class="kpi-label">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
           提案 中
         </div>
         <div class="kpi-value">12<span class="unit">件</span></div>
@@ -882,7 +897,7 @@ button:focus-visible, a:focus-visible, input:focus-visible {
       </div>
       <div class="kpi">
         <div class="kpi-label">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+          <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
           今月 継続
         </div>
         <div class="kpi-value">28<span class="unit">/32</span></div>
@@ -896,7 +911,7 @@ button:focus-visible, a:focus-visible, input:focus-visible {
       <a href="#">全 の カレンダー を 見る →</a>
     </div>
     <div class="schedule">
-      <div class="sched-row selected">
+      <div class="sched-row selected" tabindex="0" role="button">
         <div class="sched-time">10:00<span class="end">〜 10:45</span></div>
         <div class="sched-client">
           <span class="a-dot a-blue">SS</span>
@@ -906,9 +921,9 @@ button:focus-visible, a:focus-visible, input:focus-visible {
           </div>
         </div>
         <div class="sched-topic">Zoom 面談 · 議題: 学資保険</div>
-        <div class="sched-status"><span class="tag live">Live</span></div>
+        <div class="sched-status"><span class="tag live" aria-label="現在 セッション 進行 中">進行 中</span></div>
       </div>
-      <div class="sched-row">
+      <div class="sched-row" tabindex="0" role="button">
         <div class="sched-time">13:30<span class="end">〜 14:15</span></div>
         <div class="sched-client">
           <span class="a-dot a-orange">TK</span>
@@ -920,7 +935,7 @@ button:focus-visible, a:focus-visible, input:focus-visible {
         <div class="sched-topic">対面 面談 · 議題: NISA 見直し</div>
         <div class="sched-status"><span class="tag confirmed">確定</span></div>
       </div>
-      <div class="sched-row">
+      <div class="sched-row" tabindex="0" role="button">
         <div class="sched-time">15:00<span class="end">〜 15:30</span></div>
         <div class="sched-client">
           <span class="a-dot a-purple">MN</span>
@@ -932,7 +947,7 @@ button:focus-visible, a:focus-visible, input:focus-visible {
         <div class="sched-topic">Zoom 面談 · 議題: 老後 資金</div>
         <div class="sched-status"><span class="tag confirmed">確定</span></div>
       </div>
-      <div class="sched-row">
+      <div class="sched-row" tabindex="0" role="button">
         <div class="sched-time">16:30<span class="end">〜 17:15</span></div>
         <div class="sched-client">
           <span class="a-dot a-pink">HA</span>
@@ -950,7 +965,7 @@ button:focus-visible, a:focus-visible, input:focus-visible {
     <div class="list-2col">
       <div class="list-card">
         <h3>優先 フォロー (AI 推奨)</h3>
-        <div class="mini-row">
+        <div class="mini-row" tabindex="0" role="button">
           <span class="a-dot a-orange">TK</span>
           <div class="grow">
             <div class="name">高橋 健一 様</div>
@@ -958,7 +973,7 @@ button:focus-visible, a:focus-visible, input:focus-visible {
           </div>
           <div class="val">72h</div>
         </div>
-        <div class="mini-row">
+        <div class="mini-row" tabindex="0" role="button">
           <span class="a-dot a-green">YS</span>
           <div class="grow">
             <div class="name">山田 沙織 様</div>
@@ -966,7 +981,7 @@ button:focus-visible, a:focus-visible, input:focus-visible {
           </div>
           <div class="val">48h</div>
         </div>
-        <div class="mini-row">
+        <div class="mini-row" tabindex="0" role="button">
           <span class="a-dot a-yellow">NK</span>
           <div class="grow">
             <div class="name">中村 光子 様</div>
@@ -974,7 +989,7 @@ button:focus-visible, a:focus-visible, input:focus-visible {
           </div>
           <div class="val">24h</div>
         </div>
-        <div class="mini-row">
+        <div class="mini-row" tabindex="0" role="button">
           <span class="a-dot a-blue">SS</span>
           <div class="grow">
             <div class="name">佐々木 涼子 様</div>
@@ -986,7 +1001,7 @@ button:focus-visible, a:focus-visible, input:focus-visible {
 
       <div class="list-card">
         <h3>直近 30日 の ライフ イベント</h3>
-        <div class="mini-row">
+        <div class="mini-row" tabindex="0" role="button">
           <span class="a-dot a-purple">MN</span>
           <div class="grow">
             <div class="name">松本 直美 様</div>
@@ -994,7 +1009,7 @@ button:focus-visible, a:focus-visible, input:focus-visible {
           </div>
           <div class="val">8 日 後</div>
         </div>
-        <div class="mini-row">
+        <div class="mini-row" tabindex="0" role="button">
           <span class="a-dot a-pink">HA</span>
           <div class="grow">
             <div class="name">橋本 明日香 様</div>
@@ -1002,7 +1017,7 @@ button:focus-visible, a:focus-visible, input:focus-visible {
           </div>
           <div class="val">14 日 後</div>
         </div>
-        <div class="mini-row">
+        <div class="mini-row" tabindex="0" role="button">
           <span class="a-dot a-orange">TK</span>
           <div class="grow">
             <div class="name">高橋 健一 様</div>
@@ -1010,7 +1025,7 @@ button:focus-visible, a:focus-visible, input:focus-visible {
           </div>
           <div class="val">22 日 後</div>
         </div>
-        <div class="mini-row">
+        <div class="mini-row" tabindex="0" role="button">
           <span class="a-dot a-blue">SW</span>
           <div class="grow">
             <div class="name">鈴木 大輔 様</div>
@@ -1096,7 +1111,7 @@ document.querySelectorAll('.nav-item').forEach(n => {
   });
 });
 
-// ===== コンパちゃん chat panel =====
+// ===== コンパちゃん chat panel (+ focus trap + ARIA) =====
 (function(){
   const trigger = document.getElementById('kompa-open');
   const panel = document.getElementById('kompa-panel');
@@ -1106,13 +1121,32 @@ document.querySelectorAll('.nav-item').forEach(n => {
   const input = document.getElementById('kompa-input');
   if (!trigger || !panel) return;
 
-  trigger.addEventListener('click', () => {
+  const focusables = () => panel.querySelectorAll('button, [href], input, textarea, select, [tabindex]:not([tabindex="-1"])');
+
+  const openPanel = () => {
     panel.classList.add('open');
+    trigger.setAttribute('aria-expanded', 'true');
     setTimeout(() => input?.focus(), 100);
-  });
-  closeBtn?.addEventListener('click', () => panel.classList.remove('open'));
+  };
+  const closePanel = () => {
+    panel.classList.remove('open');
+    trigger.setAttribute('aria-expanded', 'false');
+    trigger.focus();
+  };
+
+  trigger.addEventListener('click', openPanel);
+  closeBtn?.addEventListener('click', closePanel);
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && panel.classList.contains('open')) panel.classList.remove('open');
+    if (!panel.classList.contains('open')) return;
+    if (e.key === 'Escape') { e.preventDefault(); closePanel(); return; }
+    // focus trap: Tab / Shift+Tab
+    if (e.key === 'Tab') {
+      const nodes = Array.from(focusables()).filter(n => !n.disabled && n.offsetParent !== null);
+      if (nodes.length === 0) return;
+      const first = nodes[0], last = nodes[nodes.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
   });
 
   // quick reply buttons
