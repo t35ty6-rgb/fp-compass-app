@@ -238,6 +238,181 @@ button:focus-visible, a:focus-visible, input:focus-visible {
   border: none; cursor: pointer; width: 100%;
 }
 
+/* コンパちゃん trigger — sidebar foot 内 (現行 UI と 位置 一致) */
+.kompa-trigger {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  background: linear-gradient(135deg, #fbfbfd 0%, #f0f7f3 100%);
+  border: 1px solid var(--vital-soft);
+  border-radius: var(--rad-3);
+  cursor: pointer;
+  font-family: inherit;
+  margin-bottom: 14px;
+  transition: transform 160ms, box-shadow 200ms, border-color 200ms;
+  text-align: left;
+}
+.kompa-trigger:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(0,201,106,0.14);
+  border-color: var(--vital);
+}
+.kompa-trigger .k-avatar {
+  flex-shrink: 0;
+  width: 36px; height: 36px; border-radius: 50%;
+  background: radial-gradient(ellipse at 50% 60%, #ffffff 0%, #d6f5e2 60%, #cff2df 100%);
+  border: 2px solid var(--vital);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  position: relative;
+}
+.kompa-trigger .k-avatar::after {
+  content: ""; position: absolute; right: -2px; bottom: -2px;
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--vital);
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 2px rgba(0,201,106,0.30);
+  animation: kompa-online 2s ease-in-out infinite;
+}
+@keyframes kompa-online {
+  0%, 100% { box-shadow: 0 0 0 2px rgba(0,201,106,0.30); }
+  50% { box-shadow: 0 0 0 4px rgba(0,201,106,0.10); }
+}
+.kompa-trigger .k-text { flex: 1; min-width: 0; }
+.kompa-trigger .k-name {
+  font-size: 13px; font-weight: 800; color: var(--ink);
+  letter-spacing: -0.01em;
+  display: block;
+}
+.kompa-trigger .k-sub {
+  font-size: 10.5px; color: var(--vital-hi);
+  font-weight: 700; letter-spacing: 0.04em;
+  margin-top: 2px; display: block;
+}
+
+/* ===== コンパちゃん chat panel (floating right side, SkelFit dark ink card) ===== */
+.kompa-panel {
+  position: fixed;
+  right: 24px; bottom: 24px;
+  width: 380px; max-height: 600px;
+  background: #fff;
+  border: 1px solid var(--rule);
+  border-radius: var(--rad-4);
+  box-shadow: var(--elev-3);
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 10000;
+  animation: kompa-in 240ms cubic-bezier(0.22,1,0.36,1) both;
+}
+.kompa-panel.open { display: flex; }
+@keyframes kompa-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.kompa-head {
+  padding: 14px 16px;
+  background: var(--ink);
+  color: #fff;
+  display: flex; align-items: center; gap: 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.kompa-head .h-avatar {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: radial-gradient(ellipse at 50% 60%, #fff 0%, #cff2df 100%);
+  border: 2px solid var(--vital);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 16px;
+}
+.kompa-head .h-info { flex: 1; }
+.kompa-head .h-name {
+  font-size: 14px; font-weight: 800; letter-spacing: -0.01em;
+}
+.kompa-head .h-status {
+  font-size: 11px; color: var(--vital);
+  font-family: var(--font-mono);
+  display: flex; align-items: center; gap: 5px;
+  margin-top: 1px;
+}
+.kompa-head .h-status::before {
+  content: ""; width: 6px; height: 6px; border-radius: 50%;
+  background: var(--vital);
+  animation: kompa-online 2s ease-in-out infinite;
+}
+.kompa-head .h-close {
+  background: transparent; border: none; color: rgba(255,255,255,0.6);
+  font-size: 20px; cursor: pointer; padding: 4px 8px;
+  border-radius: var(--rad-2);
+  line-height: 1;
+}
+.kompa-head .h-close:hover { color: #fff; background: rgba(255,255,255,0.08); }
+
+.kompa-body {
+  padding: 16px;
+  flex: 1;
+  overflow-y: auto;
+  background: var(--surface-2);
+}
+.kompa-msg {
+  display: flex; margin-bottom: 10px;
+}
+.kompa-msg .bub {
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-size: 13px; line-height: 1.65;
+  max-width: 82%;
+}
+.kompa-msg.in .bub { background: #fff; color: var(--ink-2); border-bottom-left-radius: 4px; border: 1px solid var(--rule); }
+.kompa-msg.out { justify-content: flex-end; }
+.kompa-msg.out .bub { background: var(--ink); color: #fff; border-bottom-right-radius: 4px; }
+.kompa-quick {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  padding: 10px 16px 0;
+  background: var(--surface-2);
+  border-top: 1px solid var(--rule);
+}
+.kompa-q {
+  padding: 6px 12px;
+  background: #fff;
+  border: 1px solid var(--rule);
+  border-radius: var(--rad-full);
+  font-size: 11.5px; font-weight: 700; color: var(--ink-2);
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 120ms, border-color 120ms;
+}
+.kompa-q:hover { background: var(--vital-soft); border-color: var(--vital); color: var(--vital-hi); }
+.kompa-foot {
+  padding: 12px 16px;
+  background: var(--surface-2);
+  display: flex; gap: 8px;
+  border-top: 1px solid var(--rule);
+}
+.kompa-input {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid var(--rule);
+  border-radius: var(--rad-2);
+  font-size: 13px;
+  font-family: inherit;
+  background: #fff;
+}
+.kompa-input:focus { outline: none; border-color: var(--vital); box-shadow: 0 0 0 3px var(--vital-ring); }
+.kompa-send {
+  padding: 10px 16px;
+  background: var(--ink);
+  color: #fff;
+  border: none;
+  border-radius: var(--rad-2);
+  font-weight: 800; font-size: 13px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.kompa-send:hover { background: var(--vital-hi); }
+@media (max-width: 500px) {
+  .kompa-panel { right: 12px; bottom: 12px; left: 12px; width: auto; max-height: 82vh; }
+}
+
 /* ===== Main ===== */
 .main {
   grid-area: main;
@@ -632,10 +807,45 @@ button:focus-visible, a:focus-visible, input:focus-visible {
     </a>
 
     <div class="sidebar-foot">
+      <!-- コンパちゃん trigger (SkelFit design 版) -->
+      <button class="kompa-trigger" id="kompa-open" type="button">
+        <span class="k-avatar">🌱</span>
+        <span class="k-text">
+          <span class="k-name">コンパちゃん</span>
+          <span class="k-sub">AI 業務 相談 · 常時 オンライン</span>
+        </span>
+      </button>
+
       <div><span class="plan-name">Pro プラン</span> · 残 12 日</div>
       <button class="upgrade">プラン を 詳しく 見る</button>
     </div>
   </aside>
+
+  <!-- コンパちゃん chat panel (floating, hidden by default) -->
+  <div class="kompa-panel" id="kompa-panel">
+    <div class="kompa-head">
+      <span class="h-avatar">🌱</span>
+      <div class="h-info">
+        <div class="h-name">コンパちゃん</div>
+        <div class="h-status">オンライン · FP 業務 全部 把握</div>
+      </div>
+      <button class="h-close" id="kompa-close" aria-label="閉じる">×</button>
+    </div>
+    <div class="kompa-body" id="kompa-body">
+      <div class="kompa-msg in">
+        <div class="bub">こんにちは、 <strong>コンパちゃん</strong> です 🌱<br><br>FP 業務 で 困った 時 は 何 でも 聞いて ください。 お客様 説明用 の 文言 も その まま 出せます ♪</div>
+      </div>
+    </div>
+    <div class="kompa-quick">
+      <button class="kompa-q" data-q="40代主婦・子供2人 の 教育費 提案">教育費 40代</button>
+      <button class="kompa-q" data-q="新NISA の 配分 を 30代会社員 で">NISA 30代</button>
+      <button class="kompa-q" data-q="保険 見直し の 切返し 文言">保険 切返し</button>
+    </div>
+    <form class="kompa-foot" id="kompa-form">
+      <input class="kompa-input" id="kompa-input" placeholder="質問 を 入力…" autocomplete="off">
+      <button class="kompa-send" type="submit">送信</button>
+    </form>
+  </div>
 
   <!-- Main -->
   <main class="main">
@@ -885,6 +1095,64 @@ document.querySelectorAll('.nav-item').forEach(n => {
     n.classList.add('active');
   });
 });
+
+// ===== コンパちゃん chat panel =====
+(function(){
+  const trigger = document.getElementById('kompa-open');
+  const panel = document.getElementById('kompa-panel');
+  const closeBtn = document.getElementById('kompa-close');
+  const body = document.getElementById('kompa-body');
+  const form = document.getElementById('kompa-form');
+  const input = document.getElementById('kompa-input');
+  if (!trigger || !panel) return;
+
+  trigger.addEventListener('click', () => {
+    panel.classList.add('open');
+    setTimeout(() => input?.focus(), 100);
+  });
+  closeBtn?.addEventListener('click', () => panel.classList.remove('open'));
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && panel.classList.contains('open')) panel.classList.remove('open');
+  });
+
+  // quick reply buttons
+  document.querySelectorAll('.kompa-q').forEach(btn => {
+    btn.addEventListener('click', () => {
+      input.value = btn.dataset.q;
+      form.dispatchEvent(new Event('submit'));
+    });
+  });
+
+  // send message (prototype demo: echoes an AI-styled response)
+  const demoReplies = [
+    'いい 質問 です ね ♪<br><br>その ケース は <strong>教育資金</strong> と <strong>老後資金</strong> の 二軸 で 分けて 考える と 整理 しやすい です。<br><br>まず 子供 の 学齢 別 に:<br>・未就学 → NISA つみたて枠 (18年 運用)<br>・小学生 → 学資保険 + 積立<br>・中高生 → 保守的 に 現金 比率 up',
+    'FP先生 が よく 使う 切返し 文言:<br><br>「保険 は 貯蓄 で は なく <strong>もしも の 時 の 家族 の 生活費</strong> を カバー する 目的 です」<br>と 客 に 説明 すると 納得感 up します。',
+    '30代会社員 (年収600万) の 場合、 新NISA つみたて枠 の 王道 は:<br><br>1. eMAXIS Slim 全世界株式 (60%)<br>2. eMAXIS Slim 米国株式 S&P500 (30%)<br>3. 日本高配当株 ETF (10%)<br><br>月 5万円 積立 で 20年 後 に 約 2400万円 (年 6% 想定)。',
+  ];
+  let replyIdx = 0;
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const text = input.value.trim();
+    if (!text) return;
+    // user message
+    const u = document.createElement('div');
+    u.className = 'kompa-msg out';
+    u.innerHTML = '<div class="bub">' + text.replace(/</g,'&lt;') + '</div>';
+    body.appendChild(u);
+    input.value = '';
+    body.scrollTop = body.scrollHeight;
+    // AI reply (delayed for realism)
+    setTimeout(() => {
+      const a = document.createElement('div');
+      a.className = 'kompa-msg in';
+      a.innerHTML = '<div class="bub">' + demoReplies[replyIdx % demoReplies.length] + '</div>';
+      body.appendChild(a);
+      body.scrollTop = body.scrollHeight;
+      replyIdx++;
+    }, 600);
+  });
+})();
 </script>
 
 </body>
