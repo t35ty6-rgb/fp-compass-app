@@ -1,0 +1,719 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Zoom 面談 1回分 の 議事録 出力例 — FP Compass STG</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Noto+Sans+JP:wght@400;500;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./styles-v2.css">
+<link rel="stylesheet" href="./styles-v8-workspace.css">
+<link rel="stylesheet" href="./styles-skelfit.css">
+<style>
+  html, body { height: auto !important; overflow: auto !important; }
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #F6F6F4 !important;
+    color: #0A0A0A !important;
+    font-family: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif !important;
+    font-weight: 400 !important;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  .preview-topbar {
+    background: #0F1117;
+    color: #E4E6EB;
+    padding: 14px 32px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-size: 12.5px;
+    letter-spacing: 0.01em;
+  }
+  .preview-topbar .brand {
+    font-family: 'Manrope', 'Noto Sans JP', sans-serif;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    font-size: 14px;
+    color: #FFFFFF;
+  }
+  .preview-topbar .brand-dot {
+    display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+    background: #5B5BF0; box-shadow: 0 0 0 4px rgba(91,91,240,0.18);
+    margin-right: 10px; vertical-align: middle; transform: translateY(-1px);
+  }
+  .preview-topbar .divider { width: 1px; height: 16px; background: #232838; }
+  .preview-topbar .crumb { color: #7A8194; font-size: 12px; }
+  .preview-topbar .crumb b { color: #E4E6EB; font-weight: 600; }
+  .preview-topbar .env {
+    margin-left: auto;
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 10px 4px 8px;
+    background: rgba(91,91,240,0.14);
+    color: #A5A5F8;
+    border: 1px solid rgba(91,91,240,0.28);
+    border-radius: 999px;
+    font-family: 'Manrope', 'Noto Sans JP', sans-serif;
+    font-size: 10.5px; font-weight: 700;
+    letter-spacing: 0.08em;
+  }
+  .preview-topbar .env::before {
+    content: ''; width: 5px; height: 5px; border-radius: 50%;
+    background: #5B5BF0; box-shadow: 0 0 6px rgba(91,91,240,0.6);
+  }
+
+  .wrap { max-width: 960px; margin: 0 auto; padding: 48px 32px 96px; }
+
+  .page-head { display: block !important; margin-bottom: 40px; }
+  .page-head .kicker {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: 'Manrope', 'Noto Sans JP', sans-serif;
+    font-size: 11px; font-weight: 700;
+    color: #0A0A0A;
+    letter-spacing: 0.14em;
+    margin-bottom: 14px;
+  }
+  .page-head .kicker::before {
+    content: ''; width: 20px; height: 1.5px; background: #0A0A0A;
+  }
+  h1 {
+    font-family: 'Manrope', 'Noto Sans JP', sans-serif;
+    font-weight: 800;
+    font-size: clamp(28px, 3.4vw, 38px);
+    color: #0A0A0A;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    margin: 0 0 14px;
+    text-wrap: balance;
+  }
+  .sub {
+    color: #3F3F46;
+    font-size: 15px;
+    line-height: 1.75;
+    max-width: 68ch;
+    margin: 0;
+  }
+
+  .info-panel {
+    margin-top: 24px;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 14px 16px;
+    padding: 18px 22px;
+    background: #FFFFFF;
+    border: 1px solid #ECECEA;
+    border-radius: 14px;
+    box-shadow: 0 1px 2px rgba(16,24,40,0.04);
+  }
+  .info-panel .ip-icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: #0A0A0A;
+    color: #FFFFFF;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+    grid-row: span 2;
+  }
+  .info-panel .ip-title {
+    font-family: 'Manrope', 'Noto Sans JP', sans-serif;
+    font-size: 13.5px; font-weight: 700; color: #0A0A0A;
+    letter-spacing: -0.005em;
+  }
+  .info-panel .ip-body {
+    font-size: 13px; line-height: 1.75; color: #3F3F46;
+    grid-column: 2;
+  }
+
+  /* pipeline flow banner (面談終了 → Whisper → Claude → 議事録 表示 の 3ステップ) */
+  .pipeline-flow {
+    margin: 32px 0 20px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+  .pipeline-flow .step {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 14px;
+    background: #FFFFFF;
+    border: 1px solid #ECECEA;
+    border-radius: 10px;
+    font-size: 12.5px;
+    color: #3F3F46;
+    position: relative;
+  }
+  .pipeline-flow .step .num {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: #0A0A0A;
+    color: #FFFFFF;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-family: 'Manrope', 'Noto Sans JP', sans-serif;
+    font-size: 11px; font-weight: 800;
+    flex-shrink: 0;
+  }
+  .pipeline-flow .step b { color: #0A0A0A; font-weight: 700; }
+  .pipeline-flow .step .meta { font-size: 10.5px; color: #6B6B6B; display: block; margin-top: 2px; }
+  .pipeline-flow .step:not(:last-child)::after {
+    content: '→';
+    position: absolute; right: -14px; top: 50%; transform: translateY(-50%);
+    color: #DCDCD8; font-weight: 700; font-size: 14px;
+    z-index: 1; background: #F6F6F4; padding: 0 2px;
+  }
+
+  .footer-note {
+    margin-top: 56px;
+    padding: 22px 26px;
+    background: #FFFFFF;
+    border: 1px solid #ECECEA;
+    border-radius: 14px;
+    color: #3F3F46;
+    font-size: 13px;
+    line-height: 1.85;
+    box-shadow: 0 1px 2px rgba(16,24,40,0.04);
+  }
+  .footer-note b { color: #0A0A0A; font-weight: 700; }
+
+  .fp-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 14px;
+    background: #0A0A0A;
+    color: #FFFFFF;
+    text-decoration: none;
+    font-size: 12px; font-weight: 600;
+    border-radius: 8px;
+    font-family: 'Noto Sans JP', sans-serif;
+  }
+  .fp-btn:hover { background: #3F3F46; }
+
+  /* ============================================================
+     BOLD SATURATED OVERRIDE (styles-skelfit.css の 淡パステル kill)
+     ============================================================ */
+  .fp-summary-structured .fp-sum-section-h,
+  .fp-summary-structured .fp-sum-tone-vital .fp-sum-section-h,
+  .fp-summary-structured .fp-sum-tone-attn .fp-sum-section-h,
+  .fp-summary-structured .fp-sum-tone-critical .fp-sum-section-h,
+  .fp-summary-structured .fp-sum-tone-trust .fp-sum-section-h,
+  .fp-summary-structured .fp-sum-tone-mono .fp-sum-section-h,
+  .fp-summary-structured .fp-sum-tone-ink .fp-sum-section-h {
+    background: transparent !important;
+    border-bottom: 1px solid #ECECEA !important;
+    padding: 12px 14px 10px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+  }
+  .fp-summary-structured .fp-sum-section-dot { display: none !important; }
+
+  .fp-summary-structured .fp-sum-section-title,
+  .fp-summary-structured .fp-sum-tone-vital .fp-sum-section-title,
+  .fp-summary-structured .fp-sum-tone-attn .fp-sum-section-title,
+  .fp-summary-structured .fp-sum-tone-critical .fp-sum-section-title,
+  .fp-summary-structured .fp-sum-tone-trust .fp-sum-section-title,
+  .fp-summary-structured .fp-sum-tone-mono .fp-sum-section-title,
+  .fp-summary-structured .fp-sum-tone-ink .fp-sum-section-title {
+    display: inline-flex !important;
+    align-items: center !important;
+    padding: 4px 11px !important;
+    border-radius: 6px !important;
+    color: #FFFFFF !important;
+    font-size: 12.5px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.01em !important;
+    background: #0A0A0A !important;
+  }
+  .fp-summary-structured .fp-sum-tone-vital .fp-sum-section-title    { background: #047647 !important; }
+  .fp-summary-structured .fp-sum-tone-attn .fp-sum-section-title     { background: #B5530F !important; }
+  .fp-summary-structured .fp-sum-tone-critical .fp-sum-section-title { background: #DC2B2B !important; }
+  .fp-summary-structured .fp-sum-tone-trust .fp-sum-section-title    { background: #3F3FCE !important; }
+  .fp-summary-structured .fp-sum-tone-mono .fp-sum-section-title,
+  .fp-summary-structured .fp-sum-tone-ink .fp-sum-section-title      { background: #0A0A0A !important; }
+
+  .fp-summary-structured .fp-sum-h4 {
+    display: inline-flex !important;
+    align-items: center !important;
+    padding: 4px 11px !important;
+    border-radius: 6px !important;
+    color: #FFFFFF !important;
+    font-size: 12.5px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.01em !important;
+    background: #0A0A0A !important;
+    margin: 18px 0 10px !important;
+  }
+  .fp-summary-structured .fp-sum-h4.fp-sum-tone-vital    { background: #047647 !important; color: #FFFFFF !important; }
+  .fp-summary-structured .fp-sum-h4.fp-sum-tone-attn     { background: #B5530F !important; color: #FFFFFF !important; }
+  .fp-summary-structured .fp-sum-h4.fp-sum-tone-critical { background: #DC2B2B !important; color: #FFFFFF !important; }
+  .fp-summary-structured .fp-sum-h4.fp-sum-tone-trust    { background: #3F3FCE !important; color: #FFFFFF !important; }
+  .fp-summary-structured .fp-sum-h4.fp-sum-tone-mono,
+  .fp-summary-structured .fp-sum-h4.fp-sum-tone-ink      { background: #0A0A0A !important; color: #FFFFFF !important; }
+  .fp-summary-structured .fp-sum-h4 .fp-sum-dot { display: none !important; }
+
+  .fp-meeting-block-label {
+    color: #0A0A0A !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.02em !important;
+    margin-bottom: 12px !important;
+  }
+  .fp-meeting-block-label > span:first-child {
+    display: inline-flex !important;
+    align-items: center !important;
+    padding: 4px 11px !important;
+    border-radius: 6px !important;
+    color: #FFFFFF !important;
+    background: #0A0A0A !important;
+    font-size: 12.5px !important;
+    font-weight: 700 !important;
+  }
+  .fp-meeting-block:not(:has(>.fp-meeting-block-label > span)) .fp-meeting-block-label {
+    display: inline-flex !important;
+    align-items: center !important;
+    padding: 4px 11px !important;
+    border-radius: 6px !important;
+    color: #FFFFFF !important;
+    background: #0A0A0A !important;
+  }
+
+  .fp-summary-structured .fp-sum-item {
+    background: #FFFFFF !important;
+    border: 1px solid #ECECEA !important;
+  }
+  .fp-summary-structured .fp-sum-item-num {
+    background: #0A0A0A !important;
+    color: #FFFFFF !important;
+    font-weight: 800 !important;
+  }
+  .fp-summary-structured .fp-sum-item.fp-sum-tone-vital .fp-sum-item-num    { background: #047647 !important; }
+  .fp-summary-structured .fp-sum-item.fp-sum-tone-attn .fp-sum-item-num     { background: #B5530F !important; }
+  .fp-summary-structured .fp-sum-item.fp-sum-tone-critical .fp-sum-item-num { background: #DC2B2B !important; }
+  .fp-summary-structured .fp-sum-item.fp-sum-tone-trust .fp-sum-item-num    { background: #3F3FCE !important; }
+
+  .fp-summary-structured .fp-sum-section {
+    background: #FFFFFF !important;
+    border: 1px solid #ECECEA !important;
+    border-radius: 12px !important;
+    overflow: hidden !important;
+  }
+  .fp-summary-structured .fp-sum-section-body {
+    background: #FFFFFF !important;
+  }
+
+  /* ============================================================
+     LIST / ROW / STAT / MEMO の 見やすさ polish (中身の editorial 化)
+     ============================================================ */
+
+  /* h4 pill の 次にくる list は マージン 詰めて 直下感 */
+  .fp-summary-structured .fp-sum-h4 + ul.fp-sum-list,
+  .fp-summary-structured .fp-sum-h4 + ol.fp-sum-list,
+  .fp-summary-structured .fp-sum-h4 + p.fp-sum-p,
+  .fp-summary-structured .fp-sum-h4 + .fp-sum-row {
+    margin-top: 4px !important;
+  }
+
+  /* list 共通 — 素bullet 廃止、 各 li を hairline card 化 */
+  .fp-summary-structured .fp-sum-list {
+    list-style: none !important;
+    padding: 0 !important;
+    margin: 6px 0 22px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 6px !important;
+  }
+  .fp-summary-structured .fp-sum-list > li {
+    position: relative !important;
+    background: #FFFFFF !important;
+    border: 1px solid #ECECEA !important;
+    border-radius: 8px !important;
+    padding: 11px 14px 11px 42px !important;
+    font-size: 13.5px !important;
+    line-height: 1.75 !important;
+    color: #1A1A1A !important;
+    transition: border-color 120ms cubic-bezier(0.22, 1, 0.36, 1) !important;
+  }
+  .fp-summary-structured .fp-sum-list > li:hover {
+    border-color: #B0B0AC !important;
+  }
+  /* 決定事項 (vital / ul) — 左に ✓ green check + 4px 左緑 accent bar (白 base 保持) */
+  .fp-summary-structured .fp-sum-tone-vital + ul.fp-sum-list > li,
+  .fp-summary-structured .fp-sum-h4.fp-sum-tone-vital + ul.fp-sum-list > li {
+    border-left: 4px solid #047647 !important;
+    background: linear-gradient(90deg, rgba(4,118,71,0.05) 0%, rgba(255,255,255,1) 45%) !important;
+  }
+  .fp-summary-structured .fp-sum-tone-vital + ul.fp-sum-list > li::before,
+  .fp-summary-structured .fp-sum-h4.fp-sum-tone-vital + ul.fp-sum-list > li::before {
+    content: '✓' !important;
+    position: absolute !important;
+    left: 14px !important; top: 10px !important;
+    width: 22px !important; height: 22px !important;
+    background: #047647 !important;
+    color: #FFFFFF !important;
+    border-radius: 50% !important;
+    display: inline-flex !important;
+    align-items: center !important; justify-content: center !important;
+    font-size: 12px !important;
+    font-weight: 900 !important;
+    font-family: 'Manrope', 'Noto Sans JP', sans-serif !important;
+    line-height: 1 !important;
+    box-shadow: 0 0 0 2px rgba(4,118,71,0.15) !important;
+  }
+  /* TODO (attn / ol) — 番号 chip 濃橙 */
+  .fp-summary-structured .fp-sum-tone-attn + ol.fp-sum-list,
+  .fp-summary-structured .fp-sum-h4.fp-sum-tone-attn + ol.fp-sum-list {
+    counter-reset: fp-todo !important;
+  }
+  .fp-summary-structured .fp-sum-tone-attn + ol.fp-sum-list > li,
+  .fp-summary-structured .fp-sum-h4.fp-sum-tone-attn + ol.fp-sum-list > li {
+    counter-increment: fp-todo !important;
+  }
+  /* TODO li に 左 4px 濃橙 accent + subtle amber wash (白 base 保持) */
+  .fp-summary-structured .fp-sum-tone-attn + ol.fp-sum-list > li,
+  .fp-summary-structured .fp-sum-h4.fp-sum-tone-attn + ol.fp-sum-list > li {
+    border-left: 4px solid #B5530F !important;
+    background: linear-gradient(90deg, rgba(181,83,15,0.05) 0%, rgba(255,255,255,1) 45%) !important;
+  }
+  .fp-summary-structured .fp-sum-tone-attn + ol.fp-sum-list > li::before,
+  .fp-summary-structured .fp-sum-h4.fp-sum-tone-attn + ol.fp-sum-list > li::before {
+    content: counter(fp-todo) !important;
+    position: absolute !important;
+    left: 12px !important; top: 9px !important;
+    width: 22px !important; height: 22px !important;
+    background: #B5530F !important;
+    color: #FFFFFF !important;
+    border-radius: 6px !important;
+    display: inline-flex !important;
+    align-items: center !important; justify-content: center !important;
+    font-family: 'Manrope', 'Noto Sans JP', sans-serif !important;
+    font-size: 12px !important;
+    font-weight: 800 !important;
+    line-height: 1 !important;
+    box-shadow: 0 0 0 2px rgba(181,83,15,0.15) !important;
+  }
+  /* TODO li 右上 に 「TODO」 小さいタグ */
+  .fp-summary-structured .fp-sum-tone-attn + ol.fp-sum-list > li::after,
+  .fp-summary-structured .fp-sum-h4.fp-sum-tone-attn + ol.fp-sum-list > li::after {
+    content: 'TODO' !important;
+    position: absolute !important;
+    right: 10px !important; top: 10px !important;
+    font-family: 'Manrope', 'Noto Sans JP', sans-serif !important;
+    font-size: 9px !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.14em !important;
+    color: #B5530F !important;
+    background: rgba(181,83,15,0.08) !important;
+    padding: 2px 7px !important;
+    border-radius: 4px !important;
+    line-height: 1.2 !important;
+  }
+  /* 数字・試算 (mono / ul) — 左に 小さな ink 縦 bar (数字 chip 埋込 済 の 別強調) */
+  .fp-summary-structured .fp-sum-tone-mono + ul.fp-sum-list > li,
+  .fp-summary-structured .fp-sum-h4.fp-sum-tone-mono + ul.fp-sum-list > li,
+  .fp-summary-structured .fp-sum-tone-ink + ul.fp-sum-list > li,
+  .fp-summary-structured .fp-sum-h4.fp-sum-tone-ink + ul.fp-sum-list > li {
+    padding-left: 14px !important;
+    border-left: 3px solid #0A0A0A !important;
+  }
+  .fp-summary-structured .fp-sum-tone-mono + ul.fp-sum-list > li::before,
+  .fp-summary-structured .fp-sum-h4.fp-sum-tone-mono + ul.fp-sum-list > li::before,
+  .fp-summary-structured .fp-sum-tone-ink + ul.fp-sum-list > li::before,
+  .fp-summary-structured .fp-sum-h4.fp-sum-tone-ink + ul.fp-sum-list > li::before {
+    content: none !important;
+  }
+
+  /* fp-sum-num (¥/円/万 数字 の 埋込 highlight) を もっと 主張 させる — mono chip 化 */
+  .fp-summary-structured .fp-sum-num {
+    background: #0A0A0A !important;
+    color: #FFFFFF !important;
+    padding: 1px 7px !important;
+    border-radius: 5px !important;
+    font-family: 'JetBrains Mono', 'Manrope', ui-monospace, monospace !important;
+    font-weight: 700 !important;
+    font-size: 12px !important;
+    letter-spacing: 0.01em !important;
+    display: inline-block !important;
+    line-height: 1.4 !important;
+    vertical-align: baseline !important;
+  }
+
+  /* fp-sum-strong (bold 強調) — 蛍光ペン風 マーカー (淡黄) */
+  .fp-summary-structured .fp-sum-strong {
+    font-weight: 700 !important;
+    color: #0A0A0A !important;
+    background: linear-gradient(transparent 55%, #FFF176 55%, #FFEB3B 88%, transparent 88%) !important;
+    padding: 0 3px !important;
+    border-radius: 2px !important;
+    text-decoration: none !important;
+  }
+
+  /* 懸念事項 row (label + value) を alert card 化 — label 濃赤 pill + 左4px 濃赤 bar + ⚠ icon */
+  .fp-summary-structured .fp-sum-row,
+  .fp-summary-structured .fp-sum-row.fp-sum-tone-vital,
+  .fp-summary-structured .fp-sum-row.fp-sum-tone-attn,
+  .fp-summary-structured .fp-sum-row.fp-sum-tone-critical,
+  .fp-summary-structured .fp-sum-row.fp-sum-tone-trust,
+  .fp-summary-structured .fp-sum-row.fp-sum-tone-mono {
+    display: grid !important;
+    grid-template-columns: 220px 1fr !important;
+    gap: 12px 18px !important;
+    align-items: start !important;
+    background: #FFFFFF !important;
+    border: 1px solid #ECECEA !important;
+    border-left: 4px solid #DC2B2B !important;
+    border-radius: 8px !important;
+    padding: 14px 16px 14px 18px !important;
+    margin: 6px 0 !important;
+    position: relative !important;
+  }
+  .fp-summary-structured .fp-sum-row.fp-sum-tone-vital    { border-left-color: #047647 !important; }
+  .fp-summary-structured .fp-sum-row.fp-sum-tone-attn     { border-left-color: #B5530F !important; }
+  .fp-summary-structured .fp-sum-row.fp-sum-tone-critical { border-left-color: #DC2B2B !important; }
+  .fp-summary-structured .fp-sum-row.fp-sum-tone-trust    { border-left-color: #3F3FCE !important; }
+  .fp-summary-structured .fp-sum-row.fp-sum-tone-vital .fp-sum-label    { background: #047647 !important; }
+  .fp-summary-structured .fp-sum-row.fp-sum-tone-attn .fp-sum-label     { background: #B5530F !important; }
+  .fp-summary-structured .fp-sum-row.fp-sum-tone-trust .fp-sum-label    { background: #3F3FCE !important; }
+  .fp-summary-structured .fp-sum-row .fp-sum-label {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    padding: 4px 10px 4px 8px !important;
+    background: #DC2B2B !important;
+    color: #FFFFFF !important;
+    border-radius: 5px !important;
+    font-family: 'Manrope', 'Noto Sans JP', sans-serif !important;
+    font-size: 11.5px !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.02em !important;
+    line-height: 1.3 !important;
+    align-self: start !important;
+    width: fit-content !important;
+    max-width: 100% !important;
+  }
+  .fp-summary-structured .fp-sum-row .fp-sum-label::before {
+    content: '⚠' !important;
+    font-size: 11px !important;
+  }
+  .fp-summary-structured .fp-sum-row .fp-sum-value {
+    font-size: 13.5px !important;
+    line-height: 1.75 !important;
+    color: #1A1A1A !important;
+  }
+
+  /* fp-sum-p (段落) の 見やすさ調整 */
+  .fp-summary-structured .fp-sum-p {
+    font-size: 13.5px !important;
+    line-height: 1.85 !important;
+    color: #1A1A1A !important;
+    margin: 6px 0 22px !important;
+    max-width: 68ch !important;
+  }
+
+  /* 補足メモ h5 (小見出し) — 濃色 罫線 header */
+  .fp-summary-structured .fp-sum-h5 {
+    font-family: 'Manrope', 'Noto Sans JP', sans-serif !important;
+    font-size: 11.5px !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.08em !important;
+    color: #6B6B6B !important;
+    text-transform: uppercase !important;
+    padding: 0 0 8px !important;
+    margin: 28px 0 12px !important;
+    border-bottom: 1px solid #ECECEA !important;
+  }
+
+  @media (max-width: 640px) {
+    .fp-summary-structured .fp-sum-row {
+      grid-template-columns: 1fr !important;
+      gap: 6px !important;
+    }
+    .fp-summary-structured .fp-sum-list > li {
+      font-size: 13px !important;
+      padding-right: 12px !important;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .preview-topbar { padding: 12px 18px; flex-wrap: wrap; gap: 10px; }
+    .preview-topbar .crumb { display: none; }
+    .wrap { padding: 32px 20px 72px; }
+    .info-panel { grid-template-columns: 1fr; }
+    .info-panel .ip-icon { grid-row: auto; }
+    .info-panel .ip-body { grid-column: 1; }
+    .pipeline-flow { grid-template-columns: 1fr; }
+    .pipeline-flow .step:not(:last-child)::after { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="preview-topbar">
+  <span class="brand"><span class="brand-dot"></span>FP Compass</span>
+  <span class="divider"></span>
+  <span class="crumb">Design Preview <b>/ Zoom 面談 1回分 の 議事録</b></span>
+  <span class="env">STG</span>
+</div>
+
+<div class="wrap">
+
+  <header class="page-head">
+    <div class="kicker">Meeting Output</div>
+    <h1>Zoom 面談 1回分 → 議事録</h1>
+    <p class="sub">
+      顧客と 1回 Zoom 面談 (60分) を 録画すると、 5〜10分 の AI 処理後 に 顧客カルテ の 議事録タブ に この形 で 表示 されます。 下記 は 山口 様ご夫妻 (福井市) の 2回目 面談 (2026/07/17 10:00 開始) の 出力例。
+    </p>
+
+    <div class="pipeline-flow">
+      <div class="step">
+        <span class="num">1</span>
+        <div><b>Zoom 面談 終了</b><span class="meta">録画データ 自動収集</span></div>
+      </div>
+      <div class="step">
+        <span class="num">2</span>
+        <div><b>Whisper 文字起こし</b><span class="meta">音声 → text (2〜3分)</span></div>
+      </div>
+      <div class="step">
+        <span class="num">3</span>
+        <div><b>Claude 議事録 生成</b><span class="meta">構造化 summary (3〜5分)</span></div>
+      </div>
+    </div>
+
+    <div class="info-panel">
+      <div class="ip-icon" aria-hidden="true">◐</div>
+      <div class="ip-title">これは 出力例 (合成 サンプル) です</div>
+      <div class="ip-body">
+        本番 顧客カルテ で 同じ CSS で 描画 されます。 実データ を 見る には tenant セットアップ + 実 Zoom 面談 の 録画 が 必要。 内容 は 40代夫婦 の 教育資金・住宅ローン・老後準備 を 想定 した realistic サンプル。
+      </div>
+    </div>
+  </header>
+
+  <!-- ==================== 1回分 の 議事録 カード ==================== -->
+  <div class="fp-meeting-card">
+    <div class="fp-meeting-card-head">
+      <div>
+        <div class="fp-meeting-card-eyebrow" style="font-size:13px;font-weight:900;color:#1B3A5C;">📹 Zoom 面談 <span style="font-size:11px;color:#9CA3AF;font-weight:700;margin-left:8px;font-family:'JetBrains Mono',monospace;">#20260717-1000</span></div>
+        <div class="fp-meeting-card-date" style="font-size:14px;font-weight:700;margin-top:2px;">2026/07/17 (水) 10:00 面談 · 山口 様ご夫妻 (福井市 · 共働き)</div>
+        <div class="fp-meeting-card-recstart" style="font-size:11.5px;color:#6B7280;font-weight:600;margin-top:3px;">録画開始: 10:02 / 終了: 11:04 (62分12秒)</div>
+      </div>
+      <div class="fp-meeting-card-actions">
+        <a href="#" class="fp-btn">🎥 録画を見る</a>
+      </div>
+    </div>
+
+    <!-- Whisper 文字起こし: LINE風 chat -->
+    <div class="fp-meeting-block">
+      <div class="fp-meeting-block-label" style="display:flex;justify-content:space-between;align-items:center;">
+        <span>AI 文字起こし (Whisper)</span>
+        <div class="fp-transcript-view-toggle">
+          <button type="button" class="fp-tv-btn fp-tv-active">💬 会話</button>
+          <button type="button" class="fp-tv-btn">📄 プレーン</button>
+        </div>
+      </div>
+      <div class="fp-transcript-chat">
+        <div style="display:flex;justify-content:flex-end;"><div><div>FP先生 <span style="font-size:10px;color:#9CA3AF;font-weight:600;margin-left:6px;">00:02</span></div><div>おはようございます。 先月 お送りいただいた 家計簿 3ヶ月分、 拝見しました。 まず 全体像 を 共有 させてください。</div></div></div>
+        <div style="display:flex;justify-content:flex-start;"><div><div>山口様 (夫) <span style="font-size:10px;color:#9CA3AF;font-weight:600;margin-left:6px;">00:24</span></div><div>よろしくお願いします。 妻も 隣で 聞いています。</div></div></div>
+        <div style="display:flex;justify-content:flex-end;"><div><div>FP先生 <span style="font-size:10px;color:#9CA3AF;font-weight:600;margin-left:6px;">00:38</span></div><div>ありがとうございます。 世帯月収 手取り 68万円、 支出 52万円、 貯蓄率 24% で 同世代平均 の ほぼ 倍 の 数字 が 出ています。 このペース は 大変 健全 です。</div></div></div>
+        <div style="display:flex;justify-content:flex-start;"><div><div>山口様 (妻) <span style="font-size:10px;color:#9CA3AF;font-weight:600;margin-left:6px;">01:15</span></div><div>あ、 そうなんですね。 なんとなく 貯まっている 気は していたんですが、 それが 平均 に対して どうか は 分からず。</div></div></div>
+        <div style="display:flex;justify-content:flex-end;"><div><div>FP先生 <span style="font-size:10px;color:#9CA3AF;font-weight:600;margin-left:6px;">01:32</span></div><div>本題 に 入ります。 今日 は 3つ 決めましょう。 (1) 教育資金 の 準備方針 (2) 住宅ローン 借換 判断 (3) 老後 資金 の 積立額。 まず (1) から。</div></div></div>
+        <div style="display:flex;justify-content:flex-start;"><div><div>山口様 (夫) <span style="font-size:10px;color:#9CA3AF;font-weight:600;margin-left:6px;">02:04</span></div><div>お願いします。 長男 が 中3、 次男 が 小5。 私立高校 進学 も 視野 に あって、 いくら 用意すれば いいか 見えなくて。</div></div></div>
+        <div style="display:flex;justify-content:flex-end;"><div><div>FP先生 <span style="font-size:10px;color:#9CA3AF;font-weight:600;margin-left:6px;">02:28</span></div><div>結論 から 言うと、 長男 分 に 4年 で 380万、 次男 分 に 7年 で 480万、 合計 860万 を 目安 に 積立 開始 が 妥当 です。 内訳 は 私立文系 前提 で 学費+下宿費 込み。</div></div></div>
+        <div style="display:flex;justify-content:flex-start;"><div><div>山口様 (妻) <span style="font-size:10px;color:#9CA3AF;font-weight:600;margin-left:6px;">03:11</span></div><div>860万… 結構 な 額 ですね。 児童手当 は 今 全額 貯金 に 回していて 250万 くらい 貯まってます。</div></div></div>
+        <div style="display:flex;justify-content:flex-end;"><div><div>FP先生 <span style="font-size:10px;color:#9CA3AF;font-weight:600;margin-left:6px;">03:38</span></div><div>それ が あれば 残り 610万。 月 8万 の 積立 で 6.5年 で 到達 可能 です。 学資保険 で 元本保証 型 と、 つみたてNISA で 6年 運用 型、 半々 が 現実的。</div></div></div>
+        <div style="display:flex;justify-content:flex-start;"><div><div>山口様 (夫) <span style="font-size:10px;color:#9CA3AF;font-weight:600;margin-left:6px;">04:22</span></div><div>NISA は 変動する のが 少し 怖いです。 大学入学 の 直前 に 暴落 したら どうなりますか?</div></div></div>
+        <div style="display:flex;justify-content:flex-end;"><div><div>FP先生 <span style="font-size:10px;color:#9CA3AF;font-weight:600;margin-left:6px;">04:41</span></div><div>ごもっとも な 懸念 です。 入学 の 2年前 から 段階的 に リスク資産 を 現金化 する ルール を セット します。 次回 面談 で 「取り崩し ロード」 を お渡しします。</div></div></div>
+        <div style="display:flex;justify-content:flex-start;"><div><div>山口様 (妻) <span style="font-size:10px;color:#9CA3AF;font-weight:600;margin-left:6px;">05:12</span></div><div>次 (2) の 住宅ローン、 いま 変動 0.5% で 残 2,850万、 あと 22年 です。</div></div></div>
+        <div style="display:flex;justify-content:flex-end;"><div><div>FP先生 <span style="font-size:10px;color:#9CA3AF;font-weight:600;margin-left:6px;">05:36</span></div><div>変動 0.5% は 既に かなり 有利 な 条件 で、 現時点 での 借換 メリット は 薄い です。 諸費用 60万 を 回収 する のに 8年 かかる 試算。 現状 維持 推奨。</div></div></div>
+        <div style="display:flex;justify-content:flex-start;"><div><div>山口様 (夫) <span style="font-size:10px;color:#9CA3AF;font-weight:600;margin-left:6px;">08:04</span></div><div>了解 しました。 じゃあ (3) 老後 の 積立額 も 出せますか。</div></div></div>
+        <div style="display:flex;justify-content:flex-end;"><div><div>FP先生 <span style="font-size:10px;color:#9CA3AF;font-weight:600;margin-left:6px;">08:20</span></div><div>お二人 65歳 時点 で 3,200万 目標 で iDeCo 満額 と つみたてNISA の 余枠 で 月 6.8万。 教育資金 完了後 に 月 12万 に 増額 する 2段階 プラン が 現実的 です。 詳細 は 次回 資料 で お渡し します。</div></div></div>
+      </div>
+    </div>
+
+    <!-- Claude 議事録 -->
+    <div class="fp-meeting-block">
+      <div class="fp-meeting-block-label" style="display:flex;justify-content:space-between;align-items:center;">
+        <span>AI 議事録 (Claude) <span style="font-size:10px;color:#9CA3AF;font-weight:600;margin-left:6px;">編集・追記可</span></span>
+        <button class="fp-minutes-edit" style="background:#fff;border:1px solid #E2E8F0;color:#475569;font-size:11px;font-weight:700;padding:4px 10px;border-radius:5px;cursor:pointer;">✏ 編集</button>
+      </div>
+      <div class="fp-meeting-body fp-summary-structured">
+        <h4 class="fp-sum-h4 fp-sum-tone-vital"><span class="fp-sum-dot"></span>本日の決定事項</h4>
+        <ul class="fp-sum-list fp-sum-ul">
+          <li><strong class="fp-sum-strong">教育資金 目標 860万</strong> (長男 380万 / 次男 480万) を 承認、 児童手当 貯蓄 250万 差引 後 の 残 610万 を 6.5年 で 積立</li>
+          <li>月 <strong class="fp-sum-strong">積立 8万</strong> を <strong class="fp-sum-strong">学資保険 4万 + つみたてNISA 4万</strong> に 半々 配分</li>
+          <li>住宅ローン (変動 0.5% / 残 2,850万) は <strong class="fp-sum-strong">借換なし・現状維持</strong> と 決定</li>
+          <li>老後資金 は 教育資金 完了 まで 月 <strong class="fp-sum-strong">6.8万</strong>、 完了後 <strong class="fp-sum-strong">月12万</strong> に 増額 の 2段階プラン</li>
+        </ul>
+
+        <h4 class="fp-sum-h4 fp-sum-tone-trust"><span class="fp-sum-dot"></span>お客様の関心事</h4>
+        <p class="fp-sum-p">世帯月収 手取り 68万 / 支出 52万 / 貯蓄率 24% (同世代平均 の 約2倍)。 長男 中3 (私立高校 進学 検討中) と 次男 小5 の 教育資金 準備 が 最優先。 妻 は NISA の 元本 変動 リスク に 強い 不安。</p>
+
+        <h4 class="fp-sum-h4 fp-sum-tone-attn"><span class="fp-sum-dot"></span>次回までのTODO</h4>
+        <ol class="fp-sum-list fp-sum-ol">
+          <li>学資保険 3社 比較資料 (元本保証 の 範囲 / 途中解約 返戻率 / 契約者貸付) を 準備</li>
+          <li>つみたてNISA <strong class="fp-sum-strong">段階的 現金化 ロード</strong> (入学2年前 から 20% ずつ) を 図解 で 作成</li>
+          <li>iDeCo 満額 拠出 の 節税額 試算 (現行 所得税率 20% 前提) を 数字 で 提示</li>
+          <li>老後 3,200万 目標 の 前提条件 (公的年金 想定額 / 生活費 想定) を 明文化 し 認識合わせ</li>
+        </ol>
+
+        <h4 class="fp-sum-h4 fp-sum-tone-critical"><span class="fp-sum-dot"></span>懸念事項</h4>
+        <div class="fp-sum-row fp-sum-tone-critical">
+          <span class="fp-sum-label">NISA 暴落 リスク</span>
+          <span class="fp-sum-value">大学入学 直前 に リーマン級 の 暴落 が 発生した 場合、 -30% で 現金化 になる リスク。 段階取崩 ルール で 緩和 するが 完全 排除 は 不可</span>
+        </div>
+        <div class="fp-sum-row fp-sum-tone-critical">
+          <span class="fp-sum-label">高校 進路 未確定</span>
+          <span class="fp-sum-value">長男 の 私立 / 公立 判断 が 教育資金 総額 に ±150万 の 影響。 中3秋 の 三者面談 後 に プラン 再調整 が 必要</span>
+        </div>
+
+        <h4 class="fp-sum-h4 fp-sum-tone-mono"><span class="fp-sum-dot"></span>議論した数字・試算</h4>
+        <ul class="fp-sum-list fp-sum-ul">
+          <li>教育資金 目標: <strong class="fp-sum-strong">860万</strong> (長男 380万 + 次男 480万、 私立文系 + 下宿 前提)</li>
+          <li>既存 児童手当 貯蓄: <strong class="fp-sum-strong">250万</strong> / 追加 必要額: <strong class="fp-sum-strong">610万</strong></li>
+          <li>月 積立額: <strong class="fp-sum-strong">8万</strong> × 6.5年 = 624万 到達</li>
+          <li>ローン 借換 試算: 諸費用 60万 / 回収 期間 8年 → メリット薄</li>
+          <li>老後 目標: <strong class="fp-sum-strong">3,200万</strong> (65歳時点、 iDeCo 満額 + NISA 余枠)</li>
+        </ul>
+
+        <h5 class="fp-sum-h5">補足メモ</h5>
+        <p class="fp-sum-p">妻 は 数字 に 強く、 その場 で 電卓 を 叩いて 確認 する タイプ。 説明資料 は 「結論 の 数字」 → 「根拠 の 数字」 → 「前提条件」 の 順序 で 構成 すると 納得 が 早い。 夫 は 変動リスク に 敏感、 <strong class="fp-sum-strong">リスク管理 の ルール化</strong> が 意思決定 の 鍵。 iDeCo は 次回以降 の 提案 で 満額 → 段階的 に 説明。</p>
+      </div>
+    </div>
+
+    <!-- 関心事 chips -->
+    <div class="fp-meeting-block">
+      <div class="fp-meeting-block-label">お客様の関心事</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <span class="fp-concern-chip">教育資金 860万</span>
+        <span class="fp-concern-chip">私立高校 進学</span>
+        <span class="fp-concern-chip">つみたてNISA</span>
+        <span class="fp-concern-chip">学資保険</span>
+        <span class="fp-concern-chip">住宅ローン</span>
+        <span class="fp-concern-chip">iDeCo</span>
+        <span class="fp-concern-chip">段階取崩</span>
+      </div>
+    </div>
+
+    <!-- 次回質問 予測 -->
+    <div class="fp-meeting-block">
+      <div class="fp-meeting-block-label" style="display:flex;align-items:center;gap:6px;">
+        🔮 次回 聞かれそうな 質問
+        <span style="font-size:9.5px;font-weight:600;color:#94A3B8;background:#F1F5F9;padding:1px 6px;border-radius:99px;">AI 予測</span>
+      </div>
+      <ul style="margin:0;padding-left:18px;font-size:13px;color:#1F2A3F;line-height:1.85;">
+        <li>学資保険 の 元本保証 は 契約者貸付 を 使った 場合 も 有効か?</li>
+        <li>iDeCo は 途中で 積立額 を 減らせるか? 減らした場合 節税額 は どう 変わるか?</li>
+        <li>長男 が 公立高校 に 進んだ場合、 浮いた 分 を どこ に 回すべきか?</li>
+        <li>金利 が 上がって 変動 ローン が 1.5% になった 場合 の 再判定 タイミング は?</li>
+      </ul>
+      <div style="font-size:10.5px;color:#64748B;margin-top:6px;line-height:1.55;">妻 の 数字 志向 と 夫 の リスク志向 に 事前 対応 する ため、 次回 資料 に 数値根拠 と リスク緩和ルール を 明示 して 用意。</div>
+    </div>
+  </div>
+
+  <div class="footer-note">
+    <b>この 議事録 が 出る までの 時間</b>: 面談 終了 (Zoom 録画 完了) から 5〜10分。<br>
+    <b>データ 依存</b>: Whisper 文字起こし (💬 会話) と Claude 議事録 は 別々 の AI で 独立 生成。 Whisper が 失敗 しても Claude は 動く (逆も同)。<br>
+    <b>編集</b>: FP先生 が 議事録 の 内容 を 追記・修正 可能。 顧客 側 には 見せない 内部メモ。<br>
+    <b>他 の 表示 パターン</b> (edge case / v7 polish 比較) は <a href="./meeting-preview.html" style="color:#5B5BF0;font-weight:700;">meeting-preview.html</a> 参照。
+  </div>
+
+</div>
+</body>
+</html>
