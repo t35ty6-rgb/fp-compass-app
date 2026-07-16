@@ -10696,3 +10696,427 @@ section > div[data-line-view] > div[style*="background: #fff"] {
   color: #475569;  /* WCAG AA 5:1 vs #fff */
 }
 
+
+/* ==========================================================================
+   MEETING NOTES POLISH (2026-07-17) — 議事録タブ の 実UI 適用版
+   preview page (meeting-single.html) で 承認済 の override を そのまま 移植:
+   - 濃色 solid pill 型 section 見出し (緑/indigo/橙/赤/ink)
+   - 白面 + hairline の list card (決定=✓緑 / TODO=番号橙 / 数字=左ink bar)
+   - 蛍光ペン 淡黄 marker (fp-sum-strong)
+   - 懸念事項 row = grid + 濃赤 alert card + ⚠ pill label
+   - LINE風 transcript chat bubble (右緑=advisor / 左白=client)
+   全て .fp-meeting-* / .fp-sum-* / .fp-transcript-* に scope 済 (他機能 影響 zero)
+   ========================================================================== */
+
+/* --- section header pill (元 淡パステル塗り kill) --- */
+.fp-summary-structured .fp-sum-section-h,
+.fp-summary-structured .fp-sum-tone-vital .fp-sum-section-h,
+.fp-summary-structured .fp-sum-tone-attn .fp-sum-section-h,
+.fp-summary-structured .fp-sum-tone-critical .fp-sum-section-h,
+.fp-summary-structured .fp-sum-tone-trust .fp-sum-section-h,
+.fp-summary-structured .fp-sum-tone-mono .fp-sum-section-h,
+.fp-summary-structured .fp-sum-tone-ink .fp-sum-section-h {
+  background: transparent !important;
+  border-bottom: 1px solid #ECECEA !important;
+  padding: 12px 14px 10px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+.fp-summary-structured .fp-sum-section-dot { display: none !important; }
+
+.fp-summary-structured .fp-sum-section-title,
+.fp-summary-structured .fp-sum-tone-vital .fp-sum-section-title,
+.fp-summary-structured .fp-sum-tone-attn .fp-sum-section-title,
+.fp-summary-structured .fp-sum-tone-critical .fp-sum-section-title,
+.fp-summary-structured .fp-sum-tone-trust .fp-sum-section-title,
+.fp-summary-structured .fp-sum-tone-mono .fp-sum-section-title,
+.fp-summary-structured .fp-sum-tone-ink .fp-sum-section-title {
+  display: inline-flex !important;
+  align-items: center !important;
+  padding: 4px 11px !important;
+  border-radius: 6px !important;
+  color: #FFFFFF !important;
+  font-size: 12.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.01em !important;
+  background: #0A0A0A !important;
+}
+.fp-summary-structured .fp-sum-tone-vital .fp-sum-section-title    { background: #047647 !important; }
+.fp-summary-structured .fp-sum-tone-attn .fp-sum-section-title     { background: #B5530F !important; }
+.fp-summary-structured .fp-sum-tone-critical .fp-sum-section-title { background: #DC2B2B !important; }
+.fp-summary-structured .fp-sum-tone-trust .fp-sum-section-title    { background: #3F3FCE !important; }
+.fp-summary-structured .fp-sum-tone-mono .fp-sum-section-title,
+.fp-summary-structured .fp-sum-tone-ink .fp-sum-section-title      { background: #0A0A0A !important; }
+
+/* --- CASE 02 型 (fp-sum-h4 別クラス) の pill --- */
+.fp-summary-structured .fp-sum-h4 {
+  display: inline-flex !important;
+  align-items: center !important;
+  padding: 4px 11px !important;
+  border-radius: 6px !important;
+  color: #FFFFFF !important;
+  font-size: 12.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.01em !important;
+  background: #0A0A0A !important;
+  margin: 18px 0 10px !important;
+}
+.fp-summary-structured .fp-sum-h4.fp-sum-tone-vital    { background: #047647 !important; color: #FFFFFF !important; }
+.fp-summary-structured .fp-sum-h4.fp-sum-tone-attn     { background: #B5530F !important; color: #FFFFFF !important; }
+.fp-summary-structured .fp-sum-h4.fp-sum-tone-critical { background: #DC2B2B !important; color: #FFFFFF !important; }
+.fp-summary-structured .fp-sum-h4.fp-sum-tone-trust    { background: #3F3FCE !important; color: #FFFFFF !important; }
+.fp-summary-structured .fp-sum-h4.fp-sum-tone-mono,
+.fp-summary-structured .fp-sum-h4.fp-sum-tone-ink      { background: #0A0A0A !important; color: #FFFFFF !important; }
+.fp-summary-structured .fp-sum-h4 .fp-sum-dot { display: none !important; }
+
+/* --- meta 外側 label (「AI 議事録」「AI 文字起こし」等) --- */
+.fp-meeting-block-label {
+  color: #0A0A0A !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.02em !important;
+  margin-bottom: 12px !important;
+}
+.fp-meeting-block-label > span:first-child {
+  display: inline-flex !important;
+  align-items: center !important;
+  padding: 4px 11px !important;
+  border-radius: 6px !important;
+  color: #FFFFFF !important;
+  background: #0A0A0A !important;
+  font-size: 12.5px !important;
+  font-weight: 700 !important;
+}
+.fp-meeting-block:not(:has(>.fp-meeting-block-label > span)) .fp-meeting-block-label {
+  display: inline-flex !important;
+  align-items: center !important;
+  padding: 4px 11px !important;
+  border-radius: 6px !important;
+  color: #FFFFFF !important;
+  background: #0A0A0A !important;
+}
+
+/* --- section 全体 は 白面 + hairline (パステル塗り消滅) --- */
+.fp-summary-structured .fp-sum-section {
+  background: #FFFFFF !important;
+  border: 1px solid #ECECEA !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+}
+.fp-summary-structured .fp-sum-section-body {
+  background: #FFFFFF !important;
+}
+
+/* --- list / row / stat / memo polish --- */
+.fp-summary-structured .fp-sum-h4 + ul.fp-sum-list,
+.fp-summary-structured .fp-sum-h4 + ol.fp-sum-list,
+.fp-summary-structured .fp-sum-h4 + p.fp-sum-p,
+.fp-summary-structured .fp-sum-h4 + .fp-sum-row {
+  margin-top: 4px !important;
+}
+.fp-summary-structured .fp-sum-list {
+  list-style: none !important;
+  padding: 0 !important;
+  margin: 6px 0 22px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 6px !important;
+}
+.fp-summary-structured .fp-sum-list > li {
+  position: relative !important;
+  background: #FFFFFF !important;
+  border: 1px solid #ECECEA !important;
+  border-radius: 8px !important;
+  padding: 11px 14px 11px 42px !important;
+  font-size: 13.5px !important;
+  line-height: 1.75 !important;
+  color: #1A1A1A !important;
+  transition: border-color 120ms cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+.fp-summary-structured .fp-sum-list > li:hover {
+  border-color: #B0B0AC !important;
+}
+
+/* 決定事項 li — ✓緑 + 左緑 accent bar */
+.fp-summary-structured .fp-sum-tone-vital + ul.fp-sum-list > li,
+.fp-summary-structured .fp-sum-h4.fp-sum-tone-vital + ul.fp-sum-list > li {
+  border-left: 4px solid #047647 !important;
+  background: linear-gradient(90deg, rgba(4,118,71,0.05) 0%, rgba(255,255,255,1) 45%) !important;
+}
+.fp-summary-structured .fp-sum-tone-vital + ul.fp-sum-list > li::before,
+.fp-summary-structured .fp-sum-h4.fp-sum-tone-vital + ul.fp-sum-list > li::before {
+  content: '✓' !important;
+  position: absolute !important;
+  left: 14px !important; top: 10px !important;
+  width: 22px !important; height: 22px !important;
+  background: #047647 !important;
+  color: #FFFFFF !important;
+  border-radius: 50% !important;
+  display: inline-flex !important;
+  align-items: center !important; justify-content: center !important;
+  font-size: 12px !important;
+  font-weight: 900 !important;
+  font-family: 'Manrope', 'Noto Sans JP', sans-serif !important;
+  line-height: 1 !important;
+  box-shadow: 0 0 0 2px rgba(4,118,71,0.15) !important;
+}
+
+/* TODO li — 番号濃橙 + 左橙 accent + 右上 TODO タグ */
+.fp-summary-structured .fp-sum-tone-attn + ol.fp-sum-list > li,
+.fp-summary-structured .fp-sum-h4.fp-sum-tone-attn + ol.fp-sum-list > li {
+  border-left: 4px solid #B5530F !important;
+  background: linear-gradient(90deg, rgba(181,83,15,0.05) 0%, rgba(255,255,255,1) 45%) !important;
+}
+.fp-summary-structured .fp-sum-tone-attn + ol.fp-sum-list,
+.fp-summary-structured .fp-sum-h4.fp-sum-tone-attn + ol.fp-sum-list {
+  counter-reset: fp-todo !important;
+}
+.fp-summary-structured .fp-sum-tone-attn + ol.fp-sum-list > li,
+.fp-summary-structured .fp-sum-h4.fp-sum-tone-attn + ol.fp-sum-list > li {
+  counter-increment: fp-todo !important;
+}
+.fp-summary-structured .fp-sum-tone-attn + ol.fp-sum-list > li::before,
+.fp-summary-structured .fp-sum-h4.fp-sum-tone-attn + ol.fp-sum-list > li::before {
+  content: counter(fp-todo) !important;
+  position: absolute !important;
+  left: 12px !important; top: 9px !important;
+  width: 22px !important; height: 22px !important;
+  background: #B5530F !important;
+  color: #FFFFFF !important;
+  border-radius: 6px !important;
+  display: inline-flex !important;
+  align-items: center !important; justify-content: center !important;
+  font-family: 'Manrope', 'Noto Sans JP', sans-serif !important;
+  font-size: 12px !important;
+  font-weight: 800 !important;
+  line-height: 1 !important;
+  box-shadow: 0 0 0 2px rgba(181,83,15,0.15) !important;
+}
+.fp-summary-structured .fp-sum-tone-attn + ol.fp-sum-list > li::after,
+.fp-summary-structured .fp-sum-h4.fp-sum-tone-attn + ol.fp-sum-list > li::after {
+  content: 'TODO' !important;
+  position: absolute !important;
+  right: 10px !important; top: 10px !important;
+  font-family: 'Manrope', 'Noto Sans JP', sans-serif !important;
+  font-size: 9px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.14em !important;
+  color: #B5530F !important;
+  background: rgba(181,83,15,0.08) !important;
+  padding: 2px 7px !important;
+  border-radius: 4px !important;
+  line-height: 1.2 !important;
+}
+
+/* 数字・試算 (mono/ink) li — 左ink 縦 bar */
+.fp-summary-structured .fp-sum-tone-mono + ul.fp-sum-list > li,
+.fp-summary-structured .fp-sum-h4.fp-sum-tone-mono + ul.fp-sum-list > li,
+.fp-summary-structured .fp-sum-tone-ink + ul.fp-sum-list > li,
+.fp-summary-structured .fp-sum-h4.fp-sum-tone-ink + ul.fp-sum-list > li {
+  padding-left: 14px !important;
+  border-left: 3px solid #0A0A0A !important;
+}
+.fp-summary-structured .fp-sum-tone-mono + ul.fp-sum-list > li::before,
+.fp-summary-structured .fp-sum-h4.fp-sum-tone-mono + ul.fp-sum-list > li::before,
+.fp-summary-structured .fp-sum-tone-ink + ul.fp-sum-list > li::before,
+.fp-summary-structured .fp-sum-h4.fp-sum-tone-ink + ul.fp-sum-list > li::before {
+  content: none !important;
+}
+
+/* --- item numbered chip / section itself --- */
+.fp-summary-structured .fp-sum-item {
+  background: #FFFFFF !important;
+  border: 1px solid #ECECEA !important;
+}
+.fp-summary-structured .fp-sum-item-num {
+  background: #0A0A0A !important;
+  color: #FFFFFF !important;
+  font-weight: 800 !important;
+}
+.fp-summary-structured .fp-sum-item.fp-sum-tone-vital .fp-sum-item-num    { background: #047647 !important; }
+.fp-summary-structured .fp-sum-item.fp-sum-tone-attn .fp-sum-item-num     { background: #B5530F !important; }
+.fp-summary-structured .fp-sum-item.fp-sum-tone-critical .fp-sum-item-num { background: #DC2B2B !important; }
+.fp-summary-structured .fp-sum-item.fp-sum-tone-trust .fp-sum-item-num    { background: #3F3FCE !important; }
+
+/* --- 数字強調 (fp-sum-num) & 蛍光ペン marker (fp-sum-strong) --- */
+.fp-summary-structured .fp-sum-num {
+  background: #0A0A0A !important;
+  color: #FFFFFF !important;
+  padding: 1px 7px !important;
+  border-radius: 5px !important;
+  font-family: 'JetBrains Mono', 'Manrope', ui-monospace, monospace !important;
+  font-weight: 700 !important;
+  font-size: 12px !important;
+  letter-spacing: 0.01em !important;
+  display: inline-block !important;
+  line-height: 1.4 !important;
+  vertical-align: baseline !important;
+}
+.fp-summary-structured .fp-sum-strong {
+  font-weight: 700 !important;
+  color: #0A0A0A !important;
+  background: linear-gradient(transparent 55%, #FFF176 55%, #FFEB3B 88%, transparent 88%) !important;
+  padding: 0 3px !important;
+  border-radius: 2px !important;
+  text-decoration: none !important;
+}
+
+/* --- 懸念事項 row = grid 型 alert card + ⚠ pill label --- */
+.fp-summary-structured .fp-sum-row,
+.fp-summary-structured .fp-sum-row.fp-sum-tone-vital,
+.fp-summary-structured .fp-sum-row.fp-sum-tone-attn,
+.fp-summary-structured .fp-sum-row.fp-sum-tone-critical,
+.fp-summary-structured .fp-sum-row.fp-sum-tone-trust,
+.fp-summary-structured .fp-sum-row.fp-sum-tone-mono {
+  display: grid !important;
+  grid-template-columns: 220px 1fr !important;
+  gap: 12px 18px !important;
+  align-items: start !important;
+  background: #FFFFFF !important;
+  border: 1px solid #ECECEA !important;
+  border-left: 4px solid #DC2B2B !important;
+  border-radius: 8px !important;
+  padding: 14px 16px 14px 18px !important;
+  margin: 6px 0 !important;
+  position: relative !important;
+}
+.fp-summary-structured .fp-sum-row.fp-sum-tone-vital    { border-left-color: #047647 !important; }
+.fp-summary-structured .fp-sum-row.fp-sum-tone-attn     { border-left-color: #B5530F !important; }
+.fp-summary-structured .fp-sum-row.fp-sum-tone-critical { border-left-color: #DC2B2B !important; }
+.fp-summary-structured .fp-sum-row.fp-sum-tone-trust    { border-left-color: #3F3FCE !important; }
+.fp-summary-structured .fp-sum-row .fp-sum-label {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 4px 10px 4px 8px !important;
+  background: #DC2B2B !important;
+  color: #FFFFFF !important;
+  border-radius: 5px !important;
+  font-family: 'Manrope', 'Noto Sans JP', sans-serif !important;
+  font-size: 11.5px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.02em !important;
+  line-height: 1.3 !important;
+  align-self: start !important;
+  width: fit-content !important;
+  max-width: 100% !important;
+}
+.fp-summary-structured .fp-sum-row.fp-sum-tone-vital .fp-sum-label { background: #047647 !important; }
+.fp-summary-structured .fp-sum-row.fp-sum-tone-attn .fp-sum-label  { background: #B5530F !important; }
+.fp-summary-structured .fp-sum-row.fp-sum-tone-trust .fp-sum-label { background: #3F3FCE !important; }
+.fp-summary-structured .fp-sum-row .fp-sum-label::before {
+  content: '⚠' !important;
+  font-size: 11px !important;
+}
+.fp-summary-structured .fp-sum-row .fp-sum-value {
+  font-size: 13.5px !important;
+  line-height: 1.75 !important;
+  color: #1A1A1A !important;
+}
+.fp-summary-structured .fp-sum-p {
+  font-size: 13.5px !important;
+  line-height: 1.85 !important;
+  color: #1A1A1A !important;
+  margin: 6px 0 22px !important;
+  max-width: 68ch !important;
+}
+.fp-summary-structured .fp-sum-h5 {
+  font-family: 'Manrope', 'Noto Sans JP', sans-serif !important;
+  font-size: 11.5px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.08em !important;
+  color: #6B6B6B !important;
+  text-transform: uppercase !important;
+  padding: 0 0 8px !important;
+  margin: 28px 0 12px !important;
+  border-bottom: 1px solid #ECECEA !important;
+}
+
+/* --- LINE風 transcript chat bubble --- */
+.fp-transcript-chat {
+  background: #F0F2F5 !important;
+  padding: 20px 18px !important;
+  border-radius: 12px !important;
+  border: 1px solid #ECECEA !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+  max-height: 620px !important;
+  overflow-y: auto !important;
+}
+.fp-transcript-chat > div {
+  display: flex !important;
+  gap: 10px !important;
+  align-items: flex-end !important;
+}
+.fp-transcript-chat > div > div {
+  max-width: 72% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
+}
+.fp-transcript-chat > div > div > div:first-child {
+  font-family: 'Manrope', 'Noto Sans JP', sans-serif !important;
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+  color: #6B6B6B !important;
+  padding: 0 4px !important;
+  letter-spacing: 0.01em !important;
+}
+.fp-transcript-chat > div > div > div:last-child {
+  padding: 10px 14px !important;
+  border-radius: 16px !important;
+  font-size: 14px !important;
+  line-height: 1.75 !important;
+  color: #1A1A1A !important;
+  background: #FFFFFF !important;
+  box-shadow: 0 1px 2px rgba(16,24,40,0.06) !important;
+  word-wrap: break-word !important;
+}
+.fp-transcript-chat > div[style*="flex-end"] > div > div:last-child {
+  background: #06C755 !important;
+  color: #FFFFFF !important;
+  border-bottom-right-radius: 4px !important;
+  box-shadow: 0 1px 2px rgba(6,199,85,0.15) !important;
+}
+.fp-transcript-chat > div[style*="flex-end"] > div > div:first-child {
+  text-align: right !important;
+  color: #6B6B6B !important;
+}
+.fp-transcript-chat > div[style*="flex-end"] > div > div:first-child span {
+  color: #9A9A9A !important;
+}
+.fp-transcript-chat > div[style*="flex-start"] > div > div:last-child {
+  background: #FFFFFF !important;
+  color: #1A1A1A !important;
+  border-bottom-left-radius: 4px !important;
+}
+.fp-transcript-chat > div[style*="flex-start"] > div > div:first-child {
+  text-align: left !important;
+}
+.fp-transcript-chat > div[style*="flex-end"] > div > div:first-child::before,
+.fp-transcript-chat > div[style*="flex-start"] > div > div:first-child::before {
+  content: '' !important;
+  display: inline-block !important;
+  width: 6px !important; height: 6px !important;
+  border-radius: 50% !important;
+  margin-right: 6px !important;
+  vertical-align: middle !important;
+  transform: translateY(-1px) !important;
+}
+.fp-transcript-chat > div[style*="flex-end"] > div > div:first-child::before { background: #06C755 !important; }
+.fp-transcript-chat > div[style*="flex-start"] > div > div:first-child::before { background: #3F3FCE !important; }
+
+@media (max-width: 640px) {
+  .fp-summary-structured .fp-sum-row {
+    grid-template-columns: 1fr !important;
+    gap: 6px !important;
+  }
+  .fp-summary-structured .fp-sum-list > li {
+    font-size: 13px !important;
+    padding-right: 12px !important;
+  }
+  .fp-transcript-chat > div > div { max-width: 85% !important; }
+  .fp-transcript-chat { padding: 14px 12px !important; }
+}
