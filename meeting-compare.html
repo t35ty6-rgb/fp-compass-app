@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>議事録デザイン Before/After 比較 — FP Compass</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Noto+Sans+JP:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #F6F6F4; color: #0A0A0A; font-family: 'Noto Sans JP', -apple-system, sans-serif; -webkit-font-smoothing: antialiased; }
+
+  .topbar { background: #0F1117; color: #E4E6EB; padding: 14px 32px; display: flex; align-items: center; gap: 14px; font-size: 12.5px; }
+  .topbar .brand { font-family: 'Manrope', sans-serif; font-weight: 800; font-size: 14px; color: #FFF; }
+  .topbar .brand::before { content: ''; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #5B5BF0; box-shadow: 0 0 0 4px rgba(91,91,240,0.18); margin-right: 10px; vertical-align: middle; transform: translateY(-1px); }
+  .topbar .crumb { color: #7A8194; }
+  .topbar .crumb b { color: #E4E6EB; font-weight: 600; }
+  .topbar .env { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px 4px 8px; background: rgba(91,91,240,0.14); color: #A5A5F8; border: 1px solid rgba(91,91,240,0.28); border-radius: 999px; font-family: 'Manrope', sans-serif; font-size: 10.5px; font-weight: 700; letter-spacing: 0.08em; }
+  .topbar .env::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: #5B5BF0; box-shadow: 0 0 6px rgba(91,91,240,0.6); }
+
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 48px 32px 96px; }
+
+  .kicker { display: inline-flex; align-items: center; gap: 8px; font-family: 'Manrope', sans-serif; font-size: 11px; font-weight: 700; color: #0A0A0A; letter-spacing: 0.14em; margin-bottom: 14px; }
+  .kicker::before { content: ''; width: 20px; height: 1.5px; background: #0A0A0A; }
+  h1 { font-family: 'Manrope', 'Noto Sans JP', sans-serif; font-weight: 800; font-size: clamp(28px, 3.4vw, 40px); letter-spacing: -0.02em; line-height: 1.15; margin: 0 0 14px; }
+  .sub { color: #3F3F46; font-size: 15px; line-height: 1.8; max-width: 76ch; margin: 0 0 32px; }
+  .sub .hl { font-weight: 700; background: linear-gradient(transparent 55%, #FFF176 55%, #FFEB3B 88%, transparent 88%); padding: 0 2px; }
+
+  .toc { display: flex; gap: 10px; flex-wrap: wrap; margin: 20px 0 40px; padding: 16px 20px; background: #FFFFFF; border: 1px solid #ECECEA; border-radius: 12px; }
+  .toc a { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: #0A0A0A; color: #FFFFFF; text-decoration: none; border-radius: 6px; font-size: 12px; font-weight: 700; font-family: 'Manrope', sans-serif; letter-spacing: 0.02em; }
+  .toc a:hover { background: #3F3F46; }
+  .toc-label { font-size: 12px; color: #6B6B6B; font-family: 'Manrope', sans-serif; letter-spacing: 0.14em; font-weight: 700; align-self: center; margin-right: 4px; }
+
+  .section { margin: 56px 0 0; }
+  .section-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 20px; }
+  .section-idx { font-family: 'JetBrains Mono', 'Manrope', monospace; font-size: 12px; font-weight: 700; color: #9A9A9A; letter-spacing: 0.06em; }
+  .section-title { font-family: 'Manrope', 'Noto Sans JP', sans-serif; font-size: 24px; font-weight: 800; letter-spacing: -0.01em; color: #0A0A0A; }
+
+  .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 16px; }
+  .compare .col { background: #FFFFFF; border: 1px solid #ECECEA; border-radius: 14px; overflow: hidden; box-shadow: 0 1px 2px rgba(16,24,40,0.04); }
+  .compare .col-head { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-bottom: 1px solid #ECECEA; }
+  .compare .col-head .tag { font-family: 'Manrope', sans-serif; font-size: 10px; font-weight: 800; letter-spacing: 0.14em; padding: 3px 9px; border-radius: 4px; color: #FFFFFF; }
+  .compare .col-head .tag.before { background: #6B6B6B; }
+  .compare .col-head .tag.after { background: #047647; }
+  .compare .col-head .label { font-size: 13px; font-weight: 700; color: #3F3F46; }
+  .compare img { display: block; width: 100%; height: auto; }
+
+  .changes { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 4px; }
+  .changes .col { background: #FFFFFF; border: 1px solid #ECECEA; border-radius: 12px; padding: 16px 20px; }
+  .changes .col b { display: block; font-size: 11px; font-weight: 800; letter-spacing: 0.14em; margin-bottom: 8px; }
+  .changes .col.b b { color: #6B6B6B; }
+  .changes .col.a b { color: #047647; }
+  .changes .col p { margin: 0; font-size: 13.5px; line-height: 1.75; color: #1A1A1A; }
+  .changes .col p .hl { font-weight: 700; background: linear-gradient(transparent 55%, #FFF176 55%, #FFEB3B 88%, transparent 88%); padding: 0 2px; }
+
+  .summary-table {
+    margin: 64px 0 0;
+    background: #FFFFFF;
+    border: 1px solid #ECECEA;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 1px 2px rgba(16,24,40,0.04);
+  }
+  .summary-table table { width: 100%; border-collapse: collapse; }
+  .summary-table th { background: #0A0A0A; color: #FFFFFF; font-family: 'Manrope', sans-serif; font-size: 11.5px; font-weight: 800; letter-spacing: 0.06em; text-align: left; padding: 12px 18px; }
+  .summary-table td { padding: 14px 18px; font-size: 13.5px; line-height: 1.7; color: #1A1A1A; border-bottom: 1px solid #ECECEA; vertical-align: top; }
+  .summary-table tr:last-child td { border-bottom: none; }
+  .summary-table td:first-child { font-weight: 700; color: #0A0A0A; width: 25%; }
+  .summary-table td.b { color: #6B6B6B; }
+  .summary-table td.a { color: #0A0A0A; }
+  .summary-table td .hl { font-weight: 700; background: linear-gradient(transparent 55%, #FFF176 55%, #FFEB3B 88%, transparent 88%); padding: 0 2px; }
+  .summary-table td .pill { display: inline-flex; align-items: center; padding: 3px 9px; border-radius: 5px; color: #FFF; font-family: 'Manrope', sans-serif; font-size: 10.5px; font-weight: 700; letter-spacing: 0.02em; margin-right: 4px; }
+
+  .footer-note { margin-top: 56px; padding: 22px 26px; background: #FFFFFF; border: 1px solid #ECECEA; border-radius: 14px; color: #3F3F46; font-size: 13px; line-height: 1.85; box-shadow: 0 1px 2px rgba(16,24,40,0.04); }
+  .footer-note b { color: #0A0A0A; font-weight: 700; }
+  .footer-note a { color: #5B5BF0; font-weight: 700; text-decoration: none; }
+
+  @media (max-width: 900px) {
+    .compare, .changes { grid-template-columns: 1fr; }
+    .topbar { padding: 12px 18px; flex-wrap: wrap; }
+    .topbar .crumb { display: none; }
+    .wrap { padding: 32px 20px 72px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <span class="brand">FP Compass</span>
+  <span class="crumb">Owner Review <b>/ 議事録デザイン Before/After</b></span>
+  <span class="env">REPORT</span>
+</div>
+
+<div class="wrap">
+
+  <div class="kicker">Meeting Notes Design Comparison</div>
+  <h1>議事録 デザイン Before / After</h1>
+  <p class="sub">
+    2026-07-16 → 07-17 で 議事録 の 見た目 と まとめ方 を 全面 改修。 <span class="hl">4 箇所 × Before/After</span> の 実 スクリーンショット と、 何 が どう 変わった か の 詳細 を まとめました。
+  </p>
+
+  <div class="toc">
+    <span class="toc-label">JUMP</span>
+    <a href="#s1">① 決定事項</a>
+    <a href="#s2">② TODO</a>
+    <a href="#s3">③ 懸念事項</a>
+    <a href="#s4">④ LINE 会話</a>
+    <a href="#summary">まとめ 表</a>
+  </div>
+
+  <!-- ============ ① 決定事項 ============ -->
+  <section class="section" id="s1">
+    <div class="section-head">
+      <span class="section-idx">SECTION 01</span>
+      <span class="section-title">本日の決定事項</span>
+    </div>
+    <div class="compare">
+      <div class="col">
+        <div class="col-head"><span class="tag before">BEFORE</span><span class="label">プレーン markdown / 素 の bullet</span></div>
+        <img src="./assets/meeting-compare/before-1-decision.png" alt="Before: 決定事項">
+      </div>
+      <div class="col">
+        <div class="col-head"><span class="tag after">AFTER</span><span class="label">濃緑 pill + ✓緑 chip + 蛍光ペン</span></div>
+        <img src="./assets/meeting-compare/after-1-decision.png" alt="After: 決定事項">
+      </div>
+    </div>
+    <div class="changes">
+      <div class="col b">
+        <b>◇ 変更前</b>
+        <p>見出し は 「## 本日の決定事項」 の markdown 記号 が 生 で 表示。 リスト項目 は 素 の • bullet で、 数字 と 語句 が フラット。 「決まった こと」 と 「まだ 検討中」 が 見た目 で 区別 つかない。</p>
+      </div>
+      <div class="col a">
+        <b>◆ 変更後</b>
+        <p><span class="hl">濃緑 solid pill</span> の 見出し で 「決まった 系」 だと 即 分かる。 各項目 は 白カード + <span class="hl">左緑 4px accent bar</span> + <span class="hl">✓緑 チェック chip</span> で 「完了 感」 を 視覚化。 数字 (860万 / 月8万) は <span class="hl">黄色 蛍光ペン</span> で 目 が 引かれる。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ② TODO ============ -->
+  <section class="section" id="s2">
+    <div class="section-head">
+      <span class="section-idx">SECTION 02</span>
+      <span class="section-title">次回までのTODO</span>
+    </div>
+    <div class="compare">
+      <div class="col">
+        <div class="col-head"><span class="tag before">BEFORE</span><span class="label">「関心事」 の 生 markdown 見出し</span></div>
+        <img src="./assets/meeting-compare/before-2-todo.png" alt="Before: TODO">
+      </div>
+      <div class="col">
+        <div class="col-head"><span class="tag after">AFTER</span><span class="label">濃橙 pill + 番号 chip + TODO タグ</span></div>
+        <img src="./assets/meeting-compare/after-2-todo.png" alt="After: TODO">
+      </div>
+    </div>
+    <div class="changes">
+      <div class="col b">
+        <b>◇ 変更前</b>
+        <p>「## お客様の関心事」 が プレーン テキスト、 markdown の ## が 見えて 読みづらい。 関心事 と TODO の 区別 が 曖昧。 段落 の 情報密度 が 平板。</p>
+      </div>
+      <div class="col a">
+        <b>◆ 変更後</b>
+        <p><span class="hl">濃indigo pill</span> (関心事) と <span class="hl">濃橙 pill</span> (TODO) で セクション を 色分け。 TODO 項目 は 白カード + <span class="hl">左橙 4px accent</span> + <span class="hl">番号 濃橙 chip</span> + <span class="hl">右上 「TODO」 小タグ</span> で 「これから やる こと」 が 一目瞭然。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ③ 懸念事項 ============ -->
+  <section class="section" id="s3">
+    <div class="section-head">
+      <span class="section-idx">SECTION 03</span>
+      <span class="section-title">懸念事項 (新設)</span>
+    </div>
+    <div class="compare">
+      <div class="col">
+        <div class="col-head"><span class="tag before">BEFORE</span><span class="label">見出し 未生成 (旧 prompt に無し)</span></div>
+        <img src="./assets/meeting-compare/before-3-concern.png" alt="Before: 懸念事項">
+      </div>
+      <div class="col">
+        <div class="col-head"><span class="tag after">AFTER</span><span class="label">濃赤 alert card + ⚠ pill label</span></div>
+        <img src="./assets/meeting-compare/after-3-concern.png" alt="After: 懸念事項">
+      </div>
+    </div>
+    <div class="changes">
+      <div class="col b">
+        <b>◇ 変更前</b>
+        <p>旧 prompt には <span class="hl">「懸念事項」 section が 存在せず</span>、 リスク / 不確定要素 が どこ に 書かれるか 面談ごと に バラバラ。 「## 懸念事項」 の 生 markdown が 底 に 見える だけ。</p>
+      </div>
+      <div class="col a">
+        <b>◆ 変更後</b>
+        <p><span class="hl">濃赤 solid pill</span> で 独立 section 化。 各リスク は <span class="hl">grid 型 alert card</span> (左に ⚠濃赤 pill label / 右に 詳細) で 「ラベル と 説明 が 縦積み せず 横並び」 で 読める。 「-30% で 現金化 リスク」 等 の 数字 も 蛍光ペン。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ④ LINE 会話 ============ -->
+  <section class="section" id="s4">
+    <div class="section-head">
+      <span class="section-idx">SECTION 04</span>
+      <span class="section-title">LINE 会話 (誰が何を喋ったか)</span>
+    </div>
+    <div class="compare">
+      <div class="col">
+        <div class="col-head"><span class="tag before">BEFORE</span><span class="label">プレーン、 話者と発言が 潰れて 読みづらい</span></div>
+        <img src="./assets/meeting-compare/before-4-chat.png" alt="Before: LINE会話">
+      </div>
+      <div class="col">
+        <div class="col-head"><span class="tag after">AFTER</span><span class="label">LINE 吹き出し 型 + 淡グレー wall</span></div>
+        <img src="./assets/meeting-compare/after-4-chat.png" alt="After: LINE会話">
+      </div>
+    </div>
+    <div class="changes">
+      <div class="col b">
+        <b>◇ 変更前</b>
+        <p>話者名 + 発言 が <span class="hl">同じ緑帯</span> に 潰れて 表示。 誰 が どの 発言 をした か 一瞬 で 追えない。 発言 と 発言 の 境目 も 弱く、 長い 面談 を スクロール すると 迷子 に なる。</p>
+      </div>
+      <div class="col a">
+        <b>◆ 変更後</b>
+        <p><span class="hl">LINE そっくり の 緑/白 吹き出し</span> (右 = FP先生 緑 / 左 = 山口様 白)。 話者名 と 時刻 は 吹き出し の 上 に 小さい meta、 発言 本体 は 独立 の 吹き出し。 <span class="hl">淡グレー wall 背景</span> で 「会話 の 場」 感 が 出て、 誰 が 何 を 喋った か 一目 で 追える。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ まとめ 表 ============ -->
+  <section class="section" id="summary">
+    <div class="section-head">
+      <span class="section-idx">SUMMARY</span>
+      <span class="section-title">変更点 まとめ</span>
+    </div>
+    <div class="summary-table">
+      <table>
+        <thead>
+          <tr>
+            <th>場所</th>
+            <th>Before</th>
+            <th>After</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>見出し</td>
+            <td class="b">生 の <code>## 本日の決定事項</code></td>
+            <td class="a"><span class="pill" style="background:#047647">本日の決定事項</span><span class="pill" style="background:#3F3FCE">お客様の関心事</span><span class="pill" style="background:#B5530F">次回までのTODO</span><span class="pill" style="background:#DC2B2B">懸念事項</span><span class="pill" style="background:#0A0A0A">議論した数字</span> の 5トーン 濃色 pill</td>
+          </tr>
+          <tr>
+            <td>リスト項目</td>
+            <td class="b">素 の • bullet、 全部 同じ 見た目</td>
+            <td class="a">白カード + 種類別 marker (<b>決定=✓緑</b> / <b>TODO=番号橙</b> + 右上「TODO」タグ / <b>数字=左3px ink bar</b>)</td>
+          </tr>
+          <tr>
+            <td>数字 / 大事な語句</td>
+            <td class="b">普通 の bold</td>
+            <td class="a"><span class="hl">黄色 蛍光ペン マーカー</span> (860万 / 月8万 / 借換なし・現状維持 等)</td>
+          </tr>
+          <tr>
+            <td>懸念事項</td>
+            <td class="b">見出し すら 未生成 (旧 6 section 内 に 存在せず)</td>
+            <td class="a">濃赤 alert card + ⚠pill label + grid型 「ラベル / 詳細」 横並び</td>
+          </tr>
+          <tr>
+            <td>会話 (Whisper)</td>
+            <td class="b">話者名 + 発言 が 同じ緑帯 に 潰れて 読みづらい</td>
+            <td class="a">LINE 吹き出し (右=緑 advisor / 左=白 client、 淡グレー wall)</td>
+          </tr>
+          <tr>
+            <td>要約 の 構成</td>
+            <td class="b">6 section バラバラ (面談ごと に 揺れ、 懸念事項 抜け)</td>
+            <td class="a">5 section 固定 (どの面談 も 同じ形、 見出し 一字一句一致)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="footer-note">
+    <b>反映済 の 対象</b>: 明日 以降 の Zoom 面談 (今日 の Cloud Run deploy で 5 section 生成 が 起動、 CSS は 2026-07-16 に prod 反映済)<br>
+    <b>過去 議事録</b>: prod Firestore は 0 件 だった ため 過去分 の 変換 は 不要<br>
+    <b>実物 で 確認</b>: <a href="./meeting-single.html">meeting-single.html</a> (Zoom 1回分 の 議事録 出力例) / <a href="./meeting-preview.html">meeting-preview.html</a> (4 CASE 比較)<br>
+    <b>本番 議事録タブ</b>: <a href="https://app.skeleton-inc.jp/?v=20260717A-meeting-polish">https://app.skeleton-inc.jp/</a> (顧客カルテ → 議事録タブ、 CSS は 反映済 / 新 pipeline は 次 の Zoom 面談 から 適用)
+  </div>
+
+</div>
+</body>
+</html>
