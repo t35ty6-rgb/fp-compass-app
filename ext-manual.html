@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FP Compass 議事録レコーダー 使い方 — Chrome 拡張機能 v1.2.0</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Noto+Sans+JP:wght@400;500;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #F6F6F4; color: #0A0A0A; font-family: 'Noto Sans JP', -apple-system, sans-serif; -webkit-font-smoothing: antialiased; }
+
+  .topbar { background: #0F1117; color: #E4E6EB; padding: 14px 32px; display: flex; align-items: center; gap: 14px; font-size: 12.5px; }
+  .topbar .brand { font-family: 'Manrope', sans-serif; font-weight: 800; font-size: 14px; color: #FFF; }
+  .topbar .brand::before { content: ''; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #5B5BF0; box-shadow: 0 0 0 4px rgba(91,91,240,0.18); margin-right: 10px; vertical-align: middle; transform: translateY(-1px); }
+  .topbar .crumb { color: #7A8194; }
+  .topbar .crumb b { color: #E4E6EB; font-weight: 600; }
+  .topbar .env { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px 4px 8px; background: rgba(91,91,240,0.14); color: #A5A5F8; border: 1px solid rgba(91,91,240,0.28); border-radius: 999px; font-family: 'Manrope', sans-serif; font-size: 10.5px; font-weight: 700; letter-spacing: 0.08em; }
+  .topbar .env::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: #5B5BF0; box-shadow: 0 0 6px rgba(91,91,240,0.6); }
+
+  .wrap { max-width: 900px; margin: 0 auto; padding: 48px 32px 96px; }
+
+  .kicker { display: inline-flex; align-items: center; gap: 8px; font-family: 'Manrope', sans-serif; font-size: 11px; font-weight: 700; color: #0A0A0A; letter-spacing: 0.14em; margin-bottom: 14px; }
+  .kicker::before { content: ''; width: 20px; height: 1.5px; background: #0A0A0A; }
+  h1 { font-family: 'Manrope', 'Noto Sans JP', sans-serif; font-weight: 800; font-size: clamp(28px, 3.4vw, 40px); letter-spacing: -0.02em; line-height: 1.15; margin: 0 0 14px; }
+  .sub { color: #3F3F46; font-size: 15px; line-height: 1.8; max-width: 68ch; margin: 0 0 24px; }
+  .sub .hl { font-weight: 700; background: linear-gradient(transparent 55%, #FFF176 55%, #FFEB3B 88%, transparent 88%); padding: 0 2px; }
+
+  .info-panel { display: grid; grid-template-columns: auto 1fr; gap: 14px 16px; padding: 18px 22px; background: #FFFFFF; border: 1px solid #ECECEA; border-radius: 14px; box-shadow: 0 1px 2px rgba(16,24,40,0.04); margin-bottom: 32px; }
+  .info-panel .ip-icon { width: 36px; height: 36px; border-radius: 10px; background: #0A0A0A; color: #FFF; display: inline-flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; grid-row: span 2; }
+  .info-panel .ip-title { font-family: 'Manrope', sans-serif; font-size: 13.5px; font-weight: 700; color: #0A0A0A; }
+  .info-panel .ip-body { font-size: 13px; line-height: 1.75; color: #3F3F46; grid-column: 2; }
+
+  .toc { display: flex; gap: 10px; flex-wrap: wrap; margin: 20px 0 40px; padding: 16px 20px; background: #FFFFFF; border: 1px solid #ECECEA; border-radius: 12px; }
+  .toc a { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: #0A0A0A; color: #FFFFFF; text-decoration: none; border-radius: 6px; font-size: 12px; font-weight: 700; font-family: 'Manrope', sans-serif; letter-spacing: 0.02em; }
+  .toc a:hover { background: #3F3F46; }
+  .toc-label { font-size: 12px; color: #6B6B6B; font-family: 'Manrope', sans-serif; letter-spacing: 0.14em; font-weight: 700; align-self: center; margin-right: 4px; }
+
+  .section { margin: 56px 0 0; }
+  .section-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 18px; }
+  .section-idx { font-family: 'JetBrains Mono', 'Manrope', monospace; font-size: 12px; font-weight: 700; color: #9A9A9A; letter-spacing: 0.06em; }
+  .section-title { font-family: 'Manrope', 'Noto Sans JP', sans-serif; font-size: 24px; font-weight: 800; letter-spacing: -0.01em; color: #0A0A0A; }
+  .section-sub { color: #6B6B6B; font-size: 13.5px; margin: 0 0 24px; line-height: 1.7; }
+
+  /* Step card */
+  .step {
+    background: #FFFFFF; border: 1px solid #ECECEA; border-radius: 14px; overflow: hidden; margin-bottom: 14px; box-shadow: 0 1px 2px rgba(16,24,40,0.04);
+  }
+  .step-head { display: flex; align-items: center; gap: 14px; padding: 16px 22px; border-bottom: 1px solid #ECECEA; }
+  .step-num { width: 32px; height: 32px; border-radius: 50%; background: #0A0A0A; color: #FFF; display: inline-flex; align-items: center; justify-content: center; font-family: 'Manrope', sans-serif; font-size: 14px; font-weight: 800; flex-shrink: 0; }
+  .step-title { font-size: 16px; font-weight: 800; color: #0A0A0A; font-family: 'Manrope', 'Noto Sans JP', sans-serif; }
+  .step-body { padding: 16px 22px; font-size: 13.5px; line-height: 1.85; color: #1A1A1A; }
+  .step-body p { margin: 0 0 8px; }
+  .step-body .hl { font-weight: 700; background: linear-gradient(transparent 55%, #FFF176 55%, #FFEB3B 88%, transparent 88%); padding: 0 2px; }
+  .step-body code { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12.5px; background: #F0F0EE; padding: 2px 6px; border-radius: 4px; color: #0A0A0A; }
+  .step-body ul { margin: 6px 0; padding-left: 22px; }
+  .step-body li { margin-bottom: 4px; }
+  .step-body a.btn-link { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; background: #0A0A0A; color: #FFF; text-decoration: none; border-radius: 6px; font-size: 12.5px; font-weight: 700; margin-top: 6px; }
+  .step-body a.btn-link:hover { background: #3F3F46; }
+
+  /* Visual mock for Chrome extensions page */
+  .mock {
+    background: #F0F0EE; border: 1px solid #DCDCD8; border-radius: 10px; padding: 14px 16px; margin: 10px 0; font-size: 12.5px;
+  }
+  .mock .mock-label { font-family: 'Manrope', sans-serif; font-size: 10px; font-weight: 800; color: #6B6B6B; letter-spacing: 0.14em; margin-bottom: 8px; }
+  .mock .ext-row { display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: #FFF; border: 1px solid #ECECEA; border-radius: 8px; }
+  .mock .ext-icon { width: 32px; height: 32px; border-radius: 6px; background: #5B5BF0; color: #FFF; display: inline-flex; align-items: center; justify-content: center; font-size: 16px; }
+  .mock .ext-name { font-weight: 700; color: #0A0A0A; }
+  .mock .ext-ver { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #6B6B6B; }
+  .mock .ext-reload { margin-left: auto; padding: 6px 12px; background: #F0F0EE; border: 1px solid #DCDCD8; border-radius: 4px; font-size: 11.5px; color: #0A0A0A; }
+
+  /* Badge visual */
+  .badge-example { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; background: #0A0A0A; color: #FFF; border-radius: 8px; font-family: 'Manrope', sans-serif; font-size: 12px; font-weight: 700; margin: 4px 6px 4px 0; }
+  .badge-example .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .badge-example.armed .dot { background: #10B981; }
+  .badge-example.armed::after { content: '▶'; font-size: 14px; color: #10B981; }
+  .badge-example.rec .dot { background: #DC2B2B; animation: pulse 1.2s ease-in-out infinite; }
+  .badge-example.rec::after { content: 'REC'; font-size: 11px; color: #DC2B2B; font-weight: 800; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+  .flow-diagram {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 20px 0; padding: 20px; background: #FFFFFF; border: 1px solid #ECECEA; border-radius: 12px;
+  }
+  .flow-diagram .fd-step { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 12px 10px; background: #F6F6F4; border-radius: 10px; text-align: center; position: relative; }
+  .flow-diagram .fd-step:not(:last-child)::after { content: '→'; position: absolute; right: -12px; top: 50%; transform: translateY(-50%); color: #DCDCD8; font-weight: 700; z-index: 1; background: #FFF; padding: 0 2px; }
+  .flow-diagram .fd-num { width: 22px; height: 22px; border-radius: 50%; background: #0A0A0A; color: #FFF; display: inline-flex; align-items: center; justify-content: center; font-family: 'Manrope', sans-serif; font-size: 11px; font-weight: 800; }
+  .flow-diagram .fd-title { font-size: 12px; font-weight: 700; color: #0A0A0A; line-height: 1.4; }
+  .flow-diagram .fd-sub { font-size: 10.5px; color: #6B6B6B; line-height: 1.5; }
+
+  .callout {
+    background: #FFFBEB; border: 1px solid #FCD34D; border-left: 4px solid #B5530F; border-radius: 8px; padding: 14px 18px; margin: 14px 0; font-size: 13px; line-height: 1.75; color: #1A1A1A;
+  }
+  .callout b { color: #B5530F; }
+  .callout.critical { background: #FEF2F2; border-color: #FCA5A5; border-left-color: #DC2B2B; }
+  .callout.critical b { color: #DC2B2B; }
+  .callout.info { background: #EEF1FE; border-color: #C7D2FE; border-left-color: #3F3FCE; }
+  .callout.info b { color: #3F3FCE; }
+
+  .footer-note { margin-top: 56px; padding: 22px 26px; background: #FFFFFF; border: 1px solid #ECECEA; border-radius: 14px; color: #3F3F46; font-size: 13px; line-height: 1.85; box-shadow: 0 1px 2px rgba(16,24,40,0.04); }
+  .footer-note b { color: #0A0A0A; font-weight: 700; }
+  .footer-note a { color: #5B5BF0; font-weight: 700; text-decoration: none; }
+
+  @media (max-width: 700px) {
+    .topbar { padding: 12px 18px; flex-wrap: wrap; }
+    .topbar .crumb { display: none; }
+    .wrap { padding: 32px 20px 72px; }
+    .info-panel { grid-template-columns: 1fr; }
+    .info-panel .ip-icon { grid-row: auto; }
+    .info-panel .ip-body { grid-column: 1; }
+    .flow-diagram { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <span class="brand">FP Compass</span>
+  <span class="crumb">Chrome Extension <b>/ 使い方 v1.2.0</b></span>
+  <span class="env">MANUAL</span>
+</div>
+
+<div class="wrap">
+
+  <div class="kicker">Chrome Extension Manual</div>
+  <h1>拡張機能 の 使い方</h1>
+  <p class="sub">
+    Zoom 面談 の 音声 を <span class="hl">自動 で 録音 → 議事録 生成</span> する Chrome 拡張機能。 <span class="hl">AirPods でも 相手 の 声 が 拾える</span>、 面倒な 画面共有 ダイアログ 不要。 v1.2.0 で 「FP Compass の Zoom button 押す だけ で 自動起動」 に なった。
+  </p>
+
+  <div class="info-panel">
+    <div class="ip-icon" aria-hidden="true">🧩</div>
+    <div class="ip-title">初めて 使う 方 → セクション 02 (新規 install)</div>
+    <div class="ip-body">
+      以前 v1.1.0 を install 済 の 方 → <b>セクション 01 (更新)</b> で 5分。 完全 に 新規 の 方 → <b>セクション 02 (新規 install)</b> で 10分。 install 後 の 使い方 は <b>セクション 03</b>。
+    </div>
+  </div>
+
+  <div class="toc">
+    <span class="toc-label">JUMP</span>
+    <a href="#s1">① v1.2.0 に 更新</a>
+    <a href="#s2">② 新規 install</a>
+    <a href="#s3">③ 使い方 (通常 flow)</a>
+    <a href="#s4">④ うまく行かない時</a>
+  </div>
+
+  <!-- ============ ① 更新 ============ -->
+  <section class="section" id="s1">
+    <div class="section-head">
+      <span class="section-idx">SECTION 01</span>
+      <span class="section-title">既に install 済 → v1.2.0 に 更新</span>
+    </div>
+    <p class="section-sub">v1.1.0 以前 を 使ってる 場合、 <span class="hl">CSP bug で 拡張機能 が 認識されない 状態</span> でした。 v1.2.0 で 修正 済 + 「Zoom button 押す だけ で 自動起動」 に なった ので、 必ず 更新 してください。</p>
+
+    <div class="step">
+      <div class="step-head"><span class="step-num">1</span><span class="step-title">Chrome で 拡張機能 ページ を 開く</span></div>
+      <div class="step-body">
+        <p>Chrome の URL バー に <code>chrome://extensions/</code> と 打つ → Enter。</p>
+        <p>(または Chrome 右上 の … メニュー → 「拡張機能」 → 「拡張機能 を 管理」)</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head"><span class="step-num">2</span><span class="step-title">「FP Compass 議事録レコーダー」 を 見つける</span></div>
+      <div class="step-body">
+        <p>一覧 の 中 に FP Compass 拡張 が 出ている はず。</p>
+        <div class="mock">
+          <div class="mock-label">CHROME://EXTENSIONS/ の 表示</div>
+          <div class="ext-row">
+            <span class="ext-icon">🧩</span>
+            <div><div class="ext-name">FP Compass 議事録レコーダー</div><div class="ext-ver">1.1.0 → 1.2.0 に なれば OK</div></div>
+            <span class="ext-reload">⟳ 更新</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head"><span class="step-num">3</span><span class="step-title">「更新」 button を クリック</span></div>
+      <div class="step-body">
+        <p>拡張機能 の カード の 右下 (or ページ 右上) に <b>⟳ 更新</b> button がある。 これを click → 数秒 で version が <span class="hl">1.2.0</span> に なる。</p>
+        <div class="callout info">
+          <b>ℹ 「更新」 button が 見つからない 場合</b>: 拡張機能 ページ 右上 の 「デベロッパーモード」 switch を ON に すると、 各 拡張 の 下 に 「更新」 が 出る。
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head"><span class="step-num">4</span><span class="step-title">FP Compass タブ を リロード</span></div>
+      <div class="step-body">
+        <p>https://app.skeleton-inc.jp/ タブ を <b>Cmd + Shift + R</b> (ハードリロード) で 開き直す。</p>
+        <p>これで 新 拡張 v1.2.0 が FP Compass 側 でも 認識される。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ② 新規 install ============ -->
+  <section class="section" id="s2">
+    <div class="section-head">
+      <span class="section-idx">SECTION 02</span>
+      <span class="section-title">初めて → 新規 install</span>
+    </div>
+    <p class="section-sub">Chrome Web Store 未公開 の ため、 zip を DL → unpacked mode で 手動 install する 形。 一度 install すれば 以降 は 自動更新可能。</p>
+
+    <div class="step">
+      <div class="step-head"><span class="step-num">1</span><span class="step-title">拡張機能 zip を ダウンロード</span></div>
+      <div class="step-body">
+        <p>下 の button を click → <code>FP-Compass-拡張機能.zip</code> が Downloads に落ちる (13KB)。</p>
+        <p><a class="btn-link" href="https://app.skeleton-inc.jp/FP-Compass-%E6%8B%A1%E5%BC%B5%E6%A9%9F%E8%83%BD.zip" download>📥 zip を DL する</a></p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head"><span class="step-num">2</span><span class="step-title">zip を 展開 して 好きな場所 に 置く</span></div>
+      <div class="step-body">
+        <p>Downloads の zip を ダブルクリック → <b><code>FP-Compass-拡張機能</code></b> フォルダ が できる。 これを 消さない場所 (Documents や Desktop) に 移動。</p>
+        <div class="callout critical">
+          <b>⚠ フォルダ を 消したり 移動 したり しない</b>: unpacked mode の 拡張 は フォルダ を 指す ので、 消すと 拡張 が 使えなく なる。
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head"><span class="step-num">3</span><span class="step-title">Chrome の 拡張機能 ページ で 「デベロッパー モード」 ON</span></div>
+      <div class="step-body">
+        <p>Chrome の URL バー に <code>chrome://extensions/</code> → Enter。 <b>右上</b> の 「デベロッパー モード」 の switch を ON に する。</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head"><span class="step-num">4</span><span class="step-title">「パッケージ化 されて いない 拡張機能 を 読み込む」 を クリック</span></div>
+      <div class="step-body">
+        <p>デベロッパー モード ON に なる と 左上 に 3 つ の button が 出る:</p>
+        <ul>
+          <li><b>パッケージ化 されて いない 拡張機能 を 読み込む</b> ← これ を click</li>
+          <li>パッケージ化</li>
+          <li>更新</li>
+        </ul>
+        <p>ファイル 選択 ダイアログ が 開く → 手順 2 で 展開 した <b><code>FP-Compass-拡張機能</code></b> フォルダ を 選択 → 「開く」。</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head"><span class="step-num">5</span><span class="step-title">拡張 が 一覧 に 出れば OK</span></div>
+      <div class="step-body">
+        <p>拡張機能 の カード が 出て、 version が <span class="hl">1.2.0</span> なら 完了。</p>
+        <p>Chrome 右上 の 拡張 アイコン (🧩) を click → FP Compass 拡張 を 「pin」 (画鋲マーク) で 固定 して おく と 便利。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ③ 使い方 ============ -->
+  <section class="section" id="s3">
+    <div class="section-head">
+      <span class="section-idx">SECTION 03</span>
+      <span class="section-title">使い方 (通常 flow)</span>
+    </div>
+    <p class="section-sub">install 済 なら、 <span class="hl">FP Compass で 「Zoom 面談」 button を 押す だけ</span>。 拡張 が 全部 自動で やる。</p>
+
+    <div class="flow-diagram">
+      <div class="fd-step">
+        <span class="fd-num">1</span>
+        <div class="fd-title">FP Compass ログイン</div>
+        <div class="fd-sub">app.skeleton-inc.jp</div>
+      </div>
+      <div class="fd-step">
+        <span class="fd-num">2</span>
+        <div class="fd-title">顧客カルテ で Zoom button click</div>
+        <div class="fd-sub">「Zoom 面談 開始」</div>
+      </div>
+      <div class="fd-step">
+        <span class="fd-num">3</span>
+        <div class="fd-title">Zoom タブ 自動 open + 録音開始</div>
+        <div class="fd-sub">拡張 が 全部 自動</div>
+      </div>
+      <div class="fd-step">
+        <span class="fd-num">4</span>
+        <div class="fd-title">面談 終了 → Zoom タブ 閉じる</div>
+        <div class="fd-sub">議事録 auto 生成</div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head"><span class="step-num">1</span><span class="step-title">FP Compass に ログイン</span></div>
+      <div class="step-body">
+        <p>Chrome で <a href="https://app.skeleton-inc.jp/" target="_blank" style="color:#5B5BF0;font-weight:700;">https://app.skeleton-inc.jp/</a> を 開いて ログイン。</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head"><span class="step-num">2</span><span class="step-title">顧客カルテ で 「Zoom 面談」 button を click</span></div>
+      <div class="step-body">
+        <p>顧客リスト → 該当 顧客 の カード click → 「Zoom 面談 開始」 button (or 「急遽 Zoom」) を click。</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head"><span class="step-num">3</span><span class="step-title">拡張 が 自動 で 動く</span></div>
+      <div class="step-body">
+        <p>ここ から は 拡張 が 全部 自動 で やる。 owner の 追加 click は <b>不要</b>。</p>
+        <ul>
+          <li>拡張 が client 情報 で arm される (Chrome 右上 の 拡張 アイコン に <span class="badge-example armed"><span class="dot"></span></span> 緑 の ▶ badge)</li>
+          <li>新しい Zoom タブ が 自動 で 開く</li>
+          <li>Zoom タブ の 読み込み 完了 → <span class="hl">自動 で 録音開始</span> (badge が <span class="badge-example rec"><span class="dot"></span></span> 赤 REC に 変わる)</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head"><span class="step-num">4</span><span class="step-title">Zoom で 面談 (AirPods OK)</span></div>
+      <div class="step-body">
+        <p>普通 に Zoom で 面談 する。 <span class="hl">AirPods 使用中 でも 相手 の 声 も owner の 声 も 両方 録音 される</span>。</p>
+        <ul>
+          <li><b>相手 の 声</b>: Zoom タブ の 音声 を 拡張 が tabCapture で 拾う</li>
+          <li><b>owner の 声</b>: マイク (AirPods) を getUserMedia で 拾う</li>
+          <li>両方 を 合成 → 1 本 の 音声 に 収録</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head"><span class="step-num">5</span><span class="step-title">面談 終了 → Zoom タブ 閉じる</span></div>
+      <div class="step-body">
+        <p>Zoom タブ を <b>閉じる だけ</b>。 拡張 が 検知 → 自動 stop → 音声 blob を FP Compass に 送信 → Whisper で 文字起こし → Claude で 5 section 議事録 生成 → 顧客カルテ の 議事録タブ に 表示 (5〜10分)。</p>
+        <div class="callout info">
+          <b>ℹ 停止 button 押す 必要 なし</b>: Zoom タブ を 閉じた 瞬間 に 自動 stop + 送信 まで やる。
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ④ うまく行かない時 ============ -->
+  <section class="section" id="s4">
+    <div class="section-head">
+      <span class="section-idx">SECTION 04</span>
+      <span class="section-title">うまく 行かない 時</span>
+    </div>
+    <p class="section-sub">Chrome の 安全機能 で 「User gesture 制約」 が 効いて 自動 開始 に 失敗 する 事 が ある。 その時 は 拡張 アイコン を 1回 click で 起動 する。</p>
+
+    <div class="step">
+      <div class="step-head"><span class="step-num">▲</span><span class="step-title">「自動録音 失敗」 の toast が 出た 時</span></div>
+      <div class="step-body">
+        <p>FP Compass 下部 に オレンジ の toast:</p>
+        <div class="callout">
+          <b>⚠ 自動録音 失敗</b>: <b>山口様</b> — Chrome 右上 の 拡張アイコン (<span class="badge-example armed"><span class="dot"></span></span> ▶ 表示) を <b>1回 クリック</b> で 録音開始
+        </div>
+        <p>この場合 は Zoom タブ に 切り替え て → Chrome 右上 の 拡張 アイコン (▶ 緑 badge) を <b>1回 click</b> → 録音開始。 (完全 自動 の 半歩手前)</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head"><span class="step-num">?</span><span class="step-title">拡張機能 が 認識されない (window.__fpTabRecorder 未定義)</span></div>
+      <div class="step-body">
+        <p><b>症状</b>: FP Compass で Zoom button 押しても 「拡張入ってる」 認識が 出ない。</p>
+        <p><b>原因</b>: v1.1.0 以前 (CSP bug)、 or 拡張 が disabled。</p>
+        <p><b>対処</b>:</p>
+        <ul>
+          <li>chrome://extensions/ で FP Compass 拡張 が <span class="hl">v1.2.0</span> か 確認</li>
+          <li>拡張 switch が ON か 確認</li>
+          <li>FP Compass タブ を Cmd+Shift+R で ハードリロード</li>
+          <li>DevTools (F12) console で <code>window.__fpTabRecorder</code> と 打って <code>"1.2.0"</code> が 返る か 確認</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head"><span class="step-num">🎙</span><span class="step-title">マイク 音声 が 入らない (owner の 声 が 録音されない)</span></div>
+      <div class="step-body">
+        <p><b>原因</b>: Chrome の マイク 権限 が offscreen document に 与えられて いない。</p>
+        <p><b>対処</b>:</p>
+        <ul>
+          <li>Mac の システム設定 → プライバシー と セキュリティ → マイク で Chrome が ON か 確認</li>
+          <li>Chrome の URL バー 左 の 🔒 アイコン → 「サイト の 設定」 → マイク が 「許可」 か 確認</li>
+          <li>AirPods を 使う 場合 は Mac の 「サウンド → 入力」 で AirPods が 選択 されて いる か 確認</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head"><span class="step-num">📹</span><span class="step-title">Zoom タブ が 開いても 録音 始まらない</span></div>
+      <div class="step-body">
+        <p><b>原因</b>: Zoom タブ の 読み込み が 遅れて 拡張 が timing miss。</p>
+        <p><b>対処</b>: Chrome 右上 の 拡張 アイコン (▶ 緑) を 1回 click → 手動で 録音開始。 (「うまく 行かない 時 の toast」 と 同じ 対処)</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="footer-note">
+    <b>拡張機能 zip</b>: <a href="https://app.skeleton-inc.jp/FP-Compass-%E6%8B%A1%E5%BC%B5%E6%A9%9F%E8%83%BD.zip" download>https://app.skeleton-inc.jp/FP-Compass-拡張機能.zip</a> (最新 v1.2.0)<br>
+    <b>本番 URL</b>: <a href="https://app.skeleton-inc.jp/">https://app.skeleton-inc.jp/</a><br>
+    <b>議事録 デザイン Before/After</b>: <a href="./meeting-compare.html">meeting-compare.html</a> / <a href="./meeting-single.html">meeting-single.html</a>
+  </div>
+
+</div>
+</body>
+</html>
