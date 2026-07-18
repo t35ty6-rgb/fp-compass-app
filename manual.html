@@ -1,0 +1,519 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FP Compass 完全マニュアル — Zoom 面談 自動議事録</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Noto+Sans+JP:wght@400;500;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #F6F6F4; color: #0A0A0A; font-family: 'Noto Sans JP', -apple-system, sans-serif; -webkit-font-smoothing: antialiased; }
+
+  .topbar { background: #0F1117; color: #E4E6EB; padding: 14px 32px; display: flex; align-items: center; gap: 14px; font-size: 12.5px; }
+  .topbar .brand { font-family: 'Manrope', sans-serif; font-weight: 800; font-size: 14px; color: #FFF; }
+  .topbar .brand::before { content: ''; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #5B5BF0; box-shadow: 0 0 0 4px rgba(91,91,240,0.18); margin-right: 10px; vertical-align: middle; transform: translateY(-1px); }
+  .topbar .crumb { color: #7A8194; }
+  .topbar .crumb b { color: #E4E6EB; font-weight: 600; }
+  .topbar .env { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px 4px 8px; background: rgba(91,91,240,0.14); color: #A5A5F8; border: 1px solid rgba(91,91,240,0.28); border-radius: 999px; font-family: 'Manrope', sans-serif; font-size: 10.5px; font-weight: 700; letter-spacing: 0.08em; }
+  .topbar .env::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: #5B5BF0; box-shadow: 0 0 6px rgba(91,91,240,0.6); }
+
+  .wrap { max-width: 900px; margin: 0 auto; padding: 48px 32px 96px; }
+
+  .kicker { display: inline-flex; align-items: center; gap: 8px; font-family: 'Manrope', sans-serif; font-size: 11px; font-weight: 700; color: #0A0A0A; letter-spacing: 0.14em; margin-bottom: 14px; }
+  .kicker::before { content: ''; width: 20px; height: 1.5px; background: #0A0A0A; }
+  h1 { font-family: 'Manrope', 'Noto Sans JP', sans-serif; font-weight: 800; font-size: clamp(28px, 3.4vw, 40px); letter-spacing: -0.02em; line-height: 1.15; margin: 0 0 14px; }
+  .sub { color: #3F3F46; font-size: 15px; line-height: 1.8; max-width: 68ch; margin: 0 0 24px; }
+  .sub .hl { font-weight: 700; background: linear-gradient(transparent 55%, #FFF176 55%, #FFEB3B 88%, transparent 88%); padding: 0 2px; }
+
+  .who-panel { display: grid; grid-template-columns: auto 1fr; gap: 14px 16px; padding: 18px 22px; background: #FFFFFF; border: 1px solid #ECECEA; border-radius: 14px; box-shadow: 0 1px 2px rgba(16,24,40,0.04); margin-bottom: 32px; }
+  .who-panel .wp-icon { width: 36px; height: 36px; border-radius: 10px; background: #0A0A0A; color: #FFF; display: inline-flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; grid-row: span 2; }
+  .who-panel .wp-title { font-family: 'Manrope', sans-serif; font-size: 13.5px; font-weight: 700; color: #0A0A0A; }
+  .who-panel .wp-body { font-size: 13px; line-height: 1.75; color: #3F3F46; grid-column: 2; }
+
+  .overview-flow {
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 24px 0 32px; padding: 20px; background: #FFFFFF; border: 1px solid #ECECEA; border-radius: 12px;
+  }
+  .overview-flow .of-step { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 8px; background: #F6F6F4; border-radius: 8px; text-align: center; position: relative; }
+  .overview-flow .of-step:not(:last-child)::after { content: '→'; position: absolute; right: -10px; top: 50%; transform: translateY(-50%); color: #DCDCD8; font-weight: 700; z-index: 1; background: #FFF; padding: 0 2px; }
+  .overview-flow .of-num { width: 20px; height: 20px; border-radius: 50%; background: #0A0A0A; color: #FFF; display: inline-flex; align-items: center; justify-content: center; font-family: 'Manrope', sans-serif; font-size: 10px; font-weight: 800; }
+  .overview-flow .of-title { font-size: 11.5px; font-weight: 700; color: #0A0A0A; line-height: 1.4; }
+  .overview-flow .of-sub { font-size: 10px; color: #6B6B6B; line-height: 1.4; }
+
+  .toc { display: flex; gap: 10px; flex-wrap: wrap; margin: 20px 0 40px; padding: 16px 20px; background: #FFFFFF; border: 1px solid #ECECEA; border-radius: 12px; }
+  .toc a { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: #0A0A0A; color: #FFFFFF; text-decoration: none; border-radius: 6px; font-size: 12px; font-weight: 700; font-family: 'Manrope', sans-serif; letter-spacing: 0.02em; }
+  .toc a:hover { background: #3F3F46; }
+  .toc-label { font-size: 12px; color: #6B6B6B; font-family: 'Manrope', sans-serif; letter-spacing: 0.14em; font-weight: 700; align-self: center; margin-right: 4px; }
+
+  .chapter { margin: 64px 0 0; }
+  .chapter-head { padding: 16px 22px; background: #0A0A0A; color: #FFF; border-radius: 12px 12px 0 0; display: flex; align-items: center; gap: 14px; }
+  .chapter-idx { font-family: 'JetBrains Mono', 'Manrope', monospace; font-size: 11px; font-weight: 700; color: #A5A5F8; letter-spacing: 0.06em; }
+  .chapter-title { font-family: 'Manrope', 'Noto Sans JP', sans-serif; font-size: 20px; font-weight: 800; letter-spacing: -0.01em; color: #FFF; }
+  .chapter-time { margin-left: auto; font-size: 11px; color: #A5A5F8; font-family: 'Manrope', sans-serif; letter-spacing: 0.08em; padding: 4px 10px; background: rgba(91,91,240,0.14); border: 1px solid rgba(91,91,240,0.28); border-radius: 999px; }
+  .chapter-body { background: #FFF; border: 1px solid #ECECEA; border-top: none; border-radius: 0 0 12px 12px; padding: 24px 26px; }
+
+  .step {
+    background: #F8F8F6; border: 1px solid #ECECEA; border-radius: 10px; overflow: hidden; margin-bottom: 16px;
+  }
+  .step-head { display: flex; align-items: center; gap: 12px; padding: 12px 18px; background: #FFF; border-bottom: 1px solid #ECECEA; }
+  .step-num { width: 26px; height: 26px; border-radius: 50%; background: #0A0A0A; color: #FFF; display: inline-flex; align-items: center; justify-content: center; font-family: 'Manrope', sans-serif; font-size: 12px; font-weight: 800; flex-shrink: 0; }
+  .step-title { font-size: 14.5px; font-weight: 800; color: #0A0A0A; font-family: 'Manrope', 'Noto Sans JP', sans-serif; }
+  .step-body { padding: 14px 18px; font-size: 13px; line-height: 1.85; color: #1A1A1A; }
+  .step-body p { margin: 0 0 8px; }
+  .step-body .hl { font-weight: 700; background: linear-gradient(transparent 55%, #FFF176 55%, #FFEB3B 88%, transparent 88%); padding: 0 2px; }
+  .step-body code { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; background: #F0F0EE; padding: 2px 6px; border-radius: 4px; color: #0A0A0A; }
+  .step-body ul, .step-body ol { margin: 6px 0; padding-left: 22px; }
+  .step-body li { margin-bottom: 4px; }
+  .step-body a.btn-link { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; background: #0A0A0A; color: #FFF; text-decoration: none; border-radius: 6px; font-size: 12.5px; font-weight: 700; margin-top: 6px; }
+
+  .shot-frame { margin: 12px 0; background: #F0F0EE; border: 1px solid #DCDCD8; border-radius: 10px; padding: 8px; }
+  .shot-frame img { display: block; width: 100%; height: auto; border-radius: 6px; box-shadow: 0 2px 6px rgba(16,24,40,0.08); }
+  .shot-caption { font-size: 11.5px; color: #6B6B6B; text-align: center; margin-top: 8px; font-family: 'Manrope', sans-serif; letter-spacing: 0.02em; }
+
+  .hud-example { background: #FFF; border: 1px solid #ECECEA; border-radius: 10px; overflow: hidden; margin-bottom: 10px; display: grid; grid-template-columns: 200px 1fr; gap: 0; }
+  .hud-example .hud-shot { background: #F0F0EE; padding: 10px; display: flex; align-items: center; justify-content: center; }
+  .hud-example .hud-shot img { max-width: 100%; border-radius: 6px; box-shadow: 0 2px 6px rgba(16,24,40,0.08); }
+  .hud-example .hud-desc { padding: 14px 18px; font-size: 12.5px; line-height: 1.75; color: #1A1A1A; }
+  .hud-example .hud-desc b { display: block; margin-bottom: 4px; font-size: 13px; }
+  .hud-example .hud-desc .when { font-size: 11px; color: #6B6B6B; font-family: 'Manrope', sans-serif; letter-spacing: 0.06em; text-transform: uppercase; font-weight: 700; margin-top: 6px; }
+
+  .callout {
+    background: #FFFBEB; border: 1px solid #FCD34D; border-left: 4px solid #B5530F; border-radius: 8px; padding: 12px 16px; margin: 12px 0; font-size: 12.5px; line-height: 1.75; color: #1A1A1A;
+  }
+  .callout b { color: #B5530F; }
+  .callout.critical { background: #FEF2F2; border-color: #FCA5A5; border-left-color: #DC2B2B; }
+  .callout.critical b { color: #DC2B2B; }
+  .callout.info { background: #EEF1FE; border-color: #C7D2FE; border-left-color: #3F3FCE; }
+  .callout.info b { color: #3F3FCE; }
+  .callout.tip { background: #ECFDF5; border-color: #6EE7B7; border-left-color: #047647; }
+  .callout.tip b { color: #047647; }
+
+  .footer-note { margin-top: 56px; padding: 22px 26px; background: #FFFFFF; border: 1px solid #ECECEA; border-radius: 14px; color: #3F3F46; font-size: 13px; line-height: 1.85; box-shadow: 0 1px 2px rgba(16,24,40,0.04); }
+  .footer-note b { color: #0A0A0A; font-weight: 700; }
+  .footer-note a { color: #5B5BF0; font-weight: 700; text-decoration: none; }
+
+  @media (max-width: 700px) {
+    .topbar { padding: 12px 18px; flex-wrap: wrap; }
+    .topbar .crumb { display: none; }
+    .wrap { padding: 32px 20px 72px; }
+    .who-panel { grid-template-columns: 1fr; }
+    .who-panel .wp-icon { grid-row: auto; }
+    .who-panel .wp-body { grid-column: 1; }
+    .overview-flow { grid-template-columns: 1fr 1fr; }
+    .overview-flow .of-step:not(:last-child)::after { display: none; }
+    .hud-example { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <span class="brand">FP Compass</span>
+  <span class="crumb">Full Manual <b>/ Zoom 面談 自動議事録</b></span>
+  <span class="env">MANUAL</span>
+</div>
+
+<div class="wrap">
+
+  <div class="kicker">Full Manual</div>
+  <h1>FP Compass 使い方 完全マニュアル</h1>
+  <p class="sub">
+    <span class="hl">初めて 触る 人 でも</span> Zoom 面談 の 音声 を <span class="hl">自動で 議事録化</span> できる ように なる 手順書。 Chrome 拡張機能 の install から、 Zoom 面談 実行、 議事録 完成 まで、 <span class="hl">実際 の スクリーンショット</span> 付き で 全 flow 解説。
+  </p>
+
+  <div class="who-panel">
+    <div class="wp-icon" aria-hidden="true">👤</div>
+    <div class="wp-title">対象 = FP先生 (この tool を 使う 人)</div>
+    <div class="wp-body">
+      顧客 と Zoom 面談 を する ファイナンシャルプランナー が 対象。 客 自身 は 何 も する 必要 なし (客 は Zoom URL を 受け取って 参加 するだけ)。 議事録 は FP先生 の 業務 記録 用。
+    </div>
+  </div>
+
+  <div class="overview-flow">
+    <div class="of-step">
+      <span class="of-num">1</span>
+      <div class="of-title">Chrome拡張 install</div>
+      <div class="of-sub">初回 10分</div>
+    </div>
+    <div class="of-step">
+      <span class="of-num">2</span>
+      <div class="of-title">FP Compass login</div>
+      <div class="of-sub">30秒</div>
+    </div>
+    <div class="of-step">
+      <span class="of-num">3</span>
+      <div class="of-title">顧客カルテ → Zoom開始</div>
+      <div class="of-sub">1 click</div>
+    </div>
+    <div class="of-step">
+      <span class="of-num">4</span>
+      <div class="of-title">面談 (AirPods OK)</div>
+      <div class="of-sub">拡張 が 録音</div>
+    </div>
+    <div class="of-step">
+      <span class="of-num">5</span>
+      <div class="of-title">議事録 完成</div>
+      <div class="of-sub">5-10分 で 自動</div>
+    </div>
+  </div>
+
+  <div class="toc">
+    <span class="toc-label">JUMP</span>
+    <a href="#c1">CH.1 拡張機能 install</a>
+    <a href="#c2">CH.2 FP Compass 使い方</a>
+    <a href="#c3">CH.3 Zoom 面談 flow</a>
+    <a href="#c4">CH.4 状態表示 (HUD)</a>
+    <a href="#c5">CH.5 議事録 確認</a>
+    <a href="#c6">CH.6 うまく行かない時</a>
+  </div>
+
+  <!-- ============ CH1 拡張機能 install ============ -->
+  <section class="chapter" id="c1">
+    <div class="chapter-head">
+      <span class="chapter-idx">CH 01</span>
+      <span class="chapter-title">Chrome 拡張機能 を install する</span>
+      <span class="chapter-time">初回 10分</span>
+    </div>
+    <div class="chapter-body">
+      <p style="font-size:13.5px;line-height:1.85;margin:0 0 20px;color:#1A1A1A;">Zoom 面談 の 音声 を 自動 録音 する ため、 専用 Chrome 拡張機能 を install する。 <b>Chrome Web Store 未公開</b> の ため zip を DL → 手動 install (unpacked mode)。</p>
+
+      <div class="step">
+        <div class="step-head"><span class="step-num">1</span><span class="step-title">拡張機能 zip を DL</span></div>
+        <div class="step-body">
+          <p>下 の button で zip DL (13KB)。 Downloads に <code>FP-Compass-拡張機能.zip</code> が 落ちる。</p>
+          <p><a class="btn-link" href="https://app.skeleton-inc.jp/FP-Compass-%E6%8B%A1%E5%BC%B5%E6%A9%9F%E8%83%BD.zip" download>📥 zip を DL</a></p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-head"><span class="step-num">2</span><span class="step-title">zip を 展開 して 好きな場所 に 置く</span></div>
+        <div class="step-body">
+          <p>Downloads の zip を ダブルクリック → <code>FP-Compass-拡張機能</code> フォルダ が できる。 <b>Documents や Desktop</b> に 移動 して 消さない ように する。</p>
+          <div class="callout critical">
+            <b>⚠ フォルダ を 消さない</b>: unpacked mode の 拡張 は フォルダ を 指す。 消したり 移動したり すると 拡張 が 使えなく なる。
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-head"><span class="step-num">3</span><span class="step-title">Chrome で <code>chrome://extensions/</code> を 開く</span></div>
+        <div class="step-body">
+          <p>Chrome の URL バー に <code>chrome://extensions/</code> を 貼り付け → Enter。 (または Chrome 右上 の … → 「拡張機能」 → 「拡張機能 を 管理」)</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-head"><span class="step-num">4</span><span class="step-title">「デベロッパー モード」 ON → 「パッケージ化 されていない 拡張機能 を 読み込む」</span></div>
+        <div class="step-body">
+          <p>ページ <b>右上</b> の 「デベロッパー モード」 switch を ON。 左上 に 3 つ の button が 出る → <b>「パッケージ化 されていない 拡張機能 を 読み込む」</b> を click。</p>
+          <p>ファイル 選択 ダイアログ → 手順 2 で 展開 した <code>FP-Compass-拡張機能</code> <b>フォルダ</b> を 選択 → 「開く」。</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-head"><span class="step-num">5</span><span class="step-title">install 確認 + pin</span></div>
+        <div class="step-body">
+          <p>拡張機能 の カード が 出て、 version が <span class="hl">1.2.0</span> なら 完了。</p>
+          <p>Chrome 右上 の 拡張 アイコン (🧩) を click → 「FP Compass 議事録レコーダー」 の 隣 の <b>画鋲マーク</b> を click で <b>pin</b> 固定 して おく と 便利 (常時 表示)。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CH2 FP Compass 使い方 ============ -->
+  <section class="chapter" id="c2">
+    <div class="chapter-head">
+      <span class="chapter-idx">CH 02</span>
+      <span class="chapter-title">FP Compass に login</span>
+      <span class="chapter-time">30秒</span>
+    </div>
+    <div class="chapter-body">
+      <div class="step">
+        <div class="step-head"><span class="step-num">1</span><span class="step-title">https://app.skeleton-inc.jp/ を 開く</span></div>
+        <div class="step-body">
+          <p>Chrome で <a href="https://app.skeleton-inc.jp/" target="_blank" style="color:#5B5BF0;font-weight:700;">https://app.skeleton-inc.jp/</a> を 開くと login 画面 が 出る。</p>
+          <div class="shot-frame">
+            <img src="./assets/manual/00-login.png" alt="login 画面">
+            <div class="shot-caption">▲ login 画面 — メール + パスワード</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-head"><span class="step-num">2</span><span class="step-title">メール と パスワード で login</span></div>
+        <div class="step-body">
+          <p>登録済み の メール と パスワード を 入れて 「ログイン」。 30日間 login 維持。</p>
+          <p>login 後、 dashboard (ホーム) が 出る。 左 サイドバー に 「顧客台帳」 「面談履歴」 「LINE オートメーション」 等 の nav。</p>
+          <div class="shot-frame">
+            <img src="./assets/manual/01-dashboard.png" alt="dashboard">
+            <div class="shot-caption">▲ login 後 の dashboard (ホーム)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CH3 Zoom 面談 flow ============ -->
+  <section class="chapter" id="c3">
+    <div class="chapter-head">
+      <span class="chapter-idx">CH 03</span>
+      <span class="chapter-title">Zoom 面談 を 開始 (1 click で 自動録音)</span>
+      <span class="chapter-time">1 click</span>
+    </div>
+    <div class="chapter-body">
+      <div class="step">
+        <div class="step-head"><span class="step-num">1</span><span class="step-title">左 サイドバー の 「顧客」 タブ を click</span></div>
+        <div class="step-body">
+          <p>login 後、 左 サイドバー の <b>「顧客」</b> nav を click → 顧客台帳 が 出る。</p>
+          <div class="shot-frame">
+            <img src="./assets/manual/02-clients-list.png" alt="顧客台帳">
+            <div class="shot-caption">▲ 顧客台帳 (客一覧 table)</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-head"><span class="step-num">2</span><span class="step-title">面談したい 客 を click → 顧客カルテ が 開く</span></div>
+        <div class="step-body">
+          <p>table の 客 の 行 を click → 右側 に <b>顧客カルテ</b> が 開く。 上部 に 客名 + status、 その 下 に アクション button 群。</p>
+          <div class="shot-frame">
+            <img src="./assets/manual/03-customer-detail.png" alt="顧客カルテ">
+            <div class="shot-caption">▲ 顧客カルテ — 上部 に アクション button, 下 に 詳細</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-head"><span class="step-num">3</span><span class="step-title">「⚡ 今すぐ 開始」 button を 1回 click</span></div>
+        <div class="step-body">
+          <p>顧客カルテ の 中 に <b>青枠 の Zoom アイコン button が 2つ</b> 並んで いる:</p>
+          <ul>
+            <li><b>⚡ 今すぐ 開始</b> ← <span class="hl">これ を 押す</span></li>
+            <li>📅 日時指定 予約 (後日 の 面談 予約用)</li>
+          </ul>
+          <div class="shot-frame">
+            <img src="./assets/manual/04-zoom-buttons.png" alt="Zoom button">
+            <div class="shot-caption">▲ 顧客カルテ の Zoom button 2つ (左 = 今すぐ / 右 = 予約)</div>
+          </div>
+          <div class="callout tip">
+            <b>💡 LINE 紐付け 有無 で sub label が 変わる</b>: LINE 有り → 「LINE 自動送付」、 無し → 「URL コピー可」。 どちら でも 拡張 の 自動録音 は 動く。
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-head"><span class="step-num">4</span><span class="step-title">拡張 が 自動 で 動く</span></div>
+        <div class="step-body">
+          <p>button click 後、 <b>owner は 何 も しない</b>。 裏で こう 動く:</p>
+          <ol>
+            <li>拡張 が この 客 で 「録音準備完了」 に なる (右上 HUD に 🟡 表示)</li>
+            <li>Zoom タブ が 新規 open</li>
+            <li>Zoom タブ の 読み込み 完了 → <b>自動 で 録音開始</b> (HUD が 🔴 に 変わる)</li>
+          </ol>
+          <div class="callout">
+            <b>⚠ 「自動起動 失敗」 と 出た 場合</b>: Chrome の セキュリティ で 自動 tabCapture 失敗 する ケース あり。 その 時 は Zoom タブ に 切り替えて Chrome 右上 の 拡張 アイコン (▶ 緑 badge) を <b>1 click</b> で 録音 開始。
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-head"><span class="step-num">5</span><span class="step-title">Zoom で 面談 (AirPods OK)</span></div>
+        <div class="step-body">
+          <p>普通 に Zoom で 面談する。 <span class="hl">AirPods 使用中 でも 相手 の 声 と owner の 声 両方 録音される</span>:</p>
+          <ul>
+            <li><b>相手 の 声</b>: Zoom タブ の 音声 を 拡張 が 拾う (AirPods 経由 で 聞こえてる 音声)</li>
+            <li><b>owner の 声</b>: マイク (AirPods) を 拡張 が 拾う</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-head"><span class="step-num">6</span><span class="step-title">面談 終了 → Zoom タブ を 閉じる だけ</span></div>
+        <div class="step-body">
+          <p>Zoom タブ を <b>× で 閉じる だけ</b>。 拡張 が 検知 → 自動 stop → 音声 blob を FP Compass に 送信 → Whisper で 文字起こし → Claude で 5 section 議事録 生成 → 顧客カルテ の 議事録タブ に 表示 (5〜10分)。</p>
+          <div class="callout info">
+            <b>ℹ 停止 button 押す 必要 なし</b>: Zoom タブ 閉じた 瞬間 に 自動 stop + 送信 + 生成 まで 全部やる。
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CH4 状態表示 HUD ============ -->
+  <section class="chapter" id="c4">
+    <div class="chapter-head">
+      <span class="chapter-idx">CH 04</span>
+      <span class="chapter-title">画面 右上 の 状態パネル (HUD) — 今 何 が 起きてる か</span>
+      <span class="chapter-time">常時 表示</span>
+    </div>
+    <div class="chapter-body">
+      <p style="font-size:13.5px;line-height:1.85;margin:0 0 20px;color:#1A1A1A;">FP Compass 画面 <b>右上</b> に 小さい パネル が 出る。 「今 拡張機能 が 何 を してる か」 が 全 段階 で 分かる。</p>
+
+      <div class="hud-example">
+        <div class="hud-shot"><img src="./assets/manual/10-hud-armed.png" alt="準備完了"></div>
+        <div class="hud-desc">
+          <b>🟡 録音準備完了</b>
+          <div>Zoom button click 直後 に 出る。 拡張 が 客名 を 記憶 して、 Zoom タブ の open + 録音 開始 を 試みる 段階。</div>
+          <div class="when">WHEN — Zoom button click 直後</div>
+        </div>
+      </div>
+
+      <div class="hud-example">
+        <div class="hud-shot"><img src="./assets/manual/11-hud-recording.png" alt="録音中"></div>
+        <div class="hud-desc">
+          <b>🔴 録音中</b>
+          <div>Zoom タブ の 音声 + マイク (AirPods) を 収録中。 Zoom タブ を 閉じる まで 継続。 <b>この間 は 何 も しない</b>。</div>
+          <div class="when">WHEN — Zoom タブ load 完了 → 自動 開始</div>
+        </div>
+      </div>
+
+      <div class="hud-example">
+        <div class="hud-shot"><img src="./assets/manual/12-hud-failed.png" alt="失敗"></div>
+        <div class="hud-desc">
+          <b>⚠ 自動起動 失敗</b>
+          <div>Chrome の セキュリティ で 自動 tabCapture 失敗。 Zoom タブ に 切り替えて <b>Chrome 右上 の 拡張アイコン (▶ 緑)</b> を <b>1回 click</b> で 録音開始 する。 (完全自動 の 半歩手前)</div>
+          <div class="when">WHEN — auto-start が Chrome policy で 失敗した時</div>
+        </div>
+      </div>
+
+      <div class="hud-example">
+        <div class="hud-shot"><img src="./assets/manual/13-hud-processing.png" alt="処理中"></div>
+        <div class="hud-desc">
+          <b>⏳ 議事録 生成中…</b>
+          <div>Zoom タブ 閉じた 直後 に 出る。 「音声 XX KB, YY秒 受信」 の 数字 で 「ちゃんと録れてる」 が 確認できる。 <b>5〜10分</b> 待つ と 完成。</div>
+          <div class="when">WHEN — Zoom タブ 閉じた 直後</div>
+        </div>
+      </div>
+
+      <div class="hud-example">
+        <div class="hud-shot"><img src="./assets/manual/14-hud-done.png" alt="完了"></div>
+        <div class="hud-desc">
+          <b>✅ 議事録できました</b>
+          <div>5〜10分 経過 して 議事録 が 完成 した 通知。 <b>「顧客カルテで開く」 button</b> を click で 該当 客 の 議事録タブ に 直行。</div>
+          <div class="when">WHEN — 議事録 fetch 完了 (5-10分後)</div>
+        </div>
+      </div>
+
+      <div class="callout info">
+        <b>ℹ HUD の 操作</b>: 右上 <b>×</b> で 手動 閉じ 可能。 sticky でない state は <b>15秒 で auto-hide</b>。 面談中 も 邪魔 に なりにくい 位置。
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CH5 議事録 確認 ============ -->
+  <section class="chapter" id="c5">
+    <div class="chapter-head">
+      <span class="chapter-idx">CH 05</span>
+      <span class="chapter-title">議事録 を 確認する</span>
+      <span class="chapter-time">面談 5-10分後</span>
+    </div>
+    <div class="chapter-body">
+      <div class="step">
+        <div class="step-head"><span class="step-num">1</span><span class="step-title">顧客カルテ の 「議事録」 タブ を 開く</span></div>
+        <div class="step-body">
+          <p>該当 客 の 顧客カルテ を 開く → 上部 の タブ で <b>「議事録」</b> を 選択。 過去 の 議事録 が 時系列 で 並ぶ。</p>
+          <div class="shot-frame">
+            <img src="./assets/manual/05-meetings-tab.png" alt="議事録タブ">
+            <div class="shot-caption">▲ 顧客カルテ → 議事録タブ</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-head"><span class="step-num">2</span><span class="step-title">議事録 の 構成</span></div>
+        <div class="step-body">
+          <p>各 議事録 は 以下 <b>5 セクション</b> に 自動 分解 されて 表示 される (2026-07-17 以降 の 新規 面談):</p>
+          <ol>
+            <li><b>本日の決定事項</b> (緑 pill) — 面談で 決まった こと</li>
+            <li><b>お客様の関心事</b> (indigo pill) — 顧客 の 現状 / 希望 / 家族構成</li>
+            <li><b>次回までのTODO</b> (橙 pill) — FP先生 が 次回まで に やる こと</li>
+            <li><b>懸念事項</b> (赤 pill) — リスク / 不確定要素</li>
+            <li><b>議論した数字・試算</b> (黒 pill) — 出た 数字 の 集約</li>
+          </ol>
+          <p>数字 と 大事な語句 は <span class="hl">黄色 蛍光ペン</span> で 目立つ。 詳細 デザイン は <a href="./meeting-single.html" target="_blank" style="color:#5B5BF0;font-weight:700;">meeting-single.html</a> で 確認 可能。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CH6 うまく行かない時 ============ -->
+  <section class="chapter" id="c6">
+    <div class="chapter-head">
+      <span class="chapter-idx">CH 06</span>
+      <span class="chapter-title">うまく 行かない 時</span>
+      <span class="chapter-time">トラブル 対処</span>
+    </div>
+    <div class="chapter-body">
+
+      <div class="step">
+        <div class="step-head"><span class="step-num">?</span><span class="step-title">顧客カルテ に Zoom button が 見えない</span></div>
+        <div class="step-body">
+          <p><b>症状</b>: 顧客カルテ を 開いても 「⚡ 今すぐ 開始」 button が 表示 されない。</p>
+          <p><b>原因</b>: 旧 版 では LINE 紐付け 済 客 のみ 表示 だった。 2026-07-18 修正 で 全客 で 表示 に。</p>
+          <p><b>対処</b>: FP Compass を <b>Cmd+Shift+R</b> (ハードリロード) → 新 UI が 反映される。</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-head"><span class="step-num">?</span><span class="step-title">「自動起動 失敗」 の HUD が 出た</span></div>
+        <div class="step-body">
+          <p><b>症状</b>: HUD 右上 に ⚠ 橙 の 「自動起動 失敗」 表示。</p>
+          <p><b>原因</b>: Chrome の セキュリティ で 自動 tabCapture が blocked。</p>
+          <p><b>対処</b>: Zoom タブ に 切り替えて Chrome 右上 の <b>拡張 アイコン (▶ 緑 badge)</b> を <b>1回 click</b> → 録音 開始 (半自動)。</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-head"><span class="step-num">?</span><span class="step-title">拡張機能 が 認識 されない</span></div>
+        <div class="step-body">
+          <p><b>症状</b>: Zoom button 押しても HUD が 出ない、 何 も 起きない。</p>
+          <p><b>対処</b>:</p>
+          <ul>
+            <li>Chrome の <code>chrome://extensions/</code> で 「FP Compass 議事録レコーダー」 が <b>v1.2.0</b> か 確認</li>
+            <li>switch が ON か 確認</li>
+            <li>FP Compass タブ を Cmd+Shift+R でハードリロード</li>
+            <li>DevTools (F12) console で <code>window.__fpTabRecorder</code> と 打って <code>"1.2.0"</code> が 返る か 確認</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-head"><span class="step-num">?</span><span class="step-title">マイク (自分の声) が 入らない</span></div>
+        <div class="step-body">
+          <p><b>症状</b>: 議事録 で 相手 の 声 だけ、 自分の 声 が 入って ない。</p>
+          <p><b>対処</b>:</p>
+          <ul>
+            <li>Mac の <b>システム設定 → プライバシー と セキュリティ → マイク</b> で Chrome が ON か 確認</li>
+            <li>Chrome の URL バー 左 の 🔒 → 「サイト の 設定」 → マイク が 「許可」 か 確認</li>
+            <li>AirPods 使用時 は Mac の 「サウンド → 入力」 で AirPods が 選択 されて いる か 確認</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-head"><span class="step-num">?</span><span class="step-title">議事録 が いつまでも 出ない</span></div>
+        <div class="step-body">
+          <p><b>症状</b>: HUD が 「⏳ 議事録 生成中」 の まま 30分 以上 経つ。</p>
+          <p><b>対処</b>:</p>
+          <ul>
+            <li>FP Compass タブ を リロード → 議事録 が 出て いる か 確認</li>
+            <li>顧客カルテ → 議事録タブ で 「AI処理失敗」 表示 が 出て いない か 確認</li>
+            <li>継続 で 失敗 する 場合 は 音声 の 品質 (無音 / 音量 小さすぎ) を 確認</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <div class="footer-note">
+    <b>本 マニュアル</b>: https://app.skeleton-inc.jp/manual.html<br>
+    <b>拡張機能 zip</b>: <a href="https://app.skeleton-inc.jp/FP-Compass-%E6%8B%A1%E5%BC%B5%E6%A9%9F%E8%83%BD.zip" download>DL (v1.2.0, 13KB)</a><br>
+    <b>本番 URL</b>: <a href="https://app.skeleton-inc.jp/">https://app.skeleton-inc.jp/</a><br>
+    <b>議事録 デザイン Before/After</b>: <a href="./meeting-compare.html">meeting-compare.html</a> / <a href="./meeting-single.html">meeting-single.html</a>
+  </div>
+
+</div>
+</body>
+</html>
