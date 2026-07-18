@@ -2739,14 +2739,15 @@
       if (window.__fpTabRecorder && typeof window.armAndOpenZoom === 'function' && finalClientId && result.zoomUrl) {
         // hostZoomUrl (FP先生 が host で 参加する URL) を 優先、 無ければ zoomUrl
         const rawHostUrl = result.hostZoomUrl || result.startUrl || result.zoomUrl;
-        // ★ 2026-07-18 revert: /j/{id} → /wc/join/{id} (急遽ボタン で 動いてた format に 戻す)
-        //   /wc/{id}/start?fromPWA=1 は 効かなかった owner 報告 → 動作実績 ある format を 採用
+        // ★ 2026-07-18 fix (qa FAIL C): /s/ (startUrl) は /wc/{id}/start に、 /j/ は /wc/join/{id} に 変換
+        //   前は 全部 /wc/join に していた が、 それだと FP先生 が host権限 なく 参加者 として 入る バグ
         const forceWebUrl = (() => {
           try {
             const m = rawHostUrl.match(/\/(j|s)\/(\d+)([?&].*)?/);
             if (!m) return rawHostUrl;
             const u = new URL(rawHostUrl);
-            return `https://${u.host}/wc/join/${m[2]}${m[3] || ''}`;
+            const isStart = m[1] === 's';
+            return `https://${u.host}/wc/${isStart ? m[2] + '/start' : 'join/' + m[2]}${m[3] || ''}`;
           } catch (_) { return rawHostUrl; }
         })();
         extAutoOpened = window.armAndOpenZoom(finalClientId, clientName, window.currentTenantId, forceWebUrl);
@@ -3445,10 +3446,12 @@
       const sh = window.screen.availHeight || screen.height;
       const zoomBrowserUrl = (function() {
         try {
-          const m = (zoomUrl || '').match(/zoom\.us\/j\/(\d+)(\?.*)?/);
+          // ★ 2026-07-18 fix (qa FAIL B): /s/ (startUrl) 対応 追加 → ホスト URL は /wc/{id}/start に (Zoom Web で ホスト権限 保持)
+          const m = (zoomUrl || '').match(/zoom\.us\/(j|s)\/(\d+)(\?.*)?/);
           if (!m) return zoomUrl;
           const host = (zoomUrl.match(/^https?:\/\/([^\/]+)/) || ['', 'zoom.us'])[1];
-          return `https://${host}/wc/join/${m[1]}${m[2] || ''}`;
+          const isStart = m[1] === 's';
+          return `https://${host}/wc/${isStart ? m[2] + '/start' : 'join/' + m[2]}${m[3] || ''}`;
         } catch (_) { return zoomUrl; }
       })();
       let zoomWin = preZoomWin;
