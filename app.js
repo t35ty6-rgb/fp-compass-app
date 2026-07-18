@@ -4522,6 +4522,13 @@ ${ctxText}${surveyTxt}`;
                 return `https://${u.host}/wc/join/${m[2]}${m[3] || ''}`;
               } catch (_) { return data.startUrl; }
             })();
+            // ★ 2026-07-18 bug fix: 拡張機能 に 客名 arm (前客 の 名前 が 残る バグ 対応)
+            //   armAndOpenZoom の auto-open は disable 済 なので、 arm だけ 呼ぶ armTabRecorder を 使う
+            try {
+              if (typeof window.armTabRecorder === 'function') {
+                window.armTabRecorder(fsCustomerId, c.name, window.currentTenantId);
+              }
+            } catch (e) { console.warn('armTabRecorder failed:', e); }
             window.open(forceWebUrl, '_blank');
             status.style.color = '#059669';
             status.textContent = data.lineSent
