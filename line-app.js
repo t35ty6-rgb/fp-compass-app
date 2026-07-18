@@ -3025,21 +3025,138 @@
     return true;
   };
 
-  // ★ 拡張 → app: auto-start 失敗時 通知 (user gesture 制約 等)
-  window.addEventListener('message', (ev) => {
-    if (ev.source !== window) return;
-    const d = ev.data;
-    if (d?.source === 'fp-tab-recorder' && d?.type === 'FP_AUTO_START_FAILED') {
-      try {
-        const t = document.createElement('div');
-        t.innerHTML = '⚠ 自動録音 失敗: <b>' + escapeHtml(d.payload?.clientName || '') + '</b> — Chrome 右上 の 拡張アイコン (▶ 表示) を 1回 クリック で 録音開始';
-        t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#B45309;color:#fff;padding:14px 26px;border-radius:8px;font-size:13px;font-weight:700;z-index:2147483647;box-shadow:0 12px 32px rgba(0,0,0,.35);max-width:560px;line-height:1.5;';
-        document.body.appendChild(t);
-        setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity .4s'; }, 12000);
-        setTimeout(() => t.remove(), 12500);
-      } catch(_) {}
-    }
-  });
+  // ★ 拡張 → app: auto-start 失敗時 通知 (user gesture 制約 等) — 旧トーストは HUD に統合
+  //   FP_AUTO_START_FAILED も HUD の状態変化として扱う (下の HUD listener で処理)
+
+  // ★ 2026-07-18: 常時表示 status HUD — 「準備完了 → 録音中 → 処理中 → 完了」 の 5 状態 を 明示
+  //   owner の 「今 動いてるか 分からない」 対策
+  (function initStatusHud() {
+    if (window._fpExtHud) return;
+    // HUD element (fixed top-right)
+    const hud = document.createElement('div');
+    hud.id = 'fp-ext-hud';
+    hud.style.cssText = 'position:fixed;top:16px;right:16px;z-index:2147483645;background:#FFFFFF;border:1px solid #ECECEA;border-radius:12px;padding:12px 16px;box-shadow:0 8px 24px rgba(15,23,42,0.15),0 2px 6px rgba(15,23,42,0.08);font-family:"Noto Sans JP",sans-serif;font-size:12.5px;line-height:1.55;max-width:340px;display:none;cursor:default;';
+    hud.innerHTML = `
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span id="fp-hud-dot" style="width:10px;height:10px;border-radius:50%;background:#9A9A9A;flex-shrink:0;"></span>
+        <div style="font-family:'Manrope','Noto Sans JP',sans-serif;font-size:10.5px;font-weight:800;letter-spacing:0.14em;color:#6B6B6B;">RECORDING STATUS</div>
+        <button id="fp-hud-close" style="margin-left:auto;background:transparent;border:none;color:#9A9A9A;cursor:pointer;padding:0 4px;font-size:16px;line-height:1;">×</button>
+      </div>
+      <div id="fp-hud-title" style="font-size:14px;font-weight:800;color:#0A0A0A;margin-top:8px;line-height:1.4;">—</div>
+      <div id="fp-hud-body" style="font-size:12px;color:#3F3F46;margin-top:6px;line-height:1.65;">—</div>
+      <div id="fp-hud-cta" style="margin-top:10px;display:none;">
+        <button style="width:100%;padding:8px 14px;background:#0A0A0A;color:#FFF;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;">action</button>
+      </div>
+      <style>
+        @keyframes fp-hud-pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
+        #fp-ext-hud .pulsing { animation: fp-hud-pulse 1.2s ease-in-out infinite; }
+      </style>`;
+    document.body.appendChild(hud);
+    const $dot = hud.querySelector('#fp-hud-dot');
+    const $title = hud.querySelector('#fp-hud-title');
+    const $body = hud.querySelector('#fp-hud-body');
+    const $cta = hud.querySelector('#fp-hud-cta');
+    const $closeBtn = hud.querySelector('#fp-hud-close');
+    $closeBtn.addEventListener('click', () => { hud.style.display = 'none'; });
+
+    window._fpExtHud = {
+      set(state) {
+        // state = { color, title, body, ctaText, ctaClick, pulse, sticky }
+        hud.style.display = 'block';
+        $dot.style.background = state.color || '#9A9A9A';
+        $dot.classList.toggle('pulsing', !!state.pulse);
+        $title.textContent = state.title || '';
+        $body.innerHTML = state.body || '';
+        if (state.ctaText && state.ctaClick) {
+          $cta.style.display = 'block';
+          const b = $cta.querySelector('button');
+          b.textContent = state.ctaText;
+          b.onclick = state.ctaClick;
+        } else {
+          $cta.style.display = 'none';
+        }
+        // auto-hide after 15s if not sticky
+        if (window._fpHudAutoHide) clearTimeout(window._fpHudAutoHide);
+        if (!state.sticky) {
+          window._fpHudAutoHide = setTimeout(() => { hud.style.display = 'none'; }, 15000);
+        }
+      },
+      hide() { hud.style.display = 'none'; },
+    };
+
+    // 拡張 message listener を HUD 統合版に置き換え
+    window.addEventListener('message', (ev) => {
+      if (ev.source !== window) return;
+      const d = ev.data;
+      if (!d || d.source !== 'fp-tab-recorder') return;
+
+      // 準備完了 (armed) — Zoom タブ open 直後
+      if (d.type === 'ARM_AND_OPEN_RESULT' && d.payload?.ok) {
+        window._fpExtHud.set({
+          color: '#B5530F',
+          title: '🟡 録音準備完了',
+          body: `<b>${escapeHtml(d.payload.armed?.clientName || '(顧客未指定)')}</b> さん の Zoom タブ を 開いています…<br>拡張 が 自動 録音開始 を 試みます。`,
+          pulse: true,
+          sticky: true,
+        });
+      }
+
+      // 録音開始
+      if (d.type === 'RECORDING_STARTED') {
+        window._fpExtHud.set({
+          color: '#DC2B2B',
+          title: '🔴 録音中',
+          body: `<b>${escapeHtml(d.payload?.clientName || '(顧客未指定)')}</b> さん の Zoom 面談 を 録音しています。<br>面談 終了 (Zoom タブ を 閉じる) で 自動 停止 + 議事録生成 が 走ります。`,
+          pulse: true,
+          sticky: true,
+        });
+      }
+
+      // auto-start 失敗 → owner に 拡張アイコン click 案内
+      if (d.type === 'FP_AUTO_START_FAILED') {
+        window._fpExtHud.set({
+          color: '#B5530F',
+          title: '⚠ 自動起動 失敗 → 1 click 必要',
+          body: `<b>${escapeHtml(d.payload?.clientName || '')}</b> さん の 録音 準備 は 完了。<br>Zoom タブ に 切り替えて Chrome 右上 の <b>拡張アイコン (🧩 or ▶ 緑 badge)</b> を <b>1回 click</b> で 録音開始。`,
+          sticky: true,
+        });
+      }
+
+      // 録音終了 → 処理中
+      if (d.type === 'RECORDING_DONE') {
+        const p = d.payload || {};
+        const meta = p.meta || {};
+        const sec = Math.round((p.durationMs || 0) / 1000);
+        window._fpExtHud.set({
+          color: '#B5530F',
+          title: '⏳ 議事録 生成中…',
+          body: `<b>${escapeHtml(meta.clientName || '(顧客未指定)')}</b> さん の 音声 受信 (${Math.round((p.size||0)/1024)}KB, ${sec}秒)。<br>Whisper 文字起こし + Claude 5 section 議事録生成 で <b>約 5〜10 分</b> かかります。<br>完了 したら 顧客カルテ の <b>議事録タブ</b> に 表示 されます。`,
+          pulse: true,
+          sticky: true,
+        });
+      }
+    });
+  })();
+
+  // ★ 議事録 完成 検知 (ai_results に 新規 が 追加 された 瞬間 HUD 更新)
+  //   fetchLiveData 後 に 呼ぶ 前提 で window._fpLastAiResultTs を 保持
+  window._fpNotifyMeetingReady = function(newAi) {
+    if (!newAi || !window._fpExtHud) return;
+    const name = newAi.customerName || newAi.clientName || '(顧客未指定)';
+    window._fpExtHud.set({
+      color: '#047647',
+      title: '✅ 議事録できました',
+      body: `<b>${escapeHtml(name)}</b> さん の 議事録が 生成されました。<br>顧客カルテ → 議事録タブ で 確認 できます。`,
+      ctaText: '顧客カルテ で 開く',
+      ctaClick: () => {
+        try {
+          const cid = newAi.userId || newAi.clientId;
+          if (cid && window.openCustomerDetail) window.openCustomerDetail(cid);
+        } catch(_) {}
+      },
+      sticky: true,
+    });
+  };
 
   // ★ 2026-06-22 roundG: マイクのみ録音 fallback (カメラ NotFound / 不要 時)
   //   音声 → 同じパイプライン (upload → AI議事録)
