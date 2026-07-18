@@ -493,16 +493,16 @@
         <header style="display:flex;align-items:baseline;justify-content:space-between;gap:14px;margin-bottom:16px;">
           <div>
             <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:10.5px;letter-spacing:0.18em;text-transform:uppercase;color:#DC2626;margin-bottom:5px;">⚠ ACTION REQUIRED</div>
-            <h2 style="font-family:'Noto Serif JP',serif;font-weight:700;font-size:20px;letter-spacing:-0.01em;color:#7F1D1D;margin:0;">LINE で返信を待っている方 <span style="color:#DC2626;">${unreadList.length}名</span></h2>
+            <h2 style="font-family:'Noto Sans JP',serif;font-weight:700;font-size:20px;letter-spacing:-0.01em;color:#7F1D1D;margin:0;">LINE で返信を待っている方 <span style="color:#DC2626;">${unreadList.length}名</span></h2>
           </div>
           <span style="font-size:11px;color:#991B1B;font-weight:700;">放置すると 信頼を 損ねます</span>
         </header>
         <div style="display:grid;gap:8px;">
           ${unreadList.slice(0, 5).map(u => `
             <button class="fp-home-unread-row" data-client-id="${escapeHtml(u.client.id)}" style="display:grid;grid-template-columns:auto 1fr auto auto;gap:14px;align-items:center;background:#fff;border:1px solid #FCA5A5;border-radius:10px;padding:12px 16px;cursor:pointer;font-family:inherit;text-align:left;transition:all 0.15s ease;">
-              <div style="width:38px;height:38px;border-radius:50%;background:hsl(${(u.client.name.charCodeAt(0)*7)%360},55%,90%);color:hsl(${(u.client.name.charCodeAt(0)*7)%360},60%,30%);display:flex;align-items:center;justify-content:center;font-family:'Noto Serif JP',serif;font-weight:700;font-size:16px;">${escapeHtml(u.client.name.charAt(0))}</div>
+              <div style="width:38px;height:38px;border-radius:50%;background:hsl(${(u.client.name.charCodeAt(0)*7)%360},55%,90%);color:hsl(${(u.client.name.charCodeAt(0)*7)%360},60%,30%);display:flex;align-items:center;justify-content:center;font-family:'Noto Sans JP',serif;font-weight:700;font-size:16px;">${escapeHtml(u.client.name.charAt(0))}</div>
               <div style="min-width:0;">
-                <div style="font-family:'Noto Serif JP',serif;font-weight:700;font-size:14.5px;color:#1F1A12;line-height:1.3;">${escapeHtml(u.client.name)} <span style="font-size:11px;color:#8B7D5D;font-weight:400;">さん</span></div>
+                <div style="font-family:'Noto Sans JP',serif;font-weight:700;font-size:14.5px;color:#1F1A12;line-height:1.3;">${escapeHtml(u.client.name)} <span style="font-size:11px;color:#8B7D5D;font-weight:400;">さん</span></div>
                 <div style="font-size:11.5px;color:#5E5648;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.5;">💬 「${escapeHtml(u.latestText)}${u.latestText.length >= 80 ? '…' : ''}」</div>
               </div>
               <span style="background:linear-gradient(135deg,#DC2626,#991B1B);color:#fff;font-size:10.5px;font-weight:900;padding:5px 11px;border-radius:11px;letter-spacing:0.04em;box-shadow:0 4px 10px rgba(220,38,38,0.32);">${u.count}件 未読</span>
@@ -691,24 +691,34 @@
       const c = t.client;
       const p = t.topAction.priority;
       const initial = (c.name || '?').replace(/\s+/g, '').slice(0, 1);
-      const days = Math.max(0, Math.floor((todayDate - new Date(c.lastContact)) / 86400000));
+      // ★ 2026-07-15 distill: NaN/null 対策 (lastContact 未登録 で NaN日前 render される事故 fix)
+      const rawDays = Math.floor((todayDate - new Date(c.lastContact)) / 86400000);
+      const days = Number.isFinite(rawDays) && rawDays >= 0 ? rawDays : null;
       const age = window.LifeEvents.currentAge(c);
+      const ageStr = (age == null || !Number.isFinite(age)) ? null : age + '歳';
+      const aumStr = (typeof c.aum === 'number' && Number.isFinite(c.aum) && c.aum > 0) ? 'AUM ' + fmtMoneyAum(c.aum) : null;
+      const occStr = c.occupation ? escapeHtml(c.occupation) : null;
+      const metaLine = [ageStr, occStr, aumStr].filter(Boolean).join(' · ');
 
-      // Find next upcoming event
+      // Find next upcoming event, filter far-future noise (2年超は行動性なし)
       const evs = window.LifeEvents.generate(c);
-      const futureEv = evs.find(ev => new Date(ev.date) >= todayDate);
+      const futureEv = evs.find(ev => {
+        const d = new Date(ev.date);
+        if (d < todayDate) return false;
+        const daysAhead = (d - todayDate) / 86400000;
+        return daysAhead <= 730; // 2年以内 のみ
+      });
       const nextEvent = futureEv ? {
         title: futureEv.title || futureEv.kind || futureEv.name || 'イベント',
         rel: window.LifeEvents.formatRelative(new Date(futureEv.date))
       } : null;
 
-      const priorityLabelText = priorityLabel(p);
-      const priorityCls = priorityClass(p);
-
       const kpis = getClientKpis(c);
+      // 「定期フォロー」 default badge は 全カード共通で 情報価値ゼロ → kpis 空なら 何も出さない
       const kpiBadgeHtml = kpis.map(k => `<span class="senior-kpi-badge senior-kpi-${k.tone}"><i data-lucide="target"></i>${escapeHtml(k.label)}</span>`).join('');
 
       const isTop = rank === 0;
+      const contactStr = days == null ? '未接触' : (days + '日前');
 
       return `
         <div class="senior-card ${isTop ? 'senior-card-top' : ''}" data-client-id="${c.id}">
@@ -717,9 +727,8 @@
             <div class="senior-card-avatar">${initial}</div>
             <div class="senior-card-id">
               <div class="senior-card-name">${escapeHtml(c.name)} <span class="senior-card-honor">様</span></div>
-              <div class="senior-card-sub">${age}歳 ・ ${escapeHtml(c.occupation || '—')} ・ AUM ${fmtMoneyAum(c.aum)}</div>
+              <div class="senior-card-sub">${metaLine || '—'}</div>
               ${(function(){
-                // ★ オーナーfb (v AR): ホームの今日のお客様カードでも タグを 表示
                 const master = (typeof getTagsMaster === 'function') ? getTagsMaster() : [];
                 const ids = (typeof getClientTags === 'function') ? getClientTags(c.id) : [];
                 if (!ids.length) return '';
@@ -727,19 +736,14 @@
                 return `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;">${tags.map(t => { const col = validColor(t.color); return `<span style="background:${col}1A;color:${col};border:1px solid ${col}55;padding:1px 8px;border-radius:8px;font-size:10px;font-weight:700;line-height:1.6;">${escapeHtml(t.label)}</span>`; }).join('')}</div>`;
               })()}
             </div>
+            ${kpiBadgeHtml ? `<div class="senior-card-status-badges">${kpiBadgeHtml}</div>` : ''}
           </div>
 
-          <div class="senior-card-kpi">
-            <div class="senior-kpi-label">この方に必要なフォロー</div>
-            <div class="senior-kpi-badges">${kpiBadgeHtml || '<span class="senior-kpi-badge senior-kpi-info"><i data-lucide="info"></i>定期フォロー</span>'}</div>
-          </div>
-
-          <div class="senior-card-action">
-            <div class="senior-action-label">やる事</div>
-            <div class="senior-action-text">${escapeHtml(t.topAction.action)}</div>
-            <div class="senior-action-reason">${escapeHtml(t.topAction.reason)}</div>
-            ${nextEvent ? `<div class="senior-action-event">📅 次のイベント: <strong>${escapeHtml(nextEvent.title)}</strong> (${escapeHtml(nextEvent.rel)})</div>` : ''}
-            <div class="senior-action-contact">⏰ 最終接触: <strong>${days == null ? '未記録' : days + '日前'}</strong></div>
+          <div class="senior-card-action senior-action-compact">
+            <span class="senior-action-title">${escapeHtml(t.topAction.action)}</span>
+            <span class="senior-action-sep">·</span>
+            <span class="senior-action-contact">${contactStr}</span>
+            ${nextEvent ? `<span class="senior-action-sep">·</span><span class="senior-action-event">📅 ${escapeHtml(nextEvent.title)} <span class="rel">(${escapeHtml(nextEvent.rel)})</span></span>` : ''}
           </div>
 
           ${(function(){
@@ -760,9 +764,8 @@
               quickMsg = `${c.name}さん、こんにちは！\nいつもありがとうございます。\n何かお役に立てることがあればお気軽にご連絡ください😊\n— ${fpHandleName}`;
             }
             return `
-          <div class="senior-card-quick-msg" style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:9px;padding:11px 14px;margin:12px 0 14px;">
-            <div style="font-size:10px;font-weight:900;color:#065F46;letter-spacing:0.08em;margin-bottom:5px;">💬 すぐ送れる文案</div>
-            <div style="font-size:12px;color:#0F172A;line-height:1.7;white-space:pre-wrap;">${escapeHtml(quickMsg)}</div>
+          <div class="senior-card-quick-msg">
+            <div class="senior-quick-msg-preview">${escapeHtml(quickMsg)}</div>
           </div>`;
           })()}
           <div class="senior-card-buttons">
@@ -1601,7 +1604,7 @@
     overlay.innerHTML = `
       <div style="background:#fff;width:min(720px,100%);max-height:90vh;overflow-y:auto;border-radius:14px;box-shadow:0 24px 60px rgba(0,0,0,0.35);">
         <div style="padding:20px 24px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:baseline;">
-          <h2 style="margin:0;font-family:'Noto Serif JP',serif;font-size:20px;">📝 ${escapeHtml(customerName)}様 のタスク一覧 (${tasks.length}件)</h2>
+          <h2 style="margin:0;font-family:'Noto Sans JP',serif;font-size:20px;">📝 ${escapeHtml(customerName)}様 のタスク一覧 (${tasks.length}件)</h2>
           <button id="fp-tl-close" style="font-size:18px;width:32px;height:32px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;cursor:pointer;color:#6b7280;font-family:inherit;">✕</button>
         </div>
         <div style="padding:18px 24px;">
@@ -2987,7 +2990,7 @@
         return `
           <div style="margin-bottom:18px;">
             <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid #E2E8F0;">
-              <span style="font-family:'Noto Serif JP',serif;font-weight:800;font-size:15px;color:#0F172A;letter-spacing:-0.01em;">${monthLabel}</span>
+              <span style="font-family:'Noto Sans JP',serif;font-weight:800;font-size:15px;color:#0F172A;letter-spacing:-0.01em;">${monthLabel}</span>
               <span style="font-size:10.5px;color:#5B5BF0;background:#EEF2FF;padding:2px 8px;border-radius:10px;font-weight:700;">${rel}</span>
               <span style="margin-left:auto;font-size:11px;color:#94A3B8;font-weight:600;">${monthEvents.length} 件</span>
             </div>
@@ -3061,15 +3064,15 @@
           </div>
 
           <!-- ★ オーナーfb 2026-06-20: 「今すぐ Zoom 開始」 + 「日時指定 Zoom 予約」 — 顧客名直下、 Zoom 公式アイコン -->
-          ${c.lineFriendId ? `
-            <div class="cd-zoom-pair" style="margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <!-- ★ 2026-07-18: LINE 未紐付け 客 でも 表示 (LINE 有→自動送付 / 無→URL コピー or SMS/Email で 手動送付、 拡張自動録音 は 両方 OK) -->
+          <div class="cd-zoom-pair" style="margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
               <button id="cd-instant-zoom-btn" data-client-id="${escapeHtml(c.id)}" style="background:#fff;color:#0F172A;border:2px solid #2D8CFF;padding:12px 14px;border-radius:14px;font-size:14.5px;font-weight:900;cursor:pointer;font-family:'Noto Sans JP',sans-serif;letter-spacing:0.005em;box-shadow:0 6px 18px rgba(45,140,255,0.22);display:flex;align-items:center;justify-content:flex-start;gap:10px;min-height:66px;transition:transform .12s,box-shadow .12s;">
                 <svg width="34" height="34" viewBox="0 0 100 100" style="flex-shrink:0;border-radius:10px;box-shadow:0 2px 6px rgba(45,140,255,0.30);">
                   <defs><linearGradient id="zg-inst-${escapeHtml(c.id)}" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#4A9BFF"/><stop offset="100%" stop-color="#2D8CFF"/></linearGradient></defs>
                   <rect width="100" height="100" rx="22" fill="url(#zg-inst-${escapeHtml(c.id)})"/>
                   <text x="50" y="62" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-weight="700" font-size="28" fill="#fff" letter-spacing="-1">zoom</text>
                 </svg>
-                <span style="text-align:left;line-height:1.3;">⚡ 今すぐ 開始<br><span style="font-size:10.5px;font-weight:700;color:#475569;">LINE 自動送付</span></span>
+                <span style="text-align:left;line-height:1.3;">⚡ 今すぐ 開始<br><span style="font-size:10.5px;font-weight:700;color:#475569;">${c.lineFriendId ? 'LINE 自動送付' : 'URL コピー可'}</span></span>
               </button>
               <button id="cd-schedule-zoom-btn" data-client-id="${escapeHtml(c.id)}" style="background:#fff;color:#0F172A;border:2px solid #2D8CFF;padding:12px 14px;border-radius:14px;font-size:14.5px;font-weight:900;cursor:pointer;font-family:'Noto Sans JP',sans-serif;letter-spacing:0.005em;box-shadow:0 6px 18px rgba(45,140,255,0.22);display:flex;align-items:center;justify-content:flex-start;gap:10px;min-height:66px;transition:transform .12s,box-shadow .12s;">
                 <svg width="34" height="34" viewBox="0 0 100 100" style="flex-shrink:0;border-radius:10px;box-shadow:0 2px 6px rgba(45,140,255,0.30);">
@@ -3081,7 +3084,6 @@
               </button>
             </div>
             <div id="cd-instant-zoom-status" style="font-size:12px;font-weight:700;margin-top:8px;text-align:center;"></div>
-          ` : ''}
 
           <!-- ★ オーナーfb 2026-06-20: タグ管理 を 顧客名 直下、 オリジナル タグ アイコン (ピンク+紺) -->
           <div class="cd-profile-section" id="cd-tags-section" data-client-id="${escapeHtml(c.id)}" style="margin-top:16px;padding:16px 18px;background:#F8FAFC;border:2px solid #E2E8F0;border-radius:12px;">
@@ -5575,7 +5577,7 @@ ${ctxText}${surveyTxt}`;
                   <span>AI 議事録 (Claude) <span style="font-size:10px;color:#9CA3AF;font-weight:600;margin-left:6px;">編集・追記可</span></span>
                   <button class="fp-minutes-edit" style="background:#fff;border:1px solid #E2E8F0;color:#475569;font-size:11px;font-weight:700;padding:4px 10px;border-radius:5px;cursor:pointer;font-family:inherit;">✏ 編集</button>
                 </div>
-                <div class="fp-meeting-body fp-minutes-view" style="${aiData.summary ? '' : 'color:#9CA3AF;font-style:italic;'}">${aiData.summary ? escapeHtml(aiData.summary) : '議事録 未生成 — 「✏ 編集」 から手動追記 可'}</div>
+                <div class="fp-meeting-body fp-minutes-view fp-summary-structured" data-raw-summary="${escapeHtml(aiData.summary || '')}">${window.renderStructuredSummary ? window.renderStructuredSummary(aiData.summary) : (aiData.summary ? escapeHtml(aiData.summary) : '議事録 未生成 — 「✏ 編集」 から手動追記 可')}</div>
                 <div class="fp-minutes-edit-wrap" style="display:none;">
                   <textarea class="fp-minutes-textarea" rows="10" style="width:100%;padding:12px 14px;border:1.5px solid #BFDBFE;border-radius:8px;font-size:13px;font-family:inherit;line-height:1.9;resize:vertical;box-sizing:border-box;">${escapeHtml(aiData.summary || '')}</textarea>
                   <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;">
@@ -6290,7 +6292,7 @@ ${ctxText}${surveyTxt}`;
         <div style="background:linear-gradient(135deg,#5B5BF0,#6D6DEF);color:#fff;padding:22px 26px;display:flex;justify-content:space-between;align-items:flex-start;">
           <div>
             <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:10.5px;letter-spacing:0.2em;opacity:0.88;text-transform:uppercase;margin-bottom:5px;">📎 DELIVERABLE</div>
-            <h3 style="margin:0;font-family:'Noto Serif JP',serif;font-weight:700;font-size:18px;">${escapeHtml(client.name)} さん の 資料を 作成</h3>
+            <h3 style="margin:0;font-family:'Noto Sans JP',serif;font-weight:700;font-size:18px;">${escapeHtml(client.name)} さん の 資料を 作成</h3>
             <p style="margin:6px 0 0;font-size:11.5px;opacity:0.88;line-height:1.6;">JSON + プロンプト の 2ファイル を ダウンロード → 自分の Claude Code で 生成 (コスト $0)</p>
           </div>
           <button id="fp-qdp-close" style="background:rgba(255,255,255,0.2);border:none;color:#fff;width:32px;height:32px;border-radius:6px;cursor:pointer;font-size:18px;">✕</button>
@@ -6302,7 +6304,7 @@ ${ctxText}${surveyTxt}`;
               <button class="fp-qdp-type" data-type="${t.id}" style="display:flex;align-items:flex-start;gap:12px;background:#fff;border:1.5px solid #E8E2D4;border-radius:10px;padding:14px;cursor:pointer;text-align:left;font-family:inherit;transition:all 0.15s ease;">
                 <div style="font-size:24px;line-height:1;flex-shrink:0;">${t.emoji}</div>
                 <div style="flex:1;min-width:0;">
-                  <div style="font-family:'Noto Serif JP',serif;font-weight:700;font-size:13.5px;color:#1F1A12;margin-bottom:3px;">${escapeHtml(t.title)}</div>
+                  <div style="font-family:'Noto Sans JP',serif;font-weight:700;font-size:13.5px;color:#1F1A12;margin-bottom:3px;">${escapeHtml(t.title)}</div>
                   <div style="font-size:11px;color:#8B7D5D;line-height:1.5;">${escapeHtml(t.sub)}</div>
                 </div>
               </button>
@@ -6455,7 +6457,7 @@ ${JSON.stringify(jsonPayload, null, 2)}
 ═══════════════════════════════════════════════
 【STEP 3 — プロ品質 のデザイン】
 ═══════════════════════════════════════════════
-- フォント: 'Noto Serif JP' (見出し), 'Hiragino Sans' (本文) / 印刷用に Google Fonts も link
+- フォント: 'Noto Sans JP' (見出し), 'Hiragino Sans' (本文) / 印刷用に Google Fonts も link
 - 色: ベース #1F1A12 (墨色) / アクセント #C19A3A (品のある金) / 背景 #FDFCF7 (アイボリー)
 - レイアウト: 上品な余白 / 罫線 hairline (#E8E2D4) / 数表は 偶数行 グレー帯
 - 印刷見せ可能。 銀行/証券 のレポートに 近い 質感
@@ -6486,9 +6488,9 @@ A4 297mm × 210mm に 1ページ で収まる量に 必ず する。 はみ出�
 ═══════════════════════════════════════════════
 <style> 内 必ず:
 @page { size: A4 portrait; margin: 15mm; }
-html, body { font-family: 'Noto Serif JP', 'Hiragino Mincho ProN', serif; font-size: 11pt; line-height: 1.55; color: #1F1A12; background: #FDFCF7; }
+html, body { font-family: 'Noto Sans JP', 'Hiragino Mincho ProN', serif; font-size: 11pt; line-height: 1.55; color: #1F1A12; background: #FDFCF7; }
 body { width: 180mm; height: 267mm; max-height: 267mm; overflow: hidden; box-sizing: border-box; }
-h1, h2, h3 { font-family: 'Noto Serif JP', serif; font-weight: 700; letter-spacing: -0.01em; }
+h1, h2, h3 { font-family: 'Noto Sans JP', serif; font-weight: 700; letter-spacing: -0.01em; }
 .accent { color: #C19A3A; }
 table { width: 100%; border-collapse: collapse; font-size: 10pt; }
 table th, table td { padding: 4px 8px; border-bottom: 1px solid #E8E2D4; }
@@ -6539,7 +6541,7 @@ STEP C: 結果報告
       <div style="background:#fff;max-width:520px;width:100%;border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,0.35);overflow:hidden;">
         <div style="background:linear-gradient(135deg,#10B981,#059669);color:#fff;padding:26px 28px;text-align:center;">
           <div style="font-size:42px;margin-bottom:6px;">✓</div>
-          <h3 style="margin:0;font-family:'Noto Serif JP',serif;font-weight:700;font-size:20px;">${copied ? '指示文を コピーしました' : 'ダウンロード しました'}</h3>
+          <h3 style="margin:0;font-family:'Noto Sans JP',serif;font-weight:700;font-size:20px;">${copied ? '指示文を コピーしました' : 'ダウンロード しました'}</h3>
           <p style="margin:6px 0 0;font-size:12.5px;opacity:0.92;line-height:1.6;">この後、 やることは <strong>2つだけ</strong></p>
         </div>
         <div style="padding:24px 28px;">
@@ -6689,7 +6691,7 @@ STEP C: 結果報告
           // V1: HTML フィールドが Firestore に書き戻されてれば それを使う、 なければ URL リダイレクト
           resolve({ json: async () => ({
             ok: true,
-            html: data.html || `<div style="padding:30px;text-align:center;font-family:'Noto Serif JP',serif;"><h2 style="color:#10B981;">✓ Mac mini で 生成完了</h2><p style="font-size:13px;color:#5E5648;margin-top:12px;">PDF は <code style="background:#F1ECDF;padding:2px 6px;border-radius:4px;">~/.skeleton-fp-deliverable/output/${snap.id}.pdf</code> に保存されました</p>${data.driveUrl ? `<p style="margin-top:18px;"><a href="${data.driveUrl}" target="_blank" style="display:inline-block;background:#06C755;color:#fff;text-decoration:none;padding:11px 22px;border-radius:8px;font-weight:800;font-size:13px;">📎 PDF をダウンロード</a></p>` : ''}</div>`,
+            html: data.html || `<div style="padding:30px;text-align:center;font-family:'Noto Sans JP',serif;"><h2 style="color:#10B981;">✓ Mac mini で 生成完了</h2><p style="font-size:13px;color:#5E5648;margin-top:12px;">PDF は <code style="background:#F1ECDF;padding:2px 6px;border-radius:4px;">~/.skeleton-fp-deliverable/output/${snap.id}.pdf</code> に保存されました</p>${data.driveUrl ? `<p style="margin-top:18px;"><a href="${data.driveUrl}" target="_blank" style="display:inline-block;background:#06C755;color:#fff;text-decoration:none;padding:11px 22px;border-radius:8px;font-weight:800;font-size:13px;">📎 PDF をダウンロード</a></p>` : ''}</div>`,
             macMiniReqId: snap.id,
             driveUrl: data.driveUrl,
           }) });
@@ -7401,17 +7403,17 @@ STEP C: 結果報告
             </div>
             <div style="background:#1F1A12;color:#FFE9A8;border-radius:10px;padding:18px;margin-bottom:10px;">
               <div style="font-family:'Inter',sans-serif;font-size:10px;letter-spacing:0.22em;color:#C5A268;font-weight:700;margin-bottom:4px;">STEP 1</div>
-              <div style="font-family:'Noto Serif JP',serif;font-size:15px;font-weight:700;margin-bottom:10px;">Claude を開きます</div>
+              <div style="font-family:'Noto Sans JP',serif;font-size:15px;font-weight:700;margin-bottom:10px;">Claude を開きます</div>
               <button id="fp-brief-open-claude" style="background:#FFE9A8;color:#1F1A12;border:none;padding:11px 22px;border-radius:7px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:0.04em;">🌐 Claude を開く</button>
             </div>
             <div style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;padding:16px;margin-bottom:10px;">
               <div style="font-family:'Inter',sans-serif;font-size:10px;letter-spacing:0.22em;color:#94A3B8;font-weight:700;margin-bottom:4px;">STEP 2</div>
-              <div style="font-family:'Noto Serif JP',serif;font-size:15px;font-weight:700;color:#1F1A12;margin-bottom:6px;">Cmd + V → Enter</div>
+              <div style="font-family:'Noto Sans JP',serif;font-size:15px;font-weight:700;color:#1F1A12;margin-bottom:6px;">Cmd + V → Enter</div>
               <div style="font-size:12px;color:#475569;line-height:1.7;">Claude の 入力欄 に 貼り付け (Cmd+V) → Enter で 送信。 <strong>${escapeHtml(client.name)}様 専用</strong> の 自然な LINE 文面 が 出ます。</div>
             </div>
             <div style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;padding:16px;">
               <div style="font-family:'Inter',sans-serif;font-size:10px;letter-spacing:0.22em;color:#94A3B8;font-weight:700;margin-bottom:4px;">STEP 3</div>
-              <div style="font-family:'Noto Serif JP',serif;font-size:15px;font-weight:700;color:#1F1A12;margin-bottom:6px;">Claude の 出力 を コピー → LINE に 貼って 送信</div>
+              <div style="font-family:'Noto Sans JP',serif;font-size:15px;font-weight:700;color:#1F1A12;margin-bottom:6px;">Claude の 出力 を コピー → LINE に 貼って 送信</div>
               <div style="font-size:12px;color:#475569;line-height:1.7;">Claude が 出した 文面 を コピー → このモーダルを閉じて、 LINE 履歴 タブの 下の <strong>送信欄</strong> に 貼って 「送信」 ボタンで お送り下さい。</div>
             </div>
             <div id="fp-brief-msg" style="margin-top:10px;font-size:12px;font-weight:700;text-align:center;"></div>
@@ -9762,6 +9764,172 @@ ${client.name}さん、ありがとうございます。
     if (typeof c !== 'string') return '#888';
     return /^#[0-9a-fA-F]{3,8}$/.test(c) ? c : '#888';
   }
+
+  // 2026-07-16 v7 polish: markdown 感 を消す。 各 ## を 独立 card 化、
+  //   ⚠ warnings は 冒頭 alert、 ①②③④ / 1. **xxx**：yyy は 番号 bubble + 見出し、
+  //   数値 (¥/万/％/月/年) は mono chip、 label：value は row。 5秒 で スキャン できる 密度に。
+  window.renderStructuredSummary = function renderStructuredSummary(text) {
+    const raw = String(text || '').trim();
+    if (!raw) return '<div class="fp-sum-empty">議事録 未生成 — 「編集」 から手動追記 可</div>';
+
+    // 構造 検出 (## / **/ 番号)
+    const hasStructure = /(?:^#{1,3}\s|【.+?】|\*\*.+?\*\*|^[-・•\*]\s|^\d+[.\)]\s|^⚠)/m.test(raw);
+    if (!hasStructure) {
+      const paragraphs = raw.split(/\n{2,}/).map(p => p.trim()).filter(Boolean);
+      if (paragraphs.length <= 1) return `<div class="fp-sum-body">${escapeHtml(raw).replace(/\n/g, '<br>')}</div>`;
+      return paragraphs.map(p => `<p class="fp-sum-p">${escapeHtml(p).replace(/\n/g, '<br>')}</p>`).join('');
+    }
+
+    // tone 判定 (見出し / ラベル 用)
+    const toneOf = (label) => {
+      if (/決定|合意|確認|結論|完了/.test(label)) return 'vital';
+      if (/TODO|todo|次回|課題|宿題|action|やること|アクション/i.test(label)) return 'attn';
+      if (/懸念|リスク|不安|注意|要検討|警告/.test(label)) return 'critical';
+      if (/質問|関心|興味|希望|プロフィール|人物/.test(label)) return 'trust';
+      if (/数字|試算|金額|コスト|見積|価格/.test(label)) return 'mono';
+      if (/提案|検討|方針|戦略/.test(label)) return 'vital';
+      return 'ink';
+    };
+
+    // 数値強調 (¥xxx万 / xxx円 / xx% / xx月 / xx年後 等)
+    const NUM_RE = /((?:¥|￥)?\s*[\d,]+(?:\.\d+)?\s*(?:億|万|千|億円|万円|千円|円|％|%|ヶ月|カ月|か月|年間|年後|年|ヶ月|時間|分|人|件|回|名|社|棟|台|坪))/g;
+    const emphasizeNumbers = (safeHtml) => safeHtml.replace(NUM_RE, '<span class="fp-sum-num">$1</span>');
+
+    // インライン 強調 (** 太字, 【】 label)
+    const inline = (s) => {
+      const safe = escapeHtml(s)
+        .replace(/\*\*([^*]+)\*\*/g, '<strong class="fp-sum-strong">$1</strong>')
+        .replace(/【([^】]+)】/g, '<strong class="fp-sum-strong">【$1】</strong>');
+      return emphasizeNumbers(safe);
+    };
+
+    const lines = raw.split(/\n/);
+    let out = '';
+    let warnings = [];
+    let sectionOpen = false;
+    let sectionTone = 'ink';
+    let inList = false;
+    let listType = 'ul';
+
+    const closeList = () => { if (inList) { out += `</${listType}>`; inList = false; } };
+    const closeSection = () => {
+      closeList();
+      if (sectionOpen) { out += '</div></section>'; sectionOpen = false; }
+    };
+    const openSection = (heading, tone) => {
+      closeSection();
+      sectionOpen = true;
+      sectionTone = tone;
+      // heading は バブル + タイトル (アイコン なし で 質実 に)
+      out += `<section class="fp-sum-section fp-sum-tone-${tone}">`;
+      out += `<header class="fp-sum-section-h"><span class="fp-sum-section-dot"></span><h4 class="fp-sum-section-title">${escapeHtml(heading)}</h4></header>`;
+      out += `<div class="fp-sum-section-body">`;
+    };
+
+    // Warnings は 冒頭 に 集めて alert box として レンダ
+    for (let i = 0; i < lines.length; i++) {
+      const t = lines[i].trim();
+      if (!t) continue;
+      const w = t.match(/^⚠\s*(.+)$/);
+      if (w && !sectionOpen && !/^#/.test(t)) {
+        warnings.push(w[1].trim());
+        lines[i] = '';   // consume
+      } else if (/^#/.test(t)) {
+        break; // stop at first ## (warnings are only prefix)
+      }
+    }
+    if (warnings.length > 0) {
+      out += '<div class="fp-sum-warnings">';
+      warnings.forEach(w => {
+        const tone = /(欠落|必須|再生成)/.test(w) ? 'critical' : 'attn';
+        out += `<div class="fp-sum-warning fp-sum-warn-${tone}"><span class="fp-sum-warn-icon">!</span><span class="fp-sum-warn-text">${inline(w)}</span></div>`;
+      });
+      out += '</div>';
+    }
+
+    // メイン parse
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const trimmed = line.trim();
+      if (!trimmed) { closeList(); continue; }
+
+      // ## Heading → 新 section card
+      const h = trimmed.match(/^(#{1,3})\s*(.+)$/);
+      if (h) {
+        const heading = h[2].replace(/^\*+|\*+$/g, '').trim();
+        openSection(heading, toneOf(heading));
+        continue;
+      }
+
+      // Auto-open section if 直接 content start (no ## before)
+      if (!sectionOpen) {
+        // profile 系 セクション を仮定
+        openSection('サマリー', 'ink');
+      }
+
+      // "1. **xxx**：yyy" or "①**xxx**：yyy" like — 番号 + label + description
+      const numbered = trimmed.match(/^(?:(\d+)[.\)、]|([①②③④⑤⑥⑦⑧⑨⑩]))\s*(?:\*\*([^*]+)\*\*|【([^】]+)】)(?:\s*[:：]\s*(.+))?$/);
+      if (numbered) {
+        closeList();
+        const num = numbered[1] || numbered[2];
+        const label = numbered[3] || numbered[4];
+        const rest = numbered[5] || '';
+        const tone = toneOf(label);
+        out += `<div class="fp-sum-item fp-sum-tone-${tone}">`;
+        out += `<div class="fp-sum-item-num">${escapeHtml(num)}</div>`;
+        out += `<div class="fp-sum-item-body">`;
+        out += `<div class="fp-sum-item-title">${inline(label)}</div>`;
+        if (rest) out += `<div class="fp-sum-item-desc">${inline(rest)}</div>`;
+        out += `</div></div>`;
+        continue;
+      }
+
+      // Standalone bold label (**xxx** or 【xxx】) — sub-heading
+      const boldOnly = trimmed.match(/^(?:\*\*([^*]+)\*\*|【([^】]+)】)\s*[:：]?\s*(.*)$/);
+      if (boldOnly && (boldOnly[1] || boldOnly[2])) {
+        closeList();
+        const label = boldOnly[1] || boldOnly[2];
+        const rest = boldOnly[3] || '';
+        if (rest) {
+          out += `<div class="fp-sum-row"><span class="fp-sum-label">${escapeHtml(label)}</span><span class="fp-sum-value">${inline(rest)}</span></div>`;
+        } else {
+          out += `<h5 class="fp-sum-h5">${escapeHtml(label)}</h5>`;
+        }
+        continue;
+      }
+
+      // "label：value" or "label: value" — auto row (no bold requirement)
+      // 「先進事例の集客規模：人口200人の村が...」 pattern
+      const kv = trimmed.match(/^([^:：]{2,32})[：:]\s*(.+)$/);
+      if (kv && !/^\d+[.\)]/.test(trimmed) && !/^[-・•]/.test(trimmed)) {
+        closeList();
+        out += `<div class="fp-sum-row"><span class="fp-sum-label">${escapeHtml(kv[1].trim())}</span><span class="fp-sum-value">${inline(kv[2])}</span></div>`;
+        continue;
+      }
+
+      // Ordered list (plain number without bold)
+      const ol = trimmed.match(/^(\d+)[.\)]\s+(.+)$/);
+      if (ol) {
+        if (!inList || listType !== 'ol') { closeList(); out += '<ol class="fp-sum-list fp-sum-ol">'; inList = true; listType = 'ol'; }
+        out += `<li>${inline(ol[2])}</li>`;
+        continue;
+      }
+
+      // Unordered list
+      const ul = trimmed.match(/^[-・•\*]\s+(.+)$/);
+      if (ul) {
+        if (!inList || listType !== 'ul') { closeList(); out += '<ul class="fp-sum-list fp-sum-ul">'; inList = true; listType = 'ul'; }
+        out += `<li>${inline(ul[1])}</li>`;
+        continue;
+      }
+
+      // Plain paragraph
+      closeList();
+      out += `<p class="fp-sum-p">${inline(trimmed)}</p>`;
+    }
+    closeSection();
+    return out;
+  };
 
   // ============================
   // 初期化
