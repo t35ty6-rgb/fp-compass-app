@@ -2738,8 +2738,18 @@
     try {
       if (window.__fpTabRecorder && typeof window.armAndOpenZoom === 'function' && finalClientId && result.zoomUrl) {
         // hostZoomUrl (FP先生 が host で 参加する URL) を 優先、 無ければ zoomUrl
-        const hostUrl = result.hostZoomUrl || result.startUrl || result.zoomUrl;
-        extAutoOpened = window.armAndOpenZoom(finalClientId, clientName, window.currentTenantId, hostUrl);
+        const rawHostUrl = result.hostZoomUrl || result.startUrl || result.zoomUrl;
+        // ★ 2026-07-18: Zoom App を 起動させず 必ず ブラウザ (Zoom Web) で 開く URL に 変換。
+        //   /j/{id} → /wc/join/{id} 変換 (Web client force)。 tabCapture は Zoom App では 効かない ので 必須。
+        const forceWebUrl = (() => {
+          try {
+            const m = rawHostUrl.match(/\/(j|s)\/(\d+)([?&].*)?/);
+            if (!m) return rawHostUrl;
+            const u = new URL(rawHostUrl);
+            return `https://${u.host}/wc/join/${m[2]}${m[3] || ''}`;
+          } catch (_) { return rawHostUrl; }
+        })();
+        extAutoOpened = window.armAndOpenZoom(finalClientId, clientName, window.currentTenantId, forceWebUrl);
       } else if (typeof window.armTabRecorder === 'function' && finalClientId) {
         // 従来 fallback (拡張 未 install)
         window.armTabRecorder(finalClientId, clientName, window.currentTenantId);
