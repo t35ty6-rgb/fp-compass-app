@@ -3092,14 +3092,33 @@
       }
     };
     $start.addEventListener('click', () => {
-      // 拡張 に 「録画開始 要求」 を 送る (拡張 が active な Zoom タブ を 探して tabCapture 起動)
+      if (!window.__fpTabRecorder) {
+        alert('拡張機能 が 未 install または 認識されていません。\nchrome://extensions/ で v1.4.0 以降 が enabled か 確認してください。');
+        return;
+      }
+      // 拡張 に 「録画開始 要求」 を 送る (拡張 が Zoom タブ を pick して tabCapture 起動)
       window.postMessage({ source: 'fp-compass', type: 'REQUEST_START_RECORDING' }, '*');
-      // toast: 拡張 経由 で 開始 する ので少し待って
-      const t = document.createElement('div');
-      t.textContent = '⏳ 拡張 に 録画開始 要求 送信中…';
-      t.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#0A0A0A;color:#FFF;padding:10px 18px;border-radius:8px;font-size:12.5px;font-weight:700;z-index:2147483647;';
-      document.body.appendChild(t);
-      setTimeout(() => t.remove(), 3000);
+      const showToast = (msg, color) => {
+        const t = document.createElement('div');
+        t.innerHTML = msg;
+        t.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:' + color + ';color:#FFF;padding:12px 20px;border-radius:8px;font-size:12.5px;font-weight:700;z-index:2147483647;max-width:520px;line-height:1.55;box-shadow:0 12px 32px rgba(0,0,0,.3);';
+        document.body.appendChild(t);
+        setTimeout(() => t.remove(), 6000);
+      };
+      showToast('⏳ 拡張 に 録画開始 要求 送信中…', '#0A0A0A');
+      // 結果 待ち (START_RESULT)
+      const onResult = (ev) => {
+        if (ev.source !== window || ev.data?.source !== 'fp-tab-recorder' || ev.data?.type !== 'START_RESULT') return;
+        window.removeEventListener('message', onResult);
+        const r = ev.data.payload || {};
+        if (r.ok) {
+          showToast('✅ 録画開始 成功', '#047647');
+        } else {
+          showToast('❌ 録画開始 失敗: <b>' + (r.error || '不明') + '</b><br>Zoom タブ が active か 確認 して、 Zoom タブ を 前面 に して 拡張 icon (右上) を 1 click で 開始 して ください。', '#B5530F');
+        }
+      };
+      window.addEventListener('message', onResult);
+      setTimeout(() => window.removeEventListener('message', onResult), 10000);
     });
     $stop.addEventListener('click', () => {
       window.postMessage({ source: 'fp-compass', type: 'REQUEST_STOP_TAB_RECORDING' }, '*');
