@@ -4513,24 +4513,16 @@ ${ctxText}${surveyTxt}`;
           const res = await fn({ customerId: fsCustomerId, lineFriendId: c.lineFriendId || null });
           const data = (res && res.data) || {};
           if (data.startUrl) {
-            // ★ 2026-07-18: /wc/{id}/start?fromPWA=1 に 変換 (Zoom App prompt を skip して Web で 直接開く)
+            // ★ 2026-07-18 revert: /wc/join/{id} format (急遽ボタン で 動いてた format と 統一)
             const forceWebUrl = (() => {
               try {
+                const m = data.startUrl.match(/\/(j|s)\/(\d+)([?&].*)?/);
+                if (!m) return data.startUrl;
                 const u = new URL(data.startUrl);
-                const m = u.pathname.match(/^\/(j|s|wc\/join)\/(\d+)/);
-                if (m) u.pathname = `/wc/${m[2]}/${m[1] === 's' ? 'start' : 'join'}`;
-                if (!u.searchParams.has('fromPWA')) u.searchParams.set('fromPWA', '1');
-                return u.toString();
+                return `https://${u.host}/wc/join/${m[2]}${m[3] || ''}`;
               } catch (_) { return data.startUrl; }
             })();
-            // ★ 拡張機能 install 時 は arm + auto open + auto record (Chrome extension の armAndOpenZoom)
-            let extAutoOpened = false;
-            try {
-              if (window.__fpTabRecorder && typeof window.armAndOpenZoom === 'function') {
-                extAutoOpened = window.armAndOpenZoom(fsCustomerId, c.name, window.currentTenantId, forceWebUrl);
-              }
-            } catch (e) { console.warn('armAndOpenZoom failed:', e); }
-            if (!extAutoOpened) window.open(forceWebUrl, '_blank');
+            window.open(forceWebUrl, '_blank');
             status.style.color = '#059669';
             status.textContent = data.lineSent
               ? '✅ LINE 送付完了 / FP の Zoom を 別タブ で 開きました (Meeting ID: ' + (data.meetingId || '?') + ')'

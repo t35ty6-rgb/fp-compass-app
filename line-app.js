@@ -2739,19 +2739,14 @@
       if (window.__fpTabRecorder && typeof window.armAndOpenZoom === 'function' && finalClientId && result.zoomUrl) {
         // hostZoomUrl (FP先生 が host で 参加する URL) を 優先、 無ければ zoomUrl
         const rawHostUrl = result.hostZoomUrl || result.startUrl || result.zoomUrl;
-        // ★ 2026-07-18 v2: /j/{id} → /wc/{id}/join?fromPWA=1 に 変換 (Zoom App prompt を 完全 skip して Web に 直行)
-        //   fromPWA=1 は Zoom の 内部 flag で 「PWA/Web で 直接開く」 モード → App 起動 dialog が 出ない
+        // ★ 2026-07-18 revert: /j/{id} → /wc/join/{id} (急遽ボタン で 動いてた format に 戻す)
+        //   /wc/{id}/start?fromPWA=1 は 効かなかった owner 報告 → 動作実績 ある format を 採用
         const forceWebUrl = (() => {
           try {
+            const m = rawHostUrl.match(/\/(j|s)\/(\d+)([?&].*)?/);
+            if (!m) return rawHostUrl;
             const u = new URL(rawHostUrl);
-            const m = u.pathname.match(/^\/(j|s|wc\/join)\/(\d+)/);
-            if (m) {
-              const id = m[2];
-              const isStart = m[1] === 's';
-              u.pathname = `/wc/${id}/${isStart ? 'start' : 'join'}`;
-            }
-            if (!u.searchParams.has('fromPWA')) u.searchParams.set('fromPWA', '1');
-            return u.toString();
+            return `https://${u.host}/wc/join/${m[2]}${m[3] || ''}`;
           } catch (_) { return rawHostUrl; }
         })();
         extAutoOpened = window.armAndOpenZoom(finalClientId, clientName, window.currentTenantId, forceWebUrl);
@@ -3057,10 +3052,9 @@
   // ★ 拡張 → app: auto-start 失敗時 通知 (user gesture 制約 等) — 旧トーストは HUD に統合
   //   FP_AUTO_START_FAILED も HUD の状態変化として扱う (下の HUD listener で処理)
 
-  // ★ 2026-07-18: 常時表示 status HUD + 手動 録画開始/終了 button
-  //   owner の 「今 動いてるか 分からない」 + 「手動でも 押せる button 欲しい」 対策
-  //
-  // 別 flow で 手動 recorder button pair (画面 下 中央 に 固定表示):
+  // ★ 2026-07-18 撤去: 拡張機能 recording flow (owner 明示 「全部削除」)
+  //   fp-rec-pad / fp-rec-dbg / fp-ext-hud / armAndOpenZoom auto-arm 全 廃止。 元 の window.open Zoom flow に 復元
+  /* DISABLED — owner 明示 削除
   (function initRecorderButtons() {
     if (window._fpRecPad) return;
     const pad = document.createElement('div');
@@ -3292,6 +3286,9 @@
       sticky: true,
     });
   };
+  */
+  // 撤去したので stub 化 (拡張が message 送っても無視、 debug panel 出さない)
+  window._fpNotifyMeetingReady = function() {};
 
   // ★ 2026-06-22 roundG: マイクのみ録音 fallback (カメラ NotFound / 不要 時)
   //   音声 → 同じパイプライン (upload → AI議事録)
