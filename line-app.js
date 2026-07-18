@@ -2854,11 +2854,19 @@
       const w = document.getElementById('fp-qz-qr-wrap');
       if (w) w.style.display = w.style.display === 'none' ? 'block' : 'none';
     });
-    document.getElementById('fp-qz-close').addEventListener('click', () => ov.remove());
-    document.getElementById('fp-qz-close-top')?.addEventListener('click', () => ov.remove());
-    // ★ 背景 click / ESC でも 閉じる (modal 詰み 防止 の 三重防御)
-    ov.addEventListener('click', (e) => { if (e.target === ov) ov.remove(); });
-    document.addEventListener('keydown', function _esc(e) { if (e.key === 'Escape') { ov.remove(); document.removeEventListener('keydown', _esc); } });
+    // ★ 2026-07-18 fix v2: 「× で 閉じれない」 owner 報告 対応。 event delegation で 全 button 型 close トリガー を 一括ハンドル
+    //   optional chain + delegation で 1つ でも throw しても 他 の close 手段 は 生きる
+    const _closeOv = () => { try { ov.remove(); } catch (_) {} };
+    ov.addEventListener('click', (e) => {
+      const t = e.target;
+      // 背景 click (overlay 本体) → 閉じる
+      if (t === ov) { _closeOv(); return; }
+      // 「閉じる」 button (下) / × button (右上) の どちらでも 閉じる
+      if (t.id === 'fp-qz-close' || t.id === 'fp-qz-close-top' || t.closest?.('#fp-qz-close, #fp-qz-close-top')) {
+        e.preventDefault(); e.stopPropagation(); _closeOv();
+      }
+    }, true);  // capture phase で 拾って 確実 に fire
+    document.addEventListener('keydown', function _esc(e) { if (e.key === 'Escape') { _closeOv(); document.removeEventListener('keydown', _esc); } });
     // ★ オーナーfb 2026-06-25: FPホストZoom入室 と 同時に startScreenRecording 起動
     //   ★ 2026-06-26 v.O fix: window.open を 先にすると user gesture 切れて Invalid state エラー
     //     → 画面共有ダイアログ先 → 許可後に startScreenRecording 内で Zoom を全画面で開く
@@ -3049,8 +3057,75 @@
   // ★ 拡張 → app: auto-start 失敗時 通知 (user gesture 制約 等) — 旧トーストは HUD に統合
   //   FP_AUTO_START_FAILED も HUD の状態変化として扱う (下の HUD listener で処理)
 
-  // ★ 2026-07-18: 常時表示 status HUD — 「準備完了 → 録音中 → 処理中 → 完了」 の 5 状態 を 明示
-  //   owner の 「今 動いてるか 分からない」 対策
+  // ★ 2026-07-18: 常時表示 status HUD + 手動 録画開始/終了 button
+  //   owner の 「今 動いてるか 分からない」 + 「手動でも 押せる button 欲しい」 対策
+  //
+  // 別 flow で 手動 recorder button pair (画面 下 中央 に 固定表示):
+  (function initRecorderButtons() {
+    if (window._fpRecPad) return;
+    const pad = document.createElement('div');
+    pad.id = 'fp-rec-pad';
+    pad.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:2147483644;display:flex;gap:12px;background:#FFFFFF;padding:14px 18px;border-radius:99px;border:1px solid #ECECEA;box-shadow:0 12px 32px rgba(15,23,42,0.18),0 4px 8px rgba(15,23,42,0.08);font-family:"Noto Sans JP",sans-serif;';
+    pad.innerHTML = `
+      <button id="fp-rec-start" style="background:#DC2B2B;color:#FFF;border:none;padding:12px 24px;border-radius:99px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:0.02em;display:inline-flex;align-items:center;gap:8px;box-shadow:0 4px 12px rgba(220,43,43,0.35);">
+        <span style="width:10px;height:10px;border-radius:50%;background:#FFF;"></span>
+        録画開始
+      </button>
+      <button id="fp-rec-stop" style="background:#0A0A0A;color:#FFF;border:none;padding:12px 24px;border-radius:99px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:0.02em;display:inline-flex;align-items:center;gap:8px;box-shadow:0 4px 12px rgba(15,23,42,0.2);opacity:0.5;" disabled>
+        <span style="width:10px;height:10px;background:#FFF;"></span>
+        録画終了
+      </button>
+      <button id="fp-rec-hide" title="非表示" style="background:transparent;color:#9A9A9A;border:none;padding:8px 10px;font-size:16px;line-height:1;cursor:pointer;">×</button>`;
+    document.body.appendChild(pad);
+    const $start = pad.querySelector('#fp-rec-start');
+    const $stop = pad.querySelector('#fp-rec-stop');
+    const $hide = pad.querySelector('#fp-rec-hide');
+    let isRecording = false;
+    const setState = (rec) => {
+      isRecording = rec;
+      if (rec) {
+        $start.style.opacity = '0.5'; $start.disabled = true;
+        $stop.style.opacity = '1'; $stop.disabled = false;
+      } else {
+        $start.style.opacity = '1'; $start.disabled = false;
+        $stop.style.opacity = '0.5'; $stop.disabled = true;
+      }
+    };
+    $start.addEventListener('click', () => {
+      // 拡張 に 「録画開始 要求」 を 送る (拡張 が active な Zoom タブ を 探して tabCapture 起動)
+      window.postMessage({ source: 'fp-compass', type: 'REQUEST_START_RECORDING' }, '*');
+      // toast: 拡張 経由 で 開始 する ので少し待って
+      const t = document.createElement('div');
+      t.textContent = '⏳ 拡張 に 録画開始 要求 送信中…';
+      t.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#0A0A0A;color:#FFF;padding:10px 18px;border-radius:8px;font-size:12.5px;font-weight:700;z-index:2147483647;';
+      document.body.appendChild(t);
+      setTimeout(() => t.remove(), 3000);
+    });
+    $stop.addEventListener('click', () => {
+      window.postMessage({ source: 'fp-compass', type: 'REQUEST_STOP_TAB_RECORDING' }, '*');
+      const t = document.createElement('div');
+      t.textContent = '⏹ 録画停止 要求 送信中…';
+      t.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#0A0A0A;color:#FFF;padding:10px 18px;border-radius:8px;font-size:12.5px;font-weight:700;z-index:2147483647;';
+      document.body.appendChild(t);
+      setTimeout(() => t.remove(), 3000);
+    });
+    $hide.addEventListener('click', () => { pad.style.display = 'none'; });
+
+    // 拡張 message で state 更新
+    window.addEventListener('message', (ev) => {
+      if (ev.source !== window) return;
+      const d = ev.data;
+      if (!d || d.source !== 'fp-tab-recorder') return;
+      if (d.type === 'RECORDING_STARTED') setState(true);
+      if (d.type === 'RECORDING_DONE') setState(false);
+      if (d.type === 'STATE' && d.payload) setState(!!d.payload.recording);
+    });
+
+    window._fpRecPad = { show: () => pad.style.display = 'flex', hide: () => pad.style.display = 'none', setState };
+    // 初期: 拡張 の 現在 state を 問い合わせ
+    setTimeout(() => window.postMessage({ source: 'fp-compass', type: 'GET_TAB_RECORDER_STATE' }, '*'), 500);
+  })();
+
   (function initStatusHud() {
     if (window._fpExtHud) return;
     // HUD element (fixed top-right)
