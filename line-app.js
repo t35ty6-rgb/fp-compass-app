@@ -2739,14 +2739,19 @@
       if (window.__fpTabRecorder && typeof window.armAndOpenZoom === 'function' && finalClientId && result.zoomUrl) {
         // hostZoomUrl (FP先生 が host で 参加する URL) を 優先、 無ければ zoomUrl
         const rawHostUrl = result.hostZoomUrl || result.startUrl || result.zoomUrl;
-        // ★ 2026-07-18: Zoom App を 起動させず 必ず ブラウザ (Zoom Web) で 開く URL に 変換。
-        //   /j/{id} → /wc/join/{id} 変換 (Web client force)。 tabCapture は Zoom App では 効かない ので 必須。
+        // ★ 2026-07-18 v2: /j/{id} → /wc/{id}/join?fromPWA=1 に 変換 (Zoom App prompt を 完全 skip して Web に 直行)
+        //   fromPWA=1 は Zoom の 内部 flag で 「PWA/Web で 直接開く」 モード → App 起動 dialog が 出ない
         const forceWebUrl = (() => {
           try {
-            const m = rawHostUrl.match(/\/(j|s)\/(\d+)([?&].*)?/);
-            if (!m) return rawHostUrl;
             const u = new URL(rawHostUrl);
-            return `https://${u.host}/wc/join/${m[2]}${m[3] || ''}`;
+            const m = u.pathname.match(/^\/(j|s|wc\/join)\/(\d+)/);
+            if (m) {
+              const id = m[2];
+              const isStart = m[1] === 's';
+              u.pathname = `/wc/${id}/${isStart ? 'start' : 'join'}`;
+            }
+            if (!u.searchParams.has('fromPWA')) u.searchParams.set('fromPWA', '1');
+            return u.toString();
           } catch (_) { return rawHostUrl; }
         })();
         extAutoOpened = window.armAndOpenZoom(finalClientId, clientName, window.currentTenantId, forceWebUrl);
@@ -2770,7 +2775,9 @@
     const smsUrl = `sms:?body=${smsBody}`;
 
     ov.innerHTML = `
-      <div style="background:#fff;border-radius:14px;max-width:540px;width:100%;padding:28px 32px;box-shadow:0 32px 80px rgba(0,0,0,0.5);">
+      <div style="background:#fff;border-radius:14px;max-width:540px;width:100%;padding:28px 32px;box-shadow:0 32px 80px rgba(0,0,0,0.5);position:relative;">
+        <!-- ★ 2026-07-18 fix: 閉じる button 追加 (owner が modal 詰み 報告 — 下 の 「閉じる」 が scroll 下 で 見えない ケース 対策) -->
+        <button id="fp-qz-close-top" aria-label="閉じる" style="position:absolute;top:14px;right:14px;background:transparent;border:none;font-size:24px;line-height:1;color:#6B7280;cursor:pointer;padding:4px 8px;border-radius:6px;">×</button>
         <div style="display:inline-flex;align-items:center;gap:8px;background:#FBF5E3;color:#9A5A18;font-size:11px;font-weight:800;padding:5px 12px;border-radius:99px;letter-spacing:0.12em;margin-bottom:14px;">⚡ Zoom 発行完了</div>
         <h2 style="font-family:'Noto Sans JP',serif;font-size:20px;font-weight:700;color:#111827;margin:0 0 6px;">${escapeHtml(clientName)} 様 と Zoom 開始</h2>
 
@@ -2848,6 +2855,10 @@
       if (w) w.style.display = w.style.display === 'none' ? 'block' : 'none';
     });
     document.getElementById('fp-qz-close').addEventListener('click', () => ov.remove());
+    document.getElementById('fp-qz-close-top')?.addEventListener('click', () => ov.remove());
+    // ★ 背景 click / ESC でも 閉じる (modal 詰み 防止 の 三重防御)
+    ov.addEventListener('click', (e) => { if (e.target === ov) ov.remove(); });
+    document.addEventListener('keydown', function _esc(e) { if (e.key === 'Escape') { ov.remove(); document.removeEventListener('keydown', _esc); } });
     // ★ オーナーfb 2026-06-25: FPホストZoom入室 と 同時に startScreenRecording 起動
     //   ★ 2026-06-26 v.O fix: window.open を 先にすると user gesture 切れて Invalid state エラー
     //     → 画面共有ダイアログ先 → 許可後に startScreenRecording 内で Zoom を全画面で開く
