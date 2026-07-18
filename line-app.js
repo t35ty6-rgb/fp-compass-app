@@ -3091,34 +3091,54 @@
         $stop.style.opacity = '0.5'; $stop.disabled = true;
       }
     };
+    // ★ 永続 debug パネル (recording pad の 上 に 出す、 全 通信 log)
+    const dbgPanel = document.createElement('div');
+    dbgPanel.id = 'fp-rec-dbg';
+    dbgPanel.style.cssText = 'position:fixed;bottom:88px;left:50%;transform:translateX(-50%);z-index:2147483644;background:#0F1117;color:#E4E6EB;padding:10px 14px;border-radius:8px;font-family:ui-monospace,Menlo,monospace;font-size:11px;line-height:1.55;max-width:600px;max-height:200px;overflow-y:auto;box-shadow:0 12px 32px rgba(0,0,0,.4);display:none;';
+    document.body.appendChild(dbgPanel);
+    const dbg = (msg, color) => {
+      const line = document.createElement('div');
+      const ts = new Date().toISOString().slice(11, 19);
+      line.innerHTML = '<span style="color:#7A8194;">[' + ts + ']</span> <span style="color:' + (color || '#E4E6EB') + ';">' + msg + '</span>';
+      dbgPanel.appendChild(line);
+      dbgPanel.scrollTop = dbgPanel.scrollHeight;
+      dbgPanel.style.display = 'block';
+      console.log('[fp-rec-dbg]', msg);
+    };
+    // 拡張 → app の 全 message を log
+    window.addEventListener('message', (ev) => {
+      if (ev.source !== window || ev.data?.source !== 'fp-tab-recorder') return;
+      dbg('← ext: ' + ev.data.type + ' ' + JSON.stringify(ev.data.payload || {}).substring(0, 200), '#A5A5F8');
+    });
+
     $start.addEventListener('click', () => {
+      dbg('▶ 録画開始 button clicked', '#10B981');
+      dbg('window.__fpTabRecorder = ' + JSON.stringify(window.__fpTabRecorder), '#FCD34D');
       if (!window.__fpTabRecorder) {
-        alert('拡張機能 が 未 install または 認識されていません。\nchrome://extensions/ で v1.4.0 以降 が enabled か 確認してください。');
+        dbg('❌ 拡張機能 未 install / 未認識', '#DC2B2B');
+        alert('拡張機能 が 未 install または 認識されていません。\nchrome://extensions/ で v1.5.0 以降 が enabled か 確認してください。');
         return;
       }
-      // 拡張 に 「録画開始 要求」 を 送る (拡張 が Zoom タブ を pick して tabCapture 起動)
+      dbg('→ ext: REQUEST_START_RECORDING 送信', '#10B981');
       window.postMessage({ source: 'fp-compass', type: 'REQUEST_START_RECORDING' }, '*');
-      const showToast = (msg, color) => {
-        const t = document.createElement('div');
-        t.innerHTML = msg;
-        t.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:' + color + ';color:#FFF;padding:12px 20px;border-radius:8px;font-size:12.5px;font-weight:700;z-index:2147483647;max-width:520px;line-height:1.55;box-shadow:0 12px 32px rgba(0,0,0,.3);';
-        document.body.appendChild(t);
-        setTimeout(() => t.remove(), 6000);
-      };
-      showToast('⏳ 拡張 に 録画開始 要求 送信中…', '#0A0A0A');
-      // 結果 待ち (START_RESULT)
+      // 10秒 タイムアウト
+      let received = false;
       const onResult = (ev) => {
         if (ev.source !== window || ev.data?.source !== 'fp-tab-recorder' || ev.data?.type !== 'START_RESULT') return;
+        received = true;
         window.removeEventListener('message', onResult);
         const r = ev.data.payload || {};
         if (r.ok) {
-          showToast('✅ 録画開始 成功', '#047647');
+          dbg('✅ START 成功 (targetTabId=' + r.targetTabId + ')', '#10B981');
         } else {
-          showToast('❌ 録画開始 失敗: <b>' + (r.error || '不明') + '</b><br>Zoom タブ が active か 確認 して、 Zoom タブ を 前面 に して 拡張 icon (右上) を 1 click で 開始 して ください。', '#B5530F');
+          dbg('❌ START 失敗: ' + (r.error || 'error なし'), '#DC2B2B');
         }
       };
       window.addEventListener('message', onResult);
-      setTimeout(() => window.removeEventListener('message', onResult), 10000);
+      setTimeout(() => {
+        window.removeEventListener('message', onResult);
+        if (!received) dbg('⚠ 10秒 経過 も 拡張 から 応答なし。 content.js が REQUEST_START_RECORDING handler 持ってない or 拡張 disabled 疑い。', '#B5530F');
+      }, 10000);
     });
     $stop.addEventListener('click', () => {
       window.postMessage({ source: 'fp-compass', type: 'REQUEST_STOP_TAB_RECORDING' }, '*');
