@@ -110,14 +110,27 @@
 </div>
 
 <div class="step">
-  <h3><span class="step-num">5</span>使い方</h3>
+  <h3><span class="step-num">5</span>使い方 (v1.1〜、 顧客自動紐付け対応)</h3>
+  <div style="background:#ECFDF5;border:1.5px solid #10B981;border-radius:8px;padding:14px 18px;margin-bottom:12px;">
+    <div style="font-weight:800;color:#059669;font-size:13px;margin-bottom:8px;">💡 v1.1 で 「どのお客様の 録音か 分からない」 問題を 解決 (2クリックで 完結)</div>
+    <div style="font-size:12.5px;color:#065F46;line-height:1.7;">
+      FP Compass 側 で 「録音準備」 ボタン を 押すと 拡張機能 に 顧客が セット されます。 その後 Zoom タブ で 拡張アイコン を 1回 クリック で 自動 録音開始 → 該当顧客の 議事録 に 保存されます。
+    </div>
+  </div>
   <ol>
-    <li>Zoom Web版 (zoom.us) を タブ で 開いて 面談 開始</li>
-    <li>Chrome 右上 の 拡張 アイコン クリック → 「Zoom タブ 録音 を 開始」</li>
-    <li>Chrome の 共有 ダイアログ で 該当 Zoom タブ を 選択</li>
-    <li>面談 終了 → 拡張 popup で 「録音 を 停止」</li>
-    <li>FP Compass に 音声 が 自動 送信 → Whisper で 議事録 生成</li>
+    <li><b>FP Compass</b> で 顧客カルテ を 開き、 <b>「急遽 面談スタート」</b> → <b>「Zoom を発行して開始」</b> ボタン を 押す<br>
+      <span class="cap">Zoom URL が 発行されると 同時に、 拡張機能 に この顧客が セット されます (Chrome 右上の 拡張アイコン が 緑 ▶ に光る)</span></li>
+    <li>案内された Zoom URL を 新タブで 開いて 面談 開始<br>
+      <span class="cap">既存の Zoom 予定 URL を 使う場合 も 同様に 別タブで 開く</span></li>
+    <li><b>Zoom タブ を 表示した 状態で</b> Chrome 右上 の 拡張アイコン を <b>1回 クリック</b><br>
+      <span class="cap">popup で 「○○さん の 録音 を 開始」 と 表示 → 「録音を開始」 ボタン を 押す</span></li>
+    <li>面談 終了 で <b>Zoom タブ を 閉じる</b> or <b>拡張アイコン から 「停止」</b><br>
+      <span class="cap">Zoom タブ 閉鎖 で 自動停止 → FP Compass に 送信 されます</span></li>
+    <li>FP Compass 画面に 「✓ ○○さん の 音声 受信」 トースト → Whisper で 議事録 自動生成 → 該当顧客の 議事録タブ に 保存</li>
   </ol>
+  <div style="background:#FEF3C7;border:1px solid #FBBF24;border-radius:8px;padding:12px 14px;margin-top:12px;color:#92400E;font-size:12px;line-height:1.65;">
+    ⚠️ <b>エラー</b>「Extension has not been invoked for the current page」 が出たら、 <b>Zoom タブ の状態で</b> 拡張アイコン を 再クリック してください。 FP Compass タブ や 新規タブ で 押すと このエラー が出ます (Chrome の 安全機能)
+  </div>
 </div>
 
 <h2 id="blackhole" style="margin-top:44px;">B. BlackHole 手順 (所要 5 分)</h2>
