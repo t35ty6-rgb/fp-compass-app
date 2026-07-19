@@ -3004,6 +3004,44 @@
           setTimeout(() => t.remove(), 5000);
         } catch(_) {}
 
+        // ★ 2026-07-20 CRITICAL FIX (qa-reviewer FAIL #1): AI処理 pipeline (Whisper + Claude + GAS + Drive) を 実行
+        //   前 は onRecordingComplete だけ 呼んでたが、 それ は UI トースト 用 で AI処理 されず 「議事録 に入って こない」 バグ
+        //   startAudioOnlyRecording (line 3382) と 同じ full flow で 処理
+        const fallbackBooking = {
+          ts: bookingTs,
+          name: clientName,
+          userId: meta.clientId || '',
+          isInperson: false,
+        };
+        try { showUnifiedProgressPanel(clientName, blob); } catch (_) {}
+        try { updateProgressStep('save', 'done'); updateProgressStep('drive', 'active'); updateProgressStep('ai', 'active'); } catch (_) {}
+        try { showCenterToast('議事録 を 生成中…', clientName + ' 様 の Zoom 録音 → AI で 文字起こし + 議事録 作成 中。 30-60秒 ほど お待ちください', { tone: 'progress', duration: 0 }); } catch (_) {}
+
+        const drivePromise = autoUploadRecording(blob, bookingTs, clientName, fallbackBooking)
+          .then(() => { try { updateProgressStep('drive', 'done'); } catch(_){} })
+          .catch(() => { try { updateProgressStep('drive', 'error'); } catch(_){} });
+
+        let aiResult = null;
+        try { aiResult = await aiProcessRecording(blob, bookingTs, clientName, fallbackBooking); }
+        catch (e) { console.error('[fp-tab-recorder] aiProcessRecording fail:', e); }
+
+        if (aiResult && aiResult.ok) {
+          try { updateProgressStep('ai', 'done'); } catch(_){}
+          window._fpAIResult = { result: aiResult, customerName: clientName, booking: fallbackBooking };
+          try { autoSaveAIResult(aiResult, clientName, fallbackBooking); } catch(_){}
+          try { showProgressDoneAction(); } catch(_){}
+        } else {
+          try { updateProgressStep('ai', 'error', aiResult?.error); } catch(_){}
+          try {
+            autoSaveAIResult({
+              ok: true, bookingTs, userId: meta.clientId || '', customerName: clientName,
+              summary: '⚠ AI処理 失敗\n\nエラー: ' + (aiResult?.error || '不明') + '\n\n録音ファイル自体は Drive に保存されています。',
+              transcript: '', key_concerns: ['AI処理エラー'], tasks: [], error: true,
+            }, clientName, fallbackBooking);
+          } catch(_){}
+        }
+        await drivePromise;
+
         if (typeof onRecordingComplete === 'function') {
           await onRecordingComplete(bookingTs, blob, blobUrl);
         } else {
