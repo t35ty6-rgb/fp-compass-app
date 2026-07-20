@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>営業プレイブック (社内用) | FP Compass</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800;900&family=Noto+Sans+JP:wght@400;500;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f7f8fa;
+    --surface: #ffffff;
+    --surface-2: #f0f2f7;
+    --ink: #1e2233;
+    --ink-2: #3d4356;
+    --dim: #7c839a;
+    --muted: #a8adbe;
+    --rule: #e4e7ee;
+    --primary: #17b26a;
+    --primary-hi: #0e9a5a;
+    --primary-soft: #dcfce7;
+    --danger: #ef4444;
+    --danger-soft: #fef2f2;
+    --warn: #f59e0b;
+    --warn-soft: #fef3c7;
+    --info: #3b82f6;
+    --info-soft: #dbeafe;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 76px; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink-2);
+    font-family: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 14px;
+    line-height: 1.7;
+    font-weight: 500;
+    letter-spacing: -0.005em;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* --- Top bar (sticky) --- */
+  .topbar {
+    position: sticky; top: 0; z-index: 100;
+    background: var(--ink); color: #FFFFFF;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 24px; border-bottom: 1px solid #0a0f1c;
+    box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset;
+  }
+  .topbar-left { display: flex; align-items: center; gap: 14px; }
+  .topbar-brand { font-family: 'Manrope', sans-serif; font-size: 13px; font-weight: 900; letter-spacing: -0.005em; }
+  .topbar-tag { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.14); font-family: 'Manrope', sans-serif; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; padding: 3px 10px; border-radius: 999px; color: rgba(255,255,255,0.75); font-weight: 700; }
+  .topbar-nav { display: flex; gap: 4px; font-family: 'Manrope', sans-serif; font-size: 12px; }
+  .topbar-nav a { color: rgba(255,255,255,0.68); padding: 6px 10px; border-radius: 6px; text-decoration: none; font-weight: 700; letter-spacing: 0.02em; }
+  .topbar-nav a:hover { background: rgba(255,255,255,0.08); color: #FFFFFF; }
+
+  main {
+    max-width: 1080px; margin: 0 auto;
+    padding: 28px 28px 60px;
+    display: grid; grid-template-columns: 220px 1fr;
+    gap: 32px;
+  }
+
+  /* --- Left sidebar TOC --- */
+  aside.side {
+    position: sticky; top: 68px;
+    align-self: start;
+    background: var(--surface); border: 1px solid var(--rule); border-radius: 10px;
+    padding: 16px 14px;
+    max-height: calc(100vh - 96px); overflow-y: auto;
+  }
+  .side-title { font-family: 'Manrope', sans-serif; font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; font-weight: 800; color: var(--muted); margin: 0 0 10px; padding-left: 8px; }
+  .side ol { list-style: none; padding: 0; margin: 0 0 14px; counter-reset: s; }
+  .side ol li { counter-increment: s; }
+  .side ol li a { display: flex; align-items: baseline; gap: 8px; padding: 6px 10px; border-radius: 6px; color: var(--ink-2); font-size: 12.5px; font-weight: 700; text-decoration: none; border-left: 2px solid transparent; }
+  .side ol li a:hover { background: var(--surface-2); color: var(--ink); }
+  .side ol li a::before { content: counter(s, decimal-leading-zero); font-family: 'Manrope', sans-serif; font-size: 10px; color: var(--muted); font-weight: 800; letter-spacing: 0.06em; flex-shrink: 0; }
+
+  .content { min-width: 0; }
+
+  /* --- Section --- */
+  section { background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 28px 32px; margin-bottom: 20px; box-shadow: 0 1px 2px rgba(11,18,32,0.03); }
+  .sec-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 10px; }
+  .sec-num { font-family: 'Manrope', sans-serif; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; font-weight: 800; color: var(--primary); }
+  h2 { font-family: 'Manrope', 'Noto Sans JP', sans-serif; margin: 0; font-size: 22px; font-weight: 900; color: var(--ink); letter-spacing: -0.015em; line-height: 1.3; }
+  .sec-lede { color: var(--dim); font-size: 13.5px; margin: 4px 0 20px; }
+  h3 { font-family: 'Manrope', 'Noto Sans JP', sans-serif; margin: 24px 0 10px; font-size: 15.5px; font-weight: 800; color: var(--ink); letter-spacing: -0.005em; }
+  h3:first-child { margin-top: 0; }
+
+  /* --- Pitch quote card --- */
+  .pitch { background: var(--ink); color: #FFFFFF; border-radius: 12px; padding: 24px 28px; margin: 14px 0 8px; position: relative; }
+  .pitch::before { content: '“'; position: absolute; top: 8px; left: 20px; font-family: Georgia, serif; font-size: 60px; color: rgba(255,255,255,0.14); font-weight: 700; line-height: 1; }
+  .pitch-body { font-family: 'Noto Sans JP', sans-serif; font-size: 16px; line-height: 1.85; color: rgba(255,255,255,0.94); font-weight: 500; padding-left: 24px; }
+  .pitch-body b { color: #FFFFFF; font-weight: 800; }
+  .pitch-attr { margin-top: 12px; font-family: 'Manrope', sans-serif; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; font-weight: 700; color: #34D399; padding-left: 24px; }
+
+  /* --- Persona cards --- */
+  .persona-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin: 14px 0; }
+  .persona { background: var(--surface-2); border: 1px solid var(--rule); border-radius: 10px; padding: 16px 18px; }
+  .persona-name { font-family: 'Manrope', sans-serif; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 800; color: var(--primary); margin-bottom: 6px; }
+  .persona h4 { margin: 0 0 8px; font-size: 15px; font-weight: 900; color: var(--ink); font-family: 'Noto Sans JP', sans-serif; }
+  .persona ul { padding-left: 18px; margin: 6px 0 0; font-size: 12.5px; color: var(--ink-2); }
+  .persona ul li { margin-bottom: 3px; }
+
+  /* --- Value prop 3 cards --- */
+  .value-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin: 14px 0; }
+  .value { padding: 18px 20px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--rule); }
+  .value-pain { font-family: 'Manrope', sans-serif; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--danger); font-weight: 800; margin-bottom: 4px; }
+  .value-pain::before { content: '悩み'; margin-right: 6px; padding: 2px 8px; background: var(--danger-soft); border-radius: 4px; color: var(--danger); font-size: 10px; }
+  .value h4 { margin: 4px 0 8px; font-size: 15px; font-weight: 900; color: var(--ink); font-family: 'Noto Sans JP', sans-serif; letter-spacing: -0.005em; }
+  .value-solution { font-size: 12.5px; color: var(--ink-2); line-height: 1.75; }
+  .value-solution b { color: var(--ink); font-weight: 800; }
+
+  /* --- Pricing --- */
+  .price-card { background: var(--ink); color: #FFFFFF; border-radius: 14px; padding: 28px 32px; margin: 14px 0; position: relative; overflow: hidden; }
+  .price-card::after { content: ''; position: absolute; top: -60px; right: -40px; width: 220px; height: 220px; background: radial-gradient(circle, rgba(23,178,106,0.3), transparent 60%); pointer-events: none; }
+  .price-label { font-family: 'Manrope', sans-serif; font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; font-weight: 800; color: #34D399; margin-bottom: 8px; position: relative; }
+  .price-value { font-family: 'Manrope', sans-serif; font-size: 44px; font-weight: 900; color: #FFFFFF; letter-spacing: -0.02em; line-height: 1; position: relative; }
+  .price-unit { font-size: 15px; color: rgba(255,255,255,0.72); font-weight: 700; margin-left: 6px; letter-spacing: 0; }
+  .price-note { margin-top: 12px; color: rgba(255,255,255,0.78); font-size: 13px; line-height: 1.75; position: relative; }
+  .price-terms { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 8px; margin-top: 16px; position: relative; }
+  .price-terms div { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.14); border-radius: 8px; padding: 10px 12px; }
+  .price-terms b { display: block; font-family: 'Manrope', sans-serif; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.6); font-weight: 800; margin-bottom: 3px; }
+  .price-terms span { font-size: 13px; color: #FFFFFF; font-weight: 700; }
+
+  /* --- Demo script table --- */
+  .demo-table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 13px; }
+  .demo-table th { background: var(--surface-2); text-align: left; padding: 10px 12px; font-family: 'Manrope', sans-serif; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 800; color: var(--dim); border-bottom: 1px solid var(--rule); }
+  .demo-table td { padding: 14px 12px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  .demo-table td:first-child { font-family: 'Manrope', sans-serif; font-weight: 800; color: var(--primary); font-size: 12px; letter-spacing: 0.06em; white-space: nowrap; }
+  .demo-table td:nth-child(2) { font-weight: 700; color: var(--ink); font-size: 13.5px; }
+  .demo-table td:nth-child(3) { color: var(--ink-2); line-height: 1.75; }
+  .demo-table .script { display: block; margin-top: 6px; padding: 8px 12px; background: var(--surface-2); border-left: 3px solid var(--primary); border-radius: 4px; font-size: 12.5px; color: var(--ink); font-weight: 600; font-style: italic; }
+  .demo-table .script::before { content: 'セリフ '; font-family: 'Manrope', sans-serif; font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--primary); font-weight: 800; font-style: normal; margin-right: 6px; }
+
+  /* --- Objection Q&A --- */
+  .oq { border: 1px solid var(--rule); border-radius: 10px; margin-bottom: 10px; overflow: hidden; }
+  .oq-q { background: var(--surface-2); padding: 12px 16px; font-weight: 800; color: var(--ink); font-size: 13.5px; display: flex; align-items: baseline; gap: 10px; }
+  .oq-q::before { content: 'Q'; font-family: 'Manrope', sans-serif; color: var(--danger); font-size: 11px; font-weight: 900; letter-spacing: 0.06em; padding: 2px 6px; background: var(--danger-soft); border-radius: 4px; }
+  .oq-a { padding: 14px 16px; font-size: 13px; line-height: 1.85; color: var(--ink-2); background: var(--surface); }
+  .oq-a b { color: var(--ink); font-weight: 800; }
+  .oq-a .pivot { display: block; margin-top: 8px; padding: 8px 12px; background: var(--primary-soft); border-left: 3px solid var(--primary); border-radius: 4px; font-size: 12.5px; color: #065F46; font-weight: 600; }
+  .oq-a .pivot::before { content: '切り返し '; font-family: 'Manrope', sans-serif; font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--primary); font-weight: 800; margin-right: 6px; }
+
+  /* --- Cheat card --- */
+  .cheat { background: linear-gradient(135deg, #1e2233 0%, #0a0f1c 100%); color: #FFFFFF; border-radius: 14px; padding: 28px 32px; margin: 14px 0; }
+  .cheat-title { font-family: 'Manrope', sans-serif; font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; font-weight: 800; color: #34D399; margin-bottom: 12px; }
+  .cheat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+  .cheat-item h4 { margin: 0 0 6px; font-family: 'Manrope', 'Noto Sans JP', sans-serif; font-size: 13px; color: rgba(255,255,255,0.6); font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+  .cheat-item p { margin: 0; font-size: 14px; color: #FFFFFF; font-weight: 700; line-height: 1.65; }
+  .cheat-item strong { color: #34D399; font-weight: 900; }
+
+  /* --- Closing --- */
+  .closing-steps { counter-reset: c; margin: 14px 0; }
+  .closing-step { counter-increment: c; display: flex; gap: 14px; padding: 14px 16px; background: var(--surface-2); border-radius: 10px; margin-bottom: 8px; }
+  .closing-step::before { content: counter(c); flex-shrink: 0; width: 28px; height: 28px; background: var(--primary); color: #FFFFFF; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; font-family: 'Manrope', sans-serif; font-weight: 900; font-size: 13px; }
+  .closing-step-body { flex: 1; }
+  .closing-step-body b { display: block; color: var(--ink); font-weight: 800; font-size: 14px; margin-bottom: 2px; }
+  .closing-step-body span { color: var(--ink-2); font-size: 13px; line-height: 1.75; }
+
+  /* --- Utility --- */
+  code { background: var(--surface-2); padding: 2px 7px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink); border: 1px solid var(--rule); font-weight: 600; }
+  a { color: var(--primary); font-weight: 700; text-decoration: none; }
+  a:hover { color: var(--primary-hi); text-decoration: underline; text-underline-offset: 3px; }
+  .link-btn { display: inline-block; background: var(--surface-2); border: 1px solid var(--rule); border-radius: 6px; padding: 6px 12px; font-size: 12.5px; color: var(--ink); text-decoration: none; margin: 4px 6px 4px 0; font-weight: 700; }
+  .link-btn:hover { background: var(--primary-soft); border-color: var(--primary); color: var(--primary-hi); text-decoration: none; }
+
+  ul.plain { padding-left: 20px; margin: 8px 0; }
+  ul.plain li { margin-bottom: 6px; font-size: 13.5px; }
+
+  footer { max-width: 1080px; margin: 0 auto; padding: 20px 28px 40px; color: var(--dim); font-size: 11.5px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.02em; display: flex; justify-content: space-between; gap: 12px; }
+  footer a { color: var(--dim); font-weight: 500; }
+  footer a:hover { color: var(--ink); }
+
+  @media (max-width: 900px) {
+    main { grid-template-columns: 1fr; padding: 20px 20px 40px; }
+    aside.side { position: static; max-height: none; }
+    .topbar-nav { display: none; }
+    section { padding: 22px 22px; }
+    .price-value { font-size: 34px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-left">
+    <span class="topbar-brand">FP Compass · Sales Playbook</span>
+    <span class="topbar-tag">Internal</span>
+  </div>
+  <nav class="topbar-nav" aria-label="jump">
+    <a href="#pitch">Pitch</a>
+    <a href="#persona">Persona</a>
+    <a href="#value">Value</a>
+    <a href="#price">Price</a>
+    <a href="#demo">Demo</a>
+    <a href="#objections">Q&amp;A</a>
+    <a href="#close">Close</a>
+    <a href="#handoff">Handoff</a>
+    <a href="#cheat">Cheat</a>
+  </nav>
+</header>
+
+<main>
+
+<aside class="side" aria-label="目次">
+  <div class="side-title">Playbook</div>
+  <ol>
+    <li><a href="#pitch">30秒 ピッチ</a></li>
+    <li><a href="#persona">誰に 売る</a></li>
+    <li><a href="#value">3 つの 推し</a></li>
+    <li><a href="#price">料金</a></li>
+    <li><a href="#demo">デモ 10分</a></li>
+    <li><a href="#objections">想定 Q&amp;A</a></li>
+    <li><a href="#close">クロージング</a></li>
+    <li><a href="#handoff">契約後 の 案内</a></li>
+    <li><a href="#cheat">ワン ページ カンペ</a></li>
+  </ol>
+  <div class="side-title" style="margin-top:6px;">Assets</div>
+  <a class="link-btn" href="/lp/" target="_blank" style="display:block;text-align:center;margin-bottom:4px;">公式 LP</a>
+  <a class="link-btn" href="/setup-manual.html" target="_blank" style="display:block;text-align:center;margin-bottom:4px;">設定マニュアル</a>
+  <a class="link-btn" href="/mic-troubleshoot.html" target="_blank" style="display:block;text-align:center;">診断ガイド</a>
+</aside>
+
+<div class="content">
+
+<!-- ============================================================ -->
+<section id="pitch">
+  <div class="sec-head"><span class="sec-num">01</span><h2>30秒 ピッチ</h2></div>
+  <p class="sec-lede">最初 の 30秒 で これ を 言えれば 続き が 聞ける。 そのまま 読める 形。</p>
+
+  <div class="pitch">
+    <div class="pitch-body">
+      FP Compass は、 <b>独立系 FP さん の ため の 顧客管理 と 提案準備 を 一本化 する SaaS</b> です。 Zoom で 面談 したら、 拡張 で 自動 録音 → AI が 議事録 に 起こして 顧客カルテ に 貯まり、 「次に 何 を 提案 するか」 まで AI が 推してくれます。 月額 ¥19,800、 <b>14日間 無料 で 全機能</b> 使えます。
+    </div>
+    <div class="pitch-attr">Recommended Opener</div>
+  </div>
+
+  <h3>ハマる 現場 の 見分け方</h3>
+  <ul class="plain">
+    <li>Excel or Google スプレッドシート で 顧客管理 → LINE トーク も 追わないと 情報 が 散らかる</li>
+    <li>面談 後 に 議事録 を 手書き / タイピング で 起こしてる (時間 泥棒)</li>
+    <li>次 の フォロー で 「何 話したっけ」 と カルテ を 何度も 見返す</li>
+    <li>複数 の 顧客 を 抱えて いて、 「誰に いつ 何 を 提案 するか」 の 優先順位 が 勘 頼み</li>
+  </ul>
+  <p style="color:var(--dim);font-size:13px;">上 の うち <b style="color:var(--ink);">2 個 以上 当てはまれば 90% クロージング 見込み</b>。</p>
+</section>
+
+<!-- ============================================================ -->
+<section id="persona">
+  <div class="sec-head"><span class="sec-num">02</span><h2>誰 に 売る (3 ペルソナ)</h2></div>
+  <p class="sec-lede">この 3 タイプ に 絞って 話す。 銀行 / 大手代理店 の サラリーマン FP は 対象外 (承認 に 時間 かかる、 稟議 で 潰れる)。</p>
+
+  <div class="persona-grid">
+    <div class="persona">
+      <div class="persona-name">Persona A</div>
+      <h4>独立系 FP (1〜3人 事務所)</h4>
+      <ul>
+        <li>顧客 30〜150 人</li>
+        <li>Excel or Google スプシ + LINE + 記憶</li>
+        <li>面談 は Zoom 半分、 対面 半分</li>
+        <li>意思決定 は 本人 = 即決 可能</li>
+        <li><b style="color:var(--ink);">主戦場</b>。 90% ここ で 決める</li>
+      </ul>
+    </div>
+    <div class="persona">
+      <div class="persona-name">Persona B</div>
+      <h4>保険 / 証券 の 兼業 FP</h4>
+      <ul>
+        <li>本業 の CRM は 会社 支給</li>
+        <li>副業 / 独立準備 で 個人客 開拓中</li>
+        <li>会社 CRM に 個人客 入れられ ない</li>
+        <li>安価 で 「自分の 顧客資産」 が 欲しい</li>
+      </ul>
+    </div>
+    <div class="persona">
+      <div class="persona-name">Persona C</div>
+      <h4>士業 (税理士 / 社労士 等)</h4>
+      <ul>
+        <li>FP 業務 を 顧問先 に 副次 提供</li>
+        <li>顧問先 20〜80 社 の 個人相談 対応</li>
+        <li>「顧問先 の 家族 まで 見て あげたい」 動機</li>
+        <li>単価 高い、 継続率 高い</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section id="value">
+  <div class="sec-head"><span class="sec-num">03</span><h2>3 つの 推し (悩み → 解決)</h2></div>
+  <p class="sec-lede">この 3 つ が LP hero と 完全 一致。 デモ でも この 順番 で 見せる。</p>
+
+  <div class="value-grid">
+    <div class="value">
+      <div class="value-pain"></div>
+      <h4>LINE が 散らかる</h4>
+      <p class="value-solution">全 顧客 の LINE トーク が <b>顧客カルテ に 自動 束ねられる</b>。 「あの人 何話 したっけ」 を 検索 一発 で 引ける。</p>
+    </div>
+    <div class="value">
+      <div class="value-pain"></div>
+      <h4>議事録 が 眠る</h4>
+      <p class="value-solution">Zoom 面談 → 拡張 で <b>自動 録音 → AI 文字起こし → カルテ に 貯まる</b>。 手打ち ゼロ。 面談 直後 に 議事録 完成。</p>
+    </div>
+    <div class="value">
+      <div class="value-pain"></div>
+      <h4>勘 で 提案 して いる</h4>
+      <p class="value-solution">溜まった 議事録 と ライフイベント から AI が <b>「次に 何 を 提案 するか」 を 顧客ごと に 推奨</b>。 提案精度 が 上がる。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section id="price">
+  <div class="sec-head"><span class="sec-num">04</span><h2>料金 (シンプル 一本)</h2></div>
+  <p class="sec-lede">プラン 分け 一切 なし。 「潔い」 と 覚えて 言い切る。</p>
+
+  <div class="price-card">
+    <div class="price-label">FP Compass Standard</div>
+    <div class="price-value">¥19,800<span class="price-unit"> / 月 (税込)</span></div>
+    <div class="price-note">1 FP = 1 アカウント。 全機能 使い放題、 顧客数 無制限、 議事録 録音 無制限。</div>
+    <div class="price-terms">
+      <div><b>初期費用</b><span>¥0</span></div>
+      <div><b>契約期間</b><span>月次 (解約自由)</span></div>
+      <div><b>無料トライアル</b><span>14 日 (カード 不要)</span></div>
+      <div><b>紹介 割引</b><span>-¥3,500 / 人</span></div>
+      <div><b>永久 無料</b><span>6 人 紹介 で</span></div>
+    </div>
+  </div>
+
+  <h3>紹介 割引 の 説明</h3>
+  <p>契約後 に 「紹介 URL」 が 発行 され、 他 の FP に 共有 → その FP が 有料化 したら <b>¥3,500 / 月 割引</b>。 6 人 紹介 で <b>永久 無料</b>。 紹介 された 側 も <b>初月 半額</b>。</p>
+  <p style="color:var(--dim);font-size:12.5px;">紹介先 が 解約 すると 割引 も 連動 して 減る (退会 は 一方通行 だが 双方 復帰 可能)。</p>
+</section>
+
+<!-- ============================================================ -->
+<section id="demo">
+  <div class="sec-head"><span class="sec-num">05</span><h2>デモ の 流れ (10 分)</h2></div>
+  <p class="sec-lede">Zoom 画面 共有 or 対面 で PC 見せる。 この 順番 で クリック すれば 客 の 「おぉ」 が 3 回 出る。</p>
+
+  <table class="demo-table">
+    <thead>
+      <tr><th style="width:60px;">時間</th><th style="width:180px;">画面 / 操作</th><th>ポイント</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>0:00</td>
+        <td>ログイン 画面</td>
+        <td>Magic Link (メールリンク だけで ログイン、 パスワード なし)。<span class="script">パスワード 覚えなくて いい ので、 毎日 の ログイン が ストレス ゼロ です。</span></td>
+      </tr>
+      <tr>
+        <td>0:30</td>
+        <td>顧客一覧</td>
+        <td>「30 人 の 顧客 が 一覧 → 最終接点 順」 を 見せる。<span class="script">今日 誰 に 連絡 する べきか、 これ 1 画面 で 分かります。</span></td>
+      </tr>
+      <tr>
+        <td>1:30</td>
+        <td>顧客カルテ (1 人 開く)</td>
+        <td>基本情報 + ライフイベント 一覧 + LINE トーク + 議事録 タブ。<span class="script">その 人 の 全て が この 1 画面 に 集まってます。 メモ 帳 3 個 開かなくて いいんです。</span></td>
+      </tr>
+      <tr>
+        <td>3:00</td>
+        <td>Zoom 面談 開始</td>
+        <td>「急遽 面談 スタート」 → 「Zoom を 発行 して 開始」 ボタン。<span class="script">今 まさに 面談 する 想定 で 見て ください。 このボタン 1 個 で Zoom URL 発行 + 拡張 が 顧客セット されます。</span></td>
+      </tr>
+      <tr>
+        <td>4:00</td>
+        <td>Zoom タブ で 拡張 クリック → REC</td>
+        <td>10 秒 話す (「あー、 デモ 録音 です」)。<span class="script">拡張 が 「この人 と の 面談」 と 認識 済 なので、 録音 停止 したら 自動で この 顧客 の 議事録 に 貯まります。</span></td>
+      </tr>
+      <tr>
+        <td>5:30</td>
+        <td>録音 停止 → 議事録 タブ 更新</td>
+        <td>AI 文字起こし 完了 の 議事録 が カルテ に 出現。<span class="script">面談 が 終わった 瞬間 に 議事録 完成。 手打ち ゼロ 分 です。</span></td>
+      </tr>
+      <tr>
+        <td>7:00</td>
+        <td>AI 推奨 タブ</td>
+        <td>過去 議事録 + ライフイベント から 「次 の 提案候補」 を 3 つ 表示。<span class="script">全 顧客 の 次一手 を AI が 出してくれる ので、 提案 の 迷い が 消えます。</span></td>
+      </tr>
+      <tr>
+        <td>8:30</td>
+        <td>料金 説明 → 紹介 割引</td>
+        <td>「¥19,800 一本、 紹介で -¥3,500、 6人で 無料」。<span class="script">プラン 選び で 悩んで もらいたくない ので、 潔く 一本 に して います。</span></td>
+      </tr>
+      <tr>
+        <td>9:30</td>
+        <td>14日 無料 の 案内 → 次 の アクション</td>
+        <td>その場で メール登録 → Magic Link 送信 → 「今 開いて 触って みませんか?」。<span class="script">カード 情報 なくて いい ので、 触って みて 合わなかったら 消して もらう だけ です。</span></td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================================================ -->
+<section id="objections">
+  <div class="sec-head"><span class="sec-num">06</span><h2>想定 Q&amp;A (10 問)</h2></div>
+  <p class="sec-lede">現場 で 実際 に 出た 反論 と 切り返し。 「切り返し」 は そのまま 言える 形。</p>
+
+  <div class="oq">
+    <div class="oq-q">既 に Salesforce (or kintone) 使ってる、 乗り換え 面倒</div>
+    <div class="oq-a">Salesforce は 高機能 だが FP 業務 に 特化 して ない → 議事録 も ライフイベント も AI 推奨 も 自分で 組む 必要。 FP Compass は <b>FP 業務 だけ に 全振り</b> して 「箱 から 出して すぐ 使える」 状態 に して あります。
+      <span class="pivot">「Salesforce 側 は 会社 の レポート用 に 残して、 個人客 の 提案準備 だけ こちら で 分けて 使う 先生 が 多い ですよ」</span>
+    </div>
+  </div>
+
+  <div class="oq">
+    <div class="oq-q">Excel で 十分 だと 思ってる、 CRM 高い</div>
+    <div class="oq-a">Excel の 一番 の 欠点 は <b>「LINE と Zoom と メール が 別 の 場所」</b>。 一件 の 顧客 で 4 個 のアプリ を 開いて 情報 束ねる の が 毎日 発生 → 積み上げると 週 5 時間 くらい 消えて ます。
+      <span class="pivot">「¥19,800 で 週 5 時間 戻る、 時給 換算 で 楽勝 なので 触って みて ください」</span>
+    </div>
+  </div>
+
+  <div class="oq">
+    <div class="oq-q">議事録 の AI 精度 は 大丈夫?</div>
+    <div class="oq-a">OpenAI Whisper + Claude で 二段 で 起こして、 <b>専門用語 (NISA / iDeCo / 変額 / 生命保険 の 商品名 等) の 認識率 も 高い</b>。 デモ で 実 音声 聞かせながら 出せる。
+      <span class="pivot">「今 この 場 で 5 秒 話して 起こして 見せる ので、 精度 は 目 で 見て ください」</span>
+    </div>
+  </div>
+
+  <div class="oq">
+    <div class="oq-q">顧客 の 個人情報 が 心配</div>
+    <div class="oq-a">Google Cloud (東京 リージョン) + Firebase Auth + TLS 全通信 暗号化。 <b>データ は 契約 FP しか 見えない (社内 の 他 FP からも 見えない)</b>。 バックアップ 24h 毎、 監査 ログ あり。
+      <span class="pivot">「金融庁 の ガイドライン に 沿った 設計 に して います、 詳細な 資料 も お渡し できます」</span>
+    </div>
+  </div>
+
+  <div class="oq">
+    <div class="oq-q">Zoom 拡張 の インストール が 難しそう</div>
+    <div class="oq-a">3 分 で 終わる 手順書 用意 済み → <a href="/setup-manual.html" target="_blank">setup-manual.html</a> を 送れば 客 が 自分で セット アップ できる。 分からない 時 は サポート メール で フォロー。
+      <span class="pivot">「入れる 時 の 手順書 と、 詰まった 時 の 診断ガイド、 両方 用意 して ある ので 大丈夫 です」</span>
+    </div>
+  </div>
+
+  <div class="oq">
+    <div class="oq-q">AirPods 使ってて 声 が 録れない って 聞いた</div>
+    <div class="oq-a">v1.5.1 で <b>AirPods 完全対応 済</b> (2026-07-20 リリース)。 マイク設定 ウィザード が 3 ステップ で AirPods を 認識 → HFP モード に 切替 → 録音 OK。
+      <span class="pivot">「AirPods は もう 大丈夫、 むしろ 今 は 内蔵mic より 音質 いい 場合 も あります」</span>
+    </div>
+  </div>
+
+  <div class="oq">
+    <div class="oq-q">顧客 何人 まで 使える?</div>
+    <div class="oq-a"><b>無制限</b>。 顧客数 で 課金 変わりません。 LINE トーク も 議事録 も 制限 なし。
+      <span class="pivot">「300 人 の 顧客 を 抱えてる 先生 でも 追加費用 ゼロ で 使えます」</span>
+    </div>
+  </div>
+
+  <div class="oq">
+    <div class="oq-q">解約 したい 時 は?</div>
+    <div class="oq-a">アカウント 画面 から <b>即 解約</b> (最低契約期間 なし)。 データ は 解約 後 30日 保管 → CSV DL 可能 → 完全消去。 復帰 も 30日 以内 なら データ 込み で 可能。
+      <span class="pivot">「合わなかったら いつ 辞めても いい 契約 なので、 まず 14日 触って みて ください」</span>
+    </div>
+  </div>
+
+  <div class="oq">
+    <div class="oq-q">14 日 の 無料 期間 中 に 課金 されないか</div>
+    <div class="oq-a"><b>カード 情報 の 登録 不要</b>。 14日 経過 → 有料化 する か 選ぶ 画面 が 出る (何も しなければ アカウント 凍結、 課金 なし)。
+      <span class="pivot">「触って みて 合う 感じ か 見てから カード 登録 する 順序 に して います」</span>
+    </div>
+  </div>
+
+  <div class="oq">
+    <div class="oq-q">高齢 の 顧客 に LINE は 難しい</div>
+    <div class="oq-a">LINE だけ で なく メール / SMS / 電話 の 履歴 も 全部 カルテ に 記録 できる。 <b>LINE は オプション</b> で、 メールだけ の 客 も 普通 に 管理 可能。
+      <span class="pivot">「LINE が メイン と いう 訳 じゃなく、 何 でも 束ねられる の が ポイント です」</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section id="close">
+  <div class="sec-head"><span class="sec-num">07</span><h2>クロージング 4 ステップ</h2></div>
+  <p class="sec-lede">迷い出したら 決めさせない。 客 の 頭 の 中 で 「試して みる か」 の 段階 で 手 を 動かす。</p>
+
+  <div class="closing-steps">
+    <div class="closing-step">
+      <div class="closing-step-body">
+        <b>その場で メール登録 を 促す</b>
+        <span>「ここで メール 教えて頂けたら、 いま 登録 画面 開きます」 → 客 の PC or スマホ に Magic Link が 飛ぶ。 その場で ログイン させる。</span>
+      </div>
+    </div>
+    <div class="closing-step">
+      <div class="closing-step-body">
+        <b>顧客 1 人 その場で 登録</b>
+        <span>客 の 実 顧客 1 人 の 名前 と メール を 一緒 に 入れる → 「これ で もう 使え ます」 の 実感 を 与える。</span>
+      </div>
+    </div>
+    <div class="closing-step">
+      <div class="closing-step-body">
+        <b>setup-manual.html リンク を 送る</b>
+        <span>Zoom 拡張 の インストール は 客 の 自宅 PC or 別日 でも OK → その場 では マニュアル URL だけ 送って 完結。<a href="/setup-manual.html" target="_blank" style="margin-left:6px;">setup-manual.html</a></span>
+      </div>
+    </div>
+    <div class="closing-step">
+      <div class="closing-step-body">
+        <b>3 日後 の チェックイン 予定 を その場で 入れる</b>
+        <span>「3日 後 に お電話 で 使い心地 聞いても いい ですか?」 → カレンダー招待 を 送る → 客 の 心 に 「試さないと」 の 期限 を 置く。</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section id="handoff">
+  <div class="sec-head"><span class="sec-num">08</span><h2>契約後 の 客案内 (Handoff)</h2></div>
+  <p class="sec-lede">売った 後 の 客 に 何 を 送る か。 テンプレ そのまま コピペ 可。</p>
+
+  <h3>Day 0 (契約 直後) — 「セットアップ お願い メール」 テンプレ</h3>
+  <div style="background:var(--surface-2);border:1px solid var(--rule);border-radius:8px;padding:16px 18px;margin:10px 0;font-family:'Noto Sans JP',monospace;font-size:13px;color:var(--ink-2);line-height:1.85;white-space:pre-wrap;">〇〇 先生
+
+本日 は FP Compass の ご契約 誠に ありがとう ございます。
+
+まず 最初 に、 Zoom 面談 を 議事録 に 自動記録 する Chrome 拡張 の セットアップ を お願い します。 下記 の マニュアル 通り に 10 分 で 完了 します:
+
+▶ 設定 マニュアル (完全版)
+https://app.skeleton-inc.jp/setup-manual.html
+
+もし 詰まった 場合 の 診断ガイド:
+https://app.skeleton-inc.jp/mic-troubleshoot.html
+
+3 日後 くらいに お電話 で 使い心地 を お伺い させて ください。
+
+Skeleton Inc.
+</div>
+
+  <h3>Day 3 (チェックイン 電話) — 聞く こと リスト</h3>
+  <ul class="plain">
+    <li>拡張 の インストール は 完了 したか (未完了 なら 一緒 に 画面 共有 で 通す)</li>
+    <li>実際 の 顧客 との Zoom で 使って みたか</li>
+    <li>議事録 が ちゃんと 貯まっているか (未使用 なら テスト録音 を 一緒 に やる)</li>
+    <li>AI 推奨 の 精度 は どうか</li>
+    <li>紹介 したい FP は いるか (紹介 URL を その場で 発行 して 送る)</li>
+  </ul>
+
+  <h3>Day 10 (トライアル 終盤) — 有料化 の 意思確認</h3>
+  <p>「そのまま 使い続けます か? カード 登録 の URL だけ 送って いい ですか?」 → 迷って いたら 3 日 延長 を 個別 で 判断。 3 回目 の 延長 は しない (依存する 客 は 有料化 しない)。</p>
+</section>
+
+<!-- ============================================================ -->
+<section id="cheat">
+  <div class="sec-head"><span class="sec-num">09</span><h2>ワン ページ カンペ</h2></div>
+  <p class="sec-lede">面談 直前 に 1 分 で 見返せる 圧縮版。 スマホ で 見る 想定。</p>
+
+  <div class="cheat">
+    <div class="cheat-title">FP Compass Quick Reference</div>
+    <div class="cheat-grid">
+      <div class="cheat-item">
+        <h4>1 行 で 何?</h4>
+        <p>FP 向け <strong>顧客管理 + AI 提案準備</strong> SaaS。 Zoom 議事録 自動化 が 目玉。</p>
+      </div>
+      <div class="cheat-item">
+        <h4>誰 に 売る?</h4>
+        <p>独立 FP / 兼業 FP / FP 業務 併設 の 士業。 <strong>1〜3 人 事務所</strong> が 主戦場。</p>
+      </div>
+      <div class="cheat-item">
+        <h4>推し 3 つ</h4>
+        <p>①LINE 束ね ②<strong>Zoom 議事録 自動化</strong> ③AI で 次一手 提案。</p>
+      </div>
+      <div class="cheat-item">
+        <h4>料金</h4>
+        <p><strong>¥19,800 / 月 一本</strong>、 14日 無料、 紹介 で -¥3,500、 6 人 で 永久無料。</p>
+      </div>
+      <div class="cheat-item">
+        <h4>デモ 順</h4>
+        <p>ログイン → 顧客一覧 → カルテ → <strong>Zoom 発行 &amp; 録音</strong> → AI 推奨 → 料金。</p>
+      </div>
+      <div class="cheat-item">
+        <h4>クロージング</h4>
+        <p>①その場 メール登録 ②顧客 1 人 登録 ③マニュアル 送る ④3日後 電話 予約。</p>
+      </div>
+      <div class="cheat-item">
+        <h4>AirPods 大丈夫?</h4>
+        <p>v1.5.1 で <strong>完全対応 済 (2026-07)</strong>。 ウィザード で 3 ステップ。</p>
+      </div>
+      <div class="cheat-item">
+        <h4>解約</h4>
+        <p>いつでも 即 解約 OK、 最低契約期間 なし、 データ CSV DL 可、 30日 復帰 可能。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+</div>
+
+</main>
+
+<footer>
+  <span>FP Compass · Sales Playbook (Internal) · 2026-07-21 · v1</span>
+  <span><a href="/setup-manual.html">Setup Manual</a>  ·  <a href="/mic-troubleshoot.html">Troubleshoot</a>  ·  <a href="/lp/">Public LP</a></span>
+</footer>
+
+</body>
+</html>
