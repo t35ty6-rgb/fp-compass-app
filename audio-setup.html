@@ -3,31 +3,47 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>音声設定ガイド · FP Compass</title>
+<title>音声設定ガイド — FP Compass</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Noto+Sans+JP:wght@400;500;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; }
-  body { margin: 0; background: #F8F9FB; color: #0F172A; font-family: 'Hiragino Kaku Gothic ProN', 'Yu Gothic', system-ui, sans-serif; font-size: 15px; line-height: 1.85; -webkit-font-smoothing: antialiased; }
-  .head { background: #0E1116; color: #F5F5F0; padding: 42px 32px 32px; }
+  body {
+    margin: 0;
+    background: #FBFBFD;
+    color: #334155;
+    font-family: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 15px;
+    line-height: 1.75;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  .head { background: #0F1729; color: #FFFFFF; padding: 42px 32px 32px; }
   .head-wrap { max-width: 780px; margin: 0 auto; }
-  .head h1 { margin: 0 0 8px; font-size: 26px; font-weight: 800; letter-spacing: 0.02em; }
-  .head p { margin: 0; color: #B5B5B0; font-size: 14px; }
+  .head h1 { font-family: 'Manrope', 'Noto Sans JP', sans-serif; margin: 0 0 8px; font-size: 28px; font-weight: 800; letter-spacing: -0.01em; line-height: 1.2; }
+  .head p { margin: 0; color: rgba(255,255,255,0.75); font-size: 14px; line-height: 1.7; }
   main { max-width: 780px; margin: 0 auto; padding: 32px; }
-  .warn { background: #FFF7E6; border-left: 4px solid #D97706; padding: 16px 20px; border-radius: 4px; margin-bottom: 24px; font-size: 14px; }
-  .warn strong { color: #92400E; }
-  h2 { font-size: 20px; font-weight: 800; margin: 32px 0 14px; padding-left: 12px; border-left: 4px solid #C1462C; letter-spacing: 0.01em; }
-  h3 { font-size: 16px; font-weight: 700; margin: 22px 0 10px; color: #1e3a5f; }
-  .step { background: #fff; border: 1px solid #e3e7ee; border-radius: 8px; padding: 20px 24px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,.03); }
-  .step-num { display: inline-block; background: #C1462C; color: #fff; width: 26px; height: 26px; border-radius: 50%; text-align: center; line-height: 26px; font-weight: 800; font-size: 13px; margin-right: 10px; }
-  code { background: #F1F5F9; padding: 3px 8px; border-radius: 4px; font-family: 'SF Mono', Menlo, monospace; font-size: 13px; color: #DC2626; }
-  pre { background: #0F172A; color: #E2E8F0; padding: 16px 20px; border-radius: 6px; overflow-x: auto; font-family: 'SF Mono', Menlo, monospace; font-size: 13px; line-height: 1.6; }
-  .btn { display: inline-block; background: #C1462C; color: #fff; padding: 12px 22px; border-radius: 6px; text-decoration: none; font-weight: 700; margin-top: 8px; }
-  .btn:hover { background: #a53b23; }
+  .warn { background: #FEF3C7; border: 1px solid rgba(180,83,9,0.22); border-radius: 8px; padding: 14px 18px; margin-bottom: 24px; font-size: 14px; color: #92400E; line-height: 1.7; }
+  .warn strong { color: #78350F; font-weight: 800; }
+  h2 { font-family: 'Manrope', 'Noto Sans JP', sans-serif; color: #0F1729; font-size: 22px; font-weight: 800; margin: 40px 0 14px; letter-spacing: -0.01em; line-height: 1.25; display: flex; align-items: baseline; gap: 10px; }
+  h2::before { content: ''; display: inline-block; width: 6px; height: 6px; border-radius: 999px; background: #00844A; transform: translateY(-3px); flex-shrink: 0; }
+  h3 { font-family: 'Manrope', 'Noto Sans JP', sans-serif; font-size: 17px; font-weight: 800; margin: 22px 0 10px; color: #0F1729; letter-spacing: -0.005em; line-height: 1.35; }
+  .step { background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 10px; padding: 20px 22px; margin-bottom: 14px; box-shadow: 0 1px 2px rgba(11,18,32,0.04); }
+  .step-num { display: inline-block; background: #0F1729; color: #FFFFFF; width: 26px; height: 26px; border-radius: 50%; text-align: center; line-height: 26px; font-weight: 900; font-size: 13px; margin-right: 10px; font-family: 'Manrope', sans-serif; }
+  code { background: #F5F7FA; padding: 3px 8px; border-radius: 4px; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12.5px; color: #0F1729; border: 1px solid #E5E7EB; }
+  pre { background: #0F1729; color: #E2E8F0; padding: 16px 20px; border-radius: 8px; overflow-x: auto; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 13px; line-height: 1.6; }
+  .btn { display: inline-block; background: #0F1729; color: #FFFFFF; padding: 12px 22px; border-radius: 8px; text-decoration: none; font-weight: 800; margin-top: 8px; font-family: 'Noto Sans JP', sans-serif; font-size: 13.5px; letter-spacing: 0.02em; transition: background .15s; }
+  .btn:hover { background: #000000; }
   ul { padding-left: 22px; }
   li { margin-bottom: 6px; }
-  .cap { color: #64748B; font-size: 13px; margin-top: 6px; }
-  a { color: #C1462C; }
-  .faq { background: #F1F5F9; border-radius: 6px; padding: 14px 18px; margin-bottom: 10px; }
-  .faq strong { color: #1e3a5f; }
+  .cap { color: #64748B; font-size: 13px; margin-top: 6px; line-height: 1.65; }
+  a { color: #00844A; font-weight: 700; text-decoration: none; border-bottom: 1px solid rgba(0,132,74,0.28); }
+  a:hover { border-bottom-color: #00844A; }
+  .faq { background: #F5F7FA; border: 1px solid #E5E7EB; border-radius: 8px; padding: 14px 18px; margin-bottom: 10px; }
+  .faq strong { color: #0F1729; font-weight: 800; }
+  footer { max-width: 780px; margin: 40px auto 0; padding: 20px 32px 40px; color: #64748B; font-size: 12.5px; border-top: 1px solid #E5E7EB; font-family: 'JetBrains Mono', ui-monospace, monospace; }
+  :focus-visible { outline: 2px solid #00844A; outline-offset: 2px; border-radius: 4px; }
 </style>
 </head>
 <body>
@@ -48,16 +64,17 @@
 <h2>選べる 3方式</h2>
 <p style="margin-bottom:20px;color:#334155;">環境 に 合わせて 選んで ください。 <b>Chrome拡張 方式 が 推奨</b> (5分 の 設定 不要、 会社支給 Mac でも OK)。</p>
 
-<div class="step" style="border:2px solid #059669;background:#F0FDF4;">
-  <h3 style="color:#065F46;"><span class="step-num" style="background:#059669;">A</span>Chrome 拡張 方式 <span style="font-size:12px;font-weight:800;color:#059669;letter-spacing:0.08em;margin-left:8px;">推奨</span></h3>
+<div class="step" style="border:2px solid #00844A;background:#F0FDF4;">
+  <h3 style="color:#00844A;"><span class="step-num" style="background:#00844A;">A</span>Chrome 拡張 方式 <span style="font-size:11px;font-weight:900;color:#FFFFFF;background:#00844A;letter-spacing:0.06em;padding:3px 10px;border-radius:999px;margin-left:8px;vertical-align:2px;">推奨</span></h3>
   <ul>
     <li>設定 時間: <b>1分</b> (Chrome拡張 install だけ)</li>
     <li>会社支給 Mac: <b>OK</b> (管理者権限 不要)</li>
     <li>Zoom: <b>Web版 で 開く</b> (アプリ版 は 不可)</li>
     <li>費用: <b>0円</b></li>
   </ul>
-  <p style="margin-top:10px;">
-    <a class="btn" href="#chrome-ext" style="background:#059669;">→ Chrome 拡張 install 手順 を 見る</a>
+  <p style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;">
+    <a class="btn" href="/recorder-manual.html" style="background:#00844A;">使い方マニュアル を 見る</a>
+    <a class="btn" href="#chrome-ext" style="background:#0F1729;">install 手順 (下)</a>
   </p>
 </div>
 
@@ -110,14 +127,27 @@
 </div>
 
 <div class="step">
-  <h3><span class="step-num">5</span>使い方</h3>
+  <h3><span class="step-num">5</span>使い方 (v1.1〜、 顧客自動紐付け対応)</h3>
+  <div style="background:#ECFDF5;border:1.5px solid #10B981;border-radius:8px;padding:14px 18px;margin-bottom:12px;">
+    <div style="font-weight:800;color:#059669;font-size:13px;margin-bottom:8px;">💡 v1.1 で 「どのお客様の 録音か 分からない」 問題を 解決 (2クリックで 完結)</div>
+    <div style="font-size:12.5px;color:#065F46;line-height:1.7;">
+      FP Compass 側 で 「録音準備」 ボタン を 押すと 拡張機能 に 顧客が セット されます。 その後 Zoom タブ で 拡張アイコン を 1回 クリック で 自動 録音開始 → 該当顧客の 議事録 に 保存されます。
+    </div>
+  </div>
   <ol>
-    <li>Zoom Web版 (zoom.us) を タブ で 開いて 面談 開始</li>
-    <li>Chrome 右上 の 拡張 アイコン クリック → 「Zoom タブ 録音 を 開始」</li>
-    <li>Chrome の 共有 ダイアログ で 該当 Zoom タブ を 選択</li>
-    <li>面談 終了 → 拡張 popup で 「録音 を 停止」</li>
-    <li>FP Compass に 音声 が 自動 送信 → Whisper で 議事録 生成</li>
+    <li><b>FP Compass</b> で 顧客カルテ を 開き、 <b>「急遽 面談スタート」</b> → <b>「Zoom を発行して開始」</b> ボタン を 押す<br>
+      <span class="cap">Zoom URL が 発行されると 同時に、 拡張機能 に この顧客が セット されます (Chrome 右上の 拡張アイコン が 緑 ▶ に光る)</span></li>
+    <li>案内された Zoom URL を 新タブで 開いて 面談 開始<br>
+      <span class="cap">既存の Zoom 予定 URL を 使う場合 も 同様に 別タブで 開く</span></li>
+    <li><b>Zoom タブ を 表示した 状態で</b> Chrome 右上 の 拡張アイコン を <b>1回 クリック</b><br>
+      <span class="cap">popup で 「○○さん の 録音 を 開始」 と 表示 → 「録音を開始」 ボタン を 押す</span></li>
+    <li>面談 終了 で <b>Zoom タブ を 閉じる</b> or <b>拡張アイコン から 「停止」</b><br>
+      <span class="cap">Zoom タブ 閉鎖 で 自動停止 → FP Compass に 送信 されます</span></li>
+    <li>FP Compass 画面に 「✓ ○○さん の 音声 受信」 トースト → Whisper で 議事録 自動生成 → 該当顧客の 議事録タブ に 保存</li>
   </ol>
+  <div style="background:#FEF3C7;border:1px solid #FBBF24;border-radius:8px;padding:12px 14px;margin-top:12px;color:#92400E;font-size:12px;line-height:1.65;">
+    ⚠️ <b>エラー</b>「Extension has not been invoked for the current page」 が出たら、 <b>Zoom タブ の状態で</b> 拡張アイコン を 再クリック してください。 FP Compass タブ や 新規タブ で 押すと このエラー が出ます (Chrome の 安全機能)
+  </div>
 </div>
 
 <h2 id="blackhole" style="margin-top:44px;">B. BlackHole 手順 (所要 5 分)</h2>

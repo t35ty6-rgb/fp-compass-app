@@ -3886,6 +3886,7 @@
       key_concerns: result.key_concerns || [],
       next_meeting_suggestion: result.next_meeting_suggestion || '',
       lifeEventCandidates: result.lifeEventCandidates || [],
+      extractedProfile: result.extractedProfile || {},
       createdAt: new Date().toISOString(),
     };
     // ★ ライフイベント自動抽出: 抽出された 候補 を 該当顧客の customEvents[] に積む
@@ -3918,6 +3919,55 @@
         }
       }
     } catch (e) { console.warn('lifeEventCandidates merge fail:', e); }
+    // ★ AI抽出プロファイル: 空フィールドのみ自動補完 (上書き禁止)
+    try {
+      const ep = result.extractedProfile;
+      if (ep && typeof ep === 'object' && window.DUMMY_CLIENTS) {
+        const c = window.DUMMY_CLIENTS.find(x =>
+          (x.lineFriendId && x.lineFriendId === userId) ||
+          (x.name && (x.name === nameKey || x.name === customerName))
+        );
+        if (c) {
+          const changedFields = [];
+          if (ep.selfBirth && /^\d{4}/.test(ep.selfBirth) && (!c.birth || c.birth === '1985-01-01')) {
+            c.birth = ep.selfBirth.length === 4 ? ep.selfBirth + '-01-01' : ep.selfBirth;
+            changedFields.push('生年月日');
+          }
+          if (ep.selfOccupation && !c.occupation) { c.occupation = ep.selfOccupation; changedFields.push('職業'); }
+          if (Array.isArray(ep.family) && ep.family.length > 0) {
+            if (!Array.isArray(c.family)) c.family = [];
+            ep.family.forEach(member => {
+              if (!member.rel) return;
+              const exists = c.family.some(m => m.rel === member.rel && (m.name === member.name || (!m.name && !member.name)));
+              if (!exists) {
+                c.family.push({ rel: member.rel, name: member.name || '', birth: member.birth || '', note: member.occupation || '', addedByAI: true, aiAddedAt: new Date().toISOString() });
+                changedFields.push('家族:' + (member.name || member.rel));
+              }
+            });
+          }
+          if (changedFields.length > 0) {
+            c.aiExtractedAt = new Date().toISOString();
+            c.aiExtractedFields = changedFields;
+            try { localStorage.setItem('fp-crm-clients-v1', JSON.stringify(window.DUMMY_CLIENTS)); } catch (_) {}
+            const fsDocId = c._fsCustomerId || (typeof c.id === 'string' && /^[A-Za-z0-9]{20}$/.test(c.id) ? c.id : null);
+            if (fsDocId && window.__fp?.db && window.__fp?.tenantId) {
+              (async () => {
+                try {
+                  const { doc, updateDoc } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js');
+                  const upd = { aiExtractedAt: c.aiExtractedAt, aiExtractedFields: changedFields };
+                  if (changedFields.includes('生年月日')) upd.birth = c.birth;
+                  if (changedFields.includes('職業')) upd.occupation = c.occupation;
+                  if (changedFields.some(f => f.startsWith('家族'))) upd.family = c.family;
+                  await updateDoc(doc(window.__fp.db, 'tenants', window.__fp.tenantId, 'customers', fsDocId), upd);
+                  console.log('[extractedProfile] Firestore sync OK:', changedFields.join(', '));
+                } catch (e) { console.warn('[extractedProfile] Firestore sync fail:', e.message); }
+              })();
+            }
+            console.log('[extractedProfile] auto-filled:', changedFields.join(', '), 'for', c.name);
+          }
+        }
+      }
+    } catch (e) { console.warn('extractedProfile merge fail:', e); }
     // ★ 「録画されてない可能性」 を 構造的に 排除:
     //   1. 最初に localStorage backup を 確実に保存 (POST失敗しても データ消えない)
     //   2. GAS POST を 3回 retry (3s/6s/12s)
