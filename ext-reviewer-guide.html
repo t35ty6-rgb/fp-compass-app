@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FP Compass 拡張機能 テスト指示書 v1.5.3</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', sans-serif;
+    background: #F8F9FA;
+    color: #1A1A2E;
+    line-height: 1.7;
+    font-size: 15px;
+  }
+
+  .header {
+    background: #1A1A2E;
+    color: #fff;
+    padding: 32px 24px 28px;
+  }
+  .header-inner { max-width: 720px; margin: 0 auto; }
+  .badge {
+    display: inline-block;
+    background: #2563EB;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    padding: 3px 10px;
+    border-radius: 4px;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+  }
+  .header h1 { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+  .header p { color: #A0AEC0; font-size: 13px; }
+
+  .container { max-width: 720px; margin: 0 auto; padding: 32px 24px 64px; }
+
+  .meta-bar {
+    display: flex; gap: 24px; flex-wrap: wrap;
+    background: #fff;
+    border: 1px solid #E2E8F0;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-bottom: 32px;
+    font-size: 13px;
+  }
+  .meta-bar span { color: #64748B; }
+  .meta-bar strong { color: #1A1A2E; }
+
+  .section { margin-bottom: 36px; }
+  .section-title {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: #2563EB;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #EBF2FF;
+  }
+
+  .step-list { list-style: none; }
+  .step-list li {
+    display: flex;
+    gap: 16px;
+    padding: 14px 0;
+    border-bottom: 1px solid #F1F5F9;
+  }
+  .step-list li:last-child { border-bottom: none; }
+  .step-num {
+    flex-shrink: 0;
+    width: 28px; height: 28px;
+    background: #2563EB;
+    color: #fff;
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    margin-top: 2px;
+  }
+  .step-content { flex: 1; }
+  .step-content strong { display: block; margin-bottom: 4px; color: #1A1A2E; font-weight: 600; }
+  .step-content p, .step-content li { color: #475569; font-size: 14px; }
+
+  .url-box {
+    background: #1A1A2E;
+    color: #7DD3FC;
+    font-family: 'SF Mono', 'Menlo', monospace;
+    font-size: 13px;
+    padding: 10px 14px;
+    border-radius: 6px;
+    margin-top: 8px;
+    word-break: break-all;
+    user-select: all;
+  }
+
+  .note {
+    background: #FFF7ED;
+    border-left: 3px solid #F59E0B;
+    padding: 10px 14px;
+    border-radius: 0 6px 6px 0;
+    font-size: 13px;
+    color: #92400E;
+    margin-top: 8px;
+  }
+
+  .checklist { list-style: none; margin-top: 12px; }
+  .checklist li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 14px;
+    background: #fff;
+    border: 1px solid #E2E8F0;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    font-size: 14px;
+    color: #1A1A2E;
+  }
+  .checklist li .icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+  .checklist li.pass { border-color: #10B981; background: #F0FDF4; }
+  .checklist li.pass .icon { color: #10B981; }
+  .checklist li.fail { border-color: #EF4444; background: #FEF2F2; }
+  .checklist li.fail .icon { color: #EF4444; }
+
+  .fail-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 12px; }
+  .fail-table th {
+    background: #F1F5F9;
+    padding: 10px 12px;
+    text-align: left;
+    font-weight: 600;
+    color: #475569;
+    border-bottom: 1px solid #CBD5E1;
+  }
+  .fail-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #F1F5F9;
+    color: #475569;
+    vertical-align: top;
+  }
+  .fail-table tr:last-child td { border-bottom: none; }
+
+  .report-box {
+    background: #fff;
+    border: 1px solid #E2E8F0;
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 12px;
+    font-size: 14px;
+    color: #475569;
+  }
+  .report-box strong { color: #1A1A2E; display: block; margin-bottom: 6px; }
+
+  footer {
+    text-align: center;
+    font-size: 12px;
+    color: #94A3B8;
+    padding: 24px;
+    border-top: 1px solid #E2E8F0;
+    margin-top: 48px;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <div class="badge">テスト指示書</div>
+    <h1>FP Compass 拡張機能 v1.5.3</h1>
+    <p>AirPods / Bluetooth イヤホン + Zoom 録音テスト &nbsp;·&nbsp; 所要時間 約 15 分</p>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="meta-bar">
+    <div><span>バージョン </span><strong>1.5.3</strong></div>
+    <div><span>修正内容 </span><strong>AirPods 使用時に相手の声が録れない問題</strong></div>
+    <div><span>発行日 </span><strong>2026-07-22</strong></div>
+  </div>
+
+  <!-- STEP 1 -->
+  <div class="section">
+    <div class="section-title">STEP 1 &nbsp; インストール</div>
+    <ul class="step-list">
+      <li>
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <strong>Chrome で拡張管理を開く</strong>
+          <p>アドレスバーに <code>chrome://extensions</code> と入力して Enter</p>
+        </div>
+      </li>
+      <li>
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <strong>デベロッパーモードをオンにする</strong>
+          <p>右上のトグルをオンにする</p>
+        </div>
+      </li>
+      <li>
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <strong>zip をダウンロードして解凍する</strong>
+          <div class="url-box">https://app.skeleton-inc.jp/fp-compass-extension.zip</div>
+        </div>
+      </li>
+      <li>
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <strong>拡張機能を読み込む</strong>
+          <p>「パッケージ化されていない拡張機能を読み込む」→ 解凍したフォルダを選択</p>
+        </div>
+      </li>
+      <li>
+        <div class="step-num">5</div>
+        <div class="step-content">
+          <strong>バージョン確認</strong>
+          <p>「FP Compass 議事録レコーダー」の下に <strong>バージョン: 1.5.3</strong> と表示されることを確認</p>
+        </div>
+      </li>
+    </ul>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="section">
+    <div class="section-title">STEP 2 &nbsp; マイクセットアップ</div>
+    <div class="note">AirPods を MacBook に接続し、耳に装着してから始めてください</div>
+    <ul class="step-list" style="margin-top:12px">
+      <li>
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <strong>セットアップを開く</strong>
+          <p>ツールバーの拡張アイコン (🎙️) をクリック → 「マイク設定を開く」</p>
+        </div>
+      </li>
+      <li>
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <strong>マイクを許可する (STEP 1)</strong>
+          <p>「マイクを許可する」ボタン → Chrome のポップアップで「許可」</p>
+        </div>
+      </li>
+      <li>
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <strong>AirPods を選択する (STEP 2)</strong>
+          <p>デバイス一覧に AirPods が <strong style="color:#7C3AED">紫バッジ</strong> で表示される → クリックして選択</p>
+        </div>
+      </li>
+      <li>
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <strong>テスト録音 (STEP 3)</strong>
+          <p>「テスト録音 (5秒)」をクリック → 自分の声を話す → 再生して声が入っているか確認 → 「設定を保存」</p>
+        </div>
+      </li>
+    </ul>
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="section">
+    <div class="section-title">STEP 3 &nbsp; Zoom テスト録音</div>
+    <ul class="step-list">
+      <li>
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <strong>Zoom で通話を開始する</strong>
+          <p>テスト用の相手 1名と Zoom 通話を開始。相手の声が AirPods から聞こえることを確認</p>
+        </div>
+      </li>
+      <li>
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <strong>FP Compass を開いて録音を開始する</strong>
+          <p><code>https://app.skeleton-inc.jp</code> にログイン → 任意の顧客を開く → 「Zoom 面談開始」ボタンをクリック</p>
+          <p style="margin-top:6px">ツールバーの拡張アイコンに <strong style="color:#DC2626">REC</strong> バッジが赤く表示されれば録音中</p>
+        </div>
+      </li>
+      <li>
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <strong>30 秒〜1 分、両者が話す</strong>
+          <p>自分も話す・相手にも話してもらう (内容は何でも OK)</p>
+        </div>
+      </li>
+      <li>
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <strong>録音を停止する</strong>
+          <p>拡張アイコンをクリック → 「録音停止」</p>
+        </div>
+      </li>
+    </ul>
+  </div>
+
+  <!-- STEP 4 -->
+  <div class="section">
+    <div class="section-title">STEP 4 &nbsp; 合格 / 不合格 判定</div>
+    <p style="font-size:13px;color:#64748B;margin-bottom:12px">録音停止後 30 秒〜2 分で FP Compass の顧客ページに議事録が自動生成されます</p>
+
+    <ul class="checklist">
+      <li class="pass"><span class="icon">✅</span><span><strong>合格</strong>: 議事録に自分の発言が文字起こしされている</span></li>
+      <li class="pass"><span class="icon">✅</span><span><strong>合格 (今回の修正ポイント)</strong>: 議事録に<strong>相手の発言</strong>が文字起こしされている</span></li>
+      <li class="pass"><span class="icon">✅</span><span><strong>合格</strong>: 「音声を再生」で両者の声が聞こえる</span></li>
+    </ul>
+
+    <table class="fail-table" style="margin-top:20px">
+      <thead>
+        <tr>
+          <th>症状</th>
+          <th>報告内容</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>相手の声が議事録に出てこない</td>
+          <td>「相手の声なし」と報告</td>
+        </tr>
+        <tr>
+          <td>自分の声も入っていない</td>
+          <td>「両方なし」と報告</td>
+        </tr>
+        <tr>
+          <td>録音が開始されない / エラーが出る</td>
+          <td>エラーメッセージのスクショを添付</td>
+        </tr>
+        <tr>
+          <td>Chrome の拡張コンソールにエラーあり</td>
+          <td>chrome://extensions → 「Service Worker」→ コンソール内容を共有</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 報告 -->
+  <div class="section">
+    <div class="section-title">結果を報告する</div>
+    <div class="report-box">
+      <strong>報告先: Tsukasa Yoshida</strong>
+      テスト結果 (合格 / 不合格) と症状を連絡してください。<br>
+      不合格の場合は、どのステップでどの症状が出たかを具体的に教えてください。
+    </div>
+  </div>
+
+</div>
+
+<footer>FP Compass 拡張機能 v1.5.3 &nbsp;·&nbsp; Skeleton Inc. &nbsp;·&nbsp; 2026-07-22</footer>
+
+</body>
+</html>
