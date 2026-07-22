@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>設定マニュアル (完全版) | FP Compass 議事録レコーダー</title>
+<meta name="description" content="Chrome 拡張 の インストール → マイク設定 → Zoom テスト 録音 まで、 一気通貫 の セットアップ ガイド (10分)">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800;900&family=Noto+Sans+JP:wght@400;500;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #FBFBFD;
+    --surface: #FFFFFF;
+    --surface-2: #F5F7FA;
+    --ink: #0F1729;
+    --ink-2: #334155;
+    --dim: #64748B;
+    --rule: #E5E7EB;
+    --primary: #00844A;
+    --primary-soft: #ECFDF5;
+    --primary-line: rgba(0,132,74,0.22);
+    --primary-dark: #065F46;
+    --warn: #92400E;
+    --warn-bg: #FEF3C7;
+    --danger: #B91C1C;
+    --danger-bg: #FEF2F2;
+    --accent-bt: #7C3AED;
+    --accent-bt-bg: #F3E8FF;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 20px; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink-2);
+    font-family: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 15px;
+    line-height: 1.75;
+    font-weight: 500;
+    letter-spacing: -0.005em;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* --- Header --- */
+  .head { background: var(--ink); color: #FFFFFF; padding: 52px 32px 40px; position: relative; overflow: hidden; }
+  .head::after { content: ''; position: absolute; top: -40px; right: -30px; width: 320px; height: 320px; background: radial-gradient(circle at 60% 40%, rgba(0,132,74,0.32), transparent 65%); pointer-events: none; }
+  .head-wrap { max-width: 820px; margin: 0 auto; position: relative; }
+  .kicker { font-family: 'Manrope', sans-serif; font-size: 11px; letter-spacing: 0.24em; font-weight: 700; color: rgba(255,255,255,0.75); text-transform: uppercase; margin-bottom: 14px; }
+  h1 { font-family: 'Manrope', 'Noto Sans JP', sans-serif; margin: 0 0 14px; font-size: 34px; font-weight: 900; letter-spacing: -0.02em; line-height: 1.2; }
+  .lede { margin: 0 0 24px; color: rgba(255,255,255,0.85); font-size: 15.5px; line-height: 1.75; max-width: 640px; }
+  .head-meta { display: flex; gap: 24px; flex-wrap: wrap; font-family: 'Manrope', sans-serif; font-size: 12px; letter-spacing: 0.08em; color: rgba(255,255,255,0.62); text-transform: uppercase; font-weight: 700; }
+  .head-meta span::before { content: '·  '; opacity: 0.4; margin-right: 4px; }
+  .head-meta span:first-child::before { content: ''; margin: 0; }
+
+  /* --- TOC (sticky sidebar-inline) --- */
+  .toc { background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 20px 24px; margin: 28px auto 0; max-width: 820px; box-shadow: 0 1px 2px rgba(11,18,32,0.04); }
+  .toc-title { font-family: 'Manrope', sans-serif; font-size: 11px; letter-spacing: 0.22em; font-weight: 800; color: var(--dim); text-transform: uppercase; margin-bottom: 12px; }
+  .toc ol { list-style: none; padding: 0; margin: 0; counter-reset: t; display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; }
+  .toc li { counter-increment: t; }
+  .toc a { display: flex; align-items: baseline; gap: 10px; padding: 10px 12px; border-radius: 8px; background: var(--surface-2); color: var(--ink); font-size: 13.5px; font-weight: 700; text-decoration: none; border: 1px solid transparent; transition: all .12s; }
+  .toc a:hover { background: var(--primary-soft); border-color: var(--primary-line); color: var(--primary-dark); }
+  .toc a::before { content: counter(t, decimal-leading-zero); font-family: 'Manrope', sans-serif; color: var(--primary); font-size: 11px; letter-spacing: 0.08em; font-weight: 800; }
+
+  /* --- Main sections --- */
+  main { max-width: 820px; margin: 0 auto; padding: 32px 32px 20px; }
+
+  section { margin-bottom: 60px; }
+  .section-head { border-top: 1px solid var(--rule); padding-top: 28px; margin-bottom: 20px; }
+  .section-count { display: block; font-family: 'Manrope', sans-serif; color: var(--primary); font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; font-weight: 800; margin-bottom: 6px; }
+  h2 { font-family: 'Manrope', 'Noto Sans JP', sans-serif; color: var(--ink); font-size: 26px; font-weight: 900; margin: 0 0 8px; letter-spacing: -0.02em; line-height: 1.25; }
+  .section-lede { color: var(--dim); font-size: 14.5px; margin: 0 0 24px; max-width: 640px; }
+  .section-time { display: inline-block; background: var(--surface-2); border: 1px solid var(--rule); border-radius: 999px; padding: 3px 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--dim); font-weight: 600; margin-left: 8px; vertical-align: 2px; letter-spacing: 0.04em; }
+
+  /* --- Step card --- */
+  .step { background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 24px 26px; margin-bottom: 14px; box-shadow: 0 1px 2px rgba(11,18,32,0.03); }
+  .step-head { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 14px; }
+  .step-num { flex-shrink: 0; background: var(--ink); color: #FFFFFF; width: 32px; height: 32px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; font-weight: 900; font-size: 14px; font-family: 'Manrope', sans-serif; margin-top: 1px; }
+  .step-title { font-family: 'Manrope', 'Noto Sans JP', sans-serif; font-size: 18px; font-weight: 900; color: var(--ink); letter-spacing: -0.01em; line-height: 1.4; margin: 0; }
+  .step-body { padding-left: 46px; }
+  .step-body p { margin: 0 0 12px; }
+  .step-body ol { padding-left: 20px; margin: 8px 0 14px; }
+  .step-body ul { padding-left: 20px; margin: 8px 0 14px; }
+  .step-body ol li, .step-body ul li { margin-bottom: 8px; }
+  .step-body strong { color: var(--ink); font-weight: 800; }
+
+  /* --- CTA button --- */
+  .cta { display: inline-block; background: var(--primary); color: #FFFFFF; padding: 13px 26px; border-radius: 10px; text-decoration: none; font-weight: 800; font-size: 14px; letter-spacing: 0.02em; margin: 4px 8px 4px 0; transition: background .15s; border: none; cursor: pointer; font-family: inherit; }
+  .cta:hover { background: #06703F; }
+  .cta.dark { background: var(--ink); }
+  .cta.dark:hover { background: #000000; }
+  .cta.ghost { background: transparent; color: var(--ink); border: 1.5px solid var(--rule); }
+  .cta.ghost:hover { background: var(--surface-2); border-color: var(--ink); }
+
+  /* --- URL bar mockup --- */
+  .url-bar { background: #FFFFFF; border: 1px solid var(--rule); border-radius: 999px; padding: 10px 18px; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: var(--ink); box-shadow: inset 0 1px 2px rgba(0,0,0,0.03); display: flex; align-items: center; gap: 10px; margin: 10px 0 8px; word-break: break-all; overflow-wrap: anywhere; }
+  .url-bar::before { content: ''; width: 10px; height: 12px; border: 1.5px solid var(--dim); border-radius: 2px; border-bottom-width: 4px; flex-shrink: 0; opacity: 0.5; }
+
+  /* --- Checkpoint --- */
+  .checkpoint { background: var(--primary-soft); border: 1px solid var(--primary-line); border-left: 4px solid var(--primary); border-radius: 8px; padding: 12px 16px; margin-top: 14px; display: flex; align-items: flex-start; gap: 10px; font-size: 13.5px; }
+  .checkpoint-mark { flex-shrink: 0; width: 20px; height: 20px; background: var(--primary); color: #FFFFFF; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900; margin-top: 2px; }
+  .checkpoint-body { color: var(--primary-dark); font-weight: 600; line-height: 1.65; }
+  .checkpoint-body b { font-weight: 800; color: #064E3B; }
+
+  /* --- Warn banner --- */
+  .warn { background: var(--warn-bg); border: 1px solid rgba(180,83,9,0.22); border-left: 4px solid var(--warn); border-radius: 8px; padding: 14px 18px; margin: 14px 0; font-size: 14px; color: var(--warn); line-height: 1.75; }
+  .warn b { color: #78350F; font-weight: 800; }
+
+  /* --- Highlight card (v1.5.1 hero) --- */
+  .highlight { background: var(--ink); color: #FFFFFF; border-radius: 14px; padding: 30px 32px; margin: 20px 0 28px; position: relative; overflow: hidden; }
+  .highlight::after { content: ''; position: absolute; top: -60px; right: -40px; width: 240px; height: 240px; background: radial-gradient(circle, rgba(0,132,74,0.28), transparent 62%); pointer-events: none; }
+  .highlight-kicker { font-family: 'Manrope', sans-serif; font-size: 11px; letter-spacing: 0.24em; font-weight: 800; color: #34D399; text-transform: uppercase; margin-bottom: 10px; position: relative; }
+  .highlight h3 { font-family: 'Manrope', 'Noto Sans JP', sans-serif; margin: 0 0 12px; font-size: 22px; font-weight: 900; color: #FFFFFF; letter-spacing: -0.015em; position: relative; }
+  .highlight p { margin: 0 0 16px; color: rgba(255,255,255,0.85); font-size: 14.5px; line-height: 1.75; position: relative; }
+  .highlight .cta { position: relative; background: #FFFFFF; color: var(--ink); }
+  .highlight .cta:hover { background: #F0FDF4; }
+
+  /* --- Mockup: mac system settings --- */
+  .mockup {
+    background: linear-gradient(180deg, #F5F7FA 0%, #EEF1F6 100%);
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+    padding: 16px 18px;
+    margin: 12px 0 16px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Noto Sans JP', sans-serif;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), 0 1px 2px rgba(11,18,32,0.05);
+  }
+  .mockup-title { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--dim); font-weight: 700; margin-bottom: 10px; font-family: 'Manrope', sans-serif; }
+  .mockup-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: #FFFFFF; border: 1px solid var(--rule); border-radius: 8px; margin-bottom: 4px; }
+  .mockup-row.highlight-row { border: 2px solid var(--primary); background: var(--primary-soft); box-shadow: 0 0 0 4px rgba(0,132,74,0.14); padding: 9px 11px; }
+  .mockup-app { display: flex; align-items: center; gap: 10px; font-size: 13.5px; font-weight: 600; color: var(--ink); }
+  .mockup-icon { width: 24px; height: 24px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900; color: #FFFFFF; }
+  .chrome-icon { background: conic-gradient(from 0deg, #EA4335 0deg 120deg, #FBBC04 120deg 240deg, #34A853 240deg 360deg); position: relative; }
+  .chrome-icon::after { content: ''; position: absolute; inset: 6px; background: #4285F4; border-radius: 999px; border: 2px solid #FFFFFF; }
+  .toggle { position: relative; width: 40px; height: 22px; background: #34C759; border-radius: 999px; flex-shrink: 0; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.06); }
+  .toggle::after { content: ''; position: absolute; top: 2px; left: 20px; width: 18px; height: 18px; background: #FFFFFF; border-radius: 999px; box-shadow: 0 1px 3px rgba(0,0,0,0.28); }
+  .toggle.off { background: #E4E7ED; }
+  .toggle.off::after { left: 2px; }
+
+  /* --- Wizard mockup preview --- */
+  .wizard-preview { border: 1px solid var(--rule); border-radius: 12px; overflow: hidden; margin: 12px 0 16px; box-shadow: 0 4px 12px rgba(11,18,32,0.06); }
+  .wizard-preview-head { background: var(--ink); color: #FFFFFF; padding: 20px 22px; }
+  .wizard-preview-head .k { font-family: 'Manrope', sans-serif; font-size: 10px; letter-spacing: 0.22em; font-weight: 700; color: rgba(255,255,255,0.65); text-transform: uppercase; margin-bottom: 6px; }
+  .wizard-preview-head .t { font-family: 'Manrope', 'Noto Sans JP', sans-serif; font-size: 20px; font-weight: 900; letter-spacing: -0.01em; }
+  .wizard-preview-body { padding: 20px 22px; background: var(--surface); }
+  .wizard-step { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid var(--rule); border-radius: 10px; margin-bottom: 8px; font-size: 13.5px; font-weight: 700; color: var(--ink); }
+  .wizard-step.done { background: var(--primary-soft); border-color: var(--primary-line); }
+  .wizard-step-num { flex-shrink: 0; width: 26px; height: 26px; border-radius: 999px; background: var(--ink); color: #FFFFFF; display: inline-flex; align-items: center; justify-content: center; font-family: 'Manrope', sans-serif; font-size: 12px; font-weight: 900; }
+  .wizard-step.done .wizard-step-num { background: var(--primary); }
+  .wizard-step-num::after { content: attr(data-check); display: none; }
+  .wizard-step.done .wizard-step-num { font-size: 0; }
+  .wizard-step.done .wizard-step-num::after { display: inline; content: '✓'; font-size: 14px; }
+  .wizard-device-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1.5px solid var(--rule); border-radius: 8px; margin-top: 6px; font-size: 12.5px; }
+  .wizard-device-row.selected { border-color: var(--primary); background: var(--primary-soft); border-width: 2px; padding: 9px 11px; }
+  .wizard-device-row.bt::after { content: 'Bluetooth'; margin-left: auto; font-family: 'Manrope', sans-serif; font-size: 9px; letter-spacing: 0.1em; font-weight: 800; color: var(--accent-bt); background: var(--accent-bt-bg); padding: 2px 7px; border-radius: 999px; }
+  .wizard-device-row .radio { width: 14px; height: 14px; border: 2px solid var(--primary); border-radius: 999px; position: relative; flex-shrink: 0; }
+  .wizard-device-row.selected .radio::after { content: ''; position: absolute; inset: 2px; background: var(--primary); border-radius: 999px; }
+
+  /* --- Faq --- */
+  .faq { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 16px 20px; margin-bottom: 8px; }
+  .faq-q { font-weight: 800; color: var(--ink); font-size: 14.5px; margin: 0 0 6px; display: flex; align-items: baseline; gap: 8px; }
+  .faq-q::before { content: 'Q'; font-family: 'Manrope', sans-serif; color: var(--primary); font-size: 12px; font-weight: 900; letter-spacing: 0.06em; }
+  .faq-a { margin: 0; color: var(--ink-2); font-size: 14px; line-height: 1.75; }
+
+  /* --- Support --- */
+  .support { background: var(--warn-bg); border: 1px solid rgba(180,83,9,0.22); border-radius: 12px; padding: 22px 26px; margin: 32px 0 20px; }
+  .support-title { font-weight: 900; color: var(--warn); font-size: 17px; margin: 0 0 8px; font-family: 'Manrope', 'Noto Sans JP', sans-serif; }
+  .support-body { color: #78350F; font-size: 14px; line-height: 1.75; margin: 0; }
+  .support a { color: #7C2D12; font-weight: 800; }
+
+  code { background: var(--surface-2); padding: 2px 7px; border-radius: 4px; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12.5px; color: var(--ink); border: 1px solid var(--rule); font-weight: 600; }
+  a { color: var(--primary); font-weight: 700; text-decoration: none; border-bottom: 1px solid var(--primary-line); }
+  a:hover { border-bottom-color: var(--primary); }
+
+  .kbd { display: inline-block; padding: 2px 8px; background: var(--surface); border: 1px solid var(--rule); border-radius: 5px; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--ink); font-weight: 700; box-shadow: 0 1px 0 rgba(11,18,32,0.08); vertical-align: 1px; }
+
+  footer { max-width: 820px; margin: 40px auto 0; padding: 20px 32px 48px; color: var(--dim); font-size: 12px; border-top: 1px solid var(--rule); font-family: 'JetBrains Mono', ui-monospace, monospace; letter-spacing: 0.02em; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+  footer a { color: var(--dim); font-weight: 500; border-bottom-color: transparent; }
+  footer a:hover { color: var(--ink); }
+
+  :focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; border-radius: 4px; }
+
+  @media (max-width: 700px) {
+    .head { padding: 40px 22px 32px; }
+    h1 { font-size: 26px; }
+    main { padding: 24px 22px 16px; }
+    .step { padding: 22px 20px; }
+    .step-body { padding-left: 12px; }
+    .highlight { padding: 24px 22px; }
+    .toc ol { grid-template-columns: 1fr 1fr; }
+    footer { flex-direction: column; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<header class="head">
+  <div class="head-wrap">
+    <div class="kicker">FP Compass 議事録レコーダー · Extension v1.5.1</div>
+    <h1>設定マニュアル (完全版)</h1>
+    <p class="lede">Chrome 拡張 の インストール → マイク設定 → Zoom テスト録音 まで、 一気通貫 で 進める セットアップ ガイド。 AirPods 対応。 所要 10 分。</p>
+    <div class="head-meta">
+      <span>macOS 対応</span>
+      <span>AirPods / Bluetooth OK</span>
+      <span>2026-07-21 更新</span>
+    </div>
+  </div>
+</header>
+
+<!-- TOC -->
+<nav class="toc" aria-label="目次">
+  <div class="toc-title">目次</div>
+  <ol>
+    <li><a href="#part-a">拡張機能 を インストール</a></li>
+    <li><a href="#part-b">マイク設定 ウィザード</a></li>
+    <li><a href="#part-c">Zoom で テスト録音</a></li>
+    <li><a href="#part-d">よくある 質問</a></li>
+  </ol>
+</nav>
+
+<main>
+
+<!-- ============================================================ -->
+<!-- PART A: INSTALL                                                -->
+<!-- ============================================================ -->
+<section id="part-a">
+  <div class="section-head">
+    <span class="section-count">Part A / 3</span>
+    <h2>拡張機能 を インストール <span class="section-time">3 分</span></h2>
+    <p class="section-lede">初めて の 場合、 or v1.5.0 以下 を 使ってる 場合 は 一度 削除 して v1.5.1 を 入れ直します。</p>
+  </div>
+
+  <div class="step">
+    <div class="step-head"><span class="step-num">1</span><h3 class="step-title">拡張機能 の zip を DL</h3></div>
+    <div class="step-body">
+      <p>下 の ボタン で v1.5.1 の zip を Downloads フォルダ に 落とします (25 KB)。</p>
+      <p><a class="cta" href="/fp-compass-extension.zip" download>zip を DL する</a></p>
+      <p style="font-size:13px;color:var(--dim);">Downloads の <code>fp-compass-extension.zip</code> を ダブルクリック → 同名 フォルダ が 展開 されます。</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-head"><span class="step-num">2</span><h3 class="step-title">Chrome の 拡張機能 画面 を 開く</h3></div>
+    <div class="step-body">
+      <p>Chrome の アドレスバー に 下 の URL を 貼って Enter:</p>
+      <div class="url-bar">chrome://extensions/</div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-head"><span class="step-num">3</span><h3 class="step-title">古い バージョン を 削除 (2回目 以降 のみ)</h3></div>
+    <div class="step-body">
+      <p>「FP Compass 議事録 レコーダー」 の カード が 既 に あれば、 カード 右下 の <b>「削除」</b> を クリック。 バージョン が 1.5.0 以下 なら 必ず 削除 → 入れ直し。</p>
+      <div class="warn">「更新」 ボタン は バージョン 番号 を 変えません。 zip 入れ替え の 時 は <b>必ず 削除 → 再読み込み</b> が 必要。</div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-head"><span class="step-num">4</span><h3 class="step-title">「デベロッパー モード」 を ON</h3></div>
+    <div class="step-body">
+      <p>chrome://extensions/ の 画面 右上 に ある <b>「デベロッパー モード」</b> の スイッチ を ON に します。</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-head"><span class="step-num">5</span><h3 class="step-title">「パッケージ 化 されて いない 拡張機能 を 読み込む」</h3></div>
+    <div class="step-body">
+      <p>左上 に 出て くる <b>「パッケージ 化 されて いない 拡張機能 を 読み込む」</b> ボタン を 押して、 STEP 1 で 展開 した <b>フォルダ を 選択</b> (zip ファイル ではなく フォルダ)。</p>
+      <div class="checkpoint">
+        <span class="checkpoint-mark">✓</span>
+        <div class="checkpoint-body">拡張リスト に <b>「FP Compass 議事録 レコーダー · バージョン 1.5.1」</b> が 追加 されたら OK。</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- PART B: MIC SETUP WIZARD                                       -->
+<!-- ============================================================ -->
+<section id="part-b">
+  <div class="section-head">
+    <span class="section-count">Part B / 3</span>
+    <h2>マイク設定 ウィザード<span class="section-time">3 分</span></h2>
+    <p class="section-lede">AirPods や 内蔵mic を 拡張 に 覚え させます。 これ を 通さない と AirPods で 自分の声 が 録れません。</p>
+  </div>
+
+  <div class="highlight">
+    <div class="highlight-kicker">v1.5.1 で 新設</div>
+    <h3>3 ステップ の ウィザード で 完了</h3>
+    <p>マイク許可 → デバイス選択 (AirPods 明示) → 5秒 テスト録音 の 3 ステップ。 これ を 通す と 以降 の Zoom 面談 で 拡張 が 自動 で AirPods の マイクモード を 呼び出します。</p>
+    <p style="margin-bottom:0;"><b style="color:#FFF;">前提</b>: AirPods を Mac に <b style="color:#FFF;">先 に Bluetooth 接続 して おく</b>。 メニューバー の Bluetooth アイコン で 「接続済」 確認。</p>
+  </div>
+
+  <div class="step">
+    <div class="step-head"><span class="step-num">1</span><h3 class="step-title">拡張 の アイコン から ウィザード を 開く</h3></div>
+    <div class="step-body">
+      <p>Chrome 右上 の 拡張機能 アイコン (パズル 型) → <b>「FP Compass 議事録 レコーダー」</b> を クリック → ポップアップ が 出る。</p>
+      <p>ポップアップ 下部 の 黄色 バナー 内 の <b>「マイク設定 を 開く」</b> リンク を 押すと、 新しい タブ で ウィザード が 開きます。</p>
+      <p style="font-size:13px;color:var(--dim);">拡張 アイコン を 右クリック → 「オプション」 でも 同じ ウィザード に 到達 可能 (Chrome の バージョン に 依存)。</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-head"><span class="step-num">2</span><h3 class="step-title">ウィザード 3 ステップ を 通す</h3></div>
+    <div class="step-body">
+      <div class="wizard-preview">
+        <div class="wizard-preview-head">
+          <div class="k">FP Compass 議事録レコーダー</div>
+          <div class="t">マイク設定</div>
+        </div>
+        <div class="wizard-preview-body">
+          <div class="wizard-step done"><span class="wizard-step-num" data-check="✓">1</span>Chrome に マイク の 使用 を 許可</div>
+          <div class="wizard-step done"><span class="wizard-step-num" data-check="✓">2</span>録音 に 使う マイク を 選ぶ</div>
+          <div style="padding-left:38px;">
+            <div class="wizard-device-row"><span class="radio"></span>MacBook Pro の マイク</div>
+            <div class="wizard-device-row bt selected"><span class="radio"></span>AirPods Pro</div>
+          </div>
+          <div class="wizard-step" style="margin-top:12px;"><span class="wizard-step-num">3</span>テスト録音 (5秒)</div>
+        </div>
+      </div>
+
+      <ol>
+        <li><b>STEP 1</b> — 「マイク を 許可 する」 ボタン → Chrome の 「マイク を 使用しますか?」 プロンプト で <b>「許可」</b> を 押す</li>
+        <li><b>STEP 2</b> — 一覧 から <b>AirPods を 選択</b> (紫 の 「Bluetooth」 バッジ 付き)。 選ぶ と 自動で 保存 されます</li>
+        <li><b>STEP 3</b> — 「テスト録音 開始 (5秒)」 を 押して <b>「あー」 と 5 秒 話す</b> → 再生 して 自分の声 が 聞こえれば 完了</li>
+      </ol>
+
+      <div class="checkpoint">
+        <span class="checkpoint-mark">✓</span>
+        <div class="checkpoint-body">STEP 3 の <b>audio player で 自分の声 が 再生できれば OK</b>。 これ で 拡張 は 以降 AirPods を 使う 準備 完了。</div>
+      </div>
+
+      <div class="warn" style="margin-top:14px;">
+        <b>STEP 3 の レベルメーター が 動かない 場合</b>: AirPods が macOS で 「音楽 モード」 の まま 「通話 モード」 に 切り替わって いません。 対処 → 一度 AirPods を 耳 から 外して 再装着、 または <b>Mac の 「システム設定 → サウンド → 入力」 で AirPods を 手動選択</b> → もう 一度 STEP 3。
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- PART C: TEST                                                   -->
+<!-- ============================================================ -->
+<section id="part-c">
+  <div class="section-head">
+    <span class="section-count">Part C / 3</span>
+    <h2>Zoom で テスト録音<span class="section-time">4 分</span></h2>
+    <p class="section-lede">実際 の Zoom 面談 と 同じ 手順 で、 テスト 用 の ミーティング を 使って 議事録 に 自分の声 が 入る か 確認 します。</p>
+  </div>
+
+  <div class="step">
+    <div class="step-head"><span class="step-num">1</span><h3 class="step-title">FP Compass で テスト顧客 を 開いて 「録音準備」</h3></div>
+    <div class="step-body">
+      <p><a href="https://app.skeleton-inc.jp/">FP Compass</a> に ログイン → 適当 な テスト用 顧客カルテ を 開く → <b>「急遽 面談スタート」</b> → <b>「Zoom を 発行 して 開始」</b> を 押す。</p>
+      <div class="checkpoint">
+        <span class="checkpoint-mark">✓</span>
+        <div class="checkpoint-body">Chrome 右上 の 拡張 アイコン に <b>緑 ▶</b> が 光ったら 「録音準備 済み」 の 合図。</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-head"><span class="step-num">2</span><h3 class="step-title">Zoom タブ で 拡張 アイコン を クリック → 「録音 を 開始」</h3></div>
+    <div class="step-body">
+      <p>新しく 開いた Zoom タブ で <b>ブラウザ 版 で 参加</b> (Desktop アプリ が 立ち上がっても、 Zoom の 「ブラウザ から 参加」 リンク を 押して ブラウザ で 開き 直す)。</p>
+      <p>Zoom タブ を 前面 に して <b>拡張 アイコン を クリック</b> → ポップアップ の <b>「録音 を 開始」</b> ボタン を 押す。</p>
+      <div class="checkpoint">
+        <span class="checkpoint-mark">✓</span>
+        <div class="checkpoint-body">拡張 バッジ が <b>「REC」 (赤)</b> に 変われば 録音 中。</div>
+      </div>
+      <div class="warn">
+        Zoom は <b>ブラウザ 版</b> で 開いて ください (Desktop アプリ で 参加 すると 拡張 は タブ 音声 を 拾えず、 議事録 が 無音 に なります)。
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-head"><span class="step-num">3</span><h3 class="step-title">10 秒 話して 停止 → 議事録 確認</h3></div>
+    <div class="step-body">
+      <p>AirPods 付けた まま <b>「あー、 テスト 録音 です」</b> を 10 秒 話す → 拡張 ポップアップ の <b>「■ 録音 を 停止」</b>。</p>
+      <p>FP Compass の 顧客カルテ に 戻る → <b>「議事録」 タブ</b> を 開く → 5〜10 分 待つ (AI 文字起こし 処理 中) → 議事録 が 追加 される。</p>
+      <div class="checkpoint">
+        <span class="checkpoint-mark">✓</span>
+        <div class="checkpoint-body">議事録 の <b>audio player で 自分の声 が 聞こえれば 完全成功</b>。 これで 実際 の 面談 で 使えます。</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- PART D: FAQ                                                    -->
+<!-- ============================================================ -->
+<section id="part-d">
+  <div class="section-head">
+    <span class="section-count">Part D / 3</span>
+    <h2>よくある 質問</h2>
+  </div>
+
+  <div class="faq">
+    <p class="faq-q">議事録 に 自分の声 が 入って いない</p>
+    <p class="faq-a">Part B の ウィザード を 通して いない 可能性 が 高いです。 拡張 ポップアップ の 黄色 バナー を 確認 → 「マイク設定 を 開く」 で ウィザード を 通して ください。 それでも ダメ なら <a href="/mic-troubleshoot.html">診断ガイド</a> を 参照。</p>
+  </div>
+
+  <div class="faq">
+    <p class="faq-q">Console に <code>[auto-start] failed</code> と 赤い エラー が 出る</p>
+    <p class="faq-a">これ は <b>Chrome の 仕様 で バグ で は ありません</b>。 拡張 は 自動 で 録音 を 始めた がった が Chrome の セキュリティ で 弾かれた、 だから 「あなた が 拡張 アイコン を 押して ね」 の 意味。 Zoom タブ で 拡張 アイコン を 1 回 押せば 録音 開始 します。</p>
+  </div>
+
+  <div class="faq">
+    <p class="faq-q">AirPods 使うと やっぱり 声 が 入らない</p>
+    <p class="faq-a">Part B の <b>STEP 3 の レベルメーター が 動いた か</b> が 分かれ目。 動かない 場合 は macOS の HFP プロファイル 切替 が 発火 していません。 対処 → AirPods を 外して 再装着 → Mac の 「システム設定 → サウンド → 入力」 で AirPods 手動選択 → ウィザード STEP 3 を もう 一度。</p>
+  </div>
+
+  <div class="faq">
+    <p class="faq-q">Zoom タブ を 開いたら Desktop アプリ が 立ち上がる</p>
+    <p class="faq-a">Zoom の ダウンロード ページ に 「ブラウザ から 参加」 の 小さい リンク が あります。 それ を 押す と ブラウザ 内 で Zoom が 開きます。 これ で ない と 拡張 は 音声 を 拾えません。</p>
+  </div>
+
+  <div class="faq">
+    <p class="faq-q">複数 の Chrome プロファイル を 使って いる</p>
+    <p class="faq-a">拡張 は インストール した プロファイル でしか 動きません。 Chrome 右上 の プロファイル アイコン で、 拡張 を 入れた プロファイル に 切り替えて ください。</p>
+  </div>
+
+  <div class="faq">
+    <p class="faq-q">会社支給 Mac で 管理者 権限 が ない</p>
+    <p class="faq-a">Part A の 「デベロッパー モード」 と 「読み込み」 は 管理者 権限 なくても 動く 場合 が 多い です。 ダメ なら 情シス に 「Chrome 拡張 の 開発者 モード を 使いたい」 と 依頼 して ください。</p>
+  </div>
+
+  <div class="support">
+    <p class="support-title">これ でも 直らない 時 は</p>
+    <p class="support-body">
+      サポート メール → <a href="mailto:support@skeleton-inc.jp">support@skeleton-inc.jp</a><br>
+      その 時 に <b>Chrome の バージョン</b> (アドレスバー に <code>chrome://version</code> を 貼って 最初の1行 を コピー) と <b>macOS の バージョン</b> ( アップルメニュー → 「この Mac について」) を 添えて 頂けると 早く 特定 できます。
+    </p>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <span>FP Compass · Skeleton Inc. · Extension v1.5.1 · 2026-07-21</span>
+  <span><a href="/mic-troubleshoot.html">診断ガイド</a>  ·  <a href="/audio-setup.html">音声設定 (旧)</a></span>
+</footer>
+
+</body>
+</html>

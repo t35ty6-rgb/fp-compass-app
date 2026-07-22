@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>マイクが録音されない時 の チェックリスト | FP Compass</title>
+<meta name="description" content="Zoom 面談 の 議事録 に 自分の声 が 入らない 時 の 3ステップ 診断 (Mac 用)">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800;900&family=Noto+Sans+JP:wght@400;500;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #FBFBFD;
+    --surface: #FFFFFF;
+    --surface-2: #F5F7FA;
+    --ink: #0F1729;
+    --ink-2: #334155;
+    --dim: #64748B;
+    --rule: #E5E7EB;
+    --primary: #00844A;
+    --primary-soft: #ECFDF5;
+    --primary-line: rgba(0,132,74,0.22);
+    --warn: #92400E;
+    --warn-bg: #FEF3C7;
+    --warn-line: rgba(180,83,9,0.22);
+    --danger: #B91C1C;
+    --danger-bg: #FEF2F2;
+    --danger-line: rgba(185,28,28,0.22);
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink-2);
+    font-family: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 15px;
+    line-height: 1.75;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    font-weight: 500;
+    letter-spacing: -0.005em;
+  }
+
+  /* --- Header --- */
+  .head { background: var(--ink); color: #FFFFFF; padding: 48px 32px 40px; position: relative; overflow: hidden; }
+  .head::after { content: ''; position: absolute; top: 0; right: 0; width: 260px; height: 260px; background: radial-gradient(circle at 60% 40%, rgba(0,132,74,0.28), transparent 62%); pointer-events: none; }
+  .head-wrap { max-width: 780px; margin: 0 auto; position: relative; }
+  .kicker { font-family: 'Manrope', sans-serif; font-size: 11px; letter-spacing: 0.24em; font-weight: 700; color: rgba(255,255,255,0.75); text-transform: uppercase; margin-bottom: 12px; }
+  .head h1 { font-family: 'Manrope', 'Noto Sans JP', sans-serif; margin: 0 0 12px; font-size: 30px; font-weight: 900; letter-spacing: -0.02em; line-height: 1.2; }
+  .head .lede { margin: 0; color: rgba(255,255,255,0.82); font-size: 15px; line-height: 1.75; max-width: 620px; }
+
+  /* --- Main --- */
+  main { max-width: 780px; margin: 0 auto; padding: 32px 32px 20px; }
+
+  /* --- 症状 box --- */
+  .symptom { background: var(--danger-bg); border: 1px solid var(--danger-line); border-left: 4px solid var(--danger); border-radius: 10px; padding: 18px 22px; margin-bottom: 32px; }
+  .symptom-label { font-family: 'Manrope', sans-serif; font-size: 11px; letter-spacing: 0.22em; font-weight: 800; color: var(--danger); text-transform: uppercase; margin-bottom: 6px; }
+  .symptom-body { font-size: 15.5px; color: #7F1D1D; font-weight: 700; line-height: 1.7; margin: 0; }
+
+  /* --- Section heading --- */
+  h2 { font-family: 'Manrope', 'Noto Sans JP', sans-serif; color: var(--ink); font-size: 22px; font-weight: 900; margin: 48px 0 6px; letter-spacing: -0.015em; line-height: 1.3; }
+  h2 .h2-count { display: inline-block; font-family: 'Manrope', sans-serif; color: var(--primary); font-size: 13px; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; margin-bottom: 4px; }
+  h2 + .h2-lede { color: var(--dim); font-size: 14px; margin: 0 0 20px; line-height: 1.75; }
+
+  /* --- Step card --- */
+  .step { background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 24px 26px; margin-bottom: 16px; box-shadow: 0 1px 2px rgba(11,18,32,0.03); }
+  .step-head { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 14px; }
+  .step-num { flex-shrink: 0; background: var(--ink); color: #FFFFFF; width: 32px; height: 32px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; font-weight: 900; font-size: 14px; font-family: 'Manrope', sans-serif; margin-top: 1px; }
+  .step-title { font-family: 'Manrope', 'Noto Sans JP', sans-serif; font-size: 18px; font-weight: 900; color: var(--ink); letter-spacing: -0.01em; line-height: 1.4; margin: 0; }
+  .step-body { padding-left: 46px; }
+  .step-body p { margin: 0 0 12px; }
+  .step-body ol { padding-left: 20px; margin: 8px 0 14px; }
+  .step-body ol li { margin-bottom: 8px; }
+  .step-body strong { color: var(--ink); font-weight: 800; }
+
+  /* --- Mockup: Mac system settings row --- */
+  .mockup {
+    background: linear-gradient(180deg, #F5F7FA 0%, #EEF1F6 100%);
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin: 14px 0 18px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Noto Sans JP', sans-serif;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), 0 1px 2px rgba(11,18,32,0.05);
+  }
+  .mockup-title { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--dim); font-weight: 700; margin-bottom: 12px; font-family: 'Manrope', sans-serif; }
+  .mockup-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; background: #FFFFFF; border: 1px solid var(--rule); border-radius: 8px; margin-bottom: 6px; }
+  .mockup-row + .mockup-row { margin-top: 4px; }
+  .mockup-row.highlight { border: 2px solid var(--primary); background: var(--primary-soft); box-shadow: 0 0 0 4px rgba(0,132,74,0.14); }
+  .mockup-app { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600; color: var(--ink); }
+  .mockup-icon { width: 26px; height: 26px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; color: #FFFFFF; }
+  .chrome-icon { background: conic-gradient(from 0deg, #EA4335 0deg 120deg, #FBBC04 120deg 240deg, #34A853 240deg 360deg); position: relative; }
+  .chrome-icon::after { content: ''; position: absolute; inset: 6px; background: #4285F4; border-radius: 999px; border: 2px solid #FFFFFF; }
+  .toggle { position: relative; width: 42px; height: 24px; background: #34C759; border-radius: 999px; flex-shrink: 0; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.06); }
+  .toggle::after { content: ''; position: absolute; top: 2px; left: 20px; width: 20px; height: 20px; background: #FFFFFF; border-radius: 999px; box-shadow: 0 1px 3px rgba(0,0,0,0.28); }
+  .toggle.off { background: #E4E7ED; }
+  .toggle.off::after { left: 2px; }
+  .toggle-caption { display: block; font-size: 11px; color: var(--dim); font-weight: 700; margin-top: 4px; text-align: right; font-family: 'Manrope', sans-serif; letter-spacing: 0.02em; }
+
+  /* --- Chrome URL bar mockup --- */
+  .url-bar { background: #FFFFFF; border: 1px solid var(--rule); border-radius: 999px; padding: 10px 18px; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: var(--ink); box-shadow: inset 0 1px 2px rgba(0,0,0,0.03); display: flex; align-items: center; gap: 10px; word-break: break-all; overflow-wrap: anywhere; }
+  .url-bar::before { content: ''; width: 10px; height: 12px; border: 1.5px solid var(--dim); border-radius: 2px; border-bottom-width: 4px; flex-shrink: 0; opacity: 0.5; }
+
+  /* --- OK checkpoint --- */
+  .checkpoint { background: var(--primary-soft); border: 1px solid var(--primary-line); border-left: 4px solid var(--primary); border-radius: 8px; padding: 12px 16px; margin-top: 14px; display: flex; align-items: flex-start; gap: 10px; font-size: 13.5px; }
+  .checkpoint-mark { flex-shrink: 0; width: 20px; height: 20px; background: var(--primary); color: #FFFFFF; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900; margin-top: 2px; }
+  .checkpoint-body { color: #065F46; font-weight: 600; line-height: 1.65; }
+  .checkpoint-body b { font-weight: 800; color: #064E3B; }
+
+  /* --- Test box --- */
+  .test { background: var(--ink); color: #FFFFFF; border-radius: 14px; padding: 28px 30px; margin: 40px 0 24px; position: relative; overflow: hidden; }
+  .test-kicker { font-family: 'Manrope', sans-serif; font-size: 11px; letter-spacing: 0.24em; font-weight: 800; color: rgba(255,255,255,0.55); text-transform: uppercase; margin-bottom: 8px; position: relative; }
+  .test h3 { font-family: 'Manrope', 'Noto Sans JP', sans-serif; margin: 0 0 14px; font-size: 20px; font-weight: 900; letter-spacing: -0.01em; color: #FFFFFF; position: relative; }
+  .test ol { padding-left: 22px; margin: 0 0 16px; color: rgba(255,255,255,0.9); position: relative; }
+  .test ol li { margin-bottom: 6px; line-height: 1.75; }
+  .test b { color: #FFFFFF; font-weight: 800; }
+  .test-result { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.14); border-radius: 8px; padding: 14px 18px; font-size: 13.5px; color: rgba(255,255,255,0.85); position: relative; line-height: 1.75; }
+  .test-result b { color: #34D399; }
+
+  /* --- FAQ --- */
+  .faq { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 16px 20px; margin-bottom: 8px; }
+  .faq-q { font-weight: 800; color: var(--ink); font-size: 14.5px; margin: 0 0 6px; display: flex; align-items: baseline; gap: 8px; }
+  .faq-q::before { content: 'Q'; font-family: 'Manrope', sans-serif; color: var(--primary); font-size: 12px; font-weight: 900; letter-spacing: 0.06em; }
+  .faq-a { margin: 0; color: var(--ink-2); font-size: 14px; line-height: 1.75; }
+
+  /* --- Support box --- */
+  .support { background: var(--warn-bg); border: 1px solid var(--warn-line); border-radius: 10px; padding: 18px 22px; margin: 32px 0 20px; }
+  .support-title { font-weight: 900; color: var(--warn); font-size: 15px; margin: 0 0 6px; font-family: 'Manrope', 'Noto Sans JP', sans-serif; }
+  .support-body { color: #78350F; font-size: 14px; line-height: 1.75; margin: 0; }
+  .support a { color: #7C2D12; font-weight: 800; }
+
+  code { background: var(--surface-2); padding: 2px 7px; border-radius: 4px; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12.5px; color: var(--ink); border: 1px solid var(--rule); font-weight: 600; }
+  a { color: var(--primary); font-weight: 700; text-decoration: none; border-bottom: 1px solid var(--primary-line); }
+  a:hover { border-bottom-color: var(--primary); }
+
+  footer { max-width: 780px; margin: 40px auto 0; padding: 20px 32px 48px; color: var(--dim); font-size: 12px; border-top: 1px solid var(--rule); font-family: 'JetBrains Mono', ui-monospace, monospace; letter-spacing: 0.02em; }
+  footer a { color: var(--dim); font-weight: 500; border-bottom-color: transparent; }
+
+  :focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; border-radius: 4px; }
+
+  @media (max-width: 640px) {
+    .head { padding: 36px 22px 32px; }
+    .head h1 { font-size: 24px; }
+    main { padding: 24px 22px 16px; }
+    .step { padding: 22px 20px; }
+    .step-body { padding-left: 12px; margin-top: 4px; }
+    .test { padding: 24px 22px; }
+    .mockup { padding: 14px 14px; }
+    .url-bar { font-size: 11px; padding: 9px 14px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<header class="head">
+  <div class="head-wrap">
+    <div class="kicker">FP Compass 議事録レコーダー</div>
+    <h1>自分の声だけ 入らない — 拡張機能 の バグ で は なく、 Mac か Chrome の 設定 で 直せます</h1>
+    <p class="lede">Zoom 面談 の 議事録 に <b style="color:#FFF;">自分の声 が 入ってない</b> 時 の 診断ガイド。 上から 順 に 3ステップ 試すと、 だいたい これ で 直ります。 所要 3分。</p>
+  </div>
+</header>
+
+<main>
+
+<div class="symptom">
+  <div class="symptom-label">Symptom</div>
+  <p class="symptom-body">議事録 に 相手の声 だけ 入って、 自分の声 が 入ってない。 or Console に <code style="background:#FCA5A5;color:#7F1D1D;border-color:#F87171;font-weight:700;">mic 拒否 or 取得失敗</code> と 出る。</p>
+</div>
+
+<p style="color:var(--dim);font-size:14px;margin-bottom:8px;">この 症状 は だいたい <b style="color:var(--ink);">Mac 側 か Chrome 側 の マイク許可 が 抜けてる</b> か、 <b style="color:var(--ink);">AirPods の 音声プロファイル切替</b> が 上手く いって いない ため。 拡張機能 の バグ で は ありません。</p>
+
+<div style="background:#0F1729;color:#FFFFFF;border-radius:12px;padding:24px 26px;margin:24px 0 32px;position:relative;overflow:hidden;">
+  <div style="font-family:'Manrope',sans-serif;font-size:11px;letter-spacing:0.22em;font-weight:800;color:#34D399;text-transform:uppercase;margin-bottom:8px;">v1.5.1 で 追加</div>
+  <h3 style="font-family:'Manrope','Noto Sans JP',sans-serif;margin:0 0 10px;font-size:19px;font-weight:900;color:#FFFFFF;letter-spacing:-0.01em;">AirPods 対応 の セットアップ ウィザード</h3>
+  <p style="margin:0 0 16px;color:rgba(255,255,255,0.82);font-size:14px;line-height:1.75;">拡張 の アイコン を 右クリック → 「オプション」 or ポップアップ の <b style="color:#FFF;">「マイク設定 を 開く」</b> ボタン から ウィザード が 開きます。 3ステップ で AirPods を 明示 選択 → テスト録音 まで やる と、 以降 は 自動 で AirPods の HFP モード に 切り替わって 録音 されます。</p>
+  <p style="margin:0;color:rgba(255,255,255,0.7);font-size:13px;line-height:1.75;">まだ v1.5.1 に 更新 して いない 場合 は <a href="/fp-compass-extension.zip" style="color:#34D399;border-bottom-color:rgba(52,211,153,0.4);">v1.5.1 zip</a> を DL して 再インストール して ください。</p>
+</div>
+
+<p style="color:var(--dim);font-size:13.5px;margin:0 0 20px;">下 の STEP 1-3 は <b style="color:var(--ink);">ウィザード で 直らない 場合 の 手動診断</b>。 通常 は ウィザード だけ で 完結 します。</p>
+
+<h2><span class="h2-count">STEP 1 / 3</span><br>Mac に Chrome の マイク使用 を 許可</h2>
+<p class="h2-lede">macOS が Chrome 自体 に マイク を 触らせて ない パターン。 8割 は これ で 直ります。</p>
+
+<div class="step">
+  <div class="step-head">
+    <span class="step-num">1</span>
+    <h3 class="step-title">「システム設定」 を 開く</h3>
+  </div>
+  <div class="step-body">
+    <p>画面 左上 の <strong>アップルメニュー (🍎)</strong> → <strong>「システム設定…」</strong></p>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-head">
+    <span class="step-num">2</span>
+    <h3 class="step-title">「プライバシーとセキュリティ」 → 「マイク」</h3>
+  </div>
+  <div class="step-body">
+    <p>左のサイドバー を 下 に スクロール → <strong>「プライバシーとセキュリティ」</strong> をクリック → 右側 の リスト から <strong>「マイク」</strong> をクリック。</p>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-head">
+    <span class="step-num">3</span>
+    <h3 class="step-title">「Google Chrome」 の トグル を ON に</h3>
+  </div>
+  <div class="step-body">
+    <p>アプリ一覧 が 出るので、 <strong>「Google Chrome」</strong> の 右側 の スイッチ を 確認。</p>
+
+    <div class="mockup" aria-label="macOS システム設定 マイク の 画面イメージ">
+      <div class="mockup-title">プライバシーとセキュリティ &gt; マイク</div>
+      <div class="mockup-row">
+        <div class="mockup-app">
+          <span class="mockup-icon" style="background:linear-gradient(135deg,#5B9BD5,#4472C4);">Z</span>Zoom
+        </div>
+        <div class="toggle" aria-hidden="true"></div>
+      </div>
+      <div class="mockup-row highlight">
+        <div class="mockup-app">
+          <span class="mockup-icon chrome-icon" aria-hidden="true"></span>Google Chrome
+        </div>
+        <div style="text-align:right;">
+          <div class="toggle" aria-hidden="true"></div>
+          <span class="toggle-caption">← これ ON</span>
+        </div>
+      </div>
+      <div class="mockup-row">
+        <div class="mockup-app">
+          <span class="mockup-icon" style="background:linear-gradient(135deg,#8E8E93,#48484A);">✎</span>メモ
+        </div>
+        <div class="toggle off" aria-hidden="true"></div>
+      </div>
+    </div>
+
+    <p style="font-size:13.5px;color:var(--dim);margin-top:8px;">🎯 <strong style="color:var(--ink);">緑</strong> に なってれば OK。 <strong style="color:var(--ink);">グレー</strong> なら クリック して ON に する → Chrome を 再起動 (⌘ Q → もう一度 開く)。</p>
+
+    <div class="checkpoint">
+      <span class="checkpoint-mark" aria-hidden="true">✓</span>
+      <div class="checkpoint-body">「Google Chrome」 の 右 の スイッチ が <b>緑</b> で、 白丸 が <b>右側</b> に あれば OK。</div>
+    </div>
+  </div>
+</div>
+
+<h2><span class="h2-count">STEP 2 / 3</span><br>Chrome 側 で マイク が ブロック されて ないか 確認</h2>
+<p class="h2-lede">過去 に Zoom や 拡張 の マイク許可 を うっかり 「ブロック」 押してた パターン。</p>
+
+<div class="step">
+  <div class="step-head">
+    <span class="step-num">1</span>
+    <h3 class="step-title">Chrome の 新しい タブ で URL を 開く</h3>
+  </div>
+  <div class="step-body">
+    <p>アドレスバー に 下記 を 貼って Enter:</p>
+    <div class="url-bar">chrome://settings/content/microphone</div>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-head">
+    <span class="step-num">2</span>
+    <h3 class="step-title">「ブロック」 リスト を 確認</h3>
+  </div>
+  <div class="step-body">
+    <p><strong>「マイクのアクセスをブロックするサイト」</strong> の リスト を 見る (古い Chrome では 「マイクの使用を許可しないサイト」 と 表記 されてる 場合 も あり)。</p>
+    <ul style="padding-left:20px;margin:8px 0 14px;">
+      <li><code>https://zoom.us</code> や <code>https://*.zoom.us</code> が 入って いれば <strong>削除</strong> (右 の ゴミ箱 マーク)</li>
+      <li><code>chrome-extension://…</code> が 入って いれば <strong>削除</strong></li>
+    </ul>
+    <div class="checkpoint">
+      <span class="checkpoint-mark" aria-hidden="true">✓</span>
+      <div class="checkpoint-body">「ブロック」 リスト に Zoom も 拡張 も 入って なければ OK。</div>
+    </div>
+  </div>
+</div>
+
+<h2><span class="h2-count">STEP 3 / 3</span><br>マイク デバイス が 正しく 選ばれてる か</h2>
+<p class="h2-lede">AirPods や 外付け マイク の 切替 で、 想定 と 別の デバイス に なってる パターン。</p>
+
+<div class="step">
+  <div class="step-head">
+    <span class="step-num">1</span>
+    <h3 class="step-title">Mac の 「サウンド」 設定 で 入力 を 確認</h3>
+  </div>
+  <div class="step-body">
+    <p>システム設定 → <strong>「サウンド」</strong> → <strong>「入力」</strong> タブ。</p>
+    <p>ここで 選ばれてる デバイス が <strong>今 使いたい マイク</strong> か 確認。 AirPods 使ってる 時 は 「AirPods マイク」、 内蔵 の 時 は 「MacBook Pro の マイク」 が 選ばれてる はず。</p>
+    <p style="font-size:13.5px;color:var(--dim);">下 の <strong style="color:var(--ink);">入力 レベル</strong> の バー を 見ながら 「あー」 と 声 を 出して、 バー が 動けば その マイク は 生きてます。</p>
+    <div class="checkpoint">
+      <span class="checkpoint-mark" aria-hidden="true">✓</span>
+      <div class="checkpoint-body">選ばれてる デバイス で 入力レベル が 動く なら、 マイク 自体 は 動作 中。</div>
+    </div>
+  </div>
+</div>
+
+<!-- Test -->
+<div class="test">
+  <div class="test-kicker">Verify</div>
+  <h3>試して みる</h3>
+  <ol>
+    <li>Chrome を <b>一旦 全部 終了</b> (⌘Q) → もう一度 開く</li>
+    <li>FP Compass で 「Zoom を 発行して 開始」 → Zoom タブ で 拡張 アイコン を <b>1回 クリック</b></li>
+    <li>初回 は Chrome が <b>「マイク を 使用しますか?」</b> の ポップアップ を 出す ので <b>「許可」</b> を 押す</li>
+    <li>5秒 くらい 「あー」 と 声 を 出す → 面談 終了</li>
+    <li>FP Compass の 議事録 タブ で 自分の声 が 入ってれば <b>完了</b></li>
+  </ol>
+  <div class="test-result"><b>ここまで 試して、 自分の声 が 入って いれば 解決 です。</b> それでも 議事録 に 自分の 声 が 入らない 場合 は、 下 の 連絡先 に Chrome の バージョン (<code style="background:rgba(255,255,255,0.14);color:#FFF;border-color:rgba(255,255,255,0.24);">chrome://version</code> の 最初の1行) と 症状 を 送って ください。</div>
+</div>
+
+<h2>よくある 質問</h2>
+
+<div class="faq">
+  <p class="faq-q">Console の 赤いエラー <code style="background:#FCA5A5;color:#7F1D1D;">[auto-start] failed: Extension has not been invoked…</code> は?</p>
+  <p class="faq-a">これ は <strong>Chrome の 仕様 で、 バグ で は ありません</strong>。 拡張 は 自動 で 録音 を 始め たがった が、 Chrome の セキュリティ で 弾かれた、 だから 「あなた が 拡張 アイコン を 押して ね」 という 意味。 Zoom タブ で 拡張 アイコン を 1回 クリック すれば 録音 開始 します。</p>
+</div>
+
+<div class="faq">
+  <p class="faq-q">「マイク を 使用しますか?」 の ポップアップ が 出ない</p>
+  <p class="faq-a">STEP 2 で 過去 に 「ブロック」 押してる 可能性 大。 chrome://settings/content/microphone を 開いて ブロック リスト を 空 に して ください。</p>
+</div>
+
+<div class="faq">
+  <p class="faq-q">設定 を 変えた のに、 まだ 録音されない</p>
+  <p class="faq-a">Chrome と あわせて Zoom も 一旦 終了 (⌘Q) → もう 一度 開き 直して ください。 マイク設定 は 「再起動 した 時」 に 反映されます。</p>
+</div>
+
+<div class="faq">
+  <p class="faq-q">AirPods 使うと 相手 の 声 も 入らない</p>
+  <p class="faq-a">それ は <strong>別の 事象 (macOS の 仕様)</strong> です。 <a href="/audio-setup.html">音声設定ガイド</a> の Chrome拡張 方式 を 見て ください。</p>
+</div>
+
+<div class="faq">
+  <p class="faq-q">会社支給 Mac で 管理者 権限 が ない</p>
+  <p class="faq-a">STEP 1 (システム設定 → マイク) は 管理者 権限 が いる 場合 が あります。 会社 の 情シス に 「Google Chrome に マイク の 使用 を 許可 して 欲しい」 と 依頼 してください。</p>
+</div>
+
+<div class="support">
+  <p class="support-title">これ でも 直らない 時 は</p>
+  <p class="support-body">
+    サポート に メール を お願いします → <a href="mailto:support@skeleton-inc.jp">support@skeleton-inc.jp</a><br>
+    その 時 に <strong>Chrome の バージョン</strong> (アドレスバー に <code>chrome://version</code> を 貼って 最初の1行 を コピー) と <strong>macOS の バージョン</strong> (🍎 → 「この Mac について」) を 添えて 頂ける と 早く 特定 できます。
+  </p>
+</div>
+
+</main>
+
+<footer>
+  FP Compass · Skeleton Inc. · v1.5.1 対応 · 2026-07-20
+</footer>
+
+</body>
+</html>
