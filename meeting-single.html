@@ -804,5 +804,49 @@
   </div>
 
 </div>
+<script>
+// 2026-07-28: 議事録 Kanban 3列 レイアウト 対応
+// h4-flat 構造 の 各 h4 + 次の h4 手前 まで を <section class="fp-sum-section fp-sum-tone-*"> に wrap
+// これで styles-v8-workspace.css の Kanban CSS が effect する
+(function() {
+  document.querySelectorAll('.fp-summary-structured').forEach(container => {
+    // 既存 wrap 済み なら skip
+    if (container.querySelector('.fp-sum-section')) return;
+    const kids = Array.from(container.children);
+    const groups = [];
+    let currentH4 = null;
+    let currentGroup = null;
+    for (const el of kids) {
+      if (el.tagName === 'H4' && el.className.includes('fp-sum-h4')) {
+        if (currentGroup) groups.push({ h4: currentH4, items: currentGroup });
+        currentH4 = el;
+        currentGroup = [];
+      } else if (currentH4) {
+        currentGroup.push(el);
+      }
+    }
+    if (currentGroup) groups.push({ h4: currentH4, items: currentGroup });
+
+    groups.forEach(g => {
+      const tone = ['vital','trust','attn','critical','mono','ink'].find(t => g.h4.classList.contains('fp-sum-tone-' + t)) || 'ink';
+      const section = document.createElement('section');
+      section.className = `fp-sum-section fp-sum-tone-${tone}`;
+      const header = document.createElement('header');
+      header.className = 'fp-sum-section-h';
+      const title = document.createElement('h4');
+      title.className = 'fp-sum-section-title';
+      title.textContent = (g.h4.textContent || '').trim();
+      header.appendChild(title);
+      section.appendChild(header);
+      const body = document.createElement('div');
+      body.className = 'fp-sum-section-body';
+      g.items.forEach(it => body.appendChild(it));
+      section.appendChild(body);
+      container.insertBefore(section, g.h4);
+      g.h4.remove();
+    });
+  });
+})();
+</script>
 </body>
 </html>
