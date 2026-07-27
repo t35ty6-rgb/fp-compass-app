@@ -5881,7 +5881,7 @@ ${ctxText}${surveyTxt}`;
                 ${a.summary ? `
                   <div class="fp-meeting-block">
                     <div class="fp-meeting-block-label">AI 議事録 (Claude)</div>
-                    <div class="fp-meeting-body">${escapeHtml(a.summary)}</div>
+                    <div class="fp-meeting-body fp-minutes-view fp-summary-structured" data-raw-summary="${escapeHtml(a.summary)}">${window.renderStructuredSummary ? window.renderStructuredSummary(a.summary) : escapeHtml(a.summary)}</div>
                   </div>` : ''}
                 ${a.key_concerns && a.key_concerns.length > 0 ? `
                   <div class="fp-meeting-block">
