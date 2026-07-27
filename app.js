@@ -4061,8 +4061,13 @@
           });
           const data = await res.json();
           if (!data.ok) throw new Error(data.error || 'unknown');
-          // UI更新
-          viewEl.textContent = newSummary;
+          // UI更新: 保存直後 も 構造化 render で 表示 (plain text 落ち 防止)
+          if (window.renderStructuredSummary && newSummary) {
+            viewEl.innerHTML = window.renderStructuredSummary(newSummary);
+          } else {
+            viewEl.textContent = newSummary;
+          }
+          viewEl.dataset.rawSummary = newSummary;
           viewEl.style.display = '';
           viewEl.style.color = '';
           viewEl.style.fontStyle = '';
