@@ -1955,16 +1955,20 @@
         </div>`;
     }
     if (entry.type === 'ai_minutes') {
-      const sum = String(entry.summary || '').slice(0, 400);
-      const ellipsis = String(entry.summary || '').length > 400 ? '…' : '';
+      const rawSum = String(entry.summary || '');
       const concernChips = (entry.key_concerns || []).slice(0, 5).map(k => `<span style="display:inline-block;background:#FED7AA;color:#7C2D12;padding:2px 8px;border-radius:99px;font-size:10.5px;font-weight:600;margin:2px 3px 2px 0;">${escapeHtml(k)}</span>`).join('');
+      const bodyHtml = rawSum
+        ? (window.renderStructuredSummary
+            ? `<div class="fp-summary-structured" style="font-size:12px;">${window.renderStructuredSummary(rawSum)}</div>`
+            : `<div style="font-size:12px;color:#7C2D12;white-space:pre-wrap;line-height:1.65;">${escapeHtml(rawSum.slice(0, 400))}${rawSum.length > 400 ? '…' : ''}</div>`)
+        : '<div style="font-size:11px;color:#9A3412;opacity:0.7;">議事録 未生成</div>';
       return `
         <details class="cd-line-msg cd-tl-entry cd-tl-minutes" style="align-self:stretch;max-width:100%;background:#FFEDD5;border:1px solid #FED7AA;border-left:4px solid #F97316;border-radius:8px;padding:10px 14px;margin:4px 0;">
           <summary style="cursor:pointer;font-weight:700;font-size:12.5px;color:#9A3412;letter-spacing:0.01em;list-style:none;">
             🎙 議事録 (AI要約)
             <span style="float:right;font-weight:400;font-size:11px;opacity:0.65;">${safeTs}</span>
           </summary>
-          <div style="margin-top:8px;padding-top:8px;border-top:1px dashed #FDBA74;font-size:12px;color:#7C2D12;white-space:pre-wrap;line-height:1.65;">${escapeHtml(sum)}${ellipsis}</div>
+          <div style="margin-top:8px;padding-top:8px;border-top:1px dashed #FDBA74;">${bodyHtml}</div>
           ${concernChips ? `<div style="margin-top:8px;">${concernChips}</div>` : ''}
         </details>`;
     }
