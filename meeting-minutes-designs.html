@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>議事録デザイン比較 A〜G / FP Compass</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Noto+Sans+JP:wght@400;500;600;700;800;900&family=Noto+Serif+JP:wght@500;700;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Inter', 'Noto Sans JP', sans-serif;
+    background: #EFF0EA;
+    color: #0F1720;
+    line-height: 1.6;
+    font-feature-settings: 'palt' 1;
+  }
+
+  .page-head {
+    background: #0F1720;
+    color: #fff;
+    padding: 28px 40px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    border-bottom: 1px solid #1F2A3F;
+  }
+  .page-head-row { display: flex; align-items: baseline; justify-content: space-between; max-width: 1400px; margin: 0 auto; gap: 24px; flex-wrap: wrap; }
+  .page-title { font-size: 22px; font-weight: 800; letter-spacing: -0.01em; }
+  .page-sub { font-size: 12px; color: #94A3B8; margin-top: 2px; }
+  .jump { display: flex; gap: 4px; flex-wrap: wrap; }
+  .jump a {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    color: #94A3B8;
+    background: #1F2A3F;
+    padding: 6px 10px;
+    border-radius: 4px;
+    text-decoration: none;
+    letter-spacing: 0.05em;
+    transition: all .15s;
+  }
+  .jump a:hover { background: #10B981; color: #fff; }
+
+  .grid {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 36px 40px 120px;
+    display: grid;
+    gap: 60px;
+  }
+
+  .variant {
+    background: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 14px rgba(15,23,32,0.06), 0 20px 60px rgba(15,23,32,0.04);
+  }
+  .variant-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 18px 28px;
+    background: #0F1720;
+    color: #fff;
+    border-bottom: 3px solid #10B981;
+  }
+  .variant-letter {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    color: #10B981;
+  }
+  .variant-title { font-size: 16px; font-weight: 700; }
+  .variant-desc { font-size: 12.5px; color: #94A3B8; margin-top: 3px; line-height: 1.5; max-width: 640px; }
+  .variant-tags { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .variant-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 7px;
+    border-radius: 3px;
+    background: #1F2A3F;
+    color: #94A3B8;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .variant-body { padding: 36px 40px 44px; background: #FDFDFB; }
+
+  strong { font-weight: 700; }
+
+  /* A. 現行改良版 */
+  .a-wrap { max-width: 780px; margin: 0 auto; font-size: 14px; }
+  .a-sec { border-left: 3px solid; padding: 4px 0 20px 22px; margin-bottom: 26px; }
+  .a-sec h4 { font-size: 12px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 12px; color: inherit; }
+  .a-sec-vital    { border-color: #047647; color: #047647; }
+  .a-sec-trust    { border-color: #4338CA; color: #4338CA; }
+  .a-sec-attn     { border-color: #B5530F; color: #B5530F; }
+  .a-sec-critical { border-color: #DC2B2B; color: #DC2B2B; }
+  .a-sec-mono     { border-color: #0F1720; color: #0F1720; }
+  .a-sec ul { list-style: none; }
+  .a-sec li { color: #0F1720; padding: 6px 0; font-size: 14px; line-height: 1.7; border-bottom: 1px solid #F1F5F9; }
+  .a-sec li:last-child { border-bottom: 0; }
+  .a-num { font-weight: 800; color: #DC2B2B; }
+  .a-sec p { color: #0F1720; font-size: 13.5px; line-height: 1.75; padding: 6px 0; }
+
+  /* B. Editorial モノトーン */
+  .b-wrap { max-width: 720px; margin: 0 auto; }
+  .b-sec { padding: 28px 0; border-bottom: 1px solid #E2E8F0; }
+  .b-sec:last-child { border-bottom: 0; }
+  .b-sec h4 { font-family: 'Noto Serif JP', serif; font-weight: 900; font-size: 18px; letter-spacing: 0.02em; color: #0F1720; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid #0F1720; display: inline-block; }
+  .b-sec ul { list-style: none; }
+  .b-sec li { font-size: 14px; line-height: 1.85; color: #1F2A3F; padding: 6px 0 6px 20px; position: relative; }
+  .b-sec li::before { content: '—'; position: absolute; left: 0; color: #94A3B8; font-weight: 500; }
+  .b-sec p { font-size: 14px; line-height: 1.9; color: #1F2A3F; padding: 6px 0; }
+  .b-num { font-weight: 800; color: #1B3A5C; font-variant-numeric: tabular-nums; padding: 0 2px; border-bottom: 2px solid #1B3A5C; }
+
+  /* C. Kanban 3列 */
+  .c-wrap { max-width: 1200px; margin: 0 auto; }
+  .c-cols { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; }
+  .c-col { background: #fff; border-radius: 8px; border-top: 4px solid; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; flex-direction: column; max-height: 500px; }
+  .c-col-vital    { border-color: #047647; }
+  .c-col-attn     { border-color: #F59E0B; }
+  .c-col-critical { border-color: #DC2B2B; }
+  .c-col-head { padding: 14px 16px 12px; display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1px solid #F1F5F9; }
+  .c-col-h { font-size: 12px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #0F1720; }
+  .c-col-count { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: #94A3B8; }
+  .c-col-body { padding: 10px 12px; overflow-y: auto; flex: 1; }
+  .c-card { background: #F8FAFC; border-radius: 6px; padding: 10px 12px; margin-bottom: 8px; font-size: 13px; line-height: 1.55; color: #0F1720; border-left: 3px solid transparent; }
+  .c-col-vital .c-card    { border-left-color: #047647; background: #F0FDF4; }
+  .c-col-attn .c-card     { border-left-color: #F59E0B; background: #FFFBEB; }
+  .c-col-critical .c-card { border-left-color: #DC2B2B; background: #FEF2F2; }
+  .c-card strong { color: #B5530F; }
+  .c-col-critical .c-card strong { color: #DC2B2B; }
+  .c-col-vital .c-card strong { color: #047647; }
+  .c-strip { margin-top: 20px; display: grid; grid-template-columns: 1.4fr 1fr; gap: 18px; }
+  .c-strip-cell { background: #fff; border-radius: 8px; padding: 14px 18px; border-top: 4px solid #4338CA; }
+  .c-strip-cell.numbers { border-top-color: #0F1720; }
+  .c-strip-h { font-size: 11px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #0F1720; margin-bottom: 10px; }
+  .c-strip-cell p { font-size: 13px; color: #1F2A3F; line-height: 1.75; }
+  .c-nums { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .c-nums div { background: #F8FAFC; border-radius: 5px; padding: 8px 10px; font-size: 11px; color: #64748B; line-height: 1.4; }
+  .c-nums div b { display: block; font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 800; color: #0F1720; margin-bottom: 2px; }
+
+  /* D. タブ切替 */
+  .d-wrap { max-width: 840px; margin: 0 auto; }
+  .d-tabs { display: flex; border-bottom: 2px solid #E2E8F0; gap: 4px; }
+  .d-tab { padding: 12px 18px; font-size: 13px; font-weight: 700; color: #64748B; background: transparent; border: none; cursor: pointer; position: relative; font-family: inherit; display: flex; gap: 8px; align-items: center; }
+  .d-tab-count { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: #94A3B8; background: #F1F5F9; padding: 1px 6px; border-radius: 3px; }
+  .d-tab.on { color: #0F1720; }
+  .d-tab.on::after { content: ''; position: absolute; left: 0; right: 0; bottom: -2px; height: 2px; background: #10B981; }
+  .d-panel { padding: 24px 4px; }
+  .d-panel ul { list-style: none; }
+  .d-panel li { padding: 10px 0 10px 24px; font-size: 14px; line-height: 1.7; color: #0F1720; border-bottom: 1px solid #F1F5F9; position: relative; }
+  .d-panel li::before { content: ''; position: absolute; left: 4px; top: 20px; width: 6px; height: 6px; background: #10B981; border-radius: 50%; }
+  .d-num { font-weight: 800; color: #047647; }
+
+  /* E. 優先度優先 */
+  .e-wrap { max-width: 780px; margin: 0 auto; }
+  .e-sec { margin-bottom: 26px; padding: 20px 24px; border-radius: 8px; background: #fff; border: 1px solid #E2E8F0; }
+  .e-sec-todo    { background: #FFF7ED; border-color: #FED7AA; }
+  .e-sec-risk    { background: #FEF2F2; border-color: #FECACA; }
+  .e-hero { display: flex; align-items: baseline; gap: 10px; margin-bottom: 14px; }
+  .e-h { font-size: 15px; font-weight: 800; color: #0F1720; letter-spacing: 0.01em; }
+  .e-tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; padding: 3px 7px; border-radius: 3px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .e-tag-priority { background: #DC2B2B; color: #fff; }
+  .e-tag-info     { background: #E2E8F0; color: #475569; }
+  .e-todo-list { display: flex; flex-direction: column; gap: 8px; }
+  .e-todo-item { display: grid; grid-template-columns: 32px 1fr auto; gap: 12px; background: #fff; padding: 10px 14px; border-radius: 6px; align-items: center; border: 1px solid #FED7AA; }
+  .e-todo-num { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 800; color: #B5530F; background: #FED7AA; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 6px; }
+  .e-todo-text { font-size: 13.5px; color: #0F1720; line-height: 1.55; }
+  .e-todo-btn { font-family: inherit; font-size: 11.5px; font-weight: 700; background: #B5530F; color: #fff; padding: 6px 12px; border-radius: 5px; border: none; cursor: pointer; white-space: nowrap; }
+  .e-sec p { font-size: 13.5px; line-height: 1.75; color: #1F2A3F; }
+  .e-sec ul { list-style: none; }
+  .e-sec li { padding: 6px 0; font-size: 13.5px; line-height: 1.7; color: #0F1720; }
+  .e-num { font-weight: 800; color: #B5530F; }
+
+  /* F. データヒーロー */
+  .f-wrap { max-width: 900px; margin: 0 auto; }
+  .f-hero { background: linear-gradient(135deg, #0F1720 0%, #1F2A3F 100%); color: #fff; padding: 24px 28px; border-radius: 10px 10px 0 0; display: grid; grid-template-columns: repeat(5, 1fr); gap: 20px; }
+  .f-hero-item { border-left: 2px solid #10B981; padding-left: 14px; }
+  .f-hero-item:first-child { border-left: 0; padding-left: 0; }
+  .f-hero-num { font-family: 'JetBrains Mono', monospace; font-size: 22px; font-weight: 800; color: #10B981; letter-spacing: -0.02em; line-height: 1.15; }
+  .f-hero-lbl { font-size: 11px; color: #94A3B8; letter-spacing: 0.05em; margin-top: 4px; line-height: 1.4; }
+  .f-body { background: #fff; padding: 28px 32px; border: 1px solid #E2E8F0; border-top: 0; border-radius: 0 0 10px 10px; }
+  .f-sec { margin-bottom: 24px; }
+  .f-sec:last-child { margin-bottom: 0; }
+  .f-h { font-size: 12px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #64748B; margin-bottom: 10px; }
+  .f-sec ul { list-style: none; }
+  .f-sec li { padding: 8px 0; border-bottom: 1px solid #F1F5F9; font-size: 13.5px; line-height: 1.7; color: #0F1720; }
+  .f-sec li:last-child { border-bottom: 0; }
+  .f-sec p { font-size: 13.5px; color: #1F2A3F; line-height: 1.75; }
+  .f-num { font-weight: 800; color: #DC2B2B; }
+
+  /* G. Notion 風 密度 */
+  .g-wrap { max-width: 720px; margin: 0 auto; font-size: 13.5px; }
+  .g-sec { padding: 16px 0 4px 24px; border-left: 2px solid #F1F5F9; margin-left: 8px; position: relative; }
+  .g-sec-vital    { border-left-color: #047647; }
+  .g-sec-trust    { border-left-color: #4338CA; }
+  .g-sec-attn     { border-left-color: #B5530F; }
+  .g-sec-critical { border-left-color: #DC2B2B; }
+  .g-sec-mono     { border-left-color: #0F1720; }
+  .g-sec h4 { font-size: 12px; font-weight: 800; color: #0F1720; margin-bottom: 8px; letter-spacing: 0.02em; display: flex; align-items: center; gap: 8px; }
+  .g-icon { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 4px; font-size: 11px; color: #fff; font-weight: 800; margin-left: -32px; }
+  .g-sec-vital .g-icon    { background: #047647; }
+  .g-sec-trust .g-icon    { background: #4338CA; }
+  .g-sec-attn .g-icon     { background: #B5530F; }
+  .g-sec-critical .g-icon { background: #DC2B2B; }
+  .g-sec-mono .g-icon     { background: #0F1720; }
+  .g-sec ul { list-style: none; padding-left: 0; }
+  .g-sec li { padding: 4px 0; color: #1F2A3F; line-height: 1.65; font-size: 13px; }
+  .g-sec li::before { content: '·'; display: inline-block; width: 12px; color: #94A3B8; }
+  .g-sec p { color: #1F2A3F; padding: 4px 0; font-size: 13px; line-height: 1.7; }
+  .g-num { font-weight: 700; background: #FEF3C7; padding: 0 3px; border-radius: 3px; }
+
+  @media (max-width: 900px) {
+    .c-cols { grid-template-columns: 1fr; }
+    .f-hero { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<header class="page-head">
+  <div class="page-head-row">
+    <div>
+      <div class="page-title">議事録デザイン比較 A〜G</div>
+      <div class="page-sub">FP Compass · 山口様ご夫妻 2回目面談 の 出力を 7方式で レンダ</div>
+    </div>
+    <nav class="jump">
+      <a href="#A">A</a><a href="#B">B</a><a href="#C">C</a><a href="#D">D</a><a href="#E">E</a><a href="#F">F</a><a href="#G">G</a>
+    </nav>
+  </div>
+</header>
+
+<div class="grid">
+
+  <!-- A -->
+  <section class="variant" id="A">
+    <div class="variant-head">
+      <div style="display:flex;gap:20px;align-items:baseline;">
+        <div class="variant-letter">A</div>
+        <div>
+          <div class="variant-title">現行改良版</div>
+          <div class="variant-desc">現状 の 5セクション色分け を 継続、 背景 塗り やめ 左罫線 と 見出し色 だけ で 軽くする</div>
+        </div>
+      </div>
+      <div class="variant-tags"><span class="variant-tag">色 5</span><span class="variant-tag">縦積</span><span class="variant-tag">密度 中</span></div>
+    </div>
+    <div class="variant-body">
+      <div class="a-wrap">
+        <div class="a-sec a-sec-vital">
+          <h4>本日の決定事項</h4>
+          <ul>
+            <li>教育費目標を <span class="a-num">860万円</span> に設定 (長女12歳・次女10歳、 大学私立理系想定)</li>
+            <li>積立NISA <span class="a-num">月8万円</span> (夫4万+妻4万) で 教育費積み立て を 実行</li>
+            <li>iDeCo を 段階的 に <span class="a-num">5% → 10% → 20%</span> ロード マップ 採用</li>
+            <li>住宅ローン繰上げ 返済 で <span class="a-num">3年前倒し</span> 完済 を 目指す</li>
+            <li>老後資金目標 を <span class="a-num">3200万円</span> (65歳時点) に 確認</li>
+          </ul>
+        </div>
+        <div class="a-sec a-sec-trust">
+          <h4>お客様の関心事</h4>
+          <p>教育費 に対する 関心 が 高く、 大学進学時 の 私立理系 選択肢 を 視野 に 入れた 計画立案 を 希望。 住宅ローン返済 と 教育費積み立て の 両立可能性 を 確認 したい。</p>
+        </div>
+        <div class="a-sec a-sec-attn">
+          <h4>次回までのTODO</h4>
+          <ul>
+            <li>1. 学資保険 の 3社比較資料 を 作成し、 メール 送付</li>
+            <li>2. 積立NISA の 段階増額 スケジュール を 表形式 で 整理し、 PDF 送付</li>
+            <li>3. 変動金利 <span class="a-num">1.5%</span> 超 の シミュレーション を 準備</li>
+            <li>4. 次回 面談前 に、 初期条件 の 再確認資料 を 送付</li>
+          </ul>
+        </div>
+        <div class="a-sec a-sec-critical">
+          <h4>懸念事項</h4>
+          <p><strong>変動金利上昇リスク</strong>: 住宅ローン変動金利 が <span class="a-num">1.5%</span> を 超えた 場合、 繰上げ返済 と 積立NISA の バランス 再検討 が 必要。</p>
+          <p style="margin-top:8px;"><strong>教育費 と 老後資金 の 両立</strong>: 月 <span class="a-num">8万円</span> の 積立NISA と 月 <span class="a-num">2850円</span> の 繰上げ 返済 を 同時進行 する 場合、 予期しない 支出 への 対応策 を 事前 定義。</p>
+        </div>
+        <div class="a-sec a-sec-mono">
+          <h4>議論した数字・試算</h4>
+          <ul>
+            <li>教育費目標: <span class="a-num">860万円</span></li>
+            <li>現在 の 貯蓄: <span class="a-num">250万円</span> / 児童手当残: <span class="a-num">610万円</span></li>
+            <li>積立NISA月額: <span class="a-num">8万円</span> (夫4万 + 妻4万)</li>
+            <li>住宅ローン変動金利: <span class="a-num">0.5%</span> / 老後資金目標: <span class="a-num">3200万円</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- B -->
+  <section class="variant" id="B">
+    <div class="variant-head">
+      <div style="display:flex;gap:20px;align-items:baseline;">
+        <div class="variant-letter">B</div>
+        <div>
+          <div class="variant-title">Editorial モノトーン</div>
+          <div class="variant-desc">色分け 廃止、 セリフ見出し × サンセリフ本文、 数字 だけ ink navy 下線 で 目立たせる 質実版</div>
+        </div>
+      </div>
+      <div class="variant-tags"><span class="variant-tag">色 0</span><span class="variant-tag">セリフ</span><span class="variant-tag">密度 低</span></div>
+    </div>
+    <div class="variant-body">
+      <div class="b-wrap">
+        <div class="b-sec">
+          <h4>本日の決定事項</h4>
+          <ul>
+            <li>教育費目標 を <span class="b-num">860万円</span> に 設定 (長女12歳・次女10歳、 大学私立理系 想定)</li>
+            <li>積立NISA <span class="b-num">月8万円</span> (夫4万 + 妻4万) で 教育費 積み立て を 実行</li>
+            <li>iDeCo を 段階的 に <span class="b-num">5%</span> → <span class="b-num">10%</span> → <span class="b-num">20%</span> ロード マップ 採用</li>
+            <li>住宅ローン 繰上げ 返済 で <span class="b-num">3年前倒し</span> 完済 を 目指す</li>
+            <li>老後資金目標 を <span class="b-num">3200万円</span> (65歳時点) に 確認</li>
+          </ul>
+        </div>
+        <div class="b-sec">
+          <h4>お客様の関心事</h4>
+          <p>教育費 に 対する 関心 が 高く、 大学進学時 の 私立理系 選択肢 を 視野 に 入れた 計画立案 を 希望。 住宅ローン返済 と 教育費積み立て の 両立可能性 を 確認 したい。</p>
+        </div>
+        <div class="b-sec">
+          <h4>次回までのTODO</h4>
+          <ul>
+            <li>学資保険 の 3社比較資料 を 作成し、 メール 送付</li>
+            <li>積立NISA の 段階増額 スケジュール を 表形式 で 整理し、 PDF 送付</li>
+            <li>変動金利 <span class="b-num">1.5%</span> 超 の シミュレーション を 準備</li>
+            <li>次回 面談前 に、 初期条件 の 再確認資料 を 送付</li>
+          </ul>
+        </div>
+        <div class="b-sec">
+          <h4>懸念事項</h4>
+          <p><strong>変動金利上昇リスク</strong>: 住宅ローン 変動金利 が <span class="b-num">1.5%</span> を 超えた 場合、 繰上げ 返済 と 積立NISA の バランス 再検討 が 必要。</p>
+          <p style="margin-top:10px;"><strong>教育費 と 老後資金 の 両立</strong>: 月 <span class="b-num">8万円</span> の 積立NISA と 月 <span class="b-num">2850円</span> の 繰上げ 返済 を 同時進行 する 場合、 予期しない 支出 への 対応策 を 事前 に 定義。</p>
+        </div>
+        <div class="b-sec">
+          <h4>議論した数字・試算</h4>
+          <ul>
+            <li>教育費目標: <span class="b-num">860万円</span></li>
+            <li>現在 の 貯蓄: <span class="b-num">250万円</span> / 児童手当残: <span class="b-num">610万円</span></li>
+            <li>積立NISA月額: <span class="b-num">8万円</span> (夫4万 + 妻4万)</li>
+            <li>住宅ローン変動金利: <span class="b-num">0.5%</span> / 老後資金目標: <span class="b-num">3200万円</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- C -->
+  <section class="variant" id="C">
+    <div class="variant-head">
+      <div style="display:flex;gap:20px;align-items:baseline;">
+        <div class="variant-letter">C</div>
+        <div>
+          <div class="variant-title">Kanban 3列</div>
+          <div class="variant-desc">決定・アクション・懸念 を 横 3列 で 同時 表示。 関心事・数字 は 下 に 帯 で。 スキャン性 最強</div>
+        </div>
+      </div>
+      <div class="variant-tags"><span class="variant-tag">色 3</span><span class="variant-tag">横 3列</span><span class="variant-tag">密度 高</span></div>
+    </div>
+    <div class="variant-body">
+      <div class="c-wrap">
+        <div class="c-cols">
+          <div class="c-col c-col-vital">
+            <div class="c-col-head"><span class="c-col-h">決定事項</span><span class="c-col-count">5件</span></div>
+            <div class="c-col-body">
+              <div class="c-card">教育費目標 <strong>860万円</strong></div>
+              <div class="c-card">積立NISA <strong>月8万円</strong> (夫4万+妻4万)</div>
+              <div class="c-card">iDeCo <strong>5%→10%→20%</strong></div>
+              <div class="c-card">住宅ローン <strong>3年前倒し</strong> 完済</div>
+              <div class="c-card">老後資金 <strong>3200万円</strong> (65歳)</div>
+            </div>
+          </div>
+          <div class="c-col c-col-attn">
+            <div class="c-col-head"><span class="c-col-h">次回TODO</span><span class="c-col-count">4件</span></div>
+            <div class="c-col-body">
+              <div class="c-card">学資保険 3社比較資料 作成 → メール 送付</div>
+              <div class="c-card">積立NISA 段階増額 スケジュール PDF 送付</div>
+              <div class="c-card">変動金利 <strong>1.5%</strong> 超 シミュ 準備</div>
+              <div class="c-card">初期条件 の 再確認資料 送付</div>
+            </div>
+          </div>
+          <div class="c-col c-col-critical">
+            <div class="c-col-head"><span class="c-col-h">懸念事項</span><span class="c-col-count">2件</span></div>
+            <div class="c-col-body">
+              <div class="c-card"><strong>変動金利上昇</strong>: <strong>1.5%</strong> 超 で 繰上げ 返済 と NISA の バランス 再検討</div>
+              <div class="c-card"><strong>両立リスク</strong>: 月8万NISA + 月2850円 繰上げ の 予期しない 支出 対策</div>
+            </div>
+          </div>
+        </div>
+        <div class="c-strip">
+          <div class="c-strip-cell">
+            <div class="c-strip-h">お客様の関心事</div>
+            <p>教育費 に 対する 関心 が 高く、 大学進学時 の 私立理系 選択肢 を 視野 に 入れた 計画立案 を 希望。 住宅ローン返済 と 教育費積み立て の 両立可能性 を 確認 したい。</p>
+          </div>
+          <div class="c-strip-cell numbers">
+            <div class="c-strip-h">議論した数字</div>
+            <div class="c-nums">
+              <div><b>860万</b>教育費目標</div>
+              <div><b>250万</b>現在貯蓄</div>
+              <div><b>610万</b>児童手当残</div>
+              <div><b>8万/月</b>NISA月額</div>
+              <div><b>0.5%</b>変動金利</div>
+              <div><b>3200万</b>老後目標</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- D -->
+  <section class="variant" id="D">
+    <div class="variant-head">
+      <div style="display:flex;gap:20px;align-items:baseline;">
+        <div class="variant-letter">D</div>
+        <div>
+          <div class="variant-title">タブ切替</div>
+          <div class="variant-desc">5セクション を タブ で 1つ ずつ 表示。 一度 に 見る情報 が 減って 集中できる。 デフォルト は 決定事項</div>
+        </div>
+      </div>
+      <div class="variant-tags"><span class="variant-tag">色 1</span><span class="variant-tag">タブ 5</span><span class="variant-tag">密度 低</span></div>
+    </div>
+    <div class="variant-body">
+      <div class="d-wrap">
+        <div class="d-tabs">
+          <button class="d-tab on">決定事項 <span class="d-tab-count">5</span></button>
+          <button class="d-tab">関心事 <span class="d-tab-count">—</span></button>
+          <button class="d-tab">次回TODO <span class="d-tab-count">4</span></button>
+          <button class="d-tab">懸念事項 <span class="d-tab-count">2</span></button>
+          <button class="d-tab">数字・試算 <span class="d-tab-count">7</span></button>
+        </div>
+        <div class="d-panel">
+          <ul>
+            <li>教育費目標 を <span class="d-num">860万円</span> に 設定 (長女12歳・次女10歳、 大学私立理系 想定)</li>
+            <li>積立NISA <span class="d-num">月8万円</span> (夫4万 + 妻4万) で 教育費 積み立て を 実行</li>
+            <li>iDeCo を 段階的 に <span class="d-num">5% → 10% → 20%</span> ロード マップ 採用</li>
+            <li>住宅ローン 繰上げ 返済 で <span class="d-num">3年前倒し</span> 完済 を 目指す</li>
+            <li>老後資金目標 を <span class="d-num">3200万円</span> (65歳時点) に 確認</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- E -->
+  <section class="variant" id="E">
+    <div class="variant-head">
+      <div style="display:flex;gap:20px;align-items:baseline;">
+        <div class="variant-letter">E</div>
+        <div>
+          <div class="variant-title">優先度優先 (TODO最上)</div>
+          <div class="variant-desc">TODO を 最上位、 各行 に LINE下書き ボタン。 次に 懸念、 決定、 関心、 数字。 「次何する」 が 一目</div>
+        </div>
+      </div>
+      <div class="variant-tags"><span class="variant-tag">TODO 主役</span><span class="variant-tag">CTA 込</span><span class="variant-tag">密度 中</span></div>
+    </div>
+    <div class="variant-body">
+      <div class="e-wrap">
+        <div class="e-sec e-sec-todo">
+          <div class="e-hero">
+            <div class="e-h">次回までのTODO</div>
+            <div class="e-tag e-tag-priority">最優先</div>
+          </div>
+          <div class="e-todo-list">
+            <div class="e-todo-item">
+              <div class="e-todo-num">1</div>
+              <div class="e-todo-text">学資保険 の 3社比較資料 を 作成 し、 メール 送付</div>
+              <button class="e-todo-btn">LINE下書き</button>
+            </div>
+            <div class="e-todo-item">
+              <div class="e-todo-num">2</div>
+              <div class="e-todo-text">積立NISA の 段階増額 スケジュール を PDF 送付</div>
+              <button class="e-todo-btn">LINE下書き</button>
+            </div>
+            <div class="e-todo-item">
+              <div class="e-todo-num">3</div>
+              <div class="e-todo-text">変動金利 <span class="e-num">1.5%</span> 超 の シミュレーション を 準備</div>
+              <button class="e-todo-btn">LINE下書き</button>
+            </div>
+            <div class="e-todo-item">
+              <div class="e-todo-num">4</div>
+              <div class="e-todo-text">初期条件 の 再確認資料 を 送付</div>
+              <button class="e-todo-btn">LINE下書き</button>
+            </div>
+          </div>
+        </div>
+        <div class="e-sec e-sec-risk">
+          <div class="e-hero">
+            <div class="e-h">懸念事項</div>
+            <div class="e-tag e-tag-priority">要注意</div>
+          </div>
+          <p><strong>変動金利上昇リスク</strong>: 住宅ローン変動金利 が <span class="e-num">1.5%</span> 超 で 繰上げ 返済 と NISA バランス 再検討 が 必要。</p>
+          <p style="margin-top:8px;"><strong>両立リスク</strong>: 月 <span class="e-num">8万円</span> の NISA と 月 <span class="e-num">2850円</span> の 繰上げ の 予期しない 支出 対策。</p>
+        </div>
+        <div class="e-sec">
+          <div class="e-hero"><div class="e-h">本日の決定事項</div><div class="e-tag e-tag-info">5件</div></div>
+          <ul>
+            <li>教育費目標 <span class="e-num">860万円</span> / 積立NISA <span class="e-num">月8万円</span> / iDeCo <span class="e-num">5→10→20%</span> / 住宅ローン <span class="e-num">3年前倒し</span> / 老後 <span class="e-num">3200万円</span></li>
+          </ul>
+        </div>
+        <div class="e-sec">
+          <div class="e-hero"><div class="e-h">お客様の関心事 & 数字</div><div class="e-tag e-tag-info">補足</div></div>
+          <p style="margin-bottom:8px;">教育費 に 対する 関心 が 高く、 大学進学時 の 私立理系 選択肢 を 視野 に 入れた 計画立案 を 希望。</p>
+          <p style="font-size:12.5px;color:#64748B;">教育費 <span class="e-num">860万</span> / 貯蓄 <span class="e-num">250万</span> / 児童手当残 <span class="e-num">610万</span> / NISA <span class="e-num">8万/月</span> / 金利 <span class="e-num">0.5%</span> / 老後 <span class="e-num">3200万</span></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- F -->
+  <section class="variant" id="F">
+    <div class="variant-head">
+      <div style="display:flex;gap:20px;align-items:baseline;">
+        <div class="variant-letter">F</div>
+        <div>
+          <div class="variant-title">データヒーロー</div>
+          <div class="variant-desc">頭 に 数字 5個 を 大きく ダーク背景 で 表示。 数字面談 の 本質 を 先出し、 下 に 構造化 リスト</div>
+        </div>
+      </div>
+      <div class="variant-tags"><span class="variant-tag">数字 主役</span><span class="variant-tag">ダーク</span><span class="variant-tag">密度 中</span></div>
+    </div>
+    <div class="variant-body">
+      <div class="f-wrap">
+        <div class="f-hero">
+          <div class="f-hero-item"><div class="f-hero-num">860万</div><div class="f-hero-lbl">教育費目標</div></div>
+          <div class="f-hero-item"><div class="f-hero-num">8万/月</div><div class="f-hero-lbl">積立NISA</div></div>
+          <div class="f-hero-item"><div class="f-hero-num">3年</div><div class="f-hero-lbl">住宅ローン 前倒し</div></div>
+          <div class="f-hero-item"><div class="f-hero-num">3200万</div><div class="f-hero-lbl">老後資金 (65歳)</div></div>
+          <div class="f-hero-item"><div class="f-hero-num">1.5%</div><div class="f-hero-lbl">金利 見直し トリガー</div></div>
+        </div>
+        <div class="f-body">
+          <div class="f-sec">
+            <div class="f-h">本日の決定事項</div>
+            <ul>
+              <li>教育費目標 <span class="f-num">860万円</span> (長女12歳・次女10歳、 大学私立理系)</li>
+              <li>iDeCo <span class="f-num">5% → 10% → 20%</span> の 段階 ロード マップ</li>
+              <li>老後 <span class="f-num">3200万円</span> を 公的年金 + iDeCo + NISA で</li>
+            </ul>
+          </div>
+          <div class="f-sec">
+            <div class="f-h">次回までのTODO</div>
+            <ul>
+              <li>1. 学資保険 3社 比較資料 メール 送付</li>
+              <li>2. 積立NISA 段階増額 スケジュール PDF 送付</li>
+              <li>3. 金利 <span class="f-num">1.5%</span> 超 の シミュレーション 準備</li>
+              <li>4. 初期条件 再確認 資料 送付</li>
+            </ul>
+          </div>
+          <div class="f-sec">
+            <div class="f-h">懸念事項</div>
+            <p><strong>変動金利上昇</strong>: 金利 <span class="f-num">1.5%</span> 超 で 繰上げ 返済 と NISA バランス 再検討 必要。 月 <span class="f-num">8万</span> NISA と 月 <span class="f-num">2850円</span> 繰上げ の 予期しない 支出 対策 も。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- G -->
+  <section class="variant" id="G">
+    <div class="variant-head">
+      <div style="display:flex;gap:20px;align-items:baseline;">
+        <div class="variant-letter">G</div>
+        <div>
+          <div class="variant-title">Notion 風密度</div>
+          <div class="variant-desc">左罫線 + 色付き 見出しアイコン、 罫線 のみ で 区切り、 マーカー は 数字ハイライト。 密度 最強</div>
+        </div>
+      </div>
+      <div class="variant-tags"><span class="variant-tag">色 5</span><span class="variant-tag">左罫線</span><span class="variant-tag">密度 最高</span></div>
+    </div>
+    <div class="variant-body">
+      <div class="g-wrap">
+        <div class="g-sec g-sec-vital">
+          <h4><span class="g-icon">決</span>本日の決定事項</h4>
+          <ul>
+            <li>教育費目標 <span class="g-num">860万円</span> (長女12歳・次女10歳、 大学私立理系)</li>
+            <li>積立NISA <span class="g-num">月8万円</span> (夫4万 + 妻4万) 実行</li>
+            <li>iDeCo <span class="g-num">5% → 10% → 20%</span> ロード マップ 採用</li>
+            <li>住宅ローン <span class="g-num">3年前倒し</span> 完済</li>
+            <li>老後資金 <span class="g-num">3200万円</span> (65歳時点)</li>
+          </ul>
+        </div>
+        <div class="g-sec g-sec-trust">
+          <h4><span class="g-icon">関</span>お客様の関心事</h4>
+          <p>教育費 に 対する 関心 が 高く、 大学進学時 の 私立理系 選択肢 を 視野 に。 住宅ローン返済 と 教育費 積み立て の 両立可能性 を 確認 したい。</p>
+        </div>
+        <div class="g-sec g-sec-attn">
+          <h4><span class="g-icon">T</span>次回までのTODO</h4>
+          <ul>
+            <li>学資保険 3社比較 メール 送付</li>
+            <li>積立NISA 段階増額 スケジュール PDF 送付</li>
+            <li>変動金利 <span class="g-num">1.5%</span> 超 シミュ 準備</li>
+            <li>初期条件 再確認 資料 送付</li>
+          </ul>
+        </div>
+        <div class="g-sec g-sec-critical">
+          <h4><span class="g-icon">警</span>懸念事項</h4>
+          <p><strong>変動金利上昇</strong>: 金利 <span class="g-num">1.5%</span> 超 で バランス 再検討。 月 <span class="g-num">8万</span> NISA + 月 <span class="g-num">2850円</span> 繰上げ の 予期しない 支出 対策 も 明文化。</p>
+        </div>
+        <div class="g-sec g-sec-mono">
+          <h4><span class="g-icon">数</span>議論した数字・試算</h4>
+          <ul>
+            <li>教育費目標 <span class="g-num">860万</span> / 貯蓄 <span class="g-num">250万</span> / 児童手当残 <span class="g-num">610万</span></li>
+            <li>NISA <span class="g-num">8万/月</span> / 変動金利 <span class="g-num">0.5%</span> / 老後 <span class="g-num">3200万</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+</body>
+</html>

@@ -11120,3 +11120,208 @@ section > div[data-line-view] > div[style*="background: #fff"] {
   .fp-transcript-chat > div > div { max-width: 85% !important; }
   .fp-transcript-chat { padding: 14px 12px !important; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   議事録 Kanban 3列 レイアウト (variant C, owner 2026-07-28 承認)
+   決定事項 | 次回TODO | 懸念事項 を 横 3列、 関心事 + 数字 を 下 帯 で
+   ═══════════════════════════════════════════════════════════════════ */
+.fp-summary-structured {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr 1fr !important;
+  grid-auto-rows: min-content !important;
+  gap: 14px !important;
+  align-items: start !important;
+}
+.fp-summary-structured .fp-sum-warnings {
+  grid-column: 1 / -1 !important;
+  margin-bottom: 4px !important;
+}
+.fp-summary-structured .fp-sum-empty,
+.fp-summary-structured .fp-sum-body,
+.fp-summary-structured .fp-sum-p:not(.fp-sum-section .fp-sum-p) {
+  grid-column: 1 / -1 !important;
+}
+/* 3 primary column sections */
+.fp-summary-structured .fp-sum-section {
+  background: #fff !important;
+  border: 1px solid #E2E8F0 !important;
+  border-top: 4px solid transparent !important;
+  border-radius: 8px !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  box-shadow: 0 1px 3px rgba(15,23,32,0.04) !important;
+}
+.fp-summary-structured .fp-sum-section.fp-sum-tone-vital    { grid-column: 1 !important; grid-row: 1 !important; border-top-color: #047647 !important; }
+.fp-summary-structured .fp-sum-section.fp-sum-tone-attn     { grid-column: 2 !important; grid-row: 1 !important; border-top-color: #F59E0B !important; }
+.fp-summary-structured .fp-sum-section.fp-sum-tone-critical { grid-column: 3 !important; grid-row: 1 !important; border-top-color: #DC2B2B !important; }
+/* bottom strip: trust (関心事) 2/3幅 + mono (数字) 1/3幅 */
+.fp-summary-structured .fp-sum-section.fp-sum-tone-trust    { grid-column: 1 / 3 !important; grid-row: 2 !important; border-top-color: #4338CA !important; }
+.fp-summary-structured .fp-sum-section.fp-sum-tone-mono,
+.fp-summary-structured .fp-sum-section.fp-sum-tone-ink      { grid-column: 3 !important; grid-row: 2 !important; border-top-color: #0F1720 !important; }
+
+/* section header (pill やめる、 sect-h ラベル に) */
+.fp-summary-structured .fp-sum-section .fp-sum-section-h {
+  padding: 12px 16px 10px !important;
+  background: transparent !important;
+  border-bottom: 1px solid #F1F5F9 !important;
+  display: flex !important;
+  align-items: baseline !important;
+  justify-content: space-between !important;
+  margin: 0 !important;
+}
+.fp-summary-structured .fp-sum-section .fp-sum-section-title {
+  font-size: 12px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.1em !important;
+  text-transform: uppercase !important;
+  color: #0F1720 !important;
+  background: transparent !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  display: inline !important;
+}
+.fp-summary-structured .fp-sum-section .fp-sum-section-body {
+  padding: 10px 14px 14px !important;
+  flex: 1 !important;
+  overflow-y: auto !important;
+  max-height: 420px !important;
+}
+
+/* card 化 - list items become chips */
+.fp-summary-structured .fp-sum-section .fp-sum-list {
+  list-style: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+.fp-summary-structured .fp-sum-section .fp-sum-list > li {
+  background: #F8FAFC !important;
+  border-radius: 6px !important;
+  padding: 9px 12px !important;
+  margin-bottom: 6px !important;
+  font-size: 13px !important;
+  line-height: 1.55 !important;
+  color: #0F1720 !important;
+  border-left: 3px solid transparent !important;
+}
+.fp-summary-structured .fp-sum-section .fp-sum-list > li::before,
+.fp-summary-structured .fp-sum-section .fp-sum-list > li::marker { content: none !important; }
+.fp-summary-structured .fp-sum-tone-vital    .fp-sum-list > li { background: #F0FDF4 !important; border-left-color: #047647 !important; }
+.fp-summary-structured .fp-sum-tone-attn     .fp-sum-list > li { background: #FFFBEB !important; border-left-color: #F59E0B !important; }
+.fp-summary-structured .fp-sum-tone-critical .fp-sum-list > li { background: #FEF2F2 !important; border-left-color: #DC2B2B !important; }
+.fp-summary-structured .fp-sum-tone-trust    .fp-sum-list > li { background: #EEF2FF !important; border-left-color: #4338CA !important; }
+.fp-summary-structured .fp-sum-tone-mono     .fp-sum-list > li { background: #F1F5F9 !important; border-left-color: #0F1720 !important; }
+
+/* section 内 の p (関心事 の 長文 / 懸念の説明) */
+.fp-summary-structured .fp-sum-section .fp-sum-section-body > p,
+.fp-summary-structured .fp-sum-section .fp-sum-section-body .fp-sum-p {
+  padding: 8px 0 !important;
+  margin: 0 !important;
+  font-size: 13px !important;
+  line-height: 1.7 !important;
+  color: #1F2A3F !important;
+  background: transparent !important;
+  border: 0 !important;
+}
+.fp-summary-structured .fp-sum-section .fp-sum-section-body > p + p {
+  border-top: 1px solid #F1F5F9 !important;
+  padding-top: 10px !important;
+  margin-top: 4px !important;
+}
+/* row (label:value) は section 内 では chip 風 */
+.fp-summary-structured .fp-sum-section .fp-sum-row {
+  background: #F8FAFC !important;
+  border: 0 !important;
+  border-left: 3px solid #0F1720 !important;
+  border-radius: 6px !important;
+  padding: 7px 10px !important;
+  margin-bottom: 6px !important;
+  display: flex !important;
+  gap: 8px !important;
+  align-items: baseline !important;
+  flex-wrap: wrap !important;
+}
+.fp-summary-structured .fp-sum-section .fp-sum-row .fp-sum-label {
+  background: transparent !important;
+  color: #64748B !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  padding: 0 !important;
+  letter-spacing: 0.02em !important;
+  min-width: 0 !important;
+}
+.fp-summary-structured .fp-sum-section .fp-sum-row .fp-sum-value {
+  color: #0F1720 !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  padding: 0 !important;
+}
+.fp-summary-structured .fp-sum-section .fp-sum-row .fp-sum-label::before { content: none !important; }
+.fp-summary-structured .fp-sum-section .fp-sum-h5 {
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  color: #64748B !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+  margin: 8px 0 4px !important;
+  padding: 0 !important;
+}
+/* numbered items (1. **xxx**：yyy) card 化 */
+.fp-summary-structured .fp-sum-section .fp-sum-item {
+  background: #F8FAFC !important;
+  border-radius: 6px !important;
+  padding: 8px 10px !important;
+  margin-bottom: 6px !important;
+  border-left: 3px solid transparent !important;
+  display: flex !important;
+  gap: 8px !important;
+  align-items: flex-start !important;
+}
+.fp-summary-structured .fp-sum-tone-vital .fp-sum-item    { background: #F0FDF4 !important; border-left-color: #047647 !important; }
+.fp-summary-structured .fp-sum-tone-attn .fp-sum-item     { background: #FFFBEB !important; border-left-color: #F59E0B !important; }
+.fp-summary-structured .fp-sum-tone-critical .fp-sum-item { background: #FEF2F2 !important; border-left-color: #DC2B2B !important; }
+.fp-summary-structured .fp-sum-section .fp-sum-item-num {
+  min-width: 20px !important;
+  width: 20px !important;
+  height: 20px !important;
+  font-size: 11px !important;
+  color: #fff !important;
+  border-radius: 4px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-weight: 800 !important;
+  flex-shrink: 0 !important;
+}
+.fp-summary-structured .fp-sum-section .fp-sum-item-title {
+  font-size: 12.5px !important;
+  font-weight: 700 !important;
+  color: #0F1720 !important;
+}
+.fp-summary-structured .fp-sum-section .fp-sum-item-desc {
+  font-size: 12px !important;
+  color: #475569 !important;
+  margin-top: 3px !important;
+  line-height: 1.55 !important;
+}
+
+/* ─ responsive: 900px 以下 で 縦積み ─ */
+@media (max-width: 900px) {
+  .fp-summary-structured {
+    grid-template-columns: 1fr !important;
+  }
+  .fp-summary-structured .fp-sum-section.fp-sum-tone-vital,
+  .fp-summary-structured .fp-sum-section.fp-sum-tone-attn,
+  .fp-summary-structured .fp-sum-section.fp-sum-tone-critical,
+  .fp-summary-structured .fp-sum-section.fp-sum-tone-trust,
+  .fp-summary-structured .fp-sum-section.fp-sum-tone-mono,
+  .fp-summary-structured .fp-sum-section.fp-sum-tone-ink {
+    grid-column: 1 !important;
+    grid-row: auto !important;
+  }
+  .fp-summary-structured .fp-sum-section .fp-sum-section-body {
+    max-height: none !important;
+  }
+}
