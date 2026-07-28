@@ -4536,10 +4536,21 @@ ${ctxText}${surveyTxt}`;
               }
             } catch (e) { console.warn('armTabRecorder failed:', e); }
             window.open(forceWebUrl, '_blank');
-            status.style.color = '#059669';
-            status.textContent = data.lineSent
-              ? '✅ LINE 送付完了 / FP の Zoom を 別タブ で 開きました (Meeting ID: ' + (data.meetingId || '?') + ')'
-              : '⚠ Meeting 作成成功 だが LINE 送信失敗 (' + (data.error || '') + ')';
+            if (data.lineSent) {
+              status.style.color = '#059669';
+              status.textContent = '✅ LINE 送付完了 / FP の Zoom を 別タブ で 開きました (Meeting ID: ' + (data.meetingId || '?') + ')';
+            } else {
+              // 2026-07-28: LINE 失敗時 は 分類 error code に 応じて 具体 復旧案内 + アカウント設定 リンク を 出す
+              status.style.color = '#B45309';
+              const errCode = data.errorCode || 'LINE_UNKNOWN';
+              const errMsg = data.error || 'LINE 送信 失敗';
+              const isTokenIssue = (errCode === 'LINE_TOKEN_EXPIRED' || errCode === 'LINE_CHANNEL_DELETED_OR_ERROR');
+              status.innerHTML = '⚠ Zoom Meeting は 作成 OK / LINE 送信 のみ 失敗 ' +
+                '<div style="margin-top:6px;font-size:12.5px;font-weight:600;color:#7C2D12;">' + escapeHtml(errMsg) + '</div>' +
+                (isTokenIssue
+                  ? '<div style="margin-top:8px;"><a href="/account.html" target="_blank" style="display:inline-block;background:#DC2626;color:#fff;padding:6px 14px;border-radius:6px;text-decoration:none;font-weight:800;font-size:12px;">🔧 マイページ で LINE 再連携</a></div>'
+                  : '');
+            }
             // ★ Firestore データ即refresh → leadHub/Zoom予定 リスト 即反映
             try {
               if (window.refreshFirestoreCustomers) await window.refreshFirestoreCustomers();
