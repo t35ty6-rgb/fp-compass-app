@@ -354,12 +354,12 @@ input:focus, select:focus, textarea:focus {
 }
 
 /* ───────── Modal ───────── */
+/* 2026-07-28 design-reviewer 指摘 Round 2: glassmorphism 撤廃 (BtoB admin では 不要) */
 .modal-overlay {
-  background: rgba(10, 23, 41, 0.62);
-  backdrop-filter: blur(4px);
+  background: rgba(15, 23, 42, 0.55);
 }
 .modal {
-  border-radius: var(--radius-lg);
+  border-radius: 10px;
   box-shadow: var(--shadow-lg);
   border: 1px solid var(--line);
 }
@@ -2244,13 +2244,14 @@ table.clients tbody tr:hover {
 }
 
 /* ───── モーダル: 文字被り修正 + ディテール ───── */
+/* 2026-07-28 design-reviewer 指摘 Round 2: backdrop-filter blur 撤廃 (BtoB admin に glassmorphism 不要) */
 .modal-overlay {
-  background: rgba(10, 23, 41, 0.65) !important;
-  backdrop-filter: blur(8px) !important;
+  background: rgba(15, 23, 42, 0.55) !important;
 }
+/* 2026-07-28 design-reviewer 指摘 Round 2: border-radius 14px → 10px (案件内 一貫) */
 .modal {
   border: 1px solid var(--line) !important;
-  border-radius: var(--radius-lg) !important;
+  border-radius: 10px !important;
   box-shadow:
     0 24px 64px rgba(0, 0, 0, 0.35),
     0 4px 12px rgba(0, 0, 0, 0.15) !important;

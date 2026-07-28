@@ -1844,8 +1844,7 @@ table.clients [class*="avatar"],
   justify-content: center !important;
   z-index: 1000 !important;
   background: rgba(15, 23, 42, 0.55) !important;
-  backdrop-filter: blur(3px);
-  -webkit-backdrop-filter: blur(3px);
+  /* 2026-07-28 design-reviewer Round 2: blur 撤廃 (BtoB admin に glassmorphism 不要) */
   padding: 28px 16px !important;
   overflow-y: auto;
 }
@@ -4120,14 +4119,12 @@ table.clients [class*="avatar"],
   border-top: 1px solid var(--hairline);
 }
 
-/* Manual picker modal */
+/* Manual picker modal (2026-07-28: blur 撤廃、 BtoB admin) */
 .aib-picker-overlay {
   position: fixed;
   inset: 0;
   z-index: 1100;
   background: rgba(15, 23, 42, 0.55);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
   display: flex; align-items: center; justify-content: center;
   padding: 20px;
 }
@@ -5764,10 +5761,10 @@ button.primary:hover::before { left: 130%; }
   color: var(--fp-gold); margin-top: 3px;
 }
 
-/* ─── 7. 顧客モーダル 大アバター上品化 ─────────────────── */
+/* ─── 7. 顧客モーダル 大アバター (2026-07-28: serif → sans、 design-reviewer 指摘) ─── */
 .cd-profile-avatar {
-  font-family: 'Noto Serif JP', serif !important;
-  font-weight: 500 !important;
+  font-family: 'Noto Sans JP', sans-serif !important;
+  font-weight: 700 !important;
   letter-spacing: 0 !important;
 }
 
