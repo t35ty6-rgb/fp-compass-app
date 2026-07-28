@@ -23,7 +23,7 @@
 <link rel="stylesheet" href="styles.css?v=20260715E-line-error-wrap-all-6-sites">
 <link rel="stylesheet" href="styles-v2.css?v=20260715E-line-error-wrap-all-6-sites">
 <link rel="stylesheet" href="styles-v3.css?v=20260715E-line-error-wrap-all-6-sites">
-<link rel="stylesheet" href="styles-v8-workspace.css?v=20260728A-kanban-c">
+<link rel="stylesheet" href="styles-v8-workspace.css?v=20260715E-line-error-wrap-all-6-sites">
 <!-- ★ 2026-06-26 perf: lucide(350KB) と chart.js(201KB) を defer 化 -->
 <!--   どちらも DOMContentLoaded 後ハイドレートで OK (lucide: setInterval scan / chart: tryRender polling) -->
 <script defer src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
@@ -1374,7 +1374,7 @@ window.fpReadyAfterAuth = function() {
     });
   })();
 
-  const ver = "20260727A";
+  const ver = "20260728A";
   // ★ 2026-06-26 perf: critical (画面初期表示に必須) と deferred (LINE/charts) を 分離
   // critical: 顧客台帳・ホーム描画に必須
   // deferred: LINE タブ (line-app.js 555KB) / dashboard charts (charts.js) → idle で 後ロード

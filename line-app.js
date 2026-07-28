@@ -2969,7 +2969,29 @@
 
       const payload = d.payload || {};
       const meta = payload.meta || {};
-      console.log('[fp-tab-recorder] 受信:', payload.size, 'bytes,', Math.round(payload.durationMs / 1000), '秒, clientId:', meta.clientId);
+      // 2026-07-28: 拡張 が 全 FP tab に broadcast する 過去 bug + 同 tab で 二重 dispatch
+      // (SW re-spawn / tab restore) の いずれ でも 同 recording を 2 回 処理 して
+      // 議事録 が 重複 保存 される 事故 が 発生。 startedAt + size + duration を key に
+      // localStorage TTL 5分 で cross-tab claim (extension 側 単一 tab 送信 fix と 二重防御)
+      const recId = 'rec:' + (meta.startedAt || '') + ':' + (payload.size || 0) + ':' + (payload.durationMs || 0);
+      try {
+        const lockKey = 'fp-recording-processed-' + recId;
+        const now = Date.now();
+        const prev = parseInt(localStorage.getItem(lockKey) || '0', 10);
+        if (prev && (now - prev) < 5 * 60 * 1000) {
+          console.warn('[fp-tab-recorder] duplicate RECORDING_DONE skipped', { recId, ageMs: now - prev });
+          return;
+        }
+        localStorage.setItem(lockKey, String(now));
+        // 24h 以上 前 の lock は cleanup
+        for (let i = localStorage.length - 1; i >= 0; i--) {
+          const k = localStorage.key(i);
+          if (!k || !k.startsWith('fp-recording-processed-')) continue;
+          const v = parseInt(localStorage.getItem(k) || '0', 10);
+          if (v && (now - v) > 24 * 60 * 60 * 1000) localStorage.removeItem(k);
+        }
+      } catch (_) { /* storage quota / private mode → 続行 */ }
+      console.log('[fp-tab-recorder] 受信:', payload.size, 'bytes,', Math.round(payload.durationMs / 1000), '秒, clientId:', meta.clientId, 'recId:', recId);
       try {
         const bin = atob(payload.base64 || '');
         const arr = new Uint8Array(bin.length);
