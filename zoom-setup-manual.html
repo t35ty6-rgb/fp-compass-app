@@ -168,6 +168,7 @@
     <li><a href="#s1">アクセス権 (スコープ) を 追加</a></li>
     <li><a href="#s2">録画完了通知 を 登録</a></li>
     <li><a href="#s3">動作 確認</a></li>
+    <li><a href="#s4">困った時</a></li>
   </ol>
 </nav>
 
@@ -304,23 +305,41 @@
       <div class="step-body">
         <p>フォーム 内 の <strong>「+ Add Events」</strong> を 押す と モーダル が 開く。 続けて 4 動作:</p>
         <ol>
-          <li>左サイドバー で <strong>Recording</strong> を 押す</li>
+          <li>左サイドバー で <strong>Recording</strong> を 押す (Meeting が 初期選択 に なってる ので 必ず 切替)</li>
           <li>右側 で <strong>All Recordings have completed</strong> の チェックボックス を 押す</li>
           <li>右下 の <strong>Done</strong> を 押す (モーダル 閉じる)</li>
           <li>フォーム 下部 の <strong>Save</strong> を 押す</li>
         </ol>
+        <div class="callout tip">
+          Save 後、 subscription 一覧 に 「Recording Completed」 が 追加 される。 右側 に <strong>✏ 鉛筆</strong> と <strong>🗑 ゴミ箱</strong> の アイコン が 出る。
+        </div>
       </div>
     </div>
 
     <div class="step">
       <div class="step-head">
         <span class="step-num">5</span>
-        <h3 class="step-title">「Validate」 を 押して グリーン ✓ を 確認</h3>
+        <h3 class="step-title">✏ 鉛筆 で 編集画面 開く → 「Validate」 で グリーン ✓</h3>
       </div>
       <div class="step-body">
-        <p>保存 された URL 欄 の 下 に <strong>「Validate」</strong> ボタン が 現れる ので 押す。 Zoom が Skeleton の サーバー に 確認 を 送り、 <strong>グリーン ✓ (Validated)</strong> に なれば 登録完了。</p>
+        <p>subscription 一覧 の 「Recording Completed」 の 右側 の <strong>✏ 鉛筆 マーク</strong> を 押す (🗑 ゴミ箱 じゃない 方)。</p>
+        <p>編集画面 が 開く → URL 欄 の 下 の <strong>「Validate」 button</strong> を 押す → 数秒後 に <strong>グリーン ✓ (Validated)</strong> 表示 に なれば 登録完了。</p>
+        <div class="callout tip">
+          <b>Validate は 2 秒 以内 に 成功 する はず</b>。 Skeleton の サーバー を 常時 稼働 (warm) に して ある ので、 timeout 起きない。 もし 失敗 したら Section 04 「困った時」 参照。
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">6</span>
+        <h3 class="step-title">「Continue」 → Activation タブ で グリーン ✓ 確認</h3>
+      </div>
+      <div class="step-body">
+        <p>Feature 画面 の 右下 の <strong>「Continue」</strong> を 押す → 左メニュー の <strong>Activation</strong> タブ に 移動。</p>
+        <p><strong>Your app is activated on the account</strong> の 緑チェック が 表示 されて いれば、 全 設定 完了。</p>
         <div class="callout warn">
-          <b>もし Validate が 失敗 したら</b>: URL に 余分 な スペース / 全角 文字 が 入って ない か 確認。 それ でも 失敗 する なら Skeleton の Jobs に 連絡 (裏 の Secret Token の 反映 状況 を 実測 確認 する)。
+          もし 「app can not be activated yet due to missing」 の 警告 が 出た 場合 は、 Feature タブ に 戻って 「Validate」 が グリーン ✓ に なって いる か 再確認。 Validate されて いない と Activation が 通らない。
         </div>
       </div>
     </div>
@@ -383,6 +402,107 @@
       <div class="checkpoint-title">全 設定 完了</div>
       <div class="checkpoint-body">
         面談履歴 に 議事録 が 自動 追加 されて いれば、 Zoom → FP Compass の 全 自動化 が 稼働 開始。 以降 は 面談 する だけ で 議事録 が 溜まる 状態 に なる。
+      </div>
+    </div>
+  </section>
+
+  <section id="s4">
+    <div class="section-head">
+      <span class="section-count">Section 04</span>
+      <h2>困った時</h2>
+    </div>
+    <p class="section-lede">
+      各 手順 で よく ある トラブル と 対処法。 発生 頻度 の 高い 順 に 並んでる。
+    </p>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">1</span>
+        <h3 class="step-title">「URL validation failed. Try again later.」 が 出た</h3>
+      </div>
+      <div class="step-body">
+        <p>Skeleton の サーバー 側 で 3 秒 の Zoom timeout に 引っかかった。 <strong>もう一回 Validate button を 押す だけ で 直る</strong> (前回 で サーバー が warm 状態 に なった ため)。</p>
+        <p>それ でも 失敗 する 場合:</p>
+        <ol>
+          <li>URL 欄 に 余分 な スペース / 全角 文字 が 入って ない か 目視 確認</li>
+          <li>URL を 一旦 全消し → 下 の 正 URL を 再貼付:
+            <div class="copy-block" data-copy="https://asia-northeast1-skeleton-fp-compass-632026.cloudfunctions.net/zoomRecordingWebhook">
+              <button class="copy-btn">Copy</button>
+              https://asia-northeast1-skeleton-fp-compass-632026.cloudfunctions.net/zoomRecordingWebhook
+            </div>
+          </li>
+          <li>Save → Validate 再実行</li>
+          <li>それ でも 失敗 なら Skeleton の Jobs に 連絡</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">2</span>
+        <h3 class="step-title">「Validate」 button が 出て こない</h3>
+      </div>
+      <div class="step-body">
+        <p>Subscription を <strong>Save まだ 押して ない</strong> 可能性。 一覧 に 「Recording Completed」 が 表示 されて いれば Save は 済 → subscription の 右側 の <strong>✏ 鉛筆 マーク</strong> を 押して 編集画面 を 開くと Validate button が 見える。</p>
+        <p>それ でも 見えない なら:</p>
+        <ul>
+          <li>ページ を 一旦 リロード (⌘R / Ctrl+R)</li>
+          <li>Feature タブ を 再 訪問 (左メニュー の Feature を 再 click)</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">3</span>
+        <h3 class="step-title">「Sign In」 に 戻される (login loop)</h3>
+      </div>
+      <div class="step-body">
+        <p>Zoom Marketplace の session は idle で 5-10 分 で 切れる。 途中 で 席 を 離れて 戻ったら 「Sign In」 に なってた 場合 が これ。</p>
+        <p>右上 の 「Sign In」 押して login し直せば OK。 それ まで の 入力 内容 (subscription name / URL 等) は Zoom 側 で 保存 されて ない ので、 やり直し に なる 可能性 が ある。 login 済 の 状態 で 一気 に 進める の が コツ。</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">4</span>
+        <h3 class="step-title">Activation で 「Your app can not be activated yet」 が 出る</h3>
+      </div>
+      <div class="step-body">
+        <p>Activation の 前提条件 が 満たされて ない。 警告 の 下 に 出て いる 「missing information」 の 内容 で 判断:</p>
+        <ul>
+          <li><strong>「Event Notification Endpoint URL needs validation」</strong> → Section 02 Step 5 の Validate を 実行 (グリーン ✓ に する)</li>
+          <li><strong>「Scopes missing」</strong> → Section 01 で 4 個 の scope を チェック して Save</li>
+        </ul>
+        <p>Feature タブ → 該当 subscription で Validate 完了 → もう一度 Activation タブ に 戻って 状態 を 再確認。</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">5</span>
+        <h3 class="step-title">面談 したのに 議事録 が FP Compass に 出て こない</h3>
+      </div>
+      <div class="step-body">
+        <p>以下 を 順 に 確認:</p>
+        <ol>
+          <li><strong>Zoom Cloud 側 の 処理 は 5-15 分 かかる</strong>。 面談終了 直後 に 議事録 を 期待 しない。 30 分 待って から 確認</li>
+          <li>面談 が <strong>Zoom Cloud 録画 に なって いた か</strong> 確認 (Local 録画 だと 対象外)。 zoom.us → Recordings で 該当 会議 が Cloud Recordings 側 に あれば OK</li>
+          <li>音声文字起こし が <strong>ON に なって いる か</strong> 確認 (zoom.us → Settings → Recording → 「Audio transcript」 を ON)</li>
+          <li>該当 顧客 の 面談履歴 タブ を リロード</li>
+          <li>それ でも 出て こない なら Skeleton の Jobs に 連絡 (会議 の Meeting ID を 添えて)</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">6</span>
+        <h3 class="step-title">Secret Token が 変わった / 再生成 したい</h3>
+      </div>
+      <div class="step-body">
+        <p>Feature タブ の 上部 の 「Secret Token」 欄 に 「Regenerate」 button が ある。 押す と 新しい Token が 発行 される (旧 Token 即 失効)。</p>
+        <p><strong>Regenerate 押した 後 は 必ず 新 Token を Skeleton の Jobs に 連絡</strong> (Skeleton 側 で 反映 しない と 全 webhook が signature mismatch で 落ちる)。</p>
       </div>
     </div>
   </section>
