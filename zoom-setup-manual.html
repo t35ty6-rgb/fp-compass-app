@@ -166,9 +166,9 @@
       Zoom Marketplace で FP Compass 用 の アクセス権 と 録画完了通知 を 設定 して、 面談 の 議事録 を 自動 で FP Compass に 届く 状態 に する 手順書。 直接 リンク で 1 クリック で 該当画面 に 飛ぶ ので、 迷わ ず 3 分 で 終わる。
     </p>
     <div class="head-meta">
-      <span>4 セクション · 実作業 5 分</span>
+      <span>5 セクション · 実作業 7 分</span>
       <span>Zoom Pro 契約 済 前提</span>
-      <span>2026-07-29 更新</span>
+      <span>2026-07-30 更新</span>
     </div>
   </div>
 </header>
@@ -178,8 +178,9 @@
   <ol>
     <li><a href="#s1">アクセス権 (スコープ) を 追加</a></li>
     <li><a href="#s2">録画完了通知 を 登録</a></li>
-    <li><a href="#s3">動作 確認</a></li>
-    <li><a href="#s4">困った時</a></li>
+    <li><a href="#s3">FP Compass に 認証情報 を 貼付</a></li>
+    <li><a href="#s4">動作 確認</a></li>
+    <li><a href="#s5">困った時</a></li>
   </ol>
 </nav>
 
@@ -189,11 +190,11 @@
     <li><div><b>Zoom Pro (¥2,125/月) 契約 済</b><span class="pf-sub">無料 プラン だと Cloud 録画 と 文字起こし が 使えない ため 必須</span></div></li>
     <li><div><b>Chrome で Zoom アカウント に ログイン 済</b><span class="pf-sub">2 要素認証 まで 完了 させて おく (Marketplace 遷移中 に session 切れる と やり直し に なる)</span></div></li>
     <li><div><b>連続 で 10 分 触れる 時間 が ある</b><span class="pf-sub">途中 で 席 を 離れる と Zoom 側 session (5〜10 分) が 切れて 入力 が 消える</span></div></li>
-    <li><div><b>FP Compass 側 で は 何 も する 必要 なし</b><span class="pf-sub">Skeleton が 事前 に 全部 反映 済</span></div></li>
+    <li><div><b>FP Compass の ログイン 情報 が 手元 に ある</b><span class="pf-sub">Section 03 で account.html に 認証情報 を 貼付 する ため</span></div></li>
   </ul>
   <div class="preflight-note">
-    <b>所要時間</b>: 5 分 (Section 01 = 2 分 · Section 02 = 3 分)。 動作確認 の 面談 テスト は 別途 15 分 (Zoom Cloud の 処理待ち 含む)。<br>
-    <b>もし 途中 で 何 か 詰まったら</b>: 一旦 「<a href="#s4" style="color:var(--primary);font-weight:800;">Section 04 · 困った時</a>」 を 先 に 見る と 大抵 の 症状 は 載って いる。
+    <b>所要時間</b>: 実作業 7 分 (Section 01 = 2 分 · Section 02 = 3 分 · Section 03 = 2 分)。 動作確認 の 面談 テスト は 別途 15 分 (Zoom Cloud の 処理待ち 含む)。<br>
+    <b>もし 途中 で 何 か 詰まったら</b>: 一旦 「<a href="#s5" style="color:var(--primary);font-weight:800;">Section 05 · 困った時</a>」 を 先 に 見る と 大抵 の 症状 は 載って いる。
   </div>
 </aside>
 
@@ -380,6 +381,85 @@
   <section id="s3">
     <div class="section-head">
       <span class="section-count">Section 03</span>
+      <h2>FP Compass に 認証情報 を 貼付 <span class="section-time">2 分</span></h2>
+    </div>
+    <p class="section-lede">
+      FP Compass が Zoom API を 叩いて 会議 を 発行 したり 録画 を 取得 したり する ため の 認証情報 3 つ (Account ID / Client ID / Client Secret) を、 Zoom Marketplace から コピー して FP Compass の アカウント設定 画面 に 貼付 します。
+    </p>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">1</span>
+        <h3 class="step-title">App Credentials 画面 を 直接 開く</h3>
+      </div>
+      <div class="step-body">
+        <p>下 の URL を コピー → Chrome の アドレスバー に 貼付 (Section 01 · 02 で 使った Zoom ログイン session が 残って いれば ワンクリック で 開く)。</p>
+        <div class="copy-block" data-copy="https://marketplace.zoom.us/develop/apps/anOSyfukSYClWMKm1Avf1Q/credentials">
+          <button class="copy-btn">Copy</button>
+          https://marketplace.zoom.us/develop/apps/anOSyfukSYClWMKm1Avf1Q/credentials
+        </div>
+        <p style="margin-top:10px;">
+          <a class="cta" href="https://marketplace.zoom.us/develop/apps/anOSyfukSYClWMKm1Avf1Q/credentials" target="_blank" rel="noopener">↗ App Credentials 画面 を 開く</a>
+        </p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">2</span>
+        <h3 class="step-title">3 つ の 認証情報 を コピー</h3>
+      </div>
+      <div class="step-body">
+        <p>「App Credentials」 タブ に 以下 3 つ が 表示 されて いる。 それぞれ 右 の Copy ボタン で コピー して 次 の step で 貼付:</p>
+        <ul class="copy-list">
+          <li><div class="cb-value"><span class="cb-label">Account ID</span>右上 · 「Account ID」 の 値</div></li>
+          <li><div class="cb-value"><span class="cb-label">Client ID</span>中央 · 「Client ID」 の 値</div></li>
+          <li><div class="cb-value"><span class="cb-label">Client Secret</span>中央 · 「Client Secret」 の 値 (目玉 マーク を 押す と 表示 される)</div></li>
+        </ul>
+        <div class="callout warn">
+          <b>Client Secret は 一度 表示 して コピー したら すぐ 使う</b>。 ページ 遷移 する と 再 表示 に は Regenerate が 必要 (新 secret が 発行 され 旧 secret 即 失効) の で、 3 つ 全部 まとめて コピー して 次 の step に 進む こと。
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">3</span>
+        <h3 class="step-title">FP Compass の アカウント設定 に 貼付 → 保存</h3>
+      </div>
+      <div class="step-body">
+        <p>FP Compass に ログイン した 状態 で、 下 の URL を 開く (別 タブ 推奨):</p>
+        <div class="copy-block" data-copy="https://app.skeleton-inc.jp/account.html">
+          <button class="copy-btn">Copy</button>
+          https://app.skeleton-inc.jp/account.html
+        </div>
+        <p style="margin-top:10px;">
+          <a class="cta" href="https://app.skeleton-inc.jp/account.html" target="_blank" rel="noopener">↗ FP Compass アカウント設定 を 開く</a>
+        </p>
+        <p style="margin-top:12px;">下 に スクロール して 「<strong>Zoom 連携 (Server-to-Server OAuth)</strong>」 section を 探す。 3 つ の 欄 に 順 に 貼付:</p>
+        <ol>
+          <li>Account ID 欄 に Account ID を 貼付</li>
+          <li>Client ID 欄 に Client ID を 貼付</li>
+          <li>Client Secret 欄 に Client Secret を 貼付</li>
+          <li><strong>「Zoom 接続 テスト + 保存」</strong> ボタン を 押す</li>
+        </ol>
+        <div class="callout tip">
+          ボタン 押して <strong>「Zoom 接続 成功 · 保存 しました」</strong> の 緑 表示 が 出たら OK。 「認証 失敗」 と 出たら 貼付 ミス の 可能性 が 高い ので、 Client Secret を Zoom Marketplace で Regenerate → 新 secret を 貼り直し。
+        </div>
+      </div>
+    </div>
+
+    <div class="checkpoint">
+      <div class="checkpoint-title">Section 03 完了 確認</div>
+      <div class="checkpoint-body">
+        FP Compass の Zoom 連携 section の 上部 に <strong>「Zoom 接続 成功」</strong> の 緑 バッジ が 表示 されて いれば OK。 これ で FP Compass が Zoom の 会議 発行 と 録画 取得 の 両方 を できる 状態 に なった。
+      </div>
+    </div>
+  </section>
+
+  <section id="s4">
+    <div class="section-head">
+      <span class="section-count">Section 04</span>
       <h2>動作 確認 <span class="section-time">1 分</span></h2>
     </div>
     <p class="section-lede">
@@ -431,9 +511,9 @@
     </div>
   </section>
 
-  <section id="s4">
+  <section id="s5">
     <div class="section-head">
-      <span class="section-count">Section 04</span>
+      <span class="section-count">Section 05</span>
       <h2>困った時</h2>
     </div>
     <p class="section-lede">
@@ -500,12 +580,31 @@
           <li><strong>「Scopes missing」</strong> → Section 01 で 4 個 の scope を チェック して Save</li>
         </ul>
         <p>Feature タブ → 該当 subscription で Validate 完了 → もう一度 Activation タブ に 戻って 状態 を 再確認。</p>
+        <div class="callout warn">
+          <b>Validated ✓ が 出て いる のに Activation で 同じ error が 出る 場合</b>: Zoom の 誤 表示。 実際 は 「Add Events」 が 未 完了 の 状態 (Validate と Add Events は 別 step で、 両方 揃わない と Activation が 通らない)。 該当 subscription を 開き 直して 「+ Add Events」 → Recording → All Recordings have completed → Done → Save まで やり切って から Activation タブ に 戻る。
+        </div>
       </div>
     </div>
 
     <div class="step">
       <div class="step-head">
         <span class="step-num">5</span>
+        <h3 class="step-title">「Zoom 接続 失敗 · 認証 エラー」 と FP Compass で 出る</h3>
+      </div>
+      <div class="step-body">
+        <p>Section 03 で 貼付 した 3 つ の 値 が 間違って いる。 発生 頻度 順 に 確認:</p>
+        <ol>
+          <li>Client Secret が 目玉 マーク で 表示 された 時 に <strong>先頭 or 末尾 の 空白 まで コピー して しまった</strong> — 貼付 前 に trim (前後 の 空白 削除)。 特に 目玉 マーク の 直後 に 半角スペース が 混入 する 事故 が 多い</li>
+          <li>Account ID と Client ID を <strong>取り違えた</strong> — 両方 とも 22 文字 前後 で 見た目 が 似て いる。 Zoom Marketplace の App Credentials タブ で ラベル を もう一度 確認</li>
+          <li>Client Secret が Regenerate で 変わった 直後 で、 貼付 したのは 旧 secret — Marketplace で 現 secret を 表示 して 貼り直し</li>
+          <li>Server-to-Server OAuth じゃなく 別 タイプ (JWT / OAuth) の アプリ の credentials を 貼付 した — Section 01 と 同じ app (`anOSyfukSY...` に 始まる URL の app) の App Credentials を 使う</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">6</span>
         <h3 class="step-title">面談 したのに 議事録 が FP Compass に 出て こない</h3>
       </div>
       <div class="step-body">
@@ -522,12 +621,15 @@
 
     <div class="step">
       <div class="step-head">
-        <span class="step-num">6</span>
+        <span class="step-num">7</span>
         <h3 class="step-title">Secret Token が 変わった / 再生成 したい</h3>
       </div>
       <div class="step-body">
         <p>Feature タブ の 上部 の 「Secret Token」 欄 に 「Regenerate」 button が ある。 押す と 新しい Token が 発行 される (旧 Token 即 失効)。</p>
         <p><strong>Regenerate 押した 後 は 必ず 新 Token を Skeleton の Jobs に 連絡</strong> (Skeleton 側 で 反映 しない と 全 webhook が signature mismatch で 落ちる)。</p>
+        <div class="callout info">
+          <b>参考</b>: Zoom は Validate 完了 前 の subscription で は Secret Token を ページリロード の たび に 再表示 する 挙動 が あった (実測 2026-07-30)。 Validate ✓ 完了 で 固定 される ので、 最初 の 設定時 は Validate を 通し 切って から Secret Token を コピー する と 安全。
+        </div>
       </div>
     </div>
   </section>
@@ -535,7 +637,7 @@
 </main>
 
 <footer>
-  <p>FP Compass · Skeleton Inc. · Zoom 連携 設定マニュアル · 2026-07-29</p>
+  <p>FP Compass · Skeleton Inc. · Zoom 連携 設定マニュアル · v7 2026-07-30</p>
   <p><a href="/setup-manual.html">← 設定マニュアル (全体) に 戻る</a></p>
 </footer>
 
