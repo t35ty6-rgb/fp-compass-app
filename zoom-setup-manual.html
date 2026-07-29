@@ -45,25 +45,53 @@
   }
   ::selection { background: var(--primary); color: #fff; }
 
-  .head { background: var(--ink); color: #FFFFFF; padding: 52px 32px 40px; position: relative; overflow: hidden; }
+  /* ==== Shell: left sidebar + content ==== */
+  .shell { display: grid; grid-template-columns: 260px 1fr; min-height: 100vh; }
+
+  .sidenav { background: var(--surface); border-right: 1px solid var(--rule); position: sticky; top: 0; align-self: start; height: 100vh; overflow-y: auto; padding: 24px 18px 24px 22px; display: flex; flex-direction: column; gap: 18px; }
+  .sn-brand { padding: 4px 6px 14px; border-bottom: 1px solid var(--rule); }
+  .sn-brand-kicker { font-family: 'Manrope', sans-serif; font-size: 10.5px; letter-spacing: 0.14em; font-weight: 800; color: var(--dim); margin-bottom: 6px; }
+  .sn-brand-title { font-family: 'Manrope', 'Noto Sans JP', sans-serif; font-size: 15.5px; font-weight: 900; color: var(--ink); letter-spacing: -0.01em; line-height: 1.35; }
+  .sn-brand-meta { display: block; margin-top: 6px; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--dim); font-weight: 600; letter-spacing: 0.02em; }
+
+  .sn-section-label { font-family: 'Manrope', sans-serif; font-size: 10px; letter-spacing: 0.18em; font-weight: 800; color: var(--dim); text-transform: uppercase; margin: 4px 6px 8px; }
+  .sn-list { list-style: none; padding: 0; margin: 0; counter-reset: sn; display: flex; flex-direction: column; gap: 2px; }
+  .sn-list li { counter-increment: sn; }
+  .sn-list a { display: flex; align-items: flex-start; gap: 10px; padding: 9px 10px 9px 12px; border-radius: 8px; text-decoration: none; color: var(--ink-2); font-size: 13px; font-weight: 700; line-height: 1.4; border-left: 3px solid transparent; transition: background .12s, color .12s, border-color .12s; }
+  .sn-list a:hover { background: var(--surface-2); color: var(--ink); }
+  .sn-list a::before { content: counter(sn, decimal-leading-zero); font-family: 'Manrope', sans-serif; color: var(--dim); font-size: 10.5px; letter-spacing: 0.06em; font-weight: 800; margin-top: 2px; flex-shrink: 0; width: 20px; }
+  .sn-list a .sn-time { display: block; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--dim); font-weight: 600; margin-top: 2px; letter-spacing: 0.02em; }
+  .sn-list a.active { background: var(--primary-soft); color: var(--primary-dark); border-left-color: var(--primary); }
+  .sn-list a.active::before { color: var(--primary); }
+  .sn-list a.active .sn-time { color: var(--primary-dark); opacity: 0.8; }
+
+  .sn-cta { display: block; margin-top: 4px; background: linear-gradient(135deg,#00844A 0%,#065F46 100%); color: #fff; padding: 12px 14px; border-radius: 10px; text-decoration: none; transition: filter .12s, transform .12s; }
+  .sn-cta:hover { filter: brightness(1.10); transform: translateY(-1px); }
+  .sn-cta-kicker { font-family: 'Manrope', sans-serif; font-size: 9.5px; letter-spacing: 0.14em; font-weight: 800; color: rgba(255,255,255,0.82); margin-bottom: 4px; }
+  .sn-cta-title { font-size: 13px; font-weight: 900; line-height: 1.4; }
+  .sn-cta-title::after { content: ' ↗'; opacity: 0.85; font-size: 11px; }
+
+  .sn-foot { margin-top: auto; padding-top: 14px; border-top: 1px solid var(--rule); display: flex; flex-direction: column; gap: 8px; }
+  .sn-foot a { font-family: 'Manrope', sans-serif; font-size: 11.5px; color: var(--dim); text-decoration: none; padding: 4px 6px; font-weight: 700; transition: color .12s; }
+  .sn-foot a:hover { color: var(--primary-dark); }
+
+  .sn-toggle { display: none; position: fixed; top: 12px; left: 12px; z-index: 50; background: var(--ink); color: #fff; border: none; width: 42px; height: 42px; border-radius: 10px; font-size: 20px; cursor: pointer; box-shadow: 0 4px 12px rgba(11,18,32,0.24); }
+  .sn-scrim { display: none; position: fixed; inset: 0; background: rgba(15,23,41,0.42); z-index: 40; }
+
+  /* Content column */
+  .content { min-width: 0; }
+
+  .head { background: var(--ink); color: #FFFFFF; padding: 44px 38px 34px; position: relative; overflow: hidden; }
   .head::after { content: ''; position: absolute; top: -40px; right: -30px; width: 320px; height: 320px; background: radial-gradient(circle at 60% 40%, rgba(0,132,74,0.32), transparent 65%); pointer-events: none; }
-  .head-wrap { max-width: 820px; margin: 0 auto; position: relative; }
-  .kicker { font-family: 'Manrope', 'Noto Sans JP', sans-serif; font-size: 11.5px; letter-spacing: 0.08em; font-weight: 700; color: rgba(255,255,255,0.78); margin-bottom: 14px; }
-  h1 { font-family: 'Manrope', 'Noto Sans JP', sans-serif; margin: 0 0 14px; font-size: 34px; font-weight: 900; letter-spacing: -0.02em; line-height: 1.2; }
-  .lede { margin: 0 0 24px; color: rgba(255,255,255,0.85); font-size: 15.5px; line-height: 1.75; max-width: 640px; }
-  .head-meta { display: flex; gap: 24px; flex-wrap: wrap; font-family: 'Manrope', sans-serif; font-size: 12px; letter-spacing: 0.08em; color: rgba(255,255,255,0.62); text-transform: uppercase; font-weight: 700; }
+  .head-wrap { max-width: 780px; margin: 0 auto; position: relative; }
+  .kicker { font-family: 'Manrope', 'Noto Sans JP', sans-serif; font-size: 11.5px; letter-spacing: 0.08em; font-weight: 700; color: rgba(255,255,255,0.78); margin-bottom: 12px; }
+  h1 { font-family: 'Manrope', 'Noto Sans JP', sans-serif; margin: 0 0 12px; font-size: 30px; font-weight: 900; letter-spacing: -0.02em; line-height: 1.22; }
+  .lede { margin: 0 0 20px; color: rgba(255,255,255,0.85); font-size: 14.5px; line-height: 1.72; max-width: 620px; }
+  .head-meta { display: flex; gap: 20px; flex-wrap: wrap; font-family: 'Manrope', sans-serif; font-size: 11.5px; letter-spacing: 0.05em; color: rgba(255,255,255,0.65); font-weight: 700; }
   .head-meta span::before { content: '·  '; opacity: 0.4; margin-right: 4px; }
   .head-meta span:first-child::before { content: ''; margin: 0; }
 
-  .toc { background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 20px 24px; margin: 28px auto 0; max-width: 820px; box-shadow: 0 1px 2px rgba(11,18,32,0.04); }
-  .toc-title { font-family: 'Manrope', sans-serif; font-size: 11px; letter-spacing: 0.22em; font-weight: 800; color: var(--dim); text-transform: uppercase; margin-bottom: 12px; }
-  .toc ol { list-style: none; padding: 0; margin: 0; counter-reset: t; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }
-  .toc li { counter-increment: t; }
-  .toc a { display: flex; align-items: baseline; gap: 10px; padding: 10px 12px; border-radius: 8px; background: var(--surface-2); color: var(--ink); font-size: 13.5px; font-weight: 700; text-decoration: none; border: 1px solid transparent; transition: all .12s; }
-  .toc a:hover { background: var(--primary-soft); border-color: var(--primary-line); color: var(--primary-dark); }
-  .toc a::before { content: counter(t, decimal-leading-zero); font-family: 'Manrope', sans-serif; color: var(--primary); font-size: 11px; letter-spacing: 0.08em; font-weight: 800; }
-
-  main { max-width: 820px; margin: 0 auto; padding: 32px 32px 40px; }
+  main { max-width: 780px; margin: 0 auto; padding: 28px 38px 40px; }
 
   section { margin-bottom: 60px; }
   .section-head { border-top: 1px solid var(--rule); padding-top: 28px; margin-bottom: 20px; }
@@ -120,7 +148,7 @@
   .scope-chip { display: inline-block; background: var(--surface-2); border: 1px solid var(--rule); border-radius: 6px; padding: 3px 9px; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 700; color: var(--ink); margin: 3px 4px 3px 0; letter-spacing: -0.005em; }
 
   /* Pre-flight */
-  .preflight { max-width: 820px; margin: 16px auto 0; background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 22px 26px; box-shadow: 0 1px 2px rgba(11,18,32,0.04); }
+  .preflight { max-width: 780px; margin: 22px auto 0; background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 22px 26px; box-shadow: 0 1px 2px rgba(11,18,32,0.04); }
   .preflight-title { font-family: 'Manrope', sans-serif; font-size: 11px; letter-spacing: 0.22em; font-weight: 800; color: var(--dim); text-transform: uppercase; margin-bottom: 14px; }
   .preflight-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
   .preflight-list li { display: flex; align-items: flex-start; gap: 12px; font-size: 14px; color: var(--ink); font-weight: 600; line-height: 1.6; }
@@ -133,14 +161,18 @@
   footer { max-width: 820px; margin: 20px auto 40px; padding: 20px 32px; border-top: 1px solid var(--rule); font-size: 12px; color: var(--dim); font-family: 'Manrope', sans-serif; letter-spacing: 0; display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
   footer a { color: var(--primary); text-decoration: none; font-weight: 700; }
 
-  @media (max-width: 640px) {
-    .head { padding: 40px 20px 32px; }
-    h1 { font-size: 26px; }
+  @media (max-width: 900px) {
+    .shell { grid-template-columns: 1fr; }
+    .sidenav { position: fixed; top: 0; left: -280px; width: 260px; height: 100vh; z-index: 45; transition: left .22s ease-out; box-shadow: 0 8px 24px rgba(11,18,32,0.18); }
+    .sidenav.open { left: 0; }
+    .sn-toggle { display: inline-flex; align-items: center; justify-content: center; }
+    body.nav-open .sn-scrim { display: block; }
+    .head { padding: 68px 20px 30px; }
     main { padding: 24px 18px 32px; }
+    h1 { font-size: 26px; }
     h2 { font-size: 22px; }
     .step { padding: 18px 16px; }
     .step-body { padding-left: 0; margin-top: 8px; }
-    .toc ol { grid-template-columns: 1fr; }
     .copy-list li { flex-direction: column; align-items: stretch; }
     .copy-list li .copy-btn-inline { align-self: flex-end; }
   }
@@ -158,12 +190,48 @@
 </head>
 <body>
 
+<button class="sn-toggle" id="sn-toggle" aria-label="メニュー">☰</button>
+<div class="sn-scrim" id="sn-scrim"></div>
+
+<div class="shell">
+
+<aside class="sidenav" id="sidenav">
+  <div class="sn-brand">
+    <div class="sn-brand-kicker">FP Compass · Manual</div>
+    <div class="sn-brand-title">Zoom 連携 の<br>設定 手順</div>
+    <span class="sn-brand-meta">5 セクション · 実作業 7 分</span>
+  </div>
+
+  <div>
+    <div class="sn-section-label">Contents</div>
+    <ol class="sn-list">
+      <li><a href="#s1"><span><b>スコープ 追加</b><span class="sn-time">2 分</span></span></a></li>
+      <li><a href="#s2"><span><b>録画完了通知 登録</b><span class="sn-time">3 分</span></span></a></li>
+      <li><a href="#s3"><span><b>FP Compass に 貼付</b><span class="sn-time">2 分</span></span></a></li>
+      <li><a href="#s4"><span><b>動作 確認</b><span class="sn-time">1 分 + 15 分待</span></span></a></li>
+      <li><a href="#s5"><span><b>困った時</b><span class="sn-time">7 症状</span></span></a></li>
+    </ol>
+  </div>
+
+  <a class="sn-cta" href="/zoom-test-checklist.html">
+    <div class="sn-cta-kicker">CHECKLIST</div>
+    <div class="sn-cta-title">動作テスト を 開く</div>
+  </a>
+
+  <div class="sn-foot">
+    <a href="/account.html">← アカウント設定 に 戻る</a>
+    <a href="/setup-manual.html">← 拡張機能 の セットアップ</a>
+  </div>
+</aside>
+
+<div class="content">
+
 <header class="head">
   <div class="head-wrap">
     <div class="kicker">FP Compass · 設定マニュアル</div>
     <h1>Zoom 連携 の 設定 手順</h1>
     <p class="lede">
-      Zoom Marketplace で FP Compass 用 の アクセス権 と 録画完了通知 を 設定 して、 面談 の 議事録 を 自動 で FP Compass に 届く 状態 に する 手順書。 直接 リンク で 1 クリック で 該当画面 に 飛ぶ ので、 迷わ ず 3 分 で 終わる。
+      Zoom Marketplace で FP Compass 用 の アクセス権 と 録画完了通知 を 設定 して、 面談 の 議事録 を 自動 で FP Compass に 届く 状態 に する 手順書。 直接 リンク で 1 クリック で 該当画面 に 飛ぶ ので、 迷わ ず 実作業 7 分 で 終わる。
     </p>
     <div class="head-meta">
       <span>5 セクション · 実作業 7 分</span>
@@ -172,17 +240,6 @@
     </div>
   </div>
 </header>
-
-<nav class="toc">
-  <div class="toc-title">Contents</div>
-  <ol>
-    <li><a href="#s1">アクセス権 (スコープ) を 追加</a></li>
-    <li><a href="#s2">録画完了通知 を 登録</a></li>
-    <li><a href="#s3">FP Compass に 認証情報 を 貼付</a></li>
-    <li><a href="#s4">動作 確認</a></li>
-    <li><a href="#s5">困った時</a></li>
-  </ol>
-</nav>
 
 <aside class="preflight">
   <div class="preflight-title">Before you start · 始める前 に</div>
@@ -647,9 +704,12 @@
 </main>
 
 <footer>
-  <p>FP Compass · Skeleton Inc. · Zoom 連携 設定マニュアル · v8 2026-07-30</p>
+  <p>FP Compass · Skeleton Inc. · Zoom 連携 設定マニュアル · v9 2026-07-30 (sidebar layout)</p>
   <p><a href="/setup-manual.html">← 設定マニュアル (全体) に 戻る</a></p>
 </footer>
+
+</div><!-- /.content -->
+</div><!-- /.shell -->
 
 <script>
   // Copy button interactivity
@@ -668,6 +728,40 @@
       }
     });
   });
+
+  // Mobile drawer
+  const nav = document.getElementById('sidenav');
+  const scrim = document.getElementById('sn-scrim');
+  const toggle = document.getElementById('sn-toggle');
+  function closeNav() { nav.classList.remove('open'); document.body.classList.remove('nav-open'); }
+  function openNav() { nav.classList.add('open'); document.body.classList.add('nav-open'); }
+  toggle.addEventListener('click', () => { nav.classList.contains('open') ? closeNav() : openNav(); });
+  scrim.addEventListener('click', closeNav);
+  document.querySelectorAll('.sn-list a').forEach(a => a.addEventListener('click', () => { if (window.innerWidth <= 900) closeNav(); }));
+
+  // Scrollspy: highlight active section in sidebar
+  const sections = document.querySelectorAll('main section[id]');
+  const links = new Map();
+  document.querySelectorAll('.sn-list a').forEach(a => {
+    const id = a.getAttribute('href').replace('#','');
+    links.set(id, a);
+  });
+  const obs = new IntersectionObserver((entries) => {
+    // Pick the entry closest to top of viewport that is intersecting
+    let best = null;
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        if (!best || e.boundingClientRect.top < best.boundingClientRect.top) best = e;
+      }
+    });
+    if (best) {
+      const id = best.target.id;
+      links.forEach((a, k) => a.classList.toggle('active', k === id));
+    }
+  }, { rootMargin: '-15% 0px -70% 0px', threshold: 0 });
+  sections.forEach(s => obs.observe(s));
+  // Default to first
+  if (links.get('s1')) links.get('s1').classList.add('active');
 </script>
 
 </body>
