@@ -48,7 +48,7 @@
   .head { background: var(--ink); color: #FFFFFF; padding: 52px 32px 40px; position: relative; overflow: hidden; }
   .head::after { content: ''; position: absolute; top: -40px; right: -30px; width: 320px; height: 320px; background: radial-gradient(circle at 60% 40%, rgba(0,132,74,0.32), transparent 65%); pointer-events: none; }
   .head-wrap { max-width: 820px; margin: 0 auto; position: relative; }
-  .kicker { font-family: 'Manrope', sans-serif; font-size: 11px; letter-spacing: 0.24em; font-weight: 700; color: rgba(255,255,255,0.75); text-transform: uppercase; margin-bottom: 14px; }
+  .kicker { font-family: 'Manrope', 'Noto Sans JP', sans-serif; font-size: 11.5px; letter-spacing: 0.08em; font-weight: 700; color: rgba(255,255,255,0.78); margin-bottom: 14px; }
   h1 { font-family: 'Manrope', 'Noto Sans JP', sans-serif; margin: 0 0 14px; font-size: 34px; font-weight: 900; letter-spacing: -0.02em; line-height: 1.2; }
   .lede { margin: 0 0 24px; color: rgba(255,255,255,0.85); font-size: 15.5px; line-height: 1.75; max-width: 640px; }
   .head-meta { display: flex; gap: 24px; flex-wrap: wrap; font-family: 'Manrope', sans-serif; font-size: 12px; letter-spacing: 0.08em; color: rgba(255,255,255,0.62); text-transform: uppercase; font-weight: 700; }
@@ -67,7 +67,7 @@
 
   section { margin-bottom: 60px; }
   .section-head { border-top: 1px solid var(--rule); padding-top: 28px; margin-bottom: 20px; }
-  .section-count { display: block; font-family: 'Manrope', sans-serif; color: var(--primary); font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; font-weight: 800; margin-bottom: 6px; }
+  .section-count { display: block; font-family: 'Manrope', sans-serif; color: var(--primary); font-size: 12px; letter-spacing: 0.14em; font-weight: 800; margin-bottom: 6px; }
   h2 { font-family: 'Manrope', 'Noto Sans JP', sans-serif; color: var(--ink); font-size: 26px; font-weight: 900; margin: 0 0 8px; letter-spacing: -0.02em; line-height: 1.25; }
   .section-lede { color: var(--dim); font-size: 14.5px; margin: 0 0 24px; max-width: 640px; }
   .section-time { display: inline-block; background: var(--surface-2); border: 1px solid var(--rule); border-radius: 999px; padding: 3px 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--dim); font-weight: 600; margin-left: 8px; vertical-align: 2px; letter-spacing: 0.04em; }
@@ -97,7 +97,7 @@
   .copy-list li { background: var(--surface-2); border: 1px solid var(--rule); border-radius: 8px; padding: 10px 14px; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; color: var(--ink); font-weight: 600; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; gap: 12px; word-break: break-all; }
   .copy-list li .copy-btn-inline { flex-shrink: 0; background: var(--ink); color: #fff; font-family: 'Manrope', sans-serif; font-size: 10px; font-weight: 800; letter-spacing: 0.08em; padding: 4px 10px; border-radius: 4px; border: none; cursor: pointer; text-transform: uppercase; }
   .copy-list li .copy-btn-inline.copied { background: var(--primary); }
-  .copy-list li .cb-label { color: var(--dim); font-size: 10.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; font-family: 'Manrope', sans-serif; margin-bottom: 4px; display: block; }
+  .copy-list li .cb-label { color: var(--dim); font-size: 11px; font-weight: 700; letter-spacing: 0.02em; font-family: 'Noto Sans JP', sans-serif; margin-bottom: 4px; display: block; }
   .copy-list li .cb-value { flex: 1; }
 
   /* URL bar mockup */
@@ -118,6 +118,17 @@
 
   /* Scope chip */
   .scope-chip { display: inline-block; background: var(--surface-2); border: 1px solid var(--rule); border-radius: 6px; padding: 3px 9px; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 700; color: var(--ink); margin: 3px 4px 3px 0; letter-spacing: -0.005em; }
+
+  /* Pre-flight */
+  .preflight { max-width: 820px; margin: 16px auto 0; background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 22px 26px; box-shadow: 0 1px 2px rgba(11,18,32,0.04); }
+  .preflight-title { font-family: 'Manrope', sans-serif; font-size: 11px; letter-spacing: 0.22em; font-weight: 800; color: var(--dim); text-transform: uppercase; margin-bottom: 14px; }
+  .preflight-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+  .preflight-list li { display: flex; align-items: flex-start; gap: 12px; font-size: 14px; color: var(--ink); font-weight: 600; line-height: 1.6; }
+  .preflight-list li::before { content: '✓'; flex-shrink: 0; width: 22px; height: 22px; border-radius: 6px; background: var(--primary); color: #fff; margin-top: 1px; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 900; font-family: 'Manrope', sans-serif; }
+  .preflight-list li b { color: var(--ink); font-weight: 800; display: block; margin-bottom: 2px; }
+  .preflight-list .pf-sub { display: block; font-weight: 500; color: var(--dim); font-size: 13px; line-height: 1.65; }
+  .preflight-note { margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--rule); font-size: 12.5px; color: var(--dim); line-height: 1.7; }
+  .preflight-note b { color: var(--ink); font-weight: 800; }
 
   footer { max-width: 820px; margin: 20px auto 40px; padding: 20px 32px; border-top: 1px solid var(--rule); font-size: 12px; color: var(--dim); font-family: 'Manrope', sans-serif; letter-spacing: 0; display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
   footer a { color: var(--primary); text-decoration: none; font-weight: 700; }
@@ -155,7 +166,7 @@
       Zoom Marketplace で FP Compass 用 の アクセス権 と 録画完了通知 を 設定 して、 面談 の 議事録 を 自動 で FP Compass に 届く 状態 に する 手順書。 直接 リンク で 1 クリック で 該当画面 に 飛ぶ ので、 迷わ ず 3 分 で 終わる。
     </p>
     <div class="head-meta">
-      <span>3 セクション · 全 5 分</span>
+      <span>4 セクション · 実作業 5 分</span>
       <span>Zoom Pro 契約 済 前提</span>
       <span>2026-07-29 更新</span>
     </div>
@@ -171,6 +182,20 @@
     <li><a href="#s4">困った時</a></li>
   </ol>
 </nav>
+
+<aside class="preflight">
+  <div class="preflight-title">Before you start · 始める前 に</div>
+  <ul class="preflight-list">
+    <li><div><b>Zoom Pro (¥2,125/月) 契約 済</b><span class="pf-sub">無料 プラン だと Cloud 録画 と 文字起こし が 使えない ため 必須</span></div></li>
+    <li><div><b>Chrome で Zoom アカウント に ログイン 済</b><span class="pf-sub">2 要素認証 まで 完了 させて おく (Marketplace 遷移中 に session 切れる と やり直し に なる)</span></div></li>
+    <li><div><b>連続 で 10 分 触れる 時間 が ある</b><span class="pf-sub">途中 で 席 を 離れる と Zoom 側 session (5〜10 分) が 切れて 入力 が 消える</span></div></li>
+    <li><div><b>FP Compass 側 で は 何 も する 必要 なし</b><span class="pf-sub">Skeleton が 事前 に 全部 反映 済</span></div></li>
+  </ul>
+  <div class="preflight-note">
+    <b>所要時間</b>: 5 分 (Section 01 = 2 分 · Section 02 = 3 分)。 動作確認 の 面談 テスト は 別途 15 分 (Zoom Cloud の 処理待ち 含む)。<br>
+    <b>もし 途中 で 何 か 詰まったら</b>: 一旦 「<a href="#s4" style="color:var(--primary);font-weight:800;">Section 04 · 困った時</a>」 を 先 に 見る と 大抵 の 症状 は 載って いる。
+  </div>
+</aside>
 
 <main>
 

@@ -366,14 +366,20 @@
           Zoom 接続テスト + 保存
         </button>
         <div id="zoom-result" style="margin-top:16px;"></div>
-        <details style="margin-top:18px;background:#F8FAFC;padding:14px 18px;border-radius:8px;font-size:12.5px;color:var(--ink-2);">
-          <summary style="cursor:pointer;font-weight:700;color:var(--ink);">💡 Zoom credentials の 取得方法</summary>
-          <p style="margin-top:10px;line-height:1.85;">
-            1. <a href="https://marketplace.zoom.us/develop/create" target="_blank" style="color:#2D8CFF;font-weight:700;">Zoom Marketplace</a> を開く → 「Server-to-Server OAuth」 アプリ を 新規作成<br>
-            2. 「App Credentials」 タブ で <strong>Account ID / Client ID / Client Secret</strong> 取得<br>
-            3. 「Scopes」 タブ で <strong>meeting:write:meeting:admin</strong> 等の Meeting 系 scope 追加<br>
-            4. 「Activation」 タブ で アプリ Activate<br>
-            5. この画面 に 3つ 貼り付け → 保存
+        <a href="/zoom-setup-manual.html" target="_blank" class="zoom-manual-cta" style="display:block;margin-top:18px;background:linear-gradient(135deg,#1E293B 0%,#0F172A 100%);color:#fff;padding:18px 22px;border-radius:10px;text-decoration:none;transition:transform .15s, box-shadow .15s, filter .15s;"
+          onmouseover="this.style.filter='brightness(1.12)';this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 20px rgba(15,23,42,0.18)';"
+          onmouseout="this.style.filter='';this.style.transform='';this.style.boxShadow='';">
+          <div style="font-family:'Manrope',sans-serif;font-size:10.5px;letter-spacing:0.16em;font-weight:800;color:#93C5FD;text-transform:uppercase;margin-bottom:6px;">Setup Manual · 全 3 セクション</div>
+          <div style="font-size:15px;font-weight:800;line-height:1.5;margin-bottom:4px;">Zoom Marketplace 設定 マニュアル を 開く <span style="color:#60A5FA;">↗</span></div>
+          <div style="font-size:12.5px;color:#CBD5E1;line-height:1.6;font-weight:500;">
+            スコープ 追加 → 録画完了通知 の 登録 → 動作確認 まで、 直接 リンク で 迷わ ず 5 分。
+          </div>
+        </a>
+        <details style="margin-top:14px;background:#F8FAFC;padding:12px 16px;border-radius:8px;font-size:12px;color:var(--ink-2);">
+          <summary style="cursor:pointer;font-weight:700;color:var(--ink);">💡 上 の Account ID / Client ID / Client Secret は どこ で 取る?</summary>
+          <p style="margin-top:8px;line-height:1.8;">
+            <a href="https://marketplace.zoom.us/develop/create" target="_blank" style="color:#2D8CFF;font-weight:700;">Zoom Marketplace</a> で <strong>Server-to-Server OAuth</strong> アプリ を 作成 → <strong>App Credentials</strong> タブ に 3 つ 全部 表示 されて いる の で コピー して 上 の 欄 に 貼付。<br>
+            <small style="color:var(--ink-3);">※ Server-to-Server OAuth 単体 は Zoom Pro 契約 なし で も 作れる が、 面談 議事録 の 自動化 まで 使う に は Zoom Pro 契約 と 上 の マニュアル で 追加設定 が 必要。</small>
           </p>
         </details>
       </div>
