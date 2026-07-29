@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Zoom 連携 設定マニュアル | FP Compass</title>
+<meta name="description" content="Zoom Marketplace で FP Compass 用 の アクセス権 と 録画完了通知 を 設定 する 手順書。 全 3 セクション、 所要 8 分。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800;900&family=Noto+Sans+JP:wght@400;500;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #FBFBFD;
+    --surface: #FFFFFF;
+    --surface-2: #F5F7FA;
+    --ink: #0F1729;
+    --ink-2: #334155;
+    --dim: #4B5563;
+    --rule: #E5E7EB;
+    --primary: #00844A;
+    --primary-soft: #ECFDF5;
+    --primary-line: rgba(0,132,74,0.22);
+    --primary-dark: #065F46;
+    --warn: #92400E;
+    --warn-bg: #FEF3C7;
+    --warn-line: rgba(146,64,14,0.2);
+    --danger: #B91C1C;
+    --danger-bg: #FEF2F2;
+    --accent-blue: #1E40AF;
+    --accent-blue-bg: #DBEAFE;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 20px; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink-2);
+    font-family: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 15px;
+    line-height: 1.75;
+    font-weight: 500;
+    letter-spacing: -0.005em;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  ::selection { background: var(--primary); color: #fff; }
+
+  .head { background: var(--ink); color: #FFFFFF; padding: 52px 32px 40px; position: relative; overflow: hidden; }
+  .head::after { content: ''; position: absolute; top: -40px; right: -30px; width: 320px; height: 320px; background: radial-gradient(circle at 60% 40%, rgba(0,132,74,0.32), transparent 65%); pointer-events: none; }
+  .head-wrap { max-width: 820px; margin: 0 auto; position: relative; }
+  .kicker { font-family: 'Manrope', sans-serif; font-size: 11px; letter-spacing: 0.24em; font-weight: 700; color: rgba(255,255,255,0.75); text-transform: uppercase; margin-bottom: 14px; }
+  h1 { font-family: 'Manrope', 'Noto Sans JP', sans-serif; margin: 0 0 14px; font-size: 34px; font-weight: 900; letter-spacing: -0.02em; line-height: 1.2; }
+  .lede { margin: 0 0 24px; color: rgba(255,255,255,0.85); font-size: 15.5px; line-height: 1.75; max-width: 640px; }
+  .head-meta { display: flex; gap: 24px; flex-wrap: wrap; font-family: 'Manrope', sans-serif; font-size: 12px; letter-spacing: 0.08em; color: rgba(255,255,255,0.62); text-transform: uppercase; font-weight: 700; }
+  .head-meta span::before { content: '·  '; opacity: 0.4; margin-right: 4px; }
+  .head-meta span:first-child::before { content: ''; margin: 0; }
+
+  .toc { background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 20px 24px; margin: 28px auto 0; max-width: 820px; box-shadow: 0 1px 2px rgba(11,18,32,0.04); }
+  .toc-title { font-family: 'Manrope', sans-serif; font-size: 11px; letter-spacing: 0.22em; font-weight: 800; color: var(--dim); text-transform: uppercase; margin-bottom: 12px; }
+  .toc ol { list-style: none; padding: 0; margin: 0; counter-reset: t; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }
+  .toc li { counter-increment: t; }
+  .toc a { display: flex; align-items: baseline; gap: 10px; padding: 10px 12px; border-radius: 8px; background: var(--surface-2); color: var(--ink); font-size: 13.5px; font-weight: 700; text-decoration: none; border: 1px solid transparent; transition: all .12s; }
+  .toc a:hover { background: var(--primary-soft); border-color: var(--primary-line); color: var(--primary-dark); }
+  .toc a::before { content: counter(t, decimal-leading-zero); font-family: 'Manrope', sans-serif; color: var(--primary); font-size: 11px; letter-spacing: 0.08em; font-weight: 800; }
+
+  main { max-width: 820px; margin: 0 auto; padding: 32px 32px 40px; }
+
+  section { margin-bottom: 60px; }
+  .section-head { border-top: 1px solid var(--rule); padding-top: 28px; margin-bottom: 20px; }
+  .section-count { display: block; font-family: 'Manrope', sans-serif; color: var(--primary); font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; font-weight: 800; margin-bottom: 6px; }
+  h2 { font-family: 'Manrope', 'Noto Sans JP', sans-serif; color: var(--ink); font-size: 26px; font-weight: 900; margin: 0 0 8px; letter-spacing: -0.02em; line-height: 1.25; }
+  .section-lede { color: var(--dim); font-size: 14.5px; margin: 0 0 24px; max-width: 640px; }
+  .section-time { display: inline-block; background: var(--surface-2); border: 1px solid var(--rule); border-radius: 999px; padding: 3px 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--dim); font-weight: 600; margin-left: 8px; vertical-align: 2px; letter-spacing: 0.04em; }
+
+  .step { background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 22px 24px; margin-bottom: 12px; box-shadow: 0 1px 2px rgba(11,18,32,0.03); }
+  .step-head { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 12px; }
+  .step-num { flex-shrink: 0; background: var(--ink); color: #FFFFFF; width: 30px; height: 30px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; font-weight: 900; font-size: 13px; font-family: 'Manrope', sans-serif; margin-top: 2px; }
+  .step-title { font-family: 'Manrope', 'Noto Sans JP', sans-serif; font-size: 17px; font-weight: 900; color: var(--ink); letter-spacing: -0.01em; line-height: 1.4; margin: 0; }
+  .step-body { padding-left: 44px; }
+  .step-body p { margin: 0 0 10px; }
+  .step-body ol, .step-body ul { padding-left: 20px; margin: 8px 0 12px; }
+  .step-body ol li, .step-body ul li { margin-bottom: 6px; }
+  .step-body strong { color: var(--ink); font-weight: 800; }
+  .step-body code { background: var(--surface-2); padding: 2px 7px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; color: var(--ink); font-weight: 600; }
+
+  .cta { display: inline-block; background: var(--primary); color: #FFFFFF; padding: 12px 24px; border-radius: 10px; text-decoration: none; font-weight: 800; font-size: 14px; letter-spacing: 0.02em; margin: 4px 8px 4px 0; transition: background .15s; border: none; cursor: pointer; font-family: inherit; }
+  .cta:hover { background: #06703F; }
+  .cta.dark { background: var(--ink); }
+  .cta.dark:hover { background: #000000; }
+
+  /* Copy-paste blocks */
+  .copy-block { background: #0F1729; color: #E5E7EB; border-radius: 10px; padding: 14px 18px; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 13px; margin: 10px 0; word-break: break-all; overflow-wrap: anywhere; position: relative; line-height: 1.7; }
+  .copy-block .copy-btn { position: absolute; top: 8px; right: 8px; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); color: #E5E7EB; font-family: 'Manrope', sans-serif; font-size: 10px; font-weight: 800; letter-spacing: 0.08em; padding: 5px 10px; border-radius: 5px; cursor: pointer; text-transform: uppercase; transition: background .15s; }
+  .copy-block .copy-btn:hover { background: rgba(255,255,255,0.22); }
+  .copy-block .copy-btn.copied { background: var(--primary); border-color: var(--primary); color: #fff; }
+  .copy-list { list-style: none; padding: 0; margin: 8px 0; }
+  .copy-list li { background: var(--surface-2); border: 1px solid var(--rule); border-radius: 8px; padding: 10px 14px; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; color: var(--ink); font-weight: 600; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; gap: 12px; word-break: break-all; }
+  .copy-list li .copy-btn-inline { flex-shrink: 0; background: var(--ink); color: #fff; font-family: 'Manrope', sans-serif; font-size: 10px; font-weight: 800; letter-spacing: 0.08em; padding: 4px 10px; border-radius: 4px; border: none; cursor: pointer; text-transform: uppercase; }
+  .copy-list li .copy-btn-inline.copied { background: var(--primary); }
+  .copy-list li .cb-label { color: var(--dim); font-size: 10.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; font-family: 'Manrope', sans-serif; margin-bottom: 4px; display: block; }
+  .copy-list li .cb-value { flex: 1; }
+
+  /* URL bar mockup */
+  .url-bar { background: #FFFFFF; border: 1px solid var(--rule); border-radius: 999px; padding: 10px 18px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink); box-shadow: inset 0 1px 2px rgba(0,0,0,0.03); display: flex; align-items: center; gap: 10px; margin: 8px 0; word-break: break-all; }
+  .url-bar::before { content: ''; width: 10px; height: 12px; border: 1.5px solid var(--dim); border-radius: 2px; border-bottom-width: 4px; flex-shrink: 0; opacity: 0.5; }
+
+  /* Callouts */
+  .callout { border-left: 3px solid; padding: 12px 16px 12px 18px; border-radius: 6px; margin: 12px 0; font-size: 14px; line-height: 1.7; }
+  .callout.warn { background: var(--warn-bg); border-color: var(--warn); color: #78350F; }
+  .callout.info { background: var(--accent-blue-bg); border-color: var(--accent-blue); color: #1E3A8A; }
+  .callout.tip { background: var(--primary-soft); border-color: var(--primary); color: var(--primary-dark); }
+  .callout b { color: var(--ink); font-weight: 800; }
+
+  /* Checkpoint */
+  .checkpoint { background: var(--primary-soft); border: 1.5px solid var(--primary); border-radius: 12px; padding: 20px 24px; margin: 24px 0; }
+  .checkpoint-title { font-family: 'Manrope', sans-serif; font-size: 12px; letter-spacing: 0.18em; font-weight: 800; color: var(--primary-dark); text-transform: uppercase; margin-bottom: 10px; }
+  .checkpoint-body { color: var(--ink); font-size: 14.5px; font-weight: 600; line-height: 1.7; }
+
+  /* Scope chip */
+  .scope-chip { display: inline-block; background: var(--surface-2); border: 1px solid var(--rule); border-radius: 6px; padding: 3px 9px; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 700; color: var(--ink); margin: 3px 4px 3px 0; letter-spacing: -0.005em; }
+
+  footer { max-width: 820px; margin: 20px auto 40px; padding: 20px 32px; border-top: 1px solid var(--rule); font-size: 12px; color: var(--dim); font-family: 'Manrope', sans-serif; letter-spacing: 0; display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+  footer a { color: var(--primary); text-decoration: none; font-weight: 700; }
+
+  @media (max-width: 640px) {
+    .head { padding: 40px 20px 32px; }
+    h1 { font-size: 26px; }
+    main { padding: 24px 18px 32px; }
+    h2 { font-size: 22px; }
+    .step { padding: 18px 16px; }
+    .step-body { padding-left: 0; margin-top: 8px; }
+    .toc ol { grid-template-columns: 1fr; }
+    .copy-list li { flex-direction: column; align-items: stretch; }
+    .copy-list li .copy-btn-inline { align-self: flex-end; }
+  }
+  @media print {
+    body { background: #fff; }
+    .head { color: #000; background: #fff; border-bottom: 2px solid #000; }
+    .head::after { display: none; }
+    .kicker, .lede, .head-meta { color: #444; }
+    .copy-block { background: #f5f5f5; color: #000; border: 1px solid #ccc; }
+    .copy-block .copy-btn, .copy-list li .copy-btn-inline { display: none; }
+    section { break-inside: avoid; }
+    .step { break-inside: avoid; box-shadow: none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="head">
+  <div class="head-wrap">
+    <div class="kicker">FP Compass · 設定マニュアル</div>
+    <h1>Zoom 連携 の 設定 手順</h1>
+    <p class="lede">
+      Zoom Marketplace で FP Compass 用 の アクセス権 と 録画完了通知 を 設定 して、 面談 の 議事録 を 自動 で FP Compass に 届く 状態 に する 手順書。 直接 リンク で 1 クリック で 該当画面 に 飛ぶ ので、 迷わ ず 3 分 で 終わる。
+    </p>
+    <div class="head-meta">
+      <span>3 セクション · 全 5 分</span>
+      <span>Zoom Pro 契約 済 前提</span>
+      <span>2026-07-29 更新</span>
+    </div>
+  </div>
+</header>
+
+<nav class="toc">
+  <div class="toc-title">Contents</div>
+  <ol>
+    <li><a href="#s1">アクセス権 (スコープ) を 追加</a></li>
+    <li><a href="#s2">録画完了通知 を 登録</a></li>
+    <li><a href="#s3">動作 確認</a></li>
+  </ol>
+</nav>
+
+<main>
+
+  <section id="s1">
+    <div class="section-head">
+      <span class="section-count">Section 01</span>
+      <h2>アクセス権 (スコープ) を 追加 <span class="section-time">2 分</span></h2>
+    </div>
+    <p class="section-lede">
+      FP Compass が Zoom の データ を 取得 する ため の 権限 4 つ を、 Zoom Marketplace の アプリ に 追加 します。 下 の 直接 リンク で Scopes 画面 に 一発 で 飛べます。
+    </p>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">1</span>
+        <h3 class="step-title">Scopes 画面 を 直接 開く (Chrome ログイン 必要)</h3>
+      </div>
+      <div class="step-body">
+        <p>下 の 「Copy」 を 押して URL を コピー → Chrome の アドレスバー に 貼付 → Zoom アカウント で ログイン (2要素認証 まで 完了 させる)。</p>
+        <div class="copy-block" data-copy="https://marketplace.zoom.us/develop/apps/anOSyfukSYClWMKm1Avf1Q/scope">
+          <button class="copy-btn">Copy</button>
+          https://marketplace.zoom.us/develop/apps/anOSyfukSYClWMKm1Avf1Q/scope
+        </div>
+        <p style="margin-top:10px;">
+          <a class="cta" href="https://marketplace.zoom.us/develop/apps/anOSyfukSYClWMKm1Avf1Q/scope" target="_blank" rel="noopener">↗ Scopes 画面 を 開く</a>
+        </p>
+        <div class="callout info">
+          <b>これ は owner (FP Compass 本体) の 直接 リンク</b>。 別 会社 で FP Compass 契約 する 場合 は、 各 client 自身 の Zoom アプリ の app ID に 差し替え て 使う。
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">2</span>
+        <h3 class="step-title">「+ Add Scopes」 で スコープ 4 つ を チェック</h3>
+      </div>
+      <div class="step-body">
+        <p>「+ Add Scopes」 ボタン を 押して 出た モーダル の 検索欄 に 下 の 名前 を 入力 して、 該当 する 権限 に チェック。 4 つ 全部 終わったら <strong>Done</strong> → <strong>Continue</strong> → <strong>Save</strong>。</p>
+        <ul class="copy-list">
+          <li>
+            <div class="cb-value"><span class="cb-label">録画 の 一覧 取得</span>cloud_recording:read:list_user_recordings:admin</div>
+            <button class="copy-btn-inline" data-copy="cloud_recording:read:list_user_recordings:admin">Copy</button>
+          </li>
+          <li>
+            <div class="cb-value"><span class="cb-label">録画 と 文字起こし の 取得</span>cloud_recording:read:recording:admin</div>
+            <button class="copy-btn-inline" data-copy="cloud_recording:read:recording:admin">Copy</button>
+          </li>
+          <li>
+            <div class="cb-value"><span class="cb-label">ユーザー 情報 の 取得</span>user:read:user:admin</div>
+            <button class="copy-btn-inline" data-copy="user:read:user:admin">Copy</button>
+          </li>
+          <li>
+            <div class="cb-value"><span class="cb-label">プラン情報 の 取得 (任意)</span>billing:read:plan_information:admin</div>
+            <button class="copy-btn-inline" data-copy="billing:read:plan_information:admin">Copy</button>
+          </li>
+        </ul>
+        <div class="callout tip">
+          <b>コツ</b>: 検索欄 に <code>cloud_recording</code> と 入れる と 2 つ 一気 に 候補 が 出る。 <code>user:read</code> は 「User (Admin) 単一 users」 の 意味 の もの を 選ぶ。
+        </div>
+      </div>
+    </div>
+
+    <div class="checkpoint">
+      <div class="checkpoint-title">Section 01 完了 確認</div>
+      <div class="checkpoint-body">
+        Save 後、 Scopes タブ に <span class="scope-chip">cloud_recording:read:list_user_recordings</span> <span class="scope-chip">cloud_recording:read:recording</span> <span class="scope-chip">user:read:user</span> <span class="scope-chip">billing:read:plan_information</span> の 4 つ が 表示 されて いれば OK。
+      </div>
+    </div>
+  </section>
+
+  <section id="s2">
+    <div class="section-head">
+      <span class="section-count">Section 02</span>
+      <h2>録画完了通知 を 登録 <span class="section-time">3 分</span></h2>
+    </div>
+    <p class="section-lede">
+      Zoom で 会議 の 録画 が 終わったら、 FP Compass に 自動 で 通知 が 届く 設定 を 追加 します。 下 の 直接 リンク で Feature 画面 に 一発 で 飛べます。
+    </p>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">1</span>
+        <h3 class="step-title">Feature 画面 を 直接 開く</h3>
+      </div>
+      <div class="step-body">
+        <div class="copy-block" data-copy="https://marketplace.zoom.us/develop/apps/anOSyfukSYClWMKm1Avf1Q/feature">
+          <button class="copy-btn">Copy</button>
+          https://marketplace.zoom.us/develop/apps/anOSyfukSYClWMKm1Avf1Q/feature
+        </div>
+        <p style="margin-top:10px;">
+          <a class="cta" href="https://marketplace.zoom.us/develop/apps/anOSyfukSYClWMKm1Avf1Q/feature" target="_blank" rel="noopener">↗ Feature 画面 を 開く</a>
+        </p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">2</span>
+        <h3 class="step-title">Event Subscriptions を ON → 「+ Add Event Subscription」</h3>
+      </div>
+      <div class="step-body">
+        <p>ページ の 中央 の 「General Features」 に ある <strong>Event Subscriptions</strong> の トグル スイッチ を 押して グリーン に する。 直後 に <strong>「+ Add Event Subscription」</strong> ボタン が 現れる ので 押す。</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">3</span>
+        <h3 class="step-title">名前 + 通知先 URL を 貼付</h3>
+      </div>
+      <div class="step-body">
+        <p>開いた フォーム に、 下 の 値 を そのまま Copy して 貼付:</p>
+        <ul class="copy-list">
+          <li>
+            <div class="cb-value"><span class="cb-label">Subscription Name</span>Recording Completed</div>
+            <button class="copy-btn-inline" data-copy="Recording Completed">Copy</button>
+          </li>
+          <li>
+            <div class="cb-value"><span class="cb-label">Event notification endpoint URL</span>https://asia-northeast1-skeleton-fp-compass-632026.cloudfunctions.net/zoomRecordingWebhook</div>
+            <button class="copy-btn-inline" data-copy="https://asia-northeast1-skeleton-fp-compass-632026.cloudfunctions.net/zoomRecordingWebhook">Copy</button>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">4</span>
+        <h3 class="step-title">「+ Add Events」 → Recording → All Recordings have completed → Done → Save</h3>
+      </div>
+      <div class="step-body">
+        <p>フォーム 内 の <strong>「+ Add Events」</strong> を 押す と モーダル が 開く。 続けて 4 動作:</p>
+        <ol>
+          <li>左サイドバー で <strong>Recording</strong> を 押す</li>
+          <li>右側 で <strong>All Recordings have completed</strong> の チェックボックス を 押す</li>
+          <li>右下 の <strong>Done</strong> を 押す (モーダル 閉じる)</li>
+          <li>フォーム 下部 の <strong>Save</strong> を 押す</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">5</span>
+        <h3 class="step-title">「Validate」 を 押して グリーン ✓ を 確認</h3>
+      </div>
+      <div class="step-body">
+        <p>保存 された URL 欄 の 下 に <strong>「Validate」</strong> ボタン が 現れる ので 押す。 Zoom が Skeleton の サーバー に 確認 を 送り、 <strong>グリーン ✓ (Validated)</strong> に なれば 登録完了。</p>
+        <div class="callout warn">
+          <b>もし Validate が 失敗 したら</b>: URL に 余分 な スペース / 全角 文字 が 入って ない か 確認。 それ でも 失敗 する なら Skeleton の Jobs に 連絡 (裏 の Secret Token の 反映 状況 を 実測 確認 する)。
+        </div>
+      </div>
+    </div>
+
+    <div class="checkpoint">
+      <div class="checkpoint-title">Section 02 完了 確認</div>
+      <div class="checkpoint-body">
+        Feature タブ の Event Subscriptions 一覧 に 「Recording Completed」 サブスクリプション が グリーン ✓ で 表示 されて いれば OK。
+      </div>
+    </div>
+  </section>
+
+  <section id="s3">
+    <div class="section-head">
+      <span class="section-count">Section 03</span>
+      <h2>動作 確認 <span class="section-time">1 分</span></h2>
+    </div>
+    <p class="section-lede">
+      設定 が 全部 完了 した か どう か を、 実 面談 1 本 で テスト します。
+    </p>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">1</span>
+        <h3 class="step-title">FP Compass で テスト 面談 を 開始</h3>
+      </div>
+      <div class="step-body">
+        <p>FP Compass の 顧客カルテ で 「🎙 面談 を 開始」 → 「今すぐ Zoom」 を 押して、 Zoom タブ で <strong>10 秒 ほど 声出し</strong> して 「テスト、 これ 入って ます」 等 話す。</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">2</span>
+        <h3 class="step-title">Zoom タブ を 閉じて 5-15 分 待つ</h3>
+      </div>
+      <div class="step-body">
+        <p>Zoom タブ を 閉じる と 会議 が 終了 → Zoom Cloud で 録画 + 文字起こし の 処理 (5-15 分 かかる) → 完了 したら Skeleton の エンドポイント に 通知 が 届く。</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="step-num">3</span>
+        <h3 class="step-title">FP Compass の 面談履歴 タブ で 議事録 を 確認</h3>
+      </div>
+      <div class="step-body">
+        <p>該当 顧客 の カルテ を 開いて 「面談履歴」 タブ を 見る。 <strong>新しい 議事録</strong> が 追加 されて いれば <strong>成功</strong>。</p>
+        <p>追加 された 議事録 に は:</p>
+        <ul>
+          <li>「Zoom 面談」 の 記録</li>
+          <li>Whisper より 精度 高い Zoom cloud 文字起こし</li>
+          <li>Claude が 生成 した 5 セクション の 議事録</li>
+        </ul>
+        <p>が 含まれ ます。</p>
+      </div>
+    </div>
+
+    <div class="checkpoint">
+      <div class="checkpoint-title">全 設定 完了</div>
+      <div class="checkpoint-body">
+        面談履歴 に 議事録 が 自動 追加 されて いれば、 Zoom → FP Compass の 全 自動化 が 稼働 開始。 以降 は 面談 する だけ で 議事録 が 溜まる 状態 に なる。
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <p>FP Compass · Skeleton Inc. · Zoom 連携 設定マニュアル · 2026-07-29</p>
+  <p><a href="/setup-manual.html">← 設定マニュアル (全体) に 戻る</a></p>
+</footer>
+
+<script>
+  // Copy button interactivity
+  document.querySelectorAll('.copy-btn, .copy-btn-inline').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      const target = btn.dataset.copy || btn.parentElement.dataset.copy;
+      if (!target) return;
+      try {
+        await navigator.clipboard.writeText(target);
+        const orig = btn.textContent;
+        btn.textContent = 'Copied';
+        btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = orig; btn.classList.remove('copied'); }, 1400);
+      } catch (err) {
+        alert('コピー 失敗: ' + err.message);
+      }
+    });
+  });
+</script>
+
+</body>
+</html>
