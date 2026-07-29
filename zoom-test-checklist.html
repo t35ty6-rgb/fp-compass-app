@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Zoom 動作テスト チェックリスト | FP Compass</title>
+<meta name="description" content="Zoom 連携 の 最終 動作テスト。 中学生 でも わかる 1 画面 チェックリスト。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800;900&family=Noto+Sans+JP:wght@400;500;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #FBFBFD;
+    --surface: #FFFFFF;
+    --surface-2: #F5F7FA;
+    --ink: #0F1729;
+    --ink-2: #334155;
+    --dim: #4B5563;
+    --rule: #E5E7EB;
+    --primary: #00844A;
+    --primary-soft: #ECFDF5;
+    --primary-line: rgba(0,132,74,0.22);
+    --primary-dark: #065F46;
+    --warn: #92400E;
+    --warn-bg: #FEF3C7;
+    --danger: #B91C1C;
+    --danger-bg: #FEF2F2;
+    --accent-blue: #1E40AF;
+    --accent-blue-bg: #DBEAFE;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--bg); color: var(--ink-2); font-family: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, sans-serif; font-size: 15px; line-height: 1.7; font-weight: 500; letter-spacing: -0.005em; -webkit-font-smoothing: antialiased; }
+
+  .head { background: var(--ink); color: #fff; padding: 44px 24px 36px; }
+  .head-wrap { max-width: 780px; margin: 0 auto; }
+  .kicker { font-family: 'Manrope', 'Noto Sans JP', sans-serif; font-size: 11.5px; letter-spacing: 0.08em; font-weight: 700; color: rgba(255,255,255,0.78); margin-bottom: 12px; }
+  h1 { font-family: 'Manrope', 'Noto Sans JP', sans-serif; margin: 0 0 12px; font-size: 30px; font-weight: 900; letter-spacing: -0.02em; line-height: 1.25; }
+  .lede { margin: 0 0 22px; color: rgba(255,255,255,0.86); font-size: 14.5px; line-height: 1.7; max-width: 600px; }
+  .head-meta { display: flex; gap: 18px; flex-wrap: wrap; font-family: 'Manrope', sans-serif; font-size: 11.5px; letter-spacing: 0.05em; color: rgba(255,255,255,0.65); font-weight: 700; }
+  .head-meta span::before { content: '·  '; opacity: 0.4; margin-right: 4px; }
+  .head-meta span:first-child::before { content: ''; margin: 0; }
+
+  /* Progress rail */
+  .rail { max-width: 780px; margin: 24px auto 0; padding: 0 24px; }
+  .rail-inner { background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 14px 20px; display: flex; align-items: center; gap: 14px; box-shadow: 0 1px 2px rgba(11,18,32,0.04); }
+  .rail-label { font-family: 'Manrope', sans-serif; font-size: 11.5px; font-weight: 800; color: var(--dim); letter-spacing: 0.06em; flex-shrink: 0; }
+  .rail-bar { flex: 1; height: 8px; background: var(--surface-2); border-radius: 999px; overflow: hidden; position: relative; }
+  .rail-fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0%; background: linear-gradient(90deg, var(--primary), #06703F); border-radius: 999px; transition: width .4s ease-out; }
+  .rail-count { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; color: var(--ink); flex-shrink: 0; }
+
+  main { max-width: 780px; margin: 0 auto; padding: 22px 24px 40px; }
+
+  .phase { background: var(--surface); border: 1px solid var(--rule); border-radius: 14px; padding: 20px 22px; margin-bottom: 14px; box-shadow: 0 1px 2px rgba(11,18,32,0.04); transition: opacity .2s; }
+  .phase.done { opacity: 0.55; }
+  .phase.done .phase-h .phase-title::after { content: ' ✓ 完了'; color: var(--primary); font-size: 13px; font-weight: 800; }
+  .phase-h { display: flex; align-items: baseline; gap: 12px; margin-bottom: 6px; }
+  .phase-num { font-family: 'Manrope', sans-serif; color: var(--primary); font-size: 12px; letter-spacing: 0.06em; font-weight: 800; flex-shrink: 0; }
+  .phase-title { font-family: 'Manrope', 'Noto Sans JP', sans-serif; color: var(--ink); font-size: 19px; font-weight: 900; letter-spacing: -0.01em; margin: 0; }
+  .phase-time { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--dim); font-weight: 600; margin-left: 6px; background: var(--surface-2); padding: 2px 8px; border-radius: 999px; border: 1px solid var(--rule); }
+  .phase-lede { font-size: 13.5px; color: var(--dim); margin: 0 0 14px; }
+
+  ul.checks { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+  ul.checks li { display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px; background: var(--surface-2); border: 1.5px solid transparent; border-radius: 10px; cursor: pointer; transition: all .12s; user-select: none; }
+  ul.checks li:hover { background: #EEF2F7; border-color: var(--rule); }
+  ul.checks li.done { background: var(--primary-soft); border-color: var(--primary-line); }
+  ul.checks li.done .check-txt { color: var(--primary-dark); text-decoration: line-through; text-decoration-color: rgba(6,95,70,0.4); text-decoration-thickness: 1.5px; }
+
+  .check-box { flex-shrink: 0; width: 22px; height: 22px; border-radius: 6px; border: 2px solid var(--rule); background: #fff; display: inline-flex; align-items: center; justify-content: center; margin-top: 1px; transition: all .12s; }
+  ul.checks li.done .check-box { background: var(--primary); border-color: var(--primary); }
+  ul.checks li.done .check-box::after { content: '✓'; color: #fff; font-family: 'Manrope', sans-serif; font-weight: 900; font-size: 13px; }
+
+  .check-body { flex: 1; min-width: 0; }
+  .check-txt { font-size: 14.5px; color: var(--ink); font-weight: 700; line-height: 1.55; }
+  .check-hint { display: block; font-size: 12.5px; color: var(--dim); font-weight: 500; margin-top: 3px; line-height: 1.6; }
+  .check-hint code { background: var(--surface); padding: 1px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink); font-weight: 600; border: 1px solid var(--rule); }
+
+  .link-btn { display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; padding: 6px 12px; background: var(--ink); color: #fff; text-decoration: none; border-radius: 8px; font-size: 12.5px; font-weight: 700; letter-spacing: 0.02em; transition: background .12s; }
+  .link-btn:hover { background: #000; }
+  .link-btn.primary { background: var(--primary); }
+  .link-btn.primary:hover { background: #06703F; }
+  .link-btn::after { content: ' ↗'; font-size: 11px; }
+
+  /* Timer widget */
+  .timer { text-align: center; padding: 16px 12px 6px; }
+  .timer-display { font-family: 'JetBrains Mono', monospace; font-size: 48px; font-weight: 700; color: var(--ink); letter-spacing: 0.02em; line-height: 1; margin-bottom: 12px; }
+  .timer-display.running { color: var(--primary); }
+  .timer-display.done { color: var(--primary-dark); animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.55; } }
+  .timer-btn { display: inline-flex; padding: 12px 26px; background: var(--primary); color: #fff; border: none; border-radius: 10px; font-family: inherit; font-size: 14px; font-weight: 800; letter-spacing: 0.02em; cursor: pointer; transition: background .15s; }
+  .timer-btn:hover { background: #06703F; }
+  .timer-btn:disabled { background: var(--dim); cursor: not-allowed; opacity: 0.6; }
+  .timer-note { font-size: 12.5px; color: var(--dim); margin-top: 10px; }
+
+  .success-banner { display: none; margin-top: 18px; padding: 22px 24px; background: var(--primary-soft); border: 2px solid var(--primary); border-radius: 14px; text-align: center; }
+  .success-banner.show { display: block; animation: fadeUp .4s ease-out; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .success-banner .st { font-family: 'Manrope', sans-serif; color: var(--primary-dark); font-size: 12px; letter-spacing: 0.14em; font-weight: 800; margin-bottom: 8px; }
+  .success-banner h3 { font-family: 'Manrope', 'Noto Sans JP', sans-serif; font-size: 22px; margin: 0 0 8px; color: var(--ink); font-weight: 900; letter-spacing: -0.01em; }
+  .success-banner p { margin: 0; color: var(--ink-2); font-size: 14px; line-height: 1.7; }
+
+  .fail-help { margin-top: 14px; padding: 14px 18px; background: var(--warn-bg); border: 1px solid rgba(146,64,14,0.25); border-radius: 10px; }
+  .fail-help b { color: #78350F; font-weight: 800; }
+  .fail-help { font-size: 13px; color: #78350F; line-height: 1.7; }
+  .fail-help a { color: var(--primary-dark); font-weight: 800; }
+
+  footer { max-width: 780px; margin: 20px auto 40px; padding: 18px 24px; border-top: 1px solid var(--rule); font-size: 12px; color: var(--dim); font-family: 'Manrope', sans-serif; display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+  footer a { color: var(--primary); text-decoration: none; font-weight: 700; }
+
+  @media (max-width: 640px) {
+    .head { padding: 32px 18px 28px; }
+    h1 { font-size: 24px; }
+    main { padding: 16px 16px 32px; }
+    .phase { padding: 16px 16px; }
+    .phase-title { font-size: 17px; }
+    .timer-display { font-size: 40px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="head">
+  <div class="head-wrap">
+    <div class="kicker">FP Compass · Zoom 動作 テスト</div>
+    <h1>ちゃんと 動く か 5 分 で 確かめる</h1>
+    <p class="lede">
+      設定 が 全部 終わった 後 の 最終 チェック。 上 から 順 に やって、 済んだら タップ (or クリック) で ✓ 付ける。 15 分 待つ タイマー 付き。
+    </p>
+    <div class="head-meta">
+      <span>4 段階</span>
+      <span>実作業 3 分 + 待ち 15 分</span>
+      <span>2026-07-30</span>
+    </div>
+  </div>
+</header>
+
+<div class="rail">
+  <div class="rail-inner">
+    <div class="rail-label">進捗</div>
+    <div class="rail-bar"><div class="rail-fill" id="rail-fill"></div></div>
+    <div class="rail-count" id="rail-count">0 / 11</div>
+  </div>
+</div>
+
+<main>
+
+  <!-- Phase 1: 準備 -->
+  <section class="phase" data-phase="1">
+    <div class="phase-h">
+      <span class="phase-num">01</span>
+      <h2 class="phase-title">Zoom の 設定 を 見に 行く</h2>
+      <span class="phase-time">1 分</span>
+    </div>
+    <p class="phase-lede">Zoom の Web で 2 つ の スイッチ が ON か 確認 する。 これ が OFF だと 議事録 が 作られ ない。</p>
+    <ul class="checks">
+      <li>
+        <span class="check-box"></span>
+        <div class="check-body">
+          <span class="check-txt">Zoom Web の 設定 ページ を 開く</span>
+          <span class="check-hint">下 の 緑 ボタン で ワン クリック。 Zoom に ログイン が 求められたら ログイン。</span>
+          <a class="link-btn primary" href="https://zoom.us/profile/setting?tab=recording" target="_blank" rel="noopener">Zoom 設定 を 開く</a>
+        </div>
+      </li>
+      <li>
+        <span class="check-box"></span>
+        <div class="check-body">
+          <span class="check-txt">「Cloud recording」 が 青 (ON) に なっている</span>
+          <span class="check-hint">ページ の 上 の 方 に ある。 グレー (OFF) だったら 押して 青 に する。</span>
+        </div>
+      </li>
+      <li>
+        <span class="check-box"></span>
+        <div class="check-body">
+          <span class="check-txt">「Audio transcript」 が 青 (ON) に なっている</span>
+          <span class="check-hint">Cloud recording の 下 に ある 「Advanced cloud recording settings」 を 押す と 中 に ある。 グレー だったら 押して 青 に する。</span>
+        </div>
+      </li>
+    </ul>
+  </section>
+
+  <!-- Phase 2: 面談 -->
+  <section class="phase" data-phase="2">
+    <div class="phase-h">
+      <span class="phase-num">02</span>
+      <h2 class="phase-title">FP Compass で 5 秒 の テスト 面談</h2>
+      <span class="phase-time">2 分</span>
+    </div>
+    <p class="phase-lede">誰 の カルテ でも OK (テスト 用 の 客 で 十分)。 中身 に 意味 は なくて 「1 本 通す」 の が 目的。</p>
+    <ul class="checks">
+      <li>
+        <span class="check-box"></span>
+        <div class="check-body">
+          <span class="check-txt">FP Compass を 開く</span>
+          <a class="link-btn" href="https://app.skeleton-inc.jp/" target="_blank" rel="noopener">FP Compass を 開く</a>
+        </div>
+      </li>
+      <li>
+        <span class="check-box"></span>
+        <div class="check-body">
+          <span class="check-txt">適当 な 顧客 カルテ を 1 つ 開く</span>
+          <span class="check-hint">左 の 顧客 一覧 から 誰 か 選んで タップ。</span>
+        </div>
+      </li>
+      <li>
+        <span class="check-box"></span>
+        <div class="check-body">
+          <span class="check-txt">「🎙 面談 を 開始」 → 「今すぐ Zoom」 を 押す</span>
+          <span class="check-hint">Zoom タブ が 新しく 開く。</span>
+        </div>
+      </li>
+      <li>
+        <span class="check-box"></span>
+        <div class="check-body">
+          <span class="check-txt">Zoom タブ で 10 秒 だけ 声 出す</span>
+          <span class="check-hint">「テスト、 これ 入って ます」 で OK。 中身 は 何でも いい。</span>
+        </div>
+      </li>
+      <li>
+        <span class="check-box"></span>
+        <div class="check-body">
+          <span class="check-txt">Meeting ID を メモ する</span>
+          <span class="check-hint">Zoom タブ の URL の 数字 部分 (<code>/j/</code> の 後ろ の 数字)。 後 で 私 に 教える 用。</span>
+        </div>
+      </li>
+      <li>
+        <span class="check-box"></span>
+        <div class="check-body">
+          <span class="check-txt">Zoom タブ を 閉じる (会議 終了)</span>
+        </div>
+      </li>
+    </ul>
+  </section>
+
+  <!-- Phase 3: 待つ -->
+  <section class="phase" data-phase="3">
+    <div class="phase-h">
+      <span class="phase-num">03</span>
+      <h2 class="phase-title">15 分 待つ (Zoom が 文字起こし する 時間)</h2>
+      <span class="phase-time">15 分</span>
+    </div>
+    <p class="phase-lede">Zoom が 録画 と 文字起こし を 処理 して、 FP Compass に 議事録 が 届く まで の 待ち 時間。 下 の Start 押す と タイマー が 動く。</p>
+    <div class="timer">
+      <div class="timer-display" id="timer-display">15:00</div>
+      <button class="timer-btn" id="timer-btn" onclick="startTimer()">Start (15 分 待つ)</button>
+      <div class="timer-note" id="timer-note">タイマー が 0 に なったら 音 で 知らせる</div>
+    </div>
+  </section>
+
+  <!-- Phase 4: 確認 -->
+  <section class="phase" data-phase="4">
+    <div class="phase-h">
+      <span class="phase-num">04</span>
+      <h2 class="phase-title">議事録 が 追加 されて いる か 見る</h2>
+      <span class="phase-time">30 秒</span>
+    </div>
+    <p class="phase-lede">Phase 02 で 面談 した 顧客 の カルテ を 開いて、 議事録 が 増えて いる か 確認。</p>
+    <ul class="checks">
+      <li>
+        <span class="check-box"></span>
+        <div class="check-body">
+          <span class="check-txt">FP Compass で 同じ 顧客 の カルテ を 開き 直す</span>
+          <span class="check-hint">ブラウザ の 更新 ボタン (⌘R / Ctrl+R) を 押して リロード。</span>
+        </div>
+      </li>
+      <li>
+        <span class="check-box"></span>
+        <div class="check-body">
+          <span class="check-txt">「面談 履歴」 タブ を 押す</span>
+        </div>
+      </li>
+      <li>
+        <span class="check-box"></span>
+        <div class="check-body">
+          <span class="check-txt">新しい 議事録 が 追加 されて いる</span>
+          <span class="check-hint">タイトル に 「Zoom 面談」、 中身 に 文字起こし + 5 セクション の まとめ が 入って いれば <b>大成功</b>。</span>
+        </div>
+      </li>
+    </ul>
+    <div class="success-banner" id="success-banner">
+      <div class="st">ALL CLEAR</div>
+      <h3>全 稼働 開始 · 動作 テスト 完了</h3>
+      <p>これ 以降 は 面談 する だけ で 議事録 が 自動 で 溜まる 状態 に なった。 お疲れ さま。</p>
+    </div>
+    <div class="fail-help">
+      <b>もし 議事録 が 出て こない 場合</b>: メモ した <b>Meeting ID</b> を Skeleton の Jobs に 送る → log 追いかけて 原因 特定 する。 大抵 の 症状 は <a href="/zoom-setup-manual.html#s5" target="_blank">設定 マニュアル の 「困った時」</a> に 対処法 が 載って いる。
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <p>FP Compass · Skeleton Inc. · Zoom 動作テスト チェックリスト · v1 2026-07-30</p>
+  <p><a href="/zoom-setup-manual.html">← 設定マニュアル に 戻る</a></p>
+</footer>
+
+<script>
+  // --- Checklist state (localStorage 保存) ---
+  const KEY = 'zoom-test-checklist-v1';
+  const savedRaw = localStorage.getItem(KEY);
+  const saved = savedRaw ? JSON.parse(savedRaw) : {};
+  const items = document.querySelectorAll('ul.checks li');
+  items.forEach((li, i) => {
+    if (saved[i]) li.classList.add('done');
+    li.addEventListener('click', (e) => {
+      if (e.target.closest('a.link-btn')) return;
+      li.classList.toggle('done');
+      saved[i] = li.classList.contains('done');
+      localStorage.setItem(KEY, JSON.stringify(saved));
+      updateRail();
+    });
+  });
+
+  function updateRail() {
+    const total = items.length;
+    const done = document.querySelectorAll('ul.checks li.done').length;
+    document.getElementById('rail-fill').style.width = (done / total * 100) + '%';
+    document.getElementById('rail-count').textContent = `${done} / ${total}`;
+    // Mark phases as done when all their checks are done
+    document.querySelectorAll('.phase').forEach(ph => {
+      const chks = ph.querySelectorAll('ul.checks li');
+      if (chks.length === 0) return; // Phase 03 has timer, not checks
+      const allDone = Array.from(chks).every(li => li.classList.contains('done'));
+      ph.classList.toggle('done', allDone);
+    });
+    // Show success banner if all done
+    if (done === total) document.getElementById('success-banner').classList.add('show');
+    else document.getElementById('success-banner').classList.remove('show');
+  }
+  updateRail();
+
+  // --- 15 min timer ---
+  let timerInterval = null;
+  let remain = 15 * 60;
+  function fmt(s) { const m = Math.floor(s/60); const r = s%60; return `${String(m).padStart(2,'0')}:${String(r).padStart(2,'0')}`; }
+  function startTimer() {
+    const disp = document.getElementById('timer-display');
+    const btn = document.getElementById('timer-btn');
+    const note = document.getElementById('timer-note');
+    if (timerInterval) return;
+    btn.disabled = true;
+    btn.textContent = '待機中…';
+    disp.classList.add('running');
+    document.querySelector('.phase[data-phase="3"]').classList.add('done'); // Mark phase 3 as active/done
+    timerInterval = setInterval(() => {
+      remain--;
+      disp.textContent = fmt(remain);
+      if (remain <= 0) {
+        clearInterval(timerInterval);
+        disp.classList.remove('running');
+        disp.classList.add('done');
+        disp.textContent = '確認しよう';
+        btn.style.display = 'none';
+        note.textContent = '15分 経過。 Phase 04 に 進んで 議事録 が 出て いる か 見る。';
+        try {
+          // Beep
+          const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          const osc = audioCtx.createOscillator();
+          osc.type = 'sine'; osc.frequency.value = 660;
+          const gain = audioCtx.createGain(); gain.gain.value = 0.3;
+          osc.connect(gain); gain.connect(audioCtx.destination);
+          osc.start(); setTimeout(() => osc.stop(), 350);
+        } catch(_) {}
+        // Vibrate on mobile
+        if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+      }
+    }, 1000);
+  }
+</script>
+
+</body>
+</html>
