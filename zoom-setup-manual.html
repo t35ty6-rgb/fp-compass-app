@@ -383,16 +383,20 @@
     <div class="step">
       <div class="step-head">
         <span class="step-num">4</span>
-        <h3 class="step-title">「+ Add Events」 → Recording → All Recordings have completed → Done → Save</h3>
+        <h3 class="step-title">「+ Add Events」 → Recording → 2 個 チェック → Done → Save</h3>
       </div>
       <div class="step-body">
-        <p>フォーム 内 の <strong>「+ Add Events」</strong> を 押す と モーダル が 開く。 続けて 4 動作:</p>
+        <p>フォーム 内 の <strong>「+ Add Events」</strong> を 押す と モーダル が 開く。 続けて 5 動作:</p>
         <ol>
           <li>左サイドバー で <strong>Recording</strong> を 押す (Meeting が 初期選択 に なってる ので 必ず 切替)</li>
           <li>右側 で <strong>All Recordings have completed</strong> の チェックボックス を 押す</li>
-          <li>右下 の <strong>Done</strong> を 押す (モーダル 閉じる)</li>
+          <li>すぐ 下 の <strong>Recording Transcript files have completed</strong> の チェックボックス も 押す (これ が 無い と 議事録 が 自動 追加 されない)</li>
+          <li>右下 の 「2 Added」 表示 を 確認 → <strong>Done</strong> を 押す (モーダル 閉じる)</li>
           <li>フォーム 下部 の <strong>Save</strong> を 押す</li>
         </ol>
+        <div class="callout warn">
+          <b>2 個 チェック が 必須</b>: Zoom は 動画 の 処理 完了 (Recording) と 文字起こし 完了 (Transcript) を <strong>別 タイミング</strong> で 通知 する。 動画 完了 は 面談 終了 直後、 文字起こし 完了 は 5〜15 分 後。 両方 subscribe しない と 議事録 が FP Compass に 届かない。
+        </div>
         <div class="callout tip">
           Save 後、 subscription 一覧 に 「Recording Completed」 が 追加 される。 右側 に <strong>✏ 鉛筆</strong> と <strong>🗑 ゴミ箱</strong> の アイコン が 出る。
         </div>
@@ -648,7 +652,7 @@
         </ul>
         <p>Feature タブ → 該当 subscription で Validate 完了 → もう一度 Activation タブ に 戻って 状態 を 再確認。</p>
         <div class="callout warn">
-          <b>Validated ✓ が 出て いる のに Activation で 同じ error が 出る 場合</b>: Zoom の 誤 表示。 実際 は 「Add Events」 が 未 完了 の 状態 (Validate と Add Events は 別 step で、 両方 揃わない と Activation が 通らない)。 該当 subscription を 開き 直して 「+ Add Events」 → Recording → All Recordings have completed → Done → Save まで やり切って から Activation タブ に 戻る。
+          <b>Validated ✓ が 出て いる のに Activation で 同じ error が 出る 場合</b>: Zoom の 誤 表示。 実際 は 「Add Events」 が 未 完了 の 状態 (Validate と Add Events は 別 step で、 両方 揃わない と Activation が 通らない)。 該当 subscription を 開き 直して 「+ Add Events」 → Recording → 2 個 (All Recordings + Recording Transcript) チェック → Done → Save まで やり切って から Activation タブ に 戻る。
         </div>
       </div>
     </div>
