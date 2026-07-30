@@ -20,10 +20,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20260731B-pill-per-cust-scan">
-<link rel="stylesheet" href="styles-v2.css?v=20260731B-pill-per-cust-scan">
-<link rel="stylesheet" href="styles-v3.css?v=20260731B-pill-per-cust-scan">
-<link rel="stylesheet" href="styles-v8-workspace.css?v=20260731B-pill-per-cust-scan">
+<link rel="stylesheet" href="styles.css?v=20260731C-role-fp-owner">
+<link rel="stylesheet" href="styles-v2.css?v=20260731C-role-fp-owner">
+<link rel="stylesheet" href="styles-v3.css?v=20260731C-role-fp-owner">
+<link rel="stylesheet" href="styles-v8-workspace.css?v=20260731C-role-fp-owner">
 <!-- ★ 2026-06-26 perf: lucide(350KB) と chart.js(201KB) を defer 化 -->
 <!--   どちらも DOMContentLoaded 後ハイドレートで OK (lucide: setInterval scan / chart: tryRender polling) -->
 <script defer src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
@@ -612,18 +612,16 @@
       return;
     }
     const userData = uDoc.data();
-    // ★ 診断: tenantId が無いと後段で permission denied になるので明示エラー
-    if (!userData.tenantId && userData.role !== "skeleton_admin") {
+    // ★ 2026-07-31: owner 明示 「1 人分 の API として 運用、 商談デモ 分岐 も 要らない」
+    //   skeleton_admin による demo テナント 強制 上書き は 削除。 全 user が users/{uid}.tenantId を そのまま 見る。
+    //   商談 デモ が 必要 な 時 は demo@skeleton-inc.jp の tenantId=demo で 直接 ログイン すれば OK。
+    if (!userData.tenantId) {
       msg("err", `アカウントに tenantId が紐付いていません (uid: ${user.uid.slice(0,10)}…)。support@skeleton-inc.jp までご連絡ください。`);
       console.error("[fp diag] user doc missing tenantId", { uid: user.uid, userData });
       await signOut(auth);
       return;
     }
-    if (userData.role === "skeleton_admin") {
-      // skeleton_admin は demo テナントを見せる (商談デモ用)
-      window.__fp.tenantId = "demo";
-      window.__fp.tenantName = "Skeleton 管理者 — DEMO ビュー";
-    } else {
+    {
       window.__fp.tenantId = userData.tenantId;
       // ★ オーナーfb: tenantId 切替時に localStorage 全クリア (前tenantの顧客残骸・GASキャッシュ排除)
       try {
@@ -1374,7 +1372,7 @@ window.fpReadyAfterAuth = function() {
     });
   })();
 
-  const ver = "20260731B-pill-per-cust-scan";
+  const ver = "20260731C-role-fp-owner";
   // ★ 2026-06-26 perf: critical (画面初期表示に必須) と deferred (LINE/charts) を 分離
   // critical: 顧客台帳・ホーム描画に必須
   // deferred: LINE タブ (line-app.js 555KB) / dashboard charts (charts.js) → idle で 後ロード
@@ -2115,7 +2113,7 @@ window.fpReadyAfterAuth = function() {
 <script>
 (function(){
   // 最新の ver を 1 箇所に集約 (fpReadyAfterAuth 側と一致させる必要あり)
-  const FP_VERSION = "20260731B-pill-per-cust-scan";
+  const FP_VERSION = "20260731C-role-fp-owner";
   try { window.FP_VERSION = FP_VERSION; } catch(_) {}
 
   // 2026-07-13 v11: Chrome拡張 (Zoom タブ音声 レコーダー) 検知

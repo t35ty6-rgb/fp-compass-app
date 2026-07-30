@@ -614,18 +614,14 @@
       return;
     }
     const userData = uDoc.data();
-    // ★ 診断: tenantId が無いと後段で permission denied になるので明示エラー
-    if (!userData.tenantId && userData.role !== "skeleton_admin") {
+    // ★ 2026-07-31: owner 明示 「skeleton_admin の 商談デモ 分岐 は 削除」 (index.html と 同期)
+    if (!userData.tenantId) {
       msg("err", `アカウントに tenantId が紐付いていません (uid: ${user.uid.slice(0,10)}…)。support@skeleton-inc.jp までご連絡ください。`);
       console.error("[fp diag] user doc missing tenantId", { uid: user.uid, userData });
       await signOut(auth);
       return;
     }
-    if (userData.role === "skeleton_admin") {
-      // skeleton_admin は demo テナントを見せる (商談デモ用)
-      window.__fp.tenantId = "demo";
-      window.__fp.tenantName = "Skeleton 管理者 — DEMO ビュー";
-    } else {
+    {
       window.__fp.tenantId = userData.tenantId;
       // ★ オーナーfb: tenantId 切替時に localStorage 全クリア (前tenantの顧客残骸・GASキャッシュ排除)
       try {
