@@ -2764,6 +2764,27 @@
       }
     } catch (e) { console.warn('extension arm failed:', e); }
 
+    // 2026-07-30 fix: owner から 「Zoom 終了後 に FP Compass で 何が 起きてる か 分からない」
+    // 議事録 完成 まで の 状況 を 画面 右下 に 常時 表示 する pending pill を 追加。
+    // Firestore を 15 秒 毎 に poll して 議事録 doc が 現れたら 「完成」 に 切替。
+    try {
+      const pending = JSON.parse(localStorage.getItem('fp-pending-zoom') || '[]');
+      pending.push({
+        meetingId: String(result.zoomMeetingId || ''),
+        customerId: finalClientId,
+        customerName: clientName,
+        tenantId: window.currentTenantId || window.__fp?.tenantId || '',
+        startedAt: Date.now(),
+        status: 'issued', // issued → completed
+      });
+      // 古い (24h 経過 or 完成 後 30 分) は 掃除
+      const now = Date.now();
+      const kept = pending.filter(p => (now - p.startedAt) < 24*3600e3 && (p.status !== 'completed' || (now - (p.completedAt||0)) < 30*60e3));
+      localStorage.setItem('fp-pending-zoom', JSON.stringify(kept));
+      if (typeof window.renderZoomPendingPill === 'function') window.renderZoomPendingPill();
+      if (typeof window.startZoomPendingPoll === 'function') window.startZoomPendingPoll();
+    } catch (e) { console.warn('pending pill save fail:', e); }
+
     // 成功 → 結果モーダル — LINE 送信成否で 出し分け
     const ov = document.createElement('div');
     ov.id = 'fp-quick-zoom-result';

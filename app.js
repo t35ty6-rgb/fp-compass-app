@@ -10477,3 +10477,157 @@ window._fpMaskCode = 'loaded';
     setTimeout(() => { try { obs.disconnect(); } catch (_) {} }, 30000);
   } catch (_) {}
 })();
+
+// ═══════════════════════════════════════════════════════
+// 2026-07-30: Zoom 面談 発行 → 議事録 完成 の 進捗 常時 表示 パネル
+// owner から 「Zoom 終了 後 に FP Compass 側 で 何 が 起きてる か 分からない」 明示 fb
+// startQuickZoom で 発行 された meetingId を localStorage 保存 → 15 秒 毎 に Firestore poll
+// → meetings subcollection に 該当 doc 出たら 「議事録 完成」 に 切替 + click で 該当客 に 遷移
+// ═══════════════════════════════════════════════════════
+(function () {
+  const STORAGE = 'fp-pending-zoom';
+  const POLL_MS = 15000;
+  let pollTimer = null;
+
+  function getPending() {
+    try { return JSON.parse(localStorage.getItem(STORAGE) || '[]'); } catch { return []; }
+  }
+  function setPending(arr) {
+    try { localStorage.setItem(STORAGE, JSON.stringify(arr)); } catch (_) {}
+  }
+  function prunePending(arr) {
+    const now = Date.now();
+    return arr.filter(p =>
+      (now - p.startedAt) < 24 * 3600e3 &&
+      (p.status !== 'completed' || (now - (p.completedAt || 0)) < 30 * 60e3)
+    );
+  }
+  function fmtElapsed(ms) {
+    const m = Math.floor(ms / 60000);
+    if (m < 1) return 'たった今';
+    if (m < 60) return m + ' 分前';
+    const h = Math.floor(m / 60);
+    return h + ' 時間前';
+  }
+
+  window.renderZoomPendingPill = function () {
+    const list = prunePending(getPending());
+    setPending(list);
+    let container = document.getElementById('fp-pending-zoom-panel');
+    if (list.length === 0) {
+      if (container) container.remove();
+      return;
+    }
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'fp-pending-zoom-panel';
+      container.style.cssText = 'position:fixed;bottom:16px;right:16px;z-index:99998;max-width:340px;display:flex;flex-direction:column;gap:10px;font-family:"Noto Sans JP",sans-serif;pointer-events:auto;';
+      document.body.appendChild(container);
+    }
+    container.innerHTML = list.map((p, i) => {
+      const elapsed = fmtElapsed(Date.now() - p.startedAt);
+      const isDone = p.status === 'completed';
+      const label = isDone
+        ? '<span style="color:#065F46;">✅ 議事録 完成</span> <span style="color:#059669;font-weight:600;">タップ で 開く</span>'
+        : `<span style="color:#78350F;">⏳ Zoom Cloud 処理中</span> <span style="color:#B45309;font-size:11px;font-weight:600;">面談 終了 から 5-15 分</span>`;
+      const bg = isDone ? '#D1FAE5' : '#FEF3C7';
+      const border = isDone ? '#059669' : '#F59E0B';
+      const cursor = isDone ? 'cursor:pointer;' : '';
+      return `
+        <div class="fp-pending-zoom-item" data-idx="${i}" style="background:${bg};border:1.5px solid ${border};border-radius:12px;padding:12px 14px 10px;box-shadow:0 8px 24px rgba(15,23,42,0.18);${cursor}min-width:280px;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+            <div style="font-family:'Manrope',sans-serif;font-size:10px;letter-spacing:0.14em;font-weight:800;color:#78350F;">ZOOM 面談 · ${elapsed}</div>
+            <button class="fp-pending-close" data-idx="${i}" aria-label="閉じる" style="background:transparent;border:none;font-size:16px;line-height:1;color:#78350F;cursor:pointer;padding:0 4px;font-weight:700;">×</button>
+          </div>
+          <div style="font-size:14px;font-weight:800;color:#111827;margin:4px 0 6px;line-height:1.35;">${(p.customerName || 'お客様').replace(/[<>&]/g, '')} 様</div>
+          <div style="font-size:12.5px;font-weight:700;line-height:1.5;">${label}</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#92400E;margin-top:6px;letter-spacing:0.02em;">Meeting: ${p.meetingId}</div>
+        </div>`;
+    }).join('');
+    // click handlers
+    container.querySelectorAll('.fp-pending-zoom-item').forEach(el => {
+      el.addEventListener('click', (e) => {
+        if (e.target.classList.contains('fp-pending-close')) return;
+        const idx = Number(el.dataset.idx);
+        const item = list[idx];
+        if (!item) return;
+        if (item.status === 'completed' && item.customerId) {
+          // 該当客 の カルテ を 開く (openCustomerModal もしくは history param)
+          try {
+            if (typeof openCustomerCard === 'function') openCustomerCard(item.customerId);
+            else if (typeof window.openCustomerModal === 'function') window.openCustomerModal(item.customerId);
+            else {
+              const u = new URL(window.location.href);
+              u.searchParams.set('customer', item.customerId);
+              u.searchParams.set('tab', 'history');
+              window.location.href = u.toString();
+            }
+          } catch (err) { console.warn('open customer fail:', err); }
+        }
+      });
+    });
+    container.querySelectorAll('.fp-pending-close').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const idx = Number(btn.dataset.idx);
+        const cur = getPending();
+        cur.splice(idx, 1);
+        setPending(cur);
+        window.renderZoomPendingPill();
+      });
+    });
+  };
+
+  async function pollOnce() {
+    const list = prunePending(getPending());
+    let changed = false;
+    for (const p of list) {
+      if (p.status === 'completed') continue;
+      if (!p.tenantId || !p.customerId || !p.meetingId) continue;
+      try {
+        const { getFirestore, collection, query, where, limit, getDocs } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js');
+        const db = window.__fp?.db || getFirestore();
+        const col = collection(db, `tenants/${p.tenantId}/customers/${p.customerId}/meetings`);
+        const q = query(col, where('zoomMeetingId', '==', String(p.meetingId)), limit(1));
+        const s = await getDocs(q);
+        if (s.size > 0) {
+          p.status = 'completed';
+          p.completedAt = Date.now();
+          p.meetingDocId = s.docs[0].id;
+          changed = true;
+        }
+      } catch (e) { /* silent — poll retries */ }
+    }
+    if (changed) {
+      setPending(list);
+      window.renderZoomPendingPill();
+      // Also refresh customer data if visible
+      try { if (window.refreshFirestoreCustomers) await window.refreshFirestoreCustomers(); } catch (_) {}
+    }
+  }
+
+  window.startZoomPendingPoll = function () {
+    if (pollTimer) return;
+    pollTimer = setInterval(pollOnce, POLL_MS);
+    pollOnce();  // fire immediately
+  };
+  window.stopZoomPendingPoll = function () {
+    if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+  };
+
+  // Auto-start on page load if any pending exists
+  function autoBoot() {
+    const p = getPending();
+    if (p.length > 0) {
+      window.renderZoomPendingPill();
+      window.startZoomPendingPoll();
+    }
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', autoBoot);
+  } else {
+    setTimeout(autoBoot, 500);
+  }
+  // Also re-render pill every minute so elapsed time updates
+  setInterval(() => { if (getPending().length > 0) window.renderZoomPendingPill(); }, 60000);
+})();
