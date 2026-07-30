@@ -4412,6 +4412,24 @@ ${ctxText}${surveyTxt}`;
                 panel.dataset.cacheKey = cacheKey;
                 panel.dataset.cacheHasContent = '1';
               }
+              // 2026-07-31: Firestore /meetings subcol (Zoom webhook 保存分) を 遅延 fetch して merge → 再描画
+              // owner から 「Zoom 議事録 が UI に 出て こない」 fb で 発覚: webhook は Firestore に 書いてる のに UI は GAS ai_results のみ 読んで た gap を fix
+              if (typeof window.mergeFirestoreMeetingsIntoLiveData === 'function') {
+                (async () => {
+                  try {
+                    const added = await window.mergeFirestoreMeetingsIntoLiveData(c);
+                    if (added > 0) {
+                      panel.dataset.cacheKey = ''; // invalidate
+                      panel.innerHTML = renderMeetingRecordsBlock(c) || '<div class="cd-empty">面談録なし</div>';
+                      panel.dataset.cacheHasContent = '1';
+                      try {
+                        const cntEl = document.getElementById('cd-meetings-count');
+                        if (cntEl) cntEl.textContent = panel.querySelectorAll('.fp-meeting-card').length;
+                      } catch (_) {}
+                    }
+                  } catch (e) { console.warn('[fs-meetings] fetch fail:', e?.message); }
+                })();
+              }
               // ★ 2026-07-02 fix: lazy-render 後に count badge 同期 (直接 meetings タブ 開いた時 0 表示バグ)
               try {
                 const cntEl = document.getElementById('cd-meetings-count');
@@ -10721,3 +10739,55 @@ window._fpMaskCode = 'loaded';
   // re-render every 30 sec for elapsed time update
   setInterval(() => { if (getPending().length > 0) window.renderZoomPendingPill(); }, 30000);
 })();
+
+// ═══════════════════════════════════════════════════════
+// 2026-07-31: Firestore /meetings subcol を 読み取り LiveData.ai_results に merge
+// zoomRecordingWebhook が 書き込む doc を UI が 拾う ため の bridge。
+// GAS 経由 の ai_results は 別 pipeline (Chrome 拡張 → GAS) で、 Zoom cloud recording 由来 の doc は Firestore にしか ない。
+// ═══════════════════════════════════════════════════════
+window.mergeFirestoreMeetingsIntoLiveData = async function (client) {
+  try {
+    const tenantId = window.__fp?.tenantId;
+    const customerId = client?._fsCustomerId || client?.id;
+    if (!tenantId || !customerId) return 0;
+    const { getFirestore, collection, getDocs } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js');
+    const db = window.__fp?.db || getFirestore();
+    const snap = await getDocs(collection(db, `tenants/${tenantId}/customers/${customerId}/meetings`));
+    if (snap.size === 0) return 0;
+    if (!window.LineAppLiveData) window.LineAppLiveData = {};
+    if (!Array.isArray(window.LineAppLiveData.ai_results)) window.LineAppLiveData.ai_results = [];
+    const existing = window.LineAppLiveData.ai_results;
+    const existingKeys = new Set(existing.map(a => String(a.bookingTs || a.ts || a.zoomMeetingId || a.meetingId || '')));
+    let added = 0;
+    for (const d of snap.docs) {
+      const md = d.data();
+      const zid = String(md.zoomMeetingId || '');
+      const startIso = md.zoomStartTime || md.createdAt?.toDate?.().toISOString?.() || '';
+      const bookingTs = startIso || ('fs-' + d.id);
+      // dedupe by zoomMeetingId (primary) or bookingTs
+      if (zid && existing.some(a => String(a.zoomMeetingId || a.meetingId || '') === zid)) continue;
+      if (existingKeys.has(bookingTs)) continue;
+      existing.push({
+        userId: client.lineFriendId || client.id || customerId,
+        customerName: client.name || '',
+        bookingTs,
+        ts: startIso,
+        createdAt: startIso,
+        transcript: md.transcript || '',
+        summary: md.summary || '',
+        zoomMeetingId: zid,
+        meetingId: zid,
+        zoomTopic: md.zoomTopic || '',
+        zoomDurationMin: md.zoomDurationMin || null,
+        source: md.source || 'firestore-meetings',
+        _fsMeetingDocId: d.id,
+      });
+      added++;
+    }
+    if (added > 0) console.log(`[fs-meetings] merged ${added} Zoom 議事録 into LiveData for ${client?.name || customerId}`);
+    return added;
+  } catch (e) {
+    console.warn('[fs-meetings] merge fail:', e?.message);
+    return 0;
+  }
+};
