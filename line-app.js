@@ -1157,7 +1157,8 @@
     ov.id = 'fp-quick-inperson-modal';
     ov.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.72);z-index:99999;display:flex;align-items:center;justify-content:center;font-family:"Hiragino Sans",sans-serif;';
     ov.innerHTML = `
-      <div style="background:#fff;border-radius:16px;max-width:480px;width:92%;padding:28px;box-shadow:0 32px 80px rgba(0,0,0,0.4);">
+      <div style="background:#fff;border-radius:16px;max-width:480px;width:92%;padding:28px;box-shadow:0 32px 80px rgba(0,0,0,0.4);position:relative;">
+        <button id="fp-qi-close-top" aria-label="閉じる" style="position:absolute;top:12px;right:12px;background:transparent;border:none;font-size:26px;line-height:1;color:#6B7280;cursor:pointer;padding:4px 10px;border-radius:6px;font-weight:600;">×</button>
         <div style="font-size:11px;font-weight:800;color:#9A5A18;letter-spacing:0.14em;margin-bottom:6px;">QUICK START</div>
         <h2 style="font-size:20px;font-weight:800;color:#111827;margin:0 0 6px;font-family:'Noto Sans JP',serif;">急遽 面談スタート</h2>
         <p style="font-size:13px;color:#6b7280;line-height:1.65;margin:0 0 18px;">予約なしで お客様から相談が入った時はこちら。 <strong style="color:#9A5A18;">Zoom リンクを 即発行 して 双方参加</strong> するか、 <strong style="color:#1F2A3F;">対面で 録音だけ する</strong> かを 選んで 開始してください。</p>
@@ -1239,6 +1240,12 @@
     });
 
     ov.querySelector('#fp-qi-cancel').addEventListener('click', () => ov.remove());
+    // × top-right close + Escape key + backdrop click
+    ov.querySelector('#fp-qi-close-top')?.addEventListener('click', () => ov.remove());
+    ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
+    document.addEventListener('keydown', function _escQi(e) {
+      if (e.key === 'Escape' && document.body.contains(ov)) { ov.remove(); document.removeEventListener('keydown', _escQi); }
+    });
 
     startBtn.addEventListener('click', async () => {
       const v = sel.value;
@@ -2869,18 +2876,25 @@
     //     → ホスト URL は session に 保持して startScreenRecording が 開く zoom URL を 差替え
     const joinRecBtn = document.getElementById('fp-qz-join-record');
     if (joinRecBtn) joinRecBtn.addEventListener('click', async () => {
-      joinRecBtn.disabled = true;
-      joinRecBtn.innerHTML = '<span>画面共有ダイアログ で 「Zoom + 音声」 選んで OK して...</span>';
+      // 2026-07-30 fix: 旧 flow は startScreenRecording (画面共有ダイアログ) を 呼んで 音声を capture したが、
+      // 現 flow は Zoom Cloud API auto_recording=cloud で サーバー側 で 自動 録画 + zoomRecordingWebhook で 議事録 自動生成 する。
+      // 画面共有ダイアログ / 拡張機能 は もう 不要。 host URL を 単純 に 新タブ で 開くだけ。
       try {
-        if (typeof startScreenRecording !== 'function') throw new Error('startScreenRecording 未定義');
-        // hostZoomUrl を Zoom URL の代わりに渡す (FP が ホスト権限で 入室するように)
-        // preZoomWin = null → 画面共有許可後に startScreenRecording 内で window.open する設計
-        await startScreenRecording(result.bookingTs, result.hostZoomUrl, null);
-        ov.remove();
+        const url = result.hostZoomUrl || result.zoomUrl;
+        if (!url) { alert('Zoom URL が 空 です。 quickZoomMeeting 応答 を 再確認 してください'); return; }
+        const w = window.open(url, '_blank', 'noopener,noreferrer');
+        if (!w || w.closed || typeof w.closed === 'undefined') {
+          alert('ブラウザ が pop-up を ブロック しました。 アドレスバー 右 の pop-up アイコン を 押して 許可 → もう一度 button 押して ください。');
+          return;
+        }
+        joinRecBtn.disabled = true;
+        joinRecBtn.style.background = '#ECFDF5';
+        joinRecBtn.style.color = '#059669';
+        joinRecBtn.innerHTML = '<span>✓ Zoom を 開きました (別 タブ)</span>';
+        // 15 秒後 modal を 自動 で 閉じる (owner が close 忘れて も UI が 詰まらない)
+        setTimeout(() => { try { ov.remove(); } catch (_) {} }, 15000);
       } catch (e) {
-        joinRecBtn.disabled = false;
-        joinRecBtn.innerHTML = '<span>📹 FPとして Zoom に参加 + 録画開始</span><span class="cta-arrow">→</span>';
-        alert('録画起動 失敗: ' + (e?.message || e));
+        alert('Zoom 起動 失敗: ' + (e?.message || e));
       }
     });
     document.getElementById('fp-qz-copy').addEventListener('click', () => {
