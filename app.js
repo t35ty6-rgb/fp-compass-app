@@ -10631,7 +10631,7 @@ window._fpMaskCode = 'loaded';
           const s = await getDocs(q);
           if (s.size > 0) found = { docId: s.docs[0].id, path: `tenants/${p.tenantId}/customers/${p.customerId}/meetings/${s.docs[0].id}` };
         }
-        // Fallback: collectionGroup scan (webhook may have matched a different customerId)
+        // Fallback A: collectionGroup scan (fastest but requires Firestore index)
         if (!found) {
           try {
             const cg = collectionGroup(db, 'meetings');
@@ -10640,13 +10640,32 @@ window._fpMaskCode = 'loaded';
             if (s2.size > 0) {
               const doc = s2.docs[0];
               found = { docId: doc.id, path: doc.ref.path };
-              // Update customerId to actual match (from ref path)
               const parts = doc.ref.path.split('/');
               const cIdx = parts.indexOf('customers');
               if (cIdx >= 0 && parts[cIdx + 1]) p.customerId = parts[cIdx + 1];
             }
           } catch (cgErr) {
-            console.warn('[pending] collectionGroup fallback failed', cgErr?.message);
+            console.warn('[pending] cg fallback failed (index missing?), falling to per-customer scan:', cgErr?.message);
+          }
+        }
+        // Fallback B: iterate customers in tenant + query each customer's meetings subcol (no index needed)
+        if (!found && p.tenantId) {
+          try {
+            const custCol = collection(db, `tenants/${p.tenantId}/customers`);
+            const custs = await getDocs(custCol);
+            for (const cd of custs.docs) {
+              const mCol = collection(db, `tenants/${p.tenantId}/customers/${cd.id}/meetings`);
+              const mQ = query(mCol, where('zoomMeetingId', '==', String(p.meetingId)), limit(1));
+              const mS = await getDocs(mQ);
+              if (mS.size > 0) {
+                found = { docId: mS.docs[0].id, path: `tenants/${p.tenantId}/customers/${cd.id}/meetings/${mS.docs[0].id}`, customerName: cd.data()?.name };
+                p.customerId = cd.id;
+                if (cd.data()?.name) p.customerName = cd.data().name;
+                break;
+              }
+            }
+          } catch (perCustErr) {
+            console.warn('[pending] per-customer scan failed:', perCustErr?.message);
           }
         }
         if (found) {
@@ -10663,9 +10682,18 @@ window._fpMaskCode = 'loaded';
     if (changed) {
       setPending(list);
       window.renderZoomPendingPill();
-      try { if (window.refreshFirestoreCustomers) await window.refreshFirestoreCustomers(); } catch (_) {}
+      // 完成 検知 → 顧客リスト 強制 refresh (新規 客 が list に 出て なかった 問題 も 同時 解決)
+      try {
+        if (window.refreshFirestoreCustomers) await window.refreshFirestoreCustomers();
+        if (window.FPCrmRefreshClients) window.FPCrmRefreshClients({ immediate: true });
+      } catch (e) { console.warn('[pending] post-complete refresh fail:', e?.message); }
     } else if (opts && opts.force) {
+      // 手動 更新 押した 時 は 未 完成 でも 顧客 list を refresh (owner が 新規 客 出て ないと 気付いた ケース)
       window.renderZoomPendingPill();
+      try {
+        if (window.refreshFirestoreCustomers) await window.refreshFirestoreCustomers();
+        if (window.FPCrmRefreshClients) window.FPCrmRefreshClients({ immediate: true });
+      } catch (_) {}
     }
   }
 
