@@ -1897,6 +1897,10 @@ table.clients [class*="avatar"],
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  /* 2026-07-31 fix: grid 子要素 で overflow-y:auto が 効か なかった bug 恒久 fix。
+     min-height:0 が 無い と grid child が 内容 サイズ に 膨らみ、 スクロール しない → 底部 の 削除 button が 見え ない。 */
+  min-height: 0;
+  max-height: 100%;
 }
 .cd-profile-head { text-align: center; margin-bottom: 20px; }
 .cd-profile-avatar {
