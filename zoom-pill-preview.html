@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Zoom 面談 進捗 pill · 5 案 プレビュー | FP Compass</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800;900&family=Noto+Sans+JP:wght@400;500;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F5F7FA;
+    --surface: #FFFFFF;
+    --surface-2: #F1F5F9;
+    --ink: #0F1729;
+    --ink-2: #334155;
+    --ink-3: #64748B;
+    --dim: #94A3B8;
+    --rule: #E2E8F0;
+    --rule-2: #CBD5E1;
+    --primary: #00844A;
+    --primary-hi: #0E9A5A;
+    --primary-soft: #ECFDF5;
+    --primary-line: rgba(0,132,74,0.22);
+    --primary-dark: #065F46;
+    --info: #1E40AF;
+    --info-bg: #EEF2FF;
+    --danger: #B91C1C;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink-2);
+    font-family: 'Noto Sans JP', -apple-system, sans-serif;
+    font-size: 15px; line-height: 1.7; font-weight: 500;
+    letter-spacing: -0.005em; -webkit-font-smoothing: antialiased;
+  }
+  .head { background: var(--ink); color: #fff; padding: 44px 32px 34px; }
+  .head-wrap { max-width: 1180px; margin: 0 auto; }
+  .head-kicker { font-family: 'Manrope', sans-serif; font-size: 11px; letter-spacing: 0.16em; font-weight: 800; color: rgba(255,255,255,0.72); margin-bottom: 12px; }
+  h1 { font-family: 'Manrope','Noto Sans JP', sans-serif; font-size: 30px; font-weight: 900; letter-spacing: -0.02em; margin: 0 0 10px; line-height: 1.25; }
+  .lede { color: rgba(255,255,255,0.85); font-size: 15px; line-height: 1.7; max-width: 720px; margin: 0; }
+
+  main { max-width: 1180px; margin: 0 auto; padding: 32px; }
+
+  .variant { background: var(--surface); border: 1px solid var(--rule); border-radius: 14px; padding: 28px 32px; margin-bottom: 20px; box-shadow: 0 1px 2px rgba(11,18,32,0.04); }
+  .variant-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 6px; flex-wrap: wrap; }
+  .variant-num { font-family: 'Manrope', sans-serif; color: var(--primary); font-size: 12px; letter-spacing: 0.12em; font-weight: 800; }
+  .variant-title { font-family: 'Manrope','Noto Sans JP', sans-serif; font-size: 22px; font-weight: 900; color: var(--ink); letter-spacing: -0.015em; margin: 0; }
+  .variant-lede { color: var(--ink-3); font-size: 14px; margin: 0 0 22px; }
+  .variant-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 780px) { .variant-grid { grid-template-columns: 1fr; } }
+  .demo-cell { background: var(--surface-2); border: 1px dashed var(--rule-2); border-radius: 10px; padding: 24px; min-height: 180px; display: flex; align-items: center; justify-content: center; position: relative; }
+  .demo-label { position: absolute; top: 10px; left: 12px; font-family: 'Manrope', sans-serif; font-size: 10px; letter-spacing: 0.14em; font-weight: 800; color: var(--dim); }
+
+  /* ==================== VARIANT 1: Sequential Timeline ==================== */
+  .v1-card { background: #fff; border: 1px solid var(--rule); border-radius: 14px; padding: 16px 20px 14px; width: 340px; box-shadow: 0 10px 30px rgba(15,23,41,0.10); }
+  .v1-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+  .v1-kicker { font-family: 'Manrope', sans-serif; font-size: 10px; letter-spacing: 0.16em; font-weight: 800; color: var(--dim); }
+  .v1-name { font-size: 14px; font-weight: 800; color: var(--ink); }
+  .v1-close { background: transparent; border: none; color: var(--dim); font-size: 15px; cursor: pointer; padding: 0 4px; }
+  .v1-tl { display: flex; align-items: center; gap: 4px; margin: 10px 0 6px; }
+  .v1-step { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .v1-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--rule); position: relative; }
+  .v1-dot.done { background: var(--primary); }
+  .v1-dot.now { background: var(--primary); box-shadow: 0 0 0 4px var(--primary-soft); animation: pulseDot 1.4s ease-in-out infinite; }
+  @keyframes pulseDot { 0%, 100% { box-shadow: 0 0 0 4px var(--primary-soft); } 50% { box-shadow: 0 0 0 8px rgba(0,132,74,0.14); } }
+  .v1-lbl { font-size: 10.5px; color: var(--ink-3); font-weight: 700; font-family: 'Manrope', sans-serif; letter-spacing: 0.04em; }
+  .v1-lbl.now { color: var(--primary-dark); }
+  .v1-connector { flex: 1; height: 2px; background: var(--rule); margin: -18px 0 0; }
+  .v1-connector.done { background: var(--primary); }
+  .v1-est { text-align: center; font-size: 12px; color: var(--ink-3); font-weight: 600; margin-top: 6px; }
+  .v1-est strong { color: var(--ink); font-weight: 800; }
+  .v1-meta { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--dim); border-top: 1px solid var(--rule); padding-top: 8px; margin-top: 10px; letter-spacing: 0.02em; }
+
+  /* ==================== VARIANT 2: Ring Progress ==================== */
+  .v2-card { background: #fff; border: 1px solid var(--rule); border-radius: 14px; padding: 16px 20px; width: 340px; box-shadow: 0 10px 30px rgba(15,23,41,0.10); display: flex; align-items: center; gap: 16px; }
+  .v2-ring-wrap { position: relative; width: 64px; height: 64px; flex-shrink: 0; }
+  .v2-ring { width: 64px; height: 64px; transform: rotate(-90deg); }
+  .v2-ring-bg { fill: none; stroke: var(--rule); stroke-width: 6; }
+  .v2-ring-fg { fill: none; stroke: var(--primary); stroke-width: 6; stroke-linecap: round; stroke-dasharray: 176; stroke-dashoffset: 88; transition: stroke-dashoffset .6s; }
+  .v2-ring-fg.done { stroke-dashoffset: 0; }
+  .v2-ring-icon { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'Manrope', sans-serif; font-size: 15px; font-weight: 900; color: var(--ink); }
+  .v2-ring-icon.done { color: var(--primary); font-size: 22px; }
+  .v2-body { flex: 1; min-width: 0; }
+  .v2-kicker { font-family: 'Manrope', sans-serif; font-size: 10px; letter-spacing: 0.14em; font-weight: 800; color: var(--dim); margin-bottom: 3px; }
+  .v2-title { font-size: 15px; font-weight: 800; color: var(--ink); margin-bottom: 2px; }
+  .v2-sub { font-size: 12px; color: var(--ink-3); font-weight: 600; }
+  .v2-sub.done { color: var(--primary-dark); font-weight: 800; }
+  .v2-close { align-self: flex-start; background: transparent; border: none; color: var(--dim); font-size: 16px; cursor: pointer; padding: 0 4px; }
+
+  /* ==================== VARIANT 3: Linear-style Chip ==================== */
+  .v3-card { background: #fff; border: 1px solid var(--rule); border-radius: 10px; padding: 10px 14px; width: 340px; box-shadow: 0 8px 24px rgba(15,23,41,0.08); display: flex; align-items: center; gap: 12px; }
+  .v3-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-family: 'Manrope', sans-serif; font-size: 10.5px; font-weight: 800; letter-spacing: 0.06em; flex-shrink: 0; }
+  .v3-badge.pending { background: var(--info-bg); color: var(--info); }
+  .v3-badge.done { background: var(--primary-soft); color: var(--primary-dark); }
+  .v3-badge-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .v3-badge.pending .v3-badge-dot { animation: pulseDot2 1.2s ease-in-out infinite; }
+  @keyframes pulseDot2 { 0%,100%{opacity:1} 50%{opacity:0.35} }
+  .v3-body { flex: 1; min-width: 0; }
+  .v3-name { font-size: 13.5px; font-weight: 800; color: var(--ink); }
+  .v3-meta { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--dim); letter-spacing: 0.02em; }
+  .v3-eta { font-size: 11.5px; font-weight: 700; color: var(--ink-3); white-space: nowrap; }
+  .v3-eta.done { color: var(--primary); }
+  .v3-close { background: transparent; border: none; color: var(--dim); font-size: 15px; cursor: pointer; padding: 0 4px; margin-left: 4px; }
+
+  /* ==================== VARIANT 4: Bottom Status Bar ==================== */
+  .v4-wrap { width: 100%; }
+  .v4-bar { background: var(--ink); color: #fff; padding: 11px 20px; border-radius: 12px; display: flex; align-items: center; gap: 16px; font-size: 13px; box-shadow: 0 12px 32px rgba(15,23,41,0.24); }
+  .v4-icon { width: 22px; height: 22px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.30); border-top-color: #fff; animation: spin4 1s linear infinite; flex-shrink: 0; }
+  .v4-icon.done { border-color: var(--primary); background: var(--primary); animation: none; display: flex; align-items: center; justify-content: center; }
+  @keyframes spin4 { to { transform: rotate(360deg); } }
+  .v4-progress-track { flex: 1; height: 4px; background: rgba(255,255,255,0.15); border-radius: 999px; overflow: hidden; min-width: 120px; }
+  .v4-progress-fill { height: 100%; background: var(--primary); border-radius: 999px; transition: width .8s; }
+  .v4-lbl { font-weight: 700; white-space: nowrap; }
+  .v4-lbl-sub { color: rgba(255,255,255,0.65); font-size: 11.5px; font-weight: 500; }
+  .v4-lbl-done { color: var(--primary); font-weight: 800; }
+  .v4-eta { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: rgba(255,255,255,0.85); font-weight: 600; }
+  .v4-close { background: transparent; border: none; color: rgba(255,255,255,0.55); font-size: 15px; cursor: pointer; padding: 0 4px; }
+  .v4-cta { background: var(--primary); color: #fff; border: none; padding: 5px 12px; border-radius: 6px; font-family: inherit; font-size: 11.5px; font-weight: 800; cursor: pointer; letter-spacing: 0.04em; }
+
+  /* ==================== VARIANT 5: Notification Card (macOS-style) ==================== */
+  .v5-card { background: rgba(255,255,255,0.98); backdrop-filter: saturate(1.8) blur(20px); border: 1px solid rgba(15,23,41,0.06); border-radius: 14px; padding: 12px 14px; width: 340px; box-shadow: 0 20px 40px rgba(15,23,41,0.18), 0 1px 0 rgba(255,255,255,0.6) inset; display: flex; gap: 12px; align-items: flex-start; }
+  .v5-app-icon { width: 38px; height: 38px; border-radius: 9px; background: var(--ink); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 900; font-family: 'Manrope', sans-serif; font-size: 13px; flex-shrink: 0; box-shadow: 0 4px 10px rgba(15,23,41,0.18); }
+  .v5-app-icon.done { background: var(--primary); }
+  .v5-body { flex: 1; min-width: 0; }
+  .v5-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 3px; }
+  .v5-app-name { font-size: 11px; font-weight: 800; color: var(--ink-3); letter-spacing: 0.02em; }
+  .v5-time { font-size: 11px; color: var(--dim); font-family: 'JetBrains Mono', monospace; }
+  .v5-title { font-size: 14px; font-weight: 800; color: var(--ink); line-height: 1.4; margin-bottom: 2px; }
+  .v5-msg { font-size: 12.5px; color: var(--ink-2); line-height: 1.5; }
+  .v5-msg.done { color: var(--primary-dark); font-weight: 700; }
+  .v5-actions { display: flex; gap: 6px; margin-top: 8px; }
+  .v5-act { background: var(--surface-2); border: none; padding: 5px 12px; border-radius: 6px; font-size: 11px; font-weight: 700; color: var(--ink); cursor: pointer; font-family: inherit; }
+  .v5-act.primary { background: var(--primary); color: #fff; }
+  .v5-close { background: transparent; border: none; color: var(--dim); font-size: 14px; cursor: pointer; padding: 0 4px; }
+
+  /* Choice bar */
+  .choice-bar { margin-top: 32px; padding: 22px 26px; background: var(--surface); border: 1.5px solid var(--primary); border-radius: 14px; }
+  .choice-title { font-family: 'Manrope', sans-serif; font-size: 12px; letter-spacing: 0.14em; font-weight: 800; color: var(--primary-dark); margin-bottom: 10px; }
+  .choice-body { color: var(--ink); font-size: 14.5px; font-weight: 600; line-height: 1.7; }
+  .choice-body b { color: var(--primary-dark); font-weight: 800; }
+
+  footer { max-width: 1180px; margin: 30px auto; padding: 20px 32px; color: var(--dim); font-size: 12px; font-family: 'Manrope', sans-serif; border-top: 1px solid var(--rule); text-align: center; }
+</style>
+</head>
+<body>
+
+<header class="head">
+  <div class="head-wrap">
+    <div class="head-kicker">FP COMPASS · UI PROPOSAL</div>
+    <h1>Zoom 面談 進捗 表示 · 5 案 プレビュー</h1>
+    <p class="lede">
+      Zoom 会議 発行 → 処理中 → 議事録 完成 の 3 段 状態 を 画面 右下 の pill で 常時 表示 する UI 案。 5 案 の 「処理中 (左)」 と 「完成 (右)」 の 2 状態 を それぞれ 並べた。 選ぶ 番号 を 教えて。
+    </p>
+  </div>
+</header>
+
+<main>
+
+  <!-- ================================ Variant 1 ================================ -->
+  <section class="variant">
+    <div class="variant-head">
+      <span class="variant-num">CASE 01</span>
+      <h2 class="variant-title">3-Step Timeline · 発行 → 処理中 → 完成 が 一目 で 見える</h2>
+    </div>
+    <p class="variant-lede">工程 の どこ に いる か を 3 つ の ドット と 進捗 バー で 表示。 業務 admin っぽい 落ち着き。</p>
+    <div class="variant-grid">
+      <div class="demo-cell">
+        <span class="demo-label">処理中</span>
+        <div class="v1-card">
+          <div class="v1-head">
+            <span class="v1-kicker">ZOOM 面談</span>
+            <button class="v1-close">×</button>
+          </div>
+          <div class="v1-name">テスト 様</div>
+          <div class="v1-tl">
+            <div class="v1-step"><div class="v1-dot done"></div><div class="v1-lbl">発行</div></div>
+            <div class="v1-connector done"></div>
+            <div class="v1-step"><div class="v1-dot now"></div><div class="v1-lbl now">処理中</div></div>
+            <div class="v1-connector"></div>
+            <div class="v1-step"><div class="v1-dot"></div><div class="v1-lbl">完成</div></div>
+          </div>
+          <div class="v1-est">あと <strong>約 12 分</strong> で 議事録 追加</div>
+          <div class="v1-meta">Meeting: 82816151665 · 1 分前</div>
+        </div>
+      </div>
+      <div class="demo-cell">
+        <span class="demo-label">完成</span>
+        <div class="v1-card" style="border-color: var(--primary); background: var(--primary-soft);">
+          <div class="v1-head">
+            <span class="v1-kicker" style="color: var(--primary-dark);">ZOOM 面談 · 議事録 完成</span>
+            <button class="v1-close">×</button>
+          </div>
+          <div class="v1-name">テスト 様</div>
+          <div class="v1-tl">
+            <div class="v1-step"><div class="v1-dot done"></div><div class="v1-lbl">発行</div></div>
+            <div class="v1-connector done"></div>
+            <div class="v1-step"><div class="v1-dot done"></div><div class="v1-lbl">処理</div></div>
+            <div class="v1-connector done"></div>
+            <div class="v1-step"><div class="v1-dot done"></div><div class="v1-lbl">完成</div></div>
+          </div>
+          <div class="v1-est" style="color: var(--primary-dark); font-weight: 800;">タップ で 面談履歴 を 開く →</div>
+          <div class="v1-meta">Meeting: 82816151665 · 14 分前</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================ Variant 2 ================================ -->
+  <section class="variant">
+    <div class="variant-head">
+      <span class="variant-num">CASE 02</span>
+      <h2 class="variant-title">Ring Progress · 円形 で 「あと 何 % か」 が 直感的</h2>
+    </div>
+    <p class="variant-lede">円形 進捗 が 時間 経過 に 合わせて 埋まって いく。 完成 で ✓ に 切替。 コンパクト で 邪魔 に なりにくい。</p>
+    <div class="variant-grid">
+      <div class="demo-cell">
+        <span class="demo-label">処理中 (50 %)</span>
+        <div class="v2-card">
+          <div class="v2-ring-wrap">
+            <svg class="v2-ring" width="64" height="64" viewBox="0 0 64 64">
+              <circle class="v2-ring-bg" cx="32" cy="32" r="28"/>
+              <circle class="v2-ring-fg" cx="32" cy="32" r="28"/>
+            </svg>
+            <div class="v2-ring-icon">50%</div>
+          </div>
+          <div class="v2-body">
+            <div class="v2-kicker">ZOOM 面談 · 処理中</div>
+            <div class="v2-title">テスト 様</div>
+            <div class="v2-sub">あと 約 7 分 で 議事録 追加</div>
+          </div>
+          <button class="v2-close">×</button>
+        </div>
+      </div>
+      <div class="demo-cell">
+        <span class="demo-label">完成</span>
+        <div class="v2-card" style="border-color: var(--primary); background: var(--primary-soft);">
+          <div class="v2-ring-wrap">
+            <svg class="v2-ring" width="64" height="64" viewBox="0 0 64 64">
+              <circle class="v2-ring-bg" cx="32" cy="32" r="28" style="stroke: rgba(0,132,74,0.15);"/>
+              <circle class="v2-ring-fg done" cx="32" cy="32" r="28"/>
+            </svg>
+            <div class="v2-ring-icon done">✓</div>
+          </div>
+          <div class="v2-body">
+            <div class="v2-kicker" style="color: var(--primary-dark);">ZOOM 面談 · 議事録 完成</div>
+            <div class="v2-title">テスト 様</div>
+            <div class="v2-sub done">タップ で 面談履歴 を 開く →</div>
+          </div>
+          <button class="v2-close">×</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================ Variant 3 ================================ -->
+  <section class="variant">
+    <div class="variant-head">
+      <span class="variant-num">CASE 03</span>
+      <h2 class="variant-title">Linear-style Chip · 最小 高さ で 邪魔 しない</h2>
+    </div>
+    <p class="variant-lede">Linear / GitHub の issue チップ 風。 badge + 客名 + ETA が 一列。 場所 を 取らない。</p>
+    <div class="variant-grid">
+      <div class="demo-cell">
+        <span class="demo-label">処理中</span>
+        <div class="v3-card">
+          <span class="v3-badge pending"><span class="v3-badge-dot"></span>処理中</span>
+          <div class="v3-body">
+            <div class="v3-name">テスト 様 · Zoom 面談</div>
+            <div class="v3-meta">Meeting 82816151665 · 1 分前</div>
+          </div>
+          <div class="v3-eta">あと 12 分</div>
+          <button class="v3-close">×</button>
+        </div>
+      </div>
+      <div class="demo-cell">
+        <span class="demo-label">完成</span>
+        <div class="v3-card" style="border-color: var(--primary); box-shadow: 0 8px 24px rgba(0,132,74,0.20);">
+          <span class="v3-badge done"><span class="v3-badge-dot"></span>完成</span>
+          <div class="v3-body">
+            <div class="v3-name">テスト 様 · 議事録 追加 済</div>
+            <div class="v3-meta">Meeting 82816151665 · 14 分前</div>
+          </div>
+          <div class="v3-eta done">開く →</div>
+          <button class="v3-close">×</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================ Variant 4 ================================ -->
+  <section class="variant">
+    <div class="variant-head">
+      <span class="variant-num">CASE 04</span>
+      <h2 class="variant-title">Bottom Status Bar · 画面 最下 の 帯 で 進捗 バー</h2>
+    </div>
+    <p class="variant-lede">macOS Finder コピー 進捗 風。 画面 最下 を 帯 で 使う ので 顧客 一覧 が 隠れ ない。 バー が 埋まって いく の が 見える。</p>
+    <div class="variant-grid" style="grid-template-columns: 1fr;">
+      <div class="demo-cell" style="padding: 32px;">
+        <span class="demo-label">処理中</span>
+        <div class="v4-wrap">
+          <div class="v4-bar">
+            <div class="v4-icon"></div>
+            <div>
+              <div class="v4-lbl">テスト 様 の Zoom 面談 · 議事録 準備中</div>
+              <div class="v4-lbl-sub">Meeting 82816151665 · 開始 1 分 前</div>
+            </div>
+            <div class="v4-progress-track"><div class="v4-progress-fill" style="width: 25%;"></div></div>
+            <span class="v4-eta">あと 12 分</span>
+            <button class="v4-close">×</button>
+          </div>
+        </div>
+      </div>
+      <div class="demo-cell" style="padding: 32px;">
+        <span class="demo-label">完成</span>
+        <div class="v4-wrap">
+          <div class="v4-bar" style="background: linear-gradient(135deg, #065F46 0%, #0F1729 100%);">
+            <div class="v4-icon done">✓</div>
+            <div>
+              <div class="v4-lbl v4-lbl-done">テスト 様 の 議事録 が 完成 しました</div>
+              <div class="v4-lbl-sub">Meeting 82816151665 · 14 分前 の 面談</div>
+            </div>
+            <div class="v4-progress-track"><div class="v4-progress-fill" style="width: 100%;"></div></div>
+            <button class="v4-cta">面談履歴 を 開く</button>
+            <button class="v4-close">×</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================ Variant 5 ================================ -->
+  <section class="variant">
+    <div class="variant-head">
+      <span class="variant-num">CASE 05</span>
+      <h2 class="variant-title">Notification Card · macOS 通知 センター 風</h2>
+    </div>
+    <p class="variant-lede">アプリ アイコン + 状態 テキスト + アクション button の 定番 通知 スタイル。 完成 時 は 「面談履歴 を 開く」 が 直接 押せる。</p>
+    <div class="variant-grid">
+      <div class="demo-cell">
+        <span class="demo-label">処理中</span>
+        <div class="v5-card">
+          <div class="v5-app-icon">FP</div>
+          <div class="v5-body">
+            <div class="v5-top">
+              <span class="v5-app-name">FP COMPASS</span>
+              <span class="v5-time">1 分前</span>
+            </div>
+            <div class="v5-title">Zoom 面談 · 処理中</div>
+            <div class="v5-msg">テスト 様 の 議事録 を 生成 中。 完成 まで 約 12 分。</div>
+          </div>
+          <button class="v5-close">×</button>
+        </div>
+      </div>
+      <div class="demo-cell">
+        <span class="demo-label">完成</span>
+        <div class="v5-card">
+          <div class="v5-app-icon done">FP</div>
+          <div class="v5-body">
+            <div class="v5-top">
+              <span class="v5-app-name">FP COMPASS</span>
+              <span class="v5-time">14 分前</span>
+            </div>
+            <div class="v5-title">議事録 が 完成 しました</div>
+            <div class="v5-msg done">テスト 様 · Zoom 面談 · 5 セクション の 議事録 が 面談履歴 に 追加 されました。</div>
+            <div class="v5-actions">
+              <button class="v5-act primary">面談履歴 を 開く</button>
+              <button class="v5-act">後で</button>
+            </div>
+          </div>
+          <button class="v5-close">×</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Owner Choice -->
+  <div class="choice-bar">
+    <div class="choice-title">SELECT · どれ で 実装 する か 教えて</div>
+    <div class="choice-body">
+      案 1〜5 の 番号 で 教えて。 「<b>2 と 4 の 混合</b>」 等 でも OK。 選ばれたら 即 実装 → PROD 反映 する。<br>
+      現状 の 「黄色 で 分かり づらい pill」 は fp-pending-zoom-panel 選 された 案 で 完全 置換。
+    </div>
+  </div>
+
+</main>
+
+<footer>FP Compass · Skeleton Inc. · Zoom 面談 進捗 UI 案 · v1 2026-07-31</footer>
+
+</body>
+</html>

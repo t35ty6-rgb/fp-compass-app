@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Zoom 面談 進捗 pill v2 · 完成 状態 5 案 | FP Compass</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800;900&family=Noto+Sans+JP:wght@400;500;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F5F7FA;
+    --surface: #FFFFFF;
+    --surface-2: #F1F5F9;
+    --ink: #0F1729;
+    --ink-2: #334155;
+    --ink-3: #64748B;
+    --dim: #94A3B8;
+    --rule: #E2E8F0;
+    --primary: #00844A;
+    --primary-hi: #0E9A5A;
+    --primary-soft: #ECFDF5;
+    --primary-line: rgba(0,132,74,0.22);
+    --primary-dark: #065F46;
+    --teal: #0891B2;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink-2); font-family: 'Noto Sans JP', -apple-system, sans-serif; font-size: 15px; line-height: 1.7; font-weight: 500; letter-spacing: -0.005em; -webkit-font-smoothing: antialiased; }
+
+  .head { background: var(--ink); color: #fff; padding: 44px 32px 34px; }
+  .head-wrap { max-width: 1180px; margin: 0 auto; }
+  .head-kicker { font-family: 'Manrope', sans-serif; font-size: 11px; letter-spacing: 0.16em; font-weight: 800; color: rgba(255,255,255,0.72); margin-bottom: 12px; }
+  h1 { font-family: 'Manrope','Noto Sans JP', sans-serif; font-size: 30px; font-weight: 900; letter-spacing: -0.02em; margin: 0 0 10px; line-height: 1.25; }
+  .lede { color: rgba(255,255,255,0.85); font-size: 15px; line-height: 1.7; max-width: 720px; margin: 0; }
+
+  main { max-width: 1180px; margin: 0 auto; padding: 32px; }
+
+  /* Common bar structure */
+  .bar-base { padding: 11px 18px 11px 20px; border-radius: 12px; display: flex; align-items: center; gap: 16px; font-size: 13px; box-shadow: 0 12px 32px rgba(15,23,41,0.16); font-family: 'Noto Sans JP', sans-serif; }
+  .bar-lbl { font-weight: 800; white-space: nowrap; line-height: 1.35; }
+  .bar-sub { font-size: 12px; font-weight: 500; margin-top: 1px; opacity: 0.75; }
+  .bar-icon { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; flex-shrink: 0; font-family: 'Manrope', sans-serif; font-size: 13px; }
+  .bar-track { flex: 1; height: 4px; background: rgba(0,0,0,0.08); border-radius: 999px; overflow: hidden; min-width: 100px; }
+  .bar-fill { height: 100%; border-radius: 999px; }
+  .bar-cta { border: none; padding: 6px 14px; border-radius: 7px; font-family: inherit; font-size: 11.5px; font-weight: 800; cursor: pointer; letter-spacing: 0.02em; white-space: nowrap; }
+  .bar-close { background: transparent; border: none; font-size: 15px; cursor: pointer; padding: 0 4px; opacity: 0.55; }
+
+  /* Reference: 処理中 (変更 なし) */
+  .processing-bar { background: var(--ink); color: #fff; }
+  .processing-icon { border: 2px solid rgba(255,255,255,0.30); border-top-color: #fff; animation: spin 1s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ---- CASE 04-A: Light Emerald Wash (穏やか) ---- */
+  .v-a { background: var(--primary-soft); color: var(--primary-dark); border: 1.5px solid rgba(0,132,74,0.32); }
+  .v-a .bar-icon { background: var(--primary); color: #fff; }
+  .v-a .bar-sub { color: var(--primary-dark); opacity: 0.78; }
+  .v-a .bar-cta { background: var(--primary); color: #fff; }
+
+  /* ---- CASE 04-B: White + Filled Green Icon Panel (icon block パターン) ---- */
+  /* 4px 側 border は AI reject 該当 なので、 32×full-height の icon block で 対比 */
+  .v-b { background: #fff; color: var(--ink); padding-left: 0; box-shadow: 0 12px 32px rgba(15,23,41,0.12); overflow: hidden; }
+  .v-b .bar-lead { background: var(--primary); color: #fff; padding: 12px 14px; margin: -11px 0 -11px 0; display: flex; align-items: center; gap: 6px; font-family: 'Manrope', sans-serif; font-size: 12px; font-weight: 800; letter-spacing: 0.06em; }
+  .v-b .bar-sub { color: var(--ink-3); }
+  .v-b .bar-cta { background: var(--primary); color: #fff; }
+
+  /* ---- CASE 04-C: Solid Primary Emerald (bold) ---- */
+  .v-c { background: var(--primary); color: #fff; }
+  .v-c .bar-icon { background: rgba(255,255,255,0.20); color: #fff; }
+  .v-c .bar-sub { color: rgba(255,255,255,0.82); }
+  .v-c .bar-cta { background: #fff; color: var(--primary-dark); }
+
+  /* ---- CASE 04-D: Emerald → Teal Gradient (celebration) ---- */
+  .v-d { background: linear-gradient(90deg, var(--primary) 0%, var(--teal) 100%); color: #fff; }
+  .v-d .bar-icon { background: rgba(255,255,255,0.22); color: #fff; }
+  .v-d .bar-sub { color: rgba(255,255,255,0.86); }
+  .v-d .bar-cta { background: #fff; color: var(--primary-dark); }
+
+  /* ---- CASE 04-E: White + Green Pulse Glow (静か) ---- */
+  .v-e { background: #fff; color: var(--ink); border: 1px solid var(--rule); box-shadow: 0 12px 32px rgba(15,23,41,0.10), 0 0 0 3px rgba(0,132,74,0.08); animation: glow 2.4s ease-in-out infinite; }
+  @keyframes glow { 0%,100% { box-shadow: 0 12px 32px rgba(15,23,41,0.10), 0 0 0 3px rgba(0,132,74,0.08); } 50% { box-shadow: 0 12px 32px rgba(15,23,41,0.10), 0 0 0 6px rgba(0,132,74,0.15); } }
+  .v-e .bar-icon { background: var(--primary); color: #fff; }
+  .v-e .bar-sub { color: var(--ink-3); }
+  .v-e .bar-cta { background: var(--primary); color: #fff; }
+
+  /* Section wrappers */
+  .section { background: var(--surface); border: 1px solid var(--rule); border-radius: 14px; padding: 28px 32px; margin-bottom: 20px; box-shadow: 0 1px 2px rgba(11,18,32,0.04); }
+  .section-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 6px; flex-wrap: wrap; }
+  .section-num { font-family: 'Manrope', sans-serif; color: var(--primary); font-size: 12px; letter-spacing: 0.10em; font-weight: 800; }
+  .section-title { font-family: 'Manrope','Noto Sans JP', sans-serif; font-size: 22px; font-weight: 900; color: var(--ink); letter-spacing: -0.015em; margin: 0; }
+  .section-lede { color: var(--ink-3); font-size: 14px; margin: 0 0 22px; }
+  .demo-cell { background: var(--surface-2); border: 1px dashed #CBD5E1; border-radius: 10px; padding: 32px 24px 40px; min-height: 96px; position: relative; }
+  .demo-label { position: absolute; top: 10px; left: 12px; font-family: 'Manrope', sans-serif; font-size: 10px; letter-spacing: 0.14em; font-weight: 800; color: var(--dim); }
+
+  .ref-note { background: rgba(15,23,41,0.04); border-radius: 10px; padding: 20px 24px; margin-bottom: 24px; }
+  .ref-note-title { font-family: 'Manrope', sans-serif; font-size: 11px; letter-spacing: 0.14em; font-weight: 800; color: var(--ink-3); margin-bottom: 10px; }
+  .ref-note-body { font-size: 13px; color: var(--ink-2); line-height: 1.7; }
+
+  .choice-bar { margin-top: 32px; padding: 22px 26px; background: var(--surface); border: 1.5px solid var(--primary); border-radius: 14px; }
+  .choice-title { font-family: 'Manrope', sans-serif; font-size: 12px; letter-spacing: 0.12em; font-weight: 800; color: var(--primary-dark); margin-bottom: 10px; }
+  .choice-body { color: var(--ink); font-size: 14.5px; font-weight: 600; line-height: 1.7; }
+  .choice-body b { color: var(--primary-dark); font-weight: 800; }
+  footer { max-width: 1180px; margin: 30px auto; padding: 20px 32px; color: var(--dim); font-size: 12px; font-family: 'Manrope', sans-serif; border-top: 1px solid var(--rule); text-align: center; }
+</style>
+</head>
+<body>
+
+<header class="head">
+  <div class="head-wrap">
+    <div class="head-kicker">FP COMPASS · UI PROPOSAL v2</div>
+    <h1>CASE 04 決定 → 完成 状態 の カラー 4 案</h1>
+    <p class="lede">
+      前 の 「濃 ink + 緑 グラデ」 が 背景 と 被って いた ので、 完成 状態 の 色 だけ 差替 4 案。 「処理中」 状態 (ink dark) は 変更 なし。
+      <br><span style="color:#93C5FD;font-weight:700;">Jobs 推薦: 04-B (白 × 緑パネル、 状態 分離) or 04-C (全面 緑、 視認 速度 No.1)</span>
+    </p>
+  </div>
+</header>
+
+<main>
+
+  <!-- Reference: 処理中 -->
+  <div class="ref-note">
+    <div class="ref-note-title">REFERENCE · 処理中 状態 (変更 なし)</div>
+    <div class="demo-cell" style="background: transparent; border: none; padding: 8px 0 0;">
+      <div class="bar-base processing-bar">
+        <div class="bar-icon processing-icon"></div>
+        <div>
+          <div class="bar-lbl">テスト 様 の Zoom 面談 · 議事録 準備中</div>
+          <div class="bar-sub">Meeting 82816151665 · 開始 1 分 前</div>
+        </div>
+        <div class="bar-track"><div class="bar-fill" style="width: 25%; background: var(--primary);"></div></div>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:rgba(255,255,255,0.85);font-weight:600;">あと 12 分</span>
+        <button class="bar-close" style="color:rgba(255,255,255,0.55);">×</button>
+      </div>
+    </div>
+    <div class="ref-note-body" style="margin-top: 12px;">これ が 「処理中」 状態 の 決定版。 下 の 5 案 は 「完成」 状態 の カラー だけ 変更。</div>
+  </div>
+
+  <!-- A -->
+  <section class="section">
+    <div class="section-head">
+      <span class="section-num">04-A</span>
+      <h2 class="section-title">Light Emerald Wash · 淡い 緑 に 穏やか に 切替</h2>
+    </div>
+    <p class="section-lede">背景 淡緑 + primary emerald の アイコン と ボタン。 処理中 の 濃 ink と 明確 に 対比、 でも 視覚 の 主張 は 抑え目。</p>
+    <div class="demo-cell">
+      <span class="demo-label">完成</span>
+      <div class="bar-base v-a">
+        <div class="bar-icon">✓</div>
+        <div>
+          <div class="bar-lbl">テスト 様 の 議事録 が 完成 しました</div>
+          <div class="bar-sub">Meeting 82816151665 · 14 分前 の 面談</div>
+        </div>
+        <div class="bar-track" style="background: rgba(0,132,74,0.14);"><div class="bar-fill" style="width: 100%; background: var(--primary);"></div></div>
+        <button class="bar-cta">面談履歴 を 開く</button>
+        <button class="bar-close">×</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- B -->
+  <section class="section">
+    <div class="section-head">
+      <span class="section-num">04-B</span>
+      <h2 class="section-title">White + Filled Green Panel · 完成 タグ が 左 に 独立</h2>
+    </div>
+    <p class="section-lede">白 本体 に 完成 status の 緑 パネル が 左 に くっつく。 「白 ベース に status カラー だけ 目立たせる」 設計。 文字 は 通常 ink。</p>
+    <div class="demo-cell">
+      <span class="demo-label">完成</span>
+      <div class="bar-base v-b">
+        <div class="bar-lead">✓ 完成</div>
+        <div style="padding-left:2px;">
+          <div class="bar-lbl">テスト 様 の 議事録 が 完成 しました</div>
+          <div class="bar-sub">Meeting 82816151665 · 14 分前 の 面談</div>
+        </div>
+        <div class="bar-track"><div class="bar-fill" style="width: 100%; background: var(--primary);"></div></div>
+        <button class="bar-cta">面談履歴 を 開く</button>
+        <button class="bar-close">×</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- C -->
+  <section class="section">
+    <div class="section-head">
+      <span class="section-num">04-C</span>
+      <h2 class="section-title">Solid Primary Emerald · 確実 に 目立つ</h2>
+    </div>
+    <p class="section-lede">全面 primary emerald + 白 文字。 「見逃せない 完成 通知」 パターン。 button は 白 で 反転。</p>
+    <div class="demo-cell">
+      <span class="demo-label">完成</span>
+      <div class="bar-base v-c">
+        <div class="bar-icon">✓</div>
+        <div>
+          <div class="bar-lbl">テスト 様 の 議事録 が 完成 しました</div>
+          <div class="bar-sub">Meeting 82816151665 · 14 分前 の 面談</div>
+        </div>
+        <div class="bar-track" style="background: rgba(255,255,255,0.22);"><div class="bar-fill" style="width: 100%; background: #fff;"></div></div>
+        <button class="bar-cta">面談履歴 を 開く</button>
+        <button class="bar-close" style="color: rgba(255,255,255,0.65);">×</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- D (旧 E: White + Green Pulse Glow — 静か。 動き あり な ので 実物 確認 推奨) -->
+  <section class="section">
+    <div class="section-head">
+      <span class="section-num">04-D</span>
+      <h2 class="section-title">White + Green Pulse Glow · 静か に 気付かせる (動き あり)</h2>
+    </div>
+    <p class="section-lede">白 本体、 色 の 主張 なし。 外側 に 淡緑 の 光 が 呼吸 する ように 明滅。 静止 スクショ だと 04-A に 見える が、 実物 は 縁 が 明滅 する。 <b>実 URL で 見て 判断 して 欲しい</b>。</p>
+    <div class="demo-cell">
+      <span class="demo-label">完成 (動きあり)</span>
+      <div class="bar-base v-e">
+        <div class="bar-icon">✓</div>
+        <div>
+          <div class="bar-lbl">テスト 様 の 議事録 が 完成 しました</div>
+          <div class="bar-sub">Meeting 82816151665 · 14 分前 の 面談</div>
+        </div>
+        <div class="bar-track"><div class="bar-fill" style="width: 100%; background: var(--primary);"></div></div>
+        <button class="bar-cta">面談履歴 を 開く</button>
+        <button class="bar-close">×</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="choice-bar">
+    <div class="choice-title">SELECT · 完成 状態 の 案 を 選ぶ</div>
+    <div class="choice-body">
+      04-A / 04-B / 04-C / 04-D の 番号 で 教えて。 選ばれたら 即 実装 → 現行 pill を 差替 → PROD 反映 する。<br>
+      <b>Jobs 推薦: 04-B (状態 分離 の 白×緑) or 04-C (全面 緑、 見逃さない)</b>。 04-A は 淡すぎ リスク、 04-D は 動き ある ので 実 URL 確認 必須。
+      <br><span style="font-size:12px;font-weight:600;color:var(--ink-3);">旧 04-D (grad) は AI reject 該当 で 削除 済。</span>
+    </div>
+  </div>
+
+</main>
+
+<footer>FP Compass · Skeleton Inc. · Zoom 面談 進捗 UI 案 · v2 (完成 状態) 2026-07-31</footer>
+
+</body>
+</html>
