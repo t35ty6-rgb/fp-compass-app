@@ -1,0 +1,973 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>客モーダル 完璧 detail-up 5案</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800;900&family=Noto+Sans+JP:wght@400;500;600;700;800;900&display=swap">
+<style>
+  :root {
+    --emerald: #00844A;
+    --emerald-2: #065F46;
+    --emerald-soft: #ECFDF5;
+    --emerald-tint: #DCFCE7;
+    --ink: #0F1729;
+    --ink-2: #1F2937;
+    --muted: #6B7280;
+    --dim: #9CA3AF;
+    --rule: #E5E7EB;
+    --surface: #FAFBFC;
+    --gold: #B45309;
+    --gold-soft: #FEF3C7;
+    --red: #DC2626;
+    --red-soft: #FEE2E2;
+    --blue: #1E40AF;
+    --blue-soft: #DBEAFE;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Noto Sans JP', -apple-system, sans-serif;
+    background: #f5f6f8;
+    color: var(--ink);
+    line-height: 1.65;
+    padding-bottom: 60px;
+  }
+  .header {
+    background: var(--ink);
+    color: #fff;
+    padding: 24px 32px 20px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .header h1 { font-size: 20px; font-weight: 900; letter-spacing: -0.015em; margin-bottom: 3px; }
+  .header .sub { font-size: 12.5px; color: rgba(255,255,255,0.65); font-weight: 500; }
+  .tabs {
+    display: flex; gap: 4px; margin-top: 18px;
+    flex-wrap: wrap;
+  }
+  .tab {
+    background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.75);
+    border: 1px solid rgba(255,255,255,0.14);
+    padding: 10px 16px; border-radius: 999px;
+    font-size: 13px; font-weight: 700;
+    cursor: pointer; font-family: inherit;
+    transition: background 0.12s;
+  }
+  .tab:hover { background: rgba(255,255,255,0.14); }
+  .tab.active {
+    background: var(--emerald); color: #fff; border-color: var(--emerald);
+  }
+  .tab-badge {
+    display: inline-block; margin-right: 8px;
+    font-family: 'Manrope', monospace; font-weight: 900;
+    opacity: 0.7;
+  }
+  .stage {
+    max-width: 1400px;
+    margin: 28px auto;
+    padding: 0 24px;
+  }
+  .stage-title {
+    display: flex; align-items: baseline; gap: 14px;
+    margin-bottom: 6px;
+  }
+  .stage-badge {
+    background: var(--ink); color: #fff;
+    font-family: 'Manrope', monospace;
+    font-size: 12px; font-weight: 900; letter-spacing: 0.14em;
+    padding: 4px 12px; border-radius: 999px;
+  }
+  .stage-name { font-size: 22px; font-weight: 900; letter-spacing: -0.015em; }
+  .stage-desc { color: var(--muted); font-size: 14px; font-weight: 500; margin-bottom: 20px; max-width: 900px; }
+  .stage-tags { margin-bottom: 16px; }
+  .st-tag {
+    display: inline-block; margin-right: 6px;
+    background: #fff; border: 1px solid var(--rule);
+    padding: 3px 10px; border-radius: 6px;
+    font-size: 11px; font-weight: 700; color: var(--ink-2);
+  }
+  .st-tag.pro { background: var(--emerald-soft); border-color: var(--emerald); color: var(--emerald-2); }
+  .st-tag.con { background: var(--red-soft); border-color: var(--red); color: #7F1D1D; }
+
+  .canvas {
+    background: #fff;
+    border: 1px solid var(--rule);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 6px 24px rgba(15,23,41,0.06);
+  }
+
+  /* ============================================
+   * 案 C1: タイムライン stream 型
+   * ============================================ */
+  .c1 { display: grid; grid-template-columns: 300px 1fr; min-height: 720px; }
+  .c1-left {
+    background: var(--surface); padding: 20px 18px;
+    border-right: 1px solid var(--rule);
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  .c1-profile { text-align: center; padding-bottom: 16px; border-bottom: 1px solid var(--rule); }
+  .c1-avatar {
+    width: 64px; height: 64px; border-radius: 50%;
+    background: linear-gradient(135deg,var(--emerald),var(--emerald-2));
+    color: #fff; font-size: 24px; font-weight: 900;
+    display: inline-flex; align-items: center; justify-content: center;
+    margin-bottom: 10px;
+  }
+  .c1-name { font-size: 17px; font-weight: 900; letter-spacing: -0.01em; }
+  .c1-name-h { font-size: 12px; color: var(--muted); font-weight: 500; margin-left: 3px; }
+  .c1-meta { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .c1-status { display: inline-block; margin-top: 8px; background: var(--blue-soft); color: var(--blue); font-size: 10.5px; font-weight: 800; padding: 3px 9px; border-radius: 5px; letter-spacing: 0.06em; }
+  .c1-cta {
+    background: linear-gradient(135deg, var(--emerald), var(--emerald-2));
+    color: #fff; border: none; padding: 14px 16px; border-radius: 10px;
+    font-size: 14px; font-weight: 900; font-family: inherit;
+    display: flex; align-items: center; gap: 10px;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(0,132,74,0.22);
+  }
+  .c1-cta-icon { font-size: 18px; }
+  .c1-cta-body { flex: 1; text-align: left; }
+  .c1-cta-title { display: block; }
+  .c1-cta-sub { display: block; font-size: 11px; font-weight: 500; opacity: 0.85; margin-top: 2px; }
+  .c1-section {
+    background: #fff; border: 1px solid var(--rule); border-radius: 8px;
+    padding: 12px 14px;
+  }
+  .c1-section-label { font-size: 10.5px; font-weight: 800; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px; }
+  .c1-stat { display: grid; grid-template-columns: 1fr auto; padding: 3px 0; font-size: 12.5px; }
+  .c1-stat-k { color: var(--muted); font-weight: 500; }
+  .c1-stat-v { color: var(--ink); font-weight: 800; }
+  .c1-right { padding: 24px 28px; overflow: hidden; }
+  .c1-r-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .c1-r-title { font-size: 15px; font-weight: 800; color: var(--ink); }
+  .c1-filter { display: flex; gap: 4px; background: #F1F3F7; padding: 3px; border-radius: 8px; }
+  .c1-filter-btn { border: none; background: transparent; padding: 6px 10px; font-size: 11.5px; font-weight: 700; color: var(--muted); border-radius: 6px; cursor: pointer; font-family: inherit; }
+  .c1-filter-btn.active { background: #fff; color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,0.06); }
+
+  .c1-timeline { position: relative; padding-left: 28px; }
+  .c1-timeline::before {
+    content: ''; position: absolute; left: 11px; top: 0; bottom: 0;
+    width: 2px; background: var(--rule);
+  }
+  .c1-item { position: relative; padding-bottom: 22px; }
+  .c1-item::before {
+    content: ''; position: absolute; left: -22px; top: 6px;
+    width: 12px; height: 12px; border-radius: 50%;
+    background: #fff; border: 3px solid var(--emerald); box-shadow: 0 0 0 3px #fff;
+  }
+  .c1-item[data-ch="line"]::before { border-color: #06C755; }
+  .c1-item[data-ch="meet"]::before { border-color: var(--emerald); }
+  .c1-item[data-ch="ai"]::before { border-color: var(--gold); }
+  .c1-item[data-ch="prop"]::before { border-color: var(--blue); }
+  .c1-item[data-ch="note"]::before { border-color: var(--muted); }
+  .c1-item-head { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+  .c1-ch {
+    font-size: 10.5px; font-weight: 800; letter-spacing: 0.06em; padding: 2px 7px; border-radius: 4px;
+  }
+  .c1-ch-line { background: #E7FAEF; color: #04A94A; }
+  .c1-ch-meet { background: var(--emerald-soft); color: var(--emerald-2); }
+  .c1-ch-ai { background: var(--gold-soft); color: var(--gold); }
+  .c1-ch-prop { background: var(--blue-soft); color: var(--blue); }
+  .c1-ch-note { background: #F1F3F7; color: var(--ink-2); }
+  .c1-when { font-size: 11.5px; color: var(--muted); font-weight: 600; }
+  .c1-item-body { font-size: 13.5px; color: var(--ink); font-weight: 500; line-height: 1.6; }
+  .c1-quote {
+    background: var(--surface); border-left: 3px solid var(--emerald);
+    padding: 8px 12px; border-radius: 4px; margin-top: 6px;
+    font-size: 12.5px; color: var(--ink-2); line-height: 1.6;
+  }
+  .c1-item-actions { margin-top: 6px; display: flex; gap: 6px; }
+  .c1-item-action {
+    background: #fff; border: 1px solid var(--rule); padding: 4px 9px; border-radius: 5px;
+    font-size: 11px; color: var(--muted); font-weight: 700; cursor: pointer; font-family: inherit;
+  }
+
+  /* ============================================
+   * 案 C2: 客 の 物語 型
+   * ============================================ */
+  .c2 { display: grid; grid-template-columns: 360px 1fr; min-height: 720px; background: var(--surface); }
+  .c2-left {
+    background: #fff; padding: 26px 22px 22px;
+    border-right: 1px solid var(--rule);
+    display: flex; flex-direction: column; gap: 20px;
+  }
+  .c2-hero { text-align: center; }
+  .c2-avatar {
+    width: 96px; height: 96px; border-radius: 50%;
+    background: linear-gradient(135deg,var(--emerald),var(--emerald-2));
+    color: #fff; font-size: 36px; font-weight: 900;
+    display: inline-flex; align-items: center; justify-content: center;
+    box-shadow: 0 8px 24px rgba(0,132,74,0.20);
+    margin-bottom: 14px;
+  }
+  .c2-name { font-size: 22px; font-weight: 900; letter-spacing: -0.02em; }
+  .c2-meta { font-size: 12.5px; color: var(--muted); margin-top: 4px; }
+  .c2-badges { margin-top: 10px; display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
+  .c2-badge { background: var(--emerald-soft); color: var(--emerald-2); font-size: 11px; font-weight: 800; padding: 3px 9px; border-radius: 5px; }
+  .c2-family {
+    background: var(--surface); border: 1px solid var(--rule); border-radius: 12px;
+    padding: 18px 16px 14px;
+  }
+  .c2-family-title { font-size: 11px; font-weight: 800; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 14px; text-align: center; }
+  .c2-tree { display: flex; justify-content: center; align-items: center; gap: 20px; flex-wrap: wrap; }
+  .c2-tree-node { text-align: center; font-size: 11px; }
+  .c2-tree-node .avatar {
+    width: 34px; height: 34px; border-radius: 50%; background: #fff;
+    border: 2px solid var(--rule);
+    display: inline-flex; align-items: center; justify-content: center;
+    font-weight: 900; font-size: 13px; color: var(--ink);
+    margin-bottom: 4px;
+  }
+  .c2-tree-node.me .avatar { background: var(--emerald); color: #fff; border-color: var(--emerald); }
+  .c2-tree-node .label { color: var(--muted); font-weight: 600; }
+  .c2-tree-node .age { color: var(--ink); font-weight: 900; }
+
+  .c2-voices {
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .c2-voice-title { font-size: 11px; font-weight: 800; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; }
+  .c2-voice {
+    background: #fff; border: 1px solid var(--rule); border-radius: 10px;
+    padding: 12px 14px;
+    border-left: 3px solid var(--emerald);
+  }
+  .c2-voice-src { font-family: 'Manrope', monospace; font-size: 10px; font-weight: 800; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 4px; }
+  .c2-voice-body { font-size: 12.5px; color: var(--ink); font-weight: 600; line-height: 1.6; }
+  .c2-voice-body::before { content: '"'; font-family: Georgia,serif; font-size: 20px; color: var(--emerald); font-weight: 900; margin-right: 3px; line-height: 0; vertical-align: -6px; }
+
+  .c2-right { padding: 28px 32px; display: flex; flex-direction: column; gap: 18px; }
+  .c2-r-eyebrow { font-family: 'Manrope',monospace; font-size: 11px; font-weight: 800; color: var(--emerald); letter-spacing: 0.14em; }
+  .c2-r-action {
+    background: linear-gradient(135deg, var(--emerald), var(--emerald-2));
+    color: #fff; border-radius: 14px;
+    padding: 24px 26px;
+    box-shadow: 0 12px 30px rgba(0,132,74,0.25);
+  }
+  .c2-r-action-tag { display: inline-flex; align-items: center; gap: 5px; background: rgba(255,255,255,0.22); color: #fff; font-size: 10.5px; font-weight: 800; letter-spacing: 0.1em; padding: 3px 10px; border-radius: 999px; margin-bottom: 10px; }
+  .c2-r-action-title { font-size: 24px; font-weight: 900; letter-spacing: -0.015em; margin-bottom: 4px; }
+  .c2-r-action-reason { font-size: 13px; color: rgba(255,255,255,0.88); line-height: 1.65; margin-bottom: 16px; }
+  .c2-r-action-cta {
+    background: #fff; color: var(--emerald-2); border: none;
+    padding: 12px 22px; border-radius: 10px;
+    font-size: 14px; font-weight: 900;
+    cursor: pointer; font-family: inherit;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  }
+  .c2-r-secondary { display: flex; gap: 10px; margin-top: 12px; }
+  .c2-r-sec {
+    background: rgba(255,255,255,0.14);
+    color: #fff; border: 1px solid rgba(255,255,255,0.22);
+    padding: 9px 14px; border-radius: 8px;
+    font-size: 12.5px; font-weight: 700;
+    font-family: inherit; cursor: pointer;
+  }
+  .c2-timeline-title { display: flex; align-items: baseline; justify-content: space-between; }
+  .c2-timeline-title-l { font-size: 15px; font-weight: 900; color: var(--ink); }
+  .c2-timeline-title-r { font-size: 12px; color: var(--muted); }
+  .c2-events { display: flex; flex-direction: column; gap: 12px; }
+  .c2-event {
+    background: #fff; border: 1px solid var(--rule); border-radius: 10px;
+    padding: 12px 16px;
+    display: grid; grid-template-columns: 100px 1fr; gap: 14px;
+  }
+  .c2-event-when {
+    font-family: 'Manrope',monospace; font-size: 11px; font-weight: 800;
+    color: var(--muted); letter-spacing: 0.06em;
+  }
+  .c2-event-body { font-size: 13px; color: var(--ink); line-height: 1.55; font-weight: 500; }
+
+  /* ============================================
+   * 案 C3: 一手 集中 型 (Superhuman × Notion)
+   * ============================================ */
+  .c3 { min-height: 720px; display: flex; flex-direction: column; background: var(--surface); }
+  .c3-header {
+    background: #fff; padding: 20px 32px 18px;
+    border-bottom: 1px solid var(--rule);
+    display: grid; grid-template-columns: auto 1fr auto; gap: 20px; align-items: center;
+  }
+  .c3-client { display: flex; align-items: center; gap: 12px; }
+  .c3-avatar {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: linear-gradient(135deg,var(--emerald),var(--emerald-2));
+    color: #fff; font-size: 18px; font-weight: 900;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .c3-client-name { font-size: 17px; font-weight: 900; letter-spacing: -0.01em; }
+  .c3-client-meta { font-size: 11.5px; color: var(--muted); margin-top: 1px; }
+  .c3-shortcut { display: flex; gap: 6px; align-items: center; color: var(--muted); font-size: 11px; font-weight: 600; }
+  .c3-shortcut kbd { background: #F1F3F7; border: 1px solid var(--rule); padding: 3px 7px; border-radius: 4px; font-family: 'Manrope',monospace; font-size: 10.5px; color: var(--ink); font-weight: 800; }
+
+  .c3-action-bar {
+    background: linear-gradient(135deg, #F0FDF4, #fff);
+    border-bottom: 1px solid var(--emerald-tint);
+    padding: 24px 32px;
+    display: grid; grid-template-columns: 1fr auto; gap: 20px; align-items: center;
+  }
+  .c3-action-body { }
+  .c3-action-tag { display: inline-flex; align-items: center; gap: 5px; background: var(--emerald); color: #fff; font-size: 10.5px; font-weight: 900; letter-spacing: 0.1em; padding: 3px 10px; border-radius: 999px; margin-bottom: 8px; }
+  .c3-action-headline { font-size: 22px; font-weight: 900; color: var(--ink); letter-spacing: -0.015em; }
+  .c3-action-reason { font-size: 13px; color: var(--muted); margin-top: 4px; font-weight: 500; }
+  .c3-action-cta {
+    background: var(--emerald); color: #fff; border: none;
+    padding: 14px 26px; border-radius: 10px;
+    font-size: 15px; font-weight: 900; font-family: inherit; cursor: pointer;
+    box-shadow: 0 6px 18px rgba(0,132,74,0.28);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .c3-action-alt {
+    background: transparent; color: var(--emerald); border: none;
+    font-size: 12px; font-weight: 700; font-family: inherit; cursor: pointer;
+    text-align: right; padding: 8px 0 0;
+    display: block; margin-left: auto;
+  }
+  .c3-body { padding: 24px 32px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; flex: 1; }
+  .c3-pane {
+    background: #fff; border: 1px solid var(--rule); border-radius: 12px;
+    padding: 18px 20px;
+  }
+  .c3-pane-title { font-size: 11px; font-weight: 800; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; }
+  .c3-pane-title-count { background: var(--surface); color: var(--ink); font-size: 11px; font-family: 'Manrope',monospace; padding: 2px 8px; border-radius: 4px; letter-spacing: 0; }
+  .c3-p-row { padding: 8px 0; border-top: 1px solid var(--rule); font-size: 13px; line-height: 1.55; }
+  .c3-p-row:first-of-type { border-top: none; padding-top: 4px; }
+  .c3-p-row-k { color: var(--muted); font-size: 11.5px; font-weight: 600; }
+  .c3-p-row-v { color: var(--ink); font-weight: 800; margin-top: 1px; }
+  .c3-task { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; padding: 10px 0; border-top: 1px solid var(--rule); font-size: 12.5px; align-items: center; }
+  .c3-task:first-of-type { border-top: none; padding-top: 2px; }
+  .c3-task-check { width: 16px; height: 16px; border: 1.5px solid var(--dim); border-radius: 4px; }
+  .c3-task-label { color: var(--ink); font-weight: 700; line-height: 1.4; }
+  .c3-task-due { font-size: 10.5px; font-weight: 800; color: var(--red); background: var(--red-soft); padding: 2px 7px; border-radius: 4px; letter-spacing: 0.04em; }
+  .c3-recent { display: flex; flex-direction: column; gap: 10px; }
+  .c3-recent-item { padding-bottom: 10px; border-bottom: 1px solid var(--rule); }
+  .c3-recent-item:last-of-type { border-bottom: none; padding-bottom: 0; }
+  .c3-recent-when { font-family: 'Manrope',monospace; font-size: 10.5px; color: var(--muted); font-weight: 800; letter-spacing: 0.06em; margin-bottom: 3px; }
+  .c3-recent-body { font-size: 12.5px; color: var(--ink); font-weight: 500; line-height: 1.55; }
+  .c3-recent-ch { display: inline-block; font-size: 10px; font-weight: 800; padding: 1px 6px; border-radius: 3px; margin-right: 5px; letter-spacing: 0.06em; }
+  .c3-recent-ch.line { background: #E7FAEF; color: #04A94A; }
+  .c3-recent-ch.meet { background: var(--emerald-soft); color: var(--emerald-2); }
+  .c3-recent-ch.prop { background: var(--blue-soft); color: var(--blue); }
+
+  /* ============================================
+   * 案 C4: 面談 中心 型 (直後 wizard)
+   * ============================================ */
+  .c4 { min-height: 720px; background: var(--surface); }
+  .c4-progress {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    padding: 18px 32px 14px; background: #fff; border-bottom: 1px solid var(--rule); gap: 14px;
+  }
+  .c4-step { text-align: center; position: relative; }
+  .c4-step::after { content: ''; position: absolute; top: 12px; left: 60%; right: -40%; height: 2px; background: var(--rule); }
+  .c4-step:last-child::after { display: none; }
+  .c4-step.done::after { background: var(--emerald); }
+  .c4-step-dot { width: 24px; height: 24px; border-radius: 50%; background: var(--rule); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; font-family: 'Manrope',monospace; position: relative; z-index: 1; }
+  .c4-step.done .c4-step-dot { background: var(--emerald); }
+  .c4-step.active .c4-step-dot { background: var(--gold); }
+  .c4-step-label { font-size: 11.5px; font-weight: 700; color: var(--muted); margin-top: 6px; }
+  .c4-step.done .c4-step-label { color: var(--emerald-2); }
+  .c4-step.active .c4-step-label { color: var(--gold); font-weight: 900; }
+
+  .c4-body { padding: 24px 32px; display: grid; grid-template-columns: 1fr 320px; gap: 20px; }
+  .c4-main { display: flex; flex-direction: column; gap: 18px; }
+  .c4-summary { background: #fff; border: 1px solid var(--rule); border-radius: 12px; padding: 22px 26px; }
+  .c4-s-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 4px; }
+  .c4-s-title { font-size: 17px; font-weight: 900; color: var(--ink); letter-spacing: -0.01em; }
+  .c4-s-when { font-family: 'Manrope',monospace; font-size: 11.5px; color: var(--muted); font-weight: 700; }
+  .c4-s-src { font-size: 11.5px; color: var(--muted); margin-bottom: 16px; }
+  .c4-s-section { margin-bottom: 14px; }
+  .c4-s-section:last-child { margin-bottom: 0; }
+  .c4-s-label { font-size: 11px; font-weight: 800; color: var(--emerald-2); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 6px; }
+  .c4-s-body { font-size: 13px; color: var(--ink); line-height: 1.7; font-weight: 500; }
+  .c4-s-body ul { list-style: none; }
+  .c4-s-body li { padding-left: 14px; position: relative; }
+  .c4-s-body li::before { content: '·'; position: absolute; left: 0; color: var(--emerald); font-weight: 900; font-size: 16px; line-height: 1; top: 6px; }
+  .c4-next { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .c4-next-card { background: #fff; border: 1px solid var(--rule); border-radius: 12px; padding: 18px 20px; cursor: pointer; font-family: inherit; text-align: left; border: 1px solid var(--rule); }
+  .c4-next-card.primary { border: 2px solid var(--emerald); background: var(--emerald-soft); }
+  .c4-next-title { font-size: 14px; font-weight: 900; color: var(--ink); margin-bottom: 4px; }
+  .c4-next-sub { font-size: 11.5px; color: var(--muted); font-weight: 500; line-height: 1.5; }
+  .c4-side { display: flex; flex-direction: column; gap: 14px; }
+  .c4-side-card { background: #fff; border: 1px solid var(--rule); border-radius: 10px; padding: 14px 16px; }
+  .c4-side-label { font-size: 10.5px; font-weight: 800; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px; }
+  .c4-tasks-list { display: flex; flex-direction: column; gap: 8px; }
+  .c4-task-row { display: grid; grid-template-columns: 16px 1fr auto; gap: 10px; align-items: start; font-size: 12.5px; }
+  .c4-task-check { width: 16px; height: 16px; border: 1.5px solid var(--dim); border-radius: 4px; margin-top: 2px; }
+  .c4-task-body { color: var(--ink); font-weight: 600; line-height: 1.45; }
+  .c4-task-due { font-size: 10px; font-weight: 800; color: var(--gold); background: var(--gold-soft); padding: 2px 6px; border-radius: 3px; letter-spacing: 0.04em; white-space: nowrap; }
+
+  /* ============================================
+   * 案 C5: ダッシュボード 型 (BI 風)
+   * ============================================ */
+  .c5 { min-height: 720px; background: var(--surface); padding: 20px; }
+  .c5-grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    grid-auto-rows: minmax(120px, auto);
+    gap: 12px;
+  }
+  .c5-tile { background: #fff; border: 1px solid var(--rule); border-radius: 10px; padding: 14px 16px; display: flex; flex-direction: column; }
+  .c5-tile-title { font-size: 10.5px; font-weight: 800; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; }
+  .c5-t-hero { grid-column: span 4; grid-row: span 2; }
+  .c5-hero-avatar { width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg,var(--emerald),var(--emerald-2)); color: #fff; font-size: 22px; font-weight: 900; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 10px; }
+  .c5-hero-name { font-size: 20px; font-weight: 900; letter-spacing: -0.015em; }
+  .c5-hero-meta { font-size: 12px; color: var(--muted); margin-top: 3px; margin-bottom: 12px; }
+  .c5-hero-cta {
+    background: var(--emerald); color: #fff; border: none;
+    padding: 10px 18px; border-radius: 8px; font-size: 13px; font-weight: 900; font-family: inherit; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .c5-t-aum { grid-column: span 4; grid-row: span 2; }
+  .c5-aum-val { font-family: 'Manrope',monospace; font-size: 32px; font-weight: 900; color: var(--ink); letter-spacing: -0.02em; }
+  .c5-aum-delta { font-size: 12px; color: var(--emerald); font-weight: 800; margin-left: 6px; }
+  .c5-aum-chart { flex: 1; margin-top: 10px; position: relative; }
+  .c5-t-priority { grid-column: span 4; grid-row: span 2; background: linear-gradient(135deg, var(--emerald), var(--emerald-2)); color: #fff; border-color: var(--emerald); }
+  .c5-t-priority .c5-tile-title { color: rgba(255,255,255,0.7); }
+  .c5-priority-title { font-size: 18px; font-weight: 900; letter-spacing: -0.01em; margin-bottom: 4px; }
+  .c5-priority-reason { font-size: 12px; color: rgba(255,255,255,0.85); margin-bottom: 12px; line-height: 1.6; }
+  .c5-priority-cta {
+    background: #fff; color: var(--emerald-2); border: none;
+    padding: 10px 18px; border-radius: 8px; font-size: 13px; font-weight: 900; font-family: inherit; cursor: pointer;
+  }
+  .c5-t-line { grid-column: span 4; grid-row: span 2; }
+  .c5-heatmap { display: grid; grid-template-columns: repeat(30, 1fr); gap: 3px; margin-top: 10px; }
+  .c5-heat-cell { aspect-ratio: 1; border-radius: 2px; }
+  .c5-t-voices { grid-column: span 4; grid-row: span 2; }
+  .c5-voices-list { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; }
+  .c5-voice-item { border-left: 2px solid var(--emerald); padding: 6px 10px; font-size: 12px; color: var(--ink); font-weight: 500; line-height: 1.55; background: var(--surface); border-radius: 3px; }
+  .c5-voice-src { font-family: 'Manrope',monospace; font-size: 9.5px; color: var(--muted); font-weight: 800; letter-spacing: 0.08em; display: block; margin-bottom: 2px; }
+  .c5-t-family { grid-column: span 4; grid-row: span 2; }
+  .c5-family { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 8px; justify-content: center; align-items: center; flex: 1; }
+  .c5-family-node { text-align: center; font-size: 10.5px; }
+  .c5-family-node .avatar { width: 32px; height: 32px; border-radius: 50%; background: #fff; border: 2px solid var(--rule); display: inline-flex; align-items: center; justify-content: center; font-weight: 900; font-size: 11px; margin-bottom: 3px; }
+  .c5-family-node.me .avatar { background: var(--emerald); color: #fff; border-color: var(--emerald); }
+  .c5-family-node .label { color: var(--muted); font-weight: 600; display: block; }
+  .c5-family-node .age { color: var(--ink); font-weight: 900; }
+  .c5-t-tasks { grid-column: span 6; grid-row: span 2; }
+  .c5-task-list { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+  .c5-task-item { display: grid; grid-template-columns: 16px 1fr auto; gap: 10px; align-items: center; font-size: 12.5px; padding: 7px 0; border-top: 1px solid var(--rule); }
+  .c5-task-item:first-of-type { border-top: none; padding-top: 2px; }
+  .c5-task-check { width: 16px; height: 16px; border: 1.5px solid var(--dim); border-radius: 3px; }
+  .c5-task-label { color: var(--ink); font-weight: 600; }
+  .c5-task-due { font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 3px; letter-spacing: 0.04em; white-space: nowrap; }
+  .c5-task-due.urg { background: var(--red-soft); color: var(--red); }
+  .c5-task-due.week { background: var(--gold-soft); color: var(--gold); }
+  .c5-t-timeline { grid-column: span 6; grid-row: span 2; }
+  .c5-tl-list { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+  .c5-tl-item { padding: 8px 0; border-top: 1px solid var(--rule); font-size: 12px; }
+  .c5-tl-item:first-of-type { border-top: none; padding-top: 2px; }
+  .c5-tl-when { font-family: 'Manrope',monospace; font-size: 10px; color: var(--muted); font-weight: 800; letter-spacing: 0.06em; }
+  .c5-tl-body { color: var(--ink); font-weight: 500; line-height: 1.55; margin-top: 2px; }
+  .c5-tl-ch { display: inline-block; font-size: 9.5px; font-weight: 800; padding: 1px 5px; border-radius: 3px; margin-right: 5px; letter-spacing: 0.06em; }
+  .c5-tl-ch.line { background: #E7FAEF; color: #04A94A; }
+  .c5-tl-ch.meet { background: var(--emerald-soft); color: var(--emerald-2); }
+  .c5-tl-ch.prop { background: var(--blue-soft); color: var(--blue); }
+
+  /* view switch */
+  .view { display: none; }
+  .view.active { display: block; }
+
+  .decide {
+    background: var(--emerald-soft);
+    border: 2px solid var(--emerald);
+    border-radius: 14px;
+    padding: 22px 28px;
+    margin: 40px auto 0;
+    max-width: 1400px;
+  }
+  .decide h2 { font-size: 16px; font-weight: 900; color: var(--emerald-2); margin-bottom: 8px; }
+  .decide p { font-size: 13.5px; color: var(--ink); font-weight: 500; line-height: 1.75; }
+  .decide b { color: var(--emerald); font-weight: 900; }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <h1>客モーダル · 完璧 detail-up 5 案</h1>
+  <p class="sub">「単なる CRUD」 → 「客 を 理解 する ダッシュボード」 に 質 変換。 上部 タブ で 切替 · 実 mock data で 描画。 owner picks 前提 · 実装 は picks 後。</p>
+  <div class="tabs">
+    <button class="tab active" data-v="c1"><span class="tab-badge">C1</span>タイムライン stream 型</button>
+    <button class="tab" data-v="c2"><span class="tab-badge">C2</span>物語 型</button>
+    <button class="tab" data-v="c3"><span class="tab-badge">C3</span>一手 集中 型</button>
+    <button class="tab" data-v="c4"><span class="tab-badge">C4</span>面談 中心 型</button>
+    <button class="tab" data-v="c5"><span class="tab-badge">C5</span>ダッシュボード 型</button>
+  </div>
+</header>
+
+<!-- =========== C1: タイムライン stream =========== -->
+<div class="view active" id="v-c1">
+  <div class="stage">
+    <div class="stage-title"><span class="stage-badge">C1</span><span class="stage-name">タイムライン stream 型</span></div>
+    <p class="stage-desc">左 = 縮小 プロフィール + AI 推奨 CTA。 右 = 全 活動 (LINE / 面談 / 議事録 / 提案 / メモ) を 1 本 の 時系列 stream に。 チャネル 別 色 の dot で 「何 経由 か」 一目。</p>
+    <div class="stage-tags">
+      <span class="st-tag pro">「田中様 と 5月 何 話した?」 が 3秒</span>
+      <span class="st-tag pro">分断された tab を 統合</span>
+      <span class="st-tag con">古い データ を 遡る 時 scroll 多め</span>
+    </div>
+
+    <div class="canvas c1">
+      <div class="c1-left">
+        <div class="c1-profile">
+          <div class="c1-avatar">田</div>
+          <div><span class="c1-name">田中 太郎</span><span class="c1-name-h">様</span></div>
+          <div class="c1-meta">45 歳 · 会社員 (IT)</div>
+          <div class="c1-status">新規</div>
+        </div>
+        <button class="c1-cta">
+          <span class="c1-cta-icon">✨</span>
+          <span class="c1-cta-body">
+            <span class="c1-cta-title">LINE で 返信 する</span>
+            <span class="c1-cta-sub">AI 下書き 済 · 2 日 未返信</span>
+          </span>
+        </button>
+        <div class="c1-section">
+          <div class="c1-section-label">状況</div>
+          <div class="c1-stat"><span class="c1-stat-k">管理 資産</span><span class="c1-stat-v">¥850 万</span></div>
+          <div class="c1-stat"><span class="c1-stat-k">最終 接触</span><span class="c1-stat-v">2 日 前</span></div>
+          <div class="c1-stat"><span class="c1-stat-k">家族</span><span class="c1-stat-v">妻 + 子 2</span></div>
+          <div class="c1-stat"><span class="c1-stat-k">住宅 ローン</span><span class="c1-stat-v">残 24 年</span></div>
+        </div>
+        <div class="c1-section">
+          <div class="c1-section-label">プロフィール</div>
+          <div class="c1-stat"><span class="c1-stat-k">流入</span><span class="c1-stat-v">セミナー</span></div>
+          <div class="c1-stat"><span class="c1-stat-k">タグ</span><span class="c1-stat-v">iDeCo · 教育資金</span></div>
+        </div>
+      </div>
+      <div class="c1-right">
+        <div class="c1-r-head">
+          <div class="c1-r-title">田中 太郎 様 の 全 活動 (時系列)</div>
+          <div class="c1-filter">
+            <button class="c1-filter-btn active">すべて</button>
+            <button class="c1-filter-btn">LINE</button>
+            <button class="c1-filter-btn">面談</button>
+            <button class="c1-filter-btn">提案</button>
+          </div>
+        </div>
+        <div class="c1-timeline">
+          <div class="c1-item" data-ch="line">
+            <div class="c1-item-head"><span class="c1-ch c1-ch-line">LINE</span><span class="c1-when">2 時間 前</span></div>
+            <div class="c1-item-body"><b>田中様:</b> 新NISA の 銘柄 選定、 SBI と 楽天 どっち で 買う べき か 悩んでる。 銘柄 も 決めきれ なくて…</div>
+            <div class="c1-item-actions"><button class="c1-item-action">✨ AI 返信</button><button class="c1-item-action">✍ 手入力</button></div>
+          </div>
+          <div class="c1-item" data-ch="meet">
+            <div class="c1-item-head"><span class="c1-ch c1-ch-meet">面談</span><span class="c1-when">7/28 (月) 14:00 · 50 分</span></div>
+            <div class="c1-item-body">Zoom 面談 済 · 議事録 生成 完了 · タスク 3 件 抽出</div>
+            <div class="c1-quote">「iDeCo 増額 は 前向き に 検討 したい。 掛金 上限 が 変わった の 知らな くて…」</div>
+            <div class="c1-item-actions"><button class="c1-item-action">議事録 全文</button><button class="c1-item-action">タスク 一覧</button></div>
+          </div>
+          <div class="c1-item" data-ch="ai">
+            <div class="c1-item-head"><span class="c1-ch c1-ch-ai">AI 抽出</span><span class="c1-when">7/28 (月) 14:52</span></div>
+            <div class="c1-item-body">議事録 から タスク 3 件 抽出: iDeCo 申請書 郵送 · NISA 銘柄 3 選 · 学資 保険 見積 3 社</div>
+          </div>
+          <div class="c1-item" data-ch="line">
+            <div class="c1-item-head"><span class="c1-ch c1-ch-line">LINE</span><span class="c1-when">7/25 (金) 10:03</span></div>
+            <div class="c1-item-body"><b>田中様:</b> 来週 の 面談、 14:00 で お願いします 🙏</div>
+          </div>
+          <div class="c1-item" data-ch="prop">
+            <div class="c1-item-head"><span class="c1-ch c1-ch-prop">提案</span><span class="c1-when">6/19 (水) · 検討中 42 日</span></div>
+            <div class="c1-item-body"><b>「相続 対策 プラン」</b> 提出 · <span style="color:var(--red);font-weight:800;">return 期限 超過</span></div>
+            <div class="c1-item-actions"><button class="c1-item-action">再 approach</button></div>
+          </div>
+          <div class="c1-item" data-ch="note">
+            <div class="c1-item-head"><span class="c1-ch c1-ch-note">メモ</span><span class="c1-when">6/12 (水)</span></div>
+            <div class="c1-item-body">奥様 が 学資 保険 と NISA 併用 に 慎重 · 次回 は 二人 で 面談 希望</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =========== C2: 物語 型 =========== -->
+<div class="view" id="v-c2">
+  <div class="stage">
+    <div class="stage-title"><span class="stage-badge">C2</span><span class="stage-name">客 の 物語 型</span></div>
+    <p class="stage-desc">左 = 大 avatar + 家族 tree + 「客 の 声」 引用 3 枠 常時。 右 = 「今 やる 一手」 巨大 CTA + サブ 選択肢 + 直近 events。 客 が 「人」 に 見える。</p>
+    <div class="stage-tags">
+      <span class="st-tag pro">40-60代 FP先生 の 「人 で 覚える」 に フィット</span>
+      <span class="st-tag pro">説得力 max · 客 の 熱量 が 伝わる</span>
+      <span class="st-tag con">LINE / 議事録 蓄積 少ない 客 は 引用 空</span>
+    </div>
+
+    <div class="canvas c2">
+      <div class="c2-left">
+        <div class="c2-hero">
+          <div class="c2-avatar">田</div>
+          <div class="c2-name">田中 太郎 <span style="font-size:14px;color:var(--muted);font-weight:500;">様</span></div>
+          <div class="c2-meta">45 歳 · 会社員 (IT) · セミナー 経由</div>
+          <div class="c2-badges">
+            <span class="c2-badge">iDeCo 検討 中</span>
+            <span class="c2-badge">教育 資金 相談</span>
+          </div>
+        </div>
+        <div class="c2-family">
+          <div class="c2-family-title">家族 構成</div>
+          <div class="c2-tree">
+            <div class="c2-tree-node"><div class="avatar">妻</div><div class="label">配偶者</div><div class="age">43 歳</div></div>
+            <div class="c2-tree-node me"><div class="avatar">田</div><div class="label">本人</div><div class="age">45 歳</div></div>
+            <div class="c2-tree-node"><div class="avatar">長</div><div class="label">長男</div><div class="age">高 2</div></div>
+            <div class="c2-tree-node"><div class="avatar">次</div><div class="label">次男</div><div class="age">中 3</div></div>
+          </div>
+        </div>
+        <div class="c2-voices">
+          <div class="c2-voice-title">この 方 の 声 (最新 3 件)</div>
+          <div class="c2-voice">
+            <div class="c2-voice-src">LINE · 2 時間 前</div>
+            <div class="c2-voice-body">新NISA の 銘柄、 SBI と 楽天 どっち が いい か 悩んでる</div>
+          </div>
+          <div class="c2-voice">
+            <div class="c2-voice-src">議事録 · 7/28</div>
+            <div class="c2-voice-body">iDeCo 増額 は 前向き に。 掛金 上限 変わった の 知らな くて</div>
+          </div>
+          <div class="c2-voice">
+            <div class="c2-voice-src">面談 メモ · 6/12</div>
+            <div class="c2-voice-body">奥様 は 学資 保険 と NISA 併用 に 慎重</div>
+          </div>
+        </div>
+      </div>
+      <div class="c2-right">
+        <div>
+          <div class="c2-r-eyebrow">✨ AI 推奨 の 一手</div>
+        </div>
+        <div class="c2-r-action">
+          <span class="c2-r-action-tag">🔴 至急</span>
+          <div class="c2-r-action-title">新NISA 銘柄 3 選 の LINE 返信</div>
+          <p class="c2-r-action-reason">田中様 が 2 時間 前 に 銘柄 選定 で 悩んでいる と 発言。 iDeCo 増額 の 話 も 進行 中 なので、 NISA も 具体 提案 で 「一緒 に 動く」 姿勢 を 示す タイミング。</p>
+          <button class="c2-r-action-cta">✨ AI で 下書き を 作る →</button>
+          <div class="c2-r-secondary">
+            <button class="c2-r-sec">📞 Zoom 招待</button>
+            <button class="c2-r-sec">✍ 手入力 返信</button>
+            <button class="c2-r-sec">📅 面談 予約</button>
+          </div>
+        </div>
+        <div class="c2-timeline-title">
+          <div class="c2-timeline-title-l">直近 の 動き</div>
+          <div class="c2-timeline-title-r">6 件 · 全部 見る →</div>
+        </div>
+        <div class="c2-events">
+          <div class="c2-event">
+            <div class="c2-event-when">2 時間 前<br>LINE</div>
+            <div class="c2-event-body">新NISA 銘柄 の 相談 メッセージ</div>
+          </div>
+          <div class="c2-event">
+            <div class="c2-event-when">7/28<br>面談</div>
+            <div class="c2-event-body">Zoom 50 分 · iDeCo · NISA · 学資 議論、 タスク 3 件 抽出</div>
+          </div>
+          <div class="c2-event">
+            <div class="c2-event-when">6/19<br>提案</div>
+            <div class="c2-event-body">「相続 対策 プラン」 提出 · <b style="color:var(--red);">検討中 42 日 · 期限 超過</b></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =========== C3: 一手 集中 =========== -->
+<div class="view" id="v-c3">
+  <div class="stage">
+    <div class="stage-title"><span class="stage-badge">C3</span><span class="stage-name">一手 集中 型 (Superhuman × Notion)</span></div>
+    <p class="stage-desc">上 に 「今 やる 一手」 巨大 CTA を sticky 追従、 下 に 3 pane grid (プロフィール mini / 直近 活動 / タスク 未完)。 迷い ゼロ、 実行 密度 max。</p>
+    <div class="stage-tags">
+      <span class="st-tag pro">1 客 に 数秒 で action 判断</span>
+      <span class="st-tag pro">キーボード 派 に 効く (⌘E で 実行)</span>
+      <span class="st-tag con">AI 推奨 が 外す と ストレス</span>
+    </div>
+
+    <div class="canvas c3">
+      <div class="c3-header">
+        <div class="c3-client">
+          <div class="c3-avatar">田</div>
+          <div>
+            <div class="c3-client-name">田中 太郎 様</div>
+            <div class="c3-client-meta">45 歳 · 会社員 (IT) · AUM ¥850 万 · 最終 2 日 前</div>
+          </div>
+        </div>
+        <div></div>
+        <div class="c3-shortcut">⌘K で 別 客 · <kbd>E</kbd> 実行 · <kbd>M</kbd> 面談</div>
+      </div>
+      <div class="c3-action-bar">
+        <div class="c3-action-body">
+          <span class="c3-action-tag">✨ AI 推奨 · 今 の 一手</span>
+          <div class="c3-action-headline">新NISA 銘柄 3 選 を LINE で 返信</div>
+          <p class="c3-action-reason">2 時間 前 に 「銘柄 悩んでる」 発言 · iDeCo 増額 進行 中 · タイミング 最適</p>
+        </div>
+        <div>
+          <button class="c3-action-cta">✨ AI で 実行 <kbd style="background:rgba(255,255,255,0.22);border-color:rgba(255,255,255,0.4);color:#fff;">E</kbd></button>
+          <button class="c3-action-alt">別 の 一手 を 見る (3 件) →</button>
+        </div>
+      </div>
+      <div class="c3-body">
+        <div class="c3-pane">
+          <div class="c3-pane-title">プロフィール</div>
+          <div class="c3-p-row"><div class="c3-p-row-k">家族</div><div class="c3-p-row-v">妻 43 · 長男 高2 · 次男 中3</div></div>
+          <div class="c3-p-row"><div class="c3-p-row-k">職業 · 流入</div><div class="c3-p-row-v">会社員 (IT) · セミナー</div></div>
+          <div class="c3-p-row"><div class="c3-p-row-k">住宅 ローン</div><div class="c3-p-row-v">残 24 年 · 月 12 万</div></div>
+          <div class="c3-p-row"><div class="c3-p-row-k">タグ</div><div class="c3-p-row-v">iDeCo · 教育資金</div></div>
+        </div>
+        <div class="c3-pane">
+          <div class="c3-pane-title">直近 の 動き<span class="c3-pane-title-count">6</span></div>
+          <div class="c3-recent">
+            <div class="c3-recent-item">
+              <div class="c3-recent-when">2 時間 前</div>
+              <div class="c3-recent-body"><span class="c3-recent-ch line">LINE</span>NISA 銘柄 の 相談</div>
+            </div>
+            <div class="c3-recent-item">
+              <div class="c3-recent-when">7/28 14:00</div>
+              <div class="c3-recent-body"><span class="c3-recent-ch meet">面談</span>Zoom 50 分 · タスク 3 件</div>
+            </div>
+            <div class="c3-recent-item">
+              <div class="c3-recent-when">6/19</div>
+              <div class="c3-recent-body"><span class="c3-recent-ch prop">提案</span>相続 対策 · 検討中 42 日</div>
+            </div>
+          </div>
+        </div>
+        <div class="c3-pane">
+          <div class="c3-pane-title">未完 タスク<span class="c3-pane-title-count">3</span></div>
+          <div class="c3-task">
+            <div class="c3-task-check"></div>
+            <div class="c3-task-label">iDeCo 増額 申請書 を 郵送</div>
+            <div class="c3-task-due">明日</div>
+          </div>
+          <div class="c3-task">
+            <div class="c3-task-check"></div>
+            <div class="c3-task-label">NISA 銘柄 3 選 の 提案 資料</div>
+            <div class="c3-task-due" style="background:var(--gold-soft);color:var(--gold);">今週</div>
+          </div>
+          <div class="c3-task">
+            <div class="c3-task-check"></div>
+            <div class="c3-task-label">学資 保険 見積 3 社</div>
+            <div class="c3-task-due" style="background:var(--gold-soft);color:var(--gold);">今週</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =========== C4: 面談 中心 =========== -->
+<div class="view" id="v-c4">
+  <div class="stage">
+    <div class="stage-title"><span class="stage-badge">C4</span><span class="stage-name">面談 中心 型 (直後 wizard)</span></div>
+    <p class="stage-desc">landing = 最新 議事録 (5 セクション) が 主役、 「次 に やる」 タスク 3 + LINE 下書き CTA + 次回 予約 が 常時。 面談 → 議事録 → タスク → 返信 の 一直線 flow。</p>
+    <div class="stage-tags">
+      <span class="st-tag pro">面談 後 の 「動作」 が モーダル で 完結</span>
+      <span class="st-tag pro">議事録 が 埋もれ ない</span>
+      <span class="st-tag con">面談 履歴 少ない 客 で は 見せる もの が 少ない</span>
+    </div>
+
+    <div class="canvas c4">
+      <div class="c4-progress">
+        <div class="c4-step done"><span class="c4-step-dot">✓</span><div class="c4-step-label">面談 実施</div></div>
+        <div class="c4-step done"><span class="c4-step-dot">✓</span><div class="c4-step-label">議事録 生成</div></div>
+        <div class="c4-step active"><span class="c4-step-dot">3</span><div class="c4-step-label">タスク 整理 · 実行</div></div>
+        <div class="c4-step"><span class="c4-step-dot">4</span><div class="c4-step-label">次回 面談 予約</div></div>
+      </div>
+      <div class="c4-body">
+        <div class="c4-main">
+          <div class="c4-summary">
+            <div class="c4-s-head">
+              <div class="c4-s-title">田中 太郎 様 · 7/28 (月) 面談 議事録</div>
+              <div class="c4-s-when">50 分 · AI 生成 済</div>
+            </div>
+            <div class="c4-s-src">Zoom Cloud · Claude Haiku 4.5 抽出 · 5 セクション</div>
+            <div class="c4-s-section">
+              <div class="c4-s-label">本日 の 決定 事項</div>
+              <div class="c4-s-body">
+                <ul>
+                  <li>iDeCo 掛金 を 月 <b>2.3 万 → 6.8 万</b> に 増額 で 決定</li>
+                  <li>新NISA 成長 枠 は eMAXIS Slim 米国株 に 集中</li>
+                  <li>生命 保険 の 見直し は 次回 (8/14) で</li>
+                </ul>
+              </div>
+            </div>
+            <div class="c4-s-section">
+              <div class="c4-s-label">お客様 の 関心 事</div>
+              <div class="c4-s-body">お子様 の 大学 資金 (第一子 高 2 · あと 2 年)、 奥様 が 学資 保険 と NISA 併用 に 慎重、 相続 対策 は 親族 全員 の 同意 が まだ。</div>
+            </div>
+            <div class="c4-s-section">
+              <div class="c4-s-label">議論 した 数字</div>
+              <div class="c4-s-body">
+                <ul>
+                  <li>iDeCo 6.8 万 (月) · 年 <b>81.6 万</b> · 30 年 で <b>2,448 万</b></li>
+                  <li>新NISA 目標 年 <b>360 万</b> (成長 240 + つみたて 120)</li>
+                  <li>学資 準備 期間 <b>8 年</b> (高校 卒業 まで)</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="c4-next">
+            <button class="c4-next-card primary">
+              <div class="c4-next-title">✨ LINE で 「次 の 動き」 を 田中様 に 送る</div>
+              <div class="c4-next-sub">AI が 議事録 から 3 段落 の フォロー アップ 文 生成 済 · 修正 して 送信</div>
+            </button>
+            <button class="c4-next-card">
+              <div class="c4-next-title">📅 次回 面談 (8/14) を 予約</div>
+              <div class="c4-next-sub">Zoom URL 発行 · カレンダー 登録 · LINE 通知 まで 一括</div>
+            </button>
+          </div>
+        </div>
+        <div class="c4-side">
+          <div class="c4-side-card">
+            <div class="c4-side-label">田中 太郎 様</div>
+            <div style="font-size:14px;font-weight:800;">45 歳 · 会社員 · AUM ¥850 万</div>
+            <div style="font-size:11.5px;color:var(--muted);margin-top:3px;">妻 43 · 長男 高 2 · 次男 中 3</div>
+          </div>
+          <div class="c4-side-card">
+            <div class="c4-side-label">抽出 タスク · 3 件</div>
+            <div class="c4-tasks-list">
+              <div class="c4-task-row"><div class="c4-task-check"></div><div class="c4-task-body">iDeCo 増額 申請書 郵送</div><div class="c4-task-due">明日</div></div>
+              <div class="c4-task-row"><div class="c4-task-check"></div><div class="c4-task-body">NISA 銘柄 3 選 資料</div><div class="c4-task-due">今週</div></div>
+              <div class="c4-task-row"><div class="c4-task-check"></div><div class="c4-task-body">学資 保険 見積 3 社</div><div class="c4-task-due">今週</div></div>
+            </div>
+          </div>
+          <div class="c4-side-card">
+            <div class="c4-side-label">プロフィール</div>
+            <div style="font-size:12px;color:var(--muted);">全項目 見る →</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =========== C5: ダッシュボード =========== -->
+<div class="view" id="v-c5">
+  <div class="stage">
+    <div class="stage-title"><span class="stage-badge">C5</span><span class="stage-name">ダッシュボード 型 (BI 風)</span></div>
+    <p class="stage-desc">6 タイル の グリッド で 全部 一覧: 客 hero / AUM 推移 / 一手 CTA / LINE heatmap / 客 の 声 / 家族 tree / 未完 タスク / 時系列。 数字 好き · 情報 密度 max。</p>
+    <div class="stage-tags">
+      <span class="st-tag pro">1 画面 で 客 の 全貌</span>
+      <span class="st-tag pro">数字 好き な FP 先生 に 刺さる</span>
+      <span class="st-tag con">情報 多くて mobile 表示 難しい</span>
+    </div>
+
+    <div class="canvas c5">
+      <div class="c5-grid">
+
+        <div class="c5-tile c5-t-hero">
+          <div class="c5-hero-avatar">田</div>
+          <div class="c5-hero-name">田中 太郎 <span style="font-size:12px;color:var(--muted);font-weight:500;">様</span></div>
+          <div class="c5-hero-meta">45 歳 · 会社員 (IT) · 新規</div>
+          <button class="c5-hero-cta">🎙 面談 を 開始</button>
+        </div>
+
+        <div class="c5-tile c5-t-aum">
+          <div class="c5-tile-title">管理 資産 <span>vs 3ヶ月 前</span></div>
+          <div>
+            <span class="c5-aum-val">¥850万</span>
+            <span class="c5-aum-delta">+¥42万</span>
+          </div>
+          <div class="c5-aum-chart">
+            <svg viewBox="0 0 300 60" style="width:100%;height:100%;">
+              <polyline points="0,50 40,45 80,42 120,35 160,32 200,28 240,20 280,15 300,10" fill="none" stroke="var(--emerald)" stroke-width="2.5"/>
+              <polyline points="0,50 40,45 80,42 120,35 160,32 200,28 240,20 280,15 300,10 300,60 0,60" fill="var(--emerald)" fill-opacity="0.08" stroke="none"/>
+            </svg>
+          </div>
+        </div>
+
+        <div class="c5-tile c5-t-priority">
+          <div class="c5-tile-title">✨ 今 やる 一手</div>
+          <div class="c5-priority-title">NISA 銘柄 3 選 の LINE 返信</div>
+          <div class="c5-priority-reason">2 時間 前 の LINE で 「銘柄 悩んでる」 発言。 iDeCo 増額 進行 中 の タイミング。</div>
+          <button class="c5-priority-cta">✨ AI で 実行 →</button>
+        </div>
+
+        <div class="c5-tile c5-t-line">
+          <div class="c5-tile-title">LINE 頻度 <span>直近 30 日</span></div>
+          <div class="c5-heatmap" id="c5-heat"></div>
+          <div style="font-size:11px;color:var(--muted);margin-top:8px;">今週: <b style="color:var(--ink);">7 件</b> · 平均: 5.2 件/週</div>
+        </div>
+
+        <div class="c5-tile c5-t-voices">
+          <div class="c5-tile-title">この 方 の 声 <span>最新 3 件</span></div>
+          <div class="c5-voices-list">
+            <div class="c5-voice-item">
+              <span class="c5-voice-src">LINE · 2 時間 前</span>
+              新NISA、 SBI と 楽天 どっち が いい か 悩んでる
+            </div>
+            <div class="c5-voice-item">
+              <span class="c5-voice-src">議事録 · 7/28</span>
+              iDeCo 増額 は 前向き。 上限 変わった の 知らな くて
+            </div>
+            <div class="c5-voice-item">
+              <span class="c5-voice-src">メモ · 6/12</span>
+              奥様 は 学資 と NISA 併用 に 慎重
+            </div>
+          </div>
+        </div>
+
+        <div class="c5-tile c5-t-family">
+          <div class="c5-tile-title">家族 構成</div>
+          <div class="c5-family">
+            <div class="c5-family-node"><div class="avatar">妻</div><span class="label">配偶者</span><span class="age">43 歳</span></div>
+            <div class="c5-family-node me"><div class="avatar">田</div><span class="label">本人</span><span class="age">45 歳</span></div>
+            <div class="c5-family-node"><div class="avatar">長</div><span class="label">長男</span><span class="age">高 2</span></div>
+            <div class="c5-family-node"><div class="avatar">次</div><span class="label">次男</span><span class="age">中 3</span></div>
+          </div>
+        </div>
+
+        <div class="c5-tile c5-t-tasks">
+          <div class="c5-tile-title">未完 タスク <span>3 件</span></div>
+          <div class="c5-task-list">
+            <div class="c5-task-item"><div class="c5-task-check"></div><div class="c5-task-label">iDeCo 増額 申請書 を 郵送</div><div class="c5-task-due urg">明日</div></div>
+            <div class="c5-task-item"><div class="c5-task-check"></div><div class="c5-task-label">NISA 銘柄 3 選 の 提案 資料 作成</div><div class="c5-task-due week">今週</div></div>
+            <div class="c5-task-item"><div class="c5-task-check"></div><div class="c5-task-label">学資 保険 の 見積 3 社</div><div class="c5-task-due week">今週</div></div>
+          </div>
+        </div>
+
+        <div class="c5-tile c5-t-timeline">
+          <div class="c5-tile-title">時系列 <span>全部 見る →</span></div>
+          <div class="c5-tl-list">
+            <div class="c5-tl-item"><span class="c5-tl-when">2 時間 前</span><div class="c5-tl-body"><span class="c5-tl-ch line">LINE</span>NISA 銘柄 相談</div></div>
+            <div class="c5-tl-item"><span class="c5-tl-when">7/28 14:00</span><div class="c5-tl-body"><span class="c5-tl-ch meet">面談</span>Zoom 50 分 · タスク 3 件</div></div>
+            <div class="c5-tl-item"><span class="c5-tl-when">6/19</span><div class="c5-tl-body"><span class="c5-tl-ch prop">提案</span>相続 対策 · 検討中 42 日</div></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="decide">
+  <h2>owner picks 待ち</h2>
+  <p>
+    <b>C1</b>: タイムライン stream · 分断 された tab 統合 · 「いつ 何 が あった か」 が 一目<br>
+    <b>C2</b>: 客 の 物語 · 家族 tree + 客 の 声 引用 · 「人 として 覚える」 に フィット<br>
+    <b>C3</b>: 一手 集中 · 今 やる 1 action + キーボード ショートカット · スピード max<br>
+    <b>C4</b>: 面談 中心 · 議事録 が 主役 + 4 step wizard · 面談 後 動線 完結<br>
+    <b>C5</b>: ダッシュボード · 6 タイル で 全部 一覧 · 数字 好き の FP 先生 向け
+  </p>
+  <p style="margin-top:12px;">
+    「C◯ で」 「C◯ の × を C△ の ○ に」 「別 案」 の どれ か で picks → 実装。 backend LINE push · P3 content variant も picks 揃い 次第 順次。
+  </p>
+</div>
+
+<script>
+  // tab switch
+  document.querySelectorAll('.tab').forEach(t => {
+    t.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+      document.querySelectorAll('.view').forEach(x => x.classList.remove('active'));
+      t.classList.add('active');
+      document.getElementById('v-' + t.dataset.v).classList.add('active');
+    });
+  });
+  // heatmap
+  const heat = document.getElementById('c5-heat');
+  if (heat) {
+    for (let i = 0; i < 30; i++) {
+      const v = Math.random();
+      const cell = document.createElement('div');
+      cell.className = 'c5-heat-cell';
+      const shade = v < 0.2 ? '#F1F5F9' : v < 0.5 ? '#BBF7D0' : v < 0.75 ? '#4ADE80' : '#00844A';
+      cell.style.background = shade;
+      heat.appendChild(cell);
+    }
+  }
+</script>
+</body>
+</html>
