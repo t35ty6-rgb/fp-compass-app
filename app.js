@@ -3258,55 +3258,32 @@
             <div class="cd-flow-title">${escapeHtml(topRec.action)}</div>
             <div class="cd-flow-reason">${escapeHtml(topRec.reason)}</div>
 
-            <!-- ★ 2026-07-31 v20260731O owner NG「大枠 button 押すと さらに 選べる drill UI に しろ」 対応
-                 大 枠 button 2 個 (Zoom / LINE) のみ initial 表示 → click で 展開 で 選択 肢。
-                 装飾 (番号 badge / hint 文言 / icon 枠) 撤去、 label + icon + caret だけ。
-                 auto-open: topRec.action が Zoom/面談 系 なら Zoom drill、 それ 以外 は LINE drill を 開く。
+            <!-- ★ 2026-07-31 v20260731P owner picks Drill D: 2 big card + bottom sheet slide-up。
+                 initial は 2 card のみ (Zoom / LINE、 高さ 110px 大)。 click → sheet が 下 から up で 選択 肢。
                  data-attrs は 既存 handler 維持 (data-quick-instant/schedule/slots/tag, data-line-brief, #modal-draft-btn, #modal-edit-btn) -->
             ${(function(){
-              const openZoom = /Zoom|面談|録画|オンライン/.test(topRec.action || '');
+              const recLine = !/Zoom|面談|録画|オンライン/.test(topRec.action || '');
               return `
-              <div class="fp-flow-drill">
-                ${c.lineFriendId ? `
-                <details class="fp-drill" ${openZoom ? 'open' : ''}>
-                  <summary class="fp-drill-head">
-                    <span class="fp-drill-icon">📞</span>
-                    <span class="fp-drill-label">Zoom で 面談 する</span>
-                    <span class="fp-drill-caret" aria-hidden="true">▾</span>
-                  </summary>
-                  <div class="fp-drill-body">
-                    <button class="fp-drill-opt" data-quick-instant="${escapeHtml(c.id)}" type="button">
-                      <span class="fp-drill-opt-icon">⚡</span>
-                      <span class="fp-drill-opt-label">今すぐ Zoom <span class="fp-drill-opt-tail">— URL 即発行</span></span>
-                    </button>
-                    <button class="fp-drill-opt" data-quick-slots="${escapeHtml(c.id)}" type="button">
-                      <span class="fp-drill-opt-icon">🗓</span>
-                      <span class="fp-drill-opt-label">候補日 3つ 送る <span class="fp-drill-opt-tail">— 客 が LINE で 選ぶ</span></span>
-                    </button>
-                    <button class="fp-drill-opt" data-quick-schedule="${escapeHtml(c.id)}" type="button">
-                      <span class="fp-drill-opt-icon">📅</span>
-                      <span class="fp-drill-opt-label">日時 を 指定 <span class="fp-drill-opt-tail">— 自分 で 決めて 予約</span></span>
-                    </button>
-                  </div>
-                </details>` : ''}
-
-                <details class="fp-drill" ${!openZoom || !c.lineFriendId ? 'open' : ''}>
-                  <summary class="fp-drill-head">
-                    <span class="fp-drill-icon">💬</span>
-                    <span class="fp-drill-label">LINE で 返信 する</span>
-                    <span class="fp-drill-caret" aria-hidden="true">▾</span>
-                  </summary>
-                  <div class="fp-drill-body">
-                    <button class="fp-drill-opt fp-drill-opt-featured" id="modal-draft-btn" type="button">
-                      <span class="fp-drill-opt-icon">✨</span>
-                      <span class="fp-drill-opt-label">AI で 下書き <span class="fp-drill-opt-tail">— 状況 から 自動 生成</span></span>
-                    </button>
-                    <button class="fp-drill-opt modal-brief-btn" data-line-brief="${escapeHtml(c.id)}" type="button">
-                      <span class="fp-drill-opt-icon">✍</span>
-                      <span class="fp-drill-opt-label">自分 で 書く <span class="fp-drill-opt-tail">— 手入力 メッセージ</span></span>
-                    </button>
-                  </div>
-                </details>
+              <div class="fp-flow-picker">
+                <div class="fp-flow-cards">
+                  ${c.lineFriendId ? `
+                  <button class="fp-pcard ${!recLine ? 'fp-pcard-recommended' : ''}" data-open-sheet="zoom" type="button">
+                    <span class="fp-pcard-icon">📞</span>
+                    <div class="fp-pcard-body">
+                      <div class="fp-pcard-title">Zoom で 面談 する</div>
+                      <div class="fp-pcard-sub">今すぐ / 候補日 / 日時</div>
+                    </div>
+                    <span class="fp-pcard-arrow" aria-hidden="true">›</span>
+                  </button>` : ''}
+                  <button class="fp-pcard ${recLine ? 'fp-pcard-recommended' : ''}" data-open-sheet="line" type="button">
+                    <span class="fp-pcard-icon">💬</span>
+                    <div class="fp-pcard-body">
+                      <div class="fp-pcard-title">LINE で 返信 する</div>
+                      <div class="fp-pcard-sub">AI 下書き / 自分 で 書く</div>
+                    </div>
+                    <span class="fp-pcard-arrow" aria-hidden="true">›</span>
+                  </button>
+                </div>
 
                 <div class="fp-flow-tools">
                   <button class="fp-tool" data-quick-tag="${escapeHtml(c.id)}" type="button">
@@ -3316,6 +3293,70 @@
                     <span aria-hidden="true">✏</span> 情報 編集
                   </button>
                 </div>
+
+                ${c.lineFriendId ? `
+                <div class="fp-sheet" data-sheet="zoom" hidden>
+                  <div class="fp-sheet-head">
+                    <span class="fp-sheet-icon">📞</span>
+                    <div>
+                      <div class="fp-sheet-title">Zoom で 面談 する</div>
+                      <div class="fp-sheet-sub">開始 方法 を 選ぶ</div>
+                    </div>
+                    <button class="fp-sheet-close" data-sheet-close type="button" aria-label="閉じる">✕</button>
+                  </div>
+                  <div class="fp-sheet-body">
+                    <button class="fp-sheet-opt" data-quick-instant="${escapeHtml(c.id)}" type="button">
+                      <span class="fp-sheet-opt-icon">⚡</span>
+                      <div>
+                        <div class="fp-sheet-opt-label">今すぐ Zoom</div>
+                        <div class="fp-sheet-opt-sub">URL 即発行 · LINE 自動 送信</div>
+                      </div>
+                    </button>
+                    <button class="fp-sheet-opt" data-quick-slots="${escapeHtml(c.id)}" type="button">
+                      <span class="fp-sheet-opt-icon">🗓</span>
+                      <div>
+                        <div class="fp-sheet-opt-label">候補日 3つ 送る</div>
+                        <div class="fp-sheet-opt-sub">お客様 が LINE で 選ぶ</div>
+                      </div>
+                    </button>
+                    <button class="fp-sheet-opt" data-quick-schedule="${escapeHtml(c.id)}" type="button">
+                      <span class="fp-sheet-opt-icon">📅</span>
+                      <div>
+                        <div class="fp-sheet-opt-label">日時 を 指定</div>
+                        <div class="fp-sheet-opt-sub">自分 で 決めて 予約</div>
+                      </div>
+                    </button>
+                  </div>
+                </div>` : ''}
+
+                <div class="fp-sheet" data-sheet="line" hidden>
+                  <div class="fp-sheet-head">
+                    <span class="fp-sheet-icon">💬</span>
+                    <div>
+                      <div class="fp-sheet-title">LINE で 返信 する</div>
+                      <div class="fp-sheet-sub">送信 方法 を 選ぶ</div>
+                    </div>
+                    <button class="fp-sheet-close" data-sheet-close type="button" aria-label="閉じる">✕</button>
+                  </div>
+                  <div class="fp-sheet-body">
+                    <button class="fp-sheet-opt fp-sheet-opt-featured" id="modal-draft-btn" type="button">
+                      <span class="fp-sheet-opt-icon">✨</span>
+                      <div>
+                        <div class="fp-sheet-opt-label">AI で 下書き</div>
+                        <div class="fp-sheet-opt-sub">状況 から 自動 生成 · おすすめ</div>
+                      </div>
+                    </button>
+                    <button class="fp-sheet-opt modal-brief-btn" data-line-brief="${escapeHtml(c.id)}" type="button">
+                      <span class="fp-sheet-opt-icon">✍</span>
+                      <div>
+                        <div class="fp-sheet-opt-label">自分 で 書く</div>
+                        <div class="fp-sheet-opt-sub">手入力 メッセージ</div>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="fp-sheet-backdrop" data-sheet-backdrop hidden></div>
               </div>`;
             })()}
               <style>
@@ -10859,4 +10900,46 @@ window.mergeFirestoreMeetingsIntoLiveData = async function (client) {
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else setTimeout(boot, 200);
   setInterval(syncCountAttrs, 3000);
+})();
+
+// ═══════════════════════════════════════════════════════
+// 2026-07-31 v20260731P Drill D: bottom-sheet global handler
+// data-open-sheet="name" click → data-sheet="name" 表示
+// data-sheet-close / data-sheet-backdrop / Escape → 全 sheet 閉じる
+// data-sheet-opt (sheet 内 の action button) click → handler 発火 後 sheet auto-close
+// ═══════════════════════════════════════════════════════
+(function () {
+  if (window.__fpSheetWired) return;
+  window.__fpSheetWired = true;
+  const scope = () => document.querySelector('.cd-modal') || document;
+  const closeAll = () => {
+    document.querySelectorAll('[data-sheet]:not([hidden])').forEach(s => s.hidden = true);
+    document.querySelectorAll('[data-sheet-backdrop]:not([hidden])').forEach(b => b.hidden = true);
+  };
+  document.addEventListener('click', (e) => {
+    const opener = e.target.closest('[data-open-sheet]');
+    if (opener) {
+      const name = opener.dataset.openSheet;
+      closeAll();
+      const s = scope();
+      const sheet = s.querySelector(`[data-sheet="${CSS.escape(name)}"]`);
+      const backdrop = s.querySelector('[data-sheet-backdrop]');
+      if (sheet) sheet.hidden = false;
+      if (backdrop) backdrop.hidden = false;
+      return;
+    }
+    if (e.target.closest('[data-sheet-close], [data-sheet-backdrop]')) {
+      closeAll();
+      return;
+    }
+    // sheet 内 の option click → 元 の handler 発火後 auto-close
+    if (e.target.closest('.fp-sheet .fp-sheet-opt')) {
+      setTimeout(closeAll, 60);
+    }
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && document.querySelector('[data-sheet]:not([hidden])')) {
+      closeAll();
+    }
+  });
 })();

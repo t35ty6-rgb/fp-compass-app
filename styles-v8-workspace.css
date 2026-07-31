@@ -12003,3 +12003,228 @@ section > div[data-line-view] > div[style*="background: #fff"] {
   .fp-drill-opt { padding: 12px 16px; grid-template-columns: 36px 1fr; gap: 12px; }
   .fp-drill-opt-tail { display: block; margin-left: 0; margin-top: 2px; font-size: 12.5px; }
 }
+
+/* ============================================================
+ * 2026-07-31 v20260731P · owner picks Drill D
+ * 2 big cards (Zoom / LINE) → click で bottom sheet slide-up
+ * 直前 v20260731O accordion (fp-drill*) 差替、 fp-flow-tools は 継続 使用
+ * ============================================================ */
+.fp-flow-picker {
+  position: relative;
+  margin-top: 14px;
+}
+.fp-flow-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.fp-pcard {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 14px;
+  align-items: center;
+  padding: 22px 22px;
+  min-height: 108px;
+  background: #fff;
+  border: 1px solid #E5E7EB;
+  border-radius: 14px;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition: border-color 0.12s, transform 0.12s, box-shadow 0.15s;
+  width: 100%;
+  box-sizing: border-box;
+}
+.fp-pcard:hover {
+  border-color: #00844A;
+  box-shadow: 0 6px 16px rgba(0,132,74,0.10);
+  transform: translateY(-1px);
+}
+.fp-pcard-recommended {
+  border-color: #00844A;
+  background: linear-gradient(135deg, #ECFDF5 0%, #fff 60%);
+  box-shadow: 0 4px 14px rgba(0,132,74,0.08);
+}
+.fp-pcard-icon {
+  width: 52px;
+  height: 52px;
+  background: #F1F5F9;
+  color: #0F1729;
+  border-radius: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  flex-shrink: 0;
+}
+.fp-pcard-recommended .fp-pcard-icon {
+  background: #DCFCE7;
+}
+.fp-pcard-body { min-width: 0; }
+.fp-pcard-title {
+  font-size: 17px;
+  font-weight: 900;
+  color: #0F1729;
+  letter-spacing: -0.01em;
+  line-height: 1.35;
+}
+.fp-pcard-sub {
+  font-size: 12.5px;
+  color: #6B7280;
+  font-weight: 500;
+  margin-top: 3px;
+  line-height: 1.5;
+}
+.fp-pcard-arrow {
+  font-size: 28px;
+  color: #9CA3AF;
+  font-weight: 300;
+  line-height: 1;
+}
+.fp-pcard:hover .fp-pcard-arrow { color: #00844A; }
+
+/* ---- Bottom sheet (modal-style) ---- */
+.fp-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 41, 0.42);
+  z-index: 10500;
+  animation: fp-sheet-fade 0.2s ease-out;
+}
+.fp-sheet-backdrop[hidden] { display: none; }
+@keyframes fp-sheet-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.fp-sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #fff;
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+  box-shadow: 0 -16px 40px rgba(15, 23, 41, 0.18);
+  z-index: 10501;
+  max-width: 640px;
+  margin: 0 auto;
+  animation: fp-sheet-up 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+.fp-sheet[hidden] { display: none; }
+@keyframes fp-sheet-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+.fp-sheet-head {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 14px;
+  align-items: center;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid #E5E7EB;
+  flex-shrink: 0;
+}
+.fp-sheet-icon {
+  width: 44px;
+  height: 44px;
+  background: #DCFCE7;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+}
+.fp-sheet-title {
+  font-size: 18px;
+  font-weight: 900;
+  color: #0F1729;
+  letter-spacing: -0.01em;
+}
+.fp-sheet-sub {
+  font-size: 12.5px;
+  color: #6B7280;
+  font-weight: 500;
+  margin-top: 2px;
+}
+.fp-sheet-close {
+  width: 36px;
+  height: 36px;
+  background: #F1F5F9;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 16px;
+  color: #6B7280;
+  font-family: inherit;
+  transition: background 0.12s, color 0.12s;
+}
+.fp-sheet-close:hover { background: #E5E7EB; color: #0F1729; }
+.fp-sheet-body {
+  padding: 12px 12px 24px;
+  display: grid;
+  gap: 4px;
+  overflow-y: auto;
+}
+.fp-sheet-opt {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 14px;
+  align-items: center;
+  padding: 16px 18px;
+  background: #fff;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition: background 0.12s, border-color 0.12s;
+  width: 100%;
+  box-sizing: border-box;
+}
+.fp-sheet-opt:hover {
+  background: #ECFDF5;
+  border-color: #00844A;
+}
+.fp-sheet-opt-featured {
+  background: #FFFBEB;
+}
+.fp-sheet-opt-featured:hover {
+  background: #FEF3C7;
+  border-color: #F59E0B;
+}
+.fp-sheet-opt-icon {
+  text-align: center;
+  font-size: 22px;
+  color: #0F1729;
+}
+.fp-sheet-opt-featured .fp-sheet-opt-icon { color: #B45309; }
+.fp-sheet-opt-label {
+  font-size: 15.5px;
+  font-weight: 800;
+  color: #0F1729;
+  letter-spacing: -0.005em;
+}
+.fp-sheet-opt-sub {
+  font-size: 12.5px;
+  color: #6B7280;
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+/* Mobile: 1 column cards, full-width sheet */
+@media (max-width: 720px) {
+  .fp-flow-cards { grid-template-columns: 1fr; }
+  .fp-sheet { max-width: 100%; }
+  .fp-pcard { padding: 18px 18px; min-height: auto; }
+  .fp-pcard-icon { width: 44px; height: 44px; font-size: 22px; }
+  .fp-pcard-title { font-size: 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fp-sheet, .fp-sheet-backdrop { animation: none; }
+  .fp-pcard:hover { transform: none; }
+}
