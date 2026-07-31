@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>議事録 完成 LINE 通知 — flex card design 3 案 (v20260731P)</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Noto Sans JP', -apple-system, sans-serif;
+    background: #f5f6f8;
+    color: #0F1729;
+    padding: 28px;
+    line-height: 1.7;
+  }
+  .wrap { max-width: 1200px; margin: 0 auto; }
+  h1 { font-size: 25px; font-weight: 900; letter-spacing: -0.02em; margin-bottom: 4px; }
+  .lead { color: #4B5563; font-size: 14px; font-weight: 500; margin-bottom: 20px; }
+
+  .note {
+    background: #FFFBEB; border: 1px solid #FCD34D;
+    border-radius: 12px; padding: 16px 22px; margin-bottom: 24px;
+    font-size: 13.5px; color: #92400E; font-weight: 500; line-height: 1.65;
+  }
+  .note b { color: #78350F; font-weight: 900; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin-bottom: 28px;
+  }
+  @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+
+  .plan {
+    background: #fff;
+    border-radius: 14px;
+    padding: 22px 22px 20px;
+    border: 1px solid #E5E7EB;
+  }
+  .plan-head {
+    display: flex; align-items: baseline; gap: 10px; margin-bottom: 4px;
+  }
+  .plan-badge {
+    background: #00844A; color: #fff;
+    font-family: 'Manrope', monospace;
+    font-size: 11px; font-weight: 900; letter-spacing: 0.14em;
+    padding: 3px 10px; border-radius: 999px;
+  }
+  .plan-title { font-size: 17px; font-weight: 900; letter-spacing: -0.01em; }
+  .plan-sub { color: #6B7280; font-size: 12.5px; font-weight: 500; margin-bottom: 16px; min-height: 40px; }
+  .plan-tag {
+    display: inline-block;
+    background: #F3F4F6; color: #374151;
+    font-size: 10.5px; font-weight: 700;
+    padding: 2px 8px; border-radius: 5px;
+    margin-right: 4px;
+  }
+  .plan-tag.pro { background: #ECFDF5; color: #065F46; }
+  .plan-tag.con { background: #FEE2E2; color: #991B1B; }
+
+  /* LINE chat bg (客 目線 の talk screen 想定) */
+  .talk {
+    background: #7B99C1;
+    border-radius: 12px;
+    padding: 18px 14px 24px;
+    display: flex; flex-direction: column; align-items: flex-start;
+    gap: 8px;
+    min-height: 340px;
+  }
+  .talk-time {
+    align-self: center;
+    background: rgba(0,0,0,0.28);
+    color: #fff;
+    font-size: 10.5px; font-weight: 600;
+    padding: 3px 12px; border-radius: 999px;
+    margin-bottom: 6px;
+    letter-spacing: 0.05em;
+  }
+  .talk-sender {
+    display: flex; gap: 8px;
+    align-items: flex-end;
+    max-width: 92%;
+  }
+  .talk-avatar {
+    width: 34px; height: 34px; border-radius: 50%;
+    background: #00844A;
+    display: inline-flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 900; font-size: 15px;
+    flex-shrink: 0;
+  }
+  .talk-name-time {
+    display: flex; flex-direction: column;
+    gap: 2px;
+    flex: 1; min-width: 0;
+  }
+  .talk-name {
+    font-size: 10.5px; color: #fff; font-weight: 600;
+    letter-spacing: 0.02em;
+    padding-left: 2px;
+  }
+
+  /* --- 案 P1: minimal flex (テキスト中心) --- */
+  .p1-flex {
+    background: #fff;
+    border-radius: 14px;
+    overflow: hidden;
+    width: 260px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+  }
+  .p1-head {
+    background: #00844A;
+    color: #fff;
+    padding: 10px 14px;
+    font-size: 11px; font-weight: 900; letter-spacing: 0.1em;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .p1-body { padding: 14px 16px 12px; }
+  .p1-name { font-size: 16px; font-weight: 900; color: #0F1729; letter-spacing: -0.01em; margin-bottom: 2px; }
+  .p1-desc { font-size: 12.5px; color: #6B7280; font-weight: 500; line-height: 1.55; margin-bottom: 12px; }
+  .p1-meta {
+    display: grid; grid-template-columns: 65px 1fr;
+    gap: 4px 8px; font-size: 12px; line-height: 1.5;
+    margin-bottom: 12px; padding-top: 10px; border-top: 1px solid #E5E7EB;
+  }
+  .p1-meta-k { color: #6B7280; font-weight: 500; }
+  .p1-meta-v { color: #0F1729; font-weight: 800; }
+  .p1-cta {
+    display: block; background: #00844A; color: #fff;
+    text-align: center; padding: 11px 14px;
+    font-size: 13.5px; font-weight: 900;
+    border-radius: 8px; border: none; width: 100%;
+    letter-spacing: 0.02em;
+  }
+
+  /* --- 案 P2: rich flex (summary 3行 抜粋 付き) --- */
+  .p2-flex {
+    background: #fff;
+    border-radius: 14px;
+    overflow: hidden;
+    width: 260px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+  }
+  .p2-hero {
+    background: linear-gradient(135deg, #00844A 0%, #065F46 100%);
+    color: #fff;
+    padding: 14px 16px 12px;
+  }
+  .p2-hero-eyebrow {
+    font-family: 'Manrope', monospace; font-size: 9.5px; font-weight: 900;
+    letter-spacing: 0.14em; opacity: 0.9; margin-bottom: 4px;
+  }
+  .p2-hero-title { font-size: 15px; font-weight: 900; letter-spacing: -0.005em; line-height: 1.4; }
+  .p2-body { padding: 12px 16px 12px; }
+  .p2-quote {
+    background: #F9FAFB; border-left: 3px solid #00844A;
+    padding: 8px 10px 8px 12px; border-radius: 4px;
+    font-size: 11.5px; color: #4B5563; line-height: 1.6;
+    margin-bottom: 12px;
+    font-style: italic;
+  }
+  .p2-quote-label {
+    font-family: 'Manrope', monospace; font-size: 9px; font-weight: 800;
+    letter-spacing: 0.1em; color: #00844A;
+    display: block; margin-bottom: 4px;
+    font-style: normal;
+  }
+  .p2-meta {
+    display: flex; gap: 12px; flex-wrap: wrap;
+    font-size: 11.5px; margin-bottom: 12px;
+  }
+  .p2-meta span { display: inline-flex; align-items: center; gap: 4px; color: #6B7280; font-weight: 600; }
+  .p2-meta b { color: #0F1729; font-weight: 900; }
+  .p2-cta {
+    display: block; background: #00844A; color: #fff;
+    text-align: center; padding: 11px 14px;
+    font-size: 13.5px; font-weight: 900;
+    border-radius: 8px; border: none; width: 100%;
+  }
+
+  /* --- 案 P3: dual-cta (見る + 直接 タスク 確認) --- */
+  .p3-flex {
+    background: #fff;
+    border-radius: 14px;
+    overflow: hidden;
+    width: 268px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+  }
+  .p3-head {
+    padding: 14px 16px 12px;
+    border-bottom: 1px solid #E5E7EB;
+  }
+  .p3-eyebrow {
+    display: inline-block;
+    background: #DCFCE7; color: #065F46;
+    font-family: 'Manrope', monospace; font-size: 10px; font-weight: 900;
+    letter-spacing: 0.1em; padding: 3px 8px; border-radius: 4px;
+    margin-bottom: 6px;
+  }
+  .p3-name { font-size: 15px; font-weight: 900; color: #0F1729; letter-spacing: -0.01em; }
+  .p3-desc { font-size: 12px; color: #6B7280; font-weight: 500; line-height: 1.55; margin-top: 2px; }
+  .p3-tasks {
+    padding: 12px 16px 8px;
+    background: #FEFCE8;
+  }
+  .p3-tasks-title {
+    font-size: 10.5px; font-weight: 800; color: #92400E;
+    letter-spacing: 0.08em; margin-bottom: 6px; text-transform: uppercase;
+  }
+  .p3-tasks ul { list-style: none; }
+  .p3-tasks li {
+    font-size: 12px; color: #78350F; font-weight: 600;
+    padding: 3px 0 3px 16px; line-height: 1.5;
+    position: relative;
+  }
+  .p3-tasks li::before {
+    content: '□'; position: absolute; left: 0; color: #B45309;
+    font-weight: 700;
+  }
+  .p3-ctas {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 6px; padding: 10px 12px 12px;
+  }
+  .p3-cta {
+    padding: 10px 8px; border-radius: 8px;
+    font-size: 12px; font-weight: 900;
+    text-align: center; border: none;
+    letter-spacing: 0.02em;
+  }
+  .p3-cta-primary { background: #00844A; color: #fff; }
+  .p3-cta-secondary { background: #fff; color: #00844A; border: 1px solid #00844A; }
+
+  /* copy 3 案 (通知 の 文言) */
+  .copy-block {
+    background: #fff; border: 1px solid #E5E7EB;
+    border-radius: 14px; padding: 22px 26px; margin-bottom: 20px;
+  }
+  .copy-block h2 { font-size: 15px; font-weight: 900; color: #0F1729; margin-bottom: 12px; letter-spacing: -0.01em; }
+  .copy-variant {
+    display: grid; grid-template-columns: 60px 1fr;
+    gap: 14px; align-items: start;
+    padding: 12px 0; border-top: 1px solid #E5E7EB;
+  }
+  .copy-variant:first-of-type { border-top: none; padding-top: 6px; }
+  .copy-label {
+    font-family: 'Manrope', monospace;
+    background: #F3F4F6; color: #374151;
+    font-size: 10.5px; font-weight: 900;
+    padding: 3px 8px; border-radius: 5px; letter-spacing: 0.1em;
+    text-align: center; height: fit-content;
+  }
+  .copy-text {
+    font-size: 13.5px; color: #0F1729; font-weight: 600;
+    background: #FAFBFC; border-left: 3px solid #00844A;
+    padding: 10px 14px; border-radius: 4px; line-height: 1.6;
+    white-space: pre-wrap;
+  }
+
+  /* 実装 spec */
+  .impl {
+    background: #fff; border: 1px solid #E5E7EB;
+    border-radius: 14px; padding: 22px 26px; margin-bottom: 20px;
+  }
+  .impl h2 { font-size: 15px; font-weight: 900; color: #0F1729; margin-bottom: 12px; letter-spacing: -0.01em; }
+  .impl-row {
+    display: grid; grid-template-columns: 130px 1fr;
+    gap: 12px; padding: 10px 0;
+    border-top: 1px solid #E5E7EB;
+    font-size: 13px; line-height: 1.6;
+  }
+  .impl-row:first-child { border-top: none; }
+  .impl-key { color: #6B7280; font-weight: 700; }
+  .impl-val { color: #0F1729; font-weight: 500; }
+  .impl-val code {
+    background: #F1F5F9; padding: 1px 6px; border-radius: 4px;
+    font-family: 'Menlo', monospace; font-size: 12px;
+  }
+  .impl-val b { font-weight: 900; }
+  .impl-val ul { margin-left: 18px; margin-top: 4px; }
+
+  .decide {
+    background: #ECFDF5;
+    border: 2px solid #00844A;
+    border-radius: 14px;
+    padding: 22px 28px;
+    margin-top: 12px;
+  }
+  .decide h2 { font-size: 16px; font-weight: 900; color: #065F46; margin-bottom: 8px; }
+  .decide p { font-size: 13.5px; color: #0F1729; font-weight: 500; line-height: 1.75; }
+  .decide b { color: #00844A; font-weight: 900; }
+
+  .foot { text-align: center; color: #6B7280; font-size: 12px; padding: 24px 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>議事録 完成 LINE 通知 — flex card design 3 案</h1>
+  <p class="lead">Zoom 面談 → AI が 議事録 生成 完了 の タイミング で FP先生 の LINE に flex card を push、 タップ で 該当 客 の 議事録 が 開く。 owner picks → 実装 (backend 裏 で 進行中)。</p>
+
+  <div class="note">
+    <b>owner の 依頼</b>: 「議事録 が できたら、 誰々 さん との 議事録 を 作成 しました って LINE 通知、 flex card クリック で その 人 の 議事録 が 見れる」。<br>
+    <b>状態</b>: design (この preview) は owner の 判断 待ち、 backend は 裏 で 実装 進行 (LINE push 送信 の function 追加、 tenant 側 に FP先生 の LINE user ID 登録 が 別途 必要)。
+  </div>
+
+  <h2 style="font-size:17px;font-weight:900;margin-bottom:12px;letter-spacing:-0.01em;">Flex card デザイン 3 案</h2>
+  <div class="grid">
+
+    <!-- 案 P1 -->
+    <div class="plan">
+      <div class="plan-head">
+        <span class="plan-badge">P1</span>
+        <span class="plan-title">Minimal (テキスト 中心、 一番 軽い)</span>
+      </div>
+      <p class="plan-sub">
+        <span class="plan-tag pro">読みやすい</span>
+        <span class="plan-tag pro">通知 バナー でも 全文 見える</span>
+      </p>
+      <div class="talk">
+        <div class="talk-time">14:32</div>
+        <div class="talk-sender">
+          <div class="talk-avatar">FP</div>
+          <div class="talk-name-time">
+            <div class="talk-name">FP Compass</div>
+            <div class="p1-flex">
+              <div class="p1-head">✨ 議事録 完成</div>
+              <div class="p1-body">
+                <div class="p1-name">田中 太郎 様</div>
+                <div class="p1-desc">との 面談 議事録 を 作成 しました</div>
+                <div class="p1-meta">
+                  <span class="p1-meta-k">面談 日時</span><span class="p1-meta-v">7/31 (木) 14:00</span>
+                  <span class="p1-meta-k">抽出 タスク</span><span class="p1-meta-v">3 件</span>
+                </div>
+                <button class="p1-cta">議事録 を 見る →</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 案 P2 -->
+    <div class="plan">
+      <div class="plan-head">
+        <span class="plan-badge">P2</span>
+        <span class="plan-title">Rich (要点 引用 付き)</span>
+      </div>
+      <p class="plan-sub">
+        <span class="plan-tag pro">通知 だけ で 概略 掴める</span>
+        <span class="plan-tag pro">緑 hero で 目立つ</span>
+        <span class="plan-tag con">縦 に 長め</span>
+      </p>
+      <div class="talk">
+        <div class="talk-time">14:32</div>
+        <div class="talk-sender">
+          <div class="talk-avatar">FP</div>
+          <div class="talk-name-time">
+            <div class="talk-name">FP Compass</div>
+            <div class="p2-flex">
+              <div class="p2-hero">
+                <div class="p2-hero-eyebrow">✨ 議事録 完成</div>
+                <div class="p2-hero-title">田中 太郎 様 との 面談</div>
+              </div>
+              <div class="p2-body">
+                <div class="p2-quote">
+                  <span class="p2-quote-label">本日 の 決定</span>
+                  iDeCo 掛金 を 月 <b>2.3万 → 6.8万</b> に 増額。 手続き 資料 は 来週 の 面談 で 手渡し。
+                </div>
+                <div class="p2-meta">
+                  <span>⏱ <b>50 分</b></span>
+                  <span>📋 <b>3</b> タスク</span>
+                  <span>🎯 <b>1</b> 提案</span>
+                </div>
+                <button class="p2-cta">議事録 を 見る →</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 案 P3 -->
+    <div class="plan">
+      <div class="plan-head">
+        <span class="plan-badge">P3</span>
+        <span class="plan-title">Dual CTA (タスク 一覧 + 議事録)</span>
+      </div>
+      <p class="plan-sub">
+        <span class="plan-tag pro">TODO を 通知 で 直に 確認</span>
+        <span class="plan-tag pro">2 CTA で 動線 分岐</span>
+        <span class="plan-tag con">要素 多め</span>
+      </p>
+      <div class="talk">
+        <div class="talk-time">14:32</div>
+        <div class="talk-sender">
+          <div class="talk-avatar">FP</div>
+          <div class="talk-name-time">
+            <div class="talk-name">FP Compass</div>
+            <div class="p3-flex">
+              <div class="p3-head">
+                <span class="p3-eyebrow">✨ 議事録 完成</span>
+                <div class="p3-name">田中 太郎 様</div>
+                <div class="p3-desc">7/31 (木) 14:00 · 50 分 · タスク 3 件</div>
+              </div>
+              <div class="p3-tasks">
+                <div class="p3-tasks-title">次回 まで の TODO</div>
+                <ul>
+                  <li>iDeCo 増額 申請書 を 郵送 (来週 火 まで)</li>
+                  <li>NISA 銘柄 3 選 の 提案 資料 作成</li>
+                  <li>お子様 学資 保険 の 見積もり 3 社</li>
+                </ul>
+              </div>
+              <div class="p3-ctas">
+                <button class="p3-cta p3-cta-secondary">タスク 一覧</button>
+                <button class="p3-cta p3-cta-primary">議事録 を 見る</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="copy-block">
+    <h2>通知 タイトル (LINE の list 画面 · pop-up バナー で 見える 文字) — 3 案</h2>
+    <div class="copy-variant">
+      <span class="copy-label">C1</span>
+      <div class="copy-text">田中 太郎 様 との 議事録 を 作成 しました</div>
+    </div>
+    <div class="copy-variant">
+      <span class="copy-label">C2</span>
+      <div class="copy-text">✨ [議事録] 田中 太郎 様 (50 分 · タスク 3 件)</div>
+    </div>
+    <div class="copy-variant">
+      <span class="copy-label">C3</span>
+      <div class="copy-text">田中 太郎 様 面談 の まとめ が できました。 タップ で 開く。</div>
+    </div>
+  </div>
+
+  <div class="impl">
+    <h2>backend 実装 spec (裏 で 進行中)</h2>
+    <div class="impl-row">
+      <div class="impl-key">Trigger</div>
+      <div class="impl-val">Cloud Function <code>zoomRecordingWebhook</code> の 議事録 Firestore save 直後 に LINE push を 追加 (line 3887 の <code>meetings/{mid}</code> set の 直後)</div>
+    </div>
+    <div class="impl-row">
+      <div class="impl-key">送信先</div>
+      <div class="impl-val"><code>tenant.notificationsLineUserId</code> (新規 field) — FP先生 が 事前 に LINE bot を 友達 追加 → admin panel で 「通知 用 に この LINE を 登録」 で uid capture</div>
+    </div>
+    <div class="impl-row">
+      <div class="impl-key">送信 手段</div>
+      <div class="impl-val"><code>POST https://api.line.me/v2/bot/message/push</code> · Bearer = <code>tenant.line.channelAccessToken</code> · message = flex (owner が picks した P1/P2/P3)</div>
+    </div>
+    <div class="impl-row">
+      <div class="impl-key">tap 動線</div>
+      <div class="impl-val">
+        flex card の URL button →
+        <code>https://app.skeleton-inc.jp/#openClient=&lt;customerId&gt;&tab=meetings&meetingId=&lt;meetingDocId&gt;</code>
+        → 既存 URL hash 経由 で 客モーダル 自動 open + 議事録 tab active + 該当 meeting scroll 済 (index.html/app.js 側 で hash router 追加 必要)
+      </div>
+    </div>
+    <div class="impl-row">
+      <div class="impl-key">エラー 時</div>
+      <div class="impl-val">
+        <ul>
+          <li>notificationsLineUserId 未設定 → silent skip、 admin panel に 「通知 設定 未完了」 banner 表示</li>
+          <li>LINE 401/403 → tenant.line.channelAccessToken 更新 促す banner + daily-audit hit 化</li>
+          <li>tap 動線 の hash router で customer 見つからない → 客一覧 に fallback + toast 表示</li>
+        </ul>
+      </div>
+    </div>
+    <div class="impl-row">
+      <div class="impl-key">残 タスク</div>
+      <div class="impl-val">
+        <ul>
+          <li>admin panel に 「通知 用 LINE 登録」 UI (FP先生 が LINE bot を 友達 追加 → 「私 です」 button で uid capture)</li>
+          <li>index.html に URL hash router (<code>#openClient=X&tab=meetings&meetingId=Y</code>) 追加 (現状 の URL 遷移 と 干渉 なし に)</li>
+          <li>flex card JSON template を owner picks した 案 で 実装</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="decide">
+    <h2>owner 判断 待ち</h2>
+    <p>
+      <b>flex card</b>: P1 (minimal) / P2 (rich) / P3 (dual CTA) から 1 個 picks<br>
+      <b>通知 タイトル</b>: C1 / C2 / C3 から 1 個 picks<br>
+      <b>backend</b>: このまま 実装 進めて OK か (「進めて」/「wait」)
+    </p>
+    <p style="margin-top:12px;">
+      picks 決まったら 実 backend + flex JSON を 差替 → owner tenant で 実 Zoom 面談 完了 → 実 LINE 受信 で 動作 verify。
+    </p>
+  </div>
+
+  <p class="foot">FP Compass / 議事録 完成 LINE 通知 design preview</p>
+</div>
+</body>
+</html>
