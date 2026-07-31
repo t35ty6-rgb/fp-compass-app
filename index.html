@@ -20,10 +20,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20260801-sig-palette-v5">
-<link rel="stylesheet" href="styles-v2.css?v=20260801-sig-palette-v5">
-<link rel="stylesheet" href="styles-v3.css?v=20260801-sig-palette-v5">
-<link rel="stylesheet" href="styles-v8-workspace.css?v=20260801-sig-palette-v5">
+<link rel="stylesheet" href="styles.css?v=20260801-v6-green-slots">
+<link rel="stylesheet" href="styles-v2.css?v=20260801-v6-green-slots">
+<link rel="stylesheet" href="styles-v3.css?v=20260801-v6-green-slots">
+<link rel="stylesheet" href="styles-v8-workspace.css?v=20260801-v6-green-slots">
 <!-- ★ 2026-06-26 perf: lucide(350KB) と chart.js(201KB) を defer 化 -->
 <!--   どちらも DOMContentLoaded 後ハイドレートで OK (lucide: setInterval scan / chart: tryRender polling) -->
 <script defer src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
@@ -816,22 +816,12 @@
   --sig-gradient-soft: linear-gradient(120deg, #E8F1FD 0%, #EDE9FE 55%, #FCE7F3 100%);
 }
 
-/* LINE トーク Hub: 送信 button + 緑 → signature gradient */
-.lch-send { background: var(--sig-gradient) !important; box-shadow: 0 4px 12px rgba(139,92,246,0.35) !important; }
-.lch-send:hover { filter: brightness(1.08); }
-.lch-send:disabled { background: #CBD5E1 !important; box-shadow: none !important; }
-.lch-lf.active { background: var(--sig-violet) !important; border-color: var(--sig-violet) !important; }
-.lch-list-title .lch-live-dot { background: var(--sig-violet) !important; box-shadow: 0 0 0 0 rgba(139,92,246,0.6) !important; animation: lch-pulse-sig 2s infinite !important; }
-@keyframes lch-pulse-sig { 0% { box-shadow: 0 0 0 0 rgba(139,92,246,0.6); } 70% { box-shadow: 0 0 0 8px rgba(139,92,246,0); } 100% { box-shadow: 0 0 0 0 rgba(139,92,246,0); } }
-.tab.tab-linechat { background: var(--sig-gradient) !important; box-shadow: 0 2px 10px rgba(139,92,246,0.35) !important; }
-.tab.tab-linechat:hover { filter: brightness(1.08); }
-.tab.tab-linechat.active { background: linear-gradient(120deg, var(--sig-blue-deep) 0%, var(--sig-violet-deep) 55%, var(--sig-pink-deep) 100%) !important; }
-.lch-msg.me .lch-bubble { background: var(--sig-gradient) !important; color: #fff !important; }
-.lch-quick .lch-q { border-color: var(--sig-violet) !important; color: var(--sig-violet-deep) !important; }
-.lch-quick .lch-q:hover { background: #F5F3FF !important; }
+/* 2026-08-01 v6 owner revert: LINE Hub は LINE brand 緑 の 方 が 見やすい と 明示 → 送信 button / active tab / me吹き出し / filter chip / 未読badge / pulse dot は 緑 native のまま。
+   AI 返信案 button だけ signature gradient で 目立たせる (機能差別化)。 */
 .lch-quick .lch-q[data-quick="ai"] { background: var(--sig-gradient) !important; color: #fff !important; border: 0 !important; box-shadow: 0 3px 10px rgba(139,92,246,0.32) !important; }
 .lch-quick .lch-q[data-quick="ai"]:hover { filter: brightness(1.08); }
-.lch-unread { background: var(--sig-pink) !important; }
+.lch-quick .lch-q[data-quick="slots"] { background: #5B5BF0 !important; color: #fff !important; border: 0 !important; box-shadow: 0 3px 10px rgba(91,91,240,0.32) !important; }
+.lch-quick .lch-q[data-quick="slots"]:hover { filter: brightness(1.08); }
 
 /* C1 stream filter chips: default gray, active = signature */
 .c1s-chip.active { background: var(--sig-violet) !important; color: #fff !important; border-color: var(--sig-violet) !important; }
@@ -2250,7 +2240,7 @@ window.fpReadyAfterAuth = function() {
 <script>
 (function(){
   // 最新の ver を 1 箇所に集約 (fpReadyAfterAuth 側と一致させる必要あり)
-  const FP_VERSION = "20260801-sig-palette-v5";
+  const FP_VERSION = "20260801-v6-green-slots";
   try { window.FP_VERSION = FP_VERSION; } catch(_) {}
 
   // 2026-07-13 v11: Chrome拡張 (Zoom タブ音声 レコーダー) 検知

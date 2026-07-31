@@ -9887,8 +9887,9 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
       </header>
       <div class="lch-chat-body" id="lch-chat-body">${bodyHtml}</div>
       <div class="lch-quick">
-        <button class="lch-q" data-quick="ai" style="background:linear-gradient(135deg,#DC2626,#991B1B);color:#fff;border-color:#991B1B;font-weight:900;">✨ AI で 返信案 を 作る</button>
-        <button class="lch-q" data-quick="meeting">📅 面談 打診</button>
+        <button class="lch-q" data-quick="ai">✨ AI で 返信案 を 作る</button>
+        <button class="lch-q" data-quick="slots"${c.lineFriendId ? '' : ' disabled'}>📅 候補日 3つ 送る</button>
+        <button class="lch-q" data-quick="meeting">📅 面談 打診 (テンプレ)</button>
         <button class="lch-q" data-quick="thanks">🙏 お礼</button>
         <button class="lch-q" data-quick="reminder">🔔 リマインド</button>
       </div>
@@ -9981,6 +9982,16 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
         window.openBriefDraftModal(c);
       } else {
         _lchToast('AI 返信案 modal を loading 中… もう一度 押して ください', true);
+      }
+      return;
+    }
+    if (kind === 'slots') {
+      // 2026-08-01: 既存 の 候補日3つ 送信 modal (openSlotsSendModal) を 呼び出す
+      if (!c.lineFriendId) { _lchToast('LINE 未連携 客 に は 候補日 送信 できません', true); return; }
+      if (typeof window.openSlotsSendModal === 'function') {
+        window.openSlotsSendModal(c);
+      } else {
+        _lchToast('候補日 送信 modal を loading 中… もう一度 押して ください', true);
       }
       return;
     }

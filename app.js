@@ -2002,11 +2002,35 @@
     }
     if (entry.type === 'ai_minutes') {
       const rawSum = String(entry.summary || '');
-      // owner「同じやつが並んで意味ない」 fix (2026-08-01): 要約 snippet を 見出し 横 に inline 表示 → 何の議事録か 一目
-      const inlineSnippet = rawSum
-        ? escapeHtml(rawSum.replace(/^#.*?\n+/, '').replace(/\n+/g, ' · ').replace(/\s+/g, ' ').trim().slice(0, 68)) + (rawSum.length > 68 ? '…' : '')
-        : '議事録 未生成';
-      const concernChips = (entry.key_concerns || []).slice(0, 5).map(k => `<span style="display:inline-block;background:#EDE9FE;color:#5B21B6;padding:2px 8px;border-radius:99px;font-size:10.5px;font-weight:600;margin:2px 3px 2px 0;">${escapeHtml(k)}</span>`).join('');
+      const keyConcerns = Array.isArray(entry.key_concerns) ? entry.key_concerns.filter(Boolean) : [];
+      // owner「同じやつが並んで意味ない」 fix v2 (2026-08-01): 音質warning · 免責文 · 空 セクション を skip、 意味 の ある content 抽出
+      function _cleanSummary(s) {
+        return String(s || '')
+          // 音質 warning 系 の 前置き 全部 削る
+          .replace(/⚠[^\n]*音質warning[^\n]*/g, '')
+          .replace(/\(下記は AI が[^)]*\)/g, '')
+          .replace(/^\s*(⚠|警告|注意)[^\n]*\n?/gim, '')
+          // 空 section 「(該当なし)」 「なし」 系 も skip
+          .replace(/^##\s*[^\n]+\n\s*\(?該当なし\)?\s*\n?/gim, '')
+          .replace(/^##\s*/gm, '')
+          .replace(/\n{2,}/g, ' · ')
+          .replace(/\s+/g, ' ')
+          .trim();
+      }
+      const cleaned = _cleanSummary(rawSum);
+      // 優先: key_concerns 3件 → 音声content から 抽出 (最初 の 意味ある 文) → 「音声 のみ (要約なし)」
+      let inlineHtml;
+      if (keyConcerns.length > 0) {
+        inlineHtml = keyConcerns.slice(0, 3).map(k =>
+          `<span style="display:inline-block;background:#EDE9FE;color:#5B21B6;padding:1px 8px;border-radius:99px;font-size:10.5px;font-weight:700;margin-right:4px;">${escapeHtml(String(k).slice(0, 20))}</span>`
+        ).join('');
+      } else if (cleaned) {
+        const snippet = cleaned.slice(0, 68) + (cleaned.length > 68 ? '…' : '');
+        inlineHtml = `<span style="font-weight:500;color:#4C1D95;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(snippet)}</span>`;
+      } else {
+        inlineHtml = `<span style="color:#94A3B8;font-style:italic;">音声のみ (要約 未生成)</span>`;
+      }
+      const concernChipsFull = keyConcerns.slice(0, 5).map(k => `<span style="display:inline-block;background:#EDE9FE;color:#5B21B6;padding:2px 8px;border-radius:99px;font-size:10.5px;font-weight:600;margin:2px 3px 2px 0;">${escapeHtml(k)}</span>`).join('');
       const bodyHtml = rawSum
         ? (window.renderStructuredSummary
             ? `<div class="fp-summary-structured" style="font-size:12px;">${window.renderStructuredSummary(rawSum)}</div>`
@@ -2017,12 +2041,12 @@
           <summary style="cursor:pointer;list-style:none;">
             <div style="display:flex;align-items:baseline;gap:8px;font-size:12.5px;color:#5B21B6;letter-spacing:0.01em;">
               <span style="font-weight:800;flex-shrink:0;">🎙 議事録</span>
-              <span style="flex:1;font-weight:500;color:#4C1D95;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${inlineSnippet}</span>
+              <span style="flex:1;min-width:0;overflow:hidden;">${inlineHtml}</span>
               <span style="font-weight:400;font-size:11px;opacity:0.65;flex-shrink:0;font-family:'Manrope','Inter',monospace;">${safeTs}</span>
             </div>
           </summary>
           <div style="margin-top:8px;padding-top:8px;border-top:1px dashed #C4B5FD;">${bodyHtml}</div>
-          ${concernChips ? `<div style="margin-top:8px;">${concernChips}</div>` : ''}
+          ${concernChipsFull ? `<div style="margin-top:8px;">${concernChipsFull}</div>` : ''}
         </details>`;
     }
     if (entry.type === 'cancellation') {
@@ -10484,9 +10508,10 @@ ${client.name}さん、ありがとうございます。
     });
 
     // line-app.js から呼び出せるように公開
-    window.FpApp = { openClientModal: openClientModal, openClientForm: openClientForm, getTagsMaster: getTagsMaster, getClientTags: getClientTags, openBriefDraftModal: openBriefDraftModal };
-    // 2026-08-01: LINE Hub (sidebar tab) から AI 返信案 を 呼び出す 用
+    window.FpApp = { openClientModal: openClientModal, openClientForm: openClientForm, getTagsMaster: getTagsMaster, getClientTags: getClientTags, openBriefDraftModal: openBriefDraftModal, openSlotsSendModal: openSlotsSendModal };
+    // 2026-08-01: LINE Hub (sidebar tab) から AI 返信案 · 候補日3つ送る を 呼び出す 用
     window.openBriefDraftModal = openBriefDraftModal;
+    window.openSlotsSendModal = openSlotsSendModal;
 
     // ★ URL routing: ?view=clients 等で起動された場合は state.activeTab を 上書き
     //   (activateTab を 呼ぶ前に やらないと 先に state.activeTab で URL を 上書きしてしまう)
