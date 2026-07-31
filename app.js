@@ -3453,75 +3453,9 @@
           </div>
 
           <div class="cd-tabpanels">
-            <!-- OVERVIEW (2026-07-11 v7: 議事録空でも 有用情報 で 埋める、 誤表示 バグ fix)
-                 2026-08-01: owner C1 pick 反映 — 末尾 に unified timeline stream + filter chips を 追加 -->
-            <div class="cd-tabpanel" data-cdpanel="overview">
-              ${(function(){
-                // ★ 有用な最新議事録: summary or transcript or key_concerns の どれか あれば 使う
-                const useableAi = (function(){
-                  if (latestAi && (String(latestAi.summary||'').trim() || String(latestAi.transcript||'').trim() || (Array.isArray(latestAi.key_concerns) && latestAi.key_concerns.length))) return latestAi;
-                  const list = (Array.isArray(c.ai_results) ? c.ai_results : []).slice().sort((a,b)=>{
-                    const ta = a?.ts ? new Date(a.ts).getTime() : 0;
-                    const tb = b?.ts ? new Date(b.ts).getTime() : 0;
-                    return tb - ta;
-                  });
-                  return list.find(x => String(x?.summary||'').trim() || String(x?.transcript||'').trim() || (Array.isArray(x?.key_concerns) && x.key_concerns.length)) || null;
-                })();
-
-                // count of meetings (any signal)
-                const meetingCount = (Array.isArray(c.ai_results) ? c.ai_results : []).length;
-                const lineCount = (Array.isArray(c.lineHistory) ? c.lineHistory : []).length;
-                const familyCount = (Array.isArray(c.family) ? c.family : []).length + 1;
-                const lastContact = c.lastContactAt ? new Date(c.lastContactAt).toLocaleDateString('ja-JP') : null;
-
-                // Header: 最終議事録 サマリー (あれば)
-                let head = '';
-                if (useableAi) {
-                  const date = useableAi.ts ? new Date(useableAi.ts).toLocaleDateString('ja-JP') : '';
-                  const body = String(useableAi.summary || useableAi.transcript_summary || (Array.isArray(useableAi.key_concerns) ? useableAi.key_concerns.join('\n・') : '') || '').trim();
-                  head = `
-                  <div class="cd-card" style="border:1px solid #E2E8F0;border-radius:12px;padding:18px 20px;margin-bottom:14px;">
-                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
-                      <span style="font-size:14px;font-weight:900;color:#0F172A;">📝 最終 議事録</span>
-                      ${date ? `<span style="font-size:11.5px;color:#64748B;font-weight:600;">${escapeHtml(date)}</span>` : ''}
-                    </div>
-                    <div style="font-size:14px;line-height:1.7;color:#334155;white-space:pre-wrap;">${escapeHtml(body.slice(0, 600))}${body.length > 600 ? '…' : ''}</div>
-                    <div style="margin-top:10px;text-align:right;">
-                      <button type="button" class="cd-tab-jump" data-jump-tab="meetings" style="background:transparent;border:0;color:#5B5BF0;font-size:12px;font-weight:800;cursor:pointer;letter-spacing:0.02em;font-family:inherit;">📖 議事録タブ で 全文 を 見る →</button>
-                    </div>
-                  </div>`;
-                }
-
-                // Info-dense summary card (always shown, replaces the 「まだ議事録がありません」 error state)
-                const items = [
-                  { key:'meetings', label:'議事録', value: meetingCount, unit:'件', color:'#5B5BF0', jump:'meetings' },
-                  { key:'line', label:'LINE 履歴', value: lineCount, unit:'件', color:'#059669', jump:'line' },
-                  { key:'timeline', label:'イベント履歴', value: events.length, unit:'件', color:'#DC2626', jump:'timeline' },
-                  { key:'family', label:'家族構成', value: familyCount, unit:'名', color:'#F59E0B', jump:'family' },
-                ];
-                const stats = `
-                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:${useableAi ? '4' : '0'}px;">
-                  ${items.map(it => `
-                    <button type="button" class="cd-tab-jump" data-jump-tab="${it.jump}" style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;padding:14px 16px;text-align:left;cursor:pointer;font-family:inherit;transition:border-color .12s,box-shadow .15s,transform .12s;">
-                      <div style="font-size:10.5px;font-weight:800;color:#64748B;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;">${escapeHtml(it.label)}</div>
-                      <div style="display:flex;align-items:baseline;gap:4px;">
-                        <span style="font-family:'Manrope','Inter',sans-serif;font-size:26px;font-weight:900;color:${it.color};letter-spacing:-0.02em;line-height:1;">${it.value}</span>
-                        <span style="font-size:11px;font-weight:700;color:#94A3B8;">${it.unit}</span>
-                      </div>
-                    </button>
-                  `).join('')}
-                </div>`;
-
-                // Empty hint (only if no meeting summary AND all counts 0)
-                const hint = (!useableAi && meetingCount === 0 && lineCount === 0 && events.length === 0)
-                  ? `<div style="margin-top:14px;padding:14px 16px;background:#F8FAFC;border:1px dashed #CBD5E1;border-radius:10px;font-size:12.5px;color:#64748B;line-height:1.7;">
-                       <strong style="color:#334155;">はじめて の 客 です。</strong> LINE 追加 / Zoom 予約 / 対面録音 で 履歴 が 溜まって いきます。
-                     </div>`
-                  : '';
-
-                return head + stats + hint;
-              })()}
-            </div>
+            <!-- OVERVIEW (2026-08-01 v3: owner C1 pick 完全反映 — 旧 summary + 4tile 撤去、 C1 unified timeline stream だけ に。
+                 詳細 議事録 は 議事録 tab で drill、 LINE は LINE tab で drill、 の 分業 に 明確化) -->
+            <div class="cd-tabpanel" data-cdpanel="overview"></div>
 
             <!-- LINE HISTORY (統合タイムライン v 20260610J) -->
             ${(function(){

@@ -12101,26 +12101,43 @@ section > div[data-line-view] > div[style*="background: #fff"] {
  *   - close ✕ 黒 に、 background 濃い 灰 で contrast 確保 */
 .fp-sheet {
   position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
   background: #fff;
-  border-top-left-radius: 20px;
-  border-top-right-radius: 20px;
-  box-shadow: 0 -20px 50px rgba(15, 23, 41, 0.22);
+  border-radius: 16px;
+  box-shadow: 0 24px 60px rgba(15, 23, 41, 0.28);
   z-index: 10501;
-  max-width: 480px;
-  margin: 0 auto;
-  animation: fp-sheet-up 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+  width: min(480px, 92vw);
+  animation: fp-sheet-pop 0.22s cubic-bezier(0.16, 1, 0.3, 1);
   overflow: hidden;
   max-height: 82vh;
   display: flex;
   flex-direction: column;
 }
 .fp-sheet[hidden] { display: none; }
-@keyframes fp-sheet-up {
-  from { transform: translateY(100%); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+@keyframes fp-sheet-pop {
+  from { transform: translate(-50%, -48%) scale(0.96); opacity: 0; }
+  to { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+}
+/* 2026-08-01: mobile では bottom sheet に 復帰 (owner の 「意味わかんない場所」 fix — desktop は centered dialog) */
+@media (max-width: 767px) {
+  .fp-sheet {
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    transform: none;
+    width: 100%;
+    max-width: 480px;
+    margin: 0 auto;
+    border-radius: 20px 20px 0 0;
+    animation: fp-sheet-up 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  @keyframes fp-sheet-up {
+    from { transform: translateY(100%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
 }
 .fp-sheet-head {
   display: grid;
