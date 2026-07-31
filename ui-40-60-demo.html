@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FP Compass · 40-60代 UI デモ v2 (実データ 相当)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800;900&family=Noto+Sans+JP:wght@400;500;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F5F7FA;
+    --surface: #FFFFFF;
+    --surface-2: #F1F5F9;
+    --ink: #0F1729;
+    --ink-2: #1F2937;
+    --ink-3: #4B5563;
+    --dim: #6B7280;
+    --rule: #D1D5DB;
+    --rule-2: #9CA3AF;
+    --primary: #00844A;
+    --primary-hi: #0E9A5A;
+    --primary-soft: #ECFDF5;
+    --primary-line: rgba(0,132,74,0.22);
+    --primary-dark: #065F46;
+    --danger: #B91C1C;
+    --warn: #B45309;
+    --warn-bg: #FEF3C7;
+    --info-bg: #DBEAFE;
+    --info: #1E40AF;
+    --line-green: #06C755;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink-2); font-family: 'Noto Sans JP', -apple-system, sans-serif; font-size: 17px; line-height: 1.7; font-weight: 500; letter-spacing: -0.005em; -webkit-font-smoothing: antialiased; min-height: 100vh; }
+
+  .demo-banner { background: var(--ink); color: #fff; padding: 10px 24px; text-align: center; font-family: 'Manrope', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; }
+  .demo-banner span { background: rgba(255,255,255,0.14); padding: 3px 10px; border-radius: 999px; margin-left: 10px; }
+
+  .topnav { background: #fff; border-bottom: 2px solid var(--rule); padding: 14px 24px; display: flex; align-items: center; gap: 16px; position: sticky; top: 0; z-index: 100; }
+  .topnav-back { background: var(--surface-2); border: none; padding: 10px 18px; border-radius: 8px; font-size: 16px; font-weight: 800; color: var(--ink-2); cursor: pointer; font-family: inherit; min-height: 48px; display: inline-flex; align-items: center; gap: 6px; }
+  .topnav-back:hover { background: var(--rule); }
+  .topnav-back svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+  .topnav-title { font-size: 20px; font-weight: 900; color: var(--ink); letter-spacing: -0.01em; }
+  .topnav-spacer { flex: 1; }
+  .topnav-home-btn { background: transparent; border: 2px solid var(--rule); padding: 8px 14px; border-radius: 8px; font-size: 15px; font-weight: 800; color: var(--ink-2); cursor: pointer; font-family: inherit; min-height: 44px; }
+  .topnav-home-btn:hover { background: var(--surface-2); }
+  .topnav-user { display: flex; align-items: center; gap: 10px; font-size: 15px; color: var(--ink-3); font-weight: 700; }
+  .topnav-user-avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; font-family: 'Manrope', sans-serif; font-weight: 800; font-size: 15px; }
+
+  main { max-width: 1200px; margin: 0 auto; padding: 32px 24px; }
+  .screen { display: none; }
+  .screen.active { display: block; animation: fadeIn .18s ease-out; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+  /* ===== HOME ===== */
+  .home-greet { text-align: center; margin: 20px 0 32px; }
+  .home-greet-date { font-size: 15px; color: var(--dim); font-weight: 700; margin-bottom: 8px; letter-spacing: 0.02em; }
+  .home-greet-title { font-size: 30px; font-weight: 900; color: var(--ink); letter-spacing: -0.015em; line-height: 1.35; }
+  .home-alert { max-width: 800px; margin: 0 auto 24px; background: #FEF3C7; border: 2px solid #F59E0B; border-radius: 12px; padding: 16px 22px; display: flex; align-items: center; gap: 14px; }
+  .home-alert-icon { width: 44px; height: 44px; border-radius: 50%; background: #F59E0B; color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-family: 'Manrope', sans-serif; font-size: 22px; font-weight: 900; }
+  .home-alert-txt { flex: 1; font-size: 15px; color: #78350F; font-weight: 700; }
+  .home-alert-txt b { color: #7C2D12; }
+  .home-alert-btn { background: #B45309; color: #fff; border: none; padding: 10px 16px; border-radius: 8px; font-size: 14px; font-weight: 800; cursor: pointer; font-family: inherit; }
+  .home-3btn { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-bottom: 28px; }
+  .home-btn { background: #fff; border: 3px solid var(--rule); border-radius: 16px; padding: 30px 22px; text-align: center; cursor: pointer; transition: all .15s; min-height: 240px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; font-family: inherit; color: inherit; }
+  .home-btn:hover, .home-btn:focus { border-color: var(--primary); background: var(--primary-soft); box-shadow: 0 10px 30px rgba(0,132,74,0.18); outline: none; transform: translateY(-2px); }
+  .home-btn-icon { width: 72px; height: 72px; border-radius: 50%; background: var(--primary-soft); color: var(--primary); display: flex; align-items: center; justify-content: center; }
+  .home-btn-icon svg { width: 36px; height: 36px; stroke: currentColor; fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+  .home-btn-title { font-size: 22px; font-weight: 900; color: var(--ink); letter-spacing: -0.01em; }
+  .home-btn-badge { background: var(--primary); color: #fff; padding: 3px 12px; border-radius: 999px; font-size: 13px; font-weight: 800; }
+  .home-btn-sub { font-size: 14px; color: var(--ink-3); font-weight: 600; line-height: 1.6; }
+  .home-quick { padding-top: 22px; border-top: 2px solid var(--rule); }
+  .home-quick-title { font-size: 13px; color: var(--dim); font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; font-family: 'Manrope', sans-serif; margin-bottom: 14px; text-align: center; }
+  .home-quick-links { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .home-quick-link { padding: 12px 22px; background: var(--surface-2); color: var(--ink-2); border-radius: 999px; font-size: 15px; font-weight: 700; text-decoration: none; cursor: pointer; border: 2px solid transparent; min-height: 48px; display: inline-flex; align-items: center; font-family: inherit; }
+  .home-quick-link:hover { background: #fff; border-color: var(--ink); color: var(--ink); }
+
+  /* ===== TODAY ===== */
+  .today-hero { background: linear-gradient(135deg, #0F1729 0%, #1F2A44 100%); color: #fff; border-radius: 14px; padding: 26px 30px; margin-bottom: 24px; }
+  .today-hero-kicker { font-size: 14px; color: rgba(255,255,255,0.72); font-weight: 700; margin-bottom: 6px; }
+  .today-hero-title { font-size: 26px; font-weight: 900; letter-spacing: -0.01em; }
+  .today-hero-title b { color: #FEF08A; }
+  .today-section-label { font-size: 13px; color: var(--dim); font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; font-family: 'Manrope', sans-serif; margin: 24px 0 12px; padding-top: 20px; border-top: 1px solid var(--rule); }
+  .today-section-label:first-of-type { border-top: none; padding-top: 0; margin-top: 0; }
+  .today-item { background: #fff; border: 2px solid var(--rule); border-radius: 12px; padding: 20px 22px; margin-bottom: 12px; display: flex; align-items: center; gap: 18px; cursor: pointer; }
+  .today-item:hover { border-color: var(--primary); }
+  .today-time { background: var(--primary); color: #fff; padding: 10px 14px; border-radius: 8px; font-family: 'JetBrains Mono', monospace; font-size: 17px; font-weight: 800; flex-shrink: 0; min-width: 82px; text-align: center; }
+  .today-body { flex: 1; min-width: 0; }
+  .today-name { font-size: 19px; font-weight: 800; color: var(--ink); }
+  .today-sub { font-size: 14px; color: var(--ink-3); font-weight: 600; margin-top: 3px; }
+  .today-tag { background: var(--primary-soft); color: var(--primary-dark); padding: 4px 12px; border-radius: 6px; font-size: 13px; font-weight: 800; }
+  .today-tag.in-person { background: #FEF3C7; color: #78350F; }
+  .today-btn { background: var(--primary); color: #fff; border: none; padding: 14px 22px; border-radius: 8px; font-size: 16px; font-weight: 800; cursor: pointer; font-family: inherit; min-height: 52px; white-space: nowrap; }
+  .today-btn:hover { background: var(--primary-hi); }
+  .today-followup { background: #fff; border: 2px solid var(--rule); border-radius: 12px; padding: 18px 22px; margin-bottom: 10px; display: flex; align-items: center; gap: 16px; cursor: pointer; }
+  .today-followup:hover { border-color: var(--primary); }
+  .today-followup-icon { width: 44px; height: 44px; border-radius: 50%; background: var(--warn-bg); color: var(--warn); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-family: 'Manrope', sans-serif; font-weight: 900; font-size: 20px; }
+  .today-followup-body { flex: 1; }
+  .today-followup-name { font-size: 17px; font-weight: 800; color: var(--ink); }
+  .today-followup-reason { font-size: 14px; color: var(--dim); font-weight: 600; margin-top: 2px; }
+  .today-followup-btn { background: #fff; color: var(--primary-dark); border: 2px solid var(--primary); padding: 12px 20px; border-radius: 8px; font-size: 15px; font-weight: 800; cursor: pointer; font-family: inherit; min-height: 48px; white-space: nowrap; }
+
+  /* ===== LEDGER ===== */
+  .ledger-search-row { display: flex; gap: 14px; margin-bottom: 16px; align-items: center; }
+  .ledger-search { flex: 1; padding: 16px 22px; border: 2px solid var(--rule); border-radius: 10px; font-size: 17px; font-family: inherit; }
+  .ledger-search:focus { outline: 3px solid var(--primary-soft); border-color: var(--primary); }
+  .ledger-add { background: var(--primary); color: #fff; border: none; padding: 16px 28px; border-radius: 10px; font-size: 17px; font-weight: 800; cursor: pointer; font-family: inherit; min-height: 60px; white-space: nowrap; }
+  .ledger-add:hover { background: var(--primary-hi); }
+  .ledger-filters { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .ledger-filter { background: #fff; border: 2px solid var(--rule); padding: 10px 16px; border-radius: 8px; font-size: 14px; font-weight: 700; color: var(--ink-2); cursor: pointer; font-family: inherit; }
+  .ledger-filter.active { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .ledger-meta { font-size: 14px; color: var(--dim); font-weight: 600; margin-bottom: 12px; }
+  .ledger { border: 2px solid var(--ink); border-radius: 12px; overflow: hidden; background: #fff; }
+  .ledger-head { background: var(--ink); color: #fff; display: grid; grid-template-columns: 2.4fr 1fr 1.3fr 1fr 1.2fr 1.3fr auto; padding: 16px 22px; font-size: 14px; font-weight: 800; letter-spacing: 0.02em; gap: 14px; }
+  .ledger-row { display: grid; grid-template-columns: 2.4fr 1fr 1.3fr 1fr 1.2fr 1.3fr auto; padding: 18px 22px; font-size: 16px; align-items: center; border-bottom: 1px solid var(--rule); gap: 14px; cursor: pointer; background: #fff; font-family: inherit; text-align: left; border-left: none; border-right: none; border-top: none; width: 100%; color: var(--ink-2); }
+  .ledger-row:hover { background: #FBFBFD; }
+  .ledger-row:last-child { border-bottom: none; }
+  .ledger-row-name { font-weight: 800; color: var(--ink); font-size: 18px; }
+  .ledger-row-name-sub { display: block; font-size: 13px; color: var(--dim); font-weight: 500; margin-top: 2px; }
+  .ledger-row-status { display: inline-flex; padding: 5px 12px; border-radius: 6px; font-size: 13px; font-weight: 800; }
+  .ledger-row-status.new { background: var(--info-bg); color: var(--info); }
+  .ledger-row-status.active { background: var(--primary-soft); color: var(--primary-dark); }
+  .ledger-row-status.follow { background: #FED7AA; color: #9A3412; }
+  .ledger-row-status.overdue { background: #FEE2E2; color: #991B1B; }
+  .ledger-row-btn { background: var(--primary); color: #fff; border: none; padding: 12px 18px; border-radius: 8px; font-size: 15px; font-weight: 800; cursor: pointer; font-family: inherit; min-height: 46px; }
+
+  /* ===== REGISTER FORM ===== */
+  .form-card { background: #fff; border: 2px solid var(--rule); border-radius: 14px; padding: 32px 34px; max-width: 720px; margin: 0 auto; }
+  .form-title { font-size: 24px; font-weight: 900; color: var(--ink); margin: 0 0 8px; letter-spacing: -0.015em; }
+  .form-desc { font-size: 15px; color: var(--ink-3); margin: 0 0 24px; line-height: 1.7; }
+  .form-row { margin-bottom: 20px; }
+  .form-row-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+  .form-label { display: block; font-size: 16px; font-weight: 800; color: var(--ink); margin-bottom: 8px; }
+  .form-req { color: var(--danger); margin-left: 4px; }
+  .form-hint { display: block; font-size: 14px; color: var(--dim); font-weight: 500; margin-top: 4px; }
+  .form-input, .form-select { width: 100%; padding: 16px 18px; border: 2px solid var(--rule); border-radius: 10px; font-size: 17px; font-family: inherit; }
+  .form-input:focus, .form-select:focus { outline: 3px solid var(--primary-soft); border-color: var(--primary); }
+  .form-actions { display: flex; gap: 12px; margin-top: 28px; }
+  .form-btn-primary { flex: 1; background: var(--primary); color: #fff; border: none; padding: 16px; border-radius: 10px; font-size: 17px; font-weight: 800; cursor: pointer; font-family: inherit; min-height: 60px; }
+  .form-btn-primary:hover { background: var(--primary-hi); }
+  .form-btn-ghost { background: #fff; color: var(--ink-2); border: 2px solid var(--rule); padding: 16px 22px; border-radius: 10px; font-size: 17px; font-weight: 800; cursor: pointer; font-family: inherit; min-height: 60px; }
+
+  /* ===== MEET START ===== */
+  .meet-cust-picker { background: #fff; border: 2px solid var(--rule); border-radius: 12px; padding: 20px 24px; margin-bottom: 20px; }
+  .meet-cust-label { font-size: 15px; font-weight: 800; color: var(--ink); margin-bottom: 10px; display: block; }
+  .meet-cust-select { width: 100%; padding: 14px 18px; border: 2px solid var(--rule); border-radius: 10px; font-size: 17px; font-family: inherit; background: #fff; }
+  .meet-picker { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .meet-opt { background: #fff; border: 2px solid var(--rule); border-radius: 14px; padding: 26px 24px; cursor: pointer; transition: all .15s; text-align: left; font-family: inherit; color: inherit; position: relative; }
+  .meet-opt:hover, .meet-opt:focus { border-color: var(--primary); background: var(--primary-soft); outline: none; }
+  .meet-opt.recommended { border-color: var(--primary); }
+  .meet-opt-kicker { display: inline-block; background: var(--primary); color: #fff; padding: 3px 10px; border-radius: 5px; font-family: 'Manrope', sans-serif; font-size: 11px; font-weight: 800; letter-spacing: 0.1em; margin-bottom: 10px; }
+  .meet-opt-icon-wrap { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
+  .meet-opt-icon { width: 52px; height: 52px; border-radius: 12px; background: var(--primary-soft); color: var(--primary); display: flex; align-items: center; justify-content: center; }
+  .meet-opt-icon svg { width: 28px; height: 28px; stroke: currentColor; fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+  .meet-opt-title { font-size: 19px; font-weight: 900; color: var(--ink); line-height: 1.3; }
+  .meet-opt-desc { font-size: 15px; color: var(--ink-3); font-weight: 600; line-height: 1.65; }
+
+  /* ===== CUSTOMER DETAIL ===== */
+  .cd-wrap { background: #fff; border: 2px solid var(--rule); border-radius: 14px; overflow: hidden; }
+  .cd-header { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); color: #fff; padding: 26px 32px; display: flex; align-items: center; gap: 20px; }
+  .cd-avatar { width: 72px; height: 72px; border-radius: 50%; background: rgba(255,255,255,0.22); color: #fff; display: flex; align-items: center; justify-content: center; font-family: 'Manrope', sans-serif; font-weight: 900; font-size: 30px; flex-shrink: 0; }
+  .cd-header-body { flex: 1; }
+  .cd-name { font-size: 26px; font-weight: 900; letter-spacing: -0.015em; }
+  .cd-name-sub { font-size: 14px; color: rgba(255,255,255,0.85); font-weight: 600; margin-top: 4px; }
+  .cd-header-status { display: inline-block; padding: 5px 12px; border-radius: 6px; font-size: 13px; font-weight: 800; margin-top: 10px; background: rgba(255,255,255,0.22); color: #fff; }
+  .cd-quick-actions { display: flex; gap: 10px; flex-shrink: 0; }
+  .cd-quick-btn { background: rgba(255,255,255,0.16); color: #fff; border: 1.5px solid rgba(255,255,255,0.3); padding: 12px 18px; border-radius: 8px; font-size: 15px; font-weight: 800; cursor: pointer; font-family: inherit; min-height: 50px; }
+  .cd-quick-btn:hover { background: rgba(255,255,255,0.28); }
+  .cd-quick-btn.primary { background: #fff; color: var(--primary-dark); border-color: #fff; }
+
+  .cd-tabs { display: flex; gap: 4px; background: var(--surface-2); border-bottom: 2px solid var(--rule); padding: 0 20px; overflow-x: auto; }
+  .cd-tab { background: transparent; border: none; padding: 18px 22px; font-size: 16px; font-weight: 800; color: var(--ink-3); cursor: pointer; font-family: inherit; border-bottom: 3px solid transparent; margin-bottom: -2px; white-space: nowrap; }
+  .cd-tab:hover { color: var(--ink); }
+  .cd-tab.active { color: var(--primary-dark); border-bottom-color: var(--primary); background: #fff; }
+  .cd-tab-count { display: inline-block; background: var(--surface-2); color: var(--ink-3); padding: 2px 8px; border-radius: 999px; font-size: 12px; margin-left: 4px; font-family: 'JetBrains Mono', monospace; }
+  .cd-tab.active .cd-tab-count { background: var(--primary); color: #fff; }
+  .cd-panels { padding: 28px 32px; }
+  .cd-panel { display: none; }
+  .cd-panel.active { display: block; }
+
+  /* Profile panel */
+  .cd-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px 32px; }
+  .cd-info-item { display: block; }
+  .cd-info-dt { font-size: 13px; color: var(--dim); font-weight: 700; margin-bottom: 4px; letter-spacing: 0.02em; }
+  .cd-info-dd { font-size: 18px; color: var(--ink); font-weight: 700; margin: 0; }
+
+  /* Meeting history */
+  .memo-card { background: #fff; border: 2px solid var(--rule); border-radius: 12px; padding: 22px 24px; margin-bottom: 14px; }
+  .memo-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+  .memo-badge { background: var(--primary); color: #fff; padding: 4px 12px; border-radius: 6px; font-family: 'Manrope', sans-serif; font-size: 11px; font-weight: 800; letter-spacing: 0.08em; }
+  .memo-date { font-family: 'JetBrains Mono', monospace; font-size: 14px; color: var(--dim); font-weight: 600; }
+  .memo-title { font-size: 19px; font-weight: 900; color: var(--ink); margin: 0 0 12px; letter-spacing: -0.01em; }
+  .memo-section { background: var(--surface-2); border-radius: 8px; padding: 14px 18px; margin-bottom: 10px; }
+  .memo-section-title { font-size: 14px; font-weight: 800; color: var(--primary-dark); margin-bottom: 6px; }
+  .memo-section-body { font-size: 15px; color: var(--ink-2); line-height: 1.75; white-space: pre-wrap; font-weight: 500; }
+
+  /* LINE history */
+  .line-log { max-height: 500px; overflow-y: auto; padding-right: 8px; }
+  .line-msg { display: flex; margin-bottom: 12px; gap: 10px; }
+  .line-msg.out { justify-content: flex-end; }
+  .line-msg-bubble { max-width: 70%; padding: 12px 16px; border-radius: 14px; font-size: 15px; line-height: 1.6; }
+  .line-msg.in .line-msg-bubble { background: #fff; border: 1.5px solid var(--rule); color: var(--ink); border-top-left-radius: 4px; }
+  .line-msg.out .line-msg-bubble { background: var(--line-green); color: #fff; border-top-right-radius: 4px; }
+  .line-msg-time { font-size: 12px; color: var(--dim); align-self: flex-end; font-family: 'JetBrains Mono', monospace; }
+
+  /* Life events */
+  .life-tl { border-left: 3px solid var(--primary); padding-left: 22px; margin-left: 12px; }
+  .life-item { position: relative; padding-bottom: 22px; }
+  .life-item::before { content: ''; position: absolute; left: -30px; top: 3px; width: 15px; height: 15px; border-radius: 50%; background: var(--primary); border: 3px solid #fff; box-shadow: 0 0 0 2px var(--primary); }
+  .life-year { font-family: 'JetBrains Mono', monospace; font-size: 14px; color: var(--primary-dark); font-weight: 800; }
+  .life-title { font-size: 17px; font-weight: 800; color: var(--ink); margin-top: 3px; }
+  .life-desc { font-size: 14px; color: var(--ink-3); margin-top: 3px; }
+
+  /* Danger zone */
+  .cd-danger { padding: 24px 0 0; border-top: 1px solid var(--rule); margin-top: 24px; }
+  .cd-danger-title { font-family: 'Manrope', sans-serif; font-size: 12px; letter-spacing: 0.16em; font-weight: 800; color: var(--dim); text-transform: uppercase; margin-bottom: 10px; }
+  .cd-delete { background: #fff; color: var(--danger); border: 2px solid #FCA5A5; padding: 14px 22px; border-radius: 10px; font-size: 16px; font-weight: 800; cursor: pointer; font-family: inherit; min-height: 52px; display: inline-flex; align-items: center; gap: 8px; }
+  .cd-delete:hover { background: #FEF2F2; }
+  .cd-delete svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+
+  .toast { position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 14px 26px; border-radius: 10px; font-size: 16px; font-weight: 700; box-shadow: 0 10px 32px rgba(15,23,41,0.32); z-index: 1000; opacity: 0; transition: opacity .2s, transform .2s; pointer-events: none; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(-4px); }
+
+  @media (max-width: 900px) {
+    main { padding: 20px 16px; }
+    .home-3btn { grid-template-columns: 1fr; gap: 14px; }
+    .home-btn { min-height: 160px; padding: 24px 20px; }
+    .home-greet-title { font-size: 22px; }
+    .home-alert { flex-wrap: wrap; }
+    .home-alert-btn { width: 100%; margin-top: 6px; padding: 12px; font-size: 15px; }
+    .today-item { flex-wrap: wrap; padding: 16px 18px; }
+    .today-body { flex: 1 1 100%; order: 3; margin: 10px 0; }
+    .today-time { order: 1; }
+    .today-tag { order: 2; margin-left: auto; }
+    .today-btn { order: 4; width: 100%; }
+    .ledger-search-row { flex-direction: column; }
+    .ledger-search, .ledger-add { width: 100%; }
+    .ledger { border: none; }
+    .ledger-head { display: none; }
+    .ledger-row { display: block; padding: 18px 20px; background: #fff; border: 2px solid var(--rule); border-radius: 12px; margin-bottom: 12px; }
+    .ledger-row-name { font-size: 18px; margin-bottom: 8px; }
+    .ledger-row > div:not(:first-child):not(:last-child) { display: inline-block; margin-right: 12px; font-size: 15px; margin-top: 4px; }
+    .ledger-row-btn { display: block; width: 100%; margin-top: 10px; }
+    .meet-picker { grid-template-columns: 1fr; }
+    .form-row-grid { grid-template-columns: 1fr; }
+    .cd-header { flex-wrap: wrap; padding: 22px 24px; }
+    .cd-quick-actions { flex: 1 1 100%; margin-top: 10px; }
+    .cd-quick-btn { flex: 1; padding: 12px; font-size: 14px; }
+    .cd-info-grid { grid-template-columns: 1fr; gap: 14px; }
+    .cd-tabs { padding: 0 10px; }
+    .cd-tab { padding: 14px 14px; font-size: 15px; }
+    .cd-panels { padding: 22px 20px; }
+    .topnav-user { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="demo-banner">
+  FP COMPASS · UI プレビュー デモ <span>v2 実データ 相当 · CASE 04 + 01 統合</span>
+</div>
+
+<header class="topnav">
+  <button class="topnav-back" id="backBtn" style="display:none;">
+    <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+    <span>戻る</span>
+  </button>
+  <div class="topnav-title" id="screenTitle">FP Compass</div>
+  <div class="topnav-spacer"></div>
+  <button class="topnav-home-btn" id="homeBtn" style="display:none;">🏠 ホーム</button>
+  <div class="topnav-user">
+    <span>山田 先生</span>
+    <div class="topnav-user-avatar">山</div>
+  </div>
+</header>
+
+<main>
+
+  <!-- HOME -->
+  <section class="screen active" data-screen="home">
+    <div class="home-greet">
+      <div class="home-greet-date" id="homeDate">2026 年 7 月 31 日 (木)</div>
+      <div class="home-greet-title">山田 先生、 今 何 を しますか?</div>
+    </div>
+    <div class="home-alert">
+      <div class="home-alert-icon">!</div>
+      <div class="home-alert-txt"><b>2 名</b> の 客 が 3 ヶ月以上 未接触 です。 フォロー が 必要 かも しれません。</div>
+      <button class="home-alert-btn" data-goto="today">確認 する</button>
+    </div>
+    <div class="home-3btn">
+      <button class="home-btn" data-goto="today">
+        <div class="home-btn-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>
+        <div class="home-btn-title">今日 の 予定 を 見る</div>
+        <div class="home-btn-badge">今日 面談 3 件</div>
+      </button>
+      <button class="home-btn" data-goto="register">
+        <div class="home-btn-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a7 7 0 0 1 14 0v1"/><path d="M20 8v6M17 11h6"/></svg></div>
+        <div class="home-btn-title">新しい 客 を 登録</div>
+        <div class="home-btn-sub">名前 · 電話 で<br>1 分 で 完了</div>
+      </button>
+      <button class="home-btn" data-goto="meet">
+        <div class="home-btn-icon"><svg viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3M8 22h8"/></svg></div>
+        <div class="home-btn-title">面談 を 始める</div>
+        <div class="home-btn-sub">Zoom or 対面<br>議事録 は 自動 保存</div>
+      </button>
+    </div>
+    <div class="home-quick">
+      <div class="home-quick-title">その 他 の メニュー</div>
+      <div class="home-quick-links">
+        <button class="home-quick-link" data-goto="ledger">顧客 台帳 <span style="color:var(--dim);margin-left:4px;font-family:JetBrains Mono,monospace;font-size:13px;">32 名</span></button>
+        <button class="home-quick-link" data-goto="history">面談 履歴</button>
+        <button class="home-quick-link" data-goto="broadcast">LINE 配信</button>
+        <button class="home-quick-link" data-goto="settings">設定</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- TODAY -->
+  <section class="screen" data-screen="today">
+    <div class="today-hero">
+      <div class="today-hero-kicker">2026 年 7 月 31 日 (木)</div>
+      <div class="today-hero-title">今日 は <b>3 名</b> の 面談 が あります</div>
+    </div>
+    <div class="today-section-label">今日 の 面談</div>
+    <div id="todayList"></div>
+    <div class="today-section-label">フォロー が 必要 な 客 (3 ヶ月 以上 未接触)</div>
+    <div id="followList"></div>
+  </section>
+
+  <!-- REGISTER -->
+  <section class="screen" data-screen="register">
+    <div class="form-card">
+      <h2 class="form-title">新しい 客 の 登録</h2>
+      <p class="form-desc">お名前 と 電話番号 だけ で 登録 できます。 詳しい 情報 は 後 から カルテ で 追加。</p>
+      <div class="form-row-grid">
+        <div>
+          <label class="form-label" for="rname">お名前<span class="form-req">*</span></label>
+          <input class="form-input" id="rname" type="text" placeholder="例: 田中 太郎">
+        </div>
+        <div>
+          <label class="form-label" for="rkana">かな</label>
+          <input class="form-input" id="rkana" type="text" placeholder="例: タナカ タロウ">
+        </div>
+      </div>
+      <div class="form-row-grid">
+        <div>
+          <label class="form-label" for="rphone">電話番号<span class="form-req">*</span></label>
+          <input class="form-input" id="rphone" type="tel" placeholder="090-1234-5678">
+        </div>
+        <div>
+          <label class="form-label" for="rage">年齢</label>
+          <input class="form-input" id="rage" type="number" placeholder="例: 45">
+        </div>
+      </div>
+      <div class="form-row-grid">
+        <div>
+          <label class="form-label" for="rjob">ご職業</label>
+          <select class="form-select" id="rjob">
+            <option>会社員</option><option>自営業</option><option>公務員</option>
+            <option>年金 生活</option><option>専業主婦 (夫)</option><option>その他</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label" for="rfamily">ご家族</label>
+          <select class="form-select" id="rfamily">
+            <option>独身</option><option>既婚 (子 なし)</option>
+            <option>既婚 (子 1 人)</option><option>既婚 (子 2 人)</option><option>既婚 (子 3 人以上)</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <label class="form-label" for="rmemo">メモ (任意)</label>
+        <input class="form-input" id="rmemo" type="text" placeholder="紹介元、 相談 内容 の 概要 など">
+      </div>
+      <div class="form-actions">
+        <button class="form-btn-ghost" data-goto="home">キャンセル</button>
+        <button class="form-btn-primary" id="registerSave">この 内容 で 登録</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- MEET START -->
+  <section class="screen" data-screen="meet">
+    <div class="meet-cust-picker">
+      <label class="meet-cust-label" for="meetCust">どの お客様 と 面談 しますか?</label>
+      <select class="meet-cust-select" id="meetCust"></select>
+    </div>
+    <p style="font-size:16px;color:var(--ink-3);margin:0 0 14px;">どの 方法 で 面談 しますか?</p>
+    <div class="meet-picker">
+      <button class="meet-opt recommended" data-toast="Zoom 会議 を 発行 しました (デモ 動作)">
+        <div class="meet-opt-kicker">推奨</div>
+        <div class="meet-opt-icon-wrap">
+          <div class="meet-opt-icon"><svg viewBox="0 0 24 24"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="M22 8l-6 4 6 4z"/></svg></div>
+          <div class="meet-opt-title">今すぐ Zoom 面談</div>
+        </div>
+        <div class="meet-opt-desc">Zoom 会議 を 自動 発行 → 客 に LINE で URL 送信 → 録画 と 議事録 は 全 自動。</div>
+      </button>
+      <button class="meet-opt" data-toast="Zoom 予約 (デモ)">
+        <div class="meet-opt-icon-wrap">
+          <div class="meet-opt-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M12 14v4M10 16h4"/></svg></div>
+          <div class="meet-opt-title">Zoom を 予約</div>
+        </div>
+        <div class="meet-opt-desc">日時 を 指定 して Zoom 発行。 客 の LINE に 前日 リマインド 自動 送信。</div>
+      </button>
+      <button class="meet-opt" data-toast="対面 録音 開始 (デモ)">
+        <div class="meet-opt-icon-wrap">
+          <div class="meet-opt-icon"><svg viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3M8 22h8"/></svg></div>
+          <div class="meet-opt-title">対面 で 録音</div>
+        </div>
+        <div class="meet-opt-desc">PC マイク で 対面 面談 を 録音 → 議事録 自動 生成。 事務所 で 客 と 会う 時。</div>
+      </button>
+      <button class="meet-opt" data-toast="メモ 画面 (デモ)">
+        <div class="meet-opt-icon-wrap">
+          <div class="meet-opt-icon"><svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></div>
+          <div class="meet-opt-title">メモ だけ を 書く</div>
+        </div>
+        <div class="meet-opt-desc">電話 対応 や 短い 相談 の 時。 手入力 で 議事録 を 残す。 自動 生成 なし。</div>
+      </button>
+    </div>
+  </section>
+
+  <!-- LEDGER -->
+  <section class="screen" data-screen="ledger">
+    <div class="ledger-search-row">
+      <input class="ledger-search" placeholder="名前 · かな · 電話 で 検索" id="ledgerSearch">
+      <button class="ledger-add" data-goto="register">＋ 新しい 客 を 登録</button>
+    </div>
+    <div class="ledger-filters" id="ledgerFilters">
+      <button class="ledger-filter active" data-filter="all">全て</button>
+      <button class="ledger-filter" data-filter="new">新規</button>
+      <button class="ledger-filter" data-filter="active">活動中</button>
+      <button class="ledger-filter" data-filter="follow">要 フォロー</button>
+      <button class="ledger-filter" data-filter="overdue">3 ヶ月 未接触</button>
+    </div>
+    <div class="ledger-meta" id="ledgerMeta">全 15 名</div>
+    <div class="ledger">
+      <div class="ledger-head">
+        <div>お名前</div>
+        <div>年齢</div>
+        <div>ご職業</div>
+        <div>状態</div>
+        <div>最終 面談</div>
+        <div>管理 資産</div>
+        <div></div>
+      </div>
+      <div id="ledgerRows"></div>
+    </div>
+  </section>
+
+  <!-- CUSTOMER DETAIL -->
+  <section class="screen" data-screen="detail">
+    <div class="cd-wrap">
+      <div class="cd-header">
+        <div class="cd-avatar" id="cdAvatar">田</div>
+        <div class="cd-header-body">
+          <div class="cd-name" id="cdName">田中 太郎 様</div>
+          <div class="cd-name-sub" id="cdSub">タナカ タロウ · 090-1234-5678 · 42 歳</div>
+          <div class="cd-header-status" id="cdStatus">活動中</div>
+        </div>
+        <div class="cd-quick-actions">
+          <button class="cd-quick-btn primary" data-toast="面談 を 開始 (デモ)">🎙 面談</button>
+          <button class="cd-quick-btn" data-toast="編集 (デモ)">編集</button>
+          <button class="cd-quick-btn" data-toast="LINE (デモ)">LINE</button>
+        </div>
+      </div>
+      <div class="cd-tabs">
+        <button class="cd-tab active" data-tab="profile">プロフィール</button>
+        <button class="cd-tab" data-tab="memos">議事録 <span class="cd-tab-count" id="tab-memos-count">0</span></button>
+        <button class="cd-tab" data-tab="line">LINE 履歴 <span class="cd-tab-count" id="tab-line-count">0</span></button>
+        <button class="cd-tab" data-tab="life">ライフイベント</button>
+      </div>
+      <div class="cd-panels">
+        <div class="cd-panel active" data-panel="profile">
+          <dl class="cd-info-grid" id="cdInfoGrid"></dl>
+          <div class="cd-danger">
+            <div class="cd-danger-title">危険 操作</div>
+            <button class="cd-delete" id="cdDelete">
+              <svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M6 6l1 14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-14M10 11v6M14 11v6"/></svg>
+              <span id="cdDeleteLabel">この 客 を 削除</span>
+            </button>
+            <div style="font-size:14px;color:var(--dim);margin-top:8px;line-height:1.6;">全 情報 (面談履歴 · LINE · 資料) が 消えます。 元 に 戻せません。</div>
+          </div>
+        </div>
+        <div class="cd-panel" data-panel="memos"><div id="memosList"></div></div>
+        <div class="cd-panel" data-panel="line"><div class="line-log" id="lineLog"></div></div>
+        <div class="cd-panel" data-panel="life"><div class="life-tl" id="lifeTl"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Placeholders -->
+  <section class="screen" data-screen="history">
+    <div class="form-card"><h2 class="form-title">面談履歴 (全客)</h2><p class="form-desc">全 顧客 の 議事録 が 時系列 で 表示 されます (デモ 画面)。</p><button class="form-btn-primary" data-goto="home">ホーム に 戻る</button></div>
+  </section>
+  <section class="screen" data-screen="broadcast">
+    <div class="form-card"><h2 class="form-title">LINE 配信</h2><p class="form-desc">全 客 or セグメント 別 に LINE メッセージ を 一括 配信 (デモ 画面)。</p><button class="form-btn-primary" data-goto="home">ホーム に 戻る</button></div>
+  </section>
+  <section class="screen" data-screen="settings">
+    <div class="form-card"><h2 class="form-title">設定</h2><p class="form-desc">Zoom 連携 · LINE 連携 · アカウント (デモ 画面)。</p><button class="form-btn-primary" data-goto="home">ホーム に 戻る</button></div>
+  </section>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  // ==== 実データ 相当 (FP事務所 の 現実 相当 の 客 15 名) ====
+  const clients = [
+    { id:'c1', name:'田中 太郎', kana:'タナカ タロウ', phone:'090-1234-5678', age:42, job:'会社員', family:'既婚 (子 2 人)', status:'new', lastMeet:'2 日前', lastMeetDays:2, asset:'¥2,400 万', income:'¥520 万/年', concern:'教育 資金 と iDeCo の 使い分け', memoCount:1, lineCount:8, birthday:'1983/05/12' },
+    { id:'c2', name:'佐藤 花子', kana:'サトウ ハナコ', phone:'080-9876-5432', age:55, job:'自営業', family:'独身', status:'active', lastMeet:'1 週間前', lastMeetDays:7, asset:'¥1,860 万', income:'¥380 万/年', concern:'国民年金 だけ で 老後 が 不安', memoCount:4, lineCount:23, birthday:'1970/09/03' },
+    { id:'c3', name:'鈴木 一郎', kana:'スズキ イチロウ', phone:'090-5555-1111', age:68, job:'年金 生活', family:'既婚 (子 なし)', status:'follow', lastMeet:'3 週間前', lastMeetDays:21, asset:'¥5,120 万', income:'¥220 万/年', concern:'相続 と 資産 の 取り崩し 順番', memoCount:6, lineCount:15, birthday:'1957/11/28' },
+    { id:'c4', name:'高橋 恵美', kana:'タカハシ エミ', phone:'080-3333-2222', age:48, job:'公務員', family:'既婚 (子 1 人)', status:'active', lastMeet:'昨日', lastMeetDays:1, asset:'¥3,200 万', income:'¥620 万/年', concern:'夫 の 定年後 の 生活 設計', memoCount:3, lineCount:12, birthday:'1977/04/17' },
+    { id:'c5', name:'中村 健', kana:'ナカムラ ケン', phone:'090-7777-8888', age:52, job:'会社員', family:'既婚 (子 3 人以上)', status:'active', lastMeet:'3 日前', lastMeetDays:3, asset:'¥4,500 万', income:'¥780 万/年', concern:'住宅ローン 繰上 vs 積立', memoCount:5, lineCount:19, birthday:'1973/02/22' },
+    { id:'c6', name:'伊藤 美咲', kana:'イトウ ミサキ', phone:'080-4444-5555', age:38, job:'会社員', family:'既婚 (子 1 人)', status:'new', lastMeet:'5 日前', lastMeetDays:5, asset:'¥980 万', income:'¥450 万/年', concern:'共働き 家計 の 見直し', memoCount:1, lineCount:4, birthday:'1987/07/09' },
+    { id:'c7', name:'渡辺 順二', kana:'ワタナベ ジュンジ', phone:'090-2222-3333', age:60, job:'自営業', family:'既婚 (子 2 人)', status:'active', lastMeet:'2 週間前', lastMeetDays:14, asset:'¥7,800 万', income:'¥920 万/年', concern:'事業 承継 と 相続', memoCount:8, lineCount:31, birthday:'1965/12/03' },
+    { id:'c8', name:'山本 千夏', kana:'ヤマモト チナツ', phone:'080-6666-7777', age:45, job:'専業主婦 (夫)', family:'既婚 (子 2 人)', status:'active', lastMeet:'10 日前', lastMeetDays:10, asset:'¥1,540 万', income:'夫 ¥680 万/年', concern:'教育費 の 積立 と 保険 見直し', memoCount:2, lineCount:7, birthday:'1980/08/14' },
+    { id:'c9', name:'小林 秀樹', kana:'コバヤシ ヒデキ', phone:'090-8888-9999', age:35, job:'会社員', family:'既婚 (子 なし)', status:'new', lastMeet:'先週', lastMeetDays:6, asset:'¥620 万', income:'¥490 万/年', concern:'家 を 買うか 賃貸 か', memoCount:1, lineCount:3, birthday:'1990/03/21' },
+    { id:'c10', name:'加藤 光子', kana:'カトウ ミツコ', phone:'080-1111-2222', age:72, job:'年金 生活', family:'独身', status:'follow', lastMeet:'1 ヶ月前', lastMeetDays:32, asset:'¥3,650 万', income:'¥180 万/年', concern:'老後 の 生活費 と 医療費', memoCount:5, lineCount:11, birthday:'1953/06/07' },
+    { id:'c11', name:'吉田 大輔', kana:'ヨシダ ダイスケ', phone:'090-9090-8080', age:44, job:'会社員', family:'既婚 (子 2 人)', status:'overdue', lastMeet:'4 ヶ月前', lastMeetDays:120, asset:'¥2,900 万', income:'¥580 万/年', concern:'住宅ローン 繰上 検討中', memoCount:3, lineCount:18, birthday:'1981/10/14' },
+    { id:'c12', name:'松本 恭子', kana:'マツモト キョウコ', phone:'080-5555-6666', age:58, job:'公務員', family:'既婚 (子 なし)', status:'active', lastMeet:'2 週間前', lastMeetDays:14, asset:'¥5,400 万', income:'¥720 万/年', concern:'退職金 の 運用 方法', memoCount:4, lineCount:16, birthday:'1967/01/25' },
+    { id:'c13', name:'木村 健太', kana:'キムラ ケンタ', phone:'090-3030-4040', age:40, job:'自営業', family:'既婚 (子 1 人)', status:'active', lastMeet:'5 日前', lastMeetDays:5, asset:'¥1,720 万', income:'¥550 万/年', concern:'小規模 企業共済 の 加入 判断', memoCount:2, lineCount:9, birthday:'1985/11/11' },
+    { id:'c14', name:'林 由美', kana:'ハヤシ ユミ', phone:'080-7070-8080', age:50, job:'会社員', family:'既婚 (子 1 人)', status:'overdue', lastMeet:'5 ヶ月前', lastMeetDays:150, asset:'¥4,100 万', income:'¥610 万/年', concern:'投資信託 の 見直し', memoCount:4, lineCount:22, birthday:'1975/07/30' },
+    { id:'c15', name:'井上 賢治', kana:'イノウエ ケンジ', phone:'090-6060-7070', age:64, job:'年金 生活', family:'既婚 (子 3 人以上)', status:'active', lastMeet:'先週', lastMeetDays:6, asset:'¥6,200 万', income:'¥250 万/年', concern:'孫 への 生前 贈与', memoCount:7, lineCount:14, birthday:'1961/09/18' },
+  ];
+  const statusLabels = { new:'新規', active:'活動中', follow:'要 フォロー', overdue:'3 ヶ月 未接触' };
+
+  const today = [
+    { time:'10:00', client:clients[0], topic:'資産 運用 の ご相談', kind:'Zoom' },
+    { time:'13:30', client:clients[3], topic:'保険 見直し', kind:'対面' },
+    { time:'15:00', client:clients[2], topic:'相続 の ご相談', kind:'Zoom' },
+  ];
+  const followups = [clients[10], clients[13]]; // overdue
+
+  // Sample memos (per client)
+  const memosByClient = {
+    'c1': [{ date:'2026-07-29 10:00', title:'資産 運用 の 見直し', decision:'- iDeCo 掛金 を **月 2.3 万円** に 増額 決定\n- 新 NISA は 現行 の **月 5 万円** を 維持', concern:'教育 費 の 進路 変更 リスク (私立 進学 の 場合 +**300 万円**)', todo:'1. 教育費 の 具体 数値 を お客様 が 整理\n2. 積立 増額 後 の CF シミュレーション 作成' }],
+    'c2': [
+      { date:'2026-07-24 14:30', title:'国民年金 補完 の 提案', decision:'- 個人年金 保険 加入 決定 (**月 1.5 万円**)\n- iDeCo は **上限 6.8 万円** で 満額 拠出', concern:'健康 保険 の 保険料 増加 の 影響', todo:'1. 加入 手続き 書類 の 準備\n2. 3 ヶ月 後 の 家計 見直し' },
+      { date:'2026-06-15 11:00', title:'初回 相談', decision:'- 国民年金 が 主 で 老後 不安 と 判明\n- 現在 貯蓄 **¥1,860 万** の 内訳 確認', concern:'**該当なし**', todo:'1. 個人年金 の 商品 比較 資料 を 作成' },
+    ],
+    'c3': [{ date:'2026-07-10 15:00', title:'相続 準備 の 進捗', decision:'- 遺言書 の 下書き 完了\n- 長男 に **相続税 対策** の 生前 贈与 開始', concern:'配偶者 死亡 後 の 手続き 複雑さ', todo:'1. 税理士 紹介 (来月 まで)\n2. 生命保険 の 死亡 保険金 受取人 変更' }],
+    'c4': [{ date:'2026-07-30 13:00', title:'夫 の 定年 後 プラン', decision:'- 夫 65 歳 まで **再雇用** 想定\n- 退職金 **¥2,800 万** の 半分 を 一時金、 残り を 年金 化', concern:'健康 状態 で 再雇用 が 難しく なる リスク', todo:'1. 医療 保険 の 補償 内容 確認' }],
+    'c5': [{ date:'2026-07-28 09:00', title:'住宅ローン 繰上 vs 積立', decision:'- 金利 **0.4%** の 低さ から **繰上 は 保留**\n- 積立 を **月 5 → 8 万円** に 増額', concern:'教育資金 と 住宅ローン の 同時 負担', todo:'1. 教育費 シミュレーション の 3 プラン 提示' }],
+  };
+
+  // Sample LINE messages
+  const lineByClient = {
+    'c1': [
+      { dir:'in', time:'07/29 09:15', text:'田中です。 昨日 は ありがとう ございました!' },
+      { dir:'out', time:'07/29 09:22', text:'お疲れさま でした。 資料 を 明日 まで に 送り ます。' },
+      { dir:'in', time:'07/29 09:24', text:'よろしく お願いします 🙇' },
+    ],
+    'c2': [
+      { dir:'in', time:'07/24 15:30', text:'加入 手続き の 書類 が 届き ました' },
+      { dir:'out', time:'07/24 15:45', text:'ありがとう ございます。 記入 方法 の 動画 を 送り ます ね。' },
+      { dir:'in', time:'07/25 10:12', text:'書類 記入 完了 しました。 送り 返し ました。' },
+      { dir:'out', time:'07/25 10:35', text:'受け取り ました。 3 週間 で 加入 完了 します。' },
+    ],
+    'c3': [{ dir:'in', time:'07/10 16:00', text:'税理士 の 紹介 助かり ました' }, { dir:'out', time:'07/10 16:30', text:'来週 面談 予定 です。 資料 の 準備 お願い します。' }],
+  };
+
+  // Life events
+  const lifeByClient = {
+    'c1': [
+      { year:'2015', title:'結婚', desc:'配偶者 と 入籍' },
+      { year:'2017', title:'第 1 子 誕生', desc:'長男 · 現在 8 歳' },
+      { year:'2020', title:'マイホーム 購入', desc:'住宅ローン **3,200 万円** · 金利 **0.4%** 変動' },
+      { year:'2022', title:'第 2 子 誕生', desc:'長女 · 現在 3 歳' },
+      { year:'2026', title:'FP相談 開始', desc:'教育 資金 と 老後 資金 の 両立 を 相談' },
+    ],
+    'c2': [
+      { year:'2010', title:'独立 · 開業', desc:'個人事業主 として 独立 (デザイナー)' },
+      { year:'2018', title:'事業 拡大', desc:'年商 **¥800 万** 突破' },
+      { year:'2025', title:'国民年金 だけ で 不安 を 感じ 始める', desc:'50 代 に なって 老後 が 見えて きた' },
+      { year:'2026', title:'FP相談 開始', desc:'個人年金 と iDeCo の 併用 提案 受ける' },
+    ],
+    'c3': [
+      { year:'1980', title:'結婚', desc:'配偶者 と 入籍' },
+      { year:'2018', title:'会社 定年 退職', desc:'退職金 **¥2,400 万** 受給' },
+      { year:'2020', title:'年金 生活 開始', desc:'国民年金 + 厚生年金 で **月 18 万円**' },
+      { year:'2024', title:'相続 対策 開始', desc:'長男 に 生前 贈与 検討 開始' },
+      { year:'2026', title:'FP相談 継続', desc:'遺言書 · 相続税 対策 進捗 中' },
+    ],
+  };
+
+  // ===== nav =====
+  const screens = document.querySelectorAll('.screen');
+  const backBtn = document.getElementById('backBtn');
+  const homeBtnEl = document.getElementById('homeBtn');
+  const titleEl = document.getElementById('screenTitle');
+  const titleMap = { home:'FP Compass', today:'今日 の 予定', register:'新しい 客 の 登録', meet:'面談 の 始め方', ledger:'顧客 台帳', detail:'顧客 カルテ', history:'面談履歴', broadcast:'LINE 配信', settings:'設定' };
+  const history = ['home'];
+
+  function goto(name, opts) {
+    if (history[history.length - 1] !== name) history.push(name);
+    screens.forEach(s => s.classList.toggle('active', s.dataset.screen === name));
+    titleEl.textContent = titleMap[name] || name;
+    backBtn.style.display = history.length > 1 ? 'inline-flex' : 'none';
+    homeBtnEl.style.display = name !== 'home' ? 'inline-flex' : 'none';
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    if (opts?.ctx) renderContext(name, opts.ctx);
+  }
+  function back() {
+    history.pop();
+    const prev = history[history.length - 1] || 'home';
+    screens.forEach(s => s.classList.toggle('active', s.dataset.screen === prev));
+    titleEl.textContent = titleMap[prev];
+    backBtn.style.display = history.length > 1 ? 'inline-flex' : 'none';
+    homeBtnEl.style.display = prev !== 'home' ? 'inline-flex' : 'none';
+    window.scrollTo({top:0,behavior:'instant'});
+  }
+  function goHome() { history.length = 0; history.push('home'); goto('home'); }
+  backBtn.addEventListener('click', back);
+  homeBtnEl.addEventListener('click', goHome);
+
+  document.body.addEventListener('click', e => {
+    const t = e.target.closest('[data-goto]');
+    if (t) { goto(t.dataset.goto); return; }
+    const ts = e.target.closest('[data-toast]');
+    if (ts) { showToast(ts.dataset.toast); return; }
+  });
+
+  // ===== today =====
+  const todayList = document.getElementById('todayList');
+  todayList.innerHTML = today.map(t => `
+    <div class="today-item" data-cid="${t.client.id}">
+      <div class="today-time">${t.time}</div>
+      <div class="today-body">
+        <div class="today-name">${t.client.name} 様</div>
+        <div class="today-sub">${t.topic} · ${t.client.age} 歳 · ${t.client.job}</div>
+      </div>
+      <div class="today-tag${t.kind==='対面'?' in-person':''}">${t.kind}</div>
+      <button class="today-btn" data-toast="${t.client.name} 様 と 面談 を 開始 (デモ)">面談 を 開始</button>
+    </div>`).join('');
+  todayList.addEventListener('click', e => {
+    const it = e.target.closest('.today-item');
+    if (!it || e.target.closest('.today-btn')) return;
+    const c = clients.find(x => x.id === it.dataset.cid);
+    if (c) goto('detail', { ctx: c });
+  });
+  const followList = document.getElementById('followList');
+  followList.innerHTML = followups.map(c => `
+    <div class="today-followup" data-cid="${c.id}">
+      <div class="today-followup-icon">!</div>
+      <div class="today-followup-body">
+        <div class="today-followup-name">${c.name} 様</div>
+        <div class="today-followup-reason">最終 面談 ${c.lastMeet} · ${c.concern}</div>
+      </div>
+      <button class="today-followup-btn" data-toast="${c.name} 様 に LINE を 送信 (デモ)">LINE で 声がけ</button>
+    </div>`).join('');
+  followList.addEventListener('click', e => {
+    const it = e.target.closest('.today-followup');
+    if (!it || e.target.closest('.today-followup-btn')) return;
+    const c = clients.find(x => x.id === it.dataset.cid);
+    if (c) goto('detail', { ctx: c });
+  });
+
+  // ===== ledger =====
+  const ledgerRows = document.getElementById('ledgerRows');
+  const ledgerMeta = document.getElementById('ledgerMeta');
+  let currentFilter = 'all';
+  function renderLedger(text = '') {
+    const f = text.trim().toLowerCase();
+    const filtered = clients.filter(c => {
+      if (currentFilter !== 'all' && c.status !== currentFilter) return false;
+      if (!f) return true;
+      return c.name.toLowerCase().includes(f) || c.kana.toLowerCase().includes(f) || c.phone.includes(f) || c.job.includes(f);
+    });
+    ledgerMeta.textContent = `${filtered.length} 名 (全 ${clients.length} 名 中)`;
+    ledgerRows.innerHTML = filtered.map(c => `
+      <button class="ledger-row" data-cid="${c.id}">
+        <div class="ledger-row-name">${c.name} 様<span class="ledger-row-name-sub">${c.kana} · ${c.phone}</span></div>
+        <div>${c.age} 歳</div>
+        <div>${c.job}</div>
+        <div><span class="ledger-row-status ${c.status}">${statusLabels[c.status]}</span></div>
+        <div>${c.lastMeet}</div>
+        <div>${c.asset}</div>
+        <div><span class="ledger-row-btn">カルテ を 開く</span></div>
+      </button>`).join('');
+  }
+  renderLedger();
+  ledgerRows.addEventListener('click', e => {
+    const row = e.target.closest('.ledger-row');
+    if (!row) return;
+    const c = clients.find(x => x.id === row.dataset.cid);
+    if (c) goto('detail', { ctx: c });
+  });
+  document.getElementById('ledgerSearch').addEventListener('input', e => renderLedger(e.target.value));
+  document.getElementById('ledgerFilters').addEventListener('click', e => {
+    const b = e.target.closest('.ledger-filter');
+    if (!b) return;
+    document.querySelectorAll('.ledger-filter').forEach(x => x.classList.toggle('active', x === b));
+    currentFilter = b.dataset.filter;
+    renderLedger(document.getElementById('ledgerSearch').value);
+  });
+
+  // ===== meet cust picker =====
+  const meetCust = document.getElementById('meetCust');
+  meetCust.innerHTML = '<option value="">— お客様 を 選んで ください —</option>' +
+    clients.map(c => `<option value="${c.id}">${c.name} 様 (${c.age} 歳 · ${c.job})</option>`).join('');
+
+  // ===== detail =====
+  function renderContext(name, ctx) {
+    if (name !== 'detail') return;
+    document.getElementById('cdAvatar').textContent = ctx.name.charAt(0);
+    document.getElementById('cdName').textContent = ctx.name + ' 様';
+    document.getElementById('cdSub').textContent = `${ctx.kana} · ${ctx.phone} · ${ctx.age} 歳`;
+    document.getElementById('cdStatus').textContent = statusLabels[ctx.status];
+    document.getElementById('cdInfoGrid').innerHTML = `
+      <div class="cd-info-item"><div class="cd-info-dt">ご職業</div><div class="cd-info-dd">${ctx.job}</div></div>
+      <div class="cd-info-item"><div class="cd-info-dt">年齢</div><div class="cd-info-dd">${ctx.age} 歳</div></div>
+      <div class="cd-info-item"><div class="cd-info-dt">ご家族</div><div class="cd-info-dd">${ctx.family}</div></div>
+      <div class="cd-info-item"><div class="cd-info-dt">生年月日</div><div class="cd-info-dd">${ctx.birthday}</div></div>
+      <div class="cd-info-item"><div class="cd-info-dt">年収</div><div class="cd-info-dd">${ctx.income}</div></div>
+      <div class="cd-info-item"><div class="cd-info-dt">管理 資産</div><div class="cd-info-dd">${ctx.asset}</div></div>
+      <div class="cd-info-item" style="grid-column:1/-1;"><div class="cd-info-dt">相談 内容 の 要旨</div><div class="cd-info-dd" style="font-size:16px;font-weight:600;color:var(--ink-2);">${ctx.concern}</div></div>
+    `;
+    document.getElementById('tab-memos-count').textContent = ctx.memoCount;
+    document.getElementById('tab-line-count').textContent = ctx.lineCount;
+    document.getElementById('cdDeleteLabel').textContent = ctx.name + ' さん を 削除';
+    document.getElementById('cdDelete').onclick = () => {
+      if (confirm(ctx.name + ' さん を 削除 しますか? 全 情報 が 消えます。')) {
+        showToast(ctx.name + ' さん を 削除 しました (デモ)');
+        setTimeout(back, 800);
+      }
+    };
+    // memos
+    const memos = memosByClient[ctx.id] || [];
+    document.getElementById('memosList').innerHTML = memos.length ? memos.map(m => `
+      <div class="memo-card">
+        <div class="memo-head">
+          <span class="memo-badge">ZOOM 面談</span>
+          <span class="memo-date">${m.date}</span>
+        </div>
+        <div class="memo-title">${m.title}</div>
+        <div class="memo-section"><div class="memo-section-title">本日 の 決定 事項</div><div class="memo-section-body">${m.decision}</div></div>
+        <div class="memo-section"><div class="memo-section-title">懸念 事項</div><div class="memo-section-body">${m.concern}</div></div>
+        <div class="memo-section"><div class="memo-section-title">次回 まで の TODO</div><div class="memo-section-body">${m.todo}</div></div>
+      </div>`).join('') : '<div style="text-align:center;color:var(--dim);padding:40px;font-size:16px;">まだ 議事録 が ありません。 面談 を すると ここ に 自動 で 追加 されます。</div>';
+    // line
+    const line = lineByClient[ctx.id] || [];
+    document.getElementById('lineLog').innerHTML = line.length ? line.map(l => `
+      <div class="line-msg ${l.dir}">
+        ${l.dir === 'out' ? `<div class="line-msg-time">${l.time}</div>` : ''}
+        <div class="line-msg-bubble">${l.text}</div>
+        ${l.dir === 'in' ? `<div class="line-msg-time">${l.time}</div>` : ''}
+      </div>`).join('') : '<div style="text-align:center;color:var(--dim);padding:40px;font-size:16px;">LINE の やりとり が ありません。</div>';
+    // life
+    const life = lifeByClient[ctx.id] || [];
+    document.getElementById('lifeTl').innerHTML = life.length ? life.map(l => `
+      <div class="life-item">
+        <div class="life-year">${l.year}</div>
+        <div class="life-title">${l.title}</div>
+        <div class="life-desc">${l.desc}</div>
+      </div>`).join('') : '<div style="text-align:center;color:var(--dim);padding:40px;font-size:16px;">ライフイベント が 登録 されて いません。</div>';
+    // reset tab to profile
+    document.querySelectorAll('.cd-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === 'profile'));
+    document.querySelectorAll('.cd-panel').forEach(p => p.classList.toggle('active', p.dataset.panel === 'profile'));
+  }
+  // tab switching
+  document.querySelectorAll('.cd-tab').forEach(t => t.addEventListener('click', () => {
+    document.querySelectorAll('.cd-tab').forEach(x => x.classList.toggle('active', x === t));
+    document.querySelectorAll('.cd-panel').forEach(p => p.classList.toggle('active', p.dataset.panel === t.dataset.tab));
+  }));
+
+  // register save
+  document.getElementById('registerSave').addEventListener('click', () => {
+    const name = document.getElementById('rname').value.trim();
+    if (!name) { alert('お名前 を 入れて ください'); return; }
+    showToast(name + ' 様 を 登録 しました (デモ)');
+    ['rname','rkana','rphone','rage','rmemo'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    setTimeout(() => goto('ledger'), 800);
+  });
+
+  // toast
+  const toastEl = document.getElementById('toast');
+  let toastTimer;
+  function showToast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2400);
+  }
+
+  // today date
+  try {
+    const d = new Date();
+    const jday = ['日','月','火','水','木','金','土'][d.getDay()];
+    document.getElementById('homeDate').textContent = `${d.getFullYear()} 年 ${d.getMonth()+1} 月 ${d.getDate()} 日 (${jday})`;
+  } catch (_) {}
+</script>
+
+</body>
+</html>
