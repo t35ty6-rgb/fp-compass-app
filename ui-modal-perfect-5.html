@@ -100,6 +100,33 @@
     overflow: hidden;
     box-shadow: 0 6px 24px rgba(15,23,41,0.06);
   }
+  /* 明示 header: これ は 客カルテ 画面 の rebuild 案 */
+  .canvas-context {
+    background: var(--ink);
+    color: #fff;
+    padding: 12px 20px;
+    font-size: 12px;
+    display: flex; align-items: center; gap: 12px;
+    letter-spacing: 0.01em;
+  }
+  .canvas-context b { font-weight: 800; color: #fff; }
+  .canvas-context .cc-badge {
+    background: var(--emerald); color: #fff;
+    font-family: 'Manrope',monospace; font-size: 10.5px; font-weight: 900;
+    letter-spacing: 0.1em; padding: 3px 9px; border-radius: 4px;
+  }
+  .canvas-context .cc-note {
+    margin-left: auto; color: rgba(255,255,255,0.65); font-size: 11.5px;
+  }
+  /* 常時 表示 の Zoom shortcut (どの 案 でも 訪問者 が landmark 見つけられる) */
+  .zoom-landmark {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--emerald); color: #fff;
+    padding: 8px 14px; border-radius: 8px;
+    font-size: 13px; font-weight: 900;
+    border: none; cursor: pointer; font-family: inherit;
+    box-shadow: 0 3px 10px rgba(0,132,74,0.28);
+  }
 
   /* ============================================
    * 案 C1: タイムライン stream 型
@@ -507,7 +534,9 @@
       <span class="st-tag con">古い データ を 遡る 時 scroll 多め</span>
     </div>
 
-    <div class="canvas c1">
+    <div class="canvas">
+    <div class="canvas-context"><span class="cc-badge">C1</span><span>👤 <b>顧客カルテ 画面 (客モーダル)</b> — 田中太郎様 · タイムライン stream 型</span><span class="cc-note">現状 v20260731T の rebuild 案</span></div>
+    <div class="c1">
       <div class="c1-left">
         <div class="c1-profile">
           <div class="c1-avatar">田</div>
@@ -522,6 +551,7 @@
             <span class="c1-cta-sub">AI 下書き 済 · 2 日 未返信</span>
           </span>
         </button>
+        <button class="zoom-landmark" style="width:100%;justify-content:center;padding:12px 14px;">🎙 面談 を 開始 (Zoom · 電話)</button>
         <div class="c1-section">
           <div class="c1-section-label">状況</div>
           <div class="c1-stat"><span class="c1-stat-k">管理 資産</span><span class="c1-stat-v">¥850 万</span></div>
@@ -591,7 +621,9 @@
       <span class="st-tag con">LINE / 議事録 蓄積 少ない 客 は 引用 空</span>
     </div>
 
-    <div class="canvas c2">
+    <div class="canvas">
+    <div class="canvas-context"><span class="cc-badge">C2</span><span>👤 <b>顧客カルテ 画面 (客モーダル)</b> — 田中太郎様 · 物語 型</span><span class="cc-note">現状 v20260731T の rebuild 案</span></div>
+    <div class="c2">
       <div class="c2-left">
         <div class="c2-hero">
           <div class="c2-avatar">田</div>
@@ -601,6 +633,7 @@
             <span class="c2-badge">iDeCo 検討 中</span>
             <span class="c2-badge">教育 資金 相談</span>
           </div>
+          <button class="zoom-landmark" style="margin-top:14px;width:100%;justify-content:center;padding:12px 14px;">🎙 面談 を 開始 (Zoom · 電話)</button>
         </div>
         <div class="c2-family">
           <div class="c2-family-title">家族 構成</div>
@@ -662,6 +695,7 @@
         </div>
       </div>
     </div>
+    </div>
   </div>
 </div>
 
@@ -676,7 +710,9 @@
       <span class="st-tag con">AI 推奨 が 外す と ストレス</span>
     </div>
 
-    <div class="canvas c3">
+    <div class="canvas">
+    <div class="canvas-context"><span class="cc-badge">C3</span><span>👤 <b>顧客カルテ 画面 (客モーダル)</b> — 田中太郎様 · 一手 集中 型</span><span class="cc-note">現状 v20260731T の rebuild 案</span></div>
+    <div class="c3">
       <div class="c3-header">
         <div class="c3-client">
           <div class="c3-avatar">田</div>
@@ -685,7 +721,7 @@
             <div class="c3-client-meta">45 歳 · 会社員 (IT) · AUM ¥850 万 · 最終 2 日 前</div>
           </div>
         </div>
-        <div></div>
+        <div><button class="zoom-landmark">🎙 面談 を 開始</button></div>
         <div class="c3-shortcut">⌘K で 別 客 · <kbd>E</kbd> 実行 · <kbd>M</kbd> 面談</div>
       </div>
       <div class="c3-action-bar">
@@ -744,6 +780,7 @@
         </div>
       </div>
     </div>
+    </div>
   </div>
 </div>
 
@@ -758,7 +795,9 @@
       <span class="st-tag con">面談 履歴 少ない 客 で は 見せる もの が 少ない</span>
     </div>
 
-    <div class="canvas c4">
+    <div class="canvas">
+    <div class="canvas-context"><span class="cc-badge">C4</span><span>👤 <b>顧客カルテ 画面 (客モーダル)</b> — 田中太郎様 · 面談 中心 (直後 wizard) 型</span><span class="cc-note">現状 v20260731T の rebuild 案 · <button class="zoom-landmark" style="padding:5px 12px;font-size:11.5px;">🎙 新規 面談 を 開始</button></span></div>
+    <div class="c4">
       <div class="c4-progress">
         <div class="c4-step done"><span class="c4-step-dot">✓</span><div class="c4-step-label">面談 実施</div></div>
         <div class="c4-step done"><span class="c4-step-dot">✓</span><div class="c4-step-label">議事録 生成</div></div>
@@ -830,6 +869,7 @@
         </div>
       </div>
     </div>
+    </div>
   </div>
 </div>
 
@@ -844,7 +884,9 @@
       <span class="st-tag con">情報 多くて mobile 表示 難しい</span>
     </div>
 
-    <div class="canvas c5">
+    <div class="canvas">
+    <div class="canvas-context"><span class="cc-badge">C5</span><span>👤 <b>顧客カルテ 画面 (客モーダル)</b> — 田中太郎様 · ダッシュボード (BI 風) 型</span><span class="cc-note">現状 v20260731T の rebuild 案 · 「面談 開始」 は hero タイル 内</span></div>
+    <div class="c5">
       <div class="c5-grid">
 
         <div class="c5-tile c5-t-hero">
@@ -928,6 +970,7 @@
         </div>
 
       </div>
+    </div>
     </div>
   </div>
 </div>
