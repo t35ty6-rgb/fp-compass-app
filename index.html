@@ -712,7 +712,7 @@
 
 <!-- ==================== LINE トーク Hub (2026-08-01) ==================== -->
 <style>
-.lch-wrap { display: grid; grid-template-columns: 340px 1fr; height: calc(100vh - 60px); min-height: 640px; background: #fff; font-family: 'Noto Sans JP', -apple-system, sans-serif; color: #0F1729; position: relative; }
+.lch-wrap { display: grid; grid-template-columns: 340px minmax(0, 1fr); height: calc(100vh - 60px); min-height: 640px; background: #fff; font-family: 'Noto Sans JP', -apple-system, sans-serif; color: #0F1729; position: relative; max-width: 1600px; margin: 0 auto; border-left: 1px solid #EEF0F2; border-right: 1px solid #EEF0F2; }
 .lch-list-pane { border-right: 1px solid #E5E7EB; background: #F7F8FA; display: flex; flex-direction: column; min-width: 0; }
 .lch-list-head { padding: 14px 16px 12px; background: #fff; border-bottom: 1px solid #E5E7EB; }
 .lch-list-title { font-size: 17px; font-weight: 900; color: #0F1729; letter-spacing: -0.01em; margin: 0 0 10px; display: flex; align-items: center; gap: 8px; }
@@ -797,10 +797,10 @@
 .tab.tab-linechat span { color: #fff !important; }
 .tab.tab-linechat .nav-count { background: #fff !important; color: #DC2626 !important; }
 
-.lch-no-selection { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #fff; text-align: center; padding: 40px; }
-.lch-no-selection .lch-ns-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.85; }
-.lch-no-selection h3 { font-size: 18px; font-weight: 900; margin: 0 0 6px; }
-.lch-no-selection p { font-size: 13px; opacity: 0.9; max-width: 320px; line-height: 1.6; }
+.lch-no-selection { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #6B7280; text-align: center; padding: 40px; background: #fff; }
+.lch-no-selection .lch-ns-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.7; }
+.lch-no-selection h3 { font-size: 18px; font-weight: 900; margin: 0 0 6px; color: #0F1729; }
+.lch-no-selection p { font-size: 13px; max-width: 320px; line-height: 1.6; }
 </style>
 
 </head>
