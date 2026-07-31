@@ -1,0 +1,503 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>客モーダル 「初回接触」 flow — 案 4 (v20260731O)</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Noto Sans JP', -apple-system, sans-serif;
+    background: #f5f6f8;
+    color: #0F1729;
+    padding: 32px;
+    line-height: 1.7;
+  }
+  .wrap { max-width: 1300px; margin: 0 auto; }
+  h1 { font-size: 26px; font-weight: 900; letter-spacing: -0.02em; margin-bottom: 6px; }
+  .lead { color: #4B5563; font-size: 14.5px; font-weight: 500; margin-bottom: 24px; }
+
+  .diag {
+    background: #FEF2F2; border: 1px solid #FCA5A5;
+    border-radius: 14px; padding: 20px 24px; margin-bottom: 28px;
+  }
+  .diag h2 { font-size: 15px; font-weight: 900; color: #991B1B; margin-bottom: 8px; }
+  .diag p { font-size: 13.5px; color: #7F1D1D; font-weight: 500; line-height: 1.7; }
+
+  .plan {
+    background: #fff;
+    border-radius: 16px;
+    padding: 24px 28px 28px;
+    margin-bottom: 22px;
+    border: 1px solid #E5E7EB;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .plan-head {
+    display: flex; align-items: baseline; gap: 12px; margin-bottom: 6px;
+  }
+  .plan-badge {
+    display: inline-block;
+    background: #00844A; color: #fff;
+    font-family: 'Manrope', monospace;
+    font-size: 12px; font-weight: 900; letter-spacing: 0.14em;
+    padding: 4px 12px; border-radius: 999px;
+  }
+  .plan-title { font-size: 19px; font-weight: 900; letter-spacing: -0.01em; }
+  .plan-sub { color: #6B7280; font-size: 13px; font-weight: 500; margin-bottom: 18px; }
+  .plan-tag {
+    display: inline-block;
+    background: #F3F4F6; color: #374151;
+    font-size: 11px; font-weight: 700;
+    padding: 3px 10px; border-radius: 6px;
+    margin-right: 6px;
+  }
+  .plan-tag.pro { background: #ECFDF5; color: #065F46; }
+  .plan-tag.con { background: #FEE2E2; color: #991B1B; }
+
+  /* mock modal container (客モーダル 右パネル 想定) */
+  .mock {
+    background: #fff;
+    border: 1px solid #E5E7EB;
+    border-radius: 14px;
+    padding: 24px 26px;
+    margin-top: 14px;
+  }
+  .mock-eyebrow {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .mock-pill {
+    background: linear-gradient(135deg, #C19A3A, #A0822E);
+    color: #fff;
+    font-family: 'Manrope', monospace;
+    font-size: 10.5px; font-weight: 900;
+    letter-spacing: 0.12em;
+    padding: 4px 10px; border-radius: 999px;
+  }
+  .mock-pri {
+    background: #FEE2E2; color: #991B1B;
+    font-size: 11px; font-weight: 800;
+    padding: 3px 10px; border-radius: 999px;
+    letter-spacing: 0.06em;
+  }
+  .mock-title { font-size: 22px; font-weight: 900; color: #0F1729; letter-spacing: -0.01em; }
+  .mock-reason { font-size: 13px; color: #6B7280; font-weight: 500; margin-top: 4px; margin-bottom: 20px; }
+
+  /* ============ 案 1: One-primary + expanded methods ============ */
+  .a1-primary {
+    display: block; width: 100%;
+    background: linear-gradient(135deg, #00844A 0%, #065F46 100%);
+    color: #fff;
+    padding: 22px 26px;
+    border: none; border-radius: 14px;
+    font-size: 20px; font-weight: 900;
+    text-align: left; cursor: pointer;
+    box-shadow: 0 8px 20px rgba(0,132,74,0.25);
+    letter-spacing: -0.01em;
+    display: grid; grid-template-columns: auto 1fr auto; gap: 16px; align-items: center;
+  }
+  .a1-primary-icon {
+    width: 48px; height: 48px;
+    background: rgba(255,255,255,0.22);
+    border-radius: 12px;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 24px;
+  }
+  .a1-primary-arrow { font-size: 28px; opacity: 0.7; }
+  .a1-methods {
+    margin-top: 14px;
+    background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 12px;
+    padding: 12px;
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;
+  }
+  .a1-method {
+    background: #fff; border: 1px solid #E5E7EB; border-radius: 10px;
+    padding: 14px 12px;
+    cursor: pointer; text-align: center;
+    font-family: inherit;
+  }
+  .a1-method:hover { border-color: #00844A; background: #ECFDF5; }
+  .a1-method-icon { font-size: 22px; margin-bottom: 6px; display: block; }
+  .a1-method-label { font-size: 13.5px; font-weight: 800; color: #0F1729; }
+  .a1-method-sub { font-size: 11px; color: #6B7280; margin-top: 3px; }
+  .a1-secondary {
+    margin-top: 14px;
+    display: flex; gap: 8px; flex-wrap: wrap;
+  }
+  .a1-sec-btn {
+    background: #fff; border: 1px solid #E5E7EB; border-radius: 8px;
+    padding: 8px 14px; font-size: 12.5px; font-weight: 700; color: #374151;
+    cursor: pointer; font-family: inherit;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+
+  /* ============ 案 2: Vertical list (LSTEP風) ============ */
+  .a2-list { border: 1px solid #E5E7EB; border-radius: 12px; overflow: hidden; }
+  .a2-row {
+    display: grid; grid-template-columns: 40px 1fr auto;
+    gap: 14px; align-items: center;
+    padding: 16px 20px;
+    background: #fff;
+    border-bottom: 1px solid #E5E7EB;
+    cursor: pointer;
+    font-family: inherit; text-align: left; border-left: none; border-right: none; border-top: none;
+    width: 100%;
+  }
+  .a2-row:last-child { border-bottom: none; }
+  .a2-row:hover { background: #F9FAFB; }
+  .a2-row-featured { background: linear-gradient(90deg, #FEF3C7 0%, #fff 100%); }
+  .a2-row-featured:hover { background: linear-gradient(90deg, #FDE68A 0%, #fff 100%); }
+  .a2-icon { font-size: 22px; text-align: center; }
+  .a2-body-label { font-size: 15.5px; font-weight: 800; color: #0F1729; }
+  .a2-body-sub { font-size: 12.5px; color: #6B7280; margin-top: 2px; }
+  .a2-arrow { color: #9CA3AF; font-size: 22px; font-weight: 300; }
+
+  /* ============ 案 3: 2-column split ============ */
+  .a3-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 14px; }
+  .a3-left {
+    background: linear-gradient(135deg, #00844A 0%, #065F46 100%);
+    color: #fff;
+    border-radius: 14px;
+    padding: 24px 22px;
+    display: flex; flex-direction: column; justify-content: space-between;
+    min-height: 260px;
+    cursor: pointer; border: none; text-align: left; font-family: inherit;
+  }
+  .a3-left-top { }
+  .a3-left-icon { font-size: 40px; margin-bottom: 10px; display: block; }
+  .a3-left-label { font-size: 22px; font-weight: 900; letter-spacing: -0.02em; margin-bottom: 6px; }
+  .a3-left-sub { font-size: 13px; color: rgba(255,255,255,0.85); font-weight: 500; line-height: 1.6; }
+  .a3-left-cta {
+    background: #fff; color: #065F46;
+    padding: 10px 16px; border-radius: 8px;
+    font-size: 13px; font-weight: 900;
+    display: inline-flex; align-items: center; gap: 8px;
+    margin-top: 14px;
+    align-self: flex-start;
+  }
+  .a3-right { display: grid; gap: 8px; }
+  .a3-r-btn {
+    background: #fff; border: 1px solid #E5E7EB; border-radius: 10px;
+    padding: 12px 14px;
+    display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: center;
+    cursor: pointer; font-family: inherit; text-align: left;
+  }
+  .a3-r-btn:hover { border-color: #00844A; background: #F9FAFB; }
+  .a3-r-btn-featured { background: linear-gradient(90deg, #FEF3C7, #fff); border-color: #F59E0B; }
+  .a3-r-icon { width: 32px; height: 32px; background: #F1F5F9; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 16px; }
+  .a3-r-btn-featured .a3-r-icon { background: #F59E0B; color: #fff; }
+  .a3-r-label { font-size: 14px; font-weight: 800; color: #0F1729; }
+  .a3-r-sub { font-size: 11.5px; color: #6B7280; }
+
+  /* ============ 案 4: Recommender picks THE action ============ */
+  .a4-hero {
+    background: linear-gradient(135deg, #00844A 0%, #047857 100%);
+    color: #fff;
+    border-radius: 16px;
+    padding: 32px 30px;
+    text-align: center;
+    box-shadow: 0 12px 32px rgba(0,132,74,0.25);
+  }
+  .a4-eyebrow { font-family: 'Manrope', monospace; font-size: 11px; font-weight: 900; letter-spacing: 0.16em; opacity: 0.85; margin-bottom: 8px; }
+  .a4-recommend { font-size: 15px; font-weight: 700; margin-bottom: 6px; opacity: 0.95; }
+  .a4-action { font-size: 26px; font-weight: 900; letter-spacing: -0.02em; margin-bottom: 18px; line-height: 1.3; }
+  .a4-cta {
+    background: #fff; color: #065F46;
+    padding: 16px 32px; border-radius: 12px;
+    font-size: 17px; font-weight: 900;
+    border: none; cursor: pointer; font-family: inherit;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+    letter-spacing: -0.005em;
+  }
+  .a4-cta:hover { background: #ECFDF5; }
+  .a4-others {
+    margin-top: 14px;
+    background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 12px;
+    padding: 14px 18px;
+  }
+  .a4-others-title { font-size: 12px; font-weight: 800; color: #6B7280; letter-spacing: 0.08em; margin-bottom: 10px; text-transform: uppercase; }
+  .a4-others-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 8px;
+  }
+  .a4-o-btn {
+    background: #fff; border: 1px solid #E5E7EB; border-radius: 8px;
+    padding: 10px 12px; font-size: 12.5px; font-weight: 700; color: #374151;
+    cursor: pointer; font-family: inherit; text-align: left;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .a4-o-btn:hover { border-color: #00844A; }
+
+  .decide {
+    background: #ECFDF5;
+    border: 2px solid #00844A;
+    border-radius: 14px;
+    padding: 22px 28px;
+    margin-top: 32px;
+  }
+  .decide h2 { font-size: 16px; font-weight: 900; color: #065F46; margin-bottom: 8px; }
+  .decide p { font-size: 13.5px; color: #0F1729; font-weight: 500; line-height: 1.7; }
+  .decide b { color: #00844A; font-weight: 900; }
+
+  .foot { text-align: center; color: #6B7280; font-size: 12px; padding: 24px 0; }
+
+  @media (max-width: 720px) {
+    .a1-methods { grid-template-columns: 1fr; }
+    .a3-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>客モーダル 「初回接触」 flow — 案 4</h1>
+  <p class="lead">v20260731N の 3-group 階層 は owner 「めちゃめちゃ 見づらい」 で NG。 抜本的 に 4 方向 出す、 owner picks。</p>
+
+  <div class="diag">
+    <h2>直前 の 失敗 (v20260731N) — 悪化 の 原因</h2>
+    <p>
+      3 group を 全部 常時 展開 で 見せた → 画面 が 縦長 に、 全 button に 装飾 (番号 badge + hint 文言 + icon 枠 + arrow) 付けた → 情報 密度 過剰 → 「どこ 押せば いいか 逆に 分からない」。 <b>hierarchy を 効かせる = 何 か を 隠す or 弱め る</b>、 全部 平等 に 装飾 した の が 根本 の 間違い。
+    </p>
+  </div>
+
+  <!-- 案 1 -->
+  <div class="plan">
+    <div class="plan-head">
+      <span class="plan-badge">案 1</span>
+      <span class="plan-title">巨大 primary + 3 方式 (owner 発言 に 一番 近い)</span>
+    </div>
+    <p class="plan-sub">
+      <span class="plan-tag pro">「面談 する」 が 一瞬 で 分かる</span>
+      <span class="plan-tag pro">3 方式 は カード で 並列</span>
+      <span class="plan-tag con">縦 に 長くなる</span>
+    </p>
+    <div class="mock">
+      <div class="mock-eyebrow">
+        <span class="mock-pill">✨ AI 推奨</span>
+        <span class="mock-pri">至急</span>
+      </div>
+      <div class="mock-title">初回接触</div>
+      <div class="mock-reason">未接触 (最終接触 記録なし)</div>
+
+      <button class="a1-primary">
+        <span class="a1-primary-icon">📞</span>
+        <span>面談 を 始める</span>
+        <span class="a1-primary-arrow">→</span>
+      </button>
+      <div class="a1-methods">
+        <button class="a1-method">
+          <span class="a1-method-icon">⚡</span>
+          <span class="a1-method-label">今すぐ Zoom</span>
+          <div class="a1-method-sub">URL 即発行</div>
+        </button>
+        <button class="a1-method">
+          <span class="a1-method-icon">🗓</span>
+          <span class="a1-method-label">候補日 3つ</span>
+          <div class="a1-method-sub">客 が 選ぶ</div>
+        </button>
+        <button class="a1-method">
+          <span class="a1-method-icon">📅</span>
+          <span class="a1-method-label">日時 指定</span>
+          <div class="a1-method-sub">自分 で 決める</div>
+        </button>
+      </div>
+      <div class="a1-secondary">
+        <button class="a1-sec-btn">✨ AI 下書き</button>
+        <button class="a1-sec-btn">✍ 自分 で 書く</button>
+        <button class="a1-sec-btn">🏷 タグ</button>
+        <button class="a1-sec-btn">✏ 情報 編集</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 案 2 -->
+  <div class="plan">
+    <div class="plan-head">
+      <span class="plan-badge">案 2</span>
+      <span class="plan-title">縦 リスト シンプル (LSTEP風、 装飾 ゼロ)</span>
+    </div>
+    <p class="plan-sub">
+      <span class="plan-tag pro">上 から 順 に 目 で 追える</span>
+      <span class="plan-tag pro">40-60代 に 一番 慣れた 形</span>
+      <span class="plan-tag con">「これ 押せ」 の 強調 が 弱い</span>
+    </p>
+    <div class="mock">
+      <div class="mock-eyebrow">
+        <span class="mock-pill">✨ AI 推奨</span>
+        <span class="mock-pri">至急</span>
+      </div>
+      <div class="mock-title">初回接触</div>
+      <div class="mock-reason">未接触 (最終接触 記録なし)</div>
+
+      <div class="a2-list">
+        <button class="a2-row a2-row-featured">
+          <span class="a2-icon">✨</span>
+          <span>
+            <div class="a2-body-label">AI で LINE 下書き</div>
+            <div class="a2-body-sub">状況 から 文面 自動 生成</div>
+          </span>
+          <span class="a2-arrow">→</span>
+        </button>
+        <button class="a2-row">
+          <span class="a2-icon">⚡</span>
+          <span>
+            <div class="a2-body-label">今すぐ Zoom</div>
+            <div class="a2-body-sub">URL 即発行 · LINE 自動 送信</div>
+          </span>
+          <span class="a2-arrow">→</span>
+        </button>
+        <button class="a2-row">
+          <span class="a2-icon">🗓</span>
+          <span>
+            <div class="a2-body-label">候補日 3つ を 送る</div>
+            <div class="a2-body-sub">客 が LINE で 選ぶ</div>
+          </span>
+          <span class="a2-arrow">→</span>
+        </button>
+        <button class="a2-row">
+          <span class="a2-icon">📅</span>
+          <span>
+            <div class="a2-body-label">日時 を 指定 して 予約</div>
+            <div class="a2-body-sub">自分 で 決める</div>
+          </span>
+          <span class="a2-arrow">→</span>
+        </button>
+        <button class="a2-row">
+          <span class="a2-icon">✍</span>
+          <span>
+            <div class="a2-body-label">LINE を 自分 で 書く</div>
+            <div class="a2-body-sub">手入力 メッセージ</div>
+          </span>
+          <span class="a2-arrow">→</span>
+        </button>
+        <button class="a2-row">
+          <span class="a2-icon">🏷</span>
+          <span>
+            <div class="a2-body-label">タグ を 追加</div>
+            <div class="a2-body-sub">分類 / 絞込 用</div>
+          </span>
+          <span class="a2-arrow">→</span>
+        </button>
+        <button class="a2-row">
+          <span class="a2-icon">✏</span>
+          <span>
+            <div class="a2-body-label">顧客 情報 を 編集</div>
+            <div class="a2-body-sub">名前 · 家族 · 生年月日</div>
+          </span>
+          <span class="a2-arrow">→</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 案 3 -->
+  <div class="plan">
+    <div class="plan-head">
+      <span class="plan-badge">案 3</span>
+      <span class="plan-title">2 分割 (左 = 面談 大 hero、 右 = 他 tools)</span>
+    </div>
+    <p class="plan-sub">
+      <span class="plan-tag pro">面談 が 圧倒的 に 目立つ</span>
+      <span class="plan-tag pro">他 tools も 同時 に 見える</span>
+      <span class="plan-tag con">左 click で 別 modal 遷移 が 必要 (drill)</span>
+    </p>
+    <div class="mock">
+      <div class="mock-eyebrow">
+        <span class="mock-pill">✨ AI 推奨</span>
+        <span class="mock-pri">至急</span>
+      </div>
+      <div class="mock-title">初回接触</div>
+      <div class="mock-reason">未接触 (最終接触 記録なし)</div>
+
+      <div class="a3-grid">
+        <button class="a3-left">
+          <div class="a3-left-top">
+            <span class="a3-left-icon">📞</span>
+            <div class="a3-left-label">面談 する</div>
+            <div class="a3-left-sub">Zoom で 今すぐ or 候補日 送る or 日時 指定 の 3 方式</div>
+          </div>
+          <span class="a3-left-cta">選ぶ →</span>
+        </button>
+        <div class="a3-right">
+          <button class="a3-r-btn a3-r-btn-featured">
+            <span class="a3-r-icon">✨</span>
+            <span>
+              <div class="a3-r-label">AI で LINE 下書き</div>
+              <div class="a3-r-sub">自動 生成</div>
+            </span>
+          </button>
+          <button class="a3-r-btn">
+            <span class="a3-r-icon">✍</span>
+            <span>
+              <div class="a3-r-label">自分 で LINE 書く</div>
+              <div class="a3-r-sub">手入力</div>
+            </span>
+          </button>
+          <button class="a3-r-btn">
+            <span class="a3-r-icon">🏷</span>
+            <span>
+              <div class="a3-r-label">タグ</div>
+              <div class="a3-r-sub">分類</div>
+            </span>
+          </button>
+          <button class="a3-r-btn">
+            <span class="a3-r-icon">✏</span>
+            <span>
+              <div class="a3-r-label">情報 編集</div>
+              <div class="a3-r-sub">名前 · 家族</div>
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 案 4 -->
+  <div class="plan">
+    <div class="plan-head">
+      <span class="plan-badge">案 4</span>
+      <span class="plan-title">AI 判定 で 1 action に 絞る (最も 大胆)</span>
+    </div>
+    <p class="plan-sub">
+      <span class="plan-tag pro">迷い ゼロ · CTA 1 個 だけ</span>
+      <span class="plan-tag pro">「AI が 判断 してくれる」 の 実感</span>
+      <span class="plan-tag con">AI 判定 が 外す と ストレス</span>
+      <span class="plan-tag con">「他 の 選択肢」 が 二次 動線 に なる</span>
+    </p>
+    <div class="mock">
+      <div class="a4-hero">
+        <div class="a4-eyebrow">✨ AI 判定 · 未接触 至急</div>
+        <div class="a4-recommend">この 方 に 今 やる べき こと は 1 つ:</div>
+        <div class="a4-action">✨ AI で LINE 下書き を 作る</div>
+        <button class="a4-cta">この まま 実行 →</button>
+      </div>
+      <div class="a4-others">
+        <div class="a4-others-title">他 の 選択肢</div>
+        <div class="a4-others-grid">
+          <button class="a4-o-btn">⚡ 今すぐ Zoom</button>
+          <button class="a4-o-btn">🗓 候補日 3つ</button>
+          <button class="a4-o-btn">📅 日時 指定</button>
+          <button class="a4-o-btn">✍ 自分 で 書く</button>
+          <button class="a4-o-btn">🏷 タグ</button>
+          <button class="a4-o-btn">✏ 情報 編集</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="decide">
+    <h2>owner 判断 待ち</h2>
+    <p>
+      <b>案 1</b>: 巨大 「面談 する」 + 3 方式 カード + 他 tools 弱く — <b>owner 発言 「Zoom 押す みたいな 大 button」 に 一番 忠実</b>。<br>
+      <b>案 2</b>: 縦 リスト 装飾 ゼロ — LSTEP風、 一番 慣れた 形。 装飾 疲れ を 排除。<br>
+      <b>案 3</b>: 2 分割 (左 面談 大 · 右 他 tools 縦) — 面談 も 他 tools も 同時に 見える、 面談 click で drill。<br>
+      <b>案 4</b>: AI が 1 action に 絞る — 迷い ゼロ、 CTA 1 個 だけ、 他 は 弱く 下 に。
+    </p>
+    <p style="margin-top:12px;">
+      「1 で」「2 で」「3 で」「4 で」「別 の 案 ある」 の どれ か で 返信。 実装 は 判断 後。 現在 の PROD (v20260731N) は 触ら ない で 待つ。
+    </p>
+  </div>
+
+  <p class="foot">FP Compass / 客モーダル 「初回接触」 flow 案 preview</p>
+</div>
+</body>
+</html>
