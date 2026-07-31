@@ -9887,7 +9887,7 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
       </header>
       <div class="lch-chat-body" id="lch-chat-body">${bodyHtml}</div>
       <div class="lch-quick">
-        <button class="lch-q" data-quick="ai" ${msgs.length === 0 ? 'disabled' : ''}>✨ AI で 返信案</button>
+        <button class="lch-q" data-quick="ai" style="background:linear-gradient(135deg,#DC2626,#991B1B);color:#fff;border-color:#991B1B;font-weight:900;">✨ AI で 返信案 を 作る</button>
         <button class="lch-q" data-quick="meeting">📅 面談 打診</button>
         <button class="lch-q" data-quick="thanks">🙏 お礼</button>
         <button class="lch-q" data-quick="reminder">🔔 リマインド</button>
@@ -9976,7 +9976,12 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
     };
     const inp = document.getElementById('lch-input');
     if (kind === 'ai') {
-      _lchToast('AI 返信案 生成 は 開発中 (客カルテ の LINE タブ で 「AI 返信案」 button 使用)');
+      // 2026-08-01: 既存 の AI 下書き modal (openBriefDraftModal) を 呼び出す
+      if (typeof window.openBriefDraftModal === 'function') {
+        window.openBriefDraftModal(c);
+      } else {
+        _lchToast('AI 返信案 modal を loading 中… もう一度 押して ください', true);
+      }
       return;
     }
     const text = templates[kind] || '';

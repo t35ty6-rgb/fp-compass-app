@@ -3437,15 +3437,6 @@
           <!-- Tabs -->
           <div class="cd-tabs" role="tablist" style="font-size:15px !important;">
             <button class="cd-tab cd-tab-active" data-cdtab="overview" style="font-size:15px !important;font-weight:700 !important;">概観</button>
-            <button class="cd-tab" data-cdtab="line" style="font-size:15px !important;font-weight:700 !important;">LINE <span class="cd-tab-count">${(c.lineHistory || []).length}</span>${(function(){
-              const lr = parseInt(localStorage.getItem('fp-line-read-' + c.id) || '0', 10);
-              const uc = (c.lineHistory || []).filter(m => {
-                const isU = (m.from === 'user' || m.direction === 'in');
-                const ts = new Date(m.ts || m.date || 0).getTime();
-                return isU && ts > lr;
-              }).length;
-              return uc > 0 ? `<span style="display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#DC2626,#B91C1C);color:#fff;font-size:10px;font-weight:900;min-width:18px;height:18px;padding:0 5px;border-radius:9px;margin-left:5px;box-shadow:0 2px 6px rgba(220,38,38,0.45);animation:fp-unread-pulse 1.6s ease-in-out infinite;letter-spacing:0;">${uc > 99 ? '99+' : uc}</span>` : '';
-            })()}</button>
             <button class="cd-tab" data-cdtab="timeline" style="font-size:15px !important;font-weight:700 !important;">ライフ <span class="cd-tab-count">${events.filter(e => e.kind !== 'meeting' && e.kind !== 'task').length}</span></button>
             <button class="cd-tab" data-cdtab="meetings" style="font-size:15px !important;font-weight:700 !important;">議事録 <span class="cd-tab-count" id="cd-meetings-count">…</span></button>
             <button class="cd-tab" data-cdtab="qa" style="font-size:15px !important;font-weight:700 !important;">Q&A <span class="cd-tab-count" id="cd-qa-count">—</span></button>
@@ -3457,103 +3448,7 @@
                  詳細 議事録 は 議事録 tab で drill、 LINE は LINE tab で drill、 の 分業 に 明確化) -->
             <div class="cd-tabpanel" data-cdpanel="overview"></div>
 
-            <!-- LINE HISTORY (統合タイムライン v 20260610J) -->
-            ${(function(){
-              // ★ 統合タイムライン entries を 事前計算 (stats行 / chat内 両方で使う)
-              const _tlEntries = buildUnifiedLineTimeline(c);
-              const _cnt = (t) => _tlEntries.filter(e => e.type === t).length;
-              const _stats = {
-                line: _tlEntries.filter(e => e.type === 'line').length,
-                survey: _cnt('survey'),
-                booking: _cnt('booking_request') + _cnt('booking_confirmed'),
-                minutes: _cnt('ai_minutes'),
-                cancel: _cnt('cancellation'),
-              };
-              // 後段で 同じ entries を chat に使うため グローバルに 一時保存
-              window._fpCurrentTlEntries = _tlEntries;
-              return ''; // この IIFE はサイドエフェクトのみ
-            })()}
-            <div class="cd-tabpanel" data-cdpanel="line" hidden>
-              <div class="cd-line-head">
-                <div class="cd-line-stats">
-                  <span class="cd-line-stat"><i data-lucide="message-square"></i><strong id="cd-line-total">${(c.lineHistory || []).length}</strong>件</span>
-                  <span class="cd-line-stat"><i data-lucide="arrow-down-left"></i>受信 <strong id="cd-line-in">${(c.lineHistory || []).filter(m => m.direction === 'in').length}</strong></span>
-                  <span class="cd-line-stat"><i data-lucide="arrow-up-right"></i>送信 <strong id="cd-line-out">${(c.lineHistory || []).filter(m => m.direction === 'out').length}</strong></span>
-                  ${(function(){
-                    const _e = window._fpCurrentTlEntries || [];
-                    const _cnt = (t) => _e.filter(x => x.type === t).length;
-                    const surveyN = _cnt('survey');
-                    const bookingN = _cnt('booking_request') + _cnt('booking_confirmed');
-                    const minutesN = _cnt('ai_minutes');
-                    const cancelN = _cnt('cancellation');
-                    const pill = (icon, n, color) => n > 0 ? `<span class="cd-line-stat" style="color:${color};"><span style="font-size:13px;">${icon}</span> <strong>${n}</strong></span>` : '';
-                    return pill('📅', bookingN, '#A855F7') + pill('📝', surveyN, '#B45309') + pill('🎙', minutesN, '#C2410C') + pill('❌', cancelN, '#DC2626');
-                  })()}
-                </div>
-                <button class="cd-line-new" data-line-ai="${c.id}"><i data-lucide="wand-2"></i><span>AI下書き (Jobs提案)</span></button>
-                <button class="cd-line-new" data-line-brief="${c.id}" style="background:#10B981;color:#fff;margin-left:6px;"><i data-lucide="edit-3"></i><span>✍ 伝えたいことから下書き</span></button>
-                <button class="cd-line-new" data-line-slots="${c.id}" style="background:#5B5BF0;color:#fff;margin-left:6px;"><i data-lucide="calendar-plus"></i><span>📅 候補日 3つ 送る</span></button>
-              </div>
-              ${(function(){
-                // ★ オーナーfb「客返信に対する AI 生成 ボタンが分かりづらい」: LINE履歴タブ内に大きな AI返信案ボタン
-                const lastMsg = (c.lineHistory || []).slice().reverse()[0];
-                const lastIsUser = lastMsg && (lastMsg.direction === 'in' || lastMsg.from === 'user');
-                if (!lastIsUser) return '';
-                return `
-                  <div style="background:linear-gradient(135deg,#DC2626,#991B1B);color:#fff;padding:14px 18px;border-radius:12px;margin:10px 0 14px;box-shadow:0 8px 28px rgba(220,38,38,0.45),0 0 0 4px rgba(255,255,255,0.5);">
-                    <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
-                      <div style="font-size:24px;">⚠️</div>
-                      <div style="flex:1;">
-                        <div style="font-size:11px;font-weight:800;letter-spacing:0.16em;opacity:0.9;text-transform:uppercase;">最新が客返信 / FP 未返信</div>
-                        <div style="font-size:14px;font-weight:900;margin-top:2px;">この方への返事がまだです — Jobs と一緒に作りましょう</div>
-                      </div>
-                    </div>
-                    <button class="fp-line-tab-reply" data-cid="${escapeHtml(c.id)}" style="width:100%;background:#fff;color:#991B1B;border:none;padding:13px 18px;border-radius:8px;font-weight:900;cursor:pointer;font-size:14px;font-family:inherit;letter-spacing:0.04em;box-shadow:0 4px 14px rgba(0,0,0,0.18);">✨ Jobs と返信案を作る → 編集 → 送信</button>
-                  </div>
-                `;
-              })()}
-              <div class="cd-line-chat" id="cd-line-chat">
-                ${(function(){
-                  const entries = window._fpCurrentTlEntries || buildUnifiedLineTimeline(c);
-                  if (entries.length === 0) return '<div class="cd-line-empty">まだ やりとり がありません</div>';
-                  return entries.map(renderTimelineEntry).join('');
-                })()}
-              </div>
-              <div class="cd-line-composer">
-                ${!c.lineFriendId ? `
-                  <!-- ★ 未紐付け 時 は CTA 入力欄を 上 に置く (紐付けないと LINE 送れない) -->
-                  <div style="background:#FBF5E3;border:1.5px solid #C19A3A;border-radius:10px;padding:12px 14px;margin-bottom:12px;">
-                    <div style="font-size:11px;font-weight:800;color:#9A5A18;letter-spacing:0.12em;margin-bottom:6px;">🔗 LINE 友だち ID を 後から 紐付け</div>
-                    <p style="font-size:11.5px;color:#5e4d1a;line-height:1.65;margin:0 0 10px;">先に Zoom などで お会いした お客様。 後で 公式LINE を 友だち追加してもらったら、 ここで <strong>LINE userId</strong> を 入れて 紐付けてください。 LINE 履歴も 紐付きます。 取得方法 は LINE連携済 顧客 を 開くと 「📋 ID をコピー」 ボタン が 出ます。</p>
-                    <div style="display:flex;gap:8px;align-items:stretch;">
-                      <input type="text" id="cd-lineid-attach-input" placeholder="U+32文字 の LINE userId" style="flex:1;padding:8px 12px;font-size:12px;font-family:'JetBrains Mono',monospace;border:1.5px solid #E8D9A8;border-radius:7px;background:#fff;">
-                      <button id="cd-lineid-attach-btn" data-cid="${escapeHtml(c.id)}" class="btn-cta-primary" style="padding:8px 18px;font-size:12.5px;border-radius:7px;justify-content:center;"><span>紐付ける</span></button>
-                    </div>
-                    <div id="cd-lineid-attach-msg" style="font-size:11px;color:#9A5A18;margin-top:8px;min-height:14px;"></div>
-                  </div>
-                ` : ''}
-                <textarea id="cd-line-input" placeholder="メッセージを入力... (Cmd+Enter で送信)"></textarea>
-                <div class="cd-line-composer-foot">
-                  <span class="cd-line-composer-meta">${c.lineFriendId ? '✓ LINE連携済' : '⚠ LINE friend ID 未登録 (上の枠で 紐付け)'}</span>
-                  <button class="cd-line-ai-quick btn-mini-action" id="cd-line-ai-quick" data-cid="${escapeHtml(c.id)}" title="AI が直近の履歴から返信案を生成 → textarea に挿入 → 編集して送信" style="margin-right:8px;"><span class="icon">✨</span>AI で返信案</button>
-                  <button class="cd-line-send-btn" id="cd-line-send"${c.lineFriendId ? '' : ' disabled'}>
-                    <i data-lucide="send"></i><span>送信</span>
-                  </button>
-                </div>
-                <div id="cd-line-msg" class="cd-line-msg-status"></div>
-                ${c.lineFriendId ? `
-                  <!-- ★ オーナーfb 2026-06-25: LINE連携済の userId 表示+マージ ボタンは 送信box の下 に移動 (重要度低) -->
-                  <details style="margin-top:14px;padding:8px 12px;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:7px;">
-                    <summary style="font-size:11px;font-weight:700;color:#065F46;cursor:pointer;letter-spacing:0.06em;list-style:none;">🔗 LINE userId / 既存客マージ</summary>
-                    <div style="margin-top:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-                      <code id="cd-lineid-show" style="font-size:10.5px;font-family:'JetBrains Mono',monospace;color:#0F172A;background:#fff;padding:3px 7px;border-radius:4px;border:1px solid #BBF7D0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;">${escapeHtml(c.lineFriendId)}</code>
-                      <button id="cd-lineid-copy" data-uid="${escapeHtml(c.lineFriendId)}" style="background:#06C755;color:#fff;border:none;padding:5px 10px;border-radius:5px;font-size:10.5px;font-weight:700;cursor:pointer;font-family:inherit;flex-shrink:0;">📋 コピー</button>
-                      <button id="cd-merge-existing" data-cid="${escapeHtml(c.id)}" data-uid="${escapeHtml(c.lineFriendId)}" style="background:#fff;color:#065F46;border:1px solid #06C755;padding:5px 10px;border-radius:5px;font-size:10.5px;font-weight:700;cursor:pointer;font-family:inherit;flex-shrink:0;">→ 既存客に マージ</button>
-                    </div>
-                  </details>
-                ` : ''}
-              </div>
-            </div>
+            <!-- LINE HISTORY — 2026-08-01 モーダル内 LINE tab 削除 (owner「モーダル で LINE 送る 場面 少ない」)。 客との LINE やり取り は 左 sidebar 「LINE トーク」 (LINE Hub) に 一元 -->
 
             <!-- TIMELINE -->
             <!-- ★ 2026-06-29 速度改善: lazy render — overview/line のみ初期render、他はタブ click時に build -->
@@ -10582,7 +10477,9 @@ ${client.name}さん、ありがとうございます。
     });
 
     // line-app.js から呼び出せるように公開
-    window.FpApp = { openClientModal: openClientModal, openClientForm: openClientForm, getTagsMaster: getTagsMaster, getClientTags: getClientTags };
+    window.FpApp = { openClientModal: openClientModal, openClientForm: openClientForm, getTagsMaster: getTagsMaster, getClientTags: getClientTags, openBriefDraftModal: openBriefDraftModal };
+    // 2026-08-01: LINE Hub (sidebar tab) から AI 返信案 を 呼び出す 用
+    window.openBriefDraftModal = openBriefDraftModal;
 
     // ★ URL routing: ?view=clients 等で起動された場合は state.activeTab を 上書き
     //   (activateTab を 呼ぶ前に やらないと 先に state.activeTab で URL を 上書きしてしまう)
