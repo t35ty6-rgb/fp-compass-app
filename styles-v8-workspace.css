@@ -11436,3 +11436,131 @@ section > div[data-line-view] > div[style*="background: #fff"] {
 .cust-status-active,[class*="status"][data-status="active"],.badge-status-active { background: #ECFDF5 !important; color: #065F46 !important; }
 .cust-status-follow,[class*="status"][data-status="follow"],.badge-status-follow { background: #FED7AA !important; color: #9A3412 !important; }
 .cust-status-overdue,[class*="status"][data-status="overdue"],.badge-status-overdue { background: #FEE2E2 !important; color: #991B1B !important; }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   2026-07-31 · TOP page detail-up (owner「どこが変わったか分からない」対応)
+   .action-list rows 拡大 + workflow-step 大型化 + section-big-title 増強
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* action-list rows 大型化 (BEFORE: padding 18px 22px、 高さ ~60px) */
+.action-list > .action-item,
+.action-list > * {
+  padding: 26px 28px !important;
+  min-height: 96px !important;
+  border-bottom: 1px solid #E5E7EB !important;
+}
+.action-list > *:first-child {
+  border-left: 6px solid #00844A !important;
+  background: linear-gradient(90deg, rgba(0,132,74,0.06) 0%, #fff 40%) !important;
+  box-shadow: none !important;
+  padding-left: 26px !important;
+}
+.action-list > *:hover {
+  background: rgba(0,132,74,0.03) !important;
+  cursor: pointer;
+}
+
+/* 客名 · 情報 の font 拡大 (action-list 内) */
+.action-list [class*="name"], .action-list h3, .action-list h4 {
+  font-size: 20px !important;
+  font-weight: 900 !important;
+  letter-spacing: -0.01em !important;
+  color: #0F1729 !important;
+}
+.action-list [class*="meta"], .action-list [class*="sub"] {
+  font-size: 14.5px !important;
+  color: #4B5563 !important;
+  font-weight: 600 !important;
+}
+.action-list button, .action-list .btn, .action-list [role="button"] {
+  min-height: 48px !important;
+  font-size: 15px !important;
+  font-weight: 800 !important;
+  padding: 12px 20px !important;
+}
+
+/* 「今日 話すべき方」 見出し 増強 */
+.section-big-title {
+  font-size: 30px !important;
+  font-weight: 900 !important;
+  letter-spacing: -0.02em !important;
+  color: #0F1729 !important;
+  line-height: 1.25 !important;
+}
+.section-big-sub {
+  font-size: 15px !important;
+  color: #4B5563 !important;
+  font-weight: 600 !important;
+  margin-top: 6px !important;
+  line-height: 1.7 !important;
+}
+.section-eyebrow-pill {
+  background: #00844A !important;
+  color: #fff !important;
+  font-family: 'Manrope', sans-serif !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.14em !important;
+  padding: 4px 12px !important;
+  border-radius: 999px !important;
+  display: inline-block !important;
+  margin-bottom: 10px !important;
+}
+
+/* Workflow step 大型化 (「今日 の 進め方」 5 step) */
+.workflow-step {
+  min-height: 130px !important;
+  padding: 22px 20px !important;
+  border-radius: 14px !important;
+  border: 2px solid #E5E7EB !important;
+  transition: all .15s !important;
+}
+.workflow-step:hover {
+  border-color: #00844A !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 20px rgba(0,132,74,0.14) !important;
+}
+.workflow-step-active {
+  background: #ECFDF5 !important;
+  border: 2px solid #00844A !important;
+  box-shadow: 0 6px 18px rgba(0,132,74,0.20) !important;
+}
+.workflow-step-title { font-size: 17px !important; font-weight: 900 !important; letter-spacing: -0.01em !important; color: #0F1729 !important; }
+.workflow-step-desc { font-size: 13.5px !important; color: #4B5563 !important; line-height: 1.7 !important; font-weight: 500 !important; }
+.workflow-step-num {
+  background: #0F1729 !important;
+  color: #fff !important;
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 50% !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-family: 'Manrope', sans-serif !important;
+  font-weight: 900 !important;
+  font-size: 15px !important;
+}
+.workflow-step-active .workflow-step-num { background: #00844A !important; }
+.workflow-step-status {
+  background: #00844A !important;
+  color: #fff !important;
+  padding: 4px 12px !important;
+  border-radius: 999px !important;
+  font-size: 12px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.06em !important;
+}
+
+/* Section title 全般 の 増強 (「今日 の 進め方」 等) */
+.section-title {
+  font-size: 22px !important;
+  font-weight: 900 !important;
+  letter-spacing: -0.015em !important;
+  color: #0F1729 !important;
+}
+.section-sub {
+  font-size: 14.5px !important;
+  color: #4B5563 !important;
+  font-weight: 600 !important;
+  line-height: 1.7 !important;
+}
