@@ -3436,8 +3436,7 @@
 
           <!-- Tabs -->
           <div class="cd-tabs" role="tablist" style="font-size:15px !important;">
-            <button class="cd-tab cd-tab-active" data-cdtab="c1stream" style="font-size:15px !important;font-weight:900 !important;color:#fff !important;background:linear-gradient(135deg,#00844A,#065F46) !important;padding:6px 14px !important;border-radius:6px !important;box-shadow:0 2px 8px rgba(0,132,74,0.28);">✨ 統合</button>
-            <button class="cd-tab" data-cdtab="overview" style="font-size:15px !important;font-weight:700 !important;">概観</button>
+            <button class="cd-tab cd-tab-active" data-cdtab="overview" style="font-size:15px !important;font-weight:700 !important;">概観</button>
             <button class="cd-tab" data-cdtab="line" style="font-size:15px !important;font-weight:700 !important;">LINE <span class="cd-tab-count">${(c.lineHistory || []).length}</span>${(function(){
               const lr = parseInt(localStorage.getItem('fp-line-read-' + c.id) || '0', 10);
               const uc = (c.lineHistory || []).filter(m => {
@@ -3447,20 +3446,16 @@
               }).length;
               return uc > 0 ? `<span style="display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#DC2626,#B91C1C);color:#fff;font-size:10px;font-weight:900;min-width:18px;height:18px;padding:0 5px;border-radius:9px;margin-left:5px;box-shadow:0 2px 6px rgba(220,38,38,0.45);animation:fp-unread-pulse 1.6s ease-in-out infinite;letter-spacing:0;">${uc > 99 ? '99+' : uc}</span>` : '';
             })()}</button>
-            <button class="cd-tab" data-cdtab="timeline" style="font-size:15px !important;font-weight:700 !important;">ライフ <span class="cd-tab-count">${events.filter(e => e.kind !== 'meeting' && e.kind !== 'task' && new Date(e.date) >= new Date()).length || events.length}</span></button>
+            <button class="cd-tab" data-cdtab="timeline" style="font-size:15px !important;font-weight:700 !important;">ライフ <span class="cd-tab-count">${events.filter(e => e.kind !== 'meeting' && e.kind !== 'task').length}</span></button>
             <button class="cd-tab" data-cdtab="meetings" style="font-size:15px !important;font-weight:700 !important;">議事録 <span class="cd-tab-count" id="cd-meetings-count">…</span></button>
             <button class="cd-tab" data-cdtab="qa" style="font-size:15px !important;font-weight:700 !important;">Q&A <span class="cd-tab-count" id="cd-qa-count">—</span></button>
             <button class="cd-tab" data-cdtab="family" style="font-size:15px !important;font-weight:700 !important;">家族 <span class="cd-tab-count">${(c.family || []).length + 1}</span></button>
           </div>
 
           <div class="cd-tabpanels">
-            <!-- C1 統合 stream (2026-08-01: C1 mockup pick 反映) -->
-            <div class="cd-tabpanel" data-cdpanel="c1stream" data-lazy-render="c1stream">
-              <div style="padding:32px 24px;color:#94A3B8;font-size:12.5px;text-align:center;">読込中…</div>
-            </div>
-
-            <!-- OVERVIEW (2026-07-11 v7: 議事録空でも 有用情報 で 埋める、 誤表示 バグ fix) -->
-            <div class="cd-tabpanel" data-cdpanel="overview" hidden>
+            <!-- OVERVIEW (2026-07-11 v7: 議事録空でも 有用情報 で 埋める、 誤表示 バグ fix)
+                 2026-08-01: owner C1 pick 反映 — 末尾 に unified timeline stream + filter chips を 追加 -->
+            <div class="cd-tabpanel" data-cdpanel="overview">
               ${(function(){
                 // ★ 有用な最新議事録: summary or transcript or key_concerns の どれか あれば 使う
                 const useableAi = (function(){
@@ -4484,16 +4479,6 @@ ${ctxText}${surveyTxt}`;
       });
     }
     bindFamilyHandlers();
-    // ★ 2026-08-01: C1 統合 tab active 時 は cd-flow (AI推薦 CTA hero) を 隠す
-    //   理由: cd-flow が 常時表示 だと C1 panel が top:918px で viewport 外 → click 無反応 に 見える
-    //   統合 panel 内部 に profile+CTA snapshot を 埋め込む ので 情報 loss なし
-    function _toggleFlowForTab(key) {
-      try {
-        const flow = document.querySelector('.cd-flow');
-        if (!flow) return;
-        flow.style.display = (key === 'c1stream') ? 'none' : '';
-      } catch (_) {}
-    }
     // Tab switching inside new modal
     document.querySelectorAll('.cd-tab').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -4503,7 +4488,6 @@ ${ctxText}${surveyTxt}`;
           if (p.dataset.cdpanel === key) p.removeAttribute('hidden');
           else p.setAttribute('hidden', '');
         });
-        _toggleFlowForTab(key);
         // ★ 2026-06-29: lazy render — タブclick時 初めて panel 中身 build
         try {
           const panel = document.querySelector(`[data-cdpanel="${key}"]`);
@@ -4545,10 +4529,6 @@ ${ctxText}${surveyTxt}`;
             } else if (key === 'timeline' && panel.dataset.cacheHasContent !== '1') {
               panel.innerHTML = buildLifePlanPanel(c, events, lifeCtaCard);
               panel.dataset.cacheHasContent = '1';
-            } else if (key === 'c1stream' && panel.dataset.cacheHasContent !== '1') {
-              panel.innerHTML = _buildC1StreamPanel(c);
-              panel.dataset.cacheHasContent = '1';
-              _bindC1StreamHandlers(panel, c);
             } else if (key === 'family' && typeof renderFamilyTreeBlock === 'function' && panel.dataset.cacheHasContent !== '1') {
               panel.innerHTML = renderFamilyTreeBlock(c);
               panel.dataset.cacheHasContent = '1';
@@ -4587,17 +4567,17 @@ ${ctxText}${surveyTxt}`;
         }
       });
     });
-    // ★ 2026-08-01: c1stream tab が default active なので 初期render を 即実行
+    // ★ 2026-08-01: 概観 tab の 末尾 に C1 unified timeline stream を 差込 (owner C1 pick 反映)
     try {
-      const c1Panel = document.querySelector('.cd-tabpanel[data-cdpanel="c1stream"]');
-      if (c1Panel && c1Panel.dataset.cacheHasContent !== '1') {
-        c1Panel.innerHTML = _buildC1StreamPanel(c);
-        c1Panel.dataset.cacheHasContent = '1';
-        _bindC1StreamHandlers(c1Panel, c);
+      const ovPanel = document.querySelector('.cd-tabpanel[data-cdpanel="overview"]');
+      if (ovPanel && !ovPanel.querySelector('[data-c1s-injected]')) {
+        const streamDiv = document.createElement('div');
+        streamDiv.setAttribute('data-c1s-injected', '1');
+        streamDiv.innerHTML = _buildC1StreamPanel(c);
+        ovPanel.appendChild(streamDiv);
+        _bindC1StreamHandlers(streamDiv, c);
       }
-      // default active が c1stream なので cd-flow を 即 隠す
-      _toggleFlowForTab('c1stream');
-    } catch (e) { console.warn('[c1stream init] fail:', e); }
+    } catch (e) { console.warn('[c1stream inject to overview] fail:', e); }
     // Quick action stubs
     const qaStub = (id, label) => {
       const el = document.getElementById(id);
