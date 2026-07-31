@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>flow drill — バリエーション 4 案 (v20260731P)</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Noto Sans JP', -apple-system, sans-serif;
+    background: #f5f6f8;
+    color: #0F1729;
+    padding: 28px;
+    line-height: 1.7;
+  }
+  .wrap { max-width: 1300px; margin: 0 auto; }
+  h1 { font-size: 25px; font-weight: 900; letter-spacing: -0.02em; margin-bottom: 4px; }
+  .lead { color: #4B5563; font-size: 14px; font-weight: 500; margin-bottom: 20px; }
+
+  .note {
+    background: #FEF2F2; border: 1px solid #FCA5A5;
+    border-radius: 12px; padding: 16px 22px; margin-bottom: 24px;
+    font-size: 13.5px; color: #7F1D1D; font-weight: 500; line-height: 1.65;
+  }
+  .note b { color: #991B1B; font-weight: 900; }
+
+  .plan {
+    background: #fff;
+    border-radius: 14px;
+    padding: 22px 26px 26px;
+    margin-bottom: 20px;
+    border: 1px solid #E5E7EB;
+  }
+  .plan-head {
+    display: flex; align-items: baseline; gap: 12px; margin-bottom: 4px;
+  }
+  .plan-badge {
+    background: #00844A; color: #fff;
+    font-family: 'Manrope', monospace;
+    font-size: 12px; font-weight: 900; letter-spacing: 0.14em;
+    padding: 4px 12px; border-radius: 999px;
+  }
+  .plan-title { font-size: 18px; font-weight: 900; letter-spacing: -0.01em; }
+  .plan-sub { color: #6B7280; font-size: 13px; font-weight: 500; margin-bottom: 14px; }
+  .plan-tag {
+    display: inline-block;
+    background: #F3F4F6; color: #374151;
+    font-size: 11px; font-weight: 700;
+    padding: 3px 9px; border-radius: 6px;
+    margin-right: 5px;
+  }
+  .plan-tag.pro { background: #ECFDF5; color: #065F46; }
+  .plan-tag.con { background: #FEE2E2; color: #991B1B; }
+
+  .mock {
+    background: #fff;
+    border: 1px solid #E5E7EB;
+    border-radius: 12px;
+    padding: 22px 24px;
+    margin-top: 12px;
+  }
+  .mock-eyebrow {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .mock-pill {
+    background: linear-gradient(135deg, #C19A3A, #A0822E);
+    color: #fff;
+    font-family: 'Manrope', monospace;
+    font-size: 10.5px; font-weight: 900;
+    letter-spacing: 0.12em;
+    padding: 3px 10px; border-radius: 999px;
+  }
+  .mock-pri {
+    background: #FEE2E2; color: #991B1B;
+    font-size: 11px; font-weight: 800;
+    padding: 3px 10px; border-radius: 999px;
+    letter-spacing: 0.06em;
+  }
+  .mock-title { font-size: 21px; font-weight: 900; color: #0F1729; letter-spacing: -0.01em; }
+  .mock-reason { font-size: 13px; color: #6B7280; font-weight: 500; margin-top: 3px; margin-bottom: 18px; }
+
+  /* ============ 案 A: 現行 (v20260731O) accordion emerald ============ */
+  .a-drill { display: grid; gap: 10px; }
+  .a-drill-block { border: 1px solid #E5E7EB; border-radius: 12px; background: #fff; overflow: hidden; }
+  .a-drill-block[data-open="true"] { border-color: #00844A; box-shadow: 0 4px 12px rgba(0,132,74,0.08); }
+  .a-drill-head { display: grid; grid-template-columns: auto 1fr auto; gap: 16px; align-items: center; padding: 20px 22px; cursor: pointer; user-select: none; background: #fff; border: none; text-align: left; width: 100%; font-family: inherit; }
+  .a-drill-block[data-open="true"] .a-drill-head { background: #F9FAFB; border-bottom: 1px solid #E5E7EB; }
+  .a-drill-icon { width: 44px; height: 44px; background: #F1F5F9; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; font-size: 22px; }
+  .a-drill-block[data-open="true"] .a-drill-icon { background: #DCFCE7; }
+  .a-drill-label { font-size: 18px; font-weight: 900; color: #0F1729; letter-spacing: -0.01em; }
+  .a-drill-caret { font-size: 20px; color: #9CA3AF; }
+  .a-drill-block[data-open="true"] .a-drill-caret { color: #00844A; transform: rotate(180deg); }
+  .a-drill-body { background: #FAFBFC; display: none; }
+  .a-drill-block[data-open="true"] .a-drill-body { display: block; }
+  .a-drill-opt { display: grid; grid-template-columns: 44px 1fr; gap: 16px; align-items: center; padding: 14px 22px; background: transparent; border: none; border-top: 1px solid #E5E7EB; cursor: pointer; text-align: left; font-family: inherit; width: 100%; }
+  .a-drill-opt:hover { background: #ECFDF5; }
+  .a-drill-opt-featured { background: #FFFBEB; }
+  .a-drill-opt-featured:hover { background: #FEF3C7; }
+  .a-drill-opt-icon { text-align: center; font-size: 20px; }
+  .a-drill-opt-label { font-size: 15px; font-weight: 800; color: #0F1729; }
+  .a-drill-opt-tail { font-weight: 500; color: #6B7280; font-size: 13.5px; margin-left: 4px; }
+  .a-tools { display: flex; gap: 8px; margin-top: 6px; }
+  .a-tool { background: #fff; border: 1px solid #E5E7EB; border-radius: 8px; padding: 10px 16px; font-size: 13.5px; font-weight: 700; color: #374151; cursor: pointer; font-family: inherit; }
+
+  /* ============ 案 B: Tabs 型 (Zoom / LINE / 情報 の 3 tab、 下 に 中身) ============ */
+  .b-tabs {
+    display: grid; grid-template-columns: 1fr 1fr auto; gap: 4px;
+    background: #F1F3F7; padding: 4px; border-radius: 12px;
+    margin-bottom: 12px;
+  }
+  .b-tab {
+    background: transparent; border: none; padding: 12px 14px;
+    font-size: 15px; font-weight: 800; color: #6B7280;
+    cursor: pointer; font-family: inherit; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    transition: background 0.12s, color 0.12s;
+  }
+  .b-tab.active { background: #fff; color: #0F1729; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+  .b-tab:not(.active):hover { color: #0F1729; }
+  .b-content { border: 1px solid #E5E7EB; border-radius: 12px; overflow: hidden; }
+  .b-row { display: grid; grid-template-columns: 40px 1fr; gap: 14px; align-items: center; padding: 16px 22px; background: #fff; border-top: 1px solid #E5E7EB; cursor: pointer; border-left: none; border-right: none; border-bottom: none; width: 100%; text-align: left; font-family: inherit; }
+  .b-row:first-child { border-top: none; }
+  .b-row:hover { background: #F9FAFB; }
+  .b-row-featured { background: #FFFBEB; }
+  .b-row-featured:hover { background: #FEF3C7; }
+  .b-row-icon { font-size: 22px; text-align: center; }
+  .b-row-label { font-size: 15.5px; font-weight: 800; color: #0F1729; }
+  .b-row-sub { font-size: 12.5px; color: #6B7280; margin-top: 2px; }
+
+  /* ============ 案 C: Card + inline expand (click card → 下 に 展開、 emerald 縦 border) ============ */
+  .c-cards { display: grid; gap: 12px; }
+  .c-card { border: 1px solid #E5E7EB; border-radius: 12px; overflow: hidden; background: #fff; }
+  .c-card[data-open="true"] { border-left: 4px solid #00844A; padding-left: 0; }
+  .c-card-head {
+    padding: 22px 24px;
+    display: grid; grid-template-columns: auto 1fr auto;
+    gap: 16px; align-items: center;
+    cursor: pointer; background: #fff; border: none; text-align: left; width: 100%; font-family: inherit;
+  }
+  .c-card[data-open="true"] .c-card-head { padding-left: 20px; }
+  .c-card-num {
+    width: 32px; height: 32px;
+    background: #0F1729; color: #fff;
+    border-radius: 50%; font-family: 'Manrope', monospace;
+    font-size: 15px; font-weight: 900;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .c-card[data-open="true"] .c-card-num { background: #00844A; }
+  .c-card-title { font-size: 18px; font-weight: 900; color: #0F1729; letter-spacing: -0.01em; }
+  .c-card-sub { font-size: 12.5px; color: #6B7280; margin-top: 3px; }
+  .c-card-plus { font-size: 22px; color: #9CA3AF; font-weight: 300; }
+  .c-card[data-open="true"] .c-card-plus { transform: rotate(45deg); color: #00844A; }
+  .c-card-body { display: none; padding: 8px 24px 20px 68px; border-top: 1px solid #E5E7EB; }
+  .c-card[data-open="true"] .c-card-body { display: block; }
+  .c-opt { display: grid; grid-template-columns: 34px 1fr auto; gap: 12px; align-items: center; padding: 12px 14px; background: #FAFBFC; border: 1px solid #E5E7EB; border-radius: 10px; margin-top: 10px; cursor: pointer; font-family: inherit; text-align: left; width: 100%; }
+  .c-opt:hover { border-color: #00844A; background: #ECFDF5; }
+  .c-opt-featured { background: #FFFBEB; border-color: #F59E0B; }
+  .c-opt-icon { text-align: center; font-size: 19px; }
+  .c-opt-label { font-size: 14.5px; font-weight: 800; color: #0F1729; }
+  .c-opt-sub { font-size: 12px; color: #6B7280; }
+  .c-opt-arrow { color: #9CA3AF; font-size: 18px; }
+
+  /* ============ 案 D: 全画面 モーダル drill (click → sheet が 上 に 覆う) ============ */
+  .d-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .d-card {
+    background: #fff; border: 1px solid #E5E7EB;
+    border-radius: 14px; padding: 24px 22px;
+    cursor: pointer; font-family: inherit; text-align: left;
+    display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: center;
+    min-height: 96px;
+  }
+  .d-card:hover { border-color: #00844A; background: #FAFBFC; }
+  .d-card-primary { background: linear-gradient(135deg, #00844A 0%, #065F46 100%); border-color: #00844A; color: #fff; }
+  .d-card-primary:hover { background: linear-gradient(135deg, #065F46 0%, #044A34 100%); }
+  .d-card-icon {
+    width: 48px; height: 48px; border-radius: 12px;
+    background: #F1F5F9; color: #0F1729;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 24px;
+  }
+  .d-card-primary .d-card-icon { background: rgba(255,255,255,0.22); color: #fff; }
+  .d-card-title { font-size: 17px; font-weight: 900; color: #0F1729; letter-spacing: -0.01em; }
+  .d-card-primary .d-card-title { color: #fff; }
+  .d-card-sub { font-size: 12.5px; color: #6B7280; margin-top: 3px; }
+  .d-card-primary .d-card-sub { color: rgba(255,255,255,0.82); }
+  .d-tools { display: flex; gap: 8px; margin-top: 12px; }
+  .d-tool { background: #fff; border: 1px solid #E5E7EB; border-radius: 8px; padding: 10px 14px; font-size: 13px; font-weight: 700; color: #374151; cursor: pointer; font-family: inherit; }
+  .d-sheet-note {
+    margin-top: 14px; background: #F9FAFB; border: 1px dashed #CBD5E1; border-radius: 10px;
+    padding: 12px 18px; font-size: 12.5px; color: #6B7280; text-align: center; font-weight: 500;
+  }
+  .d-sheet-note b { color: #0F1729; }
+
+  .decide {
+    background: #ECFDF5;
+    border: 2px solid #00844A;
+    border-radius: 14px;
+    padding: 22px 28px;
+    margin-top: 28px;
+  }
+  .decide h2 { font-size: 16px; font-weight: 900; color: #065F46; margin-bottom: 8px; }
+  .decide p { font-size: 13.5px; color: #0F1729; font-weight: 500; line-height: 1.75; }
+  .decide b { color: #00844A; font-weight: 900; }
+
+  .foot { text-align: center; color: #6B7280; font-size: 12px; padding: 24px 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>「大枠 button + drill」 バリエーション 4 案</h1>
+  <p class="lead">全 案 とも owner 明示 の 「大枠 button 押すと さらに 選べる」 spec に 準拠。 差 は 展開 動作 と 見た目 の 質感。</p>
+
+  <div class="note">
+    <b>PROD 現状</b>: v20260731O = 案 A (accordion emerald) が 実装 済 で 動いてる。<br>
+    owner の 「まず 案 出せ」 明示 を 破って フライング した の で、 別 案 (B/C/D) と 並べて 比較 できる 状態 に した。<br>
+    最終決定 は owner が picks → 私 が 実 app に 差替。 <b>この preview 段階 で は PROD 触ら ない</b>。
+  </div>
+
+  <!-- 案 A -->
+  <div class="plan">
+    <div class="plan-head">
+      <span class="plan-badge">案 A</span>
+      <span class="plan-title">Accordion (現行 実装、 emerald 縁 · 白 base)</span>
+    </div>
+    <p class="plan-sub">
+      <span class="plan-tag pro">最小 装飾 · 白 統一</span>
+      <span class="plan-tag pro">click → 縦 に 展開 で 自然</span>
+      <span class="plan-tag con">「今 どこ 開いてる」 の 主張 が 弱い かも</span>
+    </p>
+    <div class="mock">
+      <div class="mock-eyebrow"><span class="mock-pill">✨ AI 推奨</span><span class="mock-pri">至急</span></div>
+      <div class="mock-title">初回接触</div>
+      <div class="mock-reason">未接触 (最終接触 記録なし)</div>
+
+      <div class="a-drill">
+        <div class="a-drill-block" data-open="false">
+          <button class="a-drill-head" onclick="const b=this.parentElement;b.dataset.open=b.dataset.open==='true'?'false':'true'">
+            <span class="a-drill-icon">📞</span>
+            <span class="a-drill-label">Zoom で 面談 する</span>
+            <span class="a-drill-caret">▾</span>
+          </button>
+          <div class="a-drill-body">
+            <button class="a-drill-opt"><span class="a-drill-opt-icon">⚡</span><span class="a-drill-opt-label">今すぐ Zoom<span class="a-drill-opt-tail">— URL 即発行</span></span></button>
+            <button class="a-drill-opt"><span class="a-drill-opt-icon">🗓</span><span class="a-drill-opt-label">候補日 3つ 送る<span class="a-drill-opt-tail">— 客 が 選ぶ</span></span></button>
+            <button class="a-drill-opt"><span class="a-drill-opt-icon">📅</span><span class="a-drill-opt-label">日時 を 指定<span class="a-drill-opt-tail">— 自分 で 決める</span></span></button>
+          </div>
+        </div>
+        <div class="a-drill-block" data-open="true">
+          <button class="a-drill-head" onclick="const b=this.parentElement;b.dataset.open=b.dataset.open==='true'?'false':'true'">
+            <span class="a-drill-icon">💬</span>
+            <span class="a-drill-label">LINE で 返信 する</span>
+            <span class="a-drill-caret">▾</span>
+          </button>
+          <div class="a-drill-body">
+            <button class="a-drill-opt a-drill-opt-featured"><span class="a-drill-opt-icon">✨</span><span class="a-drill-opt-label">AI で 下書き<span class="a-drill-opt-tail">— 状況 から 自動 生成</span></span></button>
+            <button class="a-drill-opt"><span class="a-drill-opt-icon">✍</span><span class="a-drill-opt-label">自分 で 書く<span class="a-drill-opt-tail">— 手入力</span></span></button>
+          </div>
+        </div>
+      </div>
+      <div class="a-tools">
+        <button class="a-tool">🏷 タグ</button>
+        <button class="a-tool">✏ 情報 編集</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 案 B -->
+  <div class="plan">
+    <div class="plan-head">
+      <span class="plan-badge">案 B</span>
+      <span class="plan-title">Tabs 型 (常時 2 tab 見えて、 下 に 選んだ 中身)</span>
+    </div>
+    <p class="plan-sub">
+      <span class="plan-tag pro">両方 が 常時 見える (accordion より 認知 早い)</span>
+      <span class="plan-tag pro">切替 は 1 click</span>
+      <span class="plan-tag con">tab UI は 若干 「アプリ っぽく」 なる</span>
+    </p>
+    <div class="mock">
+      <div class="mock-eyebrow"><span class="mock-pill">✨ AI 推奨</span><span class="mock-pri">至急</span></div>
+      <div class="mock-title">初回接触</div>
+      <div class="mock-reason">未接触 (最終接触 記録なし)</div>
+
+      <div class="b-tabs">
+        <button class="b-tab" onclick="switchTab(this, 'b-c-zoom')">📞 Zoom で 面談</button>
+        <button class="b-tab active" onclick="switchTab(this, 'b-c-line')">💬 LINE で 返信</button>
+        <button class="b-tab" style="background:transparent;padding:12px 10px;font-size:13px;color:#6B7280;" onclick="switchTab(this, 'b-c-info')">✏ 情報</button>
+      </div>
+      <div class="b-content">
+        <div id="b-c-zoom" style="display:none;">
+          <button class="b-row"><span class="b-row-icon">⚡</span><div><div class="b-row-label">今すぐ Zoom</div><div class="b-row-sub">URL 即発行 · LINE 自動 送信</div></div></button>
+          <button class="b-row"><span class="b-row-icon">🗓</span><div><div class="b-row-label">候補日 3つ 送る</div><div class="b-row-sub">お客様 が LINE で 選ぶ</div></div></button>
+          <button class="b-row"><span class="b-row-icon">📅</span><div><div class="b-row-label">日時 を 指定</div><div class="b-row-sub">自分 で 決めて 予約</div></div></button>
+        </div>
+        <div id="b-c-line">
+          <button class="b-row b-row-featured"><span class="b-row-icon">✨</span><div><div class="b-row-label">AI で 下書き</div><div class="b-row-sub">状況 から 自動 生成</div></div></button>
+          <button class="b-row"><span class="b-row-icon">✍</span><div><div class="b-row-label">自分 で 書く</div><div class="b-row-sub">手入力 メッセージ</div></div></button>
+        </div>
+        <div id="b-c-info" style="display:none;">
+          <button class="b-row"><span class="b-row-icon">🏷</span><div><div class="b-row-label">タグ 追加</div><div class="b-row-sub">分類 · 絞込 用</div></div></button>
+          <button class="b-row"><span class="b-row-icon">✏</span><div><div class="b-row-label">顧客 情報 編集</div><div class="b-row-sub">名前 · 家族 · 生年月日</div></div></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 案 C -->
+  <div class="plan">
+    <div class="plan-head">
+      <span class="plan-badge">案 C</span>
+      <span class="plan-title">Card 番号 + 縦 border アクセント (LSTEP風)</span>
+    </div>
+    <p class="plan-sub">
+      <span class="plan-tag pro">番号 (1/2) で 順序 感 · 業務 tool 感</span>
+      <span class="plan-tag pro">開いた 時 の 緑 縦 border で 「開いてる の これ」 が 一目</span>
+      <span class="plan-tag con">番号 badge は 「順序 が 本当に ある か」 疑問 (skill note)</span>
+    </p>
+    <div class="mock">
+      <div class="mock-eyebrow"><span class="mock-pill">✨ AI 推奨</span><span class="mock-pri">至急</span></div>
+      <div class="mock-title">初回接触</div>
+      <div class="mock-reason">未接触 (最終接触 記録なし)</div>
+
+      <div class="c-cards">
+        <div class="c-card" data-open="false">
+          <button class="c-card-head" onclick="const b=this.parentElement;b.dataset.open=b.dataset.open==='true'?'false':'true'">
+            <span class="c-card-num">1</span>
+            <div>
+              <div class="c-card-title">📞 Zoom で 面談 する</div>
+              <div class="c-card-sub">3 方式 から 選ぶ</div>
+            </div>
+            <span class="c-card-plus">+</span>
+          </button>
+          <div class="c-card-body">
+            <button class="c-opt"><span class="c-opt-icon">⚡</span><div><div class="c-opt-label">今すぐ Zoom</div><div class="c-opt-sub">URL 即発行</div></div><span class="c-opt-arrow">→</span></button>
+            <button class="c-opt"><span class="c-opt-icon">🗓</span><div><div class="c-opt-label">候補日 3つ 送る</div><div class="c-opt-sub">客 が 選ぶ</div></div><span class="c-opt-arrow">→</span></button>
+            <button class="c-opt"><span class="c-opt-icon">📅</span><div><div class="c-opt-label">日時 を 指定</div><div class="c-opt-sub">自分 で 決める</div></div><span class="c-opt-arrow">→</span></button>
+          </div>
+        </div>
+        <div class="c-card" data-open="true">
+          <button class="c-card-head" onclick="const b=this.parentElement;b.dataset.open=b.dataset.open==='true'?'false':'true'">
+            <span class="c-card-num">2</span>
+            <div>
+              <div class="c-card-title">💬 LINE で 返信 する</div>
+              <div class="c-card-sub">AI 下書き or 自分 で 書く</div>
+            </div>
+            <span class="c-card-plus">+</span>
+          </button>
+          <div class="c-card-body">
+            <button class="c-opt c-opt-featured"><span class="c-opt-icon">✨</span><div><div class="c-opt-label">AI で 下書き</div><div class="c-opt-sub">状況 から 自動 生成</div></div><span class="c-opt-arrow">→</span></button>
+            <button class="c-opt"><span class="c-opt-icon">✍</span><div><div class="c-opt-label">自分 で 書く</div><div class="c-opt-sub">手入力</div></div><span class="c-opt-arrow">→</span></button>
+          </div>
+        </div>
+      </div>
+      <div class="a-tools" style="margin-top:12px;">
+        <button class="a-tool">🏷 タグ</button>
+        <button class="a-tool">✏ 情報 編集</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 案 D -->
+  <div class="plan">
+    <div class="plan-head">
+      <span class="plan-badge">案 D</span>
+      <span class="plan-title">Big card 2 枚 → click で 下 sheet (bottom sheet 風、 モバイル っぽい)</span>
+    </div>
+    <p class="plan-sub">
+      <span class="plan-tag pro">2 枚 が 常時 大きく 見える</span>
+      <span class="plan-tag pro">click で 「動く 感」 (sheet が スライド up)</span>
+      <span class="plan-tag con">sheet モーダル は もう 1 層 の 遷移 で 「複雑」 と 感じる 可能性</span>
+    </p>
+    <div class="mock">
+      <div class="mock-eyebrow"><span class="mock-pill">✨ AI 推奨</span><span class="mock-pri">至急</span></div>
+      <div class="mock-title">初回接触</div>
+      <div class="mock-reason">未接触 (最終接触 記録なし)</div>
+
+      <div class="d-cards">
+        <button class="d-card">
+          <span class="d-card-icon">📞</span>
+          <div>
+            <div class="d-card-title">Zoom で 面談 する</div>
+            <div class="d-card-sub">3 方式 から 選ぶ</div>
+          </div>
+        </button>
+        <button class="d-card d-card-primary">
+          <span class="d-card-icon">💬</span>
+          <div>
+            <div class="d-card-title">LINE で 返信 する</div>
+            <div class="d-card-sub">AI 下書き or 自分 で 書く</div>
+          </div>
+        </button>
+      </div>
+      <div class="d-tools">
+        <button class="d-tool">🏷 タグ</button>
+        <button class="d-tool">✏ 情報 編集</button>
+      </div>
+      <div class="d-sheet-note">
+        card click 時: <b>下 から sheet が スライド up</b> で 「今すぐ Zoom / 候補日 3つ / 日時 指定」 が 出る (画面 半分 を 覆う)
+      </div>
+    </div>
+  </div>
+
+  <div class="decide">
+    <h2>owner 判断 待ち</h2>
+    <p>
+      <b>案 A</b>: 現行 実装 (accordion emerald)。 このまま 微調整 で 進める なら 実装 差分 ゼロ。<br>
+      <b>案 B</b>: Tabs (左右 切替)。 両 method が 同時 に 「ある」 と 認知 させたい 場合。<br>
+      <b>案 C</b>: 番号 card (LSTEP風)。 業務 tool の 「手順 感」 出したい 場合。<br>
+      <b>案 D</b>: 2 大 card + bottom sheet。 モバイル 風、 tap 感 強い。
+    </p>
+    <p style="margin-top:12px;">
+      <b>返信 で 教えて</b>:<br>
+      ① どの 案 で 進める か (A / B / C / D / 別)<br>
+      ② PROD (v20260731O = 案 A 相当) を 一旦 revert する か (yes / no / このまま)<br>
+      ③ 「全部 pass」 の 場合 は もっと 抜本的 な UI 再設計 の 方向性 (「モーダル 全部 やめて 別画面 遷移 に しろ」 等) を 教えて
+    </p>
+  </div>
+
+  <p class="foot">FP Compass / 客モーダル 「初回接触」 drill バリエーション preview</p>
+</div>
+
+<script>
+  function switchTab(btn, id) {
+    const tabs = btn.parentElement.querySelectorAll('.b-tab');
+    tabs.forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    const content = btn.closest('.mock').querySelector('.b-content');
+    content.querySelectorAll('[id^="b-c-"]').forEach(c => c.style.display = 'none');
+    content.querySelector('#' + id).style.display = 'block';
+  }
+</script>
+</body>
+</html>
