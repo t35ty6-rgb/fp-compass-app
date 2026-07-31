@@ -1,0 +1,424 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>顧客モーダル 再構築 plan (v20260731U)</title>
+<link rel="stylesheet" href="https://app.skeleton-inc.jp/styles-v8-workspace.css?v=20260731T-sheet-balance-contrast&nc=RANDOM">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Noto Sans JP', -apple-system, sans-serif;
+    background: #f5f6f8;
+    color: #0F1729;
+    padding: 28px;
+    line-height: 1.7;
+  }
+  .wrap { max-width: 1400px; margin: 0 auto; }
+  h1 { font-size: 26px; font-weight: 900; letter-spacing: -0.02em; margin-bottom: 4px; }
+  .lead { color: #4B5563; font-size: 14px; font-weight: 500; margin-bottom: 24px; }
+
+  .note {
+    background: #FEF2F2; border: 1px solid #FCA5A5;
+    border-radius: 12px; padding: 18px 24px; margin-bottom: 28px;
+  }
+  .note h2 { font-size: 15px; font-weight: 900; color: #991B1B; margin-bottom: 10px; }
+  .note ul { list-style: none; }
+  .note li { font-size: 13px; color: #7F1D1D; font-weight: 500; padding: 3px 0 3px 22px; position: relative; line-height: 1.55; }
+  .note li::before { content: '×'; position: absolute; left: 4px; color: #DC2626; font-weight: 900; }
+  .note li.ok::before { content: '○'; color: #059669; }
+
+  .plan {
+    background: #fff;
+    border-radius: 16px;
+    padding: 24px 28px 28px;
+    margin-bottom: 22px;
+    border: 1px solid #E5E7EB;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+  }
+  .plan-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 6px; }
+  .plan-badge {
+    background: #00844A; color: #fff;
+    font-family: 'Manrope', monospace;
+    font-size: 12px; font-weight: 900; letter-spacing: 0.14em;
+    padding: 4px 12px; border-radius: 999px;
+  }
+  .plan-badge.current { background: #6B7280; }
+  .plan-title { font-size: 19px; font-weight: 900; letter-spacing: -0.01em; }
+  .plan-sub { color: #6B7280; font-size: 13.5px; font-weight: 500; margin-bottom: 20px; }
+
+  .diff-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px 20px; margin-top: 12px; }
+  .diff-item { font-size: 12.5px; padding: 4px 0 4px 20px; position: relative; color: #1F2937; font-weight: 600; line-height: 1.5; }
+  .diff-item.plus::before { content: '＋'; position: absolute; left: 0; color: #059669; font-weight: 900; }
+  .diff-item.minus::before { content: '−'; position: absolute; left: 0; color: #DC2626; font-weight: 900; }
+  .diff-item.change::before { content: '△'; position: absolute; left: 0; color: #F59E0B; font-weight: 900; }
+
+  .mockshot {
+    background: #f5f6f8;
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 14px;
+    overflow: hidden;
+  }
+  .mockshot-label {
+    font-size: 11px; color: #6B7280; letter-spacing: 0.12em;
+    font-family: 'Manrope', monospace; font-weight: 800; text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .mockshot img { display: block; max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 14px rgba(0,0,0,0.08); }
+
+  /* ============ 案 A: Clean rebuild (structure 同じ、 spacing token 統一) ============ */
+  .a-modal {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    min-height: 720px;
+    border: 1px solid #E5E7EB;
+  }
+  .a-left {
+    background: #FAFBFC;
+    border-right: 1px solid #E5E7EB;
+    padding: 24px 20px;
+    display: flex; flex-direction: column;
+    gap: 16px;
+  }
+  .a-profile { text-align: center; padding-bottom: 20px; border-bottom: 1px solid #E5E7EB; }
+  .a-avatar {
+    width: 72px; height: 72px; border-radius: 50%;
+    background: linear-gradient(135deg, #00844A, #065F46);
+    color: #fff; font-size: 28px; font-weight: 900;
+    display: inline-flex; align-items: center; justify-content: center;
+    margin-bottom: 12px;
+  }
+  .a-name { font-size: 20px; font-weight: 900; color: #0F1729; letter-spacing: -0.015em; }
+  .a-name-honor { font-size: 13px; color: #6B7280; font-weight: 500; margin-left: 4px; }
+  .a-kana { font-size: 12px; color: #6B7280; margin-top: 2px; }
+  .a-status { display: inline-block; margin-top: 10px; background: #DBEAFE; color: #1E40AF; font-size: 11px; font-weight: 800; padding: 3px 10px; border-radius: 6px; letter-spacing: 0.06em; }
+
+  .a-cta {
+    background: linear-gradient(135deg, #00844A, #047857);
+    color: #fff; border: none;
+    padding: 14px 16px; border-radius: 10px;
+    font-size: 14.5px; font-weight: 900;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    cursor: pointer; font-family: inherit;
+    box-shadow: 0 4px 12px rgba(0,132,74,0.22);
+  }
+  .a-cta-sub { display: block; font-size: 11px; font-weight: 500; opacity: 0.85; margin-top: 2px; }
+
+  .a-section {
+    background: #fff;
+    border: 1px solid #E5E7EB;
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+  .a-section-label {
+    font-size: 10.5px; color: #6B7280; font-weight: 800;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .a-stat-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; padding: 4px 0; font-size: 13px; }
+  .a-stat-row-k { color: #6B7280; font-weight: 500; }
+  .a-stat-row-v { color: #0F1729; font-weight: 800; }
+  .a-danger {
+    margin-top: auto; padding-top: 20px;
+    border-top: 1px solid #E5E7EB;
+  }
+  .a-danger button { width: 100%; background: #fff; color: #DC2626; border: 1px solid #FCA5A5; padding: 10px 14px; border-radius: 8px; font-size: 12.5px; font-weight: 800; cursor: pointer; font-family: inherit; }
+
+  .a-right { padding: 24px 28px; display: flex; flex-direction: column; gap: 20px; }
+  .a-flow {
+    background: #fff;
+    border: 1px solid #E5E7EB;
+    border-radius: 12px;
+    padding: 20px 22px;
+  }
+  .a-flow-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .a-flow-pill { background: linear-gradient(135deg,#C19A3A,#A0822E); color: #fff; font-size: 10.5px; font-weight: 800; padding: 3px 10px; border-radius: 999px; letter-spacing: 0.12em; }
+  .a-flow-pri { background: #FEE2E2; color: #991B1B; font-size: 10.5px; font-weight: 800; padding: 3px 10px; border-radius: 999px; letter-spacing: 0.06em; }
+  .a-flow-title { font-size: 20px; font-weight: 900; color: #0F1729; letter-spacing: -0.015em; margin-bottom: 4px; }
+  .a-flow-reason { font-size: 12.5px; color: #6B7280; margin-bottom: 16px; }
+  .a-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .a-card {
+    background: #fff; border: 1px solid #E5E7EB; border-radius: 10px;
+    padding: 16px; display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center;
+    cursor: pointer; text-align: left; font-family: inherit;
+  }
+  .a-card.recommended { border-color: #00844A; background: linear-gradient(135deg,#ECFDF5 0%, #fff 60%); }
+  .a-card-icon { width: 40px; height: 40px; background: #F1F5F9; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; font-size: 20px; }
+  .a-card.recommended .a-card-icon { background: #DCFCE7; }
+  .a-card-title { font-size: 15px; font-weight: 900; color: #0F1729; }
+  .a-card-sub { font-size: 11.5px; color: #6B7280; margin-top: 2px; }
+  .a-card-arrow { font-size: 20px; color: #9CA3AF; font-weight: 300; }
+
+  /* ★ sheet が INLINE (flow area 内、 cards の 下 に 展開) — 「意味わからない ところに ある」 fix */
+  .a-inline-sheet {
+    margin-top: 12px; background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 10px;
+    overflow: hidden;
+  }
+  .a-inline-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: #fff; border-bottom: 1px solid #E5E7EB; }
+  .a-inline-head-title { font-size: 13px; color: #6B7280; font-weight: 700; }
+  .a-inline-head-close { background: none; border: none; color: #6B7280; font-size: 16px; cursor: pointer; font-family: inherit; }
+  .a-inline-body { }
+  .a-inline-opt {
+    display: grid; grid-template-columns: 32px 1fr auto; gap: 12px; align-items: center;
+    padding: 14px 16px; border-top: 1px solid #E5E7EB; background: #fff; border-left: none; border-right: none; border-bottom: none;
+    cursor: pointer; text-align: left; font-family: inherit; width: 100%;
+  }
+  .a-inline-opt:first-of-type { border-top: none; }
+  .a-inline-opt:hover { background: #F9FAFB; }
+  .a-inline-opt::after { content: '›'; color: #9CA3AF; font-size: 20px; }
+  .a-inline-opt-icon { font-size: 18px; text-align: center; }
+  .a-inline-opt-label { font-size: 14px; font-weight: 900; color: #0F1729; }
+  .a-inline-opt-sub { font-size: 11.5px; color: #6B7280; margin-top: 1px; }
+
+  .a-tabs {
+    display: flex; gap: 4px; padding: 4px; background: #F1F3F7; border-radius: 12px;
+  }
+  .a-tab { flex: 1; padding: 10px 12px; font-size: 13px; font-weight: 700; color: #6B7280; background: transparent; border: none; border-radius: 8px; cursor: pointer; font-family: inherit; }
+  .a-tab.active { background: #fff; color: #0F1729; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+  .a-pane { padding: 16px 4px; color: #6B7280; font-size: 13px; }
+
+  /* ============ 案 B: Radical (single column, tabs top, drill main) ============ */
+  .b-modal {
+    background: #fff; border-radius: 12px; overflow: hidden;
+    border: 1px solid #E5E7EB;
+  }
+  .b-hero {
+    display: grid; grid-template-columns: auto 1fr auto; gap: 16px; align-items: center;
+    padding: 20px 24px; background: #FAFBFC; border-bottom: 1px solid #E5E7EB;
+  }
+  .b-avatar { width: 52px; height: 52px; border-radius: 50%; background: linear-gradient(135deg,#00844A,#065F46); color: #fff; font-size: 20px; font-weight: 900; display: inline-flex; align-items: center; justify-content: center; }
+  .b-hero-name { font-size: 20px; font-weight: 900; letter-spacing: -0.01em; }
+  .b-hero-meta { font-size: 12px; color: #6B7280; font-weight: 500; margin-top: 2px; }
+  .b-hero-cta { background: #00844A; color: #fff; border: none; padding: 12px 20px; border-radius: 10px; font-size: 14px; font-weight: 900; cursor: pointer; font-family: inherit; }
+  .b-tabs { display: flex; gap: 0; background: #fff; border-bottom: 1px solid #E5E7EB; padding: 0 24px; }
+  .b-tab { padding: 14px 18px; font-size: 14px; font-weight: 700; color: #6B7280; background: transparent; border: none; border-bottom: 3px solid transparent; cursor: pointer; font-family: inherit; margin-bottom: -1px; }
+  .b-tab.active { color: #00844A; border-bottom-color: #00844A; }
+  .b-body { padding: 24px; }
+
+  .b-flow { background: #fff; border: 1px solid #E5E7EB; border-radius: 12px; padding: 22px 24px; margin-bottom: 20px; }
+  .b-flow-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .b-flow-eyebrow { display: flex; align-items: center; gap: 10px; }
+  .b-flow-title { font-size: 20px; font-weight: 900; color: #0F1729; letter-spacing: -0.015em; }
+  .b-flow-reason { font-size: 12.5px; color: #6B7280; margin-bottom: 16px; }
+  .b-flow-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .b-flow-card { background: #fff; border: 1px solid #E5E7EB; border-radius: 10px; padding: 20px 16px; text-align: center; cursor: pointer; font-family: inherit; }
+  .b-flow-card.recommended { border-color: #00844A; background: linear-gradient(180deg,#ECFDF5,#fff 70%); }
+  .b-flow-card-icon { font-size: 28px; margin-bottom: 8px; display: block; }
+  .b-flow-card-title { font-size: 14.5px; font-weight: 900; }
+  .b-flow-card-sub { font-size: 11px; color: #6B7280; margin-top: 3px; }
+
+  .decide {
+    background: #ECFDF5;
+    border: 2px solid #00844A;
+    border-radius: 14px;
+    padding: 22px 28px;
+    margin-top: 12px;
+  }
+  .decide h2 { font-size: 16px; font-weight: 900; color: #065F46; margin-bottom: 8px; }
+  .decide p { font-size: 13.5px; color: #0F1729; font-weight: 500; line-height: 1.75; }
+  .decide b { color: #00844A; font-weight: 900; }
+
+  .foot { text-align: center; color: #6B7280; font-size: 12px; padding: 24px 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>顧客モーダル 再構築 plan</h1>
+  <p class="lead">owner 「バランス 余白 全部 おかしい / 3個 の 位置 意味わからない / 再構築 しろ」 対応。 現状 の 問題 12 個 洗い出し + 2 方向 mockup で picks 前提 提示。</p>
+
+  <div class="note">
+    <h2>現状 (v20260731T) の balance 問題 12 個 (私 が screenshot 撮って 実測)</h2>
+    <ul>
+      <li>左 column: avatar 「田」 が 左寄せ (center じゃ ない)</li>
+      <li>左 column: 「面談 を 開始」 button の container が pill 状 で 変</li>
+      <li>左 column: タグ section だけ 2px 灰 border + 白 bg で 他 section と 不揃い</li>
+      <li>左 column: 「この方 に 必要 な フォロー」 赤 badge が 場違い</li>
+      <li>左 column: 「その他 の 連絡 手段」 collapse が 縦線 だけ で 中身 見えない</li>
+      <li>左 column: アンケート button 単独 で 場違い</li>
+      <li>左 column: stats (管理資産 / 最終接触 / 年齢) の 空白 スペース だらっと 広い</li>
+      <li>左 column: section 間 margin バラバラ (14 / 16 / 24 px 混在)</li>
+      <li>右 column: cd-flow の 下 (initial) が 空 で tabs が いきなり</li>
+      <li>右 column: tabs plain で 目立たず、 pane 空 → 右 半分 の 白 スペース 過剰</li>
+      <li>右 column: <b>「3 個」 = sheet の option (今すぐ / 候補日 / 日時) が viewport 一番下 に fixed</b> で click した card から 遠く 「意味わからない」 と 感じる</li>
+      <li>全体: 左右 幅 バランス · section 余白 · button 統一 感 全部 バラつき</li>
+    </ul>
+  </div>
+
+  <div class="plan">
+    <div class="plan-head">
+      <span class="plan-badge current">現状</span>
+      <span class="plan-title">v20260731T 実 screenshot (私 が 撮った 生 balance)</span>
+    </div>
+    <p class="plan-sub">standalone HTML で 実 CSS 読み込んで render、 実際 の 客モーダル と 同じ balance が 出る (login bypass 詰まってる ため 実 tenant の screenshot は owner 側 実 tenant 依頼)。</p>
+    <div class="mockshot">
+      <div class="mockshot-label">現状 balance (私 実測 · 上 diagnostic list の 12 問題 全部 見える)</div>
+      <img src="/tmp-view-full-modal.png" alt="現状 modal" style="max-width: 100%;" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+      <div style="display:none;padding:40px;text-align:center;color:#6B7280;">現状 modal screenshot は 別途 owner に お渡し (file:///tmp/full-modal-actual.png)</div>
+    </div>
+  </div>
+
+  <!-- 案 A -->
+  <div class="plan">
+    <div class="plan-head">
+      <span class="plan-badge">案 A</span>
+      <span class="plan-title">Clean rebuild (structure 維持、 spacing/style token 統一)</span>
+    </div>
+    <p class="plan-sub">2 column layout は 保つ、 section 全部 同じ padding · border-radius · font に 統一。 sheet は INLINE (flow area 内 で cards 下 に 展開) で 「意味わからない ところ」 fix。</p>
+
+    <div class="diff-list">
+      <div class="diff-item plus">左 column を LSTEP風 fixed 幅 320px + 灰 bg で 「サイド」 感 明確</div>
+      <div class="diff-item plus">avatar center + name 大型 (72×72、 20px 900)</div>
+      <div class="diff-item plus">section 全 統一 (padding 14 16, border-radius 10, section-label 上部)</div>
+      <div class="diff-item plus">stats を 表 row 化 (管理資産 · 最終接触 · 年齢 · 家族)</div>
+      <div class="diff-item change">「面談 開始」 大 CTA は 上部 に 1個 だけ (下 の 「その他 連絡手段」 は 統合)</div>
+      <div class="diff-item minus">「タグ section 独立 box」 → プロフィール 内 の row 化 で 統合</div>
+      <div class="diff-item minus">「アンケート」 単独 button → その他 tools 群 に 統合</div>
+      <div class="diff-item plus">danger zone は bottom sticky (常時 見える が 目立たない)</div>
+      <div class="diff-item plus"><b>sheet inline 化</b>: click 後 cards の 直下 に 展開 (今 の viewport bottom fixed 廃止)</div>
+      <div class="diff-item plus">右 column: cd-flow コンパクト化 + tabs 大型 + pane 中身 の 空 fallback で 「次 に やる こと」 導線</div>
+    </div>
+
+    <div class="mockshot">
+      <div class="mockshot-label">案 A mockup (統一 spacing + inline sheet)</div>
+      <div class="a-modal">
+        <div class="a-left">
+          <div class="a-profile">
+            <div class="a-avatar">田</div>
+            <div><span class="a-name">田中 太郎</span><span class="a-name-honor">様</span></div>
+            <div class="a-kana">たなか たろう</div>
+            <div class="a-status">新規</div>
+          </div>
+          <button class="a-cta">🎙 面談 を 開始<span class="a-cta-sub">今すぐ / 予約 / URL / 電話</span></button>
+          <div class="a-section">
+            <div class="a-section-label">この 客 の 状況</div>
+            <div class="a-stat-row"><span class="a-stat-row-k">管理 資産</span><span class="a-stat-row-v">¥850 万</span></div>
+            <div class="a-stat-row"><span class="a-stat-row-k">最終 接触</span><span class="a-stat-row-v">未 記録</span></div>
+            <div class="a-stat-row"><span class="a-stat-row-k">年齢</span><span class="a-stat-row-v">45 歳</span></div>
+            <div class="a-stat-row"><span class="a-stat-row-k">家族</span><span class="a-stat-row-v">配偶者 + 子2</span></div>
+          </div>
+          <div class="a-section">
+            <div class="a-section-label">プロフィール</div>
+            <div class="a-stat-row"><span class="a-stat-row-k">職業</span><span class="a-stat-row-v">会社員 (IT)</span></div>
+            <div class="a-stat-row"><span class="a-stat-row-k">流入</span><span class="a-stat-row-v">セミナー</span></div>
+            <div class="a-stat-row"><span class="a-stat-row-k">タグ</span><span class="a-stat-row-v" style="color:#6B7280;font-weight:500;">— 追加 する</span></div>
+          </div>
+          <div class="a-danger">
+            <button>🗑 田中 太郎 さん を 削除</button>
+          </div>
+        </div>
+        <div class="a-right">
+          <div class="a-flow">
+            <div class="a-flow-head">
+              <span class="a-flow-pill">✨ AI 推奨</span>
+              <span class="a-flow-pri">至急</span>
+            </div>
+            <div class="a-flow-title">初回接触</div>
+            <div class="a-flow-reason">未接触 (最終接触 記録なし)</div>
+            <div class="a-cards">
+              <button class="a-card"><span class="a-card-icon">📞</span><div><div class="a-card-title">Zoom で 面談</div><div class="a-card-sub">今すぐ / 候補日 / 日時</div></div><span class="a-card-arrow">›</span></button>
+              <button class="a-card recommended"><span class="a-card-icon">💬</span><div><div class="a-card-title">LINE で 返信</div><div class="a-card-sub">AI 下書き / 自分 で 書く</div></div><span class="a-card-arrow">›</span></button>
+            </div>
+            <!-- INLINE sheet expanded (Zoom 押した 想定) -->
+            <div class="a-inline-sheet">
+              <div class="a-inline-head">
+                <span class="a-inline-head-title">📞 Zoom で 面談 する — 方法 選択</span>
+                <button class="a-inline-head-close">✕</button>
+              </div>
+              <div class="a-inline-body">
+                <button class="a-inline-opt"><span class="a-inline-opt-icon">⚡</span><div><div class="a-inline-opt-label">今すぐ Zoom</div><div class="a-inline-opt-sub">URL 即発行</div></div></button>
+                <button class="a-inline-opt"><span class="a-inline-opt-icon">🗓</span><div><div class="a-inline-opt-label">候補日 3つ 送る</div><div class="a-inline-opt-sub">客 が 選ぶ</div></div></button>
+                <button class="a-inline-opt"><span class="a-inline-opt-icon">📅</span><div><div class="a-inline-opt-label">日時 を 指定</div><div class="a-inline-opt-sub">自分 で 決める</div></div></button>
+              </div>
+            </div>
+          </div>
+          <div class="a-tabs">
+            <button class="a-tab active">概観</button>
+            <button class="a-tab">LINE</button>
+            <button class="a-tab">議事録</button>
+            <button class="a-tab">タスク</button>
+            <button class="a-tab">家族</button>
+          </div>
+          <div class="a-pane">概観 pane — 実際 は KPI · ライフイベント · 提案 履歴 等 が 出る</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 案 B -->
+  <div class="plan">
+    <div class="plan-head">
+      <span class="plan-badge">案 B</span>
+      <span class="plan-title">Single column (左サイドバー 廃止、 上部 hero + tabs + main の 縦 3 層)</span>
+    </div>
+    <p class="plan-sub">2 column 廃止 で 幅 使い 切る。 上部 に コンパクト hero (avatar + name + 「面談 開始」 CTA) → tabs → main。 flow は tab の 中 (「概観」 tab に inline)。 sheet も inline。</p>
+
+    <div class="diff-list">
+      <div class="diff-item plus">全 幅 使える (画面 広く 情報 密度 高い)</div>
+      <div class="diff-item plus">tabs が 目立つ (上部 帯 · 現在 tab 緑 border)</div>
+      <div class="diff-item plus">avatar + name + CTA が hero に 集約、 スクロール しても hero 見える</div>
+      <div class="diff-item minus">サイド プロフィール が 「概観」 tab の 中 に 移動 (2 click で 見れる)</div>
+      <div class="diff-item change">「削除」 は 別 modal or 設定 tab に 移動</div>
+      <div class="diff-item plus">flow の card 3 列 (Zoom / LINE / 情報) で 全部 見える</div>
+    </div>
+
+    <div class="mockshot">
+      <div class="mockshot-label">案 B mockup (single column)</div>
+      <div class="b-modal">
+        <div class="b-hero">
+          <div class="b-avatar">田</div>
+          <div>
+            <div class="b-hero-name">田中 太郎 <span style="font-size:13px;color:#6B7280;font-weight:500;">様</span></div>
+            <div class="b-hero-meta">45 歳 · 会社員 (IT) · AUM 850 万 · 最終 接触: 未 記録</div>
+          </div>
+          <button class="b-hero-cta">🎙 面談 を 開始</button>
+        </div>
+        <div class="b-tabs">
+          <button class="b-tab active">概観</button>
+          <button class="b-tab">LINE (3)</button>
+          <button class="b-tab">議事録</button>
+          <button class="b-tab">タスク</button>
+          <button class="b-tab">家族</button>
+          <button class="b-tab">設定</button>
+        </div>
+        <div class="b-body">
+          <div class="b-flow">
+            <div class="b-flow-head">
+              <div class="b-flow-eyebrow">
+                <span class="a-flow-pill">✨ AI 推奨</span>
+                <span class="a-flow-pri">至急</span>
+              </div>
+            </div>
+            <div class="b-flow-title">初回接触</div>
+            <div class="b-flow-reason">未接触 (最終接触 記録なし)</div>
+            <div class="b-flow-cards">
+              <button class="b-flow-card"><span class="b-flow-card-icon">📞</span><div class="b-flow-card-title">Zoom で 面談</div><div class="b-flow-card-sub">3 方式</div></button>
+              <button class="b-flow-card recommended"><span class="b-flow-card-icon">💬</span><div class="b-flow-card-title">LINE で 返信</div><div class="b-flow-card-sub">AI / 手入力</div></button>
+              <button class="b-flow-card"><span class="b-flow-card-icon">✏</span><div class="b-flow-card-title">情報 編集</div><div class="b-flow-card-sub">タグ · 家族</div></button>
+            </div>
+          </div>
+          <div style="color:#6B7280;font-size:13px;text-align:center;padding:40px 20px;">↓ この 下 に KPI · タイムライン · 提案 履歴 · ライフイベント 等 が 縦 積み</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="decide">
+    <h2>owner 判断 待ち</h2>
+    <p>
+      <b>案 A</b>: Clean rebuild (2 column 維持、 spacing 統一、 sheet inline) — <b>変更 保守 的 · 実装 早い (半日)</b>。 owner が 現行 の 情報 密度 を そのまま 欲しい 場合。<br>
+      <b>案 B</b>: Single column (左 サイド 廃止、 hero + tabs + main の 3 層) — <b>抜本 変更 · 実装 1-2 日</b>。 「もっと 広く 使いたい / モバイル 見やすい」 場合。<br>
+    </p>
+    <p style="margin-top:12px;">
+      「A で」 「B で」 「A の xxx を B の yyy に」 「別 案 出せ」 の どれ か で picks。<br>
+      決まったら 実装 (フライング 禁止 · picks 待ち)。 backend LINE push · P3 content variant も picks 揃い 次第 順次 進める。
+    </p>
+  </div>
+
+  <p class="foot">FP Compass / 客モーダル 再構築 plan preview</p>
+</div>
+</body>
+</html>
