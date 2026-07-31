@@ -11343,3 +11343,96 @@ section > div[data-line-view] > div[style*="background: #fff"] {
     max-height: none !important;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   2026-07-31 · owner 承認 「どれも良いね」 · 現行 UI 段階 改善 (5 案 全部)
+   base: 現行 selectors 維持、 末尾 override で 40-60代 向け detail-up
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* CASE 01: 左サイドバー プロフィール 大型化 + 主 CTA 明確化 */
+.cd-modal .cd-profile-avatar {
+  width: 68px !important;
+  height: 68px !important;
+  font-size: 26px !important;
+  background-image: linear-gradient(135deg, #00844A 0%, #065F46 100%) !important;
+}
+.cd-modal .cd-profile-name { font-size: 20px !important; font-weight: 900 !important; letter-spacing: -0.015em !important; }
+.cd-modal .cd-profile-honor, .cd-modal .cd-profile-kana { font-size: 13px !important; }
+#cd-meeting-start-btn {
+  min-height: 60px !important;
+  font-size: 17px !important;
+  font-weight: 900 !important;
+  padding: 16px 22px !important;
+  box-shadow: 0 8px 24px rgba(5,150,105,0.30) !important;
+  letter-spacing: 0.01em !important;
+}
+#cd-meeting-start-btn:hover { background: #06703F !important; box-shadow: 0 12px 32px rgba(5,150,105,0.42) !important; }
+
+/* CASE 02: タブ の 視認性 + 「0」 badge 非表示 */
+.cd-modal .cd-tab {
+  font-size: 16px !important;
+  font-weight: 800 !important;
+  padding: 16px 18px !important;
+  min-height: 52px !important;
+}
+.cd-modal .cd-tab.cd-tab-active { border-bottom-width: 3px !important; }
+.cd-modal .cd-tab-count {
+  padding: 3px 9px !important;
+  font-size: 12px !important;
+  font-weight: 800 !important;
+  margin-left: 5px !important;
+}
+.cd-modal .cd-tab-count[data-count="0"] { display: none !important; }
+
+/* CASE 03: 「初回接触」 hero card 単色化 (紫グラデ → primary emerald グラデ) */
+.cd-modal .cd-flow {
+  background: linear-gradient(135deg, #00844A 0%, #065F46 100%) !important;
+}
+.cd-modal .cd-flow::before { display: none !important; }
+.cd-modal .cd-flow-title { font-size: 22px !important; letter-spacing: -0.01em !important; font-weight: 900 !important; }
+.cd-modal .cd-flow-eyebrow-pill {
+  background: rgba(255,255,255,0.22) !important;
+  color: #fff !important;
+  letter-spacing: 0.14em !important;
+  font-weight: 800 !important;
+  font-family: 'Manrope', sans-serif !important;
+  font-size: 11px !important;
+}
+.cd-modal .cd-flow-eyebrow-pri { background: rgba(255,255,255,0.16) !important; color: #FEF08A !important; }
+
+/* CASE 04: 顧客リスト 行 大型化 (padding + font-size up、 layout 破壊 なし) */
+#clients-table tbody tr, .customer-row {
+  min-height: 68px;
+}
+#clients-table tbody td { padding: 16px 12px !important; font-size: 15px !important; vertical-align: middle !important; }
+#clients-table tbody tr td:first-child {
+  font-size: 17px !important;
+  font-weight: 800 !important;
+  color: #0F1729 !important;
+}
+#clients-table tbody tr:hover { background: #FBFBFD !important; cursor: pointer; }
+
+/* CASE 05: 状態 バッジ 色分け + ドット */
+.cust-status-new,   [class*="status"][data-status="new"],   .badge-status-new,
+.cust-status-active,[class*="status"][data-status="active"],.badge-status-active,
+.cust-status-follow,[class*="status"][data-status="follow"],.badge-status-follow,
+.cust-status-overdue,[class*="status"][data-status="overdue"],.badge-status-overdue {
+  font-size: 14px !important;
+  font-weight: 800 !important;
+  padding: 5px 12px !important;
+  border-radius: 8px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  letter-spacing: 0.01em !important;
+}
+.cust-status-new::before, [class*="status"][data-status="new"]::before, .badge-status-new::before,
+.cust-status-active::before, [class*="status"][data-status="active"]::before, .badge-status-active::before,
+.cust-status-follow::before, [class*="status"][data-status="follow"]::before, .badge-status-follow::before,
+.cust-status-overdue::before, [class*="status"][data-status="overdue"]::before, .badge-status-overdue::before {
+  content: ''; width: 8px; height: 8px; border-radius: 50%; background: currentColor;
+}
+.cust-status-new,   [class*="status"][data-status="new"],   .badge-status-new    { background: #DBEAFE !important; color: #1E40AF !important; }
+.cust-status-active,[class*="status"][data-status="active"],.badge-status-active { background: #ECFDF5 !important; color: #065F46 !important; }
+.cust-status-follow,[class*="status"][data-status="follow"],.badge-status-follow { background: #FED7AA !important; color: #9A3412 !important; }
+.cust-status-overdue,[class*="status"][data-status="overdue"],.badge-status-overdue { background: #FEE2E2 !important; color: #991B1B !important; }

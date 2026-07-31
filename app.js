@@ -10818,3 +10818,28 @@ window.mergeFirestoreMeetingsIntoLiveData = async function (client) {
     return 0;
   }
 };
+
+// ═══════════════════════════════════════════════════════
+// 2026-07-31 · CASE 02 detail-up: タブ の 「0」 badge を 非表示 化
+// .cd-tab-count 要素 の textContent が "0" の 時 に data-count="0" 属性 付与
+// → CSS `.cd-tab-count[data-count="0"] { display:none }` が 発火
+// ═══════════════════════════════════════════════════════
+(function () {
+  function syncCountAttrs() {
+    document.querySelectorAll('.cd-tab-count').forEach(el => {
+      const t = (el.textContent || '').trim();
+      if (t === '0' || t === '' || t === '…') el.setAttribute('data-count', '0');
+      else el.removeAttribute('data-count');
+    });
+  }
+  const boot = () => {
+    syncCountAttrs();
+    try {
+      const obs = new MutationObserver(() => syncCountAttrs());
+      obs.observe(document.body, { childList: true, subtree: true, characterData: true });
+    } catch (_) {}
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else setTimeout(boot, 200);
+  setInterval(syncCountAttrs, 3000);
+})();
