@@ -3844,7 +3844,33 @@
     // ★ 議事録タブ count = 実際の カード数 (メイン + orphan) に同期
     //   lazy-render 導入で panel が modal open 時 空 → count 0 バグ対策として、
     //   panel が既に render 済 なら DOM カウント、 未render なら data から 推定 (ai_results + bookings 名寄せ)
+    // 2026-07-31 fix: modal open 時 に Firestore /meetings も 先読み merge して count に 反映
+    //   (Zoom webhook 保存 の 議事録 が 「議事録 0」 と 表示 される bug 恒久 fix)
     try {
+      if (typeof window.mergeFirestoreMeetingsIntoLiveData === 'function') {
+        (async () => {
+          const added = await window.mergeFirestoreMeetingsIntoLiveData(c);
+          if (added > 0) {
+            // count 再計算 + タブ badge 更新
+            const cntEl2 = document.getElementById('cd-meetings-count');
+            if (cntEl2) {
+              const live = window.LineAppLiveData || {};
+              const aiForC = (live.ai_results || []).filter(a =>
+                (a.userId && (a.userId === c.id || a.userId === c.lineFriendId)) ||
+                (a.customerName && a.customerName === c.name)
+              );
+              const bkForC = (live.bookings || []).filter(b => b.userId === c.lineFriendId || b.name === c.name);
+              const seen = new Set(); bkForC.forEach(b => seen.add(b.ts || ''));
+              let total = bkForC.length;
+              aiForC.forEach(a => { if (!seen.has(a.bookingTs || '')) total++; });
+              cntEl2.textContent = total;
+            }
+            // panel cache invalidate → 次 タブ 開閉 で 再 render
+            const mp = document.querySelector('[data-cdpanel="meetings"]');
+            if (mp) mp.dataset.cacheKey = '';
+          }
+        })();
+      }
       const cntEl = document.getElementById('cd-meetings-count');
       if (cntEl) {
         const meetingsPanel = document.querySelector('[data-cdpanel="meetings"]');
