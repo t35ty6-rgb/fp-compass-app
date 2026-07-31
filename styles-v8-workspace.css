@@ -2217,25 +2217,23 @@ table.clients [class*="avatar"],
   z-index: 5;
 }
 
-/* ========== AI Flow: 3-step guided action (replaces .cd-nba) ========== */
+/* ========== AI Flow: 3-step guided action (replaces .cd-nba) ==========
+ * 2026-07-31 v20260731Q owner NG「クソみたい / 見えねえ」対応:
+ * 旧 紫 グラデ base (0F1117→1A1F2E) は PC 幅 で 生き残っており contrast 破壊 の 元凶。
+ * 全 幅 で 白 background に 統一、 border + subtle shadow で card 感 を 出す。
+ * mobile 用 の line 9334 白 override は そのまま (重複 無害) */
 .cd-flow {
   position: relative;
-  background-image: linear-gradient(135deg, #0F1117 0%, #1A1F2E 100%);
-  color: #fff;
-  border: 1px solid #232838;
+  background: #FFFFFF;
+  color: #0F1729;
+  border: 1px solid #E5E7EB;
   border-radius: 16px;
   padding: 22px 24px;
   margin-bottom: 22px;
   overflow: hidden;
-  box-shadow: 0 12px 32px rgba(15,17,23,0.18);
+  box-shadow: 0 2px 8px rgba(15,23,41,0.05);
 }
-.cd-flow::before {
-  content: ""; position: absolute;
-  right: -60px; top: -60px;
-  width: 220px; height: 220px;
-  background: radial-gradient(circle, rgba(91,91,240,0.30) 0%, transparent 65%);
-  pointer-events: none;
-}
+.cd-flow::before { display: none; }
 .cd-flow-eyebrow {
   display: flex; align-items: center; justify-content: space-between; gap: 10px;
   margin-bottom: 12px;
@@ -2244,40 +2242,41 @@ table.clients [class*="avatar"],
 .cd-flow-eyebrow-pill {
   display: inline-flex; align-items: center; gap: 6px;
   font-family: var(--font-display);
-  font-size: 10.5px; font-weight: 700;
+  font-size: 10.5px; font-weight: 800;
   letter-spacing: 0.12em; text-transform: uppercase;
-  color: #A78BFA;
-  background: rgba(167,139,250,0.18);
-  border: 1px solid rgba(167,139,250,0.32);
+  color: #FFFFFF;
+  background: linear-gradient(135deg, #C19A3A, #A0822E);
+  border: none;
   padding: 4px 10px;
   border-radius: 100px;
 }
 .cd-flow-eyebrow-pill i[data-lucide] { width: 12px !important; height: 12px !important; }
 .cd-flow-eyebrow-pri {
   font-family: var(--font-display);
-  font-size: 10.5px; font-weight: 700;
+  font-size: 10.5px; font-weight: 800;
   letter-spacing: 0.1em; text-transform: uppercase;
-  background: rgba(248,113,113,0.18);
-  color: #FCA5A5;
-  border: 1px solid rgba(248,113,113,0.32);
+  background: #FEE2E2;
+  color: #991B1B;
+  border: none;
   padding: 3px 9px;
   border-radius: 4px;
 }
 .cd-flow-title {
   font-family: var(--font-display);
-  font-weight: 800; font-size: 22px;
+  font-weight: 900; font-size: 22px;
   letter-spacing: -0.028em;
   margin-bottom: 6px;
   position: relative;
-  color: #fff;
+  color: #0F1729;
 }
 .cd-flow-reason {
   font-family: var(--font-body);
-  font-size: 12.5px;
-  color: #B3B8C3;
-  line-height: 1.5;
+  font-size: 13px;
+  color: #4B5563;
+  line-height: 1.55;
   margin-bottom: 20px;
   position: relative;
+  font-weight: 500;
 }
 
 /* 3-step flow */
