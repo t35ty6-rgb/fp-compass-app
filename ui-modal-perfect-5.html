@@ -492,6 +492,229 @@
   .c5-tl-ch.meet { background: var(--emerald-soft); color: var(--emerald-2); }
   .c5-tl-ch.prop { background: var(--blue-soft); color: var(--blue); }
 
+  /* ============================================
+   * LINE tab: 本物 LINE UI を そのまま再現
+   * ============================================ */
+  .tab.line-tab {
+    background: #06C755; color: #fff; border-color: #06C755;
+    padding: 12px 22px; font-size: 14px; font-weight: 900;
+    display: inline-flex; align-items: center; gap: 8px;
+    box-shadow: 0 2px 8px rgba(6,199,85,0.3);
+  }
+  .tab.line-tab:hover { background: #05B24C; border-color: #05B24C; }
+  .tab.line-tab.active { background: #06C755; color: #fff; border-color: #06C755; }
+  .tab.line-tab .line-logo {
+    display: inline-flex; width: 18px; height: 18px; background: #fff; color: #06C755;
+    border-radius: 4px; font-size: 10px; font-weight: 900;
+    align-items: center; justify-content: center; letter-spacing: -0.02em;
+  }
+  .tab.line-tab .tab-live {
+    display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+    background: #fff; margin-left: 2px;
+    box-shadow: 0 0 0 0 rgba(255,255,255,0.7);
+    animation: line-pulse 2s infinite;
+  }
+  @keyframes line-pulse {
+    0% { box-shadow: 0 0 0 0 rgba(255,255,255,0.7); }
+    70% { box-shadow: 0 0 0 6px rgba(255,255,255,0); }
+    100% { box-shadow: 0 0 0 0 rgba(255,255,255,0); }
+  }
+
+  .line-canvas {
+    background: #fff; border: 1px solid var(--rule); border-radius: 14px;
+    overflow: hidden; box-shadow: 0 6px 24px rgba(15,23,41,0.06);
+  }
+  .line-canvas-context {
+    background: #06C755; color: #fff;
+    padding: 12px 20px; font-size: 12px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .line-canvas-context .lcc-badge {
+    background: #fff; color: #06C755;
+    font-family: 'Manrope',monospace; font-size: 10.5px; font-weight: 900;
+    letter-spacing: 0.1em; padding: 3px 9px; border-radius: 4px;
+  }
+  .line-canvas-context b { font-weight: 800; }
+  .line-canvas-context .lcc-note { margin-left: auto; color: rgba(255,255,255,0.85); font-size: 11.5px; }
+
+  .line { min-height: 720px; display: grid; grid-template-columns: 360px 1fr; background: #fff; }
+  /* left: 顧客リスト */
+  .line-list-pane { border-right: 1px solid #E5E7EB; background: #F7F8FA; display: flex; flex-direction: column; }
+  .line-list-header {
+    padding: 14px 16px 12px; background: #fff; border-bottom: 1px solid #E5E7EB;
+  }
+  .line-list-title { font-size: 17px; font-weight: 900; color: #0F1729; letter-spacing: -0.01em; margin-bottom: 10px; }
+  .line-search {
+    background: #F1F3F5; border: none; border-radius: 8px;
+    padding: 9px 12px 9px 34px; width: 100%;
+    font-size: 13px; color: #0F1729; font-family: inherit;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none' stroke='%239CA3AF' stroke-width='2'><circle cx='7' cy='7' r='5'/><path d='M11 11l3 3'/></svg>");
+    background-repeat: no-repeat;
+    background-position: 12px center;
+  }
+  .line-list-filter {
+    display: flex; gap: 6px; padding: 10px 12px; background: #fff; border-bottom: 1px solid #E5E7EB;
+  }
+  .line-list-filter .lf {
+    font-size: 11.5px; font-weight: 700; color: #6B7280; background: transparent;
+    border: 1px solid #E5E7EB; padding: 4px 10px; border-radius: 999px;
+    cursor: pointer; font-family: inherit;
+  }
+  .line-list-filter .lf.active { background: #06C755; color: #fff; border-color: #06C755; }
+  .line-list { flex: 1; overflow-y: auto; }
+  .line-item {
+    display: grid; grid-template-columns: 46px 1fr auto; gap: 12px;
+    padding: 12px 14px; cursor: pointer; border-bottom: 1px solid #EEF0F2;
+    background: #fff; align-items: start;
+  }
+  .line-item:hover { background: #FAFBFC; }
+  .line-item.active { background: #E7F7EE; }
+  .line-item-avatar {
+    width: 46px; height: 46px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 800; font-size: 16px;
+    background: linear-gradient(135deg, #06C755, #04A94A);
+  }
+  .line-item-avatar.b1 { background: linear-gradient(135deg, #F87171, #DC2626); }
+  .line-item-avatar.b2 { background: linear-gradient(135deg, #60A5FA, #2563EB); }
+  .line-item-avatar.b3 { background: linear-gradient(135deg, #FBBF24, #D97706); }
+  .line-item-avatar.b4 { background: linear-gradient(135deg, #C084FC, #7C3AED); }
+  .line-item-avatar.b5 { background: linear-gradient(135deg, #22D3EE, #0891B2); }
+  .line-item-avatar.b6 { background: linear-gradient(135deg, #F472B6, #DB2777); }
+  .line-item-avatar.b7 { background: linear-gradient(135deg, #A3E635, #4D7C0F); }
+  .line-item-main { min-width: 0; }
+  .line-item-name { font-size: 14px; font-weight: 800; color: #0F1729; letter-spacing: -0.005em; margin-bottom: 2px; display: flex; align-items: center; gap: 6px; }
+  .line-item-tag {
+    display: inline-block; font-size: 9.5px; font-weight: 800; color: #6B7280;
+    background: #F1F3F5; padding: 1px 6px; border-radius: 3px; letter-spacing: 0.04em;
+  }
+  .line-item-preview {
+    font-size: 12.5px; color: #6B7280; font-weight: 500;
+    line-height: 1.4; overflow: hidden; text-overflow: ellipsis;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  }
+  .line-item-right { text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+  .line-item-when { font-family: 'Manrope',monospace; font-size: 10.5px; color: #9CA3AF; font-weight: 700; letter-spacing: 0.02em; }
+  .line-unread {
+    background: #06C755; color: #fff; font-family: 'Manrope',monospace;
+    font-size: 10.5px; font-weight: 900; min-width: 18px; height: 18px;
+    padding: 0 5px; border-radius: 999px;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+
+  /* right: トーク */
+  .line-chat-pane { display: flex; flex-direction: column; background: #7A9BB8; min-height: 720px; }
+  .line-chat-header {
+    background: #fff; padding: 12px 20px; border-bottom: 1px solid #E5E7EB;
+    display: grid; grid-template-columns: 40px 1fr auto; gap: 12px; align-items: center;
+  }
+  .line-chat-avatar {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: linear-gradient(135deg, #F87171, #DC2626); color: #fff;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 15px;
+  }
+  .line-chat-name { font-size: 15px; font-weight: 900; color: #0F1729; letter-spacing: -0.005em; }
+  .line-chat-sub { font-size: 11.5px; color: #6B7280; font-weight: 500; margin-top: 1px; }
+  .line-chat-actions { display: flex; gap: 4px; }
+  .line-chat-actions .lca {
+    width: 34px; height: 34px; border-radius: 8px; border: none; background: transparent;
+    color: #6B7280; cursor: pointer; font-family: inherit;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .line-chat-actions .lca:hover { background: #F1F3F5; color: #0F1729; }
+  .line-chat-actions .lca svg { width: 20px; height: 20px; }
+
+  .line-chat-body {
+    flex: 1; overflow-y: auto; padding: 20px 24px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .line-day-divider {
+    text-align: center; margin: 12px 0 4px;
+  }
+  .line-day-divider span {
+    background: rgba(0,0,0,0.35); color: #fff;
+    font-size: 10.5px; font-weight: 700; padding: 3px 12px; border-radius: 999px;
+  }
+  .line-msg { display: flex; gap: 8px; max-width: 76%; align-items: flex-end; }
+  .line-msg.them { align-self: flex-start; }
+  .line-msg.me { align-self: flex-end; flex-direction: row-reverse; }
+  .line-msg-avatar {
+    width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+    background: linear-gradient(135deg, #F87171, #DC2626); color: #fff;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 13px;
+  }
+  .line-msg.me .line-msg-avatar { visibility: hidden; width: 0; margin: 0; }
+  .line-msg-content { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .line-msg-name {
+    font-size: 11px; color: rgba(255,255,255,0.9); font-weight: 700;
+    margin-left: 4px;
+  }
+  .line-msg.me .line-msg-name { display: none; }
+  .line-bubble-wrap { display: flex; align-items: flex-end; gap: 5px; }
+  .line-msg.me .line-bubble-wrap { flex-direction: row-reverse; }
+  .line-bubble {
+    padding: 9px 13px; font-size: 13.5px; line-height: 1.55; font-weight: 500;
+    max-width: 100%; word-wrap: break-word; white-space: pre-wrap;
+  }
+  .line-msg.them .line-bubble {
+    background: #fff; color: #0F1729;
+    border-radius: 4px 16px 16px 16px;
+  }
+  .line-msg.me .line-bubble {
+    background: #06C755; color: #fff;
+    border-radius: 16px 4px 16px 16px;
+  }
+  .line-bubble.sticker {
+    background: transparent !important; padding: 0; font-size: 40px; line-height: 1;
+  }
+  .line-msg-meta {
+    font-family: 'Manrope',monospace; font-size: 9.5px; color: rgba(255,255,255,0.9);
+    font-weight: 700; letter-spacing: 0.03em; margin-bottom: 2px;
+    display: flex; flex-direction: column; align-items: flex-end; gap: 1px;
+  }
+  .line-msg.them .line-msg-meta { align-items: flex-start; }
+  .line-msg-read { color: rgba(255,255,255,0.85); font-size: 9px; }
+
+  .line-quick {
+    padding: 8px 20px; background: rgba(255,255,255,0.9);
+    display: flex; gap: 6px; overflow-x: auto; border-top: 1px solid #E5E7EB;
+  }
+  .line-quick .lq {
+    flex-shrink: 0; background: #fff; border: 1px solid #06C755;
+    color: #06C755; font-size: 12px; font-weight: 700;
+    padding: 6px 12px; border-radius: 999px; cursor: pointer; font-family: inherit;
+    white-space: nowrap;
+  }
+  .line-quick .lq:hover { background: #E7F7EE; }
+
+  .line-input-bar {
+    background: #fff; border-top: 1px solid #E5E7EB; padding: 10px 16px;
+    display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center;
+  }
+  .line-input-icons { display: flex; gap: 4px; }
+  .line-input-icons .lii {
+    width: 34px; height: 34px; border-radius: 8px; border: none; background: transparent;
+    color: #6B7280; cursor: pointer; font-family: inherit;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .line-input-icons .lii:hover { background: #F1F3F5; color: #06C755; }
+  .line-input-icons .lii svg { width: 22px; height: 22px; }
+  .line-input {
+    background: #F1F3F5; border: none; border-radius: 20px;
+    padding: 10px 16px; font-size: 13.5px; font-family: inherit;
+    color: #0F1729; width: 100%; resize: none; outline: none;
+    min-height: 40px; max-height: 100px;
+  }
+  .line-send {
+    background: #06C755; color: #fff; border: none;
+    width: 40px; height: 40px; border-radius: 50%;
+    cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+  }
+  .line-send:hover { background: #05B24C; }
+  .line-send svg { width: 20px; height: 20px; }
+
   /* view switch */
   .view { display: none; }
   .view.active { display: block; }
@@ -512,10 +735,11 @@
 <body>
 
 <header class="header">
-  <h1>客モーダル · 完璧 detail-up 5 案</h1>
-  <p class="sub">「単なる CRUD」 → 「客 を 理解 する ダッシュボード」 に 質 変換。 上部 タブ で 切替 · 実 mock data で 描画。 owner picks 前提 · 実装 は picks 後。</p>
+  <h1>客モーダル · 完璧 detail-up 5 案 + LINE 一元</h1>
+  <p class="sub">左端 「LINE」 タブ = 客 との やり取り を 本物 LINE UI で 一元管理。 C1〜C5 = 客カルテ 画面 の rebuild 案。 owner picks 前提 · 実装 は picks 後。</p>
   <div class="tabs">
-    <button class="tab active" data-v="c1"><span class="tab-badge">C1</span>タイムライン stream 型</button>
+    <button class="tab line-tab active" data-v="line"><span class="line-logo">L</span>LINE 一元<span class="tab-live" title="常時 稼働"></span></button>
+    <button class="tab" data-v="c1"><span class="tab-badge">C1</span>タイムライン stream 型</button>
     <button class="tab" data-v="c2"><span class="tab-badge">C2</span>物語 型</button>
     <button class="tab" data-v="c3"><span class="tab-badge">C3</span>一手 集中 型</button>
     <button class="tab" data-v="c4"><span class="tab-badge">C4</span>面談 中心 型</button>
@@ -523,8 +747,292 @@
   </div>
 </header>
 
+<!-- =========== LINE: 客との やり取り 一元 =========== -->
+<div class="view active" id="v-line">
+  <div class="stage">
+    <div class="stage-title"><span class="stage-badge" style="background:#06C755;">LINE</span><span class="stage-name">客 との やり取り、 ここ で 全部。</span></div>
+    <p class="stage-desc">FP Compass に 繋いだ 全 客 の LINE トーク を、 本物 LINE と 同じ UI で 1 画面 に。 左 = 顧客リスト (未読 · 最新 メッセージ · 時刻)、 右 = 選択 中 の 客 との トーク画面。 送信 · 既読 · スタンプ · クイック 返信 対応。</p>
+    <div class="stage-tags">
+      <span class="st-tag pro">◎ Bot 経由 送受信 · Push · 既読 · 画像 · スタンプ</span>
+      <span class="st-tag pro">◎ 客 カルテ 側 「LINE 履歴」 と 完全 同期</span>
+      <span class="st-tag pro">◎ AI が 返信 案 3 パターン 提示 (未実装 mock)</span>
+    </div>
+    <div class="line-canvas">
+      <div class="line-canvas-context">
+        <span class="lcc-badge">LIVE</span>
+        <span>これ は <b>客 と の LINE トーク 一元 画面</b>。 左 の 顧客 を click → 右 の トーク が 切替。</span>
+        <span class="lcc-note">本物 LINE UI 準拠 · Bot 経由 双方向</span>
+      </div>
+      <div class="line">
+        <!-- 左: 顧客リスト -->
+        <aside class="line-list-pane">
+          <div class="line-list-header">
+            <div class="line-list-title">トーク</div>
+            <input type="text" class="line-search" placeholder="名前 · メッセージ で 検索">
+          </div>
+          <div class="line-list-filter">
+            <button class="lf active">すべて</button>
+            <button class="lf">未読</button>
+            <button class="lf">重要</button>
+            <button class="lf">追客中</button>
+          </div>
+          <div class="line-list" id="line-list">
+            <div class="line-item active" data-c="sato">
+              <div class="line-item-avatar b1">佐</div>
+              <div class="line-item-main">
+                <div class="line-item-name">佐藤 賢一 <span class="line-item-tag">相続</span></div>
+                <div class="line-item-preview">先日 の 面談 で 話 した 相続 の 件、 資料 用意 いただけました でしょうか?</div>
+              </div>
+              <div class="line-item-right">
+                <div class="line-item-when">14:23</div>
+                <div class="line-unread">3</div>
+              </div>
+            </div>
+            <div class="line-item" data-c="tanaka">
+              <div class="line-item-avatar b2">田</div>
+              <div class="line-item-main">
+                <div class="line-item-name">田中 美咲 <span class="line-item-tag">学資</span></div>
+                <div class="line-item-preview">承知しました、 来週 火曜 15時 で お願いします</div>
+              </div>
+              <div class="line-item-right">
+                <div class="line-item-when">12:08</div>
+                <div class="line-unread">1</div>
+              </div>
+            </div>
+            <div class="line-item" data-c="takahashi">
+              <div class="line-item-avatar b3">高</div>
+              <div class="line-item-main">
+                <div class="line-item-name">高橋 由紀 <span class="line-item-tag">生保</span></div>
+                <div class="line-item-preview">見積書 の PDF、 拝見しました。 主人 とも 相談 して 明日 返信します</div>
+              </div>
+              <div class="line-item-right">
+                <div class="line-item-when">昨日</div>
+                <div class="line-unread">2</div>
+              </div>
+            </div>
+            <div class="line-item" data-c="suzuki">
+              <div class="line-item-avatar b4">鈴</div>
+              <div class="line-item-main">
+                <div class="line-item-name">鈴木 太郎 <span class="line-item-tag">iDeCo</span></div>
+                <div class="line-item-preview">了解です、 ありがとうございます</div>
+              </div>
+              <div class="line-item-right">
+                <div class="line-item-when">昨日</div>
+              </div>
+            </div>
+            <div class="line-item" data-c="yamada">
+              <div class="line-item-avatar b6">山</div>
+              <div class="line-item-main">
+                <div class="line-item-name">山田 花子 <span class="line-item-tag">住宅</span></div>
+                <div class="line-item-preview">審査 通りました! 本当に ありがとう ございます 🙏</div>
+              </div>
+              <div class="line-item-right">
+                <div class="line-item-when">8/28</div>
+                <div class="line-unread">1</div>
+              </div>
+            </div>
+            <div class="line-item" data-c="ito">
+              <div class="line-item-avatar b5">伊</div>
+              <div class="line-item-main">
+                <div class="line-item-name">伊藤 秀樹 <span class="line-item-tag">退職金</span></div>
+                <div class="line-item-preview">先日 は ありがとう ございました。 面談 の 内容、 妻 に 共有 しました</div>
+              </div>
+              <div class="line-item-right">
+                <div class="line-item-when">8/29</div>
+              </div>
+            </div>
+            <div class="line-item" data-c="nakamura">
+              <div class="line-item-avatar b7">中</div>
+              <div class="line-item-main">
+                <div class="line-item-name">中村 徹 <span class="line-item-tag">NISA</span></div>
+                <div class="line-item-preview">積立 額 の 変更、 手続き 完了 しました</div>
+              </div>
+              <div class="line-item-right">
+                <div class="line-item-when">8/26</div>
+              </div>
+            </div>
+            <div class="line-item" data-c="kobayashi">
+              <div class="line-item-avatar b4">小</div>
+              <div class="line-item-main">
+                <div class="line-item-name">小林 直美 <span class="line-item-tag">相続</span></div>
+                <div class="line-item-preview">資料 ありがとう ございます、 検討して 連絡 します</div>
+              </div>
+              <div class="line-item-right">
+                <div class="line-item-when">8/22</div>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        <!-- 右: トーク -->
+        <section class="line-chat-pane">
+          <header class="line-chat-header">
+            <div class="line-chat-avatar" id="chat-avatar">佐</div>
+            <div>
+              <div class="line-chat-name" id="chat-name">佐藤 賢一</div>
+              <div class="line-chat-sub" id="chat-sub">55歳 · 相続 相談 · 直近 面談 8/25 (火)</div>
+            </div>
+            <div class="line-chat-actions">
+              <button class="lca" title="通話">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.37 1.9.72 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.35 1.85.59 2.81.72A2 2 0 0 1 22 16.92z"/></svg>
+              </button>
+              <button class="lca" title="ビデオ">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+              </button>
+              <button class="lca" title="メニュー">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+              </button>
+            </div>
+          </header>
+
+          <div class="line-chat-body" id="chat-body">
+            <div class="line-day-divider"><span>2025年 8月 28日 (木)</span></div>
+
+            <div class="line-msg them">
+              <div class="line-msg-avatar">佐</div>
+              <div class="line-msg-content">
+                <div class="line-msg-name">佐藤 賢一</div>
+                <div class="line-bubble-wrap">
+                  <div class="line-bubble">こんにちは、 先週 は お忙しい 中 お時間 いただき ありがとう ございました。</div>
+                  <div class="line-msg-meta">14:32</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="line-msg them">
+              <div class="line-msg-avatar">佐</div>
+              <div class="line-msg-content">
+                <div class="line-bubble-wrap">
+                  <div class="line-bubble">いただいた 資料、 妻 と 一緒に 目 を 通しました。 内容 を 理解する のに 少し 時間 が かかりまして、 返信 遅くなり すみません。</div>
+                  <div class="line-msg-meta">14:33</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="line-msg me">
+              <div class="line-msg-avatar">私</div>
+              <div class="line-msg-content">
+                <div class="line-bubble-wrap">
+                  <div class="line-bubble">こんにちは、 佐藤さん。 じっくり 検討 いただき ありがとう ございます。 気になる 点 ございました でしょうか。</div>
+                  <div class="line-msg-meta"><span class="line-msg-read">既読 15:12</span><span>15:10</span></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="line-day-divider"><span>8月 29日 (金)</span></div>
+
+            <div class="line-msg them">
+              <div class="line-msg-avatar">佐</div>
+              <div class="line-msg-content">
+                <div class="line-msg-name">佐藤 賢一</div>
+                <div class="line-bubble-wrap">
+                  <div class="line-bubble">相続税 の 試算 なのですが、 自宅 の 評価額 が 変わった 場合 の シミュレーション を もう一度 見せて いただけますか。</div>
+                  <div class="line-msg-meta">09:12</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="line-msg me">
+              <div class="line-msg-avatar">私</div>
+              <div class="line-msg-content">
+                <div class="line-bubble-wrap">
+                  <div class="line-bubble">承知しました。 現在 の 路線価 で 再試算し、 3 パターン (現状 / 15% down / 15% up) の 資料 を 木曜 まで に お送り します。</div>
+                  <div class="line-msg-meta"><span class="line-msg-read">既読 10:02</span><span>09:45</span></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="line-day-divider"><span>8月 30日 (土)</span></div>
+
+            <div class="line-msg them">
+              <div class="line-msg-avatar">佐</div>
+              <div class="line-msg-content">
+                <div class="line-msg-name">佐藤 賢一</div>
+                <div class="line-bubble-wrap">
+                  <div class="line-bubble">ありがとう ございます、 助かります。 それと、 生前贈与 の 話も 面談 で 詰められ たら と 思います。</div>
+                  <div class="line-msg-meta">10:03</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="line-msg me">
+              <div class="line-msg-avatar">私</div>
+              <div class="line-msg-content">
+                <div class="line-bubble-wrap">
+                  <div class="line-bubble">承知しました。 生前贈与 の 特例 (相続時 精算課税 / 教育資金 / 住宅取得等)、 3 案 の 比較表 も 用意 します。
+次回 面談 は 9/3 (火) 14時 で よろしい ですか。</div>
+                  <div class="line-msg-meta"><span class="line-msg-read">既読 11:50</span><span>10:20</span></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="line-day-divider"><span>今日</span></div>
+
+            <div class="line-msg them">
+              <div class="line-msg-avatar">佐</div>
+              <div class="line-msg-content">
+                <div class="line-msg-name">佐藤 賢一</div>
+                <div class="line-bubble-wrap">
+                  <div class="line-bubble">先日 の 面談 で 話 した 相続 の 件、 資料 用意 いただけました でしょうか?</div>
+                  <div class="line-msg-meta">14:23</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="line-msg them">
+              <div class="line-msg-avatar">佐</div>
+              <div class="line-msg-content">
+                <div class="line-bubble-wrap">
+                  <div class="line-bubble">妻 が 明日 実家 に 帰る ので、 それ まで に 拝見 したい です。</div>
+                  <div class="line-msg-meta">14:23</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="line-msg them">
+              <div class="line-msg-avatar">佐</div>
+              <div class="line-msg-content">
+                <div class="line-bubble-wrap">
+                  <div class="line-bubble">お忙しい ところ 恐縮 です が、 よろしく お願い いたします。 🙇</div>
+                  <div class="line-msg-meta">14:24</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="line-quick">
+            <button class="lq">✨ AI で 返信 案 を 出す</button>
+            <button class="lq">📎 資料 を 送る</button>
+            <button class="lq">📅 面談 を 打診</button>
+            <button class="lq">✅ 既読 に する</button>
+            <button class="lq">🔔 リマインド</button>
+          </div>
+
+          <div class="line-input-bar">
+            <div class="line-input-icons">
+              <button class="lii" title="画像">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+              </button>
+              <button class="lii" title="ファイル">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+              </button>
+              <button class="lii" title="スタンプ">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+              </button>
+            </div>
+            <textarea class="line-input" placeholder="Aa" rows="1"></textarea>
+            <button class="line-send" title="送信">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </button>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- =========== C1: タイムライン stream =========== -->
-<div class="view active" id="v-c1">
+<div class="view" id="v-c1">
   <div class="stage">
     <div class="stage-title"><span class="stage-badge">C1</span><span class="stage-name">タイムライン stream 型</span></div>
     <p class="stage-desc">左 = 縮小 プロフィール + AI 推奨 CTA。 右 = 全 活動 (LINE / 面談 / 議事録 / 提案 / メモ) を 1 本 の 時系列 stream に。 チャネル 別 色 の dot で 「何 経由 か」 一目。</p>
@@ -999,6 +1507,59 @@
       document.getElementById('v-' + t.dataset.v).classList.add('active');
     });
   });
+  // LINE 顧客切替 (mock)
+  const chatBank = {
+    sato:      { name: '佐藤 賢一', sub: '55歳 · 相続 相談 · 直近 面談 8/25 (火)', avatar: '佐', color: 'b1' },
+    tanaka:    { name: '田中 美咲', sub: '42歳 · 学資 · 次男 高1 · 直近 8/20', avatar: '田', color: 'b2' },
+    takahashi: { name: '高橋 由紀', sub: '51歳 · 生保 見直し · 主人 と 検討 中', avatar: '高', color: 'b3' },
+    suzuki:    { name: '鈴木 太郎', sub: '38歳 · iDeCo 増額 完了 · 次 は NISA', avatar: '鈴', color: 'b4' },
+    yamada:    { name: '山田 花子', sub: '33歳 · 住宅ローン 審査通過! 契約 手続 中', avatar: '山', color: 'b6' },
+    ito:       { name: '伊藤 秀樹', sub: '60歳 · 退職金 運用 相談 · 妻 と 面談 予定', avatar: '伊', color: 'b5' },
+    nakamura:  { name: '中村 徹', sub: '48歳 · NISA 積立 変更 完了 · 追客 済', avatar: '中', color: 'b7' },
+    kobayashi: { name: '小林 直美', sub: '57歳 · 相続 相談 · 資料 送付 済 検討 中', avatar: '小', color: 'b4' },
+  };
+  const chatAvatarEl = document.getElementById('chat-avatar');
+  const chatNameEl = document.getElementById('chat-name');
+  const chatSubEl = document.getElementById('chat-sub');
+  document.querySelectorAll('.line-item').forEach(item => {
+    item.addEventListener('click', () => {
+      document.querySelectorAll('.line-item').forEach(x => x.classList.remove('active'));
+      item.classList.add('active');
+      const c = item.dataset.c;
+      const d = chatBank[c];
+      if (!d) return;
+      chatAvatarEl.textContent = d.avatar;
+      chatAvatarEl.className = 'line-chat-avatar';
+      // apply color gradient like list avatar
+      const gradients = {
+        b1: 'linear-gradient(135deg, #F87171, #DC2626)',
+        b2: 'linear-gradient(135deg, #60A5FA, #2563EB)',
+        b3: 'linear-gradient(135deg, #FBBF24, #D97706)',
+        b4: 'linear-gradient(135deg, #C084FC, #7C3AED)',
+        b5: 'linear-gradient(135deg, #22D3EE, #0891B2)',
+        b6: 'linear-gradient(135deg, #F472B6, #DB2777)',
+        b7: 'linear-gradient(135deg, #A3E635, #4D7C0F)',
+      };
+      chatAvatarEl.style.background = gradients[d.color] || gradients.b1;
+      chatNameEl.textContent = d.name;
+      chatSubEl.textContent = d.sub;
+      // clear unread badge on selected
+      const badge = item.querySelector('.line-unread');
+      if (badge) badge.remove();
+    });
+  });
+  // input auto-resize
+  const inp = document.querySelector('.line-input');
+  if (inp) {
+    inp.addEventListener('input', () => {
+      inp.style.height = '40px';
+      inp.style.height = Math.min(100, inp.scrollHeight) + 'px';
+    });
+  }
+  // scroll chat to bottom on load
+  const chatBody = document.getElementById('chat-body');
+  if (chatBody) chatBody.scrollTop = chatBody.scrollHeight;
+
   // heatmap
   const heat = document.getElementById('c5-heat');
   if (heat) {
