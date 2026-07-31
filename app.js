@@ -2002,19 +2002,26 @@
     }
     if (entry.type === 'ai_minutes') {
       const rawSum = String(entry.summary || '');
-      const concernChips = (entry.key_concerns || []).slice(0, 5).map(k => `<span style="display:inline-block;background:#FED7AA;color:#7C2D12;padding:2px 8px;border-radius:99px;font-size:10.5px;font-weight:600;margin:2px 3px 2px 0;">${escapeHtml(k)}</span>`).join('');
+      // owner「同じやつが並んで意味ない」 fix (2026-08-01): 要約 snippet を 見出し 横 に inline 表示 → 何の議事録か 一目
+      const inlineSnippet = rawSum
+        ? escapeHtml(rawSum.replace(/^#.*?\n+/, '').replace(/\n+/g, ' · ').replace(/\s+/g, ' ').trim().slice(0, 68)) + (rawSum.length > 68 ? '…' : '')
+        : '議事録 未生成';
+      const concernChips = (entry.key_concerns || []).slice(0, 5).map(k => `<span style="display:inline-block;background:#EDE9FE;color:#5B21B6;padding:2px 8px;border-radius:99px;font-size:10.5px;font-weight:600;margin:2px 3px 2px 0;">${escapeHtml(k)}</span>`).join('');
       const bodyHtml = rawSum
         ? (window.renderStructuredSummary
             ? `<div class="fp-summary-structured" style="font-size:12px;">${window.renderStructuredSummary(rawSum)}</div>`
-            : `<div style="font-size:12px;color:#7C2D12;white-space:pre-wrap;line-height:1.65;">${escapeHtml(rawSum.slice(0, 400))}${rawSum.length > 400 ? '…' : ''}</div>`)
-        : '<div style="font-size:11px;color:#9A3412;opacity:0.7;">議事録 未生成</div>';
+            : `<div style="font-size:12px;color:#3B0764;white-space:pre-wrap;line-height:1.65;">${escapeHtml(rawSum.slice(0, 400))}${rawSum.length > 400 ? '…' : ''}</div>`)
+        : '<div style="font-size:11px;color:#7C3AED;opacity:0.7;">議事録 未生成</div>';
       return `
-        <details class="cd-line-msg cd-tl-entry cd-tl-minutes" style="align-self:stretch;max-width:100%;background:#FFEDD5;border:1px solid #FED7AA;border-left:4px solid #F97316;border-radius:8px;padding:10px 14px;margin:4px 0;">
-          <summary style="cursor:pointer;font-weight:700;font-size:12.5px;color:#9A3412;letter-spacing:0.01em;list-style:none;">
-            🎙 議事録 (AI要約)
-            <span style="float:right;font-weight:400;font-size:11px;opacity:0.65;">${safeTs}</span>
+        <details class="cd-line-msg cd-tl-entry cd-tl-minutes" style="align-self:stretch;max-width:100%;background:#F5F3FF;border:1px solid #DDD6FE;border-left:4px solid #8B5CF6;border-radius:8px;padding:10px 14px;margin:4px 0;">
+          <summary style="cursor:pointer;list-style:none;">
+            <div style="display:flex;align-items:baseline;gap:8px;font-size:12.5px;color:#5B21B6;letter-spacing:0.01em;">
+              <span style="font-weight:800;flex-shrink:0;">🎙 議事録</span>
+              <span style="flex:1;font-weight:500;color:#4C1D95;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${inlineSnippet}</span>
+              <span style="font-weight:400;font-size:11px;opacity:0.65;flex-shrink:0;font-family:'Manrope','Inter',monospace;">${safeTs}</span>
+            </div>
           </summary>
-          <div style="margin-top:8px;padding-top:8px;border-top:1px dashed #FDBA74;">${bodyHtml}</div>
+          <div style="margin-top:8px;padding-top:8px;border-top:1px dashed #C4B5FD;">${bodyHtml}</div>
           ${concernChips ? `<div style="margin-top:8px;">${concernChips}</div>` : ''}
         </details>`;
     }
@@ -10900,6 +10907,30 @@ window.mergeFirestoreMeetingsIntoLiveData = async function (client) {
     const opener = e.target.closest('[data-open-sheet]');
     if (opener) {
       const name = opener.dataset.openSheet;
+      // 2026-08-01 owner: モーダル 「LINE で 返信 する」 は sheet じゃなく LINE Hub tab に navigate + 該当客 pre-select
+      if (name === 'line') {
+        try {
+          const cur = window._fpCurrentClient;
+          const cid = cur?.id || null;
+          if (typeof closeModal === 'function') closeModal();
+          if (window.FPRouter?.activateTab) {
+            window.FPRouter.activateTab('lineChat');
+          } else if (typeof activateTab === 'function') {
+            activateTab('lineChat');
+          }
+          // LINE Hub 描画 完了 待って 該当客 select
+          if (cid) {
+            let tries = 0;
+            const trySelect = () => {
+              const el = document.querySelector(`.lch-item[data-cid="${CSS.escape(cid)}"]`);
+              if (el) { el.click(); }
+              else if (tries++ < 20) setTimeout(trySelect, 120);
+            };
+            setTimeout(trySelect, 200);
+          }
+        } catch (err) { console.warn('[open-sheet=line] navigate fail:', err); }
+        return;
+      }
       closeAll();
       const s = scope();
       const sheet = s.querySelector(`[data-sheet="${CSS.escape(name)}"]`);

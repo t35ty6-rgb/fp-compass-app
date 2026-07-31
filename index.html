@@ -20,10 +20,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20260801-modal-line-tab-removed">
-<link rel="stylesheet" href="styles-v2.css?v=20260801-modal-line-tab-removed">
-<link rel="stylesheet" href="styles-v3.css?v=20260801-modal-line-tab-removed">
-<link rel="stylesheet" href="styles-v8-workspace.css?v=20260801-modal-line-tab-removed">
+<link rel="stylesheet" href="styles.css?v=20260801-sig-palette-v5">
+<link rel="stylesheet" href="styles-v2.css?v=20260801-sig-palette-v5">
+<link rel="stylesheet" href="styles-v3.css?v=20260801-sig-palette-v5">
+<link rel="stylesheet" href="styles-v8-workspace.css?v=20260801-sig-palette-v5">
 <!-- ★ 2026-06-26 perf: lucide(350KB) と chart.js(201KB) を defer 化 -->
 <!--   どちらも DOMContentLoaded 後ハイドレートで OK (lucide: setInterval scan / chart: tryRender polling) -->
 <script defer src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
@@ -801,6 +801,40 @@
 .lch-no-selection .lch-ns-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.7; }
 .lch-no-selection h3 { font-size: 18px; font-weight: 900; margin: 0 0 6px; color: #0F1729; }
 .lch-no-selection p { font-size: 13px; max-width: 320px; line-height: 1.6; }
+
+/* ==================== 2026-08-01: Skeleton Signature Palette (owner mapsleads reference) ====================
+   accent 色 を signature gradient (blue→violet→pink) で 統一。
+   議事録=violet / 提案=blue / お礼系=pink / キャンセル=red (semantic 温存) */
+:root {
+  --sig-blue:      #0071E3;
+  --sig-blue-deep: #0056B3;
+  --sig-violet:    #8B5CF6;
+  --sig-violet-deep: #6D28D9;
+  --sig-pink:      #EC4899;
+  --sig-pink-deep: #BE185D;
+  --sig-gradient:  linear-gradient(120deg, #0071E3 0%, #8B5CF6 55%, #EC4899 100%);
+  --sig-gradient-soft: linear-gradient(120deg, #E8F1FD 0%, #EDE9FE 55%, #FCE7F3 100%);
+}
+
+/* LINE トーク Hub: 送信 button + 緑 → signature gradient */
+.lch-send { background: var(--sig-gradient) !important; box-shadow: 0 4px 12px rgba(139,92,246,0.35) !important; }
+.lch-send:hover { filter: brightness(1.08); }
+.lch-send:disabled { background: #CBD5E1 !important; box-shadow: none !important; }
+.lch-lf.active { background: var(--sig-violet) !important; border-color: var(--sig-violet) !important; }
+.lch-list-title .lch-live-dot { background: var(--sig-violet) !important; box-shadow: 0 0 0 0 rgba(139,92,246,0.6) !important; animation: lch-pulse-sig 2s infinite !important; }
+@keyframes lch-pulse-sig { 0% { box-shadow: 0 0 0 0 rgba(139,92,246,0.6); } 70% { box-shadow: 0 0 0 8px rgba(139,92,246,0); } 100% { box-shadow: 0 0 0 0 rgba(139,92,246,0); } }
+.tab.tab-linechat { background: var(--sig-gradient) !important; box-shadow: 0 2px 10px rgba(139,92,246,0.35) !important; }
+.tab.tab-linechat:hover { filter: brightness(1.08); }
+.tab.tab-linechat.active { background: linear-gradient(120deg, var(--sig-blue-deep) 0%, var(--sig-violet-deep) 55%, var(--sig-pink-deep) 100%) !important; }
+.lch-msg.me .lch-bubble { background: var(--sig-gradient) !important; color: #fff !important; }
+.lch-quick .lch-q { border-color: var(--sig-violet) !important; color: var(--sig-violet-deep) !important; }
+.lch-quick .lch-q:hover { background: #F5F3FF !important; }
+.lch-quick .lch-q[data-quick="ai"] { background: var(--sig-gradient) !important; color: #fff !important; border: 0 !important; box-shadow: 0 3px 10px rgba(139,92,246,0.32) !important; }
+.lch-quick .lch-q[data-quick="ai"]:hover { filter: brightness(1.08); }
+.lch-unread { background: var(--sig-pink) !important; }
+
+/* C1 stream filter chips: default gray, active = signature */
+.c1s-chip.active { background: var(--sig-violet) !important; color: #fff !important; border-color: var(--sig-violet) !important; }
 </style>
 
 </head>
@@ -2216,7 +2250,7 @@ window.fpReadyAfterAuth = function() {
 <script>
 (function(){
   // 最新の ver を 1 箇所に集約 (fpReadyAfterAuth 側と一致させる必要あり)
-  const FP_VERSION = "20260801-modal-line-tab-removed";
+  const FP_VERSION = "20260801-sig-palette-v5";
   try { window.FP_VERSION = FP_VERSION; } catch(_) {}
 
   // 2026-07-13 v11: Chrome拡張 (Zoom タブ音声 レコーダー) 検知
