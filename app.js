@@ -3266,7 +3266,6 @@
               return `
               <div class="fp-flow-picker">
                 <div class="fp-flow-cards">
-                  ${c.lineFriendId ? `
                   <button class="fp-pcard ${!recLine ? 'fp-pcard-recommended' : ''}" data-open-sheet="zoom" type="button">
                     <span class="fp-pcard-icon">📞</span>
                     <div class="fp-pcard-body">
@@ -3274,7 +3273,7 @@
                       <div class="fp-pcard-sub">今すぐ / 候補日 / 日時</div>
                     </div>
                     <span class="fp-pcard-arrow" aria-hidden="true">›</span>
-                  </button>` : ''}
+                  </button>
                   <button class="fp-pcard ${recLine ? 'fp-pcard-recommended' : ''}" data-open-sheet="line" type="button">
                     <span class="fp-pcard-icon">💬</span>
                     <div class="fp-pcard-body">
@@ -3289,12 +3288,11 @@
                   <button class="fp-tool" data-quick-tag="${escapeHtml(c.id)}" type="button">
                     <span aria-hidden="true">🏷</span> タグ
                   </button>
-                  <button class="fp-tool cd-flow-edit" id="modal-edit-btn" type="button">
+                  <button class="fp-tool" id="modal-edit-btn" type="button">
                     <span aria-hidden="true">✏</span> 情報 編集
                   </button>
                 </div>
 
-                ${c.lineFriendId ? `
                 <div class="fp-sheet" data-sheet="zoom" hidden>
                   <div class="fp-sheet-head">
                     <span class="fp-sheet-icon">📞</span>
@@ -3309,16 +3307,17 @@
                       <span class="fp-sheet-opt-icon">⚡</span>
                       <div>
                         <div class="fp-sheet-opt-label">今すぐ Zoom</div>
-                        <div class="fp-sheet-opt-sub">URL 即発行 · LINE 自動 送信</div>
+                        <div class="fp-sheet-opt-sub">URL 即発行${c.lineFriendId ? ' · LINE 自動 送信' : ' · 電話 で URL 伝達'}</div>
                       </div>
                     </button>
+                    ${c.lineFriendId ? `
                     <button class="fp-sheet-opt" data-quick-slots="${escapeHtml(c.id)}" type="button">
                       <span class="fp-sheet-opt-icon">🗓</span>
                       <div>
                         <div class="fp-sheet-opt-label">候補日 3つ 送る</div>
                         <div class="fp-sheet-opt-sub">お客様 が LINE で 選ぶ</div>
                       </div>
-                    </button>
+                    </button>` : ''}
                     <button class="fp-sheet-opt" data-quick-schedule="${escapeHtml(c.id)}" type="button">
                       <span class="fp-sheet-opt-icon">📅</span>
                       <div>
@@ -3327,7 +3326,7 @@
                       </div>
                     </button>
                   </div>
-                </div>` : ''}
+                </div>
 
                 <div class="fp-sheet" data-sheet="line" hidden>
                   <div class="fp-sheet-head">
