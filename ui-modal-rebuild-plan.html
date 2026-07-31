@@ -230,34 +230,33 @@
   <h1>顧客モーダル 再構築 plan</h1>
   <p class="lead">owner 「バランス 余白 全部 おかしい / 3個 の 位置 意味わからない / 再構築 しろ」 対応。 現状 の 問題 12 個 洗い出し + 2 方向 mockup で picks 前提 提示。</p>
 
-  <div class="note">
-    <h2>現状 (v20260731T) の balance 問題 12 個 (私 が screenshot 撮って 実測)</h2>
-    <ul>
-      <li>左 column: avatar 「田」 が 左寄せ (center じゃ ない)</li>
-      <li>左 column: 「面談 を 開始」 button の container が pill 状 で 変</li>
-      <li>左 column: タグ section だけ 2px 灰 border + 白 bg で 他 section と 不揃い</li>
-      <li>左 column: 「この方 に 必要 な フォロー」 赤 badge が 場違い</li>
-      <li>左 column: 「その他 の 連絡 手段」 collapse が 縦線 だけ で 中身 見えない</li>
-      <li>左 column: アンケート button 単独 で 場違い</li>
-      <li>左 column: stats (管理資産 / 最終接触 / 年齢) の 空白 スペース だらっと 広い</li>
-      <li>左 column: section 間 margin バラバラ (14 / 16 / 24 px 混在)</li>
-      <li>右 column: cd-flow の 下 (initial) が 空 で tabs が いきなり</li>
-      <li>右 column: tabs plain で 目立たず、 pane 空 → 右 半分 の 白 スペース 過剰</li>
-      <li>右 column: <b>「3 個」 = sheet の option (今すぐ / 候補日 / 日時) が viewport 一番下 に fixed</b> で click した card から 遠く 「意味わからない」 と 感じる</li>
-      <li>全体: 左右 幅 バランス · section 余白 · button 統一 感 全部 バラつき</li>
-    </ul>
-  </div>
-
-  <div class="plan">
+  <!-- ★ 現状 screenshot を 先頭 に 大 表示 (owner 「文字 だけ わかんない」 対応) -->
+  <div class="plan" style="border-color:#DC2626;background:#FEF2F2;">
     <div class="plan-head">
-      <span class="plan-badge current">現状</span>
-      <span class="plan-title">v20260731T 実 screenshot (私 が 撮った 生 balance)</span>
+      <span class="plan-badge current" style="background:#DC2626;">現状 (NG)</span>
+      <span class="plan-title">v20260731T の 生 balance (私 が 撮った 実 screenshot)</span>
     </div>
-    <p class="plan-sub">standalone HTML で 実 CSS 読み込んで render、 実際 の 客モーダル と 同じ balance が 出る (login bypass 詰まってる ため 実 tenant の screenshot は owner 側 実 tenant 依頼)。</p>
-    <div class="mockshot">
-      <div class="mockshot-label">現状 balance (私 実測 · 上 diagnostic list の 12 問題 全部 見える)</div>
-      <img src="/tmp-view-full-modal.png" alt="現状 modal" style="max-width: 100%;" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
-      <div style="display:none;padding:40px;text-align:center;color:#6B7280;">現状 modal screenshot は 別途 owner に お渡し (file:///tmp/full-modal-actual.png)</div>
+    <p class="plan-sub" style="color:#7F1D1D;">左 が 実 screenshot、 右 が 番号 付き で 問題 の 場所 と 内容。</p>
+
+    <div style="display:grid;grid-template-columns:1.6fr 1fr;gap:20px;margin-top:14px;">
+      <div class="mockshot" style="background:#0F1729;padding:16px;">
+        <div class="mockshot-label" style="color:#9CA3AF;">実 rendering (現状)</div>
+        <img src="ba-preview/modal-current-v20260731T.png" alt="現状 modal" style="max-width:100%;height:auto;border-radius:8px;">
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <div style="background:#fff;border:1px solid #FCA5A5;border-radius:8px;padding:10px 12px;font-size:12px;line-height:1.55;"><b style="color:#DC2626;font-family:'Manrope',monospace;">①</b> avatar 「田」 が 左寄せ (center 化 されて ない)</div>
+        <div style="background:#fff;border:1px solid #FCA5A5;border-radius:8px;padding:10px 12px;font-size:12px;line-height:1.55;"><b style="color:#DC2626;font-family:'Manrope',monospace;">②</b> 「面談 を 開始」 button の container が pill 状 で 変</div>
+        <div style="background:#fff;border:1px solid #FCA5A5;border-radius:8px;padding:10px 12px;font-size:12px;line-height:1.55;"><b style="color:#DC2626;font-family:'Manrope',monospace;">③</b> タグ section だけ 2px 灰 border · 白 bg で 他 section と 不揃い</div>
+        <div style="background:#fff;border:1px solid #FCA5A5;border-radius:8px;padding:10px 12px;font-size:12px;line-height:1.55;"><b style="color:#DC2626;font-family:'Manrope',monospace;">④</b> 「必要 な フォロー」 赤 badge が 場違い</div>
+        <div style="background:#fff;border:1px solid #FCA5A5;border-radius:8px;padding:10px 12px;font-size:12px;line-height:1.55;"><b style="color:#DC2626;font-family:'Manrope',monospace;">⑤</b> 「その他 連絡 手段」 collapse 中身 見えない 縦線 だけ</div>
+        <div style="background:#fff;border:1px solid #FCA5A5;border-radius:8px;padding:10px 12px;font-size:12px;line-height:1.55;"><b style="color:#DC2626;font-family:'Manrope',monospace;">⑥</b> アンケート button 単独 で 場違い</div>
+        <div style="background:#fff;border:1px solid #FCA5A5;border-radius:8px;padding:10px 12px;font-size:12px;line-height:1.55;"><b style="color:#DC2626;font-family:'Manrope',monospace;">⑦</b> stats の 空白 スペース だらっと 広い</div>
+        <div style="background:#fff;border:1px solid #FCA5A5;border-radius:8px;padding:10px 12px;font-size:12px;line-height:1.55;"><b style="color:#DC2626;font-family:'Manrope',monospace;">⑧</b> section 間 margin バラバラ (14 / 16 / 24 px 混在)</div>
+        <div style="background:#fff;border:1px solid #FCA5A5;border-radius:8px;padding:10px 12px;font-size:12px;line-height:1.55;"><b style="color:#DC2626;font-family:'Manrope',monospace;">⑨</b> 右 column: cd-flow 下 空 で tabs いきなり</div>
+        <div style="background:#fff;border:1px solid #FCA5A5;border-radius:8px;padding:10px 12px;font-size:12px;line-height:1.55;"><b style="color:#DC2626;font-family:'Manrope',monospace;">⑩</b> tabs plain で 目立たず、 pane 空 で 右 半分 白 過剰</div>
+        <div style="border:1px solid #DC2626;border-radius:8px;padding:10px 12px;font-size:12px;line-height:1.55;background:#FEE2E2;"><b style="color:#DC2626;font-family:'Manrope',monospace;">⑪</b> <b>sheet の 3 option が viewport 最下 fixed</b> で click 元 の card から 遠い → 「意味わからない ところ」 の 正体</div>
+        <div style="background:#fff;border:1px solid #FCA5A5;border-radius:8px;padding:10px 12px;font-size:12px;line-height:1.55;"><b style="color:#DC2626;font-family:'Manrope',monospace;">⑫</b> 左右 幅 · button 統一感 全部 バラつき</div>
+      </div>
     </div>
   </div>
 
