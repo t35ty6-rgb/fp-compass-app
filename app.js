@@ -3258,104 +3258,66 @@
             <div class="cd-flow-title">${escapeHtml(topRec.action)}</div>
             <div class="cd-flow-reason">${escapeHtml(topRec.reason)}</div>
 
-            <!-- ★ 2026-07-31 owner NG「6 chip 見づらい / 何 押せば いいか 分からない / 緑背景 何回も 直せ」 対応
-                 → 3 group 階層 (① 面談 = zoom 3方式 / ② LINE 送る = AI+自分で / ③ 顧客 情報 = tag+編集)
+            <!-- ★ 2026-07-31 v20260731O owner NG「大枠 button 押すと さらに 選べる drill UI に しろ」 対応
+                 大 枠 button 2 個 (Zoom / LINE) のみ initial 表示 → click で 展開 で 選択 肢。
+                 装飾 (番号 badge / hint 文言 / icon 枠) 撤去、 label + icon + caret だけ。
+                 auto-open: topRec.action が Zoom/面談 系 なら Zoom drill、 それ 以外 は LINE drill を 開く。
                  data-attrs は 既存 handler 維持 (data-quick-instant/schedule/slots/tag, data-line-brief, #modal-draft-btn, #modal-edit-btn) -->
-            <div class="fp-flow-groups">
-
-              <!-- Group 1: 面談 する (primary, Zoom 3 方式) -->
-              ${c.lineFriendId ? `
-              <div class="fp-flow-group fp-flow-group-primary">
-                <div class="fp-flow-group-head">
-                  <span class="fp-flow-group-num">1</span>
-                  <div>
-                    <div class="fp-flow-group-title">📞 面談 を 始める</div>
-                    <div class="fp-flow-group-hint">Zoom で 話す — 3 方式 から 選ぶ</div>
+            ${(function(){
+              const openZoom = /Zoom|面談|録画|オンライン/.test(topRec.action || '');
+              return `
+              <div class="fp-flow-drill">
+                ${c.lineFriendId ? `
+                <details class="fp-drill" ${openZoom ? 'open' : ''}>
+                  <summary class="fp-drill-head">
+                    <span class="fp-drill-icon">📞</span>
+                    <span class="fp-drill-label">Zoom で 面談 する</span>
+                    <span class="fp-drill-caret" aria-hidden="true">▾</span>
+                  </summary>
+                  <div class="fp-drill-body">
+                    <button class="fp-drill-opt" data-quick-instant="${escapeHtml(c.id)}" type="button">
+                      <span class="fp-drill-opt-icon">⚡</span>
+                      <span class="fp-drill-opt-label">今すぐ Zoom <span class="fp-drill-opt-tail">— URL 即発行</span></span>
+                    </button>
+                    <button class="fp-drill-opt" data-quick-slots="${escapeHtml(c.id)}" type="button">
+                      <span class="fp-drill-opt-icon">🗓</span>
+                      <span class="fp-drill-opt-label">候補日 3つ 送る <span class="fp-drill-opt-tail">— 客 が LINE で 選ぶ</span></span>
+                    </button>
+                    <button class="fp-drill-opt" data-quick-schedule="${escapeHtml(c.id)}" type="button">
+                      <span class="fp-drill-opt-icon">📅</span>
+                      <span class="fp-drill-opt-label">日時 を 指定 <span class="fp-drill-opt-tail">— 自分 で 決めて 予約</span></span>
+                    </button>
                   </div>
-                </div>
-                <div class="fp-flow-group-body">
-                  <button class="fp-flow-opt" data-quick-instant="${escapeHtml(c.id)}" type="button">
-                    <span class="fp-flow-opt-icon">⚡</span>
-                    <span class="fp-flow-opt-text">
-                      <span class="fp-flow-opt-label">今すぐ Zoom</span>
-                      <span class="fp-flow-opt-sub">URL 即発行 · LINE 自動 送信</span>
-                    </span>
-                    <span class="fp-flow-opt-arrow">→</span>
-                  </button>
-                  <button class="fp-flow-opt" data-quick-slots="${escapeHtml(c.id)}" type="button">
-                    <span class="fp-flow-opt-icon">🗓</span>
-                    <span class="fp-flow-opt-text">
-                      <span class="fp-flow-opt-label">候補日 3つ 送る</span>
-                      <span class="fp-flow-opt-sub">お客様 が LINE で 選ぶ</span>
-                    </span>
-                    <span class="fp-flow-opt-arrow">→</span>
-                  </button>
-                  <button class="fp-flow-opt" data-quick-schedule="${escapeHtml(c.id)}" type="button">
-                    <span class="fp-flow-opt-icon">📅</span>
-                    <span class="fp-flow-opt-text">
-                      <span class="fp-flow-opt-label">日時 を 指定</span>
-                      <span class="fp-flow-opt-sub">自分 で 決めて 予約</span>
-                    </span>
-                    <span class="fp-flow-opt-arrow">→</span>
-                  </button>
-                </div>
-              </div>` : ''}
+                </details>` : ''}
 
-              <!-- Group 2: LINE を 送る -->
-              <div class="fp-flow-group">
-                <div class="fp-flow-group-head">
-                  <span class="fp-flow-group-num">${c.lineFriendId ? '2' : '1'}</span>
-                  <div>
-                    <div class="fp-flow-group-title">💬 LINE を 送る</div>
-                    <div class="fp-flow-group-hint">AI 下書き or 自分 で 書く</div>
+                <details class="fp-drill" ${!openZoom || !c.lineFriendId ? 'open' : ''}>
+                  <summary class="fp-drill-head">
+                    <span class="fp-drill-icon">💬</span>
+                    <span class="fp-drill-label">LINE で 返信 する</span>
+                    <span class="fp-drill-caret" aria-hidden="true">▾</span>
+                  </summary>
+                  <div class="fp-drill-body">
+                    <button class="fp-drill-opt fp-drill-opt-featured" id="modal-draft-btn" type="button">
+                      <span class="fp-drill-opt-icon">✨</span>
+                      <span class="fp-drill-opt-label">AI で 下書き <span class="fp-drill-opt-tail">— 状況 から 自動 生成</span></span>
+                    </button>
+                    <button class="fp-drill-opt modal-brief-btn" data-line-brief="${escapeHtml(c.id)}" type="button">
+                      <span class="fp-drill-opt-icon">✍</span>
+                      <span class="fp-drill-opt-label">自分 で 書く <span class="fp-drill-opt-tail">— 手入力 メッセージ</span></span>
+                    </button>
                   </div>
-                </div>
-                <div class="fp-flow-group-body">
-                  <button class="fp-flow-opt fp-flow-opt-featured" id="modal-draft-btn" type="button">
-                    <span class="fp-flow-opt-icon">✨</span>
-                    <span class="fp-flow-opt-text">
-                      <span class="fp-flow-opt-label">AI で 下書き</span>
-                      <span class="fp-flow-opt-sub">状況 から LINE 文面 自動 生成</span>
-                    </span>
-                    <span class="fp-flow-opt-arrow">→</span>
-                  </button>
-                  <button class="fp-flow-opt modal-brief-btn" data-line-brief="${escapeHtml(c.id)}" type="button">
-                    <span class="fp-flow-opt-icon">✍</span>
-                    <span class="fp-flow-opt-text">
-                      <span class="fp-flow-opt-label">自分 で 書く</span>
-                      <span class="fp-flow-opt-sub">手入力 LINE メッセージ</span>
-                    </span>
-                    <span class="fp-flow-opt-arrow">→</span>
-                  </button>
-                </div>
-              </div>
+                </details>
 
-              <!-- Group 3: 顧客 情報 (secondary, 横 2 列) -->
-              <div class="fp-flow-group fp-flow-group-secondary">
-                <div class="fp-flow-group-head">
-                  <span class="fp-flow-group-num">${c.lineFriendId ? '3' : '2'}</span>
-                  <div>
-                    <div class="fp-flow-group-title">👤 顧客 情報</div>
-                    <div class="fp-flow-group-hint">タグ 追加 / 名前 · 家族 編集</div>
-                  </div>
-                </div>
-                <div class="fp-flow-group-body fp-flow-group-body-h">
-                  <button class="fp-flow-opt fp-flow-opt-slim" data-quick-tag="${escapeHtml(c.id)}" type="button">
-                    <span class="fp-flow-opt-icon">🏷</span>
-                    <span class="fp-flow-opt-text">
-                      <span class="fp-flow-opt-label">タグ 追加</span>
-                    </span>
+                <div class="fp-flow-tools">
+                  <button class="fp-tool" data-quick-tag="${escapeHtml(c.id)}" type="button">
+                    <span aria-hidden="true">🏷</span> タグ
                   </button>
-                  <button class="fp-flow-opt fp-flow-opt-slim cd-flow-edit" id="modal-edit-btn" type="button">
-                    <span class="fp-flow-opt-icon">✏</span>
-                    <span class="fp-flow-opt-text">
-                      <span class="fp-flow-opt-label">情報 編集</span>
-                    </span>
+                  <button class="fp-tool cd-flow-edit" id="modal-edit-btn" type="button">
+                    <span aria-hidden="true">✏</span> 情報 編集
                   </button>
                 </div>
-              </div>
-
-            </div>
+              </div>`;
+            })()}
               <style>
                 @keyframes fp-draft-cta-pulse{0%,100%{transform:translateY(0) scale(1);box-shadow:0 8px 24px rgba(249,115,22,0.55),0 0 0 4px rgba(255,255,255,0.5)}50%{transform:translateY(-2.5px) scale(1.025);box-shadow:0 16px 36px rgba(249,115,22,0.72),0 0 0 7px rgba(255,255,255,0.6)}}
                 @keyframes fp-draft-cta-gradient{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
