@@ -10541,8 +10541,9 @@ window._fpMaskCode = 'loaded';
     if (!container) {
       container = document.createElement('div');
       container.id = 'fp-pending-zoom-panel';
-      // CASE 04: bottom-fixed, full width (with edge gutter), stack multiple pills vertically
-      container.style.cssText = 'position:fixed;left:16px;right:16px;bottom:16px;z-index:99998;display:flex;flex-direction:column;gap:10px;font-family:"Noto Sans JP",sans-serif;pointer-events:none;';
+      // 2026-07-31 fix: owner から 「画面幅 いっぱい で 邪魔」 fb。 右下 に max-width 420px の コンパクト card に 縮小。
+      // 左側 は 顧客モーダル の スクロール 操作 が 効く よう pointer-events を 完全 に 空ける。
+      container.style.cssText = 'position:fixed;right:16px;bottom:16px;left:auto;z-index:99998;display:flex;flex-direction:column;gap:10px;font-family:"Noto Sans JP",sans-serif;pointer-events:none;max-width:min(420px,calc(100vw - 32px));';
       document.body.appendChild(container);
     }
     container.innerHTML = list.map((p, i) => {
