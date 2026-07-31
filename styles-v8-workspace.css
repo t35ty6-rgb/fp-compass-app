@@ -1867,8 +1867,11 @@ table.clients [class*="avatar"],
 .cd-modal {
   display: grid;
   grid-template-columns: 360px 1fr;
-  min-height: min(720px, 100vh - 40px); /* 2026-07-11 v8: 780h ノート で は 100vh基準 に 切替 → cd-right 切れ 解消 */
+  grid-template-rows: 100%; /* 2026-07-31 fix: 明示 rows で child が 親 高さ に 制約 (auto rows だと 中身 サイズ に 膨らんで overflow:auto 無効化) */
+  min-height: min(720px, 100vh - 40px);
+  height: calc(100vh - 40px); /* max-height だけ だと grid track が content に 膨らむ → 明示 height で 制約 */
   max-height: calc(100vh - 40px);
+  overflow: hidden; /* 内部 は cd-left / cd-right が 独自 scroll */
   position: relative;
 }
 @media (max-width: 900px) {
