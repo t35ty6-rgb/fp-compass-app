@@ -1,0 +1,465 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>「今日 話すべき方」 差替 案 4 (v20260731L)</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Noto Sans JP', -apple-system, sans-serif;
+    background: #f5f6f8;
+    color: #0F1729;
+    padding: 32px;
+    line-height: 1.7;
+  }
+  .wrap { max-width: 1400px; margin: 0 auto; }
+  h1 { font-size: 26px; font-weight: 900; letter-spacing: -0.02em; margin-bottom: 6px; }
+  .lead { color: #4B5563; font-size: 14.5px; font-weight: 500; margin-bottom: 24px; }
+
+  .diag {
+    background: #FEF3C7; border: 1px solid #F59E0B;
+    border-radius: 14px; padding: 20px 24px; margin-bottom: 28px;
+  }
+  .diag h2 { font-size: 15px; font-weight: 900; color: #92400E; margin-bottom: 10px; }
+  .diag ul { list-style: none; }
+  .diag li {
+    font-size: 13.5px; color: #78350F; font-weight: 500;
+    padding-left: 22px; position: relative; margin-bottom: 6px;
+  }
+  .diag li::before { content: '×'; position: absolute; left: 4px; color: #DC2626; font-weight: 900; }
+  .diag li.ok::before { content: '○'; color: #059669; }
+
+  .plan {
+    background: #fff;
+    border-radius: 16px;
+    padding: 28px 32px;
+    margin-bottom: 24px;
+    border: 1px solid #E5E7EB;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .plan-head {
+    display: flex; align-items: baseline; gap: 12px; margin-bottom: 6px;
+  }
+  .plan-badge {
+    display: inline-block;
+    background: #00844A; color: #fff;
+    font-family: 'Manrope', monospace;
+    font-size: 12px; font-weight: 900; letter-spacing: 0.14em;
+    padding: 4px 12px; border-radius: 999px;
+  }
+  .plan-title { font-size: 20px; font-weight: 900; letter-spacing: -0.01em; }
+  .plan-sub { color: #6B7280; font-size: 13.5px; font-weight: 500; margin-bottom: 18px; }
+  .plan-tag {
+    display: inline-block;
+    background: #F3F4F6; color: #374151;
+    font-size: 11px; font-weight: 700;
+    padding: 3px 10px; border-radius: 6px;
+    margin-right: 6px;
+  }
+  .plan-tag.pro { background: #ECFDF5; color: #065F46; }
+  .plan-tag.con { background: #FEE2E2; color: #991B1B; }
+
+  /* Case A: evidence-only */
+  .a-card {
+    padding: 20px 22px;
+    background: #fff;
+    border: 1px solid #E5E7EB;
+    border-left: 6px solid #00844A;
+    border-radius: 12px;
+    margin-bottom: 12px;
+  }
+  .a-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .a-rank {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: #00844A; color: #fff;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-family: 'Manrope', monospace; font-size: 14px; font-weight: 900;
+  }
+  .a-name { font-size: 17px; font-weight: 900; letter-spacing: -0.01em; }
+  .a-meta { font-size: 13px; color: #6B7280; font-weight: 500; margin-left: 6px; }
+  .a-evidence {
+    background: #F0FDF4; border-left: 3px solid #10B981;
+    padding: 10px 14px; border-radius: 8px; margin-bottom: 10px;
+  }
+  .a-evidence-src {
+    display: inline-block;
+    font-family: 'Manrope', monospace;
+    font-size: 10.5px; font-weight: 800; letter-spacing: 0.08em;
+    background: #10B981; color: #fff;
+    padding: 2px 8px; border-radius: 4px; margin-bottom: 6px;
+  }
+  .a-evidence-body {
+    font-size: 14px; color: #064E3B; font-weight: 700; line-height: 1.65;
+  }
+  .a-action { display: flex; gap: 8px; margin-top: 12px; }
+  .a-btn {
+    background: #00844A; color: #fff;
+    font-size: 14px; font-weight: 800;
+    padding: 10px 18px; border-radius: 8px;
+    border: none; cursor: pointer;
+  }
+  .a-btn.ghost { background: #fff; color: #0F1729; border: 1px solid #CBD5E1; font-weight: 700; }
+
+  /* Case B: talk-topics extracted */
+  .b-card {
+    padding: 20px 22px;
+    background: #fff;
+    border: 1px solid #E5E7EB;
+    border-radius: 12px;
+    margin-bottom: 12px;
+  }
+  .b-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .b-name { font-size: 17px; font-weight: 900; }
+  .b-priority {
+    background: #FEE2E2; color: #991B1B;
+    font-size: 11px; font-weight: 800;
+    padding: 3px 10px; border-radius: 999px;
+    letter-spacing: 0.06em;
+  }
+  .b-topics { display: grid; gap: 8px; }
+  .b-topic {
+    display: grid; grid-template-columns: 40px 1fr;
+    gap: 12px; align-items: start;
+    padding: 10px 12px; background: #F8FAFC; border-radius: 8px;
+  }
+  .b-topic-num {
+    background: #0F1729; color: #fff;
+    width: 26px; height: 26px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-family: 'Manrope', monospace; font-size: 12px; font-weight: 900;
+  }
+  .b-topic-body { font-size: 13.5px; color: #1F2937; font-weight: 600; line-height: 1.6; }
+  .b-topic-src {
+    font-size: 11px; color: #6B7280; font-weight: 600;
+    margin-top: 2px;
+  }
+
+  /* Case C: task-based */
+  .c-list { display: grid; gap: 10px; }
+  .c-item {
+    display: grid; grid-template-columns: auto 1fr auto; gap: 14px;
+    align-items: center;
+    padding: 14px 18px; background: #fff;
+    border: 1px solid #E5E7EB; border-radius: 10px;
+  }
+  .c-item.urgent { border-color: #EF4444; background: #FEF2F2; }
+  .c-icon {
+    width: 40px; height: 40px; border-radius: 10px;
+    background: #F1F5F9; color: #0F1729;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 20px;
+  }
+  .c-item.urgent .c-icon { background: #FEE2E2; color: #DC2626; }
+  .c-body { min-width: 0; }
+  .c-body-title { font-size: 14.5px; font-weight: 800; color: #0F1729; letter-spacing: -0.01em; }
+  .c-body-sub { font-size: 12.5px; color: #6B7280; font-weight: 500; margin-top: 2px; }
+  .c-body-who { color: #00844A; font-weight: 800; }
+  .c-time {
+    font-size: 11.5px; font-weight: 800; color: #991B1B;
+    background: #FEE2E2; padding: 3px 10px; border-radius: 6px;
+    letter-spacing: 0.04em;
+  }
+  .c-item:not(.urgent) .c-time { color: #6B7280; background: #F3F4F6; }
+
+  /* Case D: quote-driven */
+  .d-card {
+    padding: 22px 26px;
+    background: linear-gradient(180deg, #fff 0%, #F8FAFC 100%);
+    border: 1px solid #E5E7EB;
+    border-radius: 14px;
+    margin-bottom: 12px;
+  }
+  .d-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .d-avatar {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: #0F1729; color: #fff;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 17px; font-weight: 900;
+  }
+  .d-name { font-size: 18px; font-weight: 900; letter-spacing: -0.01em; }
+  .d-meta { font-size: 12.5px; color: #6B7280; font-weight: 500; }
+  .d-quote {
+    background: #fff;
+    border: 1px solid #CBD5E1;
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin: 10px 0 14px;
+    position: relative;
+  }
+  .d-quote::before {
+    content: '"';
+    position: absolute; top: -8px; left: 12px;
+    background: #fff;
+    padding: 0 6px;
+    font-family: Georgia, serif;
+    font-size: 32px; color: #00844A; font-weight: 900;
+    line-height: 1;
+  }
+  .d-quote-src {
+    font-family: 'Manrope', monospace;
+    font-size: 10.5px; font-weight: 800; letter-spacing: 0.08em;
+    color: #6B7280; margin-bottom: 6px;
+  }
+  .d-quote-body {
+    font-size: 15px; font-weight: 700; color: #0F1729;
+    line-height: 1.7;
+  }
+  .d-suggest {
+    background: #ECFDF5;
+    border-left: 4px solid #00844A;
+    padding: 10px 14px; border-radius: 8px;
+    font-size: 13px; color: #065F46; font-weight: 700; line-height: 1.6;
+  }
+  .d-actions { display: flex; gap: 8px; margin-top: 14px; }
+  .d-btn {
+    background: #00844A; color: #fff;
+    font-size: 14px; font-weight: 800;
+    padding: 10px 18px; border-radius: 8px;
+    border: none; cursor: pointer;
+  }
+  .d-btn.ghost { background: #fff; color: #0F1729; border: 1px solid #CBD5E1; font-weight: 700; }
+
+  .decide {
+    background: #ECFDF5;
+    border: 2px solid #00844A;
+    border-radius: 14px;
+    padding: 22px 28px;
+    margin-top: 32px;
+  }
+  .decide h2 { font-size: 16px; font-weight: 900; color: #065F46; margin-bottom: 8px; }
+  .decide p { font-size: 13.5px; color: #0F1729; font-weight: 500; line-height: 1.7; }
+  .decide b { color: #00844A; font-weight: 900; }
+
+  .foot { text-align: center; color: #6B7280; font-size: 12px; padding: 24px 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>「今日 話すべき方」 差替 案 4</h1>
+  <p class="lead">現状 の 「デタラメ」 な 部分 を 洗い出し、 有益 な 内容 に 差し替える 4 案。 owner が 選んだ 案 を 本番 実装。</p>
+
+  <div class="diag">
+    <h2>診断: なぜ 現状 が 「デタラメ」 に 見える か</h2>
+    <ul>
+      <li>Recommender が 客 の 生年月日 · 家族 情報 から <b>ライフイベント を 合成推定</b>、 「教育資金 提案」「相続 対策」 を 自動 生成 (客 が 実際 に そう 言った わけ じゃない)</li>
+      <li>LINE 履歴 · Zoom 議事録 · 予約 メモ の 中身 を <b>一切 見て ない</b> — 客 が 本当に 相談 したい こと が 反映 されない</li>
+      <li>quickMsg テンプレ が <b>「〜さん、 こんにちは！ いつも ありがとう ございます」 の 5 pattern 汎用</b>、 FP先生 が そのまま 送れない</li>
+      <li>実 evidence 系 は 3 個 だけ (提案 検討中 経過 · 最終接触 日数 · キャンセル 30日)、 それ 以外 は 全部 rule ベース 推定</li>
+      <li class="ok">→ 差替 の 方針 = 「AI 予測 じゃなく <b>実 発話 · 実 イベント</b> を 見出し に する」</li>
+    </ul>
+  </div>
+
+  <!-- 案 A -->
+  <div class="plan">
+    <div class="plan-head">
+      <span class="plan-badge">案 A</span>
+      <span class="plan-title">Evidence-only (実 データ のみ、 推定 を 除外)</span>
+    </div>
+    <p class="plan-sub">
+      <span class="plan-tag pro">合成推定 を 完全 排除</span>
+      <span class="plan-tag pro">客 に 説明 できる 根拠</span>
+      <span class="plan-tag con">初期 顧客 数 少ない と 表示 空</span>
+    </p>
+
+    <div class="a-card">
+      <div class="a-head">
+        <span class="a-rank">1</span>
+        <span class="a-name">田中 太郎 様</span>
+        <span class="a-meta">42 歳 · 会社員 · AUM 850 万</span>
+      </div>
+      <div class="a-evidence">
+        <div class="a-evidence-src">議事録 · 7/28</div>
+        <div class="a-evidence-body">前回 Zoom 面談 で 「iDeCo 増額 検討 中」 発言 · 提案 期限 明日</div>
+      </div>
+      <div class="a-evidence">
+        <div class="a-evidence-src">LINE · 2日前</div>
+        <div class="a-evidence-body">「新NISA の 枠 どこまで 使うか 悩む」 未 返信</div>
+      </div>
+      <div class="a-action">
+        <button class="a-btn">文面 を 作る</button>
+        <button class="a-btn ghost">詳細 を 見る</button>
+      </div>
+    </div>
+
+    <div class="a-card">
+      <div class="a-head">
+        <span class="a-rank">2</span>
+        <span class="a-name">鈴木 花子 様</span>
+        <span class="a-meta">58 歳 · 自営業 · AUM 3,200 万</span>
+      </div>
+      <div class="a-evidence">
+        <div class="a-evidence-src">提案 · 検討中 42日</div>
+        <div class="a-evidence-body">6/19 提出 「相続 対策 プラン」 期限 到来 · 未 return</div>
+      </div>
+      <div class="a-action">
+        <button class="a-btn">文面 を 作る</button>
+        <button class="a-btn ghost">詳細 を 見る</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 案 B -->
+  <div class="plan">
+    <div class="plan-head">
+      <span class="plan-badge">案 B</span>
+      <span class="plan-title">Talk-topics 3 点 (議事録 · LINE から AI 抽出)</span>
+    </div>
+    <p class="plan-sub">
+      <span class="plan-tag pro">「何 話す か」 が 即 わかる</span>
+      <span class="plan-tag pro">議事録 の 未フォロー 拾える</span>
+      <span class="plan-tag con">AI 抽出 (Gemini/Claude) 課金 発生 · 遅延</span>
+    </p>
+
+    <div class="b-card">
+      <div class="b-head">
+        <span class="b-name">田中 太郎 様</span>
+        <span class="b-priority">最優先</span>
+      </div>
+      <div class="b-topics">
+        <div class="b-topic">
+          <span class="b-topic-num">1</span>
+          <div>
+            <div class="b-topic-body">iDeCo 掛金 変更 の 相談 (23,000 → 68,000 円 の 上限 まで)</div>
+            <div class="b-topic-src">議事録 7/28 · 「増額 検討 中」 発言 から 抽出</div>
+          </div>
+        </div>
+        <div class="b-topic">
+          <span class="b-topic-num">2</span>
+          <div>
+            <div class="b-topic-body">新NISA 成長 投資 枠 の 銘柄 選定 (SBI · 楽天 の 差)</div>
+            <div class="b-topic-src">LINE 7/29 · 「銘柄 どれ に する か 分から ない」 質問 から</div>
+          </div>
+        </div>
+        <div class="b-topic">
+          <span class="b-topic-num">3</span>
+          <div>
+            <div class="b-topic-body">お子様 の 大学 資金 (第一子 高2 · あと 2 年)</div>
+            <div class="b-topic-src">家族 情報 · 前回 面談 で 「奨学金 vs 学資 保険」 未 決着</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 案 C -->
+  <div class="plan">
+    <div class="plan-head">
+      <span class="plan-badge">案 C</span>
+      <span class="plan-title">Task-based (客 単位 じゃ なく タスク 単位)</span>
+    </div>
+    <p class="plan-sub">
+      <span class="plan-tag pro">「今日 の TODO」 明確</span>
+      <span class="plan-tag pro">複数 客 の 対応 を 時系列 で 見られる</span>
+      <span class="plan-tag con">「客 中心」 の view が 消える</span>
+    </p>
+
+    <div class="c-list">
+      <div class="c-item urgent">
+        <div class="c-icon">📅</div>
+        <div class="c-body">
+          <div class="c-body-title"><span class="c-body-who">田中 様</span> 提案 return 期限</div>
+          <div class="c-body-sub">「相続 対策 プラン」 6/19 提出 · 42 日 経過</div>
+        </div>
+        <span class="c-time">今日 中</span>
+      </div>
+      <div class="c-item urgent">
+        <div class="c-icon">💬</div>
+        <div class="c-body">
+          <div class="c-body-title"><span class="c-body-who">鈴木 様</span> LINE 未 返信</div>
+          <div class="c-body-sub">「iDeCo 掛金 変更 の 相談 したい」 · 2 日 前</div>
+        </div>
+        <span class="c-time">今日 中</span>
+      </div>
+      <div class="c-item">
+        <div class="c-icon">🎯</div>
+        <div class="c-body">
+          <div class="c-body-title"><span class="c-body-who">山田 様</span> 議事録 の 宿題</div>
+          <div class="c-body-sub">「教育資金 3 種 (奨学金 / 学資 / NISA) 比較 資料 送る」 · 未 対応</div>
+        </div>
+        <span class="c-time">今週 中</span>
+      </div>
+      <div class="c-item">
+        <div class="c-icon">📞</div>
+        <div class="c-body">
+          <div class="c-body-title"><span class="c-body-who">佐藤 様</span> 面談 予約</div>
+          <div class="c-body-sub">明日 14:00 Zoom · 論点 = NISA · iDeCo · 保険 見直し</div>
+        </div>
+        <span class="c-time">前日</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 案 D -->
+  <div class="plan">
+    <div class="plan-head">
+      <span class="plan-badge">案 D</span>
+      <span class="plan-title">Quote-driven (客 の 実 発言 を 中心 に)</span>
+    </div>
+    <p class="plan-sub">
+      <span class="plan-tag pro">説得力 max · 客 の 熱量 が 伝わる</span>
+      <span class="plan-tag pro">FP先生 が 話 の 切り口 に 迷わ ない</span>
+      <span class="plan-tag con">議事録 / LINE 蓄積 が 少ない と 空</span>
+    </p>
+
+    <div class="d-card">
+      <div class="d-head">
+        <span class="d-avatar">田</span>
+        <div>
+          <div class="d-name">田中 太郎 様</div>
+          <div class="d-meta">42 歳 · 会社員 · 前回 面談 3 日 前</div>
+        </div>
+      </div>
+      <div class="d-quote">
+        <div class="d-quote-src">LINE · 7/29 (2 日 前)</div>
+        <div class="d-quote-body">「新NISA の 成長 投資 枠、 SBI と 楽天 どっち で 買う べき か 悩んでる んです。 銘柄 も 決めきれ なくて…」</div>
+      </div>
+      <div class="d-suggest">
+        <b>提案 の 切り口</b>: 銘柄 選定 の 前 に 「毎月 の 積立 額 · 30 年 後 の 目標 額」 を 一緒 に 決める → その 目標 に 合う 銘柄 3 本 を 提案。 面談 提案 テンプレ を 開く。
+      </div>
+      <div class="d-actions">
+        <button class="d-btn">文面 を 作る</button>
+        <button class="d-btn ghost">詳細 を 見る</button>
+      </div>
+    </div>
+
+    <div class="d-card">
+      <div class="d-head">
+        <span class="d-avatar">鈴</span>
+        <div>
+          <div class="d-name">鈴木 花子 様</div>
+          <div class="d-meta">58 歳 · 自営業 · AUM 3,200 万</div>
+        </div>
+      </div>
+      <div class="d-quote">
+        <div class="d-quote-src">議事録 · 6/19 (42 日 前) · 未 フォロー</div>
+        <div class="d-quote-body">「相続 対策、 主人 が 亡くなって から 何 も 手 つけ られ ず で… 子ども たち に 迷惑 かけたく ない ので、 プラン 見せて もらえる と 助かる。」</div>
+      </div>
+      <div class="d-suggest">
+        <b>提案 の 切り口</b>: 6/19 提出 の プラン 42日 未 return。 「読んで もらえた か」 の 確認 では なく 「疑問点 3 つ 」 を 先に 聞く 形 で 再 approach。
+      </div>
+      <div class="d-actions">
+        <button class="d-btn">文面 を 作る</button>
+        <button class="d-btn ghost">詳細 を 見る</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="decide">
+    <h2>owner の 判断 待ち</h2>
+    <p>
+      <b>A</b>: 実 evidence only (シンプル · 数字 で 説得) — 小さい 変更 · 即実装 可 (1 日)。<br>
+      <b>B</b>: Talk-topics 3 点 抽出 (AI 課金 発生 · 議事録 前提) — 中規模 · 2〜3 日 · Gemini/Claude 実装。<br>
+      <b>C</b>: Task-based (客 じゃ なく TODO) — home の 意味 が 変わる · 議論 必要。<br>
+      <b>D</b>: Quote-driven (実 発言 引用) — 説得力 max · 議事録 / LINE 蓄積 に 依存 · 2 日。
+    </p>
+    <p style="margin-top:12px;">
+      推奨: <b>A</b> (即実装) → owner 実 tenant で 反応 見て → 良ければ <b>D</b> (Quote-driven) に 段階的 拡張。 <br>
+      「A で 進めて」「D 直接 やって」「別 の 案 ある」 の いずれ か で 返信。
+    </p>
+  </div>
+
+  <p class="foot">FP Compass / TOP 「今日 話すべき方」 差替 案 preview v20260731L</p>
+</div>
+</body>
+</html>
