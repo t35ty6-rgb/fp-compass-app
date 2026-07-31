@@ -20,10 +20,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20260731T-sheet-balance-contrast">
-<link rel="stylesheet" href="styles-v2.css?v=20260731T-sheet-balance-contrast">
-<link rel="stylesheet" href="styles-v3.css?v=20260731T-sheet-balance-contrast">
-<link rel="stylesheet" href="styles-v8-workspace.css?v=20260731T-sheet-balance-contrast">
+<link rel="stylesheet" href="styles.css?v=20260801-line-chat-hub">
+<link rel="stylesheet" href="styles-v2.css?v=20260801-line-chat-hub">
+<link rel="stylesheet" href="styles-v3.css?v=20260801-line-chat-hub">
+<link rel="stylesheet" href="styles-v8-workspace.css?v=20260801-line-chat-hub">
 <!-- ★ 2026-06-26 perf: lucide(350KB) と chart.js(201KB) を defer 化 -->
 <!--   どちらも DOMContentLoaded 後ハイドレートで OK (lucide: setInterval scan / chart: tryRender polling) -->
 <script defer src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
@@ -710,6 +710,99 @@
   }
 </script>
 
+<!-- ==================== LINE トーク Hub (2026-08-01) ==================== -->
+<style>
+.lch-wrap { display: grid; grid-template-columns: 340px 1fr; height: calc(100vh - 60px); min-height: 640px; background: #fff; font-family: 'Noto Sans JP', -apple-system, sans-serif; color: #0F1729; position: relative; }
+.lch-list-pane { border-right: 1px solid #E5E7EB; background: #F7F8FA; display: flex; flex-direction: column; min-width: 0; }
+.lch-list-head { padding: 14px 16px 12px; background: #fff; border-bottom: 1px solid #E5E7EB; }
+.lch-list-title { font-size: 17px; font-weight: 900; color: #0F1729; letter-spacing: -0.01em; margin: 0 0 10px; display: flex; align-items: center; gap: 8px; }
+.lch-list-title .lch-live-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #06C755; box-shadow: 0 0 0 0 rgba(6,199,85,0.7); animation: lch-pulse 2s infinite; }
+@keyframes lch-pulse { 0% { box-shadow: 0 0 0 0 rgba(6,199,85,0.7); } 70% { box-shadow: 0 0 0 8px rgba(6,199,85,0); } 100% { box-shadow: 0 0 0 0 rgba(6,199,85,0); } }
+.lch-search { background: #F1F3F5; border: none; border-radius: 8px; padding: 9px 12px 9px 34px; width: 100%; font-size: 13px; color: #0F1729; font-family: inherit; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none' stroke='%239CA3AF' stroke-width='2'><circle cx='7' cy='7' r='5'/><path d='M11 11l3 3'/></svg>"); background-repeat: no-repeat; background-position: 12px center; }
+.lch-list-filter { display: flex; gap: 6px; padding: 10px 12px; background: #fff; border-bottom: 1px solid #E5E7EB; flex-wrap: wrap; }
+.lch-lf { font-size: 11.5px; font-weight: 700; color: #6B7280; background: transparent; border: 1px solid #E5E7EB; padding: 4px 10px; border-radius: 999px; cursor: pointer; font-family: inherit; }
+.lch-lf.active { background: #06C755; color: #fff; border-color: #06C755; }
+.lch-list { flex: 1; overflow-y: auto; }
+.lch-item { display: grid; grid-template-columns: 46px 1fr auto; gap: 12px; padding: 12px 14px; cursor: pointer; border-bottom: 1px solid #EEF0F2; background: #fff; align-items: start; }
+.lch-item:hover { background: #FAFBFC; }
+.lch-item.active { background: #E7F7EE; }
+.lch-item-avatar { width: 46px; height: 46px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; color: #fff; font-weight: 800; font-size: 16px; background: linear-gradient(135deg, #06C755, #04A94A); flex-shrink: 0; }
+.lch-item-avatar.c1 { background: linear-gradient(135deg, #F87171, #DC2626); }
+.lch-item-avatar.c2 { background: linear-gradient(135deg, #60A5FA, #2563EB); }
+.lch-item-avatar.c3 { background: linear-gradient(135deg, #FBBF24, #D97706); }
+.lch-item-avatar.c4 { background: linear-gradient(135deg, #C084FC, #7C3AED); }
+.lch-item-avatar.c5 { background: linear-gradient(135deg, #22D3EE, #0891B2); }
+.lch-item-avatar.c6 { background: linear-gradient(135deg, #F472B6, #DB2777); }
+.lch-item-avatar.c7 { background: linear-gradient(135deg, #A3E635, #4D7C0F); }
+.lch-item-main { min-width: 0; }
+.lch-item-name { font-size: 14px; font-weight: 800; color: #0F1729; margin-bottom: 2px; }
+.lch-item-preview { font-size: 12.5px; color: #6B7280; font-weight: 500; line-height: 1.4; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.lch-item-right { text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.lch-item-when { font-family: 'Manrope', monospace; font-size: 10.5px; color: #9CA3AF; font-weight: 700; }
+.lch-unread { background: #06C755; color: #fff; font-family: 'Manrope', monospace; font-size: 10.5px; font-weight: 900; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; }
+
+.lch-chat-pane { display: flex; flex-direction: column; background: #7A9BB8; min-width: 0; }
+.lch-chat-header { background: #fff; padding: 12px 20px; border-bottom: 1px solid #E5E7EB; display: grid; grid-template-columns: 40px 1fr auto; gap: 12px; align-items: center; }
+.lch-chat-avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #F87171, #DC2626); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-weight: 800; font-size: 15px; }
+.lch-chat-name { font-size: 15px; font-weight: 900; color: #0F1729; }
+.lch-chat-sub { font-size: 11.5px; color: #6B7280; font-weight: 500; margin-top: 1px; }
+.lch-chat-actions { display: flex; gap: 4px; }
+.lch-chat-actions .lch-ca { width: 34px; height: 34px; border-radius: 8px; border: none; background: transparent; color: #6B7280; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; justify-content: center; }
+.lch-chat-actions .lch-ca:hover { background: #F1F3F5; color: #0F1729; }
+.lch-chat-actions .lch-ca svg { width: 20px; height: 20px; }
+
+.lch-chat-body { flex: 1; overflow-y: auto; padding: 20px 24px; display: flex; flex-direction: column; gap: 8px; }
+.lch-day { text-align: center; margin: 12px 0 4px; }
+.lch-day span { background: rgba(0,0,0,0.35); color: #fff; font-size: 10.5px; font-weight: 700; padding: 3px 12px; border-radius: 999px; }
+.lch-msg { display: flex; gap: 8px; max-width: 76%; align-items: flex-end; }
+.lch-msg.them { align-self: flex-start; }
+.lch-msg.me { align-self: flex-end; flex-direction: row-reverse; }
+.lch-msg-avatar { width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0; background: linear-gradient(135deg, #F87171, #DC2626); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; }
+.lch-msg.me .lch-msg-avatar { visibility: hidden; width: 0; margin: 0; }
+.lch-msg-content { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.lch-bubble-wrap { display: flex; align-items: flex-end; gap: 5px; }
+.lch-msg.me .lch-bubble-wrap { flex-direction: row-reverse; }
+.lch-bubble { padding: 9px 13px; font-size: 13.5px; line-height: 1.55; font-weight: 500; max-width: 100%; word-wrap: break-word; white-space: pre-wrap; }
+.lch-msg.them .lch-bubble { background: #fff; color: #0F1729; border-radius: 4px 16px 16px 16px; }
+.lch-msg.me .lch-bubble { background: #06C755; color: #fff; border-radius: 16px 4px 16px 16px; }
+.lch-msg-meta { font-family: 'Manrope', monospace; font-size: 9.5px; color: rgba(255,255,255,0.9); font-weight: 700; margin-bottom: 2px; display: flex; flex-direction: column; align-items: flex-end; gap: 1px; }
+.lch-msg.them .lch-msg-meta { align-items: flex-start; }
+.lch-msg-read { color: rgba(255,255,255,0.85); font-size: 9px; }
+.lch-sysrow { text-align: center; margin: 8px 0; }
+.lch-sysrow span { background: rgba(255,255,255,0.92); color: #6B7280; font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 999px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+
+.lch-quick { padding: 8px 20px; background: rgba(255,255,255,0.92); display: flex; gap: 6px; overflow-x: auto; border-top: 1px solid #E5E7EB; }
+.lch-quick .lch-q { flex-shrink: 0; background: #fff; border: 1px solid #06C755; color: #06C755; font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 999px; cursor: pointer; font-family: inherit; white-space: nowrap; }
+.lch-quick .lch-q:hover { background: #E7F7EE; }
+.lch-quick .lch-q:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.lch-input-bar { background: #fff; border-top: 1px solid #E5E7EB; padding: 10px 16px; display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; }
+.lch-input-icons { display: flex; gap: 4px; }
+.lch-input-icons .lch-ii { width: 34px; height: 34px; border-radius: 8px; border: none; background: transparent; color: #6B7280; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; justify-content: center; }
+.lch-input-icons .lch-ii:hover { background: #F1F3F5; color: #06C755; }
+.lch-input-icons .lch-ii svg { width: 22px; height: 22px; }
+.lch-input { background: #F1F3F5; border: none; border-radius: 20px; padding: 10px 16px; font-size: 13.5px; font-family: inherit; color: #0F1729; width: 100%; resize: none; outline: none; min-height: 40px; max-height: 100px; }
+.lch-send { background: #06C755; color: #fff; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.lch-send:hover { background: #05B24C; }
+.lch-send:disabled { background: #CBD5E1; cursor: not-allowed; }
+.lch-send svg { width: 20px; height: 20px; }
+.lch-toast { position: absolute; bottom: 76px; left: 50%; transform: translateX(-50%); background: rgba(15,23,41,0.9); color: #fff; padding: 8px 16px; border-radius: 999px; font-size: 12px; font-weight: 700; opacity: 0; transition: opacity 0.2s; pointer-events: none; z-index: 1000; }
+.lch-toast.show { opacity: 1; }
+.lch-toast.err { background: rgba(220,38,38,0.95); }
+
+/* sidebar tab LINE トーク */
+.tab.tab-linechat { background: linear-gradient(135deg, #06C755, #04A94A) !important; color: #fff !important; border: none; box-shadow: 0 2px 8px rgba(6,199,85,0.3); position: relative; }
+.tab.tab-linechat:hover { background: linear-gradient(135deg, #05B24C, #048A3E) !important; }
+.tab.tab-linechat.active { background: linear-gradient(135deg, #048A3E, #036B31) !important; }
+.tab.tab-linechat span { color: #fff !important; }
+.tab.tab-linechat .nav-count { background: #fff !important; color: #DC2626 !important; }
+
+.lch-no-selection { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #fff; text-align: center; padding: 40px; }
+.lch-no-selection .lch-ns-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.85; }
+.lch-no-selection h3 { font-size: 18px; font-weight: 900; margin: 0 0 6px; }
+.lch-no-selection p { font-size: 13px; opacity: 0.9; max-width: 320px; line-height: 1.6; }
+</style>
+
 </head>
 <body data-prod="1">
 
@@ -820,6 +913,11 @@
         <i data-lucide="zap"></i><span>LINE オートメーション</span>
       </div>
       <nav class="sidebar-nav tabs">
+        <div class="tab tab-linechat" data-tab="lineChat">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink:0;"><path d="M12 2C6.48 2 2 5.94 2 10.8c0 3.11 1.83 5.85 4.6 7.42-.19.67-.7 2.44-.8 2.83-.13.48.18.48.38.35.15-.1 2.44-1.66 3.44-2.35.75.11 1.53.17 2.38.17 5.52 0 10-3.94 10-8.8S17.52 2 12 2z"/></svg>
+          <span>LINE トーク</span>
+          <span class="nav-count" id="nav-count-line-unread"></span>
+        </div>
         <div class="tab tab-line" data-tab="leadHub">
           <i data-lucide="user-plus"></i>
           <span>新規相談</span>
@@ -1213,6 +1311,11 @@
             </div>
           </div>
           <div id="kpi-board"></div>
+        </section>
+
+        <!-- ===== LINE トーク (客との やり取り 一元) — 2026-08-01 ===== -->
+        <section class="view" data-view="lineChat" style="padding:0;">
+          <div id="lineChatHub" style="position:relative;"></div>
         </section>
 
         <!-- ===== 新規相談 ===== -->
@@ -2113,7 +2216,7 @@ window.fpReadyAfterAuth = function() {
 <script>
 (function(){
   // 最新の ver を 1 箇所に集約 (fpReadyAfterAuth 側と一致させる必要あり)
-  const FP_VERSION = "20260731T-sheet-balance-contrast";
+  const FP_VERSION = "20260801-line-chat-hub";
   try { window.FP_VERSION = FP_VERSION; } catch(_) {}
 
   // 2026-07-13 v11: Chrome拡張 (Zoom タブ音声 レコーダー) 検知

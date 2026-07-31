@@ -9624,11 +9624,377 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
   }
 
   // ============================
+  // LINE トーク Hub (2026-08-01): 客との やり取り を 本物 LINE UI で 一元管理
+  // ============================
+  const _lchState = { selectedClientId: null, filter: 'all', search: '' };
+
+  function _lchEscape(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+  }
+  function _lchTsStr(t) {
+    if (!t) return '';
+    if (typeof t === 'string') return t;
+    if (t instanceof Date) return t.toISOString();
+    if (typeof t.toDate === 'function') { try { return t.toDate().toISOString(); } catch (_) {} }
+    if (typeof t.seconds === 'number') return new Date(t.seconds * 1000 + (t.nanoseconds || 0) / 1e6).toISOString();
+    try { return String(t); } catch (_) { return ''; }
+  }
+  function _lchWhen(ts) {
+    const s = _lchTsStr(ts);
+    if (!s) return '';
+    const d = new Date(s.replace(' ', 'T'));
+    if (isNaN(d.getTime())) return '';
+    const now = new Date();
+    const diffMs = now.getTime() - d.getTime();
+    const isSameDay = d.toDateString() === now.toDateString();
+    const yesterday = new Date(now); yesterday.setDate(now.getDate() - 1);
+    const isYesterday = d.toDateString() === yesterday.toDateString();
+    if (isSameDay) return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+    if (isYesterday) return '昨日';
+    if (diffMs < 7 * 86400000) return ['日','月','火','水','木','金','土'][d.getDay()] + '曜';
+    return `${d.getMonth()+1}/${d.getDate()}`;
+  }
+  function _lchDayLabel(ts) {
+    const s = _lchTsStr(ts);
+    if (!s) return '';
+    const d = new Date(s.replace(' ', 'T'));
+    if (isNaN(d.getTime())) return '';
+    const now = new Date();
+    const isSameDay = d.toDateString() === now.toDateString();
+    const yesterday = new Date(now); yesterday.setDate(now.getDate() - 1);
+    const isYesterday = d.toDateString() === yesterday.toDateString();
+    if (isSameDay) return '今日';
+    if (isYesterday) return '昨日';
+    return `${d.getFullYear()}年 ${d.getMonth()+1}月 ${d.getDate()}日 (${['日','月','火','水','木','金','土'][d.getDay()]})`;
+  }
+  function _lchTimeShort(ts) {
+    const s = _lchTsStr(ts);
+    if (!s) return '';
+    const d = new Date(s.replace(' ', 'T'));
+    if (isNaN(d.getTime())) return '';
+    return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+  }
+  function _lchAvatarChar(name) {
+    const n = String(name || '').trim();
+    return n ? n[0] : '?';
+  }
+  function _lchAvatarClass(id) {
+    const s = String(id || '');
+    let h = 0;
+    for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+    return 'c' + ((h % 7) + 1);
+  }
+  function _lchGetClients() {
+    return (window.DUMMY_CLIENTS || window.FpApp?.getClients?.() || []).slice();
+  }
+  function _lchUnreadCount(c) {
+    try {
+      const readTs = parseInt(localStorage.getItem('fp-line-read-' + c.id) || '0', 10);
+      return (c.lineHistory || []).filter(m => {
+        const isIn = m.direction === 'in' || m.from === 'user';
+        const ts = new Date(_lchTsStr(m.ts || m.date || 0)).getTime();
+        return isIn && !isNaN(ts) && ts > readTs;
+      }).length;
+    } catch (_) { return 0; }
+  }
+  function _lchLastMsg(c) {
+    const arr = (c.lineHistory || []).slice().sort((a,b) => _lchTsStr(a.ts||a.date||'').localeCompare(_lchTsStr(b.ts||b.date||'')));
+    return arr[arr.length - 1] || null;
+  }
+
+  function renderLineChatHub() {
+    const container = document.getElementById('lineChatHub');
+    if (!container) return;
+    const allClients = _lchGetClients();
+    const eligible = allClients.filter(c => c.lineFriendId || (Array.isArray(c.lineHistory) && c.lineHistory.length > 0));
+    const totalUnread = eligible.reduce((n, c) => n + _lchUnreadCount(c), 0);
+    try {
+      const badge = document.getElementById('nav-count-line-unread');
+      if (badge) {
+        if (totalUnread > 0) { badge.textContent = totalUnread > 99 ? '99+' : String(totalUnread); badge.style.display = ''; }
+        else badge.style.display = 'none';
+      }
+    } catch (_) {}
+
+    container.innerHTML = `
+      <div class="lch-wrap">
+        <aside class="lch-list-pane">
+          <div class="lch-list-head">
+            <h2 class="lch-list-title"><span class="lch-live-dot"></span>LINE トーク</h2>
+            <input type="text" class="lch-search" id="lch-search" placeholder="名前 · メッセージ で 検索" value="${_lchEscape(_lchState.search)}">
+          </div>
+          <div class="lch-list-filter">
+            <button class="lch-lf ${_lchState.filter === 'all' ? 'active' : ''}" data-f="all">すべて</button>
+            <button class="lch-lf ${_lchState.filter === 'unread' ? 'active' : ''}" data-f="unread">未読 ${totalUnread > 0 ? '('+totalUnread+')' : ''}</button>
+            <button class="lch-lf ${_lchState.filter === 'linked' ? 'active' : ''}" data-f="linked">LINE連携済</button>
+          </div>
+          <div class="lch-list" id="lch-list"></div>
+        </aside>
+        <section class="lch-chat-pane" id="lch-chat-pane">
+          <div class="lch-no-selection">
+            <div class="lch-ns-icon">💬</div>
+            <h3>客 を 選んで トーク を 開始</h3>
+            <p>左 の 顧客リスト から 客 を 選ぶと、 LINE の やり取り が ここ に 表示 されます。 送信、 既読、 履歴 まとめて 一元 管理 できます。</p>
+          </div>
+        </section>
+        <div class="lch-toast" id="lch-toast"></div>
+      </div>
+    `;
+    _lchRenderList(eligible);
+    container.querySelectorAll('.lch-lf').forEach(btn => {
+      btn.addEventListener('click', () => {
+        _lchState.filter = btn.dataset.f;
+        _lchRenderList(_lchGetClients().filter(c => c.lineFriendId || (Array.isArray(c.lineHistory) && c.lineHistory.length > 0)));
+        container.querySelectorAll('.lch-lf').forEach(b => b.classList.toggle('active', b.dataset.f === _lchState.filter));
+      });
+    });
+    const searchEl = document.getElementById('lch-search');
+    if (searchEl) {
+      searchEl.addEventListener('input', () => {
+        _lchState.search = searchEl.value || '';
+        _lchRenderList(_lchGetClients().filter(c => c.lineFriendId || (Array.isArray(c.lineHistory) && c.lineHistory.length > 0)));
+      });
+    }
+    let selectId = _lchState.selectedClientId;
+    if (!selectId || !eligible.find(c => c.id === selectId)) {
+      const sorted = eligible.slice().sort((a, b) => {
+        const la = _lchLastMsg(a); const lb = _lchLastMsg(b);
+        return _lchTsStr(lb ? lb.ts||lb.date : '').localeCompare(_lchTsStr(la ? la.ts||la.date : ''));
+      });
+      selectId = sorted[0]?.id || null;
+    }
+    if (selectId) _lchSelectClient(selectId);
+  }
+
+  function _lchRenderList(clients) {
+    const listEl = document.getElementById('lch-list');
+    if (!listEl) return;
+    const filter = _lchState.filter;
+    const searchLc = (_lchState.search || '').toLowerCase();
+    let arr = clients.slice();
+    if (filter === 'unread') arr = arr.filter(c => _lchUnreadCount(c) > 0);
+    if (filter === 'linked') arr = arr.filter(c => !!c.lineFriendId);
+    if (searchLc) {
+      arr = arr.filter(c => {
+        if (String(c.name || '').toLowerCase().indexOf(searchLc) >= 0) return true;
+        return (c.lineHistory || []).some(m => String(m.text || '').toLowerCase().indexOf(searchLc) >= 0);
+      });
+    }
+    arr.sort((a, b) => {
+      const la = _lchLastMsg(a); const lb = _lchLastMsg(b);
+      return _lchTsStr(lb ? lb.ts||lb.date : '').localeCompare(_lchTsStr(la ? la.ts||la.date : ''));
+    });
+    if (arr.length === 0) {
+      listEl.innerHTML = '<div style="padding:40px 20px;text-align:center;color:#94A3B8;font-size:12.5px;">該当 客 が いません</div>';
+      return;
+    }
+    listEl.innerHTML = arr.map(c => {
+      const last = _lchLastMsg(c);
+      const preview = last ? String(last.text || last.message || '').slice(0, 60) : '(まだ やり取り なし)';
+      const when = last ? _lchWhen(last.ts || last.date) : '';
+      const unread = _lchUnreadCount(c);
+      const active = _lchState.selectedClientId === c.id ? 'active' : '';
+      const tag = (c.status && c.status !== 'active') ? c.status : (c.lineFriendId ? '' : '未連携');
+      return `
+        <div class="lch-item ${active}" data-cid="${_lchEscape(c.id)}">
+          <div class="lch-item-avatar ${_lchAvatarClass(c.id)}">${_lchEscape(_lchAvatarChar(c.name))}</div>
+          <div class="lch-item-main">
+            <div class="lch-item-name">${_lchEscape(c.name || '(名前 未設定)')}${tag ? ` <span style="font-size:9.5px;font-weight:800;color:#6B7280;background:#F1F3F5;padding:1px 6px;border-radius:3px;margin-left:4px;">${_lchEscape(tag)}</span>` : ''}</div>
+            <div class="lch-item-preview">${_lchEscape(preview)}</div>
+          </div>
+          <div class="lch-item-right">
+            <div class="lch-item-when">${_lchEscape(when)}</div>
+            ${unread > 0 ? `<div class="lch-unread">${unread > 99 ? '99+' : unread}</div>` : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+    listEl.querySelectorAll('.lch-item').forEach(item => {
+      item.addEventListener('click', () => _lchSelectClient(item.dataset.cid));
+    });
+  }
+
+  function _lchSelectClient(cid) {
+    const c = _lchGetClients().find(x => x.id === cid);
+    if (!c) return;
+    _lchState.selectedClientId = cid;
+    try { localStorage.setItem('fp-line-read-' + cid, String(Date.now())); } catch (_) {}
+    document.querySelectorAll('.lch-item').forEach(el => el.classList.toggle('active', el.dataset.cid === cid));
+    const activeRow = document.querySelector(`.lch-item[data-cid="${(cid || '').replace(/"/g, '\\"')}"] .lch-unread`);
+    if (activeRow) activeRow.remove();
+    _lchRenderChat(c);
+    try {
+      const eligible = _lchGetClients().filter(x => x.lineFriendId || (Array.isArray(x.lineHistory) && x.lineHistory.length > 0));
+      const totalUnread = eligible.reduce((n, x) => n + _lchUnreadCount(x), 0);
+      const badge = document.getElementById('nav-count-line-unread');
+      if (badge) { badge.textContent = totalUnread > 99 ? '99+' : (totalUnread > 0 ? String(totalUnread) : ''); badge.style.display = totalUnread > 0 ? '' : 'none'; }
+    } catch (_) {}
+  }
+
+  function _lchRenderChat(c) {
+    const pane = document.getElementById('lch-chat-pane');
+    if (!pane) return;
+    const msgs = (c.lineHistory || []).slice().sort((a, b) => _lchTsStr(a.ts || a.date || '').localeCompare(_lchTsStr(b.ts || b.date || '')));
+    const meta = [];
+    if (c.age || c.birth) meta.push((c.age ? (c.age + '歳') : '') + (c.birth ? ` (${_lchEscape(c.birth)}生)` : ''));
+    if (c.status && c.status !== 'active') meta.push(_lchEscape(c.status));
+    if (c.lastContactAt) {
+      const d = new Date(c.lastContactAt);
+      if (!isNaN(d.getTime())) meta.push('最終接触 ' + d.toLocaleDateString('ja-JP'));
+    }
+    if (!meta.length && c.lineFriendId) meta.push('LINE連携済');
+    const subLine = meta.join(' · ') || '(情報 なし)';
+    let lastDay = '';
+    const bodyHtml = msgs.length === 0
+      ? `<div class="lch-sysrow"><span>まだ やり取り が ありません — 下 の 入力欄 から 最初 の メッセージ を 送信 してください</span></div>`
+      : msgs.map(m => {
+          const dayLbl = _lchDayLabel(m.ts || m.date);
+          let day = '';
+          if (dayLbl && dayLbl !== lastDay) { day = `<div class="lch-day"><span>${_lchEscape(dayLbl)}</span></div>`; lastDay = dayLbl; }
+          const isIn = m.direction === 'in' || m.from === 'user';
+          const side = isIn ? 'them' : 'me';
+          const time = _lchTimeShort(m.ts || m.date);
+          const read = !isIn ? '<span class="lch-msg-read">既読</span>' : '';
+          const avatarChar = isIn ? _lchAvatarChar(c.name) : '私';
+          return day + `
+            <div class="lch-msg ${side}">
+              <div class="lch-msg-avatar ${_lchAvatarClass(c.id)}">${_lchEscape(avatarChar)}</div>
+              <div class="lch-msg-content">
+                <div class="lch-bubble-wrap">
+                  <div class="lch-bubble">${_lchEscape(m.text || m.message || '')}</div>
+                  <div class="lch-msg-meta">${read}<span>${_lchEscape(time)}</span></div>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+    pane.innerHTML = `
+      <header class="lch-chat-header">
+        <div class="lch-chat-avatar ${_lchAvatarClass(c.id)}">${_lchEscape(_lchAvatarChar(c.name))}</div>
+        <div>
+          <div class="lch-chat-name">${_lchEscape(c.name || '(名前 未設定)')}</div>
+          <div class="lch-chat-sub">${subLine}</div>
+        </div>
+        <div class="lch-chat-actions">
+          <button class="lch-ca" title="客カルテ を 開く" id="lch-open-modal">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </button>
+          <button class="lch-ca" title="議事録">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+          </button>
+        </div>
+      </header>
+      <div class="lch-chat-body" id="lch-chat-body">${bodyHtml}</div>
+      <div class="lch-quick">
+        <button class="lch-q" data-quick="ai" ${msgs.length === 0 ? 'disabled' : ''}>✨ AI で 返信案</button>
+        <button class="lch-q" data-quick="meeting">📅 面談 打診</button>
+        <button class="lch-q" data-quick="thanks">🙏 お礼</button>
+        <button class="lch-q" data-quick="reminder">🔔 リマインド</button>
+      </div>
+      <div class="lch-input-bar">
+        <div class="lch-input-icons">
+          <button class="lch-ii" title="画像 (未対応)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></button>
+          <button class="lch-ii" title="スタンプ (未対応)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></button>
+        </div>
+        <textarea class="lch-input" id="lch-input" placeholder="${c.lineFriendId ? 'メッセージを入力... (Cmd+Enter で送信)' : '⚠ LINE 未連携 客 (先 に 客カルテ で 紐付け)'}"${c.lineFriendId ? '' : ' disabled'}></textarea>
+        <button class="lch-send" id="lch-send" title="送信"${c.lineFriendId ? '' : ' disabled'}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
+    `;
+    const body = document.getElementById('lch-chat-body');
+    if (body) body.scrollTop = body.scrollHeight;
+    const inp = document.getElementById('lch-input');
+    if (inp) {
+      inp.addEventListener('input', () => {
+        inp.style.height = '40px';
+        inp.style.height = Math.min(100, inp.scrollHeight) + 'px';
+      });
+      inp.addEventListener('keydown', (e) => {
+        if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); _lchSendMessage(c); }
+      });
+    }
+    const sendBtn = document.getElementById('lch-send');
+    if (sendBtn) sendBtn.addEventListener('click', () => _lchSendMessage(c));
+    pane.querySelectorAll('.lch-q').forEach(btn => {
+      btn.addEventListener('click', () => _lchQuickReply(c, btn.dataset.quick));
+    });
+    const openModalBtn = document.getElementById('lch-open-modal');
+    if (openModalBtn && typeof window.openClientModal === 'function') {
+      openModalBtn.addEventListener('click', () => window.openClientModal(c.id));
+    }
+  }
+
+  function _lchToast(msg, isErr) {
+    const t = document.getElementById('lch-toast');
+    if (!t) return;
+    t.textContent = msg;
+    t.classList.remove('err');
+    if (isErr) t.classList.add('err');
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  async function _lchSendMessage(c) {
+    const inp = document.getElementById('lch-input');
+    const btn = document.getElementById('lch-send');
+    if (!inp || !btn) return;
+    const text = String(inp.value || '').trim();
+    if (!text) { _lchToast('メッセージ を 入力してください', true); return; }
+    if (!c.lineFriendId) { _lchToast('LINE 未連携 客 に は 送信 できません', true); return; }
+    btn.disabled = true;
+    try {
+      const headers = window.getFpAuthHeaders ? await window.getFpAuthHeaders() : { 'Content-Type': 'application/json' };
+      const r = await fetch(CLOUD_RUN_BASE + '/api/send-line', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ userId: c.lineFriendId, text }),
+      });
+      const data = await r.json();
+      if (!data.ok) throw new Error(data.error || '送信 失敗');
+      if (!Array.isArray(c.lineHistory)) c.lineHistory = [];
+      c.lineHistory.push({ ts: new Date().toISOString(), direction: 'out', text, from: 'fp' });
+      inp.value = '';
+      inp.style.height = '40px';
+      _lchRenderChat(c);
+      _lchToast('送信 しました');
+      if (typeof fetchLiveData === 'function') { setTimeout(() => fetchLiveData(), 800); }
+    } catch (e) {
+      console.error('[lineChat send] fail:', e);
+      _lchToast('送信 失敗: ' + (e.message || '通信 error'), true);
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  function _lchQuickReply(c, kind) {
+    const templates = {
+      meeting: `${c.name || 'お客様'} 様\n\nいつも お世話 に なって おります。\n次回 の 面談 の 候補日 を お知らせ ください。\n\n・第1候補\n・第2候補\n・第3候補\n\nよろしく お願い いたします。`,
+      thanks: `${c.name || 'お客様'} 様\n\n先日 は 貴重 な お時間 いただき、 ありがとう ございました。\nご 検討 いただいて いる 件、 ご不明 な 点 が ございましたら いつでも お気軽 に ご 連絡 ください。`,
+      reminder: `${c.name || 'お客様'} 様\n\nお忙しい ところ 恐縮 です。\n先日 ご 相談 いただいた 件、 ご 検討 状況 は いかが でしょうか。\nご不明 な 点 ございましたら お気軽 に ご 連絡 ください。`,
+    };
+    const inp = document.getElementById('lch-input');
+    if (kind === 'ai') {
+      _lchToast('AI 返信案 生成 は 開発中 (客カルテ の LINE タブ で 「AI 返信案」 button 使用)');
+      return;
+    }
+    const text = templates[kind] || '';
+    if (inp && text) {
+      inp.value = text;
+      inp.focus();
+      inp.style.height = 'auto';
+      inp.style.height = Math.min(100, inp.scrollHeight) + 'px';
+    }
+  }
+
+  // ============================
   // 初期化 (LINEタブが activate されたら)
   // ============================
   window.LineApp = {
     activateSubview: activateSubview,
     renderMeetingHistory: renderMeetingHistory,
+    renderLineChatHub: renderLineChatHub,
     openQuickInpersonModal: openQuickInpersonModal,
     init: function () {
       document.querySelectorAll('.line-subtab').forEach(t => {
@@ -9638,6 +10004,11 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
       if (btn) btn.addEventListener('click', openTestSendDialog);
       updateHeroStatus();
       activateSubview('leadHub');
+      // 2026-08-01: line-app.js deferred ロード完了時 に lineChat が pending なら 実行
+      if (window._pendingLineView === 'lineChat') {
+        try { renderLineChatHub(); } catch (e) { console.warn('[lineChat] pending render fail:', e); }
+        window._pendingLineView = null;
+      }
     },
     refresh: function () {
       activateSubview(currentSubview);
