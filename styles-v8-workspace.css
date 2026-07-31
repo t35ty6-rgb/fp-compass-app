@@ -1872,7 +1872,21 @@ table.clients [class*="avatar"],
   position: relative;
 }
 @media (max-width: 900px) {
-  .cd-modal { grid-template-columns: 1fr; }
+  /* 2026-07-31 fix: 769-899px 中間 viewport で modal max-height=860px & 中身 scrollHeight=2227px、
+     overflow=visible の まま で 中身 が 切られて 底部 の 削除 button が 絶対 見えない bug 恒久 fix。
+     modal 自身 を 内部 scroll させ、 cd-left は 独自 scroll 解除 (二重ネスト 排除)。 */
+  .cd-modal {
+    grid-template-columns: 1fr;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  .cd-modal > .cd-left,
+  .cd-modal > .cd-right {
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+    min-height: 0 !important;
+  }
 }
 .cd-close {
   position: absolute;
