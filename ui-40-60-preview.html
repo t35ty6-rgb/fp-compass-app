@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FP Compass · 40-60代 向け UI 案 5 種 | プレビュー</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800;900&family=Noto+Sans+JP:wght@400;500;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F5F7FA;
+    --surface: #FFFFFF;
+    --surface-2: #F1F5F9;
+    --ink: #0F1729;
+    --ink-2: #1F2937;
+    --ink-3: #4B5563;
+    --dim: #6B7280;
+    --rule: #D1D5DB;
+    --rule-2: #9CA3AF;
+    --primary: #00844A;
+    --primary-hi: #0E9A5A;
+    --primary-soft: #ECFDF5;
+    --primary-line: rgba(0,132,74,0.22);
+    --primary-dark: #065F46;
+    --danger: #B91C1C;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink-2); font-family: 'Noto Sans JP', -apple-system, sans-serif; font-size: 16px; line-height: 1.7; font-weight: 500; letter-spacing: -0.005em; -webkit-font-smoothing: antialiased; }
+
+  .head { background: var(--ink); color: #fff; padding: 44px 32px 34px; }
+  .head-wrap { max-width: 1400px; margin: 0 auto; }
+  .head-kicker { font-family: 'Manrope', sans-serif; font-size: 11px; letter-spacing: 0.16em; font-weight: 800; color: rgba(255,255,255,0.72); margin-bottom: 12px; }
+  h1 { font-family: 'Manrope','Noto Sans JP', sans-serif; font-size: 30px; font-weight: 900; letter-spacing: -0.02em; margin: 0 0 10px; line-height: 1.25; }
+  .lede { color: rgba(255,255,255,0.85); font-size: 15px; line-height: 1.7; max-width: 800px; margin: 0; }
+  .criteria { display: flex; gap: 24px; flex-wrap: wrap; margin-top: 18px; font-size: 13.5px; color: rgba(255,255,255,0.85); }
+  .criteria b { color: #A7F3D0; font-weight: 800; }
+
+  main { max-width: 1400px; margin: 0 auto; padding: 32px; }
+
+  .variant { background: var(--surface); border: 1px solid var(--rule); border-radius: 16px; padding: 28px 32px; margin-bottom: 28px; box-shadow: 0 1px 2px rgba(11,18,32,0.04); }
+  .variant-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 6px; flex-wrap: wrap; }
+  .variant-num { font-family: 'Manrope', sans-serif; color: var(--primary); font-size: 12px; letter-spacing: 0.12em; font-weight: 800; }
+  .variant-title { font-family: 'Manrope','Noto Sans JP', sans-serif; font-size: 24px; font-weight: 900; color: var(--ink); letter-spacing: -0.015em; margin: 0; }
+  .variant-tagline { color: var(--ink-3); font-size: 14.5px; margin: 4px 0 0; font-weight: 600; }
+  .variant-fit { background: var(--primary-soft); color: var(--primary-dark); font-size: 12.5px; padding: 4px 10px; border-radius: 6px; font-weight: 700; letter-spacing: 0.01em; }
+  .variant-lede { color: var(--ink-3); font-size: 14px; margin: 14px 0 22px; line-height: 1.7; }
+  .demo-frame { background: #FBFBFD; border: 1.5px dashed var(--rule); border-radius: 12px; padding: 24px; position: relative; }
+  .demo-label { position: absolute; top: 10px; right: 14px; font-family: 'Manrope', sans-serif; font-size: 10px; letter-spacing: 0.14em; font-weight: 800; color: var(--dim); background: #fff; padding: 3px 10px; border-radius: 6px; border: 1px solid var(--rule); }
+
+  /* ==================== VARIANT 1: Ledger Book (紙 台帳 風) ==================== */
+  .v1-nav-side { display: flex; gap: 20px; }
+  .v1-side { width: 190px; background: #fff; border: 1.5px solid var(--rule); border-radius: 8px; padding: 12px 6px; height: fit-content; }
+  .v1-side-item { padding: 14px 16px; font-size: 16px; font-weight: 700; color: var(--ink-2); border-radius: 6px; cursor: pointer; margin-bottom: 4px; }
+  .v1-side-item.active { background: var(--primary-soft); color: var(--primary-dark); font-weight: 800; border-left: 4px solid var(--primary); padding-left: 12px; }
+  .v1-side-item:hover:not(.active) { background: var(--surface-2); }
+  .v1-main { flex: 1; }
+  .v1-title { font-size: 24px; font-weight: 900; color: var(--ink); margin: 0 0 6px; letter-spacing: -0.015em; }
+  .v1-desc { color: var(--ink-3); font-size: 15px; margin: 0 0 20px; }
+  .v1-search { display: flex; gap: 12px; margin-bottom: 18px; align-items: center; }
+  .v1-search input { flex: 1; padding: 14px 18px; border: 2px solid var(--rule); border-radius: 8px; font-size: 16px; font-family: inherit; }
+  .v1-search input:focus { outline: 3px solid var(--primary-soft); border-color: var(--primary); }
+  .v1-btn-primary { background: var(--primary); color: #fff; border: none; padding: 14px 22px; border-radius: 8px; font-size: 16px; font-weight: 800; cursor: pointer; font-family: inherit; letter-spacing: 0.01em; min-height: 52px; }
+  .v1-btn-primary:hover { background: var(--primary-hi); }
+  .v1-ledger { border: 2px solid var(--ink); border-radius: 10px; overflow: hidden; background: #fff; }
+  .v1-ledger-head { background: var(--ink); color: #fff; display: grid; grid-template-columns: 2.5fr 1.5fr 1fr 1.5fr 1.5fr auto; padding: 14px 20px; font-size: 14px; font-weight: 800; letter-spacing: 0.02em; gap: 14px; }
+  .v1-row { display: grid; grid-template-columns: 2.5fr 1.5fr 1fr 1.5fr 1.5fr auto; padding: 18px 20px; font-size: 17px; align-items: center; border-bottom: 1px solid var(--rule); gap: 14px; cursor: pointer; }
+  .v1-row:hover { background: #FBFBFD; }
+  .v1-row:last-child { border-bottom: none; }
+  .v1-row-name { font-weight: 800; color: var(--ink); font-size: 18px; }
+  .v1-row-name-sub { display: block; font-size: 12px; color: var(--dim); font-weight: 500; margin-top: 2px; }
+  .v1-row-status { display: inline-flex; padding: 4px 12px; border-radius: 6px; font-size: 13px; font-weight: 800; }
+  .v1-row-status.new { background: #DBEAFE; color: #1E40AF; }
+  .v1-row-status.active { background: var(--primary-soft); color: var(--primary-dark); }
+  .v1-row-btn { background: var(--primary); color: #fff; border: none; padding: 10px 16px; border-radius: 6px; font-size: 14px; font-weight: 800; cursor: pointer; font-family: inherit; }
+  .v1-row-btn.ghost { background: transparent; color: var(--ink-2); border: 1.5px solid var(--rule); }
+
+  /* ==================== VARIANT 2: カード式 顧客帳 (Rolodex) ==================== */
+  .v2-nav { background: #fff; border-bottom: 2px solid var(--rule); padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; margin: -24px -24px 20px; border-radius: 10px 10px 0 0; }
+  .v2-nav-title { font-size: 22px; font-weight: 900; color: var(--ink); }
+  .v2-nav-count { background: var(--primary-soft); color: var(--primary-dark); padding: 6px 14px; border-radius: 999px; font-size: 14px; font-weight: 800; }
+  .v2-actions { display: flex; gap: 12px; margin-bottom: 20px; }
+  .v2-search { flex: 1; padding: 16px 22px; border: 2px solid var(--rule); border-radius: 10px; font-size: 17px; font-family: inherit; }
+  .v2-add { background: var(--primary); color: #fff; border: none; padding: 0 28px; border-radius: 10px; font-size: 17px; font-weight: 800; cursor: pointer; min-height: 60px; }
+  .v2-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+  .v2-card { background: #fff; border: 2px solid var(--rule); border-radius: 12px; padding: 20px 22px; cursor: pointer; transition: border-color .12s, box-shadow .12s; min-height: 180px; display: flex; flex-direction: column; }
+  .v2-card:hover { border-color: var(--primary); box-shadow: 0 8px 24px rgba(0,132,74,0.14); }
+  .v2-card-top { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+  .v2-avatar { width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, #4B5BF0 0%, #6D28D9 100%); color: #fff; display: flex; align-items: center; justify-content: center; font-family: 'Manrope', sans-serif; font-weight: 800; font-size: 22px; flex-shrink: 0; }
+  .v2-card-name { font-size: 20px; font-weight: 900; color: var(--ink); line-height: 1.3; }
+  .v2-card-kana { font-size: 13px; color: var(--dim); font-weight: 600; margin-top: 2px; }
+  .v2-card-info { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; font-size: 14px; margin-bottom: 14px; }
+  .v2-card-info dt { color: var(--dim); font-weight: 700; }
+  .v2-card-info dd { color: var(--ink-2); margin: 0; font-weight: 600; }
+  .v2-card-actions { margin-top: auto; display: flex; gap: 8px; }
+  .v2-card-btn { flex: 1; padding: 12px; border: 1.5px solid var(--rule); background: #fff; color: var(--ink-2); border-radius: 8px; font-size: 14px; font-weight: 800; cursor: pointer; font-family: inherit; }
+  .v2-card-btn.primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+  /* ==================== VARIANT 3: 今日 に フォーカス ==================== */
+  .v3-hero { background: linear-gradient(135deg, #0F1729 0%, #1F2A44 100%); color: #fff; border-radius: 14px; padding: 28px 32px; margin-bottom: 22px; }
+  .v3-hero-greet { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 6px; font-weight: 700; letter-spacing: 0.02em; }
+  .v3-hero-title { font-size: 26px; font-weight: 900; letter-spacing: -0.015em; line-height: 1.35; }
+  .v3-hero-title b { color: #FEF08A; }
+  .v3-today { background: #fff; border: 2px solid var(--primary); border-radius: 14px; padding: 24px 26px; margin-bottom: 20px; }
+  .v3-today-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 16px; }
+  .v3-today-title { font-size: 22px; font-weight: 900; color: var(--ink); }
+  .v3-today-date { font-size: 14px; color: var(--dim); font-weight: 700; }
+  .v3-today-item { display: flex; align-items: center; gap: 16px; padding: 16px 18px; background: var(--primary-soft); border-radius: 10px; margin-bottom: 10px; }
+  .v3-today-time { background: var(--primary); color: #fff; padding: 6px 12px; border-radius: 6px; font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 800; flex-shrink: 0; min-width: 66px; text-align: center; }
+  .v3-today-name { font-size: 17px; font-weight: 800; color: var(--ink); flex: 1; }
+  .v3-today-tag { background: #fff; color: var(--primary-dark); padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 800; border: 1px solid var(--primary-line); }
+  .v3-today-btn { background: var(--primary); color: #fff; border: none; padding: 10px 18px; border-radius: 8px; font-size: 15px; font-weight: 800; cursor: pointer; }
+  .v3-sub { background: #fff; border: 1.5px solid var(--rule); border-radius: 12px; padding: 20px 24px; }
+  .v3-sub-title { font-size: 15px; font-weight: 700; color: var(--ink-3); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.08em; font-family: 'Manrope', sans-serif; }
+  .v3-sub-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--rule); font-size: 15px; }
+  .v3-sub-row:last-child { border: none; }
+  .v3-sub-row-name { color: var(--ink); font-weight: 700; }
+  .v3-sub-row-last { color: var(--dim); font-size: 13px; font-weight: 600; }
+  .v3-sub-more { text-align: center; padding: 14px 0 4px; }
+  .v3-sub-more a { color: var(--primary); font-size: 15px; font-weight: 800; text-decoration: none; }
+
+  /* ==================== VARIANT 4: 3ボタン ホーム (ATM-style) ==================== */
+  .v4-wrap { background: #fff; border-radius: 14px; padding: 40px 32px; }
+  .v4-greet { text-align: center; margin-bottom: 32px; }
+  .v4-greet-kicker { font-size: 15px; color: var(--dim); font-weight: 700; margin-bottom: 8px; }
+  .v4-greet-title { font-size: 30px; font-weight: 900; color: var(--ink); letter-spacing: -0.02em; }
+  .v4-3btn { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .v4-btn { background: #fff; border: 3px solid var(--rule); border-radius: 16px; padding: 32px 24px; text-align: center; cursor: pointer; transition: all .15s; min-height: 220px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; }
+  .v4-btn:hover { border-color: var(--primary); background: var(--primary-soft); box-shadow: 0 10px 30px rgba(0,132,74,0.18); }
+  .v4-btn-icon { width: 72px; height: 72px; border-radius: 50%; background: var(--primary-soft); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 34px; font-weight: 900; font-family: 'Manrope', sans-serif; }
+  .v4-btn-title { font-size: 22px; font-weight: 900; color: var(--ink); letter-spacing: -0.01em; }
+  .v4-btn-sub { font-size: 14px; color: var(--ink-3); font-weight: 600; line-height: 1.6; }
+  .v4-quick { margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--rule); }
+  .v4-quick-title { font-size: 13px; color: var(--dim); font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; font-family: 'Manrope', sans-serif; margin-bottom: 12px; text-align: center; }
+  .v4-quick-links { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .v4-quick-link { padding: 10px 18px; background: var(--surface-2); color: var(--ink-2); border-radius: 999px; font-size: 14px; font-weight: 700; text-decoration: none; }
+  .v4-quick-link:hover { background: var(--ink); color: #fff; }
+
+  /* ==================== VARIANT 5: Excel/表計算 風 ==================== */
+  .v5-toolbar { display: flex; gap: 8px; padding: 12px 16px; background: #F3F4F6; border: 1px solid var(--rule); border-radius: 8px 8px 0 0; align-items: center; }
+  .v5-tbtn { padding: 8px 14px; background: #fff; border: 1px solid var(--rule); border-radius: 5px; font-size: 14px; font-weight: 700; color: var(--ink-2); cursor: pointer; font-family: inherit; min-height: 40px; }
+  .v5-tbtn.primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+  .v5-search-mini { flex: 1; padding: 8px 14px; border: 1px solid var(--rule); border-radius: 5px; font-size: 14px; font-family: inherit; margin-left: 12px; }
+  .v5-tbl { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid var(--rule); border-top: none; }
+  .v5-tbl th { background: #E5E7EB; color: var(--ink); font-size: 14px; font-weight: 800; padding: 12px 14px; text-align: left; border-right: 1px solid var(--rule); border-bottom: 2px solid var(--rule-2); }
+  .v5-tbl th:last-child { border-right: none; }
+  .v5-tbl td { padding: 14px 14px; font-size: 15px; border-right: 1px solid var(--rule); border-bottom: 1px solid var(--rule); color: var(--ink-2); font-weight: 500; }
+  .v5-tbl td:last-child { border-right: none; }
+  .v5-tbl tbody tr:nth-child(even) { background: #FAFBFC; }
+  .v5-tbl tbody tr:hover { background: #FFFBEB; cursor: pointer; }
+  .v5-tbl-name { font-weight: 800; color: var(--ink); }
+  .v5-status { padding: 3px 10px; border-radius: 4px; font-size: 12px; font-weight: 800; }
+  .v5-status.new { background: #DBEAFE; color: #1E40AF; }
+  .v5-status.active { background: #DCFCE7; color: #065F46; }
+  .v5-mini-btn { padding: 6px 12px; background: var(--primary); color: #fff; border: none; border-radius: 4px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
+
+  /* Choice bar */
+  .choice-bar { margin-top: 32px; padding: 22px 26px; background: var(--surface); border: 2px solid var(--primary); border-radius: 14px; }
+  .choice-title { font-family: 'Manrope', sans-serif; font-size: 12px; letter-spacing: 0.14em; font-weight: 800; color: var(--primary-dark); margin-bottom: 10px; }
+  .choice-body { color: var(--ink); font-size: 15px; font-weight: 600; line-height: 1.75; }
+  .choice-body b { color: var(--primary-dark); font-weight: 900; }
+  footer { max-width: 1400px; margin: 30px auto; padding: 20px 32px; color: var(--dim); font-size: 12.5px; font-family: 'Manrope', sans-serif; border-top: 1px solid var(--rule); text-align: center; }
+</style>
+</head>
+<body>
+
+<header class="head">
+  <div class="head-wrap">
+    <div class="head-kicker">FP COMPASS · UI PROPOSAL · 40-60代 向け</div>
+    <h1>FP先生 の 顧客一覧 画面 · 5 案</h1>
+    <p class="lede">
+      現行 UI は 30代 前提 で 情報 密度 高め。 実 ユーザー の FP先生 は 40-60代 が 中心 で、 現行 は 「文字 小さい / 何 どこ か 分からない」 の フィードバック 常態。 5 案 で 40-60代 向け の 別 パターン を 提示。
+    </p>
+    <div class="criteria">
+      <span>文字 <b>16-18px</b> 以上</span>
+      <span>タップ 領域 <b>52px+</b></span>
+      <span>コントラスト <b>WCAG AAA</b></span>
+      <span>専門用語 <b>最小化</b></span>
+      <span>familiar patterns 優先</span>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- ================ Variant 1: Ledger Book ================ -->
+  <section class="variant">
+    <div class="variant-head">
+      <span class="variant-num">CASE 01</span>
+      <h2 class="variant-title">紙 台帳 風 (Ledger Book)</h2>
+      <span class="variant-fit">FP事務員 · 経理 感覚</span>
+    </div>
+    <p class="variant-tagline">昔 の 経理 台帳 の 見た目 の まま デジタル 化。 一覧性 と 見慣れ 感 が 一番 強い。</p>
+    <p class="variant-lede">
+      左 に 現行 と 同じ サイドバー、 中央 に 太い 黒枠 で 囲んだ 表。 各行 の 高さ は 現行 の <b>倍 の 68px</b>、 名前 は 18px 太字、 コントラスト は 白 × 濃 ink で 目 に 優しい。 事務員 系 の FP先生 が 一番 「見慣れて る」 感じる 想定。
+    </p>
+    <div class="demo-frame">
+      <span class="demo-label">CASE 01 · 台帳 風</span>
+      <div class="v1-nav-side">
+        <aside class="v1-side">
+          <div class="v1-side-item">ホーム</div>
+          <div class="v1-side-item active">顧客台帳</div>
+          <div class="v1-side-item">面談履歴</div>
+          <div class="v1-side-item">配信</div>
+          <div class="v1-side-item">タグ管理</div>
+          <div class="v1-side-item">設定</div>
+        </aside>
+        <div class="v1-main">
+          <h3 class="v1-title">顧客 台帳</h3>
+          <p class="v1-desc">クリック で 個別 カルテ が 開きます。 検索 は 名前 · かな · 電話 で。</p>
+          <div class="v1-search">
+            <input type="text" placeholder="名前 or 電話 で さがす">
+            <button class="v1-btn-primary">＋ 新しい 客 を 登録</button>
+          </div>
+          <div class="v1-ledger">
+            <div class="v1-ledger-head">
+              <div>お名前</div>
+              <div>ご職業</div>
+              <div>状態</div>
+              <div>最終 面談</div>
+              <div>管理 資産</div>
+              <div></div>
+            </div>
+            <div class="v1-row">
+              <div class="v1-row-name">田中 太郎<span class="v1-row-name-sub">タナカ タロウ · 090-1234-5678</span></div>
+              <div>会社員</div>
+              <div><span class="v1-row-status new">新規</span></div>
+              <div>2 日前</div>
+              <div>¥2,400 万</div>
+              <div><button class="v1-row-btn">カルテ</button></div>
+            </div>
+            <div class="v1-row">
+              <div class="v1-row-name">佐藤 花子<span class="v1-row-name-sub">サトウ ハナコ · 080-9876-5432</span></div>
+              <div>自営業</div>
+              <div><span class="v1-row-status active">活動中</span></div>
+              <div>1 週間前</div>
+              <div>¥1,860 万</div>
+              <div><button class="v1-row-btn">カルテ</button></div>
+            </div>
+            <div class="v1-row">
+              <div class="v1-row-name">鈴木 一郎<span class="v1-row-name-sub">スズキ イチロウ · 090-5555-1111</span></div>
+              <div>年金 生活</div>
+              <div><span class="v1-row-status active">活動中</span></div>
+              <div>3 週間前</div>
+              <div>¥5,120 万</div>
+              <div><button class="v1-row-btn">カルテ</button></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================ Variant 2: Rolodex Cards ================ -->
+  <section class="variant">
+    <div class="variant-head">
+      <span class="variant-num">CASE 02</span>
+      <h2 class="variant-title">顧客 カード 帳 (Rolodex)</h2>
+      <span class="variant-fit">対面 · 記憶 重視 型</span>
+    </div>
+    <p class="variant-tagline">名刺 or カルテ ボックス の 感覚。 顧客 1 人 = 1 カード で 顔 と 情報 が 一目 で 出る。</p>
+    <p class="variant-lede">
+      客 1 人 1 カード で イニシャル アバター + 主要 情報 3 行 + アクション button 2 個。 「あの 客 誰 だっけ」 と 探す 時 に 名前 と 顔 (initial) で ぱっと 目 に 入る。 grid で 一覧、 検索 で 絞る。
+    </p>
+    <div class="demo-frame">
+      <span class="demo-label">CASE 02 · カード 帳</span>
+      <div class="v2-nav">
+        <div class="v2-nav-title">顧客 カード <span class="v2-nav-count">32 名</span></div>
+      </div>
+      <div class="v2-actions">
+        <input class="v2-search" placeholder="名前 · かな · 電話 で さがす">
+        <button class="v2-add">＋ 新しい 客 を 登録</button>
+      </div>
+      <div class="v2-grid">
+        <div class="v2-card">
+          <div class="v2-card-top">
+            <div class="v2-avatar">田</div>
+            <div>
+              <div class="v2-card-name">田中 太郎 様</div>
+              <div class="v2-card-kana">タナカ タロウ</div>
+            </div>
+          </div>
+          <dl class="v2-card-info">
+            <dt>ご職業</dt><dd>会社員</dd>
+            <dt>状態</dt><dd style="color:var(--primary-dark);font-weight:800;">新規 面談 待ち</dd>
+            <dt>最終 面談</dt><dd>2 日前</dd>
+            <dt>管理 資産</dt><dd>¥2,400 万</dd>
+          </dl>
+          <div class="v2-card-actions">
+            <button class="v2-card-btn primary">カルテ を 開く</button>
+            <button class="v2-card-btn">面談 予約</button>
+          </div>
+        </div>
+        <div class="v2-card">
+          <div class="v2-card-top">
+            <div class="v2-avatar" style="background:linear-gradient(135deg,#DB2777 0%,#831843 100%);">佐</div>
+            <div>
+              <div class="v2-card-name">佐藤 花子 様</div>
+              <div class="v2-card-kana">サトウ ハナコ</div>
+            </div>
+          </div>
+          <dl class="v2-card-info">
+            <dt>ご職業</dt><dd>自営業</dd>
+            <dt>状態</dt><dd>活動中</dd>
+            <dt>最終 面談</dt><dd>1 週間前</dd>
+            <dt>管理 資産</dt><dd>¥1,860 万</dd>
+          </dl>
+          <div class="v2-card-actions">
+            <button class="v2-card-btn primary">カルテ を 開く</button>
+            <button class="v2-card-btn">面談 予約</button>
+          </div>
+        </div>
+        <div class="v2-card">
+          <div class="v2-card-top">
+            <div class="v2-avatar" style="background:linear-gradient(135deg,#059669 0%,#065F46 100%);">鈴</div>
+            <div>
+              <div class="v2-card-name">鈴木 一郎 様</div>
+              <div class="v2-card-kana">スズキ イチロウ</div>
+            </div>
+          </div>
+          <dl class="v2-card-info">
+            <dt>ご職業</dt><dd>年金 生活</dd>
+            <dt>状態</dt><dd>活動中</dd>
+            <dt>最終 面談</dt><dd>3 週間前 · 要 フォロー</dd>
+            <dt>管理 資産</dt><dd>¥5,120 万</dd>
+          </dl>
+          <div class="v2-card-actions">
+            <button class="v2-card-btn primary">カルテ を 開く</button>
+            <button class="v2-card-btn">面談 予約</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================ Variant 3: Today-first ================ -->
+  <section class="variant">
+    <div class="variant-head">
+      <span class="variant-num">CASE 03</span>
+      <h2 class="variant-title">今日 に フォーカス</h2>
+      <span class="variant-fit">忙しい 先生 · 予定 中心</span>
+    </div>
+    <p class="variant-tagline">「今日 やる こと」 が 一番 上、 顧客一覧 は 下 に 小さく。 迷わず に 今日 の 面談 に 進める。</p>
+    <p class="variant-lede">
+      ホーム 画面 の 90% を 「今日 の 面談 予定」 に 割く。 何時 に 誰 と 何を するか が 一目、 「面談 開始」 ボタン が 巨大。 顧客一覧 は 下 に 小さく (直近 接触 順 5 名 + 全 一覧 リンク)。
+    </p>
+    <div class="demo-frame">
+      <span class="demo-label">CASE 03 · Today ホーム</span>
+      <div class="v3-hero">
+        <div class="v3-hero-greet">おはよう ございます、 山田 先生</div>
+        <div class="v3-hero-title">今日 は <b>3 名</b> の 面談 が あります</div>
+      </div>
+      <div class="v3-today">
+        <div class="v3-today-head">
+          <div class="v3-today-title">今日 の 面談</div>
+          <div class="v3-today-date">2026 年 7 月 31 日 (木)</div>
+        </div>
+        <div class="v3-today-item">
+          <div class="v3-today-time">10:00</div>
+          <div class="v3-today-name">田中 太郎 様 · 資産 運用 相談</div>
+          <span class="v3-today-tag">Zoom</span>
+          <button class="v3-today-btn">面談 を 開始</button>
+        </div>
+        <div class="v3-today-item">
+          <div class="v3-today-time">13:30</div>
+          <div class="v3-today-name">佐藤 花子 様 · 保険 見直し</div>
+          <span class="v3-today-tag">対面</span>
+          <button class="v3-today-btn">面談 を 開始</button>
+        </div>
+        <div class="v3-today-item">
+          <div class="v3-today-time">15:00</div>
+          <div class="v3-today-name">鈴木 一郎 様 · 相続 相談</div>
+          <span class="v3-today-tag">Zoom</span>
+          <button class="v3-today-btn">面談 を 開始</button>
+        </div>
+      </div>
+      <div class="v3-sub">
+        <div class="v3-sub-title">直近 接触 の 客</div>
+        <div class="v3-sub-row"><span class="v3-sub-row-name">高橋 恵美 様</span><span class="v3-sub-row-last">昨日</span></div>
+        <div class="v3-sub-row"><span class="v3-sub-row-name">中村 健 様</span><span class="v3-sub-row-last">3 日前</span></div>
+        <div class="v3-sub-row"><span class="v3-sub-row-name">小林 まり子 様</span><span class="v3-sub-row-last">1 週間前</span></div>
+        <div class="v3-sub-more"><a href="#">→ 全 32 名 の 顧客 一覧 を 見る</a></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================ Variant 4: 3-Button Home (ATM) ================ -->
+  <section class="variant">
+    <div class="variant-head">
+      <span class="variant-num">CASE 04</span>
+      <h2 class="variant-title">3 ボタン ホーム (ATM 風)</h2>
+      <span class="variant-fit">初心者 · 迷わない 用</span>
+    </div>
+    <p class="variant-tagline">ATM や 郵便局 の 端末 の ように 「今 何 する?」 の 大 button 3 つ だけ。 迷う 余地 なし。</p>
+    <p class="variant-lede">
+      ホーム 画面 に 巨大 な 3 button だけ (「今日 の 予定」 「新しい 客 を 登録」 「面談 を 始める」)。 押した 先 の 画面 で また 単一 目的 の button で 誘導。 IT 苦手 な 先生 でも 迷い ゼロ。
+    </p>
+    <div class="demo-frame">
+      <span class="demo-label">CASE 04 · 3 ボタン ホーム</span>
+      <div class="v4-wrap">
+        <div class="v4-greet">
+          <div class="v4-greet-kicker">2026 年 7 月 31 日 (木)</div>
+          <div class="v4-greet-title">山田 先生、 今 何 を しますか?</div>
+        </div>
+        <div class="v4-3btn">
+          <div class="v4-btn">
+            <div class="v4-btn-icon">📅</div>
+            <div class="v4-btn-title">今日 の 予定 を 見る</div>
+            <div class="v4-btn-sub">面談 3 件<br>フォロー 待ち 2 件</div>
+          </div>
+          <div class="v4-btn">
+            <div class="v4-btn-icon">＋</div>
+            <div class="v4-btn-title">新しい 客 を 登録</div>
+            <div class="v4-btn-sub">名前 · 電話 だけ で<br>1 分 で 登録 完了</div>
+          </div>
+          <div class="v4-btn">
+            <div class="v4-btn-icon">🎙</div>
+            <div class="v4-btn-title">面談 を 始める</div>
+            <div class="v4-btn-sub">Zoom or 対面<br>議事録 は 自動 で 保存</div>
+          </div>
+        </div>
+        <div class="v4-quick">
+          <div class="v4-quick-title">その 他 の メニュー</div>
+          <div class="v4-quick-links">
+            <a class="v4-quick-link" href="#">顧客 一覧</a>
+            <a class="v4-quick-link" href="#">面談 履歴</a>
+            <a class="v4-quick-link" href="#">配信</a>
+            <a class="v4-quick-link" href="#">設定</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================ Variant 5: Excel-like ================ -->
+  <section class="variant">
+    <div class="variant-head">
+      <span class="variant-num">CASE 05</span>
+      <h2 class="variant-title">Excel / 表計算 風</h2>
+      <span class="variant-fit">数字 好き · 見て 決める 型</span>
+    </div>
+    <p class="variant-tagline">馴染み の Excel そっくり の 見た目。 40-60代 が 日常 で 一番 触ってる ツール。</p>
+    <p class="variant-lede">
+      Excel の 表 と 同じ 見た目 (ヘッダ グレー、 行 交互 色、 罫線)。 上部 に Excel の ツールバー 風 の 操作 button (並び替え / フィルター / 追加)。 「クリック して 開く / 編集 する」 の Excel 的 直感 が そのまま 通用。
+    </p>
+    <div class="demo-frame">
+      <span class="demo-label">CASE 05 · Excel 風</span>
+      <div class="v5-toolbar">
+        <button class="v5-tbtn primary">＋ 新規 追加</button>
+        <button class="v5-tbtn">📊 並び替え</button>
+        <button class="v5-tbtn">🔍 絞り込み</button>
+        <button class="v5-tbtn">📥 CSV</button>
+        <input class="v5-search-mini" placeholder="表 の 中 を 探す">
+      </div>
+      <table class="v5-tbl">
+        <thead>
+          <tr>
+            <th>お名前</th>
+            <th>かな</th>
+            <th>年齢</th>
+            <th>ご職業</th>
+            <th>状態</th>
+            <th>最終 面談</th>
+            <th>管理 資産</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="v5-tbl-name">田中 太郎</td>
+            <td>タナカ タロウ</td><td>42</td><td>会社員</td>
+            <td><span class="v5-status new">新規</span></td><td>2 日前</td><td>¥2,400 万</td>
+            <td><button class="v5-mini-btn">開く</button></td>
+          </tr>
+          <tr>
+            <td class="v5-tbl-name">佐藤 花子</td>
+            <td>サトウ ハナコ</td><td>55</td><td>自営業</td>
+            <td><span class="v5-status active">活動中</span></td><td>1 週間前</td><td>¥1,860 万</td>
+            <td><button class="v5-mini-btn">開く</button></td>
+          </tr>
+          <tr>
+            <td class="v5-tbl-name">鈴木 一郎</td>
+            <td>スズキ イチロウ</td><td>68</td><td>年金 生活</td>
+            <td><span class="v5-status active">活動中</span></td><td>3 週間前</td><td>¥5,120 万</td>
+            <td><button class="v5-mini-btn">開く</button></td>
+          </tr>
+          <tr>
+            <td class="v5-tbl-name">高橋 恵美</td>
+            <td>タカハシ エミ</td><td>48</td><td>公務員</td>
+            <td><span class="v5-status active">活動中</span></td><td>昨日</td><td>¥3,200 万</td>
+            <td><button class="v5-mini-btn">開く</button></td>
+          </tr>
+          <tr>
+            <td class="v5-tbl-name">中村 健</td>
+            <td>ナカムラ ケン</td><td>52</td><td>会社員</td>
+            <td><span class="v5-status active">活動中</span></td><td>3 日前</td><td>¥4,500 万</td>
+            <td><button class="v5-mini-btn">開く</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="choice-bar">
+    <div class="choice-title">SELECT · どの UI で 実装 する か 教えて</div>
+    <div class="choice-body">
+      CASE 01〜05 の 番号 で 教えて。 「01 と 03 の 混合」 (台帳 の 中身 + Today ホーム) 等 の 組み合わせ も OK。 選ばれ たら 現行 FP Compass 全画面 を その 方向 で 書き直し 開始。
+      <br><br>
+      <b>Jobs 推薦</b>:
+      <ul style="margin:6px 0 0 20px;padding:0;">
+        <li><b>CASE 03 (Today-first)</b> — 忙しい 先生 に 一番 刺さる。 迷い ゼロ。</li>
+        <li><b>CASE 04 (3 ボタン)</b> — IT が 一番 苦手 な 先生 に 一番 優しい。</li>
+        <li><b>CASE 01 (台帳)</b> — 見慣れ 感 一番 高い。 事務員 タイプ FP 向け。</li>
+      </ul>
+      02 (カード) は 装飾多め、 05 (Excel) は 現行 と 発想 が 近い の で 差別化 弱い、 と 私 の 判定。
+    </div>
+  </div>
+
+</main>
+
+<footer>FP Compass · Skeleton Inc. · 40-60代 向け UI 5 案 · v1 2026-07-31</footer>
+
+</body>
+</html>
