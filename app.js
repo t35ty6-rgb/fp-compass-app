@@ -610,12 +610,168 @@
     // ★ オーナーfb (v AL): ホームに「LINE 要返信」 を最上部に出す。緊急度が高いので顧客台帳の赤バッジより前面に
     renderUnreadLinesOnHome(clients);
 
-    // 今日 話すべき客 — priority >= 65 (今週以上) に絞った上で top 8
-    const tops = window.Recommender.topAcrossClients(clients, 30)
-      .filter(t => t.topAction.priority >= 65)
-      .slice(0, 8);
+    // ★ 2026-07-31: Case C (Task-based) 差替 — 「今日 話すべき方」 を 客 単位 じゃなく タスク 単位 で 出す。
+    //   合成推定 (教育資金/相続 rule) は 廃止、 実 evidence (booking / proposal 検討中 / fp-tasks-* / cancel / dormant) のみ。
+    const homeTasks = generateHomeTasksFromRealData(clients);
+    renderHomeTasksList(homeTasks, clients);
+    return;
+  }
+
+  // ============================
+  // ★ 2026-07-31 Case C: Task-based ホーム
+  // ============================
+  function generateHomeTasksFromRealData(clients) {
+    const todayD = window.LifeEvents.TODAY;
+    const todayStart = new Date(todayD);
+    const todayEnd = new Date(todayD.getTime() + 86400000);
+    const in7Days = new Date(todayD.getTime() + 7 * 86400000);
+    const tasks = [];
+
+    const parseDateSafe = (v) => {
+      if (!v) return null;
+      const d = new Date(v);
+      return isNaN(d.getTime()) ? null : d;
+    };
+    const daysFromToday = (d) => Math.floor((d - todayD) / 86400000);
+
+    (clients || []).forEach(c => {
+      // 1. 面談 予約 (今日 / 明日 / 今週)
+      const liveBks = (window.LineAppLiveData && window.LineAppLiveData.bookings) || [];
+      const myBks = liveBks.filter(b => (b.userId && b.userId === c.lineFriendId) || (b.name && b.name === c.name));
+      myBks.forEach(b => {
+        const slot = b.confirmedSlot || (b.date ? (b.date + (b.time ? ' ' + b.time : '')) : null);
+        const bd = parseDateSafe(slot);
+        if (!bd) return;
+        const days = daysFromToday(bd);
+        if (days < -1 || days > 14) return; // 昨日〜2週間先 だけ
+        let urgency, urgencyRank, timeLabel;
+        if (days === 0) { urgency = '今日 面談'; urgencyRank = 0; timeLabel = '今日'; }
+        else if (days === 1) { urgency = '明日 面談'; urgencyRank = 0; timeLabel = '明日'; }
+        else if (days <= 7) { urgency = '今週 面談'; urgencyRank = 1; timeLabel = days + '日後'; }
+        else { urgency = '来週 面談'; urgencyRank = 2; timeLabel = days + '日後'; }
+        tasks.push({
+          clientId: c.id, clientName: c.name,
+          icon: '📞', type: 'booking',
+          title: '面談 予約 · ' + (b.time || (bd.getHours() ? (bd.getHours() + ':' + String(bd.getMinutes()).padStart(2, '0')) : '時刻未定')),
+          sub: 'Zoom 面談 · 論点 要 確認',
+          urgency, urgencyRank, timeLabel,
+          dueBy: bd,
+        });
+      });
+
+      // 2. 提案 検討中/提案中 で 14日 以上 経過
+      (c.proposals || []).forEach(p => {
+        if (p.result !== '検討中' && p.result !== '提案中') return;
+        const pd = parseDateSafe(p.date);
+        if (!pd) return;
+        const daysSince = Math.floor((todayD - pd) / 86400000);
+        if (daysSince < 14) return;
+        let urgency, urgencyRank, timeLabel;
+        if (daysSince >= 30) { urgency = '提案 return 期限 超過'; urgencyRank = 0; timeLabel = daysSince + '日 停滞'; }
+        else { urgency = '提案 return 期限 迫る'; urgencyRank = 1; timeLabel = daysSince + '日 経過'; }
+        tasks.push({
+          clientId: c.id, clientName: c.name,
+          icon: '📅', type: 'proposal',
+          title: '提案 「' + (p.title || '案件') + '」 · ' + (p.result === '検討中' ? '検討中' : '提案中'),
+          sub: (pd.getFullYear() % 100) + '/' + (pd.getMonth() + 1) + '/' + pd.getDate() + ' 提出 · 未 return',
+          urgency, urgencyRank, timeLabel,
+          dueBy: new Date(pd.getTime() + 30 * 86400000),
+        });
+      });
+
+      // 3. 議事録 / メモ 由来 の 未対応 タスク (localStorage + ai_tasks)
+      const tkeys = new Set();
+      if (c.lineFriendId) tkeys.add('fp-tasks-' + c.lineFriendId);
+      if (c.id) tkeys.add('fp-tasks-' + c.id);
+      if (c.name) tkeys.add('fp-tasks-' + c.name);
+      const seenT = new Set();
+      const collectTask = (t) => {
+        const id = (t.due || '') + '|' + (t.task || '');
+        if (seenT.has(id)) return; seenT.add(id);
+        const pri = String(t.priority || '');
+        const dueD = parseDateSafe(t.due);
+        let urgency, urgencyRank, timeLabel;
+        if (pri === '至急' || (dueD && daysFromToday(dueD) <= 0)) {
+          urgency = '議事録 の 宿題 · 至急'; urgencyRank = 0;
+          timeLabel = dueD ? (daysFromToday(dueD) < 0 ? Math.abs(daysFromToday(dueD)) + '日 超過' : '今日') : '至急';
+        } else if (pri === '今週' || (dueD && daysFromToday(dueD) <= 7)) {
+          urgency = '議事録 の 宿題 · 今週'; urgencyRank = 1;
+          timeLabel = dueD ? daysFromToday(dueD) + '日後' : '今週';
+        } else {
+          urgency = '議事録 の 宿題'; urgencyRank = 2;
+          timeLabel = dueD ? daysFromToday(dueD) + '日後' : (pri || '月内');
+        }
+        tasks.push({
+          clientId: c.id, clientName: c.name,
+          icon: t.icon || '🎯', type: 'homework',
+          title: t.task || '(内容 未 記載)',
+          sub: '議事録 抽出 · ' + (dueD ? '期限 ' + (dueD.getMonth() + 1) + '/' + dueD.getDate() : (pri || '')),
+          urgency, urgencyRank, timeLabel,
+          dueBy: dueD || in7Days,
+        });
+      };
+      tkeys.forEach(k => {
+        try { JSON.parse(localStorage.getItem(k) || '[]').forEach(collectTask); } catch (_) {}
+      });
+      ((window.LineAppLiveData && window.LineAppLiveData.ai_tasks) || []).forEach(t => {
+        const match = (t.userId && t.userId === c.lineFriendId) || (t.customerName && t.customerName === c.name);
+        if (match) collectTask(t);
+      });
+
+      // 4. キャンセル後 30日以内 フォロー
+      const lastCancel = (c.cancellations || []).slice().sort((a, b) => new Date(b.date) - new Date(a.date))[0];
+      if (lastCancel) {
+        const cd = parseDateSafe(lastCancel.date);
+        if (cd) {
+          const daysSince = Math.floor((todayD - cd) / 86400000);
+          if (daysSince >= 0 && daysSince <= 30) {
+            let urgencyRank = daysSince <= 7 ? 0 : (daysSince <= 21 ? 1 : 2);
+            tasks.push({
+              clientId: c.id, clientName: c.name,
+              icon: '⚠️', type: 'cancel',
+              title: 'キャンセル後 フォロー',
+              sub: (cd.getMonth() + 1) + '/' + cd.getDate() + ' 面談 キャンセル · ' + daysSince + '日 経過',
+              urgency: 'キャンセル 後 フォロー',
+              urgencyRank,
+              timeLabel: daysSince + '日 前',
+              dueBy: new Date(cd.getTime() + 30 * 86400000),
+            });
+          }
+        }
+      }
+
+      // 5. 半年 以上 未接触 (dormant re-engage)
+      const lc = parseDateSafe(c.lastContact);
+      if (lc) {
+        const daysSince = Math.floor((todayD - lc) / 86400000);
+        if (daysSince >= 180) {
+          tasks.push({
+            clientId: c.id, clientName: c.name,
+            icon: '🌿', type: 'dormant',
+            title: '長期 未接触 · 再 engagement',
+            sub: '最終 接触 ' + daysSince + '日 前 · 生存 確認 & 近況 伺い',
+            urgency: '長期 未接触',
+            urgencyRank: daysSince >= 365 ? 1 : 2,
+            timeLabel: Math.floor(daysSince / 30) + 'ヶ月 前',
+            dueBy: todayEnd,
+          });
+        }
+      }
+    });
+
+    // sort: urgencyRank 昇順 → dueBy 昇順
+    tasks.sort((a, b) => {
+      if (a.urgencyRank !== b.urgencyRank) return a.urgencyRank - b.urgencyRank;
+      return (a.dueBy || 0) - (b.dueBy || 0);
+    });
+    return tasks;
+  }
+
+  function renderHomeTasksList(tasks, clients) {
     const list = document.getElementById('action-list');
-    if (tops.length === 0) {
+    if (!list) return;
+    // 空 の 時 は 既存 の empty state を 出す (下記 else に fallback)
+    if (tasks.length === 0) {
       // ★ オーナーfb: 空の時の表示を整える (急ぎが無いことを明示 + 次の打ち手の導線)
       const todayDateE = window.LifeEvents.TODAY;
       const dormantCount = clients.filter(c => c.lineFriendId && c.lastContact && Math.floor((todayDateE - new Date(c.lastContact)) / 86400000) >= 21).length;
@@ -650,168 +806,50 @@
       return;
     }
 
-    const todayDate = window.LifeEvents.TODAY;
-    const fmtMoneyAum = (v) => v >= 100000000 ? `¥${(v/100000000).toFixed(2)}億` : `¥${Math.round(v/10000).toLocaleString()}万`;
+    // urgencyRank 別 に グループ 化
+    const groups = [
+      { rank: 0, title: '今日 中 に 対応', desc: '期限 到来 / 提案 停滞 / 面談 直前', tone: 'urgent',   items: tasks.filter(t => t.urgencyRank === 0) },
+      { rank: 1, title: '今週 中 に 対応', desc: '提案 期限 迫る / 面談 近い / 宿題 今週',    tone: 'warn',     items: tasks.filter(t => t.urgencyRank === 1) },
+      { rank: 2, title: '今月 の 予定',    desc: '長期 未接触 の 再 engagement 等',              tone: 'neutral',  items: tasks.filter(t => t.urgencyRank === 2) },
+    ];
 
-    // 各客に該当する KPI を判定
-    function getClientKpis(c) {
-      const days = Math.floor((todayDate - new Date(c.lastContact)) / 86400000);
-      const kpis = [];
-      // キャンセル後フォロー (30日以内)
-      const lastCancel = (c.cancellations || []).slice().sort((a,b) => new Date(b.date) - new Date(a.date))[0];
-      if (lastCancel && Math.floor((todayDate - new Date(lastCancel.date)) / 86400000) <= 30) {
-        kpis.push({ id: 'cancel', label: 'キャンセル後フォロー', tone: 'critical' });
-      }
-      // 提案検討中 (30日以上)
-      const stalled = (c.proposals || []).slice().reverse().find(p => (p.result === '検討中' || p.result === '提案中') && Math.floor((todayDate - new Date(p.date)) / 86400000) >= 30);
-      if (stalled) {
-        kpis.push({ id: 'stalled', label: '提案クロージング', tone: 'warn' });
-      }
-      // イベント先取り (60日以内 major)
-      const evs = window.LifeEvents.generate(c) || [];
-      const nearMajor = evs.find(ev => {
-        const d = (ev.date - todayDate) / 86400000;
-        return ev.major && d >= 0 && d <= 60;
-      });
-      if (nearMajor && days >= 21) {
-        kpis.push({ id: 'event', label: 'イベント先取り', tone: 'warn' });
-      }
-      // 休眠
-      if (c.status === 'dormant' || days >= 180) {
-        kpis.push({ id: 'dormant', label: '休眠の再エンゲージ', tone: 'critical' });
-      }
-      // 月1接触 (30日以上未接触・非休眠)
-      if (kpis.length === 0 && days >= 30 && c.status !== 'dormant') {
-        kpis.push({ id: 'untouched', label: '月1接触', tone: 'warn' });
-      }
-      return kpis;
-    }
+    const cnt = document.getElementById('senior-counter');
+    if (cnt) cnt.textContent = tasks.length + ' 件';
 
-    const briefCardHtml = (t, rank) => {
-      const c = t.client;
-      const p = t.topAction.priority;
-      const initial = (c.name || '?').replace(/\s+/g, '').slice(0, 1);
-      // ★ 2026-07-15 distill: NaN/null 対策 (lastContact 未登録 で NaN日前 render される事故 fix)
-      const rawDays = Math.floor((todayDate - new Date(c.lastContact)) / 86400000);
-      const days = Number.isFinite(rawDays) && rawDays >= 0 ? rawDays : null;
-      const age = window.LifeEvents.currentAge(c);
-      const ageStr = (age == null || !Number.isFinite(age)) ? null : age + '歳';
-      const aumStr = (typeof c.aum === 'number' && Number.isFinite(c.aum) && c.aum > 0) ? 'AUM ' + fmtMoneyAum(c.aum) : null;
-      const occStr = c.occupation ? escapeHtml(c.occupation) : null;
-      const metaLine = [ageStr, occStr, aumStr].filter(Boolean).join(' · ');
-
-      // Find next upcoming event, filter far-future noise (2年超は行動性なし)
-      const evs = window.LifeEvents.generate(c);
-      const futureEv = evs.find(ev => {
-        const d = new Date(ev.date);
-        if (d < todayDate) return false;
-        const daysAhead = (d - todayDate) / 86400000;
-        return daysAhead <= 730; // 2年以内 のみ
-      });
-      const nextEvent = futureEv ? {
-        title: futureEv.title || futureEv.kind || futureEv.name || 'イベント',
-        rel: window.LifeEvents.formatRelative(new Date(futureEv.date))
-      } : null;
-
-      const kpis = getClientKpis(c);
-      // 「定期フォロー」 default badge は 全カード共通で 情報価値ゼロ → kpis 空なら 何も出さない
-      const kpiBadgeHtml = kpis.map(k => `<span class="senior-kpi-badge senior-kpi-${k.tone}"><i data-lucide="target"></i>${escapeHtml(k.label)}</span>`).join('');
-
-      const isTop = rank === 0;
-      const contactStr = days == null ? '未接触' : (days + '日前');
-
-      return `
-        <div class="senior-card ${isTop ? 'senior-card-top' : ''}" data-client-id="${c.id}">
-          <div class="senior-card-rank">${rank + 1}</div>
-          <div class="senior-card-head">
-            <div class="senior-card-avatar">${initial}</div>
-            <div class="senior-card-id">
-              <div class="senior-card-name">${escapeHtml(c.name)} <span class="senior-card-honor">様</span></div>
-              <div class="senior-card-sub">${metaLine || '—'}</div>
-              ${(function(){
-                const master = (typeof getTagsMaster === 'function') ? getTagsMaster() : [];
-                const ids = (typeof getClientTags === 'function') ? getClientTags(c.id) : [];
-                if (!ids.length) return '';
-                const tags = ids.map(id => master.find(t => t.id === id)).filter(Boolean);
-                return `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;">${tags.map(t => { const col = validColor(t.color); return `<span style="background:${col}1A;color:${col};border:1px solid ${col}55;padding:1px 8px;border-radius:8px;font-size:10px;font-weight:700;line-height:1.6;">${escapeHtml(t.label)}</span>`; }).join('')}</div>`;
-              })()}
-            </div>
-            ${kpiBadgeHtml ? `<div class="senior-card-status-badges">${kpiBadgeHtml}</div>` : ''}
-          </div>
-
-          <div class="senior-card-action senior-action-compact">
-            <span class="senior-action-title">${escapeHtml(t.topAction.action)}</span>
-            <span class="senior-action-sep">·</span>
-            <span class="senior-action-contact">${contactStr}</span>
-            ${nextEvent ? `<span class="senior-action-sep">·</span><span class="senior-action-event">📅 ${escapeHtml(nextEvent.title)} <span class="rel">(${escapeHtml(nextEvent.rel)})</span></span>` : ''}
-          </div>
-
-          ${(function(){
-            // 状況に応じたすぐ送れるLINE文案を生成
-            const fpHandleName = ((window.__fp?.tenantName || '').match(/^[^\s—\-]+/) || ['先生'])[0];
-            let quickMsg = '';
-            const kpi = kpis[0];
-            if (kpi?.id === 'cancel') {
-              quickMsg = `${c.name}さん、先日はご予定が合わず失礼しました。\nよろしければ改めてお時間を作れますか？\n候補日を3つご連絡いただければ調整いたします 🙏\n— ${fpHandleName}`;
-            } else if (kpi?.id === 'stalled') {
-              const prop = (c.proposals || []).slice().reverse().find(p => p.result === '検討中' || p.result === '提案中');
-              quickMsg = `${c.name}さん、お世話になっております。\n先日ご提案した「${prop?.title || '件'}」について、\n何かご不明点はございますか？\n気軽にご連絡ください😊\n— ${fpHandleName}`;
-            } else if (kpi?.id === 'event' && nextEvent) {
-              quickMsg = `${c.name}さん、いつもありがとうございます。\n${nextEvent.title}が近づいてまいりましたね。\nお役に立てることがあればぜひご相談ください！\n— ${fpHandleName}`;
-            } else if (kpi?.id === 'dormant') {
-              quickMsg = `${c.name}さん、ご無沙汰しております 😊\nお元気でいらっしゃいますか？\n最近お伝えしたい情報がいくつかございます。\n30分ほどお時間はありますか？\n— ${fpHandleName}`;
-            } else {
-              quickMsg = `${c.name}さん、こんにちは！\nいつもありがとうございます。\n何かお役に立てることがあればお気軽にご連絡ください😊\n— ${fpHandleName}`;
-            }
-            return `
-          <div class="senior-card-quick-msg">
-            <div class="senior-quick-msg-preview">${escapeHtml(quickMsg)}</div>
-          </div>`;
-          })()}
-          <div class="senior-card-buttons">
-            <button class="senior-btn senior-btn-primary" data-brief-open="${c.id}">
-              <i data-lucide="message-square-text"></i>
-              <span>文面を作って送る</span>
-            </button>
-            <button class="senior-btn senior-btn-secondary" data-brief-detail="${c.id}">
-              <i data-lucide="user-round"></i>
-              <span>詳細を見る</span>
-            </button>
-          </div>
-        </div>`;
-    };
+    const iconHtml = (t) => `<div class="fp-task-icon fp-task-icon-${t.tone || 'neutral'}">${t.icon || '•'}</div>`;
+    const rowHtml = (t) => `
+      <button class="fp-task-row fp-task-row-${t.urgencyRank === 0 ? 'urgent' : (t.urgencyRank === 1 ? 'warn' : 'neutral')}" data-client-id="${escapeHtml(t.clientId)}" type="button">
+        ${iconHtml({ icon: t.icon, tone: t.urgencyRank === 0 ? 'urgent' : (t.urgencyRank === 1 ? 'warn' : 'neutral') })}
+        <div class="fp-task-body">
+          <div class="fp-task-body-title"><span class="fp-task-body-who">${escapeHtml(t.clientName)} 様</span> ${escapeHtml(t.title)}</div>
+          <div class="fp-task-body-sub">${escapeHtml(t.sub || '')}</div>
+        </div>
+        <div class="fp-task-time">${escapeHtml(t.timeLabel || '')}</div>
+      </button>`;
 
     list.innerHTML = `
-      <div class="senior-stack">
-        ${tops.map((t, i) => briefCardHtml(t, i)).join('')}
+      <div class="fp-task-list">
+        ${groups.filter(g => g.items.length > 0).map(g => `
+          <div class="fp-task-group fp-task-group-${g.tone}">
+            <div class="fp-task-group-head">
+              <span class="fp-task-group-pill fp-task-group-pill-${g.tone}">${escapeHtml(g.title)}</span>
+              <span class="fp-task-group-count">${g.items.length} 件</span>
+              <span class="fp-task-group-desc">${escapeHtml(g.desc)}</span>
+            </div>
+            <div class="fp-task-group-items">
+              ${g.items.map(rowHtml).join('')}
+            </div>
+          </div>
+        `).join('')}
       </div>
     `;
-    const cnt = document.getElementById('senior-counter');
-    if (cnt) cnt.textContent = tops.length + ' 名';
 
-    // Wire actions
-    list.querySelectorAll('[data-brief-open], [data-brief-detail]').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const id = btn.dataset.briefOpen || btn.dataset.briefDetail;
-        openClientModal(id);
+    // Wire: row click → 客モーダル
+    list.querySelectorAll('.fp-task-row').forEach(row => {
+      row.addEventListener('click', () => {
+        const id = row.dataset.clientId;
+        if (id) openClientModal(id);
       });
-    });
-    list.querySelectorAll('[data-brief-snooze]').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const card = btn.closest('.brief-card, .brief-compact');
-        if (card) { card.style.opacity = '0.3'; card.style.pointerEvents = 'none'; }
-      });
-    });
-    list.querySelectorAll('.brief-card, .brief-compact').forEach(card => {
-      card.addEventListener('click', (e) => {
-        if (e.target.closest('button')) return;
-        openClientModal(card.dataset.clientId);
-      });
-    });
-    list.querySelectorAll('.action-item').forEach(el => {
-      el.addEventListener('click', () => openClientModal(el.dataset.clientId));
     });
   }
 

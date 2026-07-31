@@ -11564,3 +11564,103 @@ section > div[data-line-view] > div[style*="background: #fff"] {
   font-weight: 600 !important;
   line-height: 1.7 !important;
 }
+
+/* ============================================
+ * 2026-07-31 Case C: Task-based ホーム
+ * 「今日 話すべき方」 差替 UI (客 単位 → タスク 単位)
+ * ============================================ */
+.fp-task-list { display: grid; gap: 20px; }
+.fp-task-group {
+  background: #fff;
+  border: 1px solid #E5E7EB;
+  border-radius: 14px;
+  overflow: hidden;
+}
+.fp-task-group-urgent { border-color: #FCA5A5; box-shadow: 0 4px 14px rgba(220,38,38,0.06); }
+.fp-task-group-warn   { border-color: #FCD34D; }
+.fp-task-group-head {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 20px;
+  background: #FAFBFC;
+  border-bottom: 1px solid #E5E7EB;
+}
+.fp-task-group-urgent .fp-task-group-head { background: #FEF2F2; border-bottom-color: #FCA5A5; }
+.fp-task-group-warn   .fp-task-group-head { background: #FFFBEB; border-bottom-color: #FCD34D; }
+.fp-task-group-pill {
+  font-family: 'Manrope', monospace;
+  font-size: 11.5px; font-weight: 900; letter-spacing: 0.12em;
+  padding: 4px 12px; border-radius: 999px;
+  background: #F3F4F6; color: #374151;
+}
+.fp-task-group-pill-urgent { background: #DC2626; color: #fff; }
+.fp-task-group-pill-warn   { background: #F59E0B; color: #fff; }
+.fp-task-group-pill-neutral { background: #6B7280; color: #fff; }
+.fp-task-group-count {
+  font-size: 13px; font-weight: 800; color: #0F1729;
+}
+.fp-task-group-desc {
+  font-size: 12.5px; color: #6B7280; font-weight: 500;
+  margin-left: auto;
+}
+.fp-task-group-items {
+  display: grid; gap: 1px;
+  background: #F3F4F6;
+}
+.fp-task-row {
+  display: grid; grid-template-columns: auto 1fr auto;
+  gap: 14px; align-items: center;
+  padding: 14px 20px;
+  background: #fff;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition: background 0.12s;
+}
+.fp-task-row:hover { background: #F9FAFB; }
+.fp-task-row-urgent:hover { background: #FEF2F2; }
+.fp-task-row-warn:hover   { background: #FFFBEB; }
+.fp-task-icon {
+  width: 40px; height: 40px; border-radius: 10px;
+  background: #F1F5F9;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+.fp-task-icon-urgent { background: #FEE2E2; }
+.fp-task-icon-warn   { background: #FEF3C7; }
+.fp-task-body { min-width: 0; }
+.fp-task-body-title {
+  font-size: 14.5px; font-weight: 800; color: #0F1729;
+  letter-spacing: -0.01em;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fp-task-body-who { color: #00844A; font-weight: 900; }
+.fp-task-body-sub {
+  font-size: 12.5px; color: #6B7280; font-weight: 500;
+  margin-top: 3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fp-task-time {
+  font-size: 11.5px; font-weight: 800;
+  padding: 4px 10px; border-radius: 6px;
+  background: #F3F4F6; color: #6B7280;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+}
+.fp-task-row-urgent .fp-task-time { background: #FEE2E2; color: #991B1B; }
+.fp-task-row-warn   .fp-task-time { background: #FEF3C7; color: #92400E; }
+
+@media (max-width: 720px) {
+  .fp-task-group-head { flex-wrap: wrap; }
+  .fp-task-group-desc { width: 100%; margin-left: 0; margin-top: 4px; }
+  .fp-task-row { padding: 12px 14px; gap: 10px; }
+  .fp-task-icon { width: 36px; height: 36px; font-size: 18px; }
+  .fp-task-body-title { white-space: normal; }
+  .fp-task-body-sub { white-space: normal; }
+}
