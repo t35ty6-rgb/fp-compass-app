@@ -7840,6 +7840,36 @@ STEP C: 結果報告
       };
       sendBtn.disabled = true; sendBtn.textContent = '送信中…';
       status.style.color = '#5B5BF0'; status.textContent = '送信中…';
+      // 候補日 の plain text version (REST fallback 用)
+      const slotsPlainText = text + '\n\n' + slots.map((s, i) => {
+        const d = new Date(s.date + 'T00:00:00');
+        return `【候補${i+1}】 ${d.getMonth()+1}月${d.getDate()}日(${wdayJa[d.getDay()]}) ${s.time}`;
+      }).join('\n') + '\n\n「候補1でお願いします」 のように 返信 ください。';
+
+      // ★ 2026-08-01 owner fb: Firebase Function sendLineMessage が 401/CORS/config で fail する ケース あり
+      //   → まず REST /api/send-line で 確実 送信 (plain text)、 それ でも fail なら Firebase Function を fallback として 試行
+      const CLOUD_RUN_BASE = 'https://fp-compass-webhook-527726449426.asia-northeast1.run.app';
+      let restOk = false;
+      let restErr = null;
+      try {
+        const headers = window.getFpAuthHeaders ? await window.getFpAuthHeaders() : { 'Content-Type': 'application/json' };
+        const r = await fetch(CLOUD_RUN_BASE + '/api/send-line', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ userId: client.lineFriendId, text: slotsPlainText }),
+        });
+        const d = await r.json();
+        if (d.ok) restOk = true; else restErr = d.error || 'REST 送信 ok=false';
+      } catch (e) { restErr = e && e.message; }
+
+      if (restOk) {
+        status.style.color = '#059669'; status.textContent = '✅ 送信完了 — ' + client.name + ' 様 の LINE に 届きました (テキスト形式)';
+        sendBtn.textContent = '✓ 送信済';
+        setTimeout(() => overlay.remove(), 2000);
+        return;
+      }
+
+      // fallback: Firebase Function sendLineMessage (flex carousel 対応 だが token config 依存)
       try {
         const { initializeApp, getApps } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js');
         const { getFunctions, httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-functions.js');
@@ -7859,16 +7889,16 @@ STEP C: 結果報告
         });
         const data = (callRes && callRes.data) || {};
         if (data.ok || data.success) {
-          status.style.color = '#059669'; status.textContent = '✅ 送信完了 — ' + client.name + ' 様 の LINE に 届きました';
+          status.style.color = '#059669'; status.textContent = '✅ 送信完了 (Flex carousel)';
           sendBtn.textContent = '✓ 送信済';
           setTimeout(() => overlay.remove(), 2000);
         } else {
-          status.style.color = '#DC2626'; status.textContent = '送信応答 ok=false';
-          sendBtn.disabled = false; sendBtn.textContent = '📤 この内容で LINE 送信';
+          throw new Error(data.error || 'ok=false');
         }
       } catch (e) {
-        console.error('[slots-send]', e);
-        status.style.color = '#DC2626'; console.error('LINE 送信 失敗:', e); status.textContent = '❌ LINE 送信 できませんでした。 LINE 連携 設定 の access token を 確認 して ください (設定 → LINE公式アカウント接続)。';
+        console.error('[slots-send both fail] REST:', restErr, 'FN:', e);
+        status.style.color = '#DC2626';
+        status.textContent = '❌ LINE 送信 fail: REST=' + (restErr || 'unknown') + ' / Fn=' + ((e.message || '').slice(0, 100));
         sendBtn.disabled = false; sendBtn.textContent = '📤 この内容で LINE 送信';
       }
     });
