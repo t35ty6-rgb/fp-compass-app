@@ -1921,6 +1921,27 @@
         reason: b.cancelReason || '',
       }));
 
+    // 6.5) 確定 Zoom 予定 — owner 2026-08-01 fb「Zoom で 3件 入れた が 反映されてない」 fix。
+    //      instant/schedule/slots 経由 の 予定 は liveData.bookings に 入る が survey_answers に 経由しない
+    //      → survey_answers.confirmedSlot 抽出 だけ では 拾えなかった。 dedupe key で 重複排除。
+    const _existingKeys = new Set(
+      out.filter(e => e.type === 'booking_confirmed' || e.type === 'booking_request')
+         .map(e => (e.slot || e.ts || '') + '|' + (e.candidates || []).join(','))
+    );
+    (liveData.bookings || [])
+      .filter(b => ((b.userId && b.userId === myUid) || (b.name && b.name === myName)) && b.status !== 'cancelled')
+      .forEach(b => {
+        const slot = b.slot || b.confirmedSlot || b.startAt || b.ts || '';
+        const key = (slot || '') + '|';
+        if (_existingKeys.has(key)) return; // survey_answers 由来 と 重複 → skip
+        out.push({
+          type: 'booking_confirmed',
+          ts: b.confirmedAt || b.createdAt || b.ts || slot || '',
+          slot: slot,
+          zoomUrl: b.zoomUrl || b.hostUrl || b.url || '',
+        });
+      });
+
     // 7) 配布資料 (localStorage)
     try {
       Object.keys(localStorage)
