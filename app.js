@@ -2050,15 +2050,15 @@
     if (entry.type === 'ai_minutes') {
       const rawSum = String(entry.summary || '');
       const keyConcerns = Array.isArray(entry.key_concerns) ? entry.key_concerns.filter(Boolean) : [];
-      // owner「同じやつが並んで意味ない」 fix v2 (2026-08-01): 音質warning · 免責文 · 空 セクション を skip、 意味 の ある content 抽出
+      // owner「議事録は 閉じた 感じ · 議題 だけ 書く · 押したら 中身」 fix v2 (2026-08-01):
+      // clean summary (音質warning skip) + 1行 title (議題) 抽出
       function _cleanSummary(s) {
         return String(s || '')
-          // v6.1: より permissive — 音質warning は 行頭 ⚠ 有無 に 関わらず 削る + newline に (⚠ の Unicode variant U+26A0 vs U+FE0F 対応)
           .replace(/[^\n]*音質\s*warning[^\n]*\n?/gi, '')
           .replace(/[^\n]*Whisper\s*幻覚[^\n]*\n?/gi, '')
           .replace(/[^\n]*\(下記は\s*AI[^\n]*\n?/g, '')
           .replace(/\(下記は\s*AI[^)]*\)/g, '')
-          .replace(/^[\s·]*[⚠⚠️][^\n]*\n?/gim, '')  // ⚠ で 始まる 行 全削
+          .replace(/^[\s·]*[⚠⚠️][^\n]*\n?/gim, '')
           .replace(/^##\s+[^\n]+\n\s*[\(（]?\s*該当なし\s*[\)）]?\s*\n?/gim, '')
           .replace(/\([\(（]?該当なし[\)）]?\)/g, '')
           .replace(/^##\s+/gm, '')
@@ -2068,34 +2068,35 @@
           .trim();
       }
       const cleaned = _cleanSummary(rawSum);
-      // 優先: key_concerns 3件 → 音声content から 抽出 (最初 の 意味ある 文) → 「音声 のみ (要約なし)」
-      let inlineHtml;
+      // 議題 1行: key_concerns 先頭 1件 → cleaned 最初 の 意味段落 → 「議題未生成」
+      let topic;
       if (keyConcerns.length > 0) {
-        inlineHtml = keyConcerns.slice(0, 3).map(k =>
-          `<span style="display:inline-block;background:#EDE9FE;color:#5B21B6;padding:1px 8px;border-radius:99px;font-size:10.5px;font-weight:700;margin-right:4px;">${escapeHtml(String(k).slice(0, 20))}</span>`
-        ).join('');
+        topic = keyConcerns[0];
       } else if (cleaned) {
-        const snippet = cleaned.slice(0, 68) + (cleaned.length > 68 ? '…' : '');
-        inlineHtml = `<span style="font-weight:500;color:#4C1D95;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(snippet)}</span>`;
+        topic = cleaned.slice(0, 50) + (cleaned.length > 50 ? '…' : '');
       } else {
-        inlineHtml = `<span style="color:#94A3B8;font-style:italic;">音声のみ (要約 未生成)</span>`;
+        topic = '議題 未生成 (音声のみ)';
       }
+      // 日時 wday
+      const dObj = safeTs ? new Date(safeTs.replace(' ', 'T')) : null;
+      const dtLabel = (dObj && !isNaN(dObj.getTime()))
+        ? `${dObj.getFullYear()}年${dObj.getMonth()+1}月${dObj.getDate()}日 (${['日','月','火','水','木','金','土'][dObj.getDay()]}) ${String(dObj.getHours()).padStart(2,'0')}:${String(dObj.getMinutes()).padStart(2,'0')}`
+        : safeTs;
       const concernChipsFull = keyConcerns.slice(0, 5).map(k => `<span style="display:inline-block;background:#EDE9FE;color:#5B21B6;padding:2px 8px;border-radius:99px;font-size:10.5px;font-weight:600;margin:2px 3px 2px 0;">${escapeHtml(k)}</span>`).join('');
       const bodyHtml = rawSum
         ? (window.renderStructuredSummary
             ? `<div class="fp-summary-structured" style="font-size:12px;">${window.renderStructuredSummary(rawSum)}</div>`
-            : `<div style="font-size:12px;color:#3B0764;white-space:pre-wrap;line-height:1.65;">${escapeHtml(rawSum.slice(0, 400))}${rawSum.length > 400 ? '…' : ''}</div>`)
+            : `<div style="font-size:12px;color:#3B0764;white-space:pre-wrap;line-height:1.65;">${escapeHtml(rawSum.slice(0, 800))}${rawSum.length > 800 ? '…' : ''}</div>`)
         : '<div style="font-size:11px;color:#7C3AED;opacity:0.7;">議事録 未生成</div>';
       return `
-        <details class="cd-line-msg cd-tl-entry cd-tl-minutes" style="align-self:stretch;max-width:100%;background:#F5F3FF;border:1px solid #DDD6FE;border-left:4px solid #8B5CF6;border-radius:8px;padding:10px 14px;margin:4px 0;">
-          <summary style="cursor:pointer;list-style:none;">
-            <div style="display:flex;align-items:baseline;gap:8px;font-size:12.5px;color:#5B21B6;letter-spacing:0.01em;">
-              <span style="font-weight:800;flex-shrink:0;">🎙 議事録</span>
-              <span style="flex:1;min-width:0;overflow:hidden;">${inlineHtml}</span>
-              <span style="font-weight:400;font-size:11px;opacity:0.65;flex-shrink:0;font-family:'Manrope','Inter',monospace;">${safeTs}</span>
-            </div>
+        <details class="cd-line-msg cd-tl-entry cd-tl-minutes" style="align-self:stretch;max-width:100%;background:#F5F3FF;border:1px solid #DDD6FE;border-left:4px solid #8B5CF6;border-radius:10px;padding:12px 14px;margin:4px 0;">
+          <summary style="cursor:pointer;list-style:none;display:flex;align-items:center;gap:10px;">
+            <span style="font-size:16px;flex-shrink:0;">🎙</span>
+            <span style="flex-shrink:0;font-family:'Manrope','Inter',monospace;font-size:11px;font-weight:700;color:#5B21B6;background:#EDE9FE;padding:2px 8px;border-radius:5px;">${escapeHtml(dtLabel)}</span>
+            <span style="flex:1;min-width:0;font-size:13px;font-weight:700;color:#3B0764;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(topic)}</span>
+            <span style="flex-shrink:0;color:#A78BFA;font-size:11px;font-weight:600;">▼ 詳細</span>
           </summary>
-          <div style="margin-top:8px;padding-top:8px;border-top:1px dashed #C4B5FD;">${bodyHtml}</div>
+          <div style="margin-top:10px;padding-top:10px;border-top:1px dashed #C4B5FD;">${bodyHtml}</div>
           ${concernChipsFull ? `<div style="margin-top:8px;">${concernChipsFull}</div>` : ''}
         </details>`;
     }
