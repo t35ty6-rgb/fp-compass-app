@@ -7,6 +7,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
 import {
   getFirestore, initializeFirestore, doc, getDoc, setDoc, serverTimestamp, collection, getDocs,
+  collectionGroup, onSnapshot, query, where, orderBy, limit,
 } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -328,11 +329,80 @@ onAuthStateChanged(auth, async (user) => {
     const clients = [];
     snap.forEach((d) => clients.push({ id: d.id, ...d.data() }));
     renderClients(clients);
+
+    // ★ 2026-08-01 owner fb 「LINE トーク から メッセージ を 送っても ここ の トーク の ところ の 履歴 に やり取り の 履歴 が 何 も 反映 されない」:
+    //   真因 = LINE webhook (Cloud Function) が Firestore `tenants/{tid}/customers/{cid}/line_messages` に 書き込む が、
+    //          admin UI は 旧 GAS livedata (getCloudRunApi) から しか 読ん でい ない → Firestore 側 の 新着 が 見え ない。
+    //   fix = Firestore collectionGroup listener を 直接 貼り、 到着 都度 window.LineAppLiveData.line_messages に merge、
+    //          既存 の mergeLineActivity() で client.lineHistory 反映。
+    subscribeLineMessagesFirestore(tenantId).catch(e => console.warn('[fs-line-listener] fail:', e));
   } catch (e) {
     console.error(e);
     $("client-list").innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div>顧客データの取得に失敗: ${e.message}</div>`;
   }
 });
+
+// Firestore 直接 listener: `tenants/{tid}/customers/*/line_messages` の 直近 200 件 を 監視
+// mergeLineActivity() が 参照 する window.LineAppLiveData.line_messages に 変換 · 反映 する
+async function subscribeLineMessagesFirestore(tenantId) {
+  if (!tenantId || tenantId === '__skeleton__') return;
+  // customerId は 親 path から 引く 必要 が ある。 collectionGroup で 全 line_messages を 取り、
+  // parent.parent.id で customerId を 復元。 tenant 分離 は path filter (親 の 親 の 親 = tenants/{tid}) で 実現
+  try {
+    const q = query(collectionGroup(db, 'line_messages'), orderBy('ts', 'desc'), limit(500));
+    let lastCount = 0;
+    onSnapshot(q, (snap) => {
+      const rows = [];
+      snap.forEach(docSnap => {
+        // path 例: tenants/xxx/customers/yyy/line_messages/zzz
+        const parts = docSnap.ref.path.split('/');
+        if (parts[0] !== 'tenants' || parts[1] !== tenantId) return; // 別 tenant 除外
+        const customerId = parts[3];
+        const d = docSnap.data() || {};
+        if (d.direction !== 'in') return; // 客→FP のみ 反映 (out は 既に UI 側 で 追加 済)
+        const tsMs = d.ts && d.ts.toMillis ? d.ts.toMillis() : (d.ts ? Number(new Date(d.ts)) : Date.now());
+        const iso = new Date(tsMs).toISOString();
+        // window.LineAppLiveData の userId ベース matching に 合わせる ため lineFriendId (= userId) を 顧客 doc から 取り出す 必要 が ある
+        // 簡易 approach: customerId を そのまま userId 代わり (最終 merge 側 で lineFriendId or 名前 で 突合 する 既存 logic に 任せる)
+        rows.push({
+          _customerId: customerId,
+          userId: null, // 後段 で 補完
+          text: String(d.text || d.message || ''),
+          ts: iso,
+          via: d.via || 'firestore',
+        });
+      });
+      if (!window.LineAppLiveData) window.LineAppLiveData = {};
+      if (!Array.isArray(window.LineAppLiveData.line_messages)) window.LineAppLiveData.line_messages = [];
+      // 既存 msgs と dedupe しつつ 追加 (ts + text で unique)
+      const seen = new Set(window.LineAppLiveData.line_messages.map(m => (m.ts || '') + '|' + (m.text || '').slice(0, 40)));
+      // customerId → lineFriendId 補完: window.DUMMY_CLIENTS or Firestore customers を 検索
+      const clientsIdx = {};
+      (window.DUMMY_CLIENTS || []).forEach(c => { if (c._fsCustomerId) clientsIdx[c._fsCustomerId] = c; else if (c.id) clientsIdx[c.id] = c; });
+      let added = 0;
+      rows.forEach(r => {
+        const k = r.ts + '|' + r.text.slice(0, 40);
+        if (seen.has(k)) return;
+        const c = clientsIdx[r._customerId];
+        if (c && c.lineFriendId) r.userId = c.lineFriendId;
+        window.LineAppLiveData.line_messages.push(r);
+        seen.add(k);
+        added++;
+      });
+      if (added > 0) {
+        console.log('[fs-line-listener] +' + added + ' new incoming msgs (total ' + snap.size + ' in listener view)');
+        // mergeLineActivity() を trigger (app.js の window.FPCrmRefreshClients で 呼ばれる)
+        try { if (typeof window.FPCrmRefreshClients === 'function') window.FPCrmRefreshClients(); } catch (_) {}
+      }
+      lastCount = snap.size;
+    }, (err) => {
+      console.warn('[fs-line-listener] onSnapshot err:', err && err.message);
+    });
+    console.log('[fs-line-listener] subscribed for tenant', tenantId);
+  } catch (e) {
+    console.warn('[fs-line-listener] setup fail:', e && e.message);
+  }
+}
 
 function renderClients(clients) {
   $("stat-total").textContent = clients.length;

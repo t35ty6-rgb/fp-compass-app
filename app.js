@@ -7873,30 +7873,13 @@ STEP C: 結果報告
         return `【候補${i+1}】 ${d.getMonth()+1}月${d.getDate()}日(${wdayJa[d.getDay()]}) ${s.time}`;
       }).join('\n') + '\n\n「候補1でお願いします」 のように 返信 ください。';
 
-      // ★ 2026-08-01 owner fb: Firebase Function sendLineMessage が 401/CORS/config で fail する ケース あり
-      //   → まず REST /api/send-line で 確実 送信 (plain text)、 それ でも fail なら Firebase Function を fallback として 試行
+      // ★ 2026-08-01 owner fb 再修正 「3つの候補日を送っても、文字で送るだけで実際のカードタイプで送られていない」:
+      //   前 修正 で REST /api/send-line を 先 に 叩いて いたが、 これ は plain text しか 送れない ため
+      //   Firebase Function (Flex carousel 対応) が 呼ばれる 前 に 「成功」 判定 → owner が 期待 する カード が 出ない。
+      //   正 順序 = Firebase Function (Flex) を 先 → fail 時 のみ REST (text) に fallback
       const CLOUD_RUN_BASE = 'https://fp-compass-webhook-527726449426.asia-northeast1.run.app';
-      let restOk = false;
-      let restErr = null;
-      try {
-        const headers = window.getFpAuthHeaders ? await window.getFpAuthHeaders() : { 'Content-Type': 'application/json' };
-        const r = await fetch(CLOUD_RUN_BASE + '/api/send-line', {
-          method: 'POST',
-          headers,
-          body: JSON.stringify({ userId: client.lineFriendId, text: slotsPlainText }),
-        });
-        const d = await r.json();
-        if (d.ok) restOk = true; else restErr = d.error || 'REST 送信 ok=false';
-      } catch (e) { restErr = e && e.message; }
-
-      if (restOk) {
-        status.style.color = '#059669'; status.textContent = '✅ 送信完了 — ' + client.name + ' 様 の LINE に 届きました (テキスト形式)';
-        sendBtn.textContent = '✓ 送信済';
-        setTimeout(() => overlay.remove(), 2000);
-        return;
-      }
-
-      // fallback: Firebase Function sendLineMessage (flex carousel 対応 だが token config 依存)
+      let fnOk = false;
+      let fnErr = null;
       try {
         const { initializeApp, getApps } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js');
         const { getFunctions, httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-functions.js');
@@ -7916,16 +7899,36 @@ STEP C: 結果報告
         });
         const data = (callRes && callRes.data) || {};
         if (data.ok || data.success) {
-          status.style.color = '#059669'; status.textContent = '✅ 送信完了 (Flex carousel)';
+          fnOk = true;
+          status.style.color = '#059669'; status.textContent = '✅ 送信完了 (Flex カルーセル)';
           sendBtn.textContent = '✓ 送信済';
           setTimeout(() => overlay.remove(), 2000);
+          return;
         } else {
-          throw new Error(data.error || 'ok=false');
+          fnErr = data.error || 'ok=false';
         }
+      } catch (e) { fnErr = e && (e.message || String(e)); console.warn('[slots-send] Fn fail:', fnErr); }
+
+      // fallback: REST plain text (Firebase Function が 401/CORS/config で fail 時)
+      try {
+        const headers = window.getFpAuthHeaders ? await window.getFpAuthHeaders() : { 'Content-Type': 'application/json' };
+        const r = await fetch(CLOUD_RUN_BASE + '/api/send-line', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ userId: client.lineFriendId, text: slotsPlainText }),
+        });
+        const d = await r.json();
+        if (d.ok) {
+          status.style.color = '#F59E0B'; status.textContent = '⚠ Flex fail → text 形式 で 送信 (Fn err: ' + (fnErr||'').slice(0,60) + ')';
+          sendBtn.textContent = '✓ 送信済 (text)';
+          setTimeout(() => overlay.remove(), 3500);
+          return;
+        }
+        throw new Error(d.error || 'REST ok=false');
       } catch (e) {
-        console.error('[slots-send both fail] REST:', restErr, 'FN:', e);
+        console.error('[slots-send both fail] Fn:', fnErr, 'REST:', e);
         status.style.color = '#DC2626';
-        status.textContent = '❌ LINE 送信 fail: REST=' + (restErr || 'unknown') + ' / Fn=' + ((e.message || '').slice(0, 100));
+        status.textContent = '❌ LINE 送信 fail: Fn=' + (fnErr || 'unknown').slice(0, 80) + ' / REST=' + ((e.message || '').slice(0, 80));
         sendBtn.disabled = false; sendBtn.textContent = '📤 この内容で LINE 送信';
       }
     });
