@@ -1324,12 +1324,13 @@
       //   2026-07-02 persist-fix: line_survey に限定していた filter を line_follow 含む LINE 経由全体に拡張
       //   (QR登録直後の アンケ未回答客 が cache path で 消えていた 症状 対応)
       if (Array.isArray(window.DUMMY_CLIENTS) && window.DUMMY_CLIENTS.length > 0) {
-        const lineOrigin = window.DUMMY_CLIENTS.filter(c => c.source === 'line_survey' || c.source === 'line_follow');
-        if (lineOrigin.length > 0) {
-          window._fpFirestoreCustomers = lineOrigin
+        // 2026-08-01 owner fb: LINE 経由 に 限定 せず、 data 有無 で 判定 (source 「quick-zoom」 等 も 対象)
+        const cacheHitList = window.DUMMY_CLIENTS.filter(c => (c.meetingCandidates || []).length > 0 || (c.confirmedSlot && c.zoomUrl));
+        if (cacheHitList.length > 0) {
+          window._fpFirestoreCustomers = cacheHitList
             .filter(c => (c.meetingCandidates||[]).length > 0 && !c.confirmedSlot)
             .map(c => ({ docId: c.id, ...c }));
-          window._fpFirestoreConfirmed = lineOrigin
+          window._fpFirestoreConfirmed = cacheHitList
             .filter(c => c.confirmedSlot && c.zoomUrl)
             .map(c => ({ docId: c.id, ...c }));
         }
@@ -1358,10 +1359,10 @@
         const c = d.data();
         const obj = { docId: d.id, ...c };
         allFs.push(obj);  // ★ 全 source を sync 対象 (旧バグ: source!=='line_survey' で除外 → quick-zoom/quick-inperson 顧客が 顧客台帳に出なかった)
-        if (c.source === 'line_survey') {
-          if ((c.meetingCandidates||[]).length > 0 && !c.confirmedSlot) pendingFs.push(obj);
-          if (c.confirmedSlot && c.zoomUrl) confirmedFs.push(obj);
-        }
+        // 2026-08-01 owner fb: 「予定 を アンケート/リッチメニュー から 入れた が 新規相談 に 反映されない」 fix
+        //   LINE友追加 → アンケート回答 の flow で source は 'line_follow' に 残る ケース あり。 source-agnostic に data 有無 で 判定
+        if ((c.meetingCandidates || []).length > 0 && !c.confirmedSlot) pendingFs.push(obj);
+        if (c.confirmedSlot && c.zoomUrl) confirmedFs.push(obj);
       });
       window._fpFirestoreCustomers = pendingFs;
       window._fpFirestoreConfirmed = confirmedFs;

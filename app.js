@@ -2803,7 +2803,13 @@
       ((c.family || []).find(m => m.rel === 'spouse') ? '夫婦' : '単身');
     const days = daysSince(c.lastContact);
     const aumDisp = c.aum >= 100000000 ? `¥${(c.aum/100000000).toFixed(2)}億` : `¥${Math.round(c.aum/10000).toLocaleString()}万`;
-    const topRec = recs[0] || null;
+    // 2026-08-01 owner fb: LINE 友達追加 直後 の 客 (topRec=null) は cd-flow-empty branch で 古い UI が 出てた。
+    // 常に with-topRec branch (Zoom / LINE 2card + タグ / 情報編集) を 使う 為 fallback を default に。
+    const topRec = recs[0] || {
+      action: 'この方 と 最初 の 一歩',
+      reason: 'まだ 会話 履歴 が ありません。 Zoom で 面談 を 予約 する か、 LINE で 挨拶 を 送って みましょう。',
+      priority: 70,
+    };
     const futureEvs = events.filter(ev => new Date(ev.date) >= TODAY);
     const nextEv = futureEvs[0];
     const eventsByCat = events.reduce((acc, ev) => { acc[ev.cat] = (acc[ev.cat] || 0) + 1; return acc; }, {});
