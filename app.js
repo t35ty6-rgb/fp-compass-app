@@ -1942,6 +1942,32 @@
         });
       });
 
+    // 6.6) 2026-08-01 owner fb: customer doc 直属 の meetingCandidates / confirmedSlot も 拾う
+    //      (backend が Firestore 直書き で GAS 経由しない new flow 対応)
+    if (Array.isArray(c.meetingCandidates) && c.meetingCandidates.length > 0) {
+      const candsKey = (c.meetingCandidates || []).map(x => typeof x === 'string' ? x : (x.slot || x.date || '')).join(',');
+      const dupKey = '|' + candsKey;
+      if (!_existingKeys.has(dupKey)) {
+        out.push({
+          type: 'booking_request',
+          ts: c.meetingCandidatesAt || c.createdAt || c.lineFriendAddedAt || new Date().toISOString(),
+          candidates: c.meetingCandidates.map(x => typeof x === 'string' ? x : (x.slot || x.date || String(x))),
+        });
+      }
+    }
+    if (c.confirmedSlot) {
+      const slot = c.confirmedSlot;
+      const dupKey = slot + '|';
+      if (!_existingKeys.has(dupKey)) {
+        out.push({
+          type: 'booking_confirmed',
+          ts: c.confirmedAt || slot,
+          slot: slot,
+          zoomUrl: c.zoomUrl || '',
+        });
+      }
+    }
+
     // 7) 配布資料 (localStorage)
     try {
       Object.keys(localStorage)

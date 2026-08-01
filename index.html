@@ -20,10 +20,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20260801-v9-slots-rest-fallback">
-<link rel="stylesheet" href="styles-v2.css?v=20260801-v9-slots-rest-fallback">
-<link rel="stylesheet" href="styles-v3.css?v=20260801-v9-slots-rest-fallback">
-<link rel="stylesheet" href="styles-v8-workspace.css?v=20260801-v9-slots-rest-fallback">
+<link rel="stylesheet" href="styles.css?v=20260801-v10-cust-meetingcandidates">
+<link rel="stylesheet" href="styles-v2.css?v=20260801-v10-cust-meetingcandidates">
+<link rel="stylesheet" href="styles-v3.css?v=20260801-v10-cust-meetingcandidates">
+<link rel="stylesheet" href="styles-v8-workspace.css?v=20260801-v10-cust-meetingcandidates">
 <!-- ★ 2026-06-26 perf: lucide(350KB) と chart.js(201KB) を defer 化 -->
 <!--   どちらも DOMContentLoaded 後ハイドレートで OK (lucide: setInterval scan / chart: tryRender polling) -->
 <script defer src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
@@ -1995,6 +1995,14 @@ window.fpReadyAfterAuth = function() {
     const daysFn = (d) => Math.floor((today - new Date(d)) / 86400000);
     const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val || ''; };
     setText('nav-count-clients', clients.length);
+    // 2026-08-01 owner fb: 「デモデータ 2名」 が 客 増えても 更新されない bug fix — 動的に 再描画
+    try {
+      const meta = document.getElementById('app-meta');
+      if (meta) {
+        const fmtDate = (d) => `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
+        meta.textContent = `顧客 ${clients.length}名 / 基準日 ${fmtDate(today)}`;
+      }
+    } catch (_) {}
     // KPI/タスク: アクション必要
     let kpiAlert = 0;
     clients.forEach(c => {
@@ -2240,7 +2248,7 @@ window.fpReadyAfterAuth = function() {
 <script>
 (function(){
   // 最新の ver を 1 箇所に集約 (fpReadyAfterAuth 側と一致させる必要あり)
-  const FP_VERSION = "20260801-v9-slots-rest-fallback";
+  const FP_VERSION = "20260801-v10-cust-meetingcandidates";
   try { window.FP_VERSION = FP_VERSION; } catch(_) {}
 
   // 2026-07-13 v11: Chrome拡張 (Zoom タブ音声 レコーダー) 検知
