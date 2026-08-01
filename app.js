@@ -2006,15 +2006,18 @@
       // owner「同じやつが並んで意味ない」 fix v2 (2026-08-01): 音質warning · 免責文 · 空 セクション を skip、 意味 の ある content 抽出
       function _cleanSummary(s) {
         return String(s || '')
-          // 音質 warning 系 の 前置き 全部 削る
-          .replace(/⚠[^\n]*音質warning[^\n]*/g, '')
-          .replace(/\(下記は AI が[^)]*\)/g, '')
-          .replace(/^\s*(⚠|警告|注意)[^\n]*\n?/gim, '')
-          // 空 section 「(該当なし)」 「なし」 系 も skip
-          .replace(/^##\s*[^\n]+\n\s*\(?該当なし\)?\s*\n?/gim, '')
-          .replace(/^##\s*/gm, '')
+          // v6.1: より permissive — 音質warning は 行頭 ⚠ 有無 に 関わらず 削る + newline に (⚠ の Unicode variant U+26A0 vs U+FE0F 対応)
+          .replace(/[^\n]*音質\s*warning[^\n]*\n?/gi, '')
+          .replace(/[^\n]*Whisper\s*幻覚[^\n]*\n?/gi, '')
+          .replace(/[^\n]*\(下記は\s*AI[^\n]*\n?/g, '')
+          .replace(/\(下記は\s*AI[^)]*\)/g, '')
+          .replace(/^[\s·]*[⚠⚠️][^\n]*\n?/gim, '')  // ⚠ で 始まる 行 全削
+          .replace(/^##\s+[^\n]+\n\s*[\(（]?\s*該当なし\s*[\)）]?\s*\n?/gim, '')
+          .replace(/\([\(（]?該当なし[\)）]?\)/g, '')
+          .replace(/^##\s+/gm, '')
           .replace(/\n{2,}/g, ' · ')
           .replace(/\s+/g, ' ')
+          .replace(/^\s*[·・]\s*/, '')
           .trim();
       }
       const cleaned = _cleanSummary(rawSum);
