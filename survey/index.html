@@ -349,6 +349,16 @@
         window._fpLiffId = liffId;
         await window.liff.init({ liffId });
         window._fpLiffInited = true;
+        // 2026-08-01 owner fb「アンケート→Zoom予約 反映しない」 root fix:
+        //   backend submitSurveyAnswer が liffChannelId 照合 を permission-denied で block してた。
+        //   liff.getContext().channelId を 拾って submit 時 に 渡す 必要 あり
+        try {
+          const ctx = window.liff.getContext ? window.liff.getContext() : null;
+          if (ctx && ctx.channelId) {
+            window._fpLiffChannelId = String(ctx.channelId);
+            console.log('[LIFF] channelId:', window._fpLiffChannelId);
+          }
+        } catch (_) {}
         if (window.liff.isLoggedIn && window.liff.isLoggedIn()) {
           const prof = await window.liff.getProfile();
           if (prof) {
@@ -510,8 +520,14 @@
               lineDisplayName = prof.displayName || '';
               linePictureUrl = prof.pictureUrl || '';
             }
-            await fn({ tenantId, answers: fields, submittedAt: new Date().toISOString(), lineUserId, lineDisplayName, linePictureUrl });
-          } catch (e) { console.error('送信失敗:', e); }
+            // 2026-08-01 root fix: backend が liffChannelId 照合 で permission-denied → Firestore write reach しなかった
+            const liffChannelId = window._fpLiffChannelId || '';
+            await fn({ tenantId, answers: fields, submittedAt: new Date().toISOString(), lineUserId, lineDisplayName, linePictureUrl, liffChannelId });
+          } catch (e) {
+            console.error('送信失敗:', e);
+            // 2026-08-01: silent fail 撤廃 — owner が 「予約が反映しない」 で 気づけない を fix
+            alert('送信に失敗しました: ' + (e?.message || e) + '\n\nLINE内 で 開いて 再度 お試しください。');
+          }
         })();
         setTimeout(() => {
           form.style.display = 'none';
