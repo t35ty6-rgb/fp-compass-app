@@ -634,7 +634,65 @@
       const tdata = tSnap.exists() ? tSnap.data() : {};
       const line = tdata.line || {};
       const statusEl = document.getElementById('line-status');
-      if (line.channelAccessToken && line.basicId) {
+      // 2026-08-04: token 失効 検知 → ワンクリック 再接続 UI (最優先 分岐)
+      if (line.tokenExpiredAt && line.channelAccessToken) {
+        const expiredAt = line.tokenExpiredAt.toDate ? line.tokenExpiredAt.toDate() : new Date(line.tokenExpiredAt.seconds * 1000);
+        const daysAgo = Math.floor((Date.now() - expiredAt.getTime()) / (24 * 3600 * 1000));
+        statusEl.innerHTML = `
+          <div style="background:#FEF2F2;border:2px solid #DC2626;padding:20px 22px;border-radius:12px;margin-bottom:14px;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+              <span style="font-size:20px;">⚠</span>
+              <strong style="color:#991B1B;font-size:15px;font-family:'Manrope',sans-serif;font-weight:800;letter-spacing:-0.01em;">LINE 送信 が 止まって います</strong>
+            </div>
+            <div style="font-size:12.5px;color:#7F1D1D;line-height:1.65;margin-bottom:16px;">
+              ${daysAgo <= 0 ? '今日' : daysAgo + ' 日前 から'} LINE の 接続 が 切れて います。 お客様 への メッセージ が 届いて いません。<br>
+              下 の ボタン で 1 秒 で 復旧 します (Channel Secret + Channel ID が 保存 済 の 場合)。
+            </div>
+            <button id="line-refresh-btn" class="btn primary" style="background:#DC2626;color:#fff;border:none;border-radius:10px;padding:14px 22px;font-size:13px;font-weight:800;cursor:pointer;letter-spacing:0.02em;width:100%;min-height:48px;">
+              今 すぐ 再接続
+            </button>
+            <div id="line-refresh-result" style="margin-top:12px;font-size:12px;line-height:1.6;"></div>
+          </div>
+          <div style="margin-top:24px;"></div>
+        `;
+        // 再接続 button の click handler
+        setTimeout(() => {
+          const btn = document.getElementById('line-refresh-btn');
+          const resultEl = document.getElementById('line-refresh-result');
+          if (!btn) return;
+          btn.addEventListener('click', async () => {
+            const origLabel = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = '再接続 中…';
+            btn.style.opacity = '0.6';
+            resultEl.innerHTML = '';
+            try {
+              const { getFunctions, httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-functions.js');
+              const fn = httpsCallable(getFunctions(undefined, 'asia-northeast1'), 'refreshLineToken');
+              const res = await fn({});
+              const expiresJa = res.data?.expiresAt ? new Date(res.data.expiresAt).toLocaleDateString('ja-JP') : '';
+              resultEl.innerHTML = `<div style="background:#F0FDF4;border:1px solid #06C755;padding:12px 16px;border-radius:8px;color:#065F46;font-weight:700;">✓ 再接続 しました (次 の 更新: ${expiresJa} まで 自動 で 動きます)</div>`;
+              setTimeout(() => loadLineStatus(), 2000);
+            } catch (e) {
+              const msg = e?.message || String(e);
+              const details = e?.details || {};
+              let hintHtml = '';
+              if (details.needChannelId) hintHtml = '<div style="margin-top:8px;font-size:11.5px;color:#7F1D1D;">→ 下 の 入力欄 に Channel ID (9-12 桁 の 数字) を 貼って 「保存」 押して ください。 その後 再度 「今 すぐ 再接続」。</div>';
+              else if (details.needChannelSecret) hintHtml = '<div style="margin-top:8px;font-size:11.5px;color:#7F1D1D;">→ 下 の 入力欄 に Channel Secret を 貼り 直して ください。</div>';
+              else if (details.errCode === 'INVALID_SECRET') hintHtml = '<div style="margin-top:8px;font-size:11.5px;color:#7F1D1D;">→ Channel Secret が LINE 側 で 変わった 可能性。 LINE Developers Console から コピー し直して 下 の 入力欄 に 貼って ください。 <a href="https://t35ty6-rgb.github.io/skeleton-demos/fp-compass-line-setup/" target="_blank" style="color:#991B1B;font-weight:700;text-decoration:underline;">手順 ガイド</a></div>';
+              resultEl.innerHTML = `<div style="background:#FEF2F2;border:1px solid #DC2626;padding:12px 16px;border-radius:8px;color:#991B1B;">エラー: ${msg}${hintHtml}</div>`;
+              btn.disabled = false;
+              btn.textContent = origLabel;
+              btn.style.opacity = '1';
+            }
+          });
+        }, 50);
+        // 入力欄 に は 既 保存 済 マスク 表示
+        document.getElementById('line-token').value = '••• 保存済 (再入力すると 上書き) •••';
+        document.getElementById('line-secret').value = '••• 保存済 •••';
+        if (line.channelId) document.getElementById('line-channel-id').value = line.channelId;
+        if (line.liffId) document.getElementById('line-liff-id').value = line.liffId;
+      } else if (line.channelAccessToken && line.basicId) {
         const surveyUrl = line.surveyUrl || `https://app.skeleton-inc.jp/survey/index.html?tenant=${currentTenantId}`;
         const friendUrl = line.basicId ? `https://line.me/R/ti/p/${encodeURIComponent(line.basicId.replace(/^@/,'@'))}` : '';
         statusEl.innerHTML = `
