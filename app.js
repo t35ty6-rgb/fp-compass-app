@@ -1527,8 +1527,8 @@
         <tr data-client-id="${c.id}">
           <td>
             <div class="client-row-name">
-              ${c.linePictureUrl
-                ? `<span class="avatar avatar-sm" style="position:relative;padding:0;background:none;border:1.5px solid #06c755;overflow:visible;"><img src="${escapeHtml(c.linePictureUrl)}" data-fallback-initial="${escapeHtml(initial)}" data-fallback-hue="${hue}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;"><span title="LINE友だち" style="position:absolute;bottom:-3px;right:-3px;background:#06c755;color:#fff;width:14px;height:14px;border-radius:50%;font-size:8px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid #fff;font-family:inherit;">L</span></span>`
+              ${(c.linePictureUrl || c.pictureUrl)
+                ? `<span class="avatar avatar-sm" style="position:relative;padding:0;background:none;border:1.5px solid #06c755;overflow:visible;"><img src="${escapeHtml(c.linePictureUrl || c.pictureUrl)}" data-fallback-initial="${escapeHtml(initial)}" data-fallback-hue="${hue}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;"><span title="LINE友だち" style="position:absolute;bottom:-3px;right:-3px;background:#06c755;color:#fff;width:14px;height:14px;border-radius:50%;font-size:8px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid #fff;font-family:inherit;">L</span></span>`
                 : `<span class="avatar avatar-sm" style="--avh:${hue};position:relative;">${escapeHtml(initial)}${c.lineFriendId ? '<span title="LINE友だち" style="position:absolute;bottom:-3px;right:-3px;background:#06c755;color:#fff;width:14px;height:14px;border-radius:50%;font-size:8px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid #fff;font-family:inherit;">L</span>' : ''}</span>`}
               <div>
                 <strong>${escapeHtml(c.name)}</strong>${c.lineFriendId ? '<span style="font-size:9.5px;color:#06c755;font-weight:700;margin-left:5px;background:#dcfce7;padding:1px 5px;border-radius:6px;letter-spacing:0.05em;">LINE</span>' : ''}${c.source === 'line_follow' ? '<span title="友だち追加済みだが 事前アンケート 未回答" style="font-size:9.5px;color:#9A3412;font-weight:700;margin-left:5px;background:#FFEDD5;padding:1px 5px;border-radius:6px;letter-spacing:0.05em;">アンケ未回答</span>' : ''}
@@ -3208,8 +3208,8 @@
         <!-- ============= LEFT: Profile column ============= -->
         <aside class="cd-left">
           <div class="cd-profile-head">
-            <div class="cd-profile-avatar" style="${c.linePictureUrl ? 'background:none;padding:0;border:2px solid #06c755;overflow:hidden;' : ''}">${c.linePictureUrl
-              ? `<img src="${escapeHtml(c.linePictureUrl)}" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover;display:block;">`
+            <div class="cd-profile-avatar" style="${(c.linePictureUrl || c.pictureUrl) ? 'background:none;padding:0;border:2px solid #06c755;overflow:hidden;' : ''}">${(c.linePictureUrl || c.pictureUrl)
+              ? `<img src="${escapeHtml(c.linePictureUrl || c.pictureUrl)}" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover;display:block;">`
               : escapeHtml(initial)}</div>
             <div class="cd-profile-name">${escapeHtml(c.name)} <span class="cd-profile-honor">様</span></div>
             <div class="cd-profile-kana">${escapeHtml(c.kana)}</div>
