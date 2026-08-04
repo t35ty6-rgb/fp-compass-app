@@ -1038,6 +1038,31 @@
       // 2026-07-02 persist-fix: 編集を Firestore に同期 (再ログイン/別端末で消える bug 対応)
       try { await persistClientToFirestore(c); }
       catch (e) { console.warn('[persist] Firestore sync fail:', e); }
+      // 2026-08-05 owner fb 「情報編集 で LINE ID 入れた が アイコン 取れない」 fix:
+      //   lineFriendId が 有効 (U+32桁 hex) なら linkCustomerToLineFriend CF 自動 呼び出し
+      //   → LINE /v2/bot/profile で pictureUrl + lineDisplayName 取得 → Firestore merge write
+      if (c.lineFriendId && /^U[0-9a-f]{32}$/i.test(c.lineFriendId)) {
+        try {
+          const { initializeApp: _initApp, getApps: _getApps } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js');
+          const { getFunctions, httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-functions.js');
+          const _fbApp = _getApps()[0] || _initApp({
+            apiKey: 'AIzaSyAmVAEe9l9e1Yo_dzzJdbTVU35wWKd2sH4',
+            authDomain: 'skeleton-fp-compass-632026.firebaseapp.com',
+            projectId: 'skeleton-fp-compass-632026',
+          });
+          const _fns = getFunctions(_fbApp, 'asia-northeast1');
+          const _linkFn = httpsCallable(_fns, 'linkCustomerToLineFriend');
+          const _fsCustomerId = c._fsCustomerId || (c.id && String(c.id).startsWith('fs-') ? String(c.id).slice(3) : c.id);
+          const _res = await _linkFn({ customerId: _fsCustomerId, lineFriendId: c.lineFriendId });
+          const _rd = _res?.data || {};
+          if (_rd.ok) {
+            if (_rd.pictureUrl) { c.pictureUrl = _rd.pictureUrl; c.linePictureUrl = _rd.pictureUrl; }
+            if (_rd.displayName) c.lineDisplayName = _rd.displayName;
+            saveClientsToLS();
+            console.log('[persist] LINE profile fetched:', _rd.displayName, _rd.pictureUrl ? 'YES' : 'no');
+          }
+        } catch (e) { console.warn('[persist] LINE profile fetch fail (要 friend 追加 or token 有効):', e?.message || e); }
+      }
       close();
       // モーダルが開いていれば閉じる
       document.getElementById('modal-overlay').style.display = 'none';
