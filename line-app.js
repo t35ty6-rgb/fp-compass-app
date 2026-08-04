@@ -1381,8 +1381,9 @@
         const _hasSelectedOrCandidates =
           (Array.isArray(c.meetingCandidates) && c.meetingCandidates.length > 0) ||
           !!c.pendingCandidateSelection;
-        if (_hasSelectedOrCandidates && !c.confirmedSlot) pendingFs.push(obj);
-        if (c.confirmedSlot && c.zoomUrl) confirmedFs.push(obj);
+        // 2026-08-05 cancel fix: bookingCancelledAt ある doc は pending/confirmed 両方 から drop
+        if (_hasSelectedOrCandidates && !c.confirmedSlot && !c.bookingCancelledAt) pendingFs.push(obj);
+        if (c.confirmedSlot && c.zoomUrl && !c.bookingCancelledAt) confirmedFs.push(obj);
       });
       window._fpFirestoreCustomers = pendingFs;
       window._fpFirestoreConfirmed = confirmedFs;
@@ -2169,61 +2170,84 @@
       });
     });
     // 送信
+    // 2026-08-05 owner fb 「キャンセル 送信 できない + admin から 消えない」 完全 rewrite:
+    //   旧: REST /api/send-line + /api/cancel-booking (前 sprint gate fix 対象外、 匿名 doc で reject)
+    //   新: sendLineMessage httpsCallable + Firestore 直 update (setDoc で confirmedSlot=null,
+    //       zoomUrl=null, bookingCancelledAt=serverTimestamp)。
+    //       lineFriendId 未連携 でも Firestore で cancel 反映 → admin から 消える (UI 側 filter で)
     document.getElementById('fp-cancel-send').addEventListener('click', async () => {
       const msg = document.getElementById('fp-cancel-msg').value.trim();
       if (!msg) { alert('メッセージ本文を入力してください。'); return; }
-      const uid = booking && booking.userId;
-      if (!uid) { showFriendAddPrompt(name, ''); return; }
-      // ★ 2026-06-26 v.O: Firestore booking で lineFriendId なし → uid が "fs:xxx" 形式 → LINE API reject
-      //   → 明示エラーで LINE送信スキップ + 予約だけキャンセル の選択肢を 出す
-      if (/^fs[:-]/.test(uid)) {
-        const skipLine = confirm('このお客様は LINE 未連携のため LINE 送信できません。\n\n[OK] LINE 送信せず 予約だけキャンセル\n[キャンセル] やめる\n\n※ お客様には 別途 メール / 電話 で キャンセル を 伝えてください');
-        if (!skipLine) return;
-        const btn = document.getElementById('fp-cancel-send');
-        btn.disabled = true; btn.textContent = '予約キャンセル中…';
-        try {
-          if (booking.id || booking.ts) {
-            await fetch(CLOUD_RUN_BASE + '/api/cancel-booking', {
-              method: 'POST', headers: await (window.getFpAuthHeaders ? window.getFpAuthHeaders() : Promise.resolve({ 'Content-Type': 'application/json' })),
-              body: JSON.stringify({ bookingId: booking.id || '', ts: booking.ts || '', userId: uid }),
-            }).catch(() => {});
-          }
-          overlay.remove();
-          alert('✓ 予約 を キャンセル しました (LINE 送信スキップ)');
-          await fetchLiveData();
-          renderLeadHubInner();
-        } catch (e) { alert('失敗: ' + e.message); btn.disabled = false; btn.textContent = '📤 この内容で送信 + 予約をキャンセル'; }
-        return;
-      }
       const btn = document.getElementById('fp-cancel-send');
-      btn.disabled = true; btn.textContent = '送信中…';
-      try {
-        // 1) LINE 送信
-        const r1 = await fetch(CLOUD_RUN_BASE + '/api/send-line', {
-          method: 'POST', headers: await (window.getFpAuthHeaders ? window.getFpAuthHeaders() : Promise.resolve({ 'Content-Type': 'application/json' })),
-          body: JSON.stringify({ userId: uid, text: msg }),
-        });
-        const d1 = await r1.json();
-        if (!d1.ok) throw new Error(d1.error || 'LINE 送信失敗');
-        // 2) 予約 status を cancelled に
-        if (booking.id || booking.ts) {
-          await fetch(CLOUD_RUN_BASE + '/api/cancel-booking', {
-            method: 'POST', headers: await (window.getFpAuthHeaders ? window.getFpAuthHeaders() : Promise.resolve({ 'Content-Type': 'application/json' })),
-            body: JSON.stringify({ bookingId: booking.id || '', ts: booking.ts || '', userId: uid }),
-          }).catch(() => {/* best effort */});
-        }
-        overlay.remove();
-        const t = document.createElement('div');
-        t.style.cssText = 'position:fixed;top:18px;left:50%;transform:translateX(-50%);background:#fff;border-left:5px solid #dc2626;border-radius:12px;padding:14px 22px;box-shadow:0 12px 36px rgba(0,0,0,0.2);z-index:10010;font-family:inherit;';
-        t.innerHTML = `<strong style="font-size:14px;">✓ キャンセル LINE 送信完了</strong><br><span style="font-size:12px;color:#6b7280;">${escapeHtml(name)} 様 の ${escapeHtml(dateLabel)} 予約をキャンセル処理しました</span>`;
-        document.body.appendChild(t);
-        setTimeout(() => t.remove(), 6000);
-        await fetchLiveData();
-        renderLeadHubInner();
-      } catch (e) {
-        alert('失敗: ' + e.message);
-        btn.disabled = false; btn.textContent = '📤 この内容で送信 + 予約をキャンセル';
+      btn.disabled = true; btn.textContent = '処理中…';
+      const uid = booking && booking.userId;
+      const fsCustomerId = booking && (booking._fsCustomerId || (booking.id && String(booking.id).startsWith('fs-') ? String(booking.id).slice(3) : null) || booking.id);
+      const canSendLine = uid && !/^fs[:-]/.test(uid);
+      let lineOk = false, lineErr = null;
+
+      // 1) LINE 送信 (可能 な 場合 のみ) — Firebase Function sendLineMessage 経由 (gate 恩恵)
+      if (canSendLine) {
+        try {
+          const { initializeApp, getApps } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js');
+          const { getFunctions, httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-functions.js');
+          const fbApp = getApps()[0] || initializeApp({
+            apiKey: 'AIzaSyAmVAEe9l9e1Yo_dzzJdbTVU35wWKd2sH4',
+            authDomain: 'skeleton-fp-compass-632026.firebaseapp.com',
+            projectId: 'skeleton-fp-compass-632026',
+          });
+          const fns = getFunctions(fbApp, 'asia-northeast1');
+          const sendFn = httpsCallable(fns, 'sendLineMessage');
+          const res = await sendFn({ customerId: fsCustomerId, lineFriendId: uid, text: msg });
+          const d = (res && res.data) || {};
+          if (d.ok || d.success) lineOk = true;
+          else lineErr = d.error || 'ok=false';
+        } catch (e) { lineErr = e?.message || String(e); }
       }
+
+      // 2) Firestore で cancel 反映 (confirmedSlot=null, zoomUrl=null, bookingCancelledAt=serverTimestamp)
+      let fsOk = false, fsErr = null;
+      try {
+        const tid = window.__fp?.tenantId;
+        if (tid && fsCustomerId) {
+          const { getFirestore, doc: fsDoc, setDoc, serverTimestamp, deleteField } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js');
+          const { initializeApp: initApp2, getApps: getApps2 } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js');
+          const fbApp2 = getApps2()[0] || initApp2({
+            apiKey: 'AIzaSyAmVAEe9l9e1Yo_dzzJdbTVU35wWKd2sH4',
+            authDomain: 'skeleton-fp-compass-632026.firebaseapp.com',
+            projectId: 'skeleton-fp-compass-632026',
+          });
+          const fsDb = getFirestore(fbApp2);
+          await setDoc(fsDoc(fsDb, `tenants/${tid}/customers/${fsCustomerId}`), {
+            confirmedSlot: deleteField(),
+            zoomUrl: deleteField(),
+            hostZoomUrl: deleteField(),
+            zoomMeetingId: deleteField(),
+            bookingCancelledAt: serverTimestamp(),
+            bookingCancelReason: msg.slice(0, 200),
+            lastContactAt: serverTimestamp(),
+          }, { merge: true });
+          fsOk = true;
+        } else {
+          fsErr = 'tenantId or customerId 不明';
+        }
+      } catch (e) { fsErr = e?.message || String(e); }
+
+      // 3) 結果 UI
+      overlay.remove();
+      let toastMsg = '', toastColor = '#059669';
+      if (lineOk && fsOk) toastMsg = `✓ ${name} 様 に キャンセル LINE 送信 済 + admin から 削除`;
+      else if (!canSendLine && fsOk) { toastMsg = `✓ admin から 削除 済 (LINE 未連携 の ため 送信 skip、 別途 メール/電話 で 連絡 を)`; toastColor = '#D97706'; }
+      else if (fsOk && !lineOk) { toastMsg = `⚠ admin から 削除 済、 LINE 送信 失敗 (${(lineErr||'').slice(0,60)}) → 別途 連絡 を`; toastColor = '#D97706'; }
+      else if (!fsOk) { alert(`失敗: Firestore ${fsErr}\nLINE: ${lineErr||'skip'}`); btn.disabled = false; btn.textContent = '📤 この内容で送信 + 予約をキャンセル'; return; }
+      const t = document.createElement('div');
+      t.style.cssText = `position:fixed;top:18px;left:50%;transform:translateX(-50%);background:#fff;border-left:5px solid ${toastColor};border-radius:12px;padding:14px 22px;box-shadow:0 12px 36px rgba(0,0,0,0.2);z-index:10010;font-family:inherit;`;
+      t.innerHTML = `<strong style="font-size:14px;">${toastMsg}</strong>`;
+      document.body.appendChild(t);
+      setTimeout(() => t.remove(), 6000);
+      // 4) admin UI 即 反映
+      try { if (typeof fetchLiveData === 'function') await fetchLiveData(); } catch (_) {}
+      try { if (typeof refreshFirestoreCustomers === 'function') await refreshFirestoreCustomers(); } catch (_) {}
+      try { if (typeof renderLeadHubInner === 'function') renderLeadHubInner(); } catch (_) {}
     });
   }
 
