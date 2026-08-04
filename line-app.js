@@ -1375,7 +1375,13 @@
         allFs.push(obj);  // ★ 全 source を sync 対象 (旧バグ: source!=='line_survey' で除外 → quick-zoom/quick-inperson 顧客が 顧客台帳に出なかった)
         // 2026-08-01 owner fb: 「予定 を アンケート/リッチメニュー から 入れた が 新規相談 に 反映されない」 fix
         //   LINE友追加 → アンケート回答 の flow で source は 'line_follow' に 残る ケース あり。 source-agnostic に data 有無 で 判定
-        if ((c.meetingCandidates || []).length > 0 && !c.confirmedSlot) pendingFs.push(obj);
+        // 2026-08-05 owner fb 「LINE で 選択 済 なのに admin 新規相談 に 反映 しない」 fix:
+        //   pendingCandidateSelection (客 が カード タップ で 選んだ 状態) も pending 扱い で 表示
+        //   → admin で 「客 が 候補X 選択 済 → Zoom URL 発行 (確定)」 flow を 可能 に
+        const _hasSelectedOrCandidates =
+          (Array.isArray(c.meetingCandidates) && c.meetingCandidates.length > 0) ||
+          !!c.pendingCandidateSelection;
+        if (_hasSelectedOrCandidates && !c.confirmedSlot) pendingFs.push(obj);
         if (c.confirmedSlot && c.zoomUrl) confirmedFs.push(obj);
       });
       window._fpFirestoreCustomers = pendingFs;

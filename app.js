@@ -7916,6 +7916,24 @@ STEP C: 結果報告
           fnOk = true;
           status.style.color = '#059669'; status.textContent = '✅ 送信完了 (Flex カルーセル)';
           sendBtn.textContent = '✓ 送信済';
+          // 2026-08-05 owner fb 「新規相談 に 反映 されない」 fix:
+          //   送信 成功 と 同時 に Firestore customer doc に meetingCandidates を write →
+          //   admin 「新規相談」 pending list に 出る + 客 タップ 前 の 「送信済 反応 待ち」 状態 見える
+          try {
+            const { getFirestore, doc: fsDoc, setDoc, serverTimestamp } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js');
+            const fsDb = getFirestore(fbApp);
+            const tid = window.__fp?.tenantId;
+            if (tid && fsCustomerId) {
+              const candArr = slots.map(s => `${s.date} ${s.time}`);
+              await setDoc(fsDoc(fsDb, `tenants/${tid}/customers/${fsCustomerId}`), {
+                meetingCandidates: candArr,
+                meetingCandidatesAt: serverTimestamp(),
+                lastCandidatesSentAt: serverTimestamp(),
+                lastContactAt: serverTimestamp(),
+              }, { merge: true });
+              console.log('[slots-send] meetingCandidates write to Firestore:', candArr);
+            }
+          } catch (fsErr) { console.warn('[slots-send] Firestore write fail:', fsErr); }
           setTimeout(() => overlay.remove(), 2000);
           return;
         } else {
