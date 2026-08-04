@@ -4863,14 +4863,28 @@ ${ctxText}${surveyTxt}`;
             statusEl.style.color = 'var(--critical)';
           }
         } catch (e) {
-          // HttpsError は e.message に 親切な文言 (友だち未追加 等) が 入ってる
-          console.error('送信 例外:', e); statusEl.textContent = '❌ LINE で 送信 できませんでした。 通信 状態 を 確認 して 再度 お試し ください。';
+          // 2026-08-04 owner fb 「LINE 履歴 反映 されない」 fix: HttpsError から 具体的 な 原因 を 抽出
+          //   failed-precondition (LINE token 失効 / customer.lineFriendId 未登録) → alert で loud
+          console.error('送信 例外:', e);
+          const msg = e?.message || String(e);
+          let userMsg = '❌ LINE 送信失敗: ' + msg.slice(0, 100);
+          if (msg.includes('LINE token 失効中')) {
+            userMsg = '❌ LINE の 接続 が 切れて います。 マイページ → 「LINE 連携」 → 上部 の 「今 すぐ 再接続」 button を 押して ください。';
+            alert(userMsg);
+          } else if (msg.includes('lineFriendId 未設定') || msg.includes('LINE friend ID 未登録')) {
+            userMsg = '❌ この 客 は LINE 未紐付け です。 客カード の 「情報 編集」 で LINE friend ID を 登録 する か、 客 に 公式 LINE を 友だち追加 して もらう と 自動 紐付け されます。';
+            alert(userMsg);
+          } else if (msg.includes('友だち追加してない')) {
+            userMsg = '❌ 客 が 事務所 の 公式 LINE を 友だち追加 してません。 友だち追加 URL / QR を 送って ください。';
+            alert(userMsg);
+          }
+          statusEl.textContent = userMsg.slice(0, 60);
           statusEl.style.color = 'var(--critical)';
         } finally {
           sendBtn.disabled = false;
           sendBtn.innerHTML = orig;
           if (window.lucide) window.lucide.createIcons();
-          setTimeout(() => { statusEl.textContent = ''; }, 6000);
+          setTimeout(() => { statusEl.textContent = ''; }, 8000);
         }
       };
       sendBtn.addEventListener('click', doSend);
