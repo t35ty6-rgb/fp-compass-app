@@ -11027,7 +11027,14 @@ window.mergeFirestoreMeetingsIntoLiveData = async function (client) {
         try {
           const cur = window._fpCurrentClient;
           const cid = cur?.id || null;
-          if (typeof closeModal === 'function') closeModal();
+          // 2026-08-04 owner fb 「顧客モーダル 消えない」 fix: closeModal が 別 IIFE scope で 見えない 可能性
+          //   → typeof check で skip される 状態。 modal-overlay を 直接 style で 保険 close する
+          try { if (typeof closeModal === 'function') closeModal(); } catch(_) {}
+          try {
+            const mo = document.getElementById('modal-overlay');
+            if (mo) mo.style.display = 'none';
+            window._fpCurrentClient = null;
+          } catch(_) {}
           if (window.FPRouter?.activateTab) {
             window.FPRouter.activateTab('lineChat');
           } else if (typeof activateTab === 'function') {
