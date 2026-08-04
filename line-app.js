@@ -1261,6 +1261,20 @@
       }
       const mode = ov.querySelector('input[name="fp-qi-mode"]:checked')?.value || 'zoom';
       const inpersonTs = 'quick-' + Date.now();
+      // ★ 2026-08-04 iOS Safari fix: user gesture 消失 対策
+      //   後 の await addDoc / import を 挟むと iOS Safari が gesture context を 失い、
+      //   getUserMedia が SecurityError で reject される known bug。
+      //   audio mode の 場合 は button click の 直後 に getUserMedia を 呼び、 stream を 引き継ぐ。
+      let earlyAudioStream = null;
+      if (mode === 'audio') {
+        try {
+          const constraint = { echoCancellation: true, noiseSuppression: true, sampleRate: 44100 };
+          earlyAudioStream = await navigator.mediaDevices.getUserMedia({ audio: constraint });
+        } catch (permErr) {
+          alert('🎤 マイク アクセス できません\n\niPhone/iPad: 設定 → Safari → マイク で 「許可」 を ON\nMac: システム設定 → プライバシーとセキュリティ → マイク で ブラウザ を ON\n\n技術詳細: ' + (permErr?.name || permErr?.message || permErr));
+          return;
+        }
+      }
       // ★ 2026-06-22 roundM: 新規お客様 (clientId が quick-) で 録音/メモ モード時は、
       //   先に Firestore に customer doc を 作成して resolvedClientId を 取得 → 顧客台帳 自動反映
       let effectiveClientId = clientId;
@@ -1288,7 +1302,7 @@
       ov.remove();
       // モード分岐
       if (mode === 'zoom')        await startQuickZoom(effectiveClientId, clientName);
-      else if (mode === 'audio')  await startAudioOnlyRecording(inpersonTs);
+      else if (mode === 'audio')  await startAudioOnlyRecording(inpersonTs, earlyAudioStream);
       else                        await openMemoOnlyForQuick(inpersonTs, effectiveClientId, clientName);
     });
   }
@@ -3389,15 +3403,22 @@
 
   // ★ 2026-06-22 roundG: マイクのみ録音 fallback (カメラ NotFound / 不要 時)
   //   音声 → 同じパイプライン (upload → AI議事録)
-  async function startAudioOnlyRecording(bookingTs) {
+  async function startAudioOnlyRecording(bookingTs, prefetchedStream) {
     const R = window._fpRecorder;
     let stream;
-    try {
-      const audioConstraint = await getPreferredMicConstraint();
-      stream = await navigator.mediaDevices.getUserMedia({ audio: audioConstraint });
-    } catch (e) {
-      alert('マイク も アクセス不可 です。\n\nMac の場合: システム設定 → プライバシーとセキュリティ → マイク で ブラウザ を ON にしてください。\n\n技術: ' + (e?.name || e?.message || e));
-      return;
+    // ★ 2026-08-04 iOS Safari fix: caller (openQuickInpersonModal) が gesture context 保護 の ため
+    //   button click 直後 に getUserMedia を 呼んで 取得済 stream を 渡す 経路 に 対応。
+    //   PC etc で prefetchedStream が 無い 場合 は 従来 の 経路 で 取得。
+    if (prefetchedStream) {
+      stream = prefetchedStream;
+    } else {
+      try {
+        const audioConstraint = await getPreferredMicConstraint();
+        stream = await navigator.mediaDevices.getUserMedia({ audio: audioConstraint });
+      } catch (e) {
+        alert('マイク も アクセス不可 です。\n\niPhone/iPad: 設定 → Safari → マイク で 「許可」 を ON\nMac: システム設定 → プライバシーとセキュリティ → マイク で ブラウザ を ON にしてください。\n\n技術: ' + (e?.name || e?.message || e));
+        return;
+      }
     }
 
     // 録音中インジケータ (右下、 audio-only 用)
