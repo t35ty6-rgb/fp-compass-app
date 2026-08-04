@@ -1339,13 +1339,15 @@
       //   (QR登録直後の アンケ未回答客 が cache path で 消えていた 症状 対応)
       if (Array.isArray(window.DUMMY_CLIENTS) && window.DUMMY_CLIENTS.length > 0) {
         // 2026-08-01 owner fb: LINE 経由 に 限定 せず、 data 有無 で 判定 (source 「quick-zoom」 等 も 対象)
-        const cacheHitList = window.DUMMY_CLIENTS.filter(c => (c.meetingCandidates || []).length > 0 || (c.confirmedSlot && c.zoomUrl));
+        // 2026-08-05 owner fb 「候補選択 済 なのに 新規相談 空」 fix:
+        //   cache path filter に pendingCandidateSelection + bookingCancelledAt 対応 追加
+        const cacheHitList = window.DUMMY_CLIENTS.filter(c => (c.meetingCandidates || []).length > 0 || c.pendingCandidateSelection || (c.confirmedSlot && c.zoomUrl));
         if (cacheHitList.length > 0) {
           window._fpFirestoreCustomers = cacheHitList
-            .filter(c => (c.meetingCandidates||[]).length > 0 && !c.confirmedSlot)
+            .filter(c => ((c.meetingCandidates||[]).length > 0 || c.pendingCandidateSelection) && !c.confirmedSlot && !c.bookingCancelledAt)
             .map(c => ({ docId: c.id, ...c }));
           window._fpFirestoreConfirmed = cacheHitList
-            .filter(c => c.confirmedSlot && c.zoomUrl)
+            .filter(c => c.confirmedSlot && c.zoomUrl && !c.bookingCancelledAt)
             .map(c => ({ docId: c.id, ...c }));
         }
       }
