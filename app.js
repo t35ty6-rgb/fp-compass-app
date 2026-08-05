@@ -859,6 +859,296 @@
         if (id) openClientModal(id);
       });
     });
+
+    // v3 Home にも 同 tasks を 描画 (2026-08-05 導入)
+    try { renderV3Home(tasks, clients); } catch (e) { console.warn('[v3h] render fail', e); }
+  }
+
+  // ============================
+  // v3 HOME (Todoist-inspired) — 2026-08-05 導入
+  // ============================
+  function renderV3Home(tasks, clients) {
+    const today = window.LifeEvents.TODAY || new Date();
+    const W = ['日','月','火','水','木','金','土'];
+    const now = new Date();
+    const hhmm = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+
+    // Header breadcrumb + title
+    const bc = document.getElementById('v3h-breadcrumb');
+    if (bc) bc.textContent = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} (${W[now.getDay()]}) · ${hhmm}`;
+    const title = document.getElementById('v3h-title');
+    const todayCount = tasks.filter(t => t.urgencyRank === 0).length;
+    if (title) title.textContent = todayCount > 0 ? `今日 · 対応 ${todayCount} 件` : '今日 · 急ぎ なし';
+
+    // Stats strip: 期限超過 / 今週 / LINE要返信 / 客反応待ち
+    const overdue = tasks.filter(t => t.type === 'proposal' && t.urgencyRank === 0).length;
+    const thisWeekCount = tasks.filter(t => t.urgencyRank <= 1).length;
+    const zoomToday = tasks.filter(t => t.type === 'booking' && t.urgencyRank === 0).length;
+    // LINE 要返信 (未読) 数 — renderUnreadLinesOnHome と 同じ 計算 で 正確 に
+    let unreadCount = 0;
+    (clients || []).forEach(c => {
+      const lastRead = parseInt(localStorage.getItem('fp-line-read-' + c.id) || '0', 10);
+      const unread = (c.lineHistory || []).filter(m => {
+        const isUser = (m.from === 'user' || m.direction === 'in');
+        const ts = new Date(m.ts || m.date || 0).getTime();
+        return isUser && ts > lastRead;
+      });
+      if (unread.length > 0) unreadCount++;
+    });
+    // 客反応待ち = 候補日送信済 未確定 の 客
+    const waitingList = buildV3WaitingList(clients);
+    const waitingCount = waitingList.length;
+
+    const stats = document.getElementById('v3h-stats');
+    if (stats) {
+      stats.innerHTML = `
+        <span class="stat"><b>${tasks.length}</b>未完了</span>
+        ${overdue > 0 ? `<span class="stat warn"><b>${overdue}</b>期限 超過</span>` : ''}
+        <span class="stat"><b>${zoomToday}</b>今日 Zoom</span>
+        <span class="stat${unreadCount > 0 ? ' warn' : ''}"><b>${unreadCount}</b>LINE 要返信</span>
+        <span class="stat"><b>${waitingCount}</b>客 反応 待ち</span>
+      `;
+    }
+
+    // Zoom タイムライン (今日 の Zoom 予定 だけ 時刻順)
+    renderV3ZoomStrip(clients, today);
+
+    // 今日 の TODO
+    const todayList = document.getElementById('v3h-today-list');
+    const todayCountEl = document.getElementById('v3h-today-count');
+    const todayTasks = tasks.filter(t => t.urgencyRank === 0);
+    if (todayCountEl) todayCountEl.textContent = `·  ${todayTasks.length}`;
+    if (todayList) {
+      if (todayTasks.length === 0) {
+        todayList.innerHTML = `<div class="v3h-empty">今日 急ぎ で 対応 する タスク は ありません。 明日 以降 の 予定 を 下 で 確認。</div>`;
+      } else {
+        todayList.innerHTML = todayTasks.map((t, i) => v3TodoHtml(t, i)).join('');
+        todayList.querySelectorAll('.v3h-todo').forEach(el => {
+          el.addEventListener('click', (ev) => {
+            if (ev.target.classList.contains('v3h-todo-check')) return;
+            const id = el.dataset.clientId;
+            if (id) openClientModal(id);
+          });
+          el.querySelector('.v3h-todo-check')?.addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            el.classList.toggle('done');
+            updateV3Progress();
+          });
+        });
+      }
+    }
+
+    // 明日 の TODO (urgencyRank === 1 の うち 面談 予約)
+    const tomorrowList = document.getElementById('v3h-tomorrow-list');
+    const tomorrowCountEl = document.getElementById('v3h-tomorrow-count');
+    const tomorrowTitle = document.getElementById('v3h-tomorrow-title');
+    const tomorrow = new Date(today.getTime() + 86400000);
+    if (tomorrowTitle) tomorrowTitle.textContent = `明日 · ${tomorrow.getMonth()+1}/${tomorrow.getDate()} (${W[tomorrow.getDay()]})`;
+    const tomorrowTasks = tasks.filter(t => t.urgencyRank === 1);
+    if (tomorrowCountEl) tomorrowCountEl.textContent = `·  ${tomorrowTasks.length}`;
+    if (tomorrowList) {
+      if (tomorrowTasks.length === 0) {
+        tomorrowList.innerHTML = `<div class="v3h-empty">今週 予定 の タスク なし。</div>`;
+      } else {
+        tomorrowList.innerHTML = tomorrowTasks.slice(0, 8).map((t, i) => v3TodoHtml(t, i)).join('');
+        tomorrowList.querySelectorAll('.v3h-todo').forEach(el => {
+          el.addEventListener('click', (ev) => {
+            if (ev.target.classList.contains('v3h-todo-check')) return;
+            const id = el.dataset.clientId;
+            if (id) openClientModal(id);
+          });
+        });
+      }
+    }
+
+    // 進捗
+    updateV3Progress();
+
+    // 客反応待ち
+    const waitEl = document.getElementById('v3h-waiting-list');
+    if (waitEl) {
+      if (waitingList.length === 0) {
+        waitEl.innerHTML = `<div class="v3h-empty" style="padding:8px 0;">送信 済 で 返答 待ち の 客 なし。</div>`;
+      } else {
+        waitEl.innerHTML = waitingList.slice(0, 6).map(w => `
+          <button class="v3h-waiting${w.days >= 5 ? ' stuck' : ''}" data-client-id="${escapeHtml(w.clientId)}">
+            <div class="top"><span class="name">${escapeHtml(w.name)} 様</span><span class="elapsed">${w.days}d</span></div>
+            <div class="status">${escapeHtml(w.status)}</div>
+          </button>
+        `).join('');
+        waitEl.querySelectorAll('.v3h-waiting').forEach(el => {
+          el.addEventListener('click', () => {
+            const id = el.dataset.clientId;
+            if (id) openClientModal(id);
+          });
+        });
+      }
+    }
+
+    // 今週 の サマリー
+    const sum = document.getElementById('v3h-summary-card');
+    if (sum) {
+      const wkStart = new Date(today.getTime() - today.getDay() * 86400000);
+      const meetingsThisWk = (window.LineAppLiveData?.bookings || []).filter(b => {
+        const bd = new Date(b.confirmedSlot || (b.date + (b.time ? ' ' + b.time : '')));
+        return !isNaN(bd) && bd >= wkStart && bd < new Date(wkStart.getTime() + 7 * 86400000);
+      }).length;
+      const newClientsThisMo = (clients || []).filter(c => c.status === 'new').length;
+      const importantCount = (clients || []).filter(c => c.status === 'important').length;
+      sum.innerHTML = `
+        面談 <b>${meetingsThisWk}</b> 件<br>
+        新規 客 <b>${newClientsThisMo}</b> 名<br>
+        重点 客 <b class="ok">${importantCount}</b> 名
+      `;
+    }
+  }
+
+  function v3TodoHtml(t, i) {
+    // priority: urgencyRank 0=p1 / 1=p2 / 2=p3 / それ以外=p4
+    const p = t.urgencyRank === 0 ? 'p1' : (t.urgencyRank === 1 ? 'p2' : (t.urgencyRank === 2 ? 'p3' : 'p4'));
+    const dueClass = t.urgencyRank === 0 ? (t.type === 'proposal' ? 'overdue' : 'soon') :
+                     (t.urgencyRank === 1 ? 'soon' : (t.type === 'booking' ? 'today' : ''));
+    // color dot: type別
+    const dotColor = t.type === 'booking' ? '#0b5d9e' :
+                     t.type === 'proposal' ? '#b7791f' :
+                     t.type === 'homework' ? '#1e7e34' :
+                     t.type === 'cancel' ? '#c53030' :
+                     t.type === 'dormant' ? '#6b7280' : '#0b5d9e';
+    return `
+      <button class="v3h-todo ${p}" data-client-id="${escapeHtml(t.clientId)}" data-idx="${i}" type="button">
+        <span class="v3h-todo-check"></span>
+        <div class="v3h-todo-body">
+          <div class="v3h-todo-title"><b>${escapeHtml(t.clientName)} 様</b> · ${escapeHtml(t.title)}</div>
+          ${t.sub ? `<div class="v3h-todo-desc">${escapeHtml(t.sub)}</div>` : ''}
+          <div class="v3h-todo-meta">
+            <span class="v3h-todo-due ${dueClass}">${escapeHtml(t.timeLabel || '')}</span>
+            <span class="v3h-todo-tag"><span class="dot" style="background:${dotColor};"></span>${escapeHtml(t.clientName)}</span>
+          </div>
+        </div>
+      </button>
+    `;
+  }
+
+  function buildV3WaitingList(clients) {
+    const todayD = window.LifeEvents.TODAY || new Date();
+    const out = [];
+    // Firestore 側 顧客 (candidatesent 済 未確定) から waiting
+    const fsCustomers = window._fpFirestoreCustomers || [];
+    fsCustomers.forEach(c => {
+      if (c.confirmedSlot || c.bookingCancelledAt) return;
+      const hasCandidates = (c.meetingCandidates || []).length > 0 || c.pendingCandidateSelection;
+      if (!hasCandidates) return;
+      const sentAt = c.lastCandidatesSentAt || c.meetingCandidatesAt || c.lastContactAt;
+      if (!sentAt) return;
+      let sentD;
+      try { sentD = sentAt.toDate ? sentAt.toDate() : new Date(sentAt); } catch (_) { return; }
+      if (isNaN(sentD)) return;
+      const days = Math.floor((todayD - sentD) / 86400000);
+      if (days < 0 || days > 30) return;
+      out.push({
+        clientId: c.id || c.docId,
+        name: c.name || '(名無し)',
+        days,
+        status: c.pendingCandidateSelection ? '客 選択 済 · Zoom 発行 待ち' : '候補日 送付 済 · タップ 選択 待ち',
+      });
+    });
+    // 加えて、 提案 検討中 で 14日 以上 経過 の 客
+    (clients || []).forEach(c => {
+      (c.proposals || []).forEach(p => {
+        if (p.result !== '検討中' && p.result !== '提案中') return;
+        const pd = new Date(p.date);
+        if (isNaN(pd)) return;
+        const days = Math.floor((todayD - pd) / 86400000);
+        if (days < 14) return;
+        // 重複 avoid: 既に fs から 出ている 客 は skip
+        if (out.find(x => x.clientId === c.id)) return;
+        out.push({
+          clientId: c.id,
+          name: c.name || '(名無し)',
+          days,
+          status: `提案 「${p.title || '案件'}」 検討 中 · フォロー タイミング`,
+        });
+      });
+    });
+    return out.sort((a, b) => b.days - a.days);
+  }
+
+  function renderV3ZoomStrip(clients, today) {
+    const slotsEl = document.getElementById('v3h-zoom-slots');
+    if (!slotsEl) return;
+    const bks = (window.LineAppLiveData && window.LineAppLiveData.bookings) || [];
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+    // client name lookup: userId or name で 客 特定
+    const byLineId = new Map();
+    const byName = new Map();
+    (clients || []).forEach(c => {
+      if (c.lineFriendId) byLineId.set(c.lineFriendId, c);
+      if (c.name) byName.set(c.name, c);
+    });
+    const todayBks = bks
+      .map(b => {
+        const slot = b.confirmedSlot || (b.date ? (b.date + (b.time ? ' ' + b.time : '')) : null);
+        const bd = slot ? new Date(slot) : null;
+        return bd && !isNaN(bd) ? { b, bd } : null;
+      })
+      .filter(x => x)
+      .filter(({ bd }) => {
+        const s = `${bd.getFullYear()}-${String(bd.getMonth()+1).padStart(2,'0')}-${String(bd.getDate()).padStart(2,'0')}`;
+        return s === todayStr;
+      })
+      .sort((a, b) => a.bd - b.bd);
+
+    if (todayBks.length === 0) {
+      slotsEl.innerHTML = `<div class="v3h-zoom-empty">今日 の Zoom 予定 なし。</div>`;
+      return;
+    }
+    const now = new Date();
+    // 「次 に 来る (もしくは 直前) の 1件」 を next マーク
+    let nextIdx = todayBks.findIndex(({ bd }) => bd >= now);
+    if (nextIdx < 0) nextIdx = todayBks.length - 1;
+
+    slotsEl.innerHTML = todayBks.map(({ b, bd }, i) => {
+      const c = byLineId.get(b.userId) || byName.get(b.name) || null;
+      const time = `${String(bd.getHours()).padStart(2,'0')}:${String(bd.getMinutes()).padStart(2,'0')}`;
+      const clientId = c?.id || b.userId || b.name || '';
+      const name = (c?.name || b.name || '客') + ' 様';
+      const isNext = i === nextIdx;
+      const meta = b.note || b.purpose || 'Zoom 面談';
+      return `
+        <a class="v3h-zoom-slot ${isNext ? 'next' : ''}" data-client-id="${escapeHtml(clientId)}" href="javascript:void(0);">
+          <div class="time">${time}</div>
+          <div class="name">${escapeHtml(name)}</div>
+          <div class="meta">${escapeHtml(meta)}</div>
+          ${isNext ? `<span class="cta-mini">▶ 開始</span>` : ''}
+        </a>
+      `;
+    }).join('');
+    slotsEl.querySelectorAll('.v3h-zoom-slot').forEach(el => {
+      el.addEventListener('click', () => {
+        const id = el.dataset.clientId;
+        if (id) openClientModal(id);
+      });
+    });
+  }
+
+  function updateV3Progress() {
+    const todayList = document.getElementById('v3h-today-list');
+    if (!todayList) return;
+    const items = todayList.querySelectorAll('.v3h-todo');
+    const total = items.length;
+    const done = todayList.querySelectorAll('.v3h-todo.done').length;
+    const setText = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    setText('v3h-progress-done', done);
+    setText('v3h-progress-total', total);
+    const pct = total > 0 ? Math.round(done / total * 100) : 0;
+    const fill = document.getElementById('v3h-progress-fill');
+    if (fill) fill.style.width = pct + '%';
+    const note = document.getElementById('v3h-progress-note');
+    if (note) {
+      note.textContent = total === 0 ? '今日 は 急ぎ なし。 next best action は 「明日」 セクション を 確認。' :
+                         done === total ? '🎉 今日 の タスク 全 消化 完了。' :
+                         `残 ${total - done} 件`;
+    }
   }
 
   // ============================

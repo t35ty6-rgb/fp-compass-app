@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FP Compass · v3 Home Preview (styles.css 実適用)</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Noto+Sans+JP:wght@400;500;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css?v=20260805A-v3-home">
+<style>
+  body { font-family: 'Noto Sans JP', -apple-system, sans-serif; padding: 20px; background: var(--bg, #f5f6f8); }
+  .app-container { max-width: 1600px; margin: 0 auto; background: #fff; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.05); overflow: hidden; }
+  .preview-note { background: #1a1f2c; color: #FCD34D; padding: 10px 20px; font-size: 12px; text-align: center; }
+  .preview-note b { color: #fff; }
+</style>
+</head>
+<body>
+<div class="app-container">
+  <div class="preview-note">🎨 v3 Home Preview · <b>styles.css v3h-*</b> の 実 rendering 確認 用 (dummy data 埋込)</div>
+  <section class="view active" data-view="dashboard" style="padding: 12px 14px;">
+    <div class="v3h-shell">
+      <main class="v3h-main">
+        <header class="v3h-header">
+          <p class="v3h-breadcrumb">2026-08-05 (水) · 09:04</p>
+          <div class="v3h-title-row">
+            <h1 class="v3h-title">今日 · 対応 3 件</h1>
+            <div style="display:flex;gap:6px;">
+              <button class="primary" style="padding:6px 12px;border-radius:6px;font-weight:600;">+ 新規</button>
+              <button style="background:#fff;border:1px solid #d4d8df;color:#1a1f2c;padding:6px 12px;border-radius:6px;font-weight:600;">配信</button>
+            </div>
+          </div>
+          <div class="v3h-stats">
+            <span class="stat"><b>7</b>未完了</span>
+            <span class="stat warn"><b>1</b>期限 超過</span>
+            <span class="stat"><b>4</b>今日 Zoom</span>
+            <span class="stat warn"><b>3</b>LINE 要返信</span>
+            <span class="stat"><b>7</b>客 反応 待ち</span>
+          </div>
+        </header>
+
+        <section class="v3h-zoom">
+          <p class="v3h-zoom-label">Today · Zoom タイムライン</p>
+          <div class="v3h-zoom-slots">
+            <a class="v3h-zoom-slot next">
+              <div class="time">10:00</div>
+              <div class="name">吉田 恭聡 様</div>
+              <div class="meta">初回 · 事前アンケート 済</div>
+              <span class="cta-mini">▶ 開始</span>
+            </a>
+            <a class="v3h-zoom-slot">
+              <div class="time">14:00</div>
+              <div class="name">山田 花子 様</div>
+              <div class="meta">2 回目 · 提案 説明</div>
+            </a>
+            <a class="v3h-zoom-slot">
+              <div class="time">15:30</div>
+              <div class="name">佐藤 様</div>
+              <div class="meta">フォロー · 契約 更新</div>
+            </a>
+            <a class="v3h-zoom-slot">
+              <div class="time">19:00</div>
+              <div class="name">鈴木 様</div>
+              <div class="meta">資料 説明 · 保険 見直し</div>
+            </a>
+          </div>
+        </section>
+
+        <section class="v3h-section">
+          <div class="v3h-section-head">
+            <h2>今日</h2>
+            <span class="count">·  3</span>
+            <span class="aux">上 から 優先度 順 (SLA + 期日 で 自動)</span>
+          </div>
+
+          <button class="v3h-todo p1" type="button">
+            <span class="v3h-todo-check"></span>
+            <div class="v3h-todo-body">
+              <div class="v3h-todo-title"><b>徳佐 拓朗 様</b> · 返信 · 候補3 (8/7 19:00) を 承諾 → Zoom URL 発行</div>
+              <div class="v3h-todo-desc">「候補3 (8月7日 19:00) で お願い します」</div>
+              <div class="v3h-todo-meta">
+                <span class="v3h-todo-due overdue">5h 遅れ · 期限 超過</span>
+                <span class="v3h-todo-tag"><span class="dot" style="background:#c53030;"></span>徳佐拓朗</span>
+              </div>
+            </div>
+          </button>
+
+          <button class="v3h-todo p1" type="button">
+            <span class="v3h-todo-check"></span>
+            <div class="v3h-todo-body">
+              <div class="v3h-todo-title"><b>吉田 恭聡 様</b> · 面談 予約 · 10:00 Zoom 録画 ON で 開始</div>
+              <div class="v3h-todo-desc">初回 面談 · 事前アンケート 回答 済</div>
+              <div class="v3h-todo-meta">
+                <span class="v3h-todo-due soon">今日 · 10:00 (30 分 後)</span>
+                <span class="v3h-todo-tag"><span class="dot" style="background:#0b5d9e;"></span>吉田恭聡</span>
+              </div>
+            </div>
+          </button>
+
+          <button class="v3h-todo p2" type="button">
+            <span class="v3h-todo-check"></span>
+            <div class="v3h-todo-body">
+              <div class="v3h-todo-title"><b>高橋 様</b> · iDeCo の 質問 の 返信</div>
+              <div class="v3h-todo-desc">「資料 見ました、 iDeCo の 手数料 の 話 で いくつか 質問 が あって」</div>
+              <div class="v3h-todo-meta">
+                <span class="v3h-todo-due soon">今日 中 · 1日 経過</span>
+                <span class="v3h-todo-tag"><span class="dot" style="background:#b7791f;"></span>高橋</span>
+              </div>
+            </div>
+          </button>
+        </section>
+
+        <section class="v3h-section" style="padding-top: 6px;">
+          <div class="v3h-section-head">
+            <h2>明日 · 8/6 (木)</h2>
+            <span class="count">·  2</span>
+          </div>
+
+          <button class="v3h-todo p3" type="button">
+            <span class="v3h-todo-check"></span>
+            <div class="v3h-todo-body">
+              <div class="v3h-todo-title"><b>山田 花子 様</b> · 面談 予約 · 14:00</div>
+              <div class="v3h-todo-meta">
+                <span class="v3h-todo-due today">明日 · 14:00</span>
+                <span class="v3h-todo-tag"><span class="dot" style="background:#1e7e34;"></span>山田花子</span>
+              </div>
+            </div>
+          </button>
+
+          <button class="v3h-todo p3" type="button">
+            <span class="v3h-todo-check"></span>
+            <div class="v3h-todo-body">
+              <div class="v3h-todo-title"><b>佐藤 様</b> · 面談 予約 · 15:30 契約 更新</div>
+              <div class="v3h-todo-meta">
+                <span class="v3h-todo-due today">明日 · 15:30</span>
+                <span class="v3h-todo-tag"><span class="dot" style="background:#6b46c1;"></span>佐藤</span>
+              </div>
+            </div>
+          </button>
+        </section>
+      </main>
+
+      <aside class="v3h-context">
+        <div class="v3h-progress">
+          <p class="v3h-progress-title">今日 の 進捗</p>
+          <div class="v3h-progress-num"><span>3</span> <span>/ <span>10</span></span></div>
+          <div class="v3h-progress-bar"><div class="v3h-progress-bar-fill" style="width:30%"></div></div>
+          <p class="v3h-progress-note">残 7 件</p>
+        </div>
+
+        <div class="v3h-ctx-section">
+          <h2>客 反応 待ち</h2>
+          <p class="subtitle">こちら は 送信 済 で 相手 の 返答 待ち。 時間 経過 順。</p>
+          <button class="v3h-waiting">
+            <div class="top"><span class="name">山田 花子 様</span><span class="elapsed">2d</span></div>
+            <div class="status">候補日 3 つ 送付 済 · タップ 選択 待ち</div>
+          </button>
+          <button class="v3h-waiting">
+            <div class="top"><span class="name">佐藤 様</span><span class="elapsed">3d</span></div>
+            <div class="status">保険 見直し 資料 送付 済 · 検討 中</div>
+          </button>
+          <button class="v3h-waiting stuck">
+            <div class="top"><span class="name">鈴木 様</span><span class="elapsed">5d</span></div>
+            <div class="status">アンケート URL 送付 済 · 催促 要 検討</div>
+          </button>
+          <button class="v3h-waiting stuck">
+            <div class="top"><span class="name">田中 様</span><span class="elapsed">7d</span></div>
+            <div class="status">提案 内容 検討 中 · LINE で 進捗 確認 要</div>
+          </button>
+        </div>
+
+        <div class="v3h-ctx-section">
+          <p class="v3h-ctx-section-title">今週 の サマリー</p>
+          <div class="v3h-summary-card">
+            面談 <b>12</b> 件<br>
+            新規 客 <b>3</b> 名<br>
+            重点 客 <b class="ok">14</b> 名
+          </div>
+        </div>
+      </aside>
+    </div>
+  </section>
+</div>
+</body>
+</html>

@@ -1077,107 +1077,73 @@
         <!-- ===== ダッシュボード ===== -->
         <section class="view active" data-view="dashboard">
 
-          <!-- ===== MEGA HERO ===== -->
-          <div class="mega-hero">
-            <div class="mega-hero-bg"></div>
-            <div class="mega-hero-grid">
-
-              <!-- Left: hero copy -->
-              <div class="mega-hero-left">
-                <div class="mega-hero-date" id="mega-hero-date">2026年5月27日 水曜日</div>
-                <h1 class="mega-hero-title">
-                  おはようございます、<span class="mega-hero-name" id="mega-hero-name">先生</span>。<br>
-                  <span class="mega-hero-highlight" id="mega-hero-num">0</span> 人、今日 話す べき 方 が います。
-                </h1>
-                <p class="mega-hero-lead" id="mega-hero-lead">ライフイベント × 接触頻度 × 未返信 を 合算 した 順。</p>
-
-                <div class="mega-hero-stats">
-                  <div class="mega-hero-stat">
-                    <span class="mega-hero-stat-label">今週フォロー</span>
-                    <span class="mega-hero-stat-value" id="mh-stat-week">—</span>
-                  </div>
-                  <div class="mega-hero-stat">
-                    <span class="mega-hero-stat-label">30日以内のイベント</span>
-                    <span class="mega-hero-stat-value" id="mh-stat-events">—</span>
-                  </div>
-                  <div class="mega-hero-stat">
-                    <span class="mega-hero-stat-label">未読LINE</span>
-                    <span class="mega-hero-stat-value">3</span>
+          <!-- ===== v3 HOME (Todoist-inspired) — 2026-08-05 導入 ===== -->
+          <div class="v3h-shell">
+            <main class="v3h-main">
+              <header class="v3h-header">
+                <p class="v3h-breadcrumb" id="v3h-breadcrumb">—</p>
+                <div class="v3h-title-row">
+                  <h1 class="v3h-title" id="v3h-title">今日</h1>
+                  <div style="display:flex;gap:6px;">
+                    <button class="primary" id="v3h-cta-new" data-hint="新規顧客を登録"><i data-lucide="user-plus" style="width:14px;height:14px;"></i>&nbsp;新規</button>
+                    <button id="v3h-cta-broadcast" style="background:#fff;border:1px solid var(--line-2);color:var(--ink);padding:6px 12px;border-radius:6px;font-weight:600;"><i data-lucide="send" style="width:14px;height:14px;"></i>&nbsp;配信</button>
                   </div>
                 </div>
+                <div class="v3h-stats" id="v3h-stats"></div>
+              </header>
 
-                <div class="mega-hero-actions">
-                  <button class="primary primary-lg" id="hero-cta-new">
-                    <i data-lucide="user-plus"></i><span>新規顧客を登録</span>
-                  </button>
-                  <button class="ghost-btn ghost-btn-lg" id="hero-cta-broadcast">
-                    <i data-lucide="send"></i><span>一斉配信</span>
-                  </button>
+              <section class="v3h-zoom">
+                <p class="v3h-zoom-label">Today · Zoom タイムライン</p>
+                <div class="v3h-zoom-slots" id="v3h-zoom-slots"><div class="v3h-zoom-empty">—</div></div>
+              </section>
+
+              <!-- LINE 要返信 (最優先 alert) -->
+              <div id="home-unread-area"></div>
+
+              <div id="notice-area"></div>
+
+              <section class="v3h-section">
+                <div class="v3h-section-head">
+                  <h2>今日</h2>
+                  <span class="count" id="v3h-today-count">·  0</span>
+                  <span class="aux">上 から 優先度 順 (SLA + 期日 で 自動)</span>
                 </div>
+                <div id="v3h-today-list" class="action-list"></div>
+              </section>
+
+              <section class="v3h-section" style="padding-top: 6px;">
+                <div class="v3h-section-head">
+                  <h2 id="v3h-tomorrow-title">明日</h2>
+                  <span class="count" id="v3h-tomorrow-count">·  0</span>
+                </div>
+                <div id="v3h-tomorrow-list"></div>
+              </section>
+            </main>
+
+            <aside class="v3h-context">
+              <div class="v3h-progress">
+                <p class="v3h-progress-title">今日 の 進捗</p>
+                <div class="v3h-progress-num"><span id="v3h-progress-done">0</span> <span>/ <span id="v3h-progress-total">0</span></span></div>
+                <div class="v3h-progress-bar"><div class="v3h-progress-bar-fill" id="v3h-progress-fill" style="width:0%"></div></div>
+                <p class="v3h-progress-note" id="v3h-progress-note">今日 の タスク 消化 状況</p>
               </div>
 
-              <!-- Right: featured next client card (hidden — Senior Cards 下にあるので重複削除) -->
-              <div class="mega-hero-right" style="display:none;">
-                <div class="featured-card" id="featured-card"></div>
+              <div class="v3h-ctx-section">
+                <h2>客 反応 待ち</h2>
+                <p class="subtitle">こちら は 送信 済 で 相手 の 返答 待ち。 時間 経過 順。</p>
+                <div id="v3h-waiting-list"></div>
               </div>
 
-            </div>
+              <div class="v3h-ctx-section">
+                <p class="v3h-ctx-section-title">今週 の サマリー</p>
+                <div class="v3h-summary-card" id="v3h-summary-card">—</div>
+              </div>
+            </aside>
           </div>
 
-          <div id="notice-area"></div>
-
-          <!-- ===== Workflow guide — FPの1日の業務フロー ===== -->
-          <div class="section-title">今日 の 進め方</div>
-          <div class="section-sub">朝 → 面談前 → 面談中 → 面談後。各ステップで「次にやること」が明確になります。</div>
-          <div class="workflow-grid">
-            <div class="workflow-step workflow-step-active">
-              <div class="workflow-step-num">1</div>
-              <div class="workflow-step-icon"><i data-lucide="sun"></i></div>
-              <div class="workflow-step-title">朝のブリーフ</div>
-              <div class="workflow-step-desc">上の Hero で「今日話す客」を確認。優先順に1人ずつ。</div>
-              <div class="workflow-step-status">いま ここ</div>
-            </div>
-            <div class="workflow-step">
-              <div class="workflow-step-num">2</div>
-              <div class="workflow-step-icon"><i data-lucide="search"></i></div>
-              <div class="workflow-step-title">面談前リサーチ</div>
-              <div class="workflow-step-desc">該当客の詳細を開く → 家族構成・タイムライン・過去提案を10秒で再確認。</div>
-            </div>
-            <div class="workflow-step">
-              <div class="workflow-step-num">3</div>
-              <div class="workflow-step-icon"><i data-lucide="mic"></i></div>
-              <div class="workflow-step-title">面談・録画</div>
-              <div class="workflow-step-desc">Zoom面談 → 録画ボタンで自動収録 → Drive に保存。</div>
-            </div>
-            <div class="workflow-step">
-              <div class="workflow-step-num">4</div>
-              <div class="workflow-step-icon"><i data-lucide="file-text"></i></div>
-              <div class="workflow-step-title">文字起こし → タスク化</div>
-              <div class="workflow-step-desc">AI議事録ボタンで自動文字起こし。提案・調査・連絡タスクを抽出して保存。</div>
-            </div>
-            <div class="workflow-step">
-              <div class="workflow-step-num">5</div>
-              <div class="workflow-step-icon"><i data-lucide="message-square-text"></i></div>
-              <div class="workflow-step-title">フォローアップ</div>
-              <div class="workflow-step-desc">AI返信下書きで LINE 文面を作って送信。次回面談を予約。</div>
-            </div>
-          </div>
-
-          <!-- ===== 🔥 LINE 要返信 (最優先) ===== -->
-          <div id="home-unread-area"></div>
-
-          <!-- ===== ★メイン: 今日やる事 (Senior Cards) ===== -->
-          <div class="section-header">
-            <div>
-              <div class="section-eyebrow-pill">本日</div>
-              <h2 class="section-big-title">今日 話すべき方</h2>
-              <p class="section-big-sub">上から順番に対応すればOK。各カードの「文面を作って送る」を押すだけ。</p>
-            </div>
-            <div class="section-header-aside">
-              <span class="section-counter" id="senior-counter">—</span>
-            </div>
-          </div>
-          <div class="action-list" id="action-list"></div>
+          <!-- (旧 senior cards は v3h-today-list に統合。 action-list は id を渡す 為 上に維持) -->
+          <div class="action-list" id="action-list" style="display:none;"></div>
+          <span id="senior-counter" style="display:none;"></span>
 
           <!-- ===== 概況 (折り畳み可) ===== -->
           <details class="home-collapsible" open>
@@ -1499,7 +1465,7 @@ window.fpReadyAfterAuth = function() {
     });
   })();
 
-  const ver = "20260804A-ios-audio-fix";
+  const ver = "20260805A-v3-home";
   // ★ 2026-06-26 perf: critical (画面初期表示に必須) と deferred (LINE/charts) を 分離
   // critical: 顧客台帳・ホーム描画に必須
   // deferred: LINE タブ (line-app.js 555KB) / dashboard charts (charts.js) → idle で 後ロード
@@ -1957,12 +1923,12 @@ window.fpReadyAfterAuth = function() {
     });
   }
 
-  // Hero CTAs
-  document.getElementById('hero-cta-new')?.addEventListener('click', () => {
+  // v3 Home CTAs (旧 hero-cta-* から rename、 2026-08-05 v3 移植)
+  document.getElementById('v3h-cta-new')?.addEventListener('click', () => {
     document.querySelector('.tab[data-tab="clients"]')?.click();
     setTimeout(() => document.getElementById('add-client-btn')?.click(), 100);
   });
-  document.getElementById('hero-cta-broadcast')?.addEventListener('click', () => {
+  document.getElementById('v3h-cta-broadcast')?.addEventListener('click', () => {
     document.querySelector('.tab[data-tab="distributionHub"]')?.click();
   });
 
@@ -2189,7 +2155,8 @@ window.fpReadyAfterAuth = function() {
 
       const daysFromContact = Math.max(0, Math.floor((today - new Date(c.lastContact)) / 86400000));
 
-      document.getElementById('featured-card').innerHTML = `
+      const _featuredEl = document.getElementById('featured-card');
+      if (_featuredEl) _featuredEl.innerHTML = `
         <div class="featured-rank">
           <i data-lucide="flame"></i>
           <span>NEXT BEST ACTION</span>
@@ -2248,7 +2215,7 @@ window.fpReadyAfterAuth = function() {
 <script>
 (function(){
   // 最新の ver を 1 箇所に集約 (fpReadyAfterAuth 側と一致させる必要あり)
-    const FP_VERSION = "20260804A-ios-audio-fix";
+    const FP_VERSION = "20260805A-v3-home";
   try { window.FP_VERSION = FP_VERSION; } catch(_) {}
 
   // 2026-07-13 v11: Chrome拡張 (Zoom タブ音声 レコーダー) 検知
