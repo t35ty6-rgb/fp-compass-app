@@ -763,26 +763,73 @@
     // Google Calendar 風 schedule 切替 wire (2026-08-06)
     try { wireV3ScheduleControls(); } catch(_) {}
 
-    // Google Cal 連携 button (2026-08-06 owner「予約 自動 Google Cal 登録」)
+    // Google Cal 連携 button — 2026-08-06 owner「押しても何もならない」対応:
+    // alert() は browser silent-block される 可能性 高い → in-app modal に 変更
     const gcalBtn = document.getElementById('v3h-cta-gcal');
     if (gcalBtn) {
       const isConnected = !!localStorage.getItem('fp-gcal-linked'); // placeholder
       if (isConnected) gcalBtn.classList.add('connected');
       gcalBtn.addEventListener('click', () => {
-        // 実装 未 の 段階: 設定 手順 説明 modal (owner GO 後 に OAuth flow 実装)
-        alert(
-          '📅 Google カレンダー 連携 (実装 準備 中)\n\n' +
-          '実装 後 は こう 動きます:\n\n' +
-          '1. この button を click → Google 認証 画面\n' +
-          '2. 「FP Compass に Google カレンダー への アクセス を 許可」 で 承認\n' +
-          '3. 以降、 客 と の Zoom 予約 が 確定 する 度 に:\n' +
-          '   • あなた の Google Cal に event 自動作成 (タイトル: 「面談 · 徳佐拓朗 様」)\n' +
-          '   • Zoom URL 添付\n' +
-          '   • 予約 変更/キャンセル も 自動 反映\n' +
-          '4. あなた の 個人 予定 (歯医者 · 家族 用事 等) も スケジュール view に 灰色 で 重ね 表示\n\n' +
-          '実装 は 2-3h 程度 · OAuth 認証 は owner が 手動 で 1回 必要。\n' +
-          'GO なら 「連携 進めて」 と Jobs に 伝えて ください。'
-        );
+        // 既存 modal 削除
+        document.getElementById('v3h-gcal-modal')?.remove();
+        const overlay = document.createElement('div');
+        overlay.id = 'v3h-gcal-modal';
+        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.65);backdrop-filter:blur(4px);z-index:2147483640;display:flex;align-items:center;justify-content:center;padding:24px;font-family:"Noto Sans JP",sans-serif;';
+        overlay.innerHTML = `
+          <div style="background:#fff;max-width:560px;width:100%;border-radius:14px;box-shadow:0 30px 80px rgba(0,0,0,0.35);overflow:hidden;">
+            <div style="padding:24px 28px 20px;border-bottom:1px solid #e3e5ea;display:flex;align-items:center;gap:12px;">
+              <div style="font-size:32px;line-height:1;">🗓️</div>
+              <div style="flex:1;">
+                <h2 style="margin:0;font-size:20px;font-weight:800;color:#1a1f2c;letter-spacing:-0.01em;">Google カレンダー 連携</h2>
+                <p style="margin:4px 0 0;font-size:12.5px;color:#c53030;font-weight:700;">未接続 · 実装 準備 中</p>
+              </div>
+              <button id="v3h-gcal-close" style="background:transparent;border:none;font-size:24px;color:#6b7280;cursor:pointer;padding:4px 10px;line-height:1;">×</button>
+            </div>
+            <div style="padding:24px 28px;color:#3a4254;font-size:14px;line-height:1.75;">
+              <p style="margin:0 0 16px;font-weight:700;color:#1a1f2c;">実装 後 は こう 動きます:</p>
+              <ol style="margin:0 0 20px;padding-left:22px;">
+                <li>この button を click → Google 認証 画面 が 開く</li>
+                <li>「FP Compass に Google カレンダー への アクセス を 許可」 で 承認</li>
+                <li>以降、 客 と の Zoom 予約 が 確定 する 度 に:
+                  <ul style="margin:6px 0;padding-left:20px;font-size:13px;color:#545e70;">
+                    <li>あなた の Google Cal に event 自動作成 (title:「面談 · 徳佐拓朗 様」)</li>
+                    <li>Zoom URL 添付</li>
+                    <li>予約 変更/キャンセル も 自動 反映</li>
+                  </ul>
+                </li>
+                <li>あなた の 個人 予定 (歯医者 · 家族 用事) も スケジュール view に 灰色 で 重ね 表示 → 二重予約 防止</li>
+              </ol>
+              <div style="background:#f0f2f5;border-left:3px solid #0b5d9e;padding:12px 16px;border-radius:0 6px 6px 0;font-size:13px;">
+                <b style="color:#084577;">実装 まで</b>: 2〜3時間 · owner の 手動 Google 認証 は 各 tenant 1回 のみ
+              </div>
+            </div>
+            <div style="padding:16px 28px;border-top:1px solid #e3e5ea;background:#f7f8fc;display:flex;justify-content:flex-end;gap:8px;">
+              <button id="v3h-gcal-later" style="background:#fff;border:1px solid #d4d8df;color:#3a4254;padding:10px 20px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">後で 判断</button>
+              <button id="v3h-gcal-go" style="background:#0b5d9e;color:#fff;border:none;padding:10px 22px;border-radius:8px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">実装 GO</button>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(overlay);
+        const close = () => overlay.remove();
+        overlay.querySelector('#v3h-gcal-close')?.addEventListener('click', close);
+        overlay.querySelector('#v3h-gcal-later')?.addEventListener('click', close);
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+        overlay.querySelector('#v3h-gcal-go')?.addEventListener('click', () => {
+          // GO signal は localStorage に flag 立てて、 owner が Jobs に 伝える の を 促す
+          try { localStorage.setItem('fp-gcal-go-requested', new Date().toISOString()); } catch(_){}
+          overlay.innerHTML = `
+            <div style="background:#fff;max-width:480px;width:100%;border-radius:14px;padding:32px 30px;text-align:center;">
+              <div style="font-size:56px;line-height:1;margin-bottom:14px;">🚀</div>
+              <h3 style="margin:0 0 10px;font-size:20px;font-weight:800;color:#1a1f2c;">実装 GO を 記録 しました</h3>
+              <p style="margin:0 0 22px;font-size:14px;color:#3a4254;line-height:1.7;">
+                次 の Jobs チャット で <b style="color:#0b5d9e;">「Google Cal 連携 の 実装 進めて」</b> と 伝えて ください。<br>
+                OAuth 認証 の 手順 と 一緒 に 実装 開始 します。
+              </p>
+              <button id="v3h-gcal-ok" style="background:#0b5d9e;color:#fff;border:none;padding:11px 32px;border-radius:8px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">OK</button>
+            </div>
+          `;
+          overlay.querySelector('#v3h-gcal-ok')?.addEventListener('click', close);
+        });
       });
     }
   }
