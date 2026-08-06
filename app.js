@@ -830,8 +830,14 @@
             const provider = new fp.GoogleAuthProvider();
             provider.addScope('https://www.googleapis.com/auth/calendar.events');
             provider.addScope('https://www.googleapis.com/auth/calendar.readonly');
-            // 「毎回 account 選択」 で どの Google account か 明示 (誤 account link 防止)
-            provider.setCustomParameters({ prompt: 'select_account' });
+            // ★ 2026-08-06 owner「403 insufficient scopes」bug fix:
+            // `select_account` だけ だと 過去 認証 済 の 場合 Google が auto-approve して
+            // Calendar scope を skip する。 `consent` で 毎回 完全 consent 画面 を 出す。
+            provider.setCustomParameters({
+              prompt: 'consent',
+              access_type: 'online',
+              include_granted_scopes: 'true',
+            });
 
             const user = fp.auth.currentUser;
             const alreadyLinked = (user.providerData || []).some(p => p.providerId === 'google.com');
@@ -860,24 +866,60 @@
               || result.user?.email || '';
             localStorage.setItem('fp-gcal-email', googleEmail);
 
-            // 成功 画面
+            // ★ scope 実測 (tokeninfo で 実際 に 何 の scope が 付与 されたか 検証)
+            let grantedScopes = '';
+            let hasCalScope = false;
+            try {
+              const ti = await fetch('https://oauth2.googleapis.com/tokeninfo?access_token=' + encodeURIComponent(accessToken));
+              if (ti.ok) {
+                const td = await ti.json();
+                grantedScopes = td.scope || '';
+                hasCalScope = /calendar\.events|calendar\.readonly|\/calendar( |$)/.test(grantedScopes);
+              }
+            } catch (_) {}
+            console.log('[gcal] granted scopes:', grantedScopes, 'hasCalScope:', hasCalScope);
+
+            // 成功 画面 (scope 実測 情報 付き)
+            const scopeWarn = hasCalScope ? '' : `
+              <div style="background:#fef3c7;border:2px solid #b7791f;border-radius:8px;padding:12px 14px;margin:0 0 14px;font-size:13px;color:#8a5915;text-align:left;">
+                ⚠️ <b>Google Calendar 権限 が 付与 されていません</b><br>
+                popup で 「Calendar への アクセス」 に ✓ が 入って なかった 可能性。<br>
+                → 「もう一度 連携」 button で 再試行 して ください (今度 は Calendar 権限 も 承認)。<br>
+                <small>granted: <code style="font-size:11px;">${escapeHtml(grantedScopes.slice(0, 200) || '(なし)')}</code></small>
+              </div>`;
             overlay.innerHTML = `
-              <div style="background:#fff;max-width:520px;width:100%;border-radius:14px;padding:32px 30px;text-align:center;">
-                <div style="font-size:56px;line-height:1;margin-bottom:14px;">✅</div>
-                <h3 style="margin:0 0 10px;font-size:22px;font-weight:800;color:#1a1f2c;">連携 できました</h3>
-                <p style="margin:0 0 8px;font-size:14px;color:#3a4254;line-height:1.7;">
-                  ${escapeHtml(googleEmail || 'Google account')} と 連携 済
+              <div style="background:#fff;max-width:560px;width:100%;border-radius:14px;padding:28px 30px;text-align:center;">
+                <div style="font-size:48px;line-height:1;margin-bottom:12px;">${hasCalScope ? '✅' : '⚠️'}</div>
+                <h3 style="margin:0 0 10px;font-size:22px;font-weight:800;color:#1a1f2c;">${hasCalScope ? '連携 できました' : 'Google login は 済 · Calendar 権限 追加 必要'}</h3>
+                <p style="margin:0 0 6px;font-size:14px;color:#3a4254;line-height:1.6;">
+                  ${escapeHtml(googleEmail || 'Google account')} と link 済
                 </p>
-                <p style="margin:0 0 22px;font-size:12.5px;color:#6b7280;">
-                  以降、 客 の Zoom 予約 が 確定 したら 自動で この Google Cal に event 作成 されます。
-                </p>
-                <div style="display:flex;gap:8px;justify-content:center;">
-                  <button id="v3h-gcal-test" style="background:#0b5d9e;color:#fff;border:none;padding:11px 22px;border-radius:8px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">動作 test (今 の 予定 1件 を Cal に 入れる)</button>
+                ${scopeWarn}
+                ${hasCalScope ? '<p style="margin:0 0 20px;font-size:12.5px;color:#6b7280;">以降、 客 の Zoom 予約 が 確定 したら 自動で この Google Cal に event 作成 されます。</p>' : ''}
+                <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+                  ${hasCalScope
+                    ? '<button id="v3h-gcal-test" style="background:#0b5d9e;color:#fff;border:none;padding:11px 22px;border-radius:8px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">動作 test (今 の 予定 1件 を Cal に 入れる)</button>'
+                    : '<button id="v3h-gcal-retry" style="background:#0b5d9e;color:#fff;border:none;padding:11px 22px;border-radius:8px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">もう一度 連携 (Calendar 権限 承認)</button>'
+                  }
                   <button id="v3h-gcal-ok" style="background:#fff;color:#3a4254;border:1px solid #d4d8df;padding:11px 22px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">閉じる</button>
                 </div>
                 <p id="v3h-gcal-test-result" style="margin:16px 0 0;font-size:13px;color:#3a4254;min-height:20px;"></p>
               </div>
             `;
+            // retry click → 同じ button の click を trigger (再 OAuth flow)
+            overlay.querySelector('#v3h-gcal-retry')?.addEventListener('click', () => {
+              close();
+              // localStorage flag clear で 完全 やり直し
+              try {
+                sessionStorage.removeItem('fp-gcal-token');
+                localStorage.removeItem('fp-gcal-linked-at');
+              } catch(_){}
+              // Google account を Firebase から unlink して from scratch
+              // (Google 側 authorize されてる アプリ list からも 削除 促す)
+              setTimeout(() => {
+                alert('もう一度 連携 の 前 に、 Google 側 の 認可 も 一度 取消 する と 確実:\n\n1. https://myaccount.google.com/permissions を 開く\n2. 「Skeleton FP Compass」 (or 類似) を 探す → 削除\n3. 戻ってきて 「Google カレンダー 連携」 button を 押す\n4. popup で Calendar への アクセス に ✓ 入れて 承認');
+              }, 300);
+            });
             overlay.querySelector('#v3h-gcal-ok')?.addEventListener('click', () => {
               close();
               // 再 render で button の 状態 更新
