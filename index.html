@@ -1084,17 +1084,35 @@
                 <p class="v3h-breadcrumb" id="v3h-breadcrumb">—</p>
                 <div class="v3h-title-row">
                   <h1 class="v3h-title" id="v3h-title">今日</h1>
-                  <div style="display:flex;gap:6px;">
-                    <button class="primary" id="v3h-cta-new" data-hint="新規顧客を登録"><i data-lucide="user-plus" style="width:14px;height:14px;"></i>&nbsp;新規</button>
-                    <button id="v3h-cta-broadcast" style="background:#fff;border:1px solid var(--line-2);color:var(--ink);padding:6px 12px;border-radius:6px;font-weight:600;"><i data-lucide="send" style="width:14px;height:14px;"></i>&nbsp;配信</button>
+                  <div style="display:flex;gap:8px;">
+                    <button class="v3h-cta-gcal" id="v3h-cta-gcal" type="button" title="Google カレンダー と 連携 (未接続)">
+                      <span style="font-size:16px;line-height:1;">🗓️</span>
+                      <span>Google 連携</span>
+                    </button>
+                    <button class="v3h-cta-add-todo" id="v3h-cta-add-todo" type="button">TODO を 追加</button>
                   </div>
                 </div>
                 <div class="v3h-stats" id="v3h-stats"></div>
+                <!-- ショートカット: 見落とし 防止 button (owner 2026-08-05 明示 「日程調整 見落とさない」) -->
+                <div class="v3h-shortcuts" id="v3h-shortcuts"></div>
               </header>
 
-              <section class="v3h-zoom">
-                <p class="v3h-zoom-label">Today · Zoom タイムライン</p>
-                <div class="v3h-zoom-slots" id="v3h-zoom-slots"><div class="v3h-zoom-empty">—</div></div>
+              <!-- 2026-08-06 owner: Google Calendar 風 [週/2週/月] 切替 view -->
+              <section class="v3h-sched">
+                <div class="v3h-sched-head">
+                  <p class="v3h-sched-title">スケジュール</p>
+                  <div class="v3h-sched-tabs" role="tablist">
+                    <button type="button" data-mode="week" class="active" role="tab">週</button>
+                    <button type="button" data-mode="2week" role="tab">2週</button>
+                    <button type="button" data-mode="month" role="tab">月</button>
+                  </div>
+                  <button type="button" class="v3h-sched-nav" data-nav="prev" title="前へ">‹</button>
+                  <span class="v3h-sched-range" id="v3h-sched-range">—</span>
+                  <button type="button" class="v3h-sched-nav" data-nav="next" title="次へ">›</button>
+                  <button type="button" class="v3h-sched-nav v3h-sched-today" data-nav="today" title="今日 に 戻る">今日</button>
+                </div>
+                <div class="v3h-sched-dow-row" id="v3h-sched-dow"></div>
+                <div class="v3h-sched-grid" id="v3h-sched-grid"></div>
               </section>
 
               <!-- LINE 要返信 (最優先 alert) -->
@@ -1106,8 +1124,43 @@
                 <div class="v3h-section-head">
                   <h2>今日</h2>
                   <span class="count" id="v3h-today-count">·  0</span>
-                  <span class="aux">上 から 優先度 順 (SLA + 期日 で 自動)</span>
+                  <span class="aux">上 から 優先度 順</span>
                 </div>
+
+                <!-- 手動 TODO 追加 inline form (button で toggle) -->
+                <div class="v3h-add-form" id="v3h-add-form">
+                  <input type="text" id="v3h-add-input" placeholder="やる こと を 入力 (例: 田中様 に 提案書 送付)">
+                  <div class="v3h-add-form-row">
+                    <!-- custom picker (LINE avatar + 名前) — button + panel -->
+                    <div class="v3h-picker" id="v3h-add-client-picker">
+                      <button type="button" class="v3h-picker-btn" id="v3h-add-client-btn" aria-haspopup="listbox">
+                        <span class="v3h-picker-label" id="v3h-add-client-label">客 (任意)</span>
+                        <span class="v3h-picker-caret">▾</span>
+                      </button>
+                      <input type="hidden" id="v3h-add-client" value="">
+                      <div class="v3h-picker-panel" id="v3h-add-client-panel" role="listbox">
+                        <input type="search" class="v3h-picker-search" id="v3h-add-client-search" placeholder="名前 で 検索…" />
+                        <div class="v3h-picker-list" id="v3h-add-client-list"></div>
+                      </div>
+                    </div>
+                    <select id="v3h-add-due">
+                      <option value="today">期限: 今日</option>
+                      <option value="tomorrow">期限: 明日</option>
+                      <option value="week">期限: 今週 中</option>
+                      <option value="none">期限 なし</option>
+                    </select>
+                    <select id="v3h-add-priority">
+                      <option value="p1">🔴 至急</option>
+                      <option value="p2" selected>🟠 今週</option>
+                      <option value="p3">🔵 いつか</option>
+                    </select>
+                  </div>
+                  <div class="v3h-add-form-actions">
+                    <button type="button" class="cancel" id="v3h-add-cancel">キャンセル</button>
+                    <button type="button" class="save" id="v3h-add-save">追加</button>
+                  </div>
+                </div>
+
                 <div id="v3h-today-list" class="action-list"></div>
               </section>
 
@@ -1465,7 +1518,7 @@ window.fpReadyAfterAuth = function() {
     });
   })();
 
-  const ver = "20260805A-v3-home";
+  const ver = "20260806F-cards-gcal";
   // ★ 2026-06-26 perf: critical (画面初期表示に必須) と deferred (LINE/charts) を 分離
   // critical: 顧客台帳・ホーム描画に必須
   // deferred: LINE タブ (line-app.js 555KB) / dashboard charts (charts.js) → idle で 後ロード
@@ -2215,7 +2268,7 @@ window.fpReadyAfterAuth = function() {
 <script>
 (function(){
   // 最新の ver を 1 箇所に集約 (fpReadyAfterAuth 側と一致させる必要あり)
-    const FP_VERSION = "20260805A-v3-home";
+    const FP_VERSION = "20260806F-cards-gcal";
   try { window.FP_VERSION = FP_VERSION; } catch(_) {}
 
   // 2026-07-13 v11: Chrome拡張 (Zoom タブ音声 レコーダー) 検知

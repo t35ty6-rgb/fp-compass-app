@@ -530,6 +530,9 @@
   }
 
   function renderDashboard() {
+    // ★ 2026-08-05 owner「実際の画面 じゃない」 対応: ?demo=cal で real admin に demo データ inject
+    try { seedDemoDataForCalendar(); } catch (e) { console.warn('[demo-seed]', e); }
+
     const totalClients = clients.length;
     const importantCount = clients.filter(c => c.status === 'important').length;
     const totalAum = clients.reduce((s, c) => s + (c.aum || 0), 0);
@@ -620,9 +623,168 @@
 
     // ★ 2026-07-31: Case C (Task-based) 差替 — 「今日 話すべき方」 を 客 単位 じゃなく タスク 単位 で 出す。
     //   合成推定 (教育資金/相続 rule) は 廃止、 実 evidence (booking / proposal 検討中 / fp-tasks-* / cancel / dormant) のみ。
-    const homeTasks = generateHomeTasksFromRealData(clients);
+    const autoTasks = generateHomeTasksFromRealData(clients);
+    const manualTasks = manualTodosAsTasks(clients);
+    // manual を 前 に (owner の 意図明示 = 優先)
+    const homeTasks = manualTasks.concat(autoTasks).sort((a, b) => {
+      if (a.urgencyRank !== b.urgencyRank) return a.urgencyRank - b.urgencyRank;
+      return (a.dueBy || 0) - (b.dueBy || 0);
+    });
     renderHomeTasksList(homeTasks, clients);
+
+    // v3 Home (Todoist 風 + week calendar) — tasks 空 の tenant でも 必ず 描画。
+    try { renderV3Home(homeTasks || [], clients); } catch (e) { console.warn('[v3h] render fail', e); }
+    // v3 手動 TODO 追加 UI wire (idempotent)
+    try { wireV3AddTodo(clients); } catch (e) { console.warn('[v3h add wire]', e); }
     return;
+  }
+
+  // ============================
+  // v3 手動 TODO 追加 UI wire — 2026-08-05
+  // ============================
+  function wireV3AddTodo(clients) {
+    if (window.__v3AddTodoWired) return;
+    window.__v3AddTodoWired = true;
+
+    const openBtn = document.getElementById('v3h-cta-add-todo');
+    const form = document.getElementById('v3h-add-form');
+    const cancelBtn = document.getElementById('v3h-add-cancel');
+    const saveBtn = document.getElementById('v3h-add-save');
+    const input = document.getElementById('v3h-add-input');
+    const clientHidden = document.getElementById('v3h-add-client');
+    const clientBtn = document.getElementById('v3h-add-client-btn');
+    const clientLabel = document.getElementById('v3h-add-client-label');
+    const clientPanel = document.getElementById('v3h-add-client-panel');
+    const clientList = document.getElementById('v3h-add-client-list');
+    const clientSearch = document.getElementById('v3h-add-client-search');
+    const dueSel = document.getElementById('v3h-add-due');
+    const prioritySel = document.getElementById('v3h-add-priority');
+    if (!openBtn || !form) return;
+
+    // Custom client picker with LINE avatars
+    function clientRowHtml(c) {
+      const avatar = c.linePictureUrl || c.pictureUrl;
+      const initial = (c.name || '?').charAt(0);
+      const color = 'hsl(' + ((c.name || '?').charCodeAt(0) * 7 % 360) + ',55%,55%)';
+      const hasLine = !!c.lineFriendId;
+      return `
+        <button type="button" class="v3h-picker-row" data-client-id="${escapeHtml(c.id)}" data-client-name="${escapeHtml(c.name || '(名無し)')}">
+          ${avatar
+            ? `<img class="v3h-picker-avatar" src="${escapeHtml(avatar)}" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='inline-flex';">
+               <span class="v3h-picker-avatar-fb" style="display:none;background:${color};">${escapeHtml(initial)}</span>`
+            : `<span class="v3h-picker-avatar-fb" style="background:${color};">${escapeHtml(initial)}</span>`}
+          <span class="v3h-picker-row-name">${escapeHtml(c.name || '(名無し)')}</span>
+          ${hasLine ? `<span class="v3h-picker-row-badge">LINE</span>` : ''}
+        </button>
+      `;
+    }
+    function refreshClientPanel(filter) {
+      const cs = (window.DUMMY_CLIENTS || clients || []).slice();
+      const q = (filter || '').trim().toLowerCase();
+      const filtered = q
+        ? cs.filter(c => (c.name || '').toLowerCase().includes(q) || (c.kana || '').toLowerCase().includes(q))
+        : cs;
+      // LINE 紐付け済 を 上 に (owner 明示 LINE アイコン 目立たせ)
+      filtered.sort((a, b) => (b.lineFriendId ? 1 : 0) - (a.lineFriendId ? 1 : 0));
+      const rows = [`<button type="button" class="v3h-picker-row" data-client-id="" data-client-name=""><span class="v3h-picker-avatar-fb" style="background:#e3e5ea;color:#6b7280;">—</span><span class="v3h-picker-row-name" style="color:#6b7280;">客 なし (メモ)</span></button>`];
+      filtered.slice(0, 100).forEach(c => rows.push(clientRowHtml(c)));
+      clientList.innerHTML = rows.join('');
+      clientList.querySelectorAll('.v3h-picker-row').forEach(row => {
+        row.addEventListener('click', () => {
+          const id = row.dataset.clientId;
+          const name = row.dataset.clientName;
+          clientHidden.value = id;
+          clientLabel.textContent = name || '客 (任意)';
+          clientLabel.dataset.hasSelection = id ? '1' : '';
+          clientPanel.classList.remove('open');
+        });
+      });
+    }
+    function resetPicker() {
+      clientHidden.value = '';
+      clientLabel.textContent = '客 (任意)';
+      clientLabel.dataset.hasSelection = '';
+      clientSearch.value = '';
+      refreshClientPanel('');
+    }
+    clientBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      clientPanel.classList.toggle('open');
+      if (clientPanel.classList.contains('open')) {
+        refreshClientPanel(clientSearch.value);
+        setTimeout(() => clientSearch.focus(), 40);
+      }
+    });
+    clientSearch.addEventListener('input', () => refreshClientPanel(clientSearch.value));
+    document.addEventListener('click', (e) => {
+      if (!clientPanel.contains(e.target) && e.target !== clientBtn) clientPanel.classList.remove('open');
+    });
+
+    openBtn.addEventListener('click', () => {
+      form.classList.add('open');
+      input.value = '';
+      dueSel.value = 'today';
+      prioritySel.value = 'p2';
+      resetPicker();
+      setTimeout(() => input.focus(), 60);
+    });
+    cancelBtn.addEventListener('click', () => form.classList.remove('open'));
+    function save() {
+      const text = (input.value || '').trim();
+      if (!text) { input.focus(); return; }
+      addManualTodo({
+        text,
+        clientId: clientHidden.value || '',
+        due: dueSel.value,
+        priority: prioritySel.value,
+      });
+      form.classList.remove('open');
+      // re-render dashboard で 新 TODO 反映
+      try { renderDashboard(); } catch(_) {}
+    }
+    saveBtn.addEventListener('click', save);
+    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') save(); });
+
+    // Delete: event delegation on today list
+    const todayList = document.getElementById('v3h-today-list');
+    if (todayList) {
+      todayList.addEventListener('click', (e) => {
+        const del = e.target.closest('.v3h-todo-del');
+        if (!del) return;
+        e.stopPropagation();
+        const id = del.dataset.manualId;
+        if (!id) return;
+        if (!confirm('この TODO を 削除 しますか?')) return;
+        deleteManualTodo(id);
+        try { renderDashboard(); } catch(_) {}
+      });
+    }
+
+    // Google Calendar 風 schedule 切替 wire (2026-08-06)
+    try { wireV3ScheduleControls(); } catch(_) {}
+
+    // Google Cal 連携 button (2026-08-06 owner「予約 自動 Google Cal 登録」)
+    const gcalBtn = document.getElementById('v3h-cta-gcal');
+    if (gcalBtn) {
+      const isConnected = !!localStorage.getItem('fp-gcal-linked'); // placeholder
+      if (isConnected) gcalBtn.classList.add('connected');
+      gcalBtn.addEventListener('click', () => {
+        // 実装 未 の 段階: 設定 手順 説明 modal (owner GO 後 に OAuth flow 実装)
+        alert(
+          '📅 Google カレンダー 連携 (実装 準備 中)\n\n' +
+          '実装 後 は こう 動きます:\n\n' +
+          '1. この button を click → Google 認証 画面\n' +
+          '2. 「FP Compass に Google カレンダー への アクセス を 許可」 で 承認\n' +
+          '3. 以降、 客 と の Zoom 予約 が 確定 する 度 に:\n' +
+          '   • あなた の Google Cal に event 自動作成 (タイトル: 「面談 · 徳佐拓朗 様」)\n' +
+          '   • Zoom URL 添付\n' +
+          '   • 予約 変更/キャンセル も 自動 反映\n' +
+          '4. あなた の 個人 予定 (歯医者 · 家族 用事 等) も スケジュール view に 灰色 で 重ね 表示\n\n' +
+          '実装 は 2-3h 程度 · OAuth 認証 は owner が 手動 で 1回 必要。\n' +
+          'GO なら 「連携 進めて」 と Jobs に 伝えて ください。'
+        );
+      });
+    }
   }
 
   // ============================
@@ -631,7 +793,9 @@
   function generateHomeTasksFromRealData(clients) {
     const todayD = window.LifeEvents.TODAY;
     const todayStart = new Date(todayD);
-    const todayEnd = new Date(todayD.getTime() + 86400000);
+    // 今日 中 の task は 23:59 に (次日 00:00 だと strip の isToday filter で 除外 される bug 対策 2026-08-06)
+    const todayEndOfDay = new Date(todayD.getFullYear(), todayD.getMonth(), todayD.getDate(), 23, 59, 0, 0);
+    const todayEnd = todayEndOfDay;
     const in7Days = new Date(todayD.getTime() + 7 * 86400000);
     const tasks = [];
 
@@ -643,6 +807,46 @@
     const daysFromToday = (d) => Math.floor((d - todayD) / 86400000);
 
     (clients || []).forEach(c => {
+      // 0. LINE 未読 (要返信) — owner 明示 2026-08-05: LINE 忘れない ため の 独立 tag
+      try {
+        const lastRead = parseInt(localStorage.getItem('fp-line-read-' + c.id) || '0', 10);
+        const unread = (c.lineHistory || []).filter(m => {
+          const isUser = (m.from === 'user' || m.direction === 'in');
+          const ts = new Date(m.ts || m.date || 0).getTime();
+          return isUser && ts > lastRead;
+        });
+        if (unread.length > 0) {
+          const latest = unread[unread.length - 1];
+          const latestText = (latest.text || '(スタンプ/画像)').slice(0, 60);
+          tasks.push({
+            clientId: c.id, clientName: c.name,
+            icon: '💬', type: 'line-reply',
+            title: 'LINE 返信 · 「' + latestText + (latest.text && latest.text.length > 60 ? '…」' : '」'),
+            sub: `${unread.length}件 未読`,
+            urgency: 'LINE 返信', urgencyRank: 0, timeLabel: '未返信',
+            dueBy: todayEnd,
+          });
+        }
+      } catch (_) {}
+
+      // 0b. 日程調整 (客 から の 候補日 選択 済 or 候補送信済 未確定) — owner 明示 2026-08-05
+      // Firestore mirror doc から の 情報 は 別 loop で 処理 (下)
+      // ここ は c.pendingCandidateSelection / c.meetingCandidates 系 を 見る
+      if ((c.pendingCandidateSelection && !c.confirmedSlot) ||
+          ((c.meetingCandidates || []).length > 0 && !c.confirmedSlot)) {
+        const isChosen = !!c.pendingCandidateSelection;
+        tasks.push({
+          clientId: c.id, clientName: c.name,
+          icon: '📅', type: 'schedule',
+          title: isChosen
+            ? '日程調整 · 客 選択 済 → Zoom URL 発行 して 返信'
+            : '日程調整 · 候補日 送付 済 → 客 選択 待ち フォロー',
+          sub: isChosen ? '「' + (c.pendingCandidateSelection?.dateLabel || c.pendingCandidateSelection || '選択日') + '」 で 承諾' : '',
+          urgency: '日程調整', urgencyRank: 0, timeLabel: isChosen ? '要 発行' : '要 フォロー',
+          dueBy: todayEnd,
+        });
+      }
+
       // 1. 面談 予約 (今日 / 明日 / 今週)
       const liveBks = (window.LineAppLiveData && window.LineAppLiveData.bookings) || [];
       const myBks = liveBks.filter(b => (b.userId && b.userId === c.lineFriendId) || (b.name && b.name === c.name));
@@ -859,14 +1063,155 @@
         if (id) openClientModal(id);
       });
     });
-
-    // v3 Home にも 同 tasks を 描画 (2026-08-05 導入)
-    try { renderV3Home(tasks, clients); } catch (e) { console.warn('[v3h] render fail', e); }
+    // NOTE: v3 Home の render は renderDashboard 側 で 直接呼び出す (tasks 空 tenant でも カレンダー 描画 保証)
   }
 
   // ============================
   // v3 HOME (Todoist-inspired) — 2026-08-05 導入
   // ============================
+  // ============================
+  // 手動 TODO (owner が 自分 で 追加) — 2026-08-05 owner 明示
+  // localStorage key: fp-manual-todos (tenant 共有 で いい、 admin 個人ノート)
+  // ============================
+  const MANUAL_TODO_KEY = 'fp-manual-todos';
+  function loadManualTodos() {
+    try { return JSON.parse(localStorage.getItem(MANUAL_TODO_KEY) || '[]'); } catch (_) { return []; }
+  }
+  function saveManualTodos(arr) {
+    try { localStorage.setItem(MANUAL_TODO_KEY, JSON.stringify(arr || [])); } catch (_) {}
+  }
+  function addManualTodo(t) {
+    const arr = loadManualTodos();
+    arr.push({ ...t, id: 'm' + Date.now(), createdAt: new Date().toISOString() });
+    saveManualTodos(arr);
+  }
+  function deleteManualTodo(id) {
+    saveManualTodos(loadManualTodos().filter(t => t.id !== id));
+  }
+  function manualTodosAsTasks(clients) {
+    const arr = loadManualTodos();
+    const todayD = window.LifeEvents && window.LifeEvents.TODAY ? new Date(window.LifeEvents.TODAY) : new Date();
+    return arr.map(m => {
+      let dueBy = null, urgencyRank = 2, timeLabel = m.dueLabel || '';
+      const p = m.priority || 'p2';
+      if (m.due === 'today') { dueBy = new Date(todayD); dueBy.setHours(23,59,0,0); urgencyRank = 0; timeLabel = '今日 中'; }
+      else if (m.due === 'tomorrow') { dueBy = new Date(todayD.getTime()+86400000); urgencyRank = 1; timeLabel = '明日'; }
+      else if (m.due === 'week') { dueBy = new Date(todayD.getTime()+7*86400000); urgencyRank = 1; timeLabel = '今週 中'; }
+      else { urgencyRank = 2; timeLabel = '期限 なし'; }
+      // priority override urgencyRank
+      if (p === 'p1') urgencyRank = 0;
+      else if (p === 'p3') urgencyRank = 2;
+      const c = (clients || []).find(x => x.id === m.clientId);
+      return {
+        clientId: m.clientId || '',
+        clientName: c?.name || (m.clientId ? '(不明)' : ''),
+        icon: '📝', type: 'manual',
+        title: m.text,
+        sub: '手動 追加',
+        urgency: '手動 TODO',
+        urgencyRank,
+        timeLabel,
+        dueBy: dueBy || new Date(todayD.getTime() + 30*86400000),
+        __manualId: m.id,
+      };
+    });
+  }
+
+  // ★ 2026-08-05 owner「デモで実際の画面 で 見せて」対応
+  // ?demo=cal URL flag で real admin (index.html) に demo bookings + tasks を inject。
+  // 1回だけ 走る (idempotent guard)。 実 client の 「実際 booking なし = 空 表示」 に 影響しない。
+  function seedDemoDataForCalendar() {
+    if (window.__fpDemoSeeded) return;
+    const p = new URLSearchParams(location.search);
+    if (p.get('demo') !== 'cal') return;
+    window.__fpDemoSeeded = true;
+
+    const today = window.LifeEvents && window.LifeEvents.TODAY ? new Date(window.LifeEvents.TODAY) : new Date();
+    today.setHours(0, 0, 0, 0);
+    const iso = (d) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const at = (dayOffset, hh, mm) => {
+      const d = new Date(today.getTime() + dayOffset * 86400000);
+      d.setHours(hh, mm, 0, 0);
+      return d;
+    };
+
+    // 客 の 名前 は 既存 clients から 先頭 数名 拝借 (無 ければ ダミー)
+    const cs = (window.DUMMY_CLIENTS || []).slice(0, 8);
+    const pick = (i, fallback) => cs[i]?.name || fallback;
+
+    const demoBks = [
+      { d: at(0, 10, 0), name: pick(0, '吉田 恭聡'),   note: '初回 · 事前アンケート 済' },
+      { d: at(0, 14, 0), name: pick(1, '山田 花子'),   note: '2 回目 · 提案 説明' },
+      { d: at(0, 15, 30), name: pick(2, '佐藤 一郎'),  note: 'フォロー · 契約 更新' },
+      { d: at(0, 19, 0), name: pick(3, '鈴木 太郎'),   note: '資料 説明 · 保険 見直し' },
+      { d: at(1, 11, 0), name: pick(4, '田中 美咲'),   note: '契約 押印 立ち会い' },
+      { d: at(1, 15, 0), name: pick(5, '中村 健'),     note: '初回 面談' },
+      { d: at(2, 19, 0), name: pick(6, '徳佐 拓朗'),   note: '候補3 (8/7 19:00) 承諾 済' },
+      { d: at(4, 10, 0), name: pick(7, '井上 花子'),   note: '定例 面談 · 半期 レビュー' },
+      { d: at(6, 14, 0), name: pick(0, '吉田 恭聡'),   note: '次回 提案 説明' },
+    ];
+
+    // LineAppLiveData に inject
+    window.LineAppLiveData = window.LineAppLiveData || {};
+    const existing = Array.isArray(window.LineAppLiveData.bookings) ? window.LineAppLiveData.bookings : [];
+    window.LineAppLiveData.bookings = existing.concat(demoBks.map((b, i) => ({
+      id: 'demo-booking-' + i,
+      name: b.name,
+      confirmedSlot: b.d.toISOString(),
+      date: iso(b.d),
+      time: `${String(b.d.getHours()).padStart(2,'0')}:${String(b.d.getMinutes()).padStart(2,'0')}`,
+      note: b.note,
+      userId: '',
+    })));
+
+    // 議事録 の 宿題 デモ tasks (fp-tasks-* に seed。 render loop で 拾われる)
+    try {
+      const homeworkClientId = cs[2]?.id || cs[0]?.id;
+      if (homeworkClientId) {
+        const key = 'fp-tasks-' + homeworkClientId;
+        const existing = JSON.parse(localStorage.getItem(key) || '[]');
+        const seedTasks = [
+          { task: 'iDeCo の 手数料 資料 送付', due: iso(at(0, 0, 0)), priority: '至急', icon: '📝', __demo: true },
+          { task: 'NISA 満額 vs 学資保険 比較 資料 作成', due: iso(at(1, 0, 0)), priority: '今週', icon: '📊', __demo: true },
+          { task: '契約 更新 用 プラン 3案 準備', due: iso(at(3, 0, 0)), priority: '今週', icon: '📋', __demo: true },
+        ];
+        // 既存 の 実 タスク は 保持、 demo は 別 flag で dedup 判定
+        const merged = existing.filter(t => !t.__demo).concat(seedTasks);
+        localStorage.setItem(key, JSON.stringify(merged));
+      }
+    } catch (_) {}
+
+    // LINE 未読 + 候補日 pending の demo (client オブジェクト を 直 mutate)
+    // owner 2026-08-05: LINE 返信 tag / 日程調整 button を 見せる ため
+    try {
+      if (cs[0]) {
+        cs[0].lineHistory = (cs[0].lineHistory || []).concat([
+          { from: 'user', direction: 'in', text: '週末 に 見直し の 件、 メール でも 送って いただけ ますか?', ts: new Date(Date.now() - 3600 * 1000 * 2).toISOString() }
+        ]);
+        // ensure unread (clear read marker)
+        try { localStorage.removeItem('fp-line-read-' + cs[0].id); } catch(_){}
+      }
+      if (cs[1]) {
+        cs[1].lineHistory = (cs[1].lineHistory || []).concat([
+          { from: 'user', direction: 'in', text: 'iDeCo の 資料 拝見 しました。 質問 が いくつか あります', ts: new Date(Date.now() - 3600 * 1000 * 5).toISOString() }
+        ]);
+        try { localStorage.removeItem('fp-line-read-' + cs[1].id); } catch(_){}
+      }
+      if (cs[2]) {
+        cs[2].pendingCandidateSelection = { dateLabel: '8/7 (木) 19:00' };
+      }
+      if (cs[3]) {
+        cs[3].meetingCandidates = [
+          { date: iso(at(2, 10, 0)), time: '10:00' },
+          { date: iso(at(3, 14, 0)), time: '14:00' },
+          { date: iso(at(4, 19, 0)), time: '19:00' },
+        ];
+      }
+    } catch (e) { console.warn('[demo-seed line/schedule]', e); }
+
+    console.log('[demo-seed] injected', demoBks.length, 'bookings +', 3, 'tasks. URL flag=?demo=cal (再読み込み で 消える: localStorage の demo task は 手動 clear 必要)');
+  }
+
   function renderV3Home(tasks, clients) {
     const today = window.LifeEvents.TODAY || new Date();
     const W = ['日','月','火','水','木','金','土'];
@@ -901,19 +1246,80 @@
 
     const stats = document.getElementById('v3h-stats');
     if (stats) {
+      // 2026-08-06 owner「押せない、大丈夫?」対応: button 化 + click で 該当 group に scroll
       stats.innerHTML = `
-        <span class="stat"><b>${tasks.length}</b>未完了</span>
-        ${overdue > 0 ? `<span class="stat warn"><b>${overdue}</b>期限 超過</span>` : ''}
-        <span class="stat"><b>${zoomToday}</b>今日 Zoom</span>
-        <span class="stat${unreadCount > 0 ? ' warn' : ''}"><b>${unreadCount}</b>LINE 要返信</span>
-        <span class="stat"><b>${waitingCount}</b>客 反応 待ち</span>
+        <button class="stat" type="button" data-jump="zoom"><b>${zoomToday}</b>今日 Zoom</button>
+        <button class="stat${tasks.length > 0 ? ' warn' : ' ok'}" type="button" data-jump="all"><b>${tasks.length}</b>未完了 TODO</button>
+        <button class="stat${unreadCount > 0 ? ' warn' : ''}" type="button" data-jump="line-reply"><b>${unreadCount}</b>LINE 要返信</button>
       `;
+      stats.querySelectorAll('button.stat').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const key = btn.dataset.jump;
+          const cls = key === 'line-reply' ? '.v3h-group-line' :
+                      key === 'schedule'   ? '.v3h-group-schedule' :
+                      key === 'zoom'       ? '.v3h-group-zoom' :
+                      key === 'all'        ? '.v3h-group' : '';
+          const el = cls ? document.querySelector(cls) : null;
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            el.style.transition = 'box-shadow 0.3s';
+            el.style.boxShadow = '0 0 0 4px rgba(11,93,158,0.2)';
+            setTimeout(() => { el.style.boxShadow = ''; }, 1500);
+          }
+        });
+      });
     }
 
-    // Zoom タイムライン (今日 の Zoom 予定 だけ 時刻順)
-    renderV3ZoomStrip(clients, today);
+    // ショートカット button (owner 2026-08-05: 日程調整 + LINE返信 見落とし防止)
+    const scheduleCount = tasks.filter(t => t.type === 'schedule').length;
+    const lineReplyCount = tasks.filter(t => t.type === 'line-reply').length;
+    const shortcutsEl = document.getElementById('v3h-shortcuts');
+    if (shortcutsEl) {
+      const btns = [];
+      if (lineReplyCount > 0) {
+        btns.push(`<button class="v3h-shortcut sc-line" data-jump="line-reply" type="button">
+          <span class="sc-icon">💬</span>
+          <span class="sc-label">LINE 返信</span>
+          <span class="sc-badge">${lineReplyCount}件</span>
+        </button>`);
+      }
+      if (scheduleCount > 0) {
+        btns.push(`<button class="v3h-shortcut sc-schedule" data-jump="schedule" type="button">
+          <span class="sc-icon">📅</span>
+          <span class="sc-label">日程調整</span>
+          <span class="sc-badge">${scheduleCount}件</span>
+        </button>`);
+      }
+      if (zoomToday > 0) {
+        btns.push(`<button class="v3h-shortcut sc-zoom" data-jump="zoom" type="button">
+          <span class="sc-icon">📞</span>
+          <span class="sc-label">今日 Zoom</span>
+          <span class="sc-badge">${zoomToday}件</span>
+        </button>`);
+      }
+      shortcutsEl.innerHTML = btns.join('');
+      shortcutsEl.querySelectorAll('.v3h-shortcut').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const key = btn.dataset.jump;
+          // scroll to matching group
+          const groupCls = key === 'line-reply' ? 'v3h-group-line' :
+                           key === 'schedule'   ? 'v3h-group-schedule' :
+                           key === 'zoom'       ? 'v3h-group-zoom' : '';
+          const el = document.querySelector('.' + groupCls);
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            el.style.transition = 'box-shadow 0.3s';
+            el.style.boxShadow = '0 0 0 4px rgba(11, 93, 158, 0.2)';
+            setTimeout(() => { el.style.boxShadow = ''; }, 1500);
+          }
+        });
+      });
+    }
 
-    // 今日 の TODO
+    // Google Calendar 風 view (owner 2026-08-06: 週/2週/月 切替)
+    renderV3Schedule(clients, tasks, today);
+
+    // 今日 の TODO — 5 category (LINE返信 / 日程調整 / 今日Zoom / その他至急 / 提案) に 色分/箱分 (owner 2026-08-05 明示)
     const todayList = document.getElementById('v3h-today-list');
     const todayCountEl = document.getElementById('v3h-today-count');
     const todayTasks = tasks.filter(t => t.urgencyRank === 0);
@@ -922,10 +1328,43 @@
       if (todayTasks.length === 0) {
         todayList.innerHTML = `<div class="v3h-empty">今日 急ぎ で 対応 する タスク は ありません。 明日 以降 の 予定 を 下 で 確認。</div>`;
       } else {
-        todayList.innerHTML = todayTasks.map((t, i) => v3TodoHtml(t, i)).join('');
+        // client map for avatar lookup
+        const cMap = new Map();
+        (clients || []).forEach(c => { if (c.id) cMap.set(c.id, c); });
+        // 5 buckets (owner 明示 順序: LINE 返信 → 日程調整 → 今日 Zoom → 手動 → その他)
+        const groups = [
+          { key: 'line',     title: 'LINE 返信',   icon: '💬', tone: 'line',     items: [] },
+          { key: 'schedule', title: '日程調整',    icon: '📅', tone: 'schedule', items: [] },
+          { key: 'zoom',     title: '今日 の Zoom', icon: '📞', tone: 'zoom',     items: [] },
+          { key: 'manual',   title: '手動 メモ',   icon: '📝', tone: 'manual',   items: [] },
+          { key: 'other',    title: 'その他 至急', icon: '🔴', tone: 'other',    items: [] },
+        ];
+        todayTasks.forEach(t => {
+          const bucket =
+            t.type === 'line-reply' ? 'line' :
+            t.type === 'schedule'   ? 'schedule' :
+            t.type === 'booking'    ? 'zoom' :
+            t.type === 'manual'     ? 'manual' :
+            'other';
+          groups.find(g => g.key === bucket)?.items.push(t);
+        });
+        const shown = groups.filter(g => g.items.length > 0);
+        todayList.innerHTML = shown.map(g => `
+          <div class="v3h-group v3h-group-${g.tone}">
+            <div class="v3h-group-head">
+              <span class="v3h-group-icon">${g.icon}</span>
+              <span class="v3h-group-title">${escapeHtml(g.title)}</span>
+              <span class="v3h-group-count">${g.items.length} 件</span>
+            </div>
+            <div class="v3h-group-body">
+              ${g.items.map((t, i) => v3TodoHtml(t, i, cMap)).join('')}
+            </div>
+          </div>
+        `).join('');
         todayList.querySelectorAll('.v3h-todo').forEach(el => {
           el.addEventListener('click', (ev) => {
             if (ev.target.classList.contains('v3h-todo-check')) return;
+            if (ev.target.classList.contains('v3h-todo-del')) return;
             const id = el.dataset.clientId;
             if (id) openClientModal(id);
           });
@@ -950,10 +1389,41 @@
       if (tomorrowTasks.length === 0) {
         tomorrowList.innerHTML = `<div class="v3h-empty">今週 予定 の タスク なし。</div>`;
       } else {
-        tomorrowList.innerHTML = tomorrowTasks.slice(0, 8).map((t, i) => v3TodoHtml(t, i)).join('');
+        // owner 2026-08-06: 明日 section も 今日 と 同じ group box treatment
+        const cMap2 = new Map();
+        (clients || []).forEach(c => { if (c.id) cMap2.set(c.id, c); });
+        const tGroups = [
+          { key: 'line',     title: 'LINE 返信',   icon: '💬', tone: 'line',     items: [] },
+          { key: 'schedule', title: '日程調整',    icon: '📅', tone: 'schedule', items: [] },
+          { key: 'zoom',     title: 'Zoom 面談',   icon: '📞', tone: 'zoom',     items: [] },
+          { key: 'manual',   title: '手動 メモ',   icon: '📝', tone: 'manual',   items: [] },
+          { key: 'other',    title: 'その他',      icon: '📋', tone: 'other',    items: [] },
+        ];
+        tomorrowTasks.slice(0, 20).forEach(t => {
+          const bucket =
+            t.type === 'line-reply' ? 'line' :
+            t.type === 'schedule'   ? 'schedule' :
+            t.type === 'booking'    ? 'zoom' :
+            t.type === 'manual'     ? 'manual' : 'other';
+          tGroups.find(g => g.key === bucket)?.items.push(t);
+        });
+        const shown = tGroups.filter(g => g.items.length > 0);
+        tomorrowList.innerHTML = shown.map(g => `
+          <div class="v3h-group v3h-group-${g.tone}">
+            <div class="v3h-group-head">
+              <span class="v3h-group-icon">${g.icon}</span>
+              <span class="v3h-group-title">${escapeHtml(g.title)}</span>
+              <span class="v3h-group-count">${g.items.length} 件</span>
+            </div>
+            <div class="v3h-group-body">
+              ${g.items.map((t, i) => v3TodoHtml(t, i, cMap2)).join('')}
+            </div>
+          </div>
+        `).join('');
         tomorrowList.querySelectorAll('.v3h-todo').forEach(el => {
           el.addEventListener('click', (ev) => {
             if (ev.target.classList.contains('v3h-todo-check')) return;
+            if (ev.target.classList.contains('v3h-todo-del')) return;
             const id = el.dataset.clientId;
             if (id) openClientModal(id);
           });
@@ -1003,29 +1473,65 @@
     }
   }
 
-  function v3TodoHtml(t, i) {
+  function v3TodoHtml(t, i, cMap) {
     // priority: urgencyRank 0=p1 / 1=p2 / 2=p3 / それ以外=p4
     const p = t.urgencyRank === 0 ? 'p1' : (t.urgencyRank === 1 ? 'p2' : (t.urgencyRank === 2 ? 'p3' : 'p4'));
     const dueClass = t.urgencyRank === 0 ? (t.type === 'proposal' ? 'overdue' : 'soon') :
                      (t.urgencyRank === 1 ? 'soon' : (t.type === 'booking' ? 'today' : ''));
-    // color dot: type別
     const dotColor = t.type === 'booking' ? '#0b5d9e' :
                      t.type === 'proposal' ? '#b7791f' :
                      t.type === 'homework' ? '#1e7e34' :
                      t.type === 'cancel' ? '#c53030' :
+                     t.type === 'manual' ? '#6b46c1' :
+                     t.type === 'line-reply' ? '#06C755' :
+                     t.type === 'schedule' ? '#0369A1' :
                      t.type === 'dormant' ? '#6b7280' : '#0b5d9e';
+    const hasClient = !!(t.clientName && t.clientId);
+    const titleHtml = hasClient
+      ? `<b>${escapeHtml(t.clientName)} 様</b> · ${escapeHtml(t.title)}`
+      : escapeHtml(t.title);
+    const manualBadge = t.type === 'manual' ? `<span class="v3h-todo-manual-badge">MEMO</span>` : '';
+    const delBtn = t.__manualId
+      ? `<button class="v3h-todo-del" data-manual-id="${escapeHtml(t.__manualId)}" title="この TODO を 削除" type="button">✕</button>`
+      : '';
+    // LINE avatar: client の linePictureUrl (or pictureUrl fallback)
+    const c = hasClient && cMap ? cMap.get(t.clientId) : null;
+    const avatarUrl = c && (c.linePictureUrl || c.pictureUrl) ? (c.linePictureUrl || c.pictureUrl) : null;
+    // 2026-08-06 owner 「グループ 内 で のっぺり」対応: 大きな avatar 左 + 客名 大字 + 内容 muted + time右 の 3-col layout
+    const bigAvatarHtml = avatarUrl
+      ? `<img class="v3h-avatar-lg" src="${escapeHtml(avatarUrl)}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='inline-flex';">
+         <span class="v3h-avatar-lg-fb" style="display:none;background:${dotColor};">${escapeHtml((t.clientName || '?').charAt(0))}</span>`
+      : `<span class="v3h-avatar-lg-fb" style="background:${dotColor};">${escapeHtml((t.clientName || '?').charAt(0))}</span>`;
+    // 客名 と 内容 を 分離
+    const clientLine = hasClient ? `<div class="v3h-todo-client">${escapeHtml(t.clientName)} 様${manualBadge}</div>` : (t.title ? `<div class="v3h-todo-client">${manualBadge || 'メモ'}</div>` : '');
+    // task title (内容) — 客名 を title 先頭から 剥がす
+    const cleanTitle = hasClient ? t.title : t.title;
+    const subLine = t.sub && t.type !== 'manual' ? `<div class="v3h-todo-quote">${escapeHtml(t.sub)}</div>` : '';
+    // type badge
+    const typeLabelMap = {
+      'line-reply': '💬 LINE返信', 'schedule': '📅 日程調整',
+      'booking': '📞 Zoom 面談', 'manual': '📝 メモ',
+      'proposal': '📋 提案', 'homework': '📝 宿題',
+      'cancel': '⚠️ フォロー', 'dormant': '🌿 再engage',
+    };
+    const typeBadge = typeLabelMap[t.type] ? `<span class="v3h-todo-type-badge type-${t.type}">${typeLabelMap[t.type]}</span>` : '';
     return `
-      <button class="v3h-todo ${p}" data-client-id="${escapeHtml(t.clientId)}" data-idx="${i}" type="button">
+      <div class="v3h-todo ${p}" data-client-id="${escapeHtml(t.clientId || '')}" data-idx="${i}">
         <span class="v3h-todo-check"></span>
+        <div class="v3h-todo-avatar-wrap">${bigAvatarHtml}</div>
         <div class="v3h-todo-body">
-          <div class="v3h-todo-title"><b>${escapeHtml(t.clientName)} 様</b> · ${escapeHtml(t.title)}</div>
-          ${t.sub ? `<div class="v3h-todo-desc">${escapeHtml(t.sub)}</div>` : ''}
+          ${clientLine}
+          <div class="v3h-todo-content">${escapeHtml(cleanTitle)}</div>
+          ${subLine}
           <div class="v3h-todo-meta">
-            <span class="v3h-todo-due ${dueClass}">${escapeHtml(t.timeLabel || '')}</span>
-            <span class="v3h-todo-tag"><span class="dot" style="background:${dotColor};"></span>${escapeHtml(t.clientName)}</span>
+            ${typeBadge}
           </div>
         </div>
-      </button>
+        <div class="v3h-todo-right">
+          ${t.timeLabel ? `<span class="v3h-todo-due-big ${dueClass}">${escapeHtml(t.timeLabel)}</span>` : ''}
+          ${delBtn}
+        </div>
+      </div>
     `;
   }
 
@@ -1073,53 +1579,387 @@
     return out.sort((a, b) => b.days - a.days);
   }
 
-  function renderV3ZoomStrip(clients, today) {
-    const slotsEl = document.getElementById('v3h-zoom-slots');
-    if (!slotsEl) return;
+  // ============================
+  // ★ 2026-08-06 owner 明示: Google Calendar 風 view (週/2週/月 切替)
+  // ============================
+  function renderV3Schedule(clients, tasks, today) {
+    const root = document.querySelector('.v3h-sched');
+    const grid = document.getElementById('v3h-sched-grid');
+    const dowRow = document.getElementById('v3h-sched-dow');
+    const rangeEl = document.getElementById('v3h-sched-range');
+    if (!root || !grid) return;
+
+    // state (module scope)
+    window.__v3SchedState = window.__v3SchedState || { mode: 'week', anchor: null };
+    const state = window.__v3SchedState;
+    if (!state.anchor) state.anchor = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+    // update mode class on root
+    root.classList.remove('mode-week', 'mode-2week', 'mode-month');
+    root.classList.add('mode-' + state.mode);
+
+    // DOW header (常に 日→土 順、 Google Calendar 準拠)
+    const DOW = ['日','月','火','水','木','金','土'];
+    if (dowRow) {
+      dowRow.innerHTML = DOW.map((d, i) => {
+        const cls = i === 6 ? 'sat' : (i === 0 ? 'sun' : '');
+        return `<div class="v3h-sched-dow ${cls}">${d}</div>`;
+      }).join('');
+    }
+
+    // 対象 期間 の 開始日/終了日 を 計算
+    const anchor = new Date(state.anchor);
+    let start, end;
+    if (state.mode === 'week') {
+      // anchor 週 の 日曜日 起点 7 日
+      start = new Date(anchor); start.setDate(anchor.getDate() - anchor.getDay());
+      end = new Date(start.getTime() + 7 * 86400000);
+    } else if (state.mode === '2week') {
+      start = new Date(anchor); start.setDate(anchor.getDate() - anchor.getDay());
+      end = new Date(start.getTime() + 14 * 86400000);
+    } else {
+      // month: anchor 月 の 1日 の 週日曜 起点 → 月末 の 週土曜 終
+      const first = new Date(anchor.getFullYear(), anchor.getMonth(), 1);
+      const last = new Date(anchor.getFullYear(), anchor.getMonth() + 1, 0);
+      start = new Date(first); start.setDate(1 - first.getDay());
+      end = new Date(last); end.setDate(last.getDate() + (6 - last.getDay()) + 1);
+    }
+
+    // range 表示
+    if (rangeEl) {
+      const fmt = (d) => `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
+      if (state.mode === 'month') {
+        rangeEl.textContent = `${anchor.getFullYear()}年 ${anchor.getMonth()+1}月`;
+      } else {
+        const last = new Date(end.getTime() - 86400000);
+        rangeEl.textContent = `${fmt(start)} 〜 ${fmt(last)}`;
+      }
+    }
+
+    // 日 → events map
+    const iso = (d) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const byDate = new Map();
+    // Zoom bookings
     const bks = (window.LineAppLiveData && window.LineAppLiveData.bookings) || [];
-    const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
-    // client name lookup: userId or name で 客 特定
+    const cById = new Map();
+    (clients || []).forEach(c => { if (c.id) cById.set(c.id, c); });
+    const byLineId = new Map(), byName = new Map();
+    (clients || []).forEach(c => {
+      if (c.lineFriendId) byLineId.set(c.lineFriendId, c);
+      if (c.name) byName.set(c.name, c);
+    });
+    bks.forEach(b => {
+      const slot = b.confirmedSlot || (b.date ? (b.date + (b.time ? ' ' + b.time : '')) : null);
+      const bd = slot ? new Date(slot) : null;
+      if (!bd || isNaN(bd)) return;
+      if (bd < start || bd >= end) return;
+      const key = iso(bd);
+      const c = byLineId.get(b.userId) || byName.get(b.name) || null;
+      const time = `${String(bd.getHours()).padStart(2,'0')}:${String(bd.getMinutes()).padStart(2,'0')}`;
+      if (!byDate.has(key)) byDate.set(key, []);
+      byDate.get(key).push({
+        type: 'zoom',
+        sortKey: bd.getTime(),
+        time,
+        clientId: c?.id || '',
+        name: c?.name || b.name || '客',
+        title: b.note || 'Zoom 面談',
+      });
+    });
+    // Tasks (excluding booking type — already handled above)
+    (tasks || []).forEach(t => {
+      if (t.type === 'booking') return;
+      if (!t.dueBy) return;
+      const bd = new Date(t.dueBy);
+      if (isNaN(bd)) return;
+      if (bd < start || bd >= end) return;
+      const key = iso(bd);
+      if (!byDate.has(key)) byDate.set(key, []);
+      const typeCls =
+        t.type === 'line-reply' ? 'line' :
+        t.type === 'schedule'   ? 'schedule' :
+        t.type === 'manual'     ? 'manual' :
+        (t.type === 'proposal' || t.type === 'homework' || t.type === 'cancel') ? 'other' : 'other';
+      // hasTime: 23:59 sentinel は 時刻なし 扱い
+      const hasTime = !(bd.getHours() === 23 && bd.getMinutes() === 59);
+      const time = hasTime ? `${String(bd.getHours()).padStart(2,'0')}:${String(bd.getMinutes()).padStart(2,'0')}` : '';
+      byDate.get(key).push({
+        type: typeCls,
+        sortKey: bd.getTime(),
+        time,
+        clientId: t.clientId || '',
+        name: t.clientName || '',
+        title: t.title,
+      });
+    });
+    // sort within date
+    byDate.forEach(arr => arr.sort((a,b) => a.sortKey - b.sortKey));
+
+    // build cells
+    const todayKey = iso(today);
+    const anchorMonth = anchor.getMonth();
+    const maxEventsPerCell = state.mode === 'month' ? 3 : (state.mode === '2week' ? 4 : 6);
+    const cells = [];
+    for (let d = new Date(start); d < end; d.setDate(d.getDate()+1)) {
+      const cd = new Date(d);
+      const key = iso(cd);
+      const isToday = key === todayKey;
+      const isPast = !isToday && cd < today;
+      const isOtherMonth = state.mode === 'month' && cd.getMonth() !== anchorMonth;
+      const dow = cd.getDay();
+      const dowCls = dow === 0 ? 'sun' : (dow === 6 ? 'sat' : '');
+      const weekendBg = dow === 0 ? 'weekend-sun' : (dow === 6 ? 'weekend-sat' : '');
+      const events = byDate.get(key) || [];
+      const shownEvents = events.slice(0, maxEventsPerCell);
+      const overflow = events.length - shownEvents.length;
+      const evHtml = shownEvents.map(e => `
+        <button class="v3h-sched-event ${e.type}" data-client-id="${escapeHtml(e.clientId)}" title="${escapeHtml((e.time ? e.time + ' · ' : '') + (e.name ? e.name + ' 様 · ' : '') + e.title)}">${e.time ? `<span class="time">${e.time}</span>` : ''}${escapeHtml((e.name || e.title).slice(0, 12))}${(e.name || e.title).length > 12 ? '…' : ''}</button>
+      `).join('');
+      cells.push(`
+        <div class="v3h-sched-cell ${isToday ? 'today' : ''} ${isPast ? 'past' : ''} ${isOtherMonth ? 'other-month' : ''} ${weekendBg} ${dowCls}">
+          <div class="v3h-sched-cell-date">
+            <span class="v3h-sched-cell-dnum">${cd.getDate()}</span>
+            ${events.length > 0 ? `<span class="v3h-sched-cell-count">${events.length}</span>` : ''}
+          </div>
+          <div class="v3h-sched-events">${evHtml}${overflow > 0 ? `<div class="v3h-sched-more">+${overflow} 件</div>` : ''}</div>
+        </div>
+      `);
+    }
+    grid.innerHTML = cells.join('');
+
+    // wire event click
+    grid.querySelectorAll('.v3h-sched-event').forEach(el => {
+      el.addEventListener('click', () => {
+        const id = el.dataset.clientId;
+        if (id) openClientModal(id);
+      });
+    });
+  }
+
+  // Nav step size in days by mode
+  function v3SchedStep(mode) {
+    return mode === 'week' ? 7 : (mode === '2week' ? 14 : null);
+  }
+
+  // Sched controls wiring (idempotent)
+  function wireV3ScheduleControls() {
+    if (window.__v3SchedWired) return;
+    window.__v3SchedWired = true;
+    const root = document.querySelector('.v3h-sched');
+    if (!root) return;
+    // tab click
+    root.querySelectorAll('.v3h-sched-tabs button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const mode = btn.dataset.mode;
+        if (!window.__v3SchedState) window.__v3SchedState = { mode: 'week', anchor: null };
+        window.__v3SchedState.mode = mode;
+        root.querySelectorAll('.v3h-sched-tabs button').forEach(b => b.classList.toggle('active', b === btn));
+        try { renderDashboard(); } catch(_) {}
+      });
+    });
+    // prev/next/today nav
+    root.querySelectorAll('.v3h-sched-nav').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const st = window.__v3SchedState || (window.__v3SchedState = { mode: 'week', anchor: null });
+        const today = window.LifeEvents?.TODAY || new Date();
+        if (!st.anchor) st.anchor = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        const nav = btn.dataset.nav;
+        if (nav === 'today') {
+          st.anchor = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        } else if (st.mode === 'month') {
+          const d = new Date(st.anchor);
+          d.setMonth(d.getMonth() + (nav === 'next' ? 1 : -1));
+          st.anchor = d;
+        } else {
+          const step = v3SchedStep(st.mode) * (nav === 'next' ? 1 : -1);
+          st.anchor = new Date(st.anchor.getTime() + step * 86400000);
+        }
+        try { renderDashboard(); } catch(_) {}
+      });
+    });
+  }
+
+  function renderV3Calendar(clients, tasks, today) {
+    const weekEl = document.getElementById('v3h-cal-week');
+    const rangeEl = document.getElementById('v3h-cal-range');
+    if (!weekEl) return;
+
+    // 週 の 起点 = 今日 起算 (0=今日, 1=明日, ... 6=6日後)。 曜日固定 じゃなく 「向こう7日」 を 表示
+    // owner 要求: 「何曜日 に 誰 と」 なので 曜日 は 表示 する
+    const DOW = ['日','月','火','水','木','金','土'];
+    const days = [];
+    const t0 = new Date(today.getFullYear(), today.getMonth(), today.getDate()); // 00:00
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(t0.getTime() + i * 86400000);
+      days.push({ date: d, key: `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`, events: [] });
+    }
+    if (rangeEl) {
+      const first = days[0].date;
+      const last = days[6].date;
+      rangeEl.textContent = `${first.getMonth()+1}/${first.getDate()} (${DOW[first.getDay()]}) 〜 ${last.getMonth()+1}/${last.getDate()} (${DOW[last.getDay()]})`;
+    }
+
+    // 1. Zoom 予定 (bookings) を 日付 別 に 割振
+    const bks = (window.LineAppLiveData && window.LineAppLiveData.bookings) || [];
     const byLineId = new Map();
     const byName = new Map();
     (clients || []).forEach(c => {
       if (c.lineFriendId) byLineId.set(c.lineFriendId, c);
       if (c.name) byName.set(c.name, c);
     });
-    const todayBks = bks
-      .map(b => {
-        const slot = b.confirmedSlot || (b.date ? (b.date + (b.time ? ' ' + b.time : '')) : null);
-        const bd = slot ? new Date(slot) : null;
-        return bd && !isNaN(bd) ? { b, bd } : null;
-      })
-      .filter(x => x)
-      .filter(({ bd }) => {
-        const s = `${bd.getFullYear()}-${String(bd.getMonth()+1).padStart(2,'0')}-${String(bd.getDate()).padStart(2,'0')}`;
-        return s === todayStr;
-      })
-      .sort((a, b) => a.bd - b.bd);
+    bks.forEach(b => {
+      const slot = b.confirmedSlot || (b.date ? (b.date + (b.time ? ' ' + b.time : '')) : null);
+      const bd = slot ? new Date(slot) : null;
+      if (!bd || isNaN(bd)) return;
+      const key = `${bd.getFullYear()}-${String(bd.getMonth()+1).padStart(2,'0')}-${String(bd.getDate()).padStart(2,'0')}`;
+      const day = days.find(d => d.key === key);
+      if (!day) return;
+      const c = byLineId.get(b.userId) || byName.get(b.name) || null;
+      const time = `${String(bd.getHours()).padStart(2,'0')}:${String(bd.getMinutes()).padStart(2,'0')}`;
+      day.events.push({
+        type: 'zoom',
+        sortKey: bd.getTime(),
+        time,
+        who: (c?.name || b.name || '客') + ' 様',
+        clientId: c?.id || b.userId || b.name || '',
+        title: 'Zoom 面談',
+      });
+    });
 
-    if (todayBks.length === 0) {
-      slotsEl.innerHTML = `<div class="v3h-zoom-empty">今日 の Zoom 予定 なし。</div>`;
+    // 2. TODO tasks を 日付 別 に (booking type は 1 で 重複 なので 除外)
+    (tasks || []).forEach(t => {
+      if (t.type === 'booking') return; // 1 で 既に 入ってる
+      if (!t.dueBy) return;
+      const bd = new Date(t.dueBy);
+      if (isNaN(bd)) return;
+      const key = `${bd.getFullYear()}-${String(bd.getMonth()+1).padStart(2,'0')}-${String(bd.getDate()).padStart(2,'0')}`;
+      const day = days.find(d => d.key === key);
+      if (!day) return;
+      const time = `${String(bd.getHours()).padStart(2,'0')}:${String(bd.getMinutes()).padStart(2,'0')}`;
+      day.events.push({
+        type: t.type === 'proposal' ? 'proposal' : 'task',
+        sortKey: bd.getTime(),
+        time: bd.getHours() > 0 ? time : '',
+        who: t.clientName + ' 様',
+        clientId: t.clientId,
+        title: t.title,
+      });
+    });
+
+    // sort events within each day
+    days.forEach(d => d.events.sort((a, b) => a.sortKey - b.sortKey));
+
+    weekEl.innerHTML = days.map((d, i) => {
+      const isToday = i === 0;
+      const dow = d.date.getDay();
+      const dowCls = dow === 0 ? 'weekend' : (dow === 6 ? 'weekend sat' : '');
+      const events = d.events;
+      const eventsHtml = events.length === 0
+        ? `<div class="v3h-cal-empty-day">—</div>`
+        : events.slice(0, 3).map(e => `
+            <button class="v3h-cal-event ${e.type}" data-client-id="${escapeHtml(e.clientId)}" title="${escapeHtml((e.time ? e.time + ' · ' : '') + e.who + ' · ' + e.title)}">
+              ${e.time ? `<span class="time">${e.time}</span>` : ''}<span class="who">${escapeHtml(e.who.replace(/\s*様$/, ''))}</span>
+            </button>
+          `).join('') + (events.length > 3 ? `<div class="v3h-cal-more">+${events.length - 3} 件</div>` : '');
+      return `
+        <div class="v3h-cal-day ${isToday ? 'today' : ''} ${dowCls}">
+          <div class="v3h-cal-day-head">
+            <span class="v3h-cal-day-dow">${DOW[dow]}</span>
+            <span class="v3h-cal-day-date">${d.date.getMonth()+1}/${d.date.getDate()}</span>
+            ${events.length > 0 ? `<span class="v3h-cal-day-count">${events.length}</span>` : ''}
+          </div>
+          <div class="v3h-cal-events">${eventsHtml}</div>
+        </div>
+      `;
+    }).join('');
+
+    weekEl.querySelectorAll('.v3h-cal-event').forEach(el => {
+      el.addEventListener('click', () => {
+        const id = el.dataset.clientId;
+        if (id) openClientModal(id);
+      });
+    });
+  }
+
+  // ★ 2026-08-06 owner「今日のZoom → 今日のやること にして」対応: 全 task type を 時刻付き で 横並び
+  function renderV3TodayStrip(clients, today, allTasks) {
+    const slotsEl = document.getElementById('v3h-zoom-slots');
+    if (!slotsEl) return;
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+    const byLineId = new Map(), byName = new Map();
+    (clients || []).forEach(c => {
+      if (c.lineFriendId) byLineId.set(c.lineFriendId, c);
+      if (c.name) byName.set(c.name, c);
+    });
+
+    // items = 今日 の 全 task (urgencyRank 0) — dueBy が 今日 の もの だけ
+    const isToday = (d) => d && !isNaN(d) && `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}` === todayStr;
+
+    const items = (allTasks || [])
+      .filter(t => t.urgencyRank === 0)
+      .map(t => {
+        const d = t.dueBy ? new Date(t.dueBy) : null;
+        if (!d || !isToday(d)) return null;
+        // 時刻 が 実際 に 設定 されてる (Zoom booking) vs 「今日 中」 (23:59 sentinel)
+        const hasTime = !(d.getHours() === 23 && d.getMinutes() === 59);
+        return { t, d, hasTime };
+      })
+      .filter(x => x);
+
+    // 時刻 付き は 時刻順、 時刻 なし (今日中) は 末尾 に category 順
+    items.sort((a, b) => {
+      if (a.hasTime && !b.hasTime) return -1;
+      if (!a.hasTime && b.hasTime) return 1;
+      return a.d - b.d;
+    });
+
+    if (items.length === 0) {
+      slotsEl.innerHTML = `<div class="v3h-zoom-empty">今日 急ぎ で 対応 する タスク は ありません。</div>`;
       return;
     }
     const now = new Date();
-    // 「次 に 来る (もしくは 直前) の 1件」 を next マーク
-    let nextIdx = todayBks.findIndex(({ bd }) => bd >= now);
-    if (nextIdx < 0) nextIdx = todayBks.length - 1;
+    // 「次 に 来る」 = 未来 で 時刻 付き の 最初
+    let nextIdx = items.findIndex(x => x.hasTime && x.d >= now);
+    if (nextIdx < 0) {
+      // 全部 過去 or 時刻 なし → 時刻 付き の 最後
+      const lastWithTime = items.map(x => x.hasTime).lastIndexOf(true);
+      nextIdx = lastWithTime >= 0 ? lastWithTime : 0;
+    }
 
-    slotsEl.innerHTML = todayBks.map(({ b, bd }, i) => {
-      const c = byLineId.get(b.userId) || byName.get(b.name) || null;
-      const time = `${String(bd.getHours()).padStart(2,'0')}:${String(bd.getMinutes()).padStart(2,'0')}`;
-      const clientId = c?.id || b.userId || b.name || '';
-      const name = (c?.name || b.name || '客') + ' 様';
+    const typeIcon = (type) => ({
+      booking: '📞', 'line-reply': '💬', schedule: '📅',
+      manual: '📝', homework: '📝', proposal: '📋',
+      cancel: '⚠️', dormant: '🌿',
+    }[type] || '•');
+    const typeCls = (type) => ({
+      booking: 'zoom', 'line-reply': 'line', schedule: 'schedule',
+      manual: 'manual', homework: 'other', proposal: 'other',
+    }[type] || 'other');
+    const typeLabel = (type) => ({
+      booking: 'Zoom', 'line-reply': 'LINE返信', schedule: '日程調整',
+      manual: 'メモ', homework: '宿題', proposal: '提案 return',
+      cancel: 'フォロー', dormant: '再engage',
+    }[type] || '');
+
+    slotsEl.innerHTML = items.map(({ t, d, hasTime }, i) => {
+      const c = t.clientId ? (clients || []).find(x => x.id === t.clientId) : null;
+      const time = hasTime ? `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}` : '今日中';
+      const clientId = t.clientId || '';
+      const name = t.clientName ? (t.clientName + ' 様') : t.title.slice(0, 20);
       const isNext = i === nextIdx;
-      const meta = b.note || b.purpose || 'Zoom 面談';
+      const meta = t.type === 'booking' ? (t.sub || 'Zoom 面談') :
+                   t.type === 'line-reply' ? (t.title.replace(/^LINE 返信 · /, '') || 'LINE 返信') :
+                   t.type === 'schedule' ? (t.title.replace(/^日程調整 · /, '') || '日程調整') :
+                   (t.title || '');
       return `
-        <a class="v3h-zoom-slot ${isNext ? 'next' : ''}" data-client-id="${escapeHtml(clientId)}" href="javascript:void(0);">
-          <div class="time">${time}</div>
+        <a class="v3h-zoom-slot ${isNext ? 'next' : ''} v3h-slot-${typeCls(t.type)}" data-client-id="${escapeHtml(clientId)}" href="javascript:void(0);">
+          <div class="v3h-slot-head">
+            <span class="v3h-slot-type-badge">${typeIcon(t.type)} ${escapeHtml(typeLabel(t.type))}</span>
+            <span class="time">${time}</span>
+          </div>
           <div class="name">${escapeHtml(name)}</div>
-          <div class="meta">${escapeHtml(meta)}</div>
-          ${isNext ? `<span class="cta-mini">▶ 開始</span>` : ''}
+          <div class="meta">${escapeHtml(meta.slice(0, 40))}${meta.length > 40 ? '…' : ''}</div>
+          ${isNext && t.type === 'booking' ? `<span class="cta-mini">▶ 開始</span>` : ''}
         </a>
       `;
     }).join('');
@@ -1129,6 +1969,11 @@
         if (id) openClientModal(id);
       });
     });
+  }
+
+  // backward compat (called from older code paths)
+  function renderV3ZoomStrip(clients, today) {
+    renderV3TodayStrip(clients, today, []);
   }
 
   function updateV3Progress() {
