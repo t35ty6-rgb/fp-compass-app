@@ -1941,6 +1941,51 @@
     `;
   }
 
+  // ★ 2026-08-07 owner「Zoom 決まったら 自動 Google Cal に 入れる」対応 の 共通 helper
+  async function autoSyncBookingToGcal({ fsCustomerId, uid, dateStr, slotStr, zoomUrl }) {
+    if (!sessionStorage.getItem('fp-gcal-token')) return null;
+    if (typeof window.__fpGcalInsertEvent !== 'function') return null;
+    // 客名 lookup
+    let clientName = '客';
+    try {
+      const fs = (window._fpFirestoreCustomers || []).find(c => c.docId === fsCustomerId || c.id === fsCustomerId);
+      if (fs && fs.name) clientName = fs.name;
+      else {
+        const dc = (window.DUMMY_CLIENTS || []).find(c => c.lineFriendId === uid || c.id === fsCustomerId);
+        if (dc && dc.name) clientName = dc.name;
+      }
+    } catch (_) {}
+    // slot 時刻 parse (HH:MM を 抽出)
+    const timeMatch = String(slotStr || '').match(/(\d{1,2}):(\d{2})/);
+    if (!timeMatch) return null;
+    const hh = String(parseInt(timeMatch[1], 10)).padStart(2, '0');
+    const mm = timeMatch[2];
+    const startISO = `${dateStr}T${hh}:${mm}:00+09:00`;
+    const start = new Date(startISO);
+    if (isNaN(start.getTime())) return null;
+    const end = new Date(start.getTime() + 30 * 60 * 1000);
+    try {
+      const ev = await window.__fpGcalInsertEvent({
+        summary: `面談 · ${clientName} 様`,
+        description: `${zoomUrl ? 'Zoom URL: ' + zoomUrl + '\n\n' : ''}FP Compass 経由 で 自動 登録`,
+        start: { dateTime: start.toISOString(), timeZone: 'Asia/Tokyo' },
+        end:   { dateTime: end.toISOString(),   timeZone: 'Asia/Tokyo' },
+        reminders: { useDefault: true },
+      });
+      // sync log 追加
+      try {
+        const log = JSON.parse(localStorage.getItem('fp-gcal-sync-log') || '[]');
+        log.push({ at: new Date().toISOString(), summary: `面談 · ${clientName} 様`, htmlLink: ev?.htmlLink || null, kind: 'auto-confirm', id: ev?.id });
+        localStorage.setItem('fp-gcal-sync-log', JSON.stringify(log.slice(-20)));
+      } catch(_){}
+      console.log('[gcal auto-sync] event created:', ev?.htmlLink);
+      return ev;
+    } catch (e) {
+      console.warn('[gcal auto-sync] fail:', e.message || e);
+      return null;
+    }
+  }
+
   function bindConfirmButtons() {
     document.querySelectorAll('[data-slot-confirm]').forEach(btn => {
       btn.addEventListener('click', async () => {
@@ -1985,7 +2030,13 @@
             });
             const fn = httpsCallable(getFunctions(app, 'asia-northeast1'), 'confirmSlotMultiTenant');
             const res = await fn({ customerId: fsCustomerId, confirmedSlot: `${dateStr} ${slotStr}` });
-            alert('✅ 確定\n\nZoom URL: ' + res.data.zoomUrl + '\nお客様 に LINE カード 自動送信済');
+            // ★ 2026-08-07 owner「Zoom 決まったら 自動 Cal 登録」対応
+            let gcalMsg = '';
+            try {
+              const gcalRes = await autoSyncBookingToGcal({ fsCustomerId, uid, dateStr, slotStr, zoomUrl: res.data.zoomUrl });
+              if (gcalRes) gcalMsg = '\nGoogle Cal 登録済 ✓';
+            } catch (_) {}
+            alert('✅ 確定\n\nZoom URL: ' + res.data.zoomUrl + '\nお客様 に LINE カード 自動送信済' + gcalMsg);
             if (window.refreshFirestoreCustomers) window.refreshFirestoreCustomers();
             renderLeadHubInner();
           } catch (e) {
@@ -2004,7 +2055,13 @@
           });
           const data = await r.json();
           if (data.ok) {
-            alert('✅ 確定\n\nZoom URL: ' + data.zoomUrl + '\nお客様にLINE通知済 + Googleカレンダー登録済');
+            // ★ 2026-08-07 owner「Zoom 決まったら 自動 Cal 登録」対応 (Cloud Run 経路)
+            let gcalMsg = '';
+            try {
+              const gcalRes = await autoSyncBookingToGcal({ uid, dateStr, slotStr, zoomUrl: data.zoomUrl });
+              if (gcalRes) gcalMsg = '\nGoogle Cal 登録済 (owner Cal) ✓';
+            } catch (_) {}
+            alert('✅ 確定\n\nZoom URL: ' + data.zoomUrl + '\nお客様にLINE通知済' + gcalMsg);
             await fetchLiveData();
             renderLeadHubInner();
           } else {

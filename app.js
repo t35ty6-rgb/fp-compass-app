@@ -1674,11 +1674,13 @@
 
     const stats = document.getElementById('v3h-stats');
     if (stats) {
-      // 2026-08-06 owner「押せない、大丈夫?」対応: button 化 + click で 該当 group に scroll
+      // 2026-08-07 owner「1つの並びでいい」対応: shortcuts 統合 で 日程調整 も stats に 追加 (横 4 pill 1 行)
+      const scheduleCount = tasks.filter(t => t.type === 'schedule').length;
       stats.innerHTML = `
         <button class="stat" type="button" data-jump="zoom"><b>${zoomToday}</b>今日 Zoom</button>
-        <button class="stat${tasks.length > 0 ? ' warn' : ' ok'}" type="button" data-jump="all"><b>${tasks.length}</b>未完了 TODO</button>
-        <button class="stat${unreadCount > 0 ? ' warn' : ''}" type="button" data-jump="line-reply"><b>${unreadCount}</b>LINE 要返信</button>
+        <button class="stat${scheduleCount > 0 ? ' warn' : ''}" type="button" data-jump="schedule"><b>${scheduleCount}</b>日程調整</button>
+        <button class="stat${unreadCount > 0 ? ' warn' : ''}" type="button" data-jump="line-reply"><b>${unreadCount}</b>LINE 返信</button>
+        <button class="stat${tasks.length > 0 ? ' warn' : ' ok'}" type="button" data-jump="all"><b>${tasks.length}</b>未完了</button>
       `;
       stats.querySelectorAll('button.stat').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -1698,51 +1700,10 @@
       });
     }
 
-    // ショートカット button (owner 2026-08-05: 日程調整 + LINE返信 見落とし防止)
-    const scheduleCount = tasks.filter(t => t.type === 'schedule').length;
-    const lineReplyCount = tasks.filter(t => t.type === 'line-reply').length;
+    // ★ 2026-08-07 owner「縦横1つの並びでいい」対応: shortcuts 削除、 stats pill が clickable で 兼務
+    // (旧 shortcuts element は 空 に して 横 1 行 に 統合)
     const shortcutsEl = document.getElementById('v3h-shortcuts');
-    if (shortcutsEl) {
-      const btns = [];
-      if (lineReplyCount > 0) {
-        btns.push(`<button class="v3h-shortcut sc-line" data-jump="line-reply" type="button">
-          <span class="sc-icon">💬</span>
-          <span class="sc-label">LINE 返信</span>
-          <span class="sc-badge">${lineReplyCount}件</span>
-        </button>`);
-      }
-      if (scheduleCount > 0) {
-        btns.push(`<button class="v3h-shortcut sc-schedule" data-jump="schedule" type="button">
-          <span class="sc-icon">📅</span>
-          <span class="sc-label">日程調整</span>
-          <span class="sc-badge">${scheduleCount}件</span>
-        </button>`);
-      }
-      if (zoomToday > 0) {
-        btns.push(`<button class="v3h-shortcut sc-zoom" data-jump="zoom" type="button">
-          <span class="sc-icon">📞</span>
-          <span class="sc-label">今日 Zoom</span>
-          <span class="sc-badge">${zoomToday}件</span>
-        </button>`);
-      }
-      shortcutsEl.innerHTML = btns.join('');
-      shortcutsEl.querySelectorAll('.v3h-shortcut').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const key = btn.dataset.jump;
-          // scroll to matching group
-          const groupCls = key === 'line-reply' ? 'v3h-group-line' :
-                           key === 'schedule'   ? 'v3h-group-schedule' :
-                           key === 'zoom'       ? 'v3h-group-zoom' : '';
-          const el = document.querySelector('.' + groupCls);
-          if (el) {
-            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            el.style.transition = 'box-shadow 0.3s';
-            el.style.boxShadow = '0 0 0 4px rgba(11, 93, 158, 0.2)';
-            setTimeout(() => { el.style.boxShadow = ''; }, 1500);
-          }
-        });
-      });
-    }
+    if (shortcutsEl) shortcutsEl.innerHTML = '';
 
     // Google Calendar 風 view (owner 2026-08-06: 週/2週/月 切替)
     renderV3Schedule(clients, tasks, today);
@@ -2351,12 +2312,15 @@
       params.set('showDate', '1');
       params.set('showPrint', '0');
       params.set('showTabs', '0');
-      params.set('showCalendars', '0');
+      // ★ 2026-08-07 owner「全部 同じ色」 fix: showCalendars=1 で 左 に 各 calendar 名 + 色 の 凡例 表示
+      params.set('showCalendars', '1');
       params.set('showTz', '0');
       ids.forEach(id => params.append('src', id));
+      // ★ color fix: '%23' + col は URLSearchParams で 二重 encode されて %2523 で 無効 に なってた
+      // '#' + col なら URLSearchParams が 正しく %23 に encode してくれる
       ids.forEach(id => {
         const col = colorMap.get(id);
-        if (col) params.append('color', '%23' + col);
+        if (col) params.append('color', '#' + col);
       });
       const url = 'https://calendar.google.com/calendar/embed?' + params.toString();
       // ★ 重い bug fix: 既存 iframe と 同 URL なら 触らない (reload 防止)
