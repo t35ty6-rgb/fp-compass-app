@@ -1106,6 +1106,7 @@
                     <button type="button" data-mode="week" class="active" role="tab">週</button>
                     <button type="button" data-mode="2week" role="tab">2週</button>
                     <button type="button" data-mode="month" role="tab">月</button>
+                    <button type="button" data-mode="gcal" role="tab" title="Google カレンダー を そのまま 埋込">📅 Google</button>
                   </div>
                   <button type="button" class="v3h-sched-nav" data-nav="prev" title="前へ">‹</button>
                   <span class="v3h-sched-range" id="v3h-sched-range">—</span>
@@ -1519,7 +1520,7 @@ window.fpReadyAfterAuth = function() {
     });
   })();
 
-  const ver = "20260806K-gcal-status-overlay";
+  const ver = "20260807A-gcal-embed";
   // ★ 2026-06-26 perf: critical (画面初期表示に必須) と deferred (LINE/charts) を 分離
   // critical: 顧客台帳・ホーム描画に必須
   // deferred: LINE タブ (line-app.js 555KB) / dashboard charts (charts.js) → idle で 後ロード
@@ -2269,7 +2270,7 @@ window.fpReadyAfterAuth = function() {
 <script>
 (function(){
   // 最新の ver を 1 箇所に集約 (fpReadyAfterAuth 側と一致させる必要あり)
-    const FP_VERSION = "20260806K-gcal-status-overlay";
+    const FP_VERSION = "20260807A-gcal-embed";
   try { window.FP_VERSION = FP_VERSION; } catch(_) {}
 
   // 2026-07-13 v11: Chrome拡張 (Zoom タブ音声 レコーダー) 検知

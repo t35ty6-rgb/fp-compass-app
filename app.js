@@ -1466,6 +1466,37 @@
   }
   window.__fpFetchGcalEventsForRange = fetchGcalEventsForRange;
 
+  // ★ 2026-08-07 owner「Google Cal を iframe 埋込 + 仕事/プライベート toggle」対応
+  async function gcalListCalendars(accessToken) {
+    const res = await fetch('https://www.googleapis.com/calendar/v3/users/me/calendarList?minAccessRole=reader', {
+      headers: { 'Authorization': 'Bearer ' + accessToken },
+    });
+    if (!res.ok) {
+      const t = await res.text();
+      throw new Error(`calendarList ${res.status}: ${t.slice(0, 200)}`);
+    }
+    const data = await res.json();
+    return data.items || [];
+  }
+  // cache 10分
+  window.__fpGcalListCache = { items: null, at: 0 };
+  async function fetchCachedCalList() {
+    const token = sessionStorage.getItem('fp-gcal-token');
+    if (!token) return [];
+    const c = window.__fpGcalListCache;
+    if (c.items && (Date.now() - c.at) < 10 * 60 * 1000) return c.items;
+    try {
+      const items = await gcalListCalendars(token);
+      window.__fpGcalListCache = { items, at: Date.now() };
+      return items;
+    } catch (e) {
+      console.warn('[gcal list]', e.message);
+      if (String(e.message).includes('401')) { try { sessionStorage.removeItem('fp-gcal-token'); } catch(_){} }
+      return [];
+    }
+  }
+  window.__fpFetchCachedCalList = fetchCachedCalList;
+
   // ============================
   // 手動 TODO (owner が 自分 で 追加) — 2026-08-05 owner 明示
   // localStorage key: fp-manual-todos (tenant 共有 で いい、 admin 個人ノート)
@@ -1992,8 +2023,21 @@
     if (!state.anchor) state.anchor = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
     // update mode class on root
-    root.classList.remove('mode-week', 'mode-2week', 'mode-month');
+    root.classList.remove('mode-week', 'mode-2week', 'mode-month', 'mode-gcal');
     root.classList.add('mode-' + state.mode);
+
+    // ★ 2026-08-07 owner「Google Cal を iframe 埋込 + 仕事/プライベート toggle」
+    if (state.mode === 'gcal') {
+      renderV3GcalEmbed(clients, tasks, today);
+      return;
+    }
+    // それ以外 は 通常 の カスタム グリッド (embed 用 の 要素 を リセット)
+    const embedWrap = document.getElementById('v3h-sched-embed-wrap');
+    if (embedWrap) embedWrap.remove();
+    const dowRow0 = document.getElementById('v3h-sched-dow');
+    const grid0 = document.getElementById('v3h-sched-grid');
+    if (dowRow0) dowRow0.style.display = '';
+    if (grid0) grid0.style.display = '';
 
     // DOW header (常に 日→土 順、 Google Calendar 準拠)
     const DOW = ['日','月','火','水','木','金','土'];
@@ -2174,6 +2218,127 @@
         if (id) openClientModal(id);
       });
     });
+  }
+
+  // ★ 2026-08-07: Google Cal iframe embed mode (owner「Google Cal を SaaS に 埋込」)
+  async function renderV3GcalEmbed(clients, tasks, today) {
+    const root = document.querySelector('.v3h-sched');
+    const dowRow = document.getElementById('v3h-sched-dow');
+    const grid = document.getElementById('v3h-sched-grid');
+    const rangeEl = document.getElementById('v3h-sched-range');
+    if (!root) return;
+
+    // 既存 grid/dow を 隠す
+    if (dowRow) dowRow.style.display = 'none';
+    if (grid) grid.style.display = 'none';
+
+    // range 表示 は 「今週 (Google Cal 埋込)」
+    if (rangeEl) rangeEl.textContent = 'Google Cal 埋込';
+
+    const token = sessionStorage.getItem('fp-gcal-token');
+    // wrap element 用意
+    let wrap = document.getElementById('v3h-sched-embed-wrap');
+    if (!wrap) {
+      wrap = document.createElement('div');
+      wrap.id = 'v3h-sched-embed-wrap';
+      wrap.className = 'v3h-sched-embed-wrap';
+      root.appendChild(wrap);
+    }
+
+    if (!token) {
+      wrap.innerHTML = `
+        <div class="v3h-empty" style="padding:32px 20px;text-align:center;">
+          <div style="font-size:36px;line-height:1;margin-bottom:10px;">🔒</div>
+          <p style="font-size:15px;font-weight:700;color:#3a4254;margin:0 0 6px;">Google Cal 連携 が 未完了</p>
+          <p style="font-size:13px;color:#6b7280;margin:0 0 14px;">上 の 「🗓️ Google カレンダー 連携」 で 連携 して ください</p>
+        </div>`;
+      return;
+    }
+
+    // toggle state (仕事のみ = primary のみ / 全部 = 全 calendar)
+    const filter = localStorage.getItem('fp-gcal-embed-filter') || 'work'; // 'work' | 'all'
+
+    // 一旦 loading
+    wrap.innerHTML = `
+      <div class="v3h-gcal-embed-controls">
+        <div class="v3h-gcal-embed-toggle">
+          <button type="button" data-filter="work" class="${filter==='work'?'active':''}">仕事 のみ</button>
+          <button type="button" data-filter="all"  class="${filter==='all'?'active':''}">プライベート も 表示</button>
+        </div>
+        <a href="https://calendar.google.com/" target="_blank" rel="noopener" class="v3h-gcal-embed-open">Google Cal を 別 tab で 開く ↗</a>
+      </div>
+      <div class="v3h-gcal-embed-frame" id="v3h-gcal-embed-frame"><div class="v3h-empty" style="padding:24px;text-align:center;color:#6b7280;">Google Cal 読込 中…</div></div>
+    `;
+
+    // toggle wire
+    wrap.querySelectorAll('.v3h-gcal-embed-toggle button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const f = btn.dataset.filter;
+        localStorage.setItem('fp-gcal-embed-filter', f);
+        renderV3GcalEmbed(clients, tasks, today);
+      });
+    });
+
+    // Fetch calendar list to know which src to include
+    const cals = await fetchCachedCalList();
+    if (!cals || cals.length === 0) {
+      // fallback: primary だけ (email 使う)
+      const email = localStorage.getItem('fp-gcal-email') || '';
+      if (!email) {
+        document.getElementById('v3h-gcal-embed-frame').innerHTML = `
+          <div class="v3h-empty" style="padding:24px;text-align:center;color:#c53030;">
+            Calendar list 取得 失敗 · 「Google カレンダー 連携」 を 一度 解除 して 再連携 して ください
+          </div>`;
+        return;
+      }
+      renderEmbedFrame([email]);
+      return;
+    }
+
+    // primary + secondary 分類
+    const primary = cals.filter(c => c.primary);
+    const secondary = cals.filter(c => !c.primary && !c.deleted);
+    const selected = filter === 'work' ? primary : primary.concat(secondary);
+    const srcIds = selected.map(c => c.id);
+    renderEmbedFrame(srcIds, cals);
+
+    function renderEmbedFrame(ids, allCals) {
+      if (!ids || ids.length === 0) {
+        document.getElementById('v3h-gcal-embed-frame').innerHTML = `
+          <div class="v3h-empty" style="padding:24px;text-align:center;color:#6b7280;">
+            表示 する calendar なし
+          </div>`;
+        return;
+      }
+      // color per calendar (Google 側 の color を 使う, 無ければ default)
+      const colorMap = new Map();
+      (allCals || []).forEach(c => {
+        // strip # from backgroundColor
+        const col = (c.backgroundColor || '').replace('#','');
+        if (col) colorMap.set(c.id, col);
+      });
+      const params = new URLSearchParams();
+      params.set('ctz', 'Asia/Tokyo');
+      params.set('mode', 'WEEK');
+      params.set('showTitle', '0');
+      params.set('showNav', '1');
+      params.set('showDate', '1');
+      params.set('showPrint', '0');
+      params.set('showTabs', '0');
+      params.set('showCalendars', '0');
+      params.set('showTz', '0');
+      ids.forEach(id => params.append('src', id));
+      ids.forEach(id => {
+        const col = colorMap.get(id);
+        if (col) params.append('color', '%23' + col);
+      });
+      const url = 'https://calendar.google.com/calendar/embed?' + params.toString();
+      const frame = document.getElementById('v3h-gcal-embed-frame');
+      if (frame) {
+        frame.innerHTML = `<iframe src="${escapeHtml(url)}" style="border:0;width:100%;height:680px;border-radius:8px;" title="Google Calendar embed"></iframe>
+          <p style="margin:8px 0 0;font-size:11.5px;color:#6b7280;">${escapeHtml(ids.length)} calendar 表示 中${allCals ? ` (全 ${allCals.length} 中)` : ''} · 別 Google account で 見る 場合 は 別 tab で https://calendar.google.com/ を 開く</p>`;
+      }
+    }
   }
 
   // Nav step size in days by mode

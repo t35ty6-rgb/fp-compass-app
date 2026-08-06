@@ -1789,6 +1789,52 @@ table.clients td.num { text-align: right; font-variant-numeric: tabular-nums; }
 /* 2026-08-06 owner「自分 の Cal 情報 も 出して」対応: Google Cal 個人 予定 は 灰色 で 重ね */
 .v3h-sched-event.gcal { border-left-color: #6b7280; background: repeating-linear-gradient(45deg, rgba(107,114,128,0.06), rgba(107,114,128,0.06) 4px, transparent 4px, transparent 8px); color: #545e70; font-style: italic; }
 .v3h-sched-event.gcal:hover { background: rgba(107,114,128,0.14); }
+
+/* 2026-08-07 owner「Google Cal iframe 埋込」 */
+.v3h-sched-embed-wrap { margin-top: 10px; padding: 0 4px; }
+.v3h-sched-embed-wrap .v3h-gcal-embed-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+.v3h-gcal-embed-toggle {
+  display: inline-flex;
+  background: var(--v3h-line-soft, #f0f2f5);
+  border-radius: 8px;
+  padding: 3px;
+  gap: 2px;
+}
+.v3h-gcal-embed-toggle button {
+  border: none;
+  background: transparent;
+  color: var(--ink-2);
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.v3h-gcal-embed-toggle button:hover { color: var(--ink); }
+.v3h-gcal-embed-toggle button.active {
+  background: var(--surface);
+  color: var(--accent);
+  box-shadow: 0 1px 3px rgba(26, 31, 44, 0.08);
+}
+.v3h-gcal-embed-open {
+  font-size: 12.5px;
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 700;
+}
+.v3h-gcal-embed-open:hover { text-decoration: underline; }
+.v3h-gcal-embed-frame { min-height: 500px; }
+/* gcal mode 時 は dow/grid 隠す */
+.v3h-sched.mode-gcal .v3h-sched-dow-row,
+.v3h-sched.mode-gcal .v3h-sched-grid { display: none; }
 .v3h-sched-event .time {
   font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
   font-weight: 700;
