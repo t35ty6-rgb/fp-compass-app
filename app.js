@@ -841,7 +841,18 @@
           title: isChosen
             ? '日程調整 · 客 選択 済 → Zoom URL 発行 して 返信'
             : '日程調整 · 候補日 送付 済 → 客 選択 待ち フォロー',
-          sub: isChosen ? '「' + (c.pendingCandidateSelection?.dateLabel || c.pendingCandidateSelection || '選択日') + '」 で 承諾' : '',
+          sub: isChosen ? (() => {
+            // owner 2026-08-06「[object Object] で 承諾」bug fix: object から 日付文字列 を 安全 に 抽出
+            const pcs = c.pendingCandidateSelection;
+            if (typeof pcs === 'string') return '「' + pcs + '」 で 承諾';
+            if (pcs && typeof pcs === 'object') {
+              const label = pcs.dateLabel || pcs.slot || pcs.slotLabel
+                || (pcs.date ? (pcs.date + (pcs.time ? ' ' + pcs.time : '')) : null)
+                || (pcs.candidateIndex ? '候補' + pcs.candidateIndex : null);
+              return label ? '「' + label + '」 で 承諾' : '客 が 候補 選択 済';
+            }
+            return '客 が 候補 選択 済';
+          })() : '',
           urgency: '日程調整', urgencyRank: 0, timeLabel: isChosen ? '要 発行' : '要 フォロー',
           dueBy: todayEnd,
         });
