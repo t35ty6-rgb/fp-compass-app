@@ -123,6 +123,7 @@
   import {
     getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword,
     onAuthStateChanged, signOut, setPersistence, browserSessionPersistence,
+    GoogleAuthProvider, linkWithPopup, reauthenticateWithPopup, signInWithPopup,
   } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
   import {
     getFirestore, initializeFirestore, doc, getDoc, setDoc, serverTimestamp, collection, getDocs, addDoc,
@@ -161,7 +162,7 @@
   const functions = getFunctions(app, "asia-northeast1");
   // ★ オーナーfb: 「勝手にログインまでしなくていい」 → タブ閉じると自動でログアウト (session 限定)
   setPersistence(auth, browserSessionPersistence).catch(console.error);
-  window.__fp = { auth, db, functions, signOut };
+  window.__fp = { auth, db, functions, signOut, GoogleAuthProvider, linkWithPopup, reauthenticateWithPopup, signInWithPopup };
   // ★ 2026-06-26: Cloud Run AI endpoint Bearer auth helper (5箇所 fetch で 使用)
   window.getFpAuthHeaders = async function (extra) {
     const u = auth.currentUser;
@@ -1518,7 +1519,7 @@ window.fpReadyAfterAuth = function() {
     });
   })();
 
-  const ver = "20260806H-gcal-modal";
+  const ver = "20260806I-gcal-oauth";
   // ★ 2026-06-26 perf: critical (画面初期表示に必須) と deferred (LINE/charts) を 分離
   // critical: 顧客台帳・ホーム描画に必須
   // deferred: LINE タブ (line-app.js 555KB) / dashboard charts (charts.js) → idle で 後ロード
@@ -2268,7 +2269,7 @@ window.fpReadyAfterAuth = function() {
 <script>
 (function(){
   // 最新の ver を 1 箇所に集約 (fpReadyAfterAuth 側と一致させる必要あり)
-    const FP_VERSION = "20260806H-gcal-modal";
+    const FP_VERSION = "20260806I-gcal-oauth";
   try { window.FP_VERSION = FP_VERSION; } catch(_) {}
 
   // 2026-07-13 v11: Chrome拡張 (Zoom タブ音声 レコーダー) 検知

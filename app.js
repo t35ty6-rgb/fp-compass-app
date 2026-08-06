@@ -763,12 +763,15 @@
     // Google Calendar 風 schedule 切替 wire (2026-08-06)
     try { wireV3ScheduleControls(); } catch(_) {}
 
-    // Google Cal 連携 button — 2026-08-06 owner「押しても何もならない」対応:
-    // alert() は browser silent-block される 可能性 高い → in-app modal に 変更
+    // Google Cal 連携 button — 2026-08-06 実 OAuth 実装
     const gcalBtn = document.getElementById('v3h-cta-gcal');
     if (gcalBtn) {
-      const isConnected = !!localStorage.getItem('fp-gcal-linked'); // placeholder
-      if (isConnected) gcalBtn.classList.add('connected');
+      const linkedAt = localStorage.getItem('fp-gcal-linked-at');
+      const hasToken = !!sessionStorage.getItem('fp-gcal-token');
+      if (linkedAt) gcalBtn.classList.add('connected');
+      if (hasToken) {
+        gcalBtn.querySelector('span:last-child').textContent = 'Google 連携 済';
+      }
       gcalBtn.addEventListener('click', () => {
         // 既存 modal 削除
         document.getElementById('v3h-gcal-modal')?.remove();
@@ -814,21 +817,92 @@
         overlay.querySelector('#v3h-gcal-close')?.addEventListener('click', close);
         overlay.querySelector('#v3h-gcal-later')?.addEventListener('click', close);
         overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
-        overlay.querySelector('#v3h-gcal-go')?.addEventListener('click', () => {
-          // GO signal は localStorage に flag 立てて、 owner が Jobs に 伝える の を 促す
-          try { localStorage.setItem('fp-gcal-go-requested', new Date().toISOString()); } catch(_){}
-          overlay.innerHTML = `
-            <div style="background:#fff;max-width:480px;width:100%;border-radius:14px;padding:32px 30px;text-align:center;">
-              <div style="font-size:56px;line-height:1;margin-bottom:14px;">🚀</div>
-              <h3 style="margin:0 0 10px;font-size:20px;font-weight:800;color:#1a1f2c;">実装 GO を 記録 しました</h3>
-              <p style="margin:0 0 22px;font-size:14px;color:#3a4254;line-height:1.7;">
-                次 の Jobs チャット で <b style="color:#0b5d9e;">「Google Cal 連携 の 実装 進めて」</b> と 伝えて ください。<br>
-                OAuth 認証 の 手順 と 一緒 に 実装 開始 します。
-              </p>
-              <button id="v3h-gcal-ok" style="background:#0b5d9e;color:#fff;border:none;padding:11px 32px;border-radius:8px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">OK</button>
-            </div>
-          `;
-          overlay.querySelector('#v3h-gcal-ok')?.addEventListener('click', close);
+        overlay.querySelector('#v3h-gcal-go')?.addEventListener('click', async () => {
+          // ★ 2026-08-06 実 OAuth 開始 (Firebase Auth Google provider + calendar scope)
+          const btn = overlay.querySelector('#v3h-gcal-go');
+          btn.disabled = true;
+          btn.textContent = '認証 画面 開いてます…';
+          try {
+            const fp = window.__fp;
+            if (!fp?.GoogleAuthProvider || !fp?.auth?.currentUser) {
+              throw new Error('Firebase Auth 初期化 待ち · 再読み込み して 再試行 ください');
+            }
+            const provider = new fp.GoogleAuthProvider();
+            provider.addScope('https://www.googleapis.com/auth/calendar.events');
+            provider.addScope('https://www.googleapis.com/auth/calendar.readonly');
+            // 「毎回 account 選択」 で どの Google account か 明示 (誤 account link 防止)
+            provider.setCustomParameters({ prompt: 'select_account' });
+
+            const user = fp.auth.currentUser;
+            const alreadyLinked = (user.providerData || []).some(p => p.providerId === 'google.com');
+            let result;
+            if (alreadyLinked) {
+              result = await fp.reauthenticateWithPopup(user, provider);
+            } else {
+              try {
+                result = await fp.linkWithPopup(user, provider);
+              } catch (e) {
+                // auth/credential-already-in-use = 他 の user と 既に link 済 → reauth に fallback
+                if (e.code === 'auth/credential-already-in-use' || e.code === 'auth/email-already-in-use') {
+                  result = await fp.reauthenticateWithPopup(user, provider);
+                } else { throw e; }
+              }
+            }
+            const credential = fp.GoogleAuthProvider.credentialFromResult(result);
+            const accessToken = credential?.accessToken;
+            if (!accessToken) throw new Error('access token 取得 失敗');
+
+            // 保存 (session = short-lived, local = linked 記録)
+            sessionStorage.setItem('fp-gcal-token', accessToken);
+            sessionStorage.setItem('fp-gcal-token-at', new Date().toISOString());
+            localStorage.setItem('fp-gcal-linked-at', new Date().toISOString());
+            const googleEmail = (user.providerData || []).find(p => p.providerId === 'google.com')?.email
+              || result.user?.email || '';
+            localStorage.setItem('fp-gcal-email', googleEmail);
+
+            // 成功 画面
+            overlay.innerHTML = `
+              <div style="background:#fff;max-width:520px;width:100%;border-radius:14px;padding:32px 30px;text-align:center;">
+                <div style="font-size:56px;line-height:1;margin-bottom:14px;">✅</div>
+                <h3 style="margin:0 0 10px;font-size:22px;font-weight:800;color:#1a1f2c;">連携 できました</h3>
+                <p style="margin:0 0 8px;font-size:14px;color:#3a4254;line-height:1.7;">
+                  ${escapeHtml(googleEmail || 'Google account')} と 連携 済
+                </p>
+                <p style="margin:0 0 22px;font-size:12.5px;color:#6b7280;">
+                  以降、 客 の Zoom 予約 が 確定 したら 自動で この Google Cal に event 作成 されます。
+                </p>
+                <div style="display:flex;gap:8px;justify-content:center;">
+                  <button id="v3h-gcal-test" style="background:#0b5d9e;color:#fff;border:none;padding:11px 22px;border-radius:8px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">動作 test (今 の 予定 1件 を Cal に 入れる)</button>
+                  <button id="v3h-gcal-ok" style="background:#fff;color:#3a4254;border:1px solid #d4d8df;padding:11px 22px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">閉じる</button>
+                </div>
+                <p id="v3h-gcal-test-result" style="margin:16px 0 0;font-size:13px;color:#3a4254;min-height:20px;"></p>
+              </div>
+            `;
+            overlay.querySelector('#v3h-gcal-ok')?.addEventListener('click', () => {
+              close();
+              // 再 render で button の 状態 更新
+              try { renderDashboard(); } catch(_) {}
+            });
+            overlay.querySelector('#v3h-gcal-test')?.addEventListener('click', async () => {
+              const resultEl = overlay.querySelector('#v3h-gcal-test-result');
+              resultEl.textContent = 'Google Cal に 送信 中…';
+              try {
+                const ev = await gcalInsertTestEvent(accessToken);
+                resultEl.innerHTML = `✓ 作成 済 — <a href="${ev.htmlLink}" target="_blank" rel="noopener" style="color:#0b5d9e;font-weight:700;">Google Cal で 確認</a>`;
+              } catch (e) {
+                resultEl.textContent = '✗ 失敗: ' + (e.message || e);
+              }
+            });
+          } catch (e) {
+            btn.disabled = false;
+            btn.textContent = '実装 GO';
+            const errMsg =
+              e.code === 'auth/popup-blocked'      ? 'popup が browser で block されました。 popup を 許可 して 再試行 ください。' :
+              e.code === 'auth/popup-closed-by-user' ? 'popup が closed されました。 再試行 ください。' :
+              e.code === 'auth/cancelled-popup-request' ? '前 の 認証 が cancel されました。 もう一度 押して ください。' :
+              (e.message || String(e));
+            alert('連携 失敗: ' + errMsg);
+          }
         });
       });
     }
@@ -1127,6 +1201,43 @@
   // ============================
   // v3 HOME (Todoist-inspired) — 2026-08-05 導入
   // ============================
+  // ============================
+  // Google Calendar API helpers — 2026-08-06 owner「1-click sync」
+  // ============================
+  async function gcalInsertEvent(accessToken, event) {
+    const res = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + accessToken,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(event),
+    });
+    if (!res.ok) {
+      const t = await res.text();
+      throw new Error(`Cal API ${res.status}: ${t.slice(0, 200)}`);
+    }
+    return await res.json();
+  }
+  async function gcalInsertTestEvent(accessToken) {
+    const start = new Date(Date.now() + 30 * 60 * 1000);
+    start.setSeconds(0, 0);
+    const end = new Date(start.getTime() + 30 * 60 * 1000);
+    return await gcalInsertEvent(accessToken, {
+      summary: '【FP Compass 連携 test】 削除 して OK',
+      description: 'FP Compass の Google カレンダー 連携 動作 確認 用 の test event です。 削除 して 問題 ありません。',
+      start: { dateTime: start.toISOString(), timeZone: 'Asia/Tokyo' },
+      end:   { dateTime: end.toISOString(),   timeZone: 'Asia/Tokyo' },
+      reminders: { useDefault: false },
+    });
+  }
+  // Expose 実 sync helper (booking 確定 時 に 呼ばれる 想定 — 別 iter で 実装)
+  window.__fpGcalInsertEvent = async function(event) {
+    const token = sessionStorage.getItem('fp-gcal-token');
+    if (!token) throw new Error('Google Cal 未連携');
+    return await gcalInsertEvent(token, event);
+  };
+
   // ============================
   // 手動 TODO (owner が 自分 で 追加) — 2026-08-05 owner 明示
   // localStorage key: fp-manual-todos (tenant 共有 で いい、 admin 個人ノート)
