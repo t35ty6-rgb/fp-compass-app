@@ -767,7 +767,7 @@
     const gcalBtn = document.getElementById('v3h-cta-gcal');
     if (gcalBtn) {
       const linkedAt = localStorage.getItem('fp-gcal-linked-at');
-      const hasToken = !!sessionStorage.getItem('fp-gcal-token');
+      const hasToken = !!localStorage.getItem('fp-gcal-token');
       if (linkedAt) gcalBtn.classList.add('connected');
       if (hasToken) {
         gcalBtn.querySelector('span:last-child').textContent = 'Google 連携 済';
@@ -781,7 +781,7 @@
 
         // ★ 2026-08-06 owner「連携 どうやって できてるか 見せて」対応:
         // 既に link 済 なら 「連携 状態」 view を default 表示 (未連携 view の 代わり)
-        const storedToken = sessionStorage.getItem('fp-gcal-token');
+        const storedToken = localStorage.getItem('fp-gcal-token');
         const linkedAt = localStorage.getItem('fp-gcal-linked-at');
         const linkedEmail = localStorage.getItem('fp-gcal-email');
         if (storedToken && linkedAt) {
@@ -879,7 +879,7 @@
             const resultEl = document.getElementById('v3h-gcal-test-result');
             resultEl.textContent = 'Google Cal に 送信 中…';
             try {
-              const token = sessionStorage.getItem('fp-gcal-token');
+              const token = localStorage.getItem('fp-gcal-token');
               const ev = await gcalInsertTestEvent(token);
               resultEl.innerHTML = `✓ 作成 済 — <a href="${escapeHtml(ev.htmlLink)}" target="_blank" rel="noopener" style="color:#0b5d9e;font-weight:700;">Google Cal で 確認</a>`;
               // sync log に 記録
@@ -910,8 +910,8 @@
           overlay.querySelector('#v3h-gcal-unlink')?.addEventListener('click', () => {
             if (!confirm('Google カレンダー 連携 を 解除 しますか?\n\n(以降、 予約 が Cal に 自動 sync されなくなります)')) return;
             try {
-              sessionStorage.removeItem('fp-gcal-token');
-              sessionStorage.removeItem('fp-gcal-token-at');
+              localStorage.removeItem('fp-gcal-token');
+              localStorage.removeItem('fp-gcal-token-at');
               localStorage.removeItem('fp-gcal-linked-at');
               localStorage.removeItem('fp-gcal-email');
               // sync log は 保持 (履歴 なので)
@@ -1004,8 +1004,8 @@
             if (!accessToken) throw new Error('access token 取得 失敗');
 
             // 保存 (session = short-lived, local = linked 記録)
-            sessionStorage.setItem('fp-gcal-token', accessToken);
-            sessionStorage.setItem('fp-gcal-token-at', new Date().toISOString());
+            localStorage.setItem('fp-gcal-token', accessToken);
+            localStorage.setItem('fp-gcal-token-at', new Date().toISOString());
             localStorage.setItem('fp-gcal-linked-at', new Date().toISOString());
             const googleEmail = (user.providerData || []).find(p => p.providerId === 'google.com')?.email
               || result.user?.email || '';
@@ -1056,7 +1056,7 @@
               close();
               // localStorage flag clear で 完全 やり直し
               try {
-                sessionStorage.removeItem('fp-gcal-token');
+                localStorage.removeItem('fp-gcal-token');
                 localStorage.removeItem('fp-gcal-linked-at');
               } catch(_){}
               // Google account を Firebase から unlink して from scratch
@@ -1392,13 +1392,27 @@
   // Google Calendar API helpers — 2026-08-06 owner「1-click sync」
   // ============================
   async function gcalInsertEvent(accessToken, event) {
+    // ★ 2026-08-07 owner「FP Compass タグ」対応: extendedProperties.private.source='fp-compass' + colorId='9' (blueberry navy)
+    // Google Cal 側 で FP Compass 由来 か 判別 可能 + owner の 他 event と 色 差別化
+    const finalEvent = {
+      ...event,
+      colorId: event.colorId || '9', // 9 = Blueberry (navy)
+      extendedProperties: {
+        ...(event.extendedProperties || {}),
+        private: {
+          ...(event.extendedProperties?.private || {}),
+          source: 'fp-compass',
+          syncedAt: new Date().toISOString(),
+        },
+      },
+    };
     const res = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
       method: 'POST',
       headers: {
         'Authorization': 'Bearer ' + accessToken,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(event),
+      body: JSON.stringify(finalEvent),
     });
     if (!res.ok) {
       const t = await res.text();
@@ -1418,9 +1432,61 @@
       reminders: { useDefault: false },
     });
   }
-  // Expose 実 sync helper (booking 確定 時 に 呼ばれる 想定 — 別 iter で 実装)
+  // ★ 2026-08-07 owner「毎回 認証 うざい」対応: token 永続化 + silent refresh
+  // localStorage に 保存 (session だと tab 閉じたら 消える) + 期限 55分 で 自動 silent reauth
+  const GCAL_TOKEN_KEY = 'fp-gcal-token';
+  const GCAL_TOKEN_AT_KEY = 'fp-gcal-token-at';
+  function getStoredGcalToken() {
+    // 移行: 旧 sessionStorage → localStorage
+    try {
+      const legacy = sessionStorage.getItem(GCAL_TOKEN_KEY);
+      if (legacy && !localStorage.getItem(GCAL_TOKEN_KEY)) {
+        localStorage.setItem(GCAL_TOKEN_KEY, legacy);
+        localStorage.setItem(GCAL_TOKEN_AT_KEY, sessionStorage.getItem(GCAL_TOKEN_AT_KEY) || new Date().toISOString());
+        sessionStorage.removeItem(GCAL_TOKEN_KEY);
+      }
+    } catch (_) {}
+    return localStorage.getItem(GCAL_TOKEN_KEY);
+  }
+  function isGcalTokenFresh() {
+    const at = localStorage.getItem(GCAL_TOKEN_AT_KEY);
+    if (!at) return false;
+    const ageMs = Date.now() - new Date(at).getTime();
+    return ageMs < 55 * 60 * 1000; // 55min (5min safety margin from 1h expiry)
+  }
+  async function ensureGcalToken() {
+    let token = getStoredGcalToken();
+    if (token && isGcalTokenFresh()) return token;
+    // silent reauth 試行 (prompt: 'none' = user consent なし で 即 token 更新)
+    const fp = window.__fp;
+    if (!fp?.GoogleAuthProvider || !fp?.auth?.currentUser) return token; // fallback: 期限切れ でも 手元 の token 返す
+    const user = fp.auth.currentUser;
+    const alreadyLinked = (user.providerData || []).some(p => p.providerId === 'google.com');
+    if (!alreadyLinked) return token; // Google account 未 link なら silent 不可
+    try {
+      const provider = new fp.GoogleAuthProvider();
+      provider.addScope('https://www.googleapis.com/auth/calendar.events');
+      provider.addScope('https://www.googleapis.com/auth/calendar.readonly');
+      provider.setCustomParameters({ prompt: 'none' }); // silent
+      const result = await fp.reauthenticateWithPopup(user, provider);
+      const cred = fp.GoogleAuthProvider.credentialFromResult(result);
+      const newTok = cred?.accessToken;
+      if (newTok) {
+        localStorage.setItem(GCAL_TOKEN_KEY, newTok);
+        localStorage.setItem(GCAL_TOKEN_AT_KEY, new Date().toISOString());
+        console.log('[gcal] silent reauth OK');
+        return newTok;
+      }
+    } catch (e) {
+      // silent 失敗 (interaction_required 等) → 手元 の token で とりあえず 動かす
+      console.log('[gcal] silent reauth fail, will need manual reauth:', e.code || e.message);
+    }
+    return token;
+  }
+  window.__fpEnsureGcalToken = ensureGcalToken;
+  // Expose 実 sync helper (booking 確定 時 に 呼ばれる 想定)
   window.__fpGcalInsertEvent = async function(event) {
-    const token = sessionStorage.getItem('fp-gcal-token');
+    const token = await ensureGcalToken();
     if (!token) throw new Error('Google Cal 未連携');
     return await gcalInsertEvent(token, event);
   };
@@ -1444,7 +1510,7 @@
   // Cache (5分 で expire)
   window.__fpGcalEventsCache = { items: null, at: 0, range: null };
   async function fetchGcalEventsForRange(start, end) {
-    const token = sessionStorage.getItem('fp-gcal-token');
+    const token = localStorage.getItem('fp-gcal-token');
     if (!token) return [];
     const rangeKey = start.toISOString() + '_' + end.toISOString();
     const cache = window.__fpGcalEventsCache;
@@ -1459,7 +1525,7 @@
       console.warn('[gcal] fetch fail:', e.message);
       // 401 なら token 失効 の signal を 出す
       if (String(e.message).includes('401')) {
-        try { sessionStorage.removeItem('fp-gcal-token'); } catch(_){}
+        try { localStorage.removeItem('fp-gcal-token'); } catch(_){}
       }
       return [];
     }
@@ -1481,7 +1547,7 @@
   // cache 10分
   window.__fpGcalListCache = { items: null, at: 0 };
   async function fetchCachedCalList() {
-    const token = sessionStorage.getItem('fp-gcal-token');
+    const token = localStorage.getItem('fp-gcal-token');
     if (!token) return [];
     const c = window.__fpGcalListCache;
     if (c.items && (Date.now() - c.at) < 10 * 60 * 1000) return c.items;
@@ -1491,7 +1557,7 @@
       return items;
     } catch (e) {
       console.warn('[gcal list]', e.message);
-      if (String(e.message).includes('401')) { try { sessionStorage.removeItem('fp-gcal-token'); } catch(_){} }
+      if (String(e.message).includes('401')) { try { localStorage.removeItem('fp-gcal-token'); } catch(_){} }
       return [];
     }
   }
@@ -2096,7 +2162,7 @@
     });
     // ★ 2026-08-06 owner「自分 の Cal 情報 が 入ってきてない」対応:
     // Google Cal 連携 済 なら owner の 個人 予定 を 灰色 chip で overlay
-    if (sessionStorage.getItem('fp-gcal-token')) {
+    if (localStorage.getItem('fp-gcal-token')) {
       // 非同期 fetch → 完了 後 に 再 render で 反映 (avoid blocking initial paint)
       fetchGcalEventsForRange(start, end).then(items => {
         if (!items || items.length === 0) return;
@@ -2197,7 +2263,7 @@
     // range 表示 は 「今週 (Google Cal 埋込)」
     if (rangeEl) rangeEl.textContent = 'Google Cal 埋込';
 
-    const token = sessionStorage.getItem('fp-gcal-token');
+    const token = localStorage.getItem('fp-gcal-token');
     let wrap = document.getElementById('v3h-sched-embed-wrap');
     // ★ 重い bug fix: 既 存在 + 同 filter/token 状態 なら 何もしない (iframe reload 抑止)
     const currentFilter = localStorage.getItem('fp-gcal-embed-filter') || 'work';
