@@ -2221,6 +2221,7 @@
   }
 
   // ★ 2026-08-07: Google Cal iframe embed mode (owner「Google Cal を SaaS に 埋込」)
+  // 2026-08-07 owner「重い bug」 fix: iframe idempotent guard で mode/filter 変更時 のみ rebuild
   async function renderV3GcalEmbed(clients, tasks, today) {
     const root = document.querySelector('.v3h-sched');
     const dowRow = document.getElementById('v3h-sched-dow');
@@ -2236,8 +2237,15 @@
     if (rangeEl) rangeEl.textContent = 'Google Cal 埋込';
 
     const token = sessionStorage.getItem('fp-gcal-token');
-    // wrap element 用意
     let wrap = document.getElementById('v3h-sched-embed-wrap');
+    // ★ 重い bug fix: 既 存在 + 同 filter/token 状態 なら 何もしない (iframe reload 抑止)
+    const currentFilter = localStorage.getItem('fp-gcal-embed-filter') || 'work';
+    const currentKey = (token ? '1' : '0') + '|' + currentFilter;
+    if (wrap && wrap.dataset.state === currentKey && wrap.querySelector('iframe')) {
+      // 既に 同 state で iframe 描画 済 → 何もしない
+      return;
+    }
+
     if (!wrap) {
       wrap = document.createElement('div');
       wrap.id = 'v3h-sched-embed-wrap';
@@ -2246,6 +2254,7 @@
     }
 
     if (!token) {
+      wrap.dataset.state = currentKey;
       wrap.innerHTML = `
         <div class="v3h-empty" style="padding:32px 20px;text-align:center;">
           <div style="font-size:36px;line-height:1;margin-bottom:10px;">🔒</div>
@@ -2256,55 +2265,73 @@
     }
 
     // toggle state (仕事のみ = primary のみ / 全部 = 全 calendar)
-    const filter = localStorage.getItem('fp-gcal-embed-filter') || 'work'; // 'work' | 'all'
-
-    // 一旦 loading
-    wrap.innerHTML = `
-      <div class="v3h-gcal-embed-controls">
-        <div class="v3h-gcal-embed-toggle">
-          <button type="button" data-filter="work" class="${filter==='work'?'active':''}">仕事 のみ</button>
-          <button type="button" data-filter="all"  class="${filter==='all'?'active':''}">プライベート も 表示</button>
+    const filter = currentFilter;
+    const isWork = filter === 'work';
+    // ★ 1 button toggle (owner 2026-08-07 「ボタン 1つ で 切替」)
+    // Header controls は 常に 同じ 構造 (iframe は 別 element で 温存)
+    if (!wrap.querySelector('.v3h-gcal-embed-controls')) {
+      wrap.innerHTML = `
+        <div class="v3h-gcal-embed-controls">
+          <button type="button" id="v3h-gcal-toggle-single" class="v3h-gcal-embed-single ${isWork ? 'is-work' : 'is-all'}">
+            <span class="v3h-gcal-toggle-track"><span class="v3h-gcal-toggle-knob"></span></span>
+            <span class="v3h-gcal-toggle-label" id="v3h-gcal-toggle-label"></span>
+          </button>
+          <a href="https://calendar.google.com/" target="_blank" rel="noopener" class="v3h-gcal-embed-open">Google Cal を 別 tab で 開く ↗</a>
         </div>
-        <a href="https://calendar.google.com/" target="_blank" rel="noopener" class="v3h-gcal-embed-open">Google Cal を 別 tab で 開く ↗</a>
-      </div>
-      <div class="v3h-gcal-embed-frame" id="v3h-gcal-embed-frame"><div class="v3h-empty" style="padding:24px;text-align:center;color:#6b7280;">Google Cal 読込 中…</div></div>
-    `;
-
-    // toggle wire
-    wrap.querySelectorAll('.v3h-gcal-embed-toggle button').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const f = btn.dataset.filter;
-        localStorage.setItem('fp-gcal-embed-filter', f);
+        <div class="v3h-gcal-embed-frame" id="v3h-gcal-embed-frame"><div class="v3h-empty" style="padding:24px;text-align:center;color:#6b7280;">Google Cal 読込 中…</div></div>
+      `;
+      // toggle click wire (once)
+      wrap.querySelector('#v3h-gcal-toggle-single')?.addEventListener('click', () => {
+        const cur = localStorage.getItem('fp-gcal-embed-filter') || 'work';
+        const next = cur === 'work' ? 'all' : 'work';
+        localStorage.setItem('fp-gcal-embed-filter', next);
+        // dataset 状態 mark を 消す ことで 再 render で iframe 更新
+        wrap.dataset.state = '';
         renderV3GcalEmbed(clients, tasks, today);
       });
-    });
+    }
+
+    // toggle 見た目 更新
+    const singleBtn = wrap.querySelector('#v3h-gcal-toggle-single');
+    if (singleBtn) {
+      singleBtn.classList.toggle('is-work', isWork);
+      singleBtn.classList.toggle('is-all', !isWork);
+    }
+    const label = wrap.querySelector('#v3h-gcal-toggle-label');
+    if (label) {
+      label.textContent = isWork ? '仕事 のみ 表示 中 (click で プライベート も 追加)' : 'プライベート も 表示 中 (click で 仕事 のみ)';
+    }
 
     // Fetch calendar list to know which src to include
     const cals = await fetchCachedCalList();
+    let srcIds;
+    let allCals = cals;
     if (!cals || cals.length === 0) {
       // fallback: primary だけ (email 使う)
       const email = localStorage.getItem('fp-gcal-email') || '';
       if (!email) {
-        document.getElementById('v3h-gcal-embed-frame').innerHTML = `
+        const frameNoList = document.getElementById('v3h-gcal-embed-frame');
+        if (frameNoList) frameNoList.innerHTML = `
           <div class="v3h-empty" style="padding:24px;text-align:center;color:#c53030;">
             Calendar list 取得 失敗 · 「Google カレンダー 連携」 を 一度 解除 して 再連携 して ください
           </div>`;
         return;
       }
-      renderEmbedFrame([email]);
-      return;
+      srcIds = [email];
+    } else {
+      const primary = cals.filter(c => c.primary);
+      const secondary = cals.filter(c => !c.primary && !c.deleted);
+      const selected = filter === 'work' ? primary : primary.concat(secondary);
+      srcIds = selected.map(c => c.id);
     }
-
-    // primary + secondary 分類
-    const primary = cals.filter(c => c.primary);
-    const secondary = cals.filter(c => !c.primary && !c.deleted);
-    const selected = filter === 'work' ? primary : primary.concat(secondary);
-    const srcIds = selected.map(c => c.id);
-    renderEmbedFrame(srcIds, cals);
+    renderEmbedFrame(srcIds, allCals);
+    // state mark で 次回 呼出 で skip 可能 に
+    wrap.dataset.state = currentKey;
 
     function renderEmbedFrame(ids, allCals) {
       if (!ids || ids.length === 0) {
-        document.getElementById('v3h-gcal-embed-frame').innerHTML = `
+        const frame0 = document.getElementById('v3h-gcal-embed-frame');
+        if (frame0) frame0.innerHTML = `
           <div class="v3h-empty" style="padding:24px;text-align:center;color:#6b7280;">
             表示 する calendar なし
           </div>`;
@@ -2313,7 +2340,6 @@
       // color per calendar (Google 側 の color を 使う, 無ければ default)
       const colorMap = new Map();
       (allCals || []).forEach(c => {
-        // strip # from backgroundColor
         const col = (c.backgroundColor || '').replace('#','');
         if (col) colorMap.set(c.id, col);
       });
@@ -2333,11 +2359,16 @@
         if (col) params.append('color', '%23' + col);
       });
       const url = 'https://calendar.google.com/calendar/embed?' + params.toString();
+      // ★ 重い bug fix: 既存 iframe と 同 URL なら 触らない (reload 防止)
       const frame = document.getElementById('v3h-gcal-embed-frame');
-      if (frame) {
-        frame.innerHTML = `<iframe src="${escapeHtml(url)}" style="border:0;width:100%;height:680px;border-radius:8px;" title="Google Calendar embed"></iframe>
-          <p style="margin:8px 0 0;font-size:11.5px;color:#6b7280;">${escapeHtml(ids.length)} calendar 表示 中${allCals ? ` (全 ${allCals.length} 中)` : ''} · 別 Google account で 見る 場合 は 別 tab で https://calendar.google.com/ を 開く</p>`;
+      if (!frame) return;
+      const existingIframe = frame.querySelector('iframe');
+      if (existingIframe && existingIframe.dataset.calUrl === url) {
+        // 同 URL → 何もしない (Google Cal 再読込 抑止 = 重さ 解消)
+        return;
       }
+      frame.innerHTML = `<iframe src="${escapeHtml(url)}" data-cal-url="${escapeHtml(url)}" style="border:0;width:100%;height:680px;border-radius:8px;" title="Google Calendar embed" loading="lazy"></iframe>
+        <p style="margin:8px 0 0;font-size:11.5px;color:#6b7280;">${escapeHtml(ids.length)} calendar 表示 中${allCals ? ` (全 ${allCals.length} 中)` : ''}</p>`;
     }
   }
 
