@@ -1786,6 +1786,9 @@ table.clients td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .v3h-sched-event.schedule { border-left-color: #0369A1; background: rgba(3, 105, 161, 0.10); }
 .v3h-sched-event.manual   { border-left-color: #6b46c1; background: rgba(107, 70, 193, 0.10); }
 .v3h-sched-event.other    { border-left-color: var(--red); background: rgba(197, 48, 48, 0.10); }
+/* 2026-08-06 owner「自分 の Cal 情報 も 出して」対応: Google Cal 個人 予定 は 灰色 で 重ね */
+.v3h-sched-event.gcal { border-left-color: #6b7280; background: repeating-linear-gradient(45deg, rgba(107,114,128,0.06), rgba(107,114,128,0.06) 4px, transparent 4px, transparent 8px); color: #545e70; font-style: italic; }
+.v3h-sched-event.gcal:hover { background: rgba(107,114,128,0.14); }
 .v3h-sched-event .time {
   font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
   font-weight: 700;

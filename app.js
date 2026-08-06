@@ -772,12 +772,157 @@
       if (hasToken) {
         gcalBtn.querySelector('span:last-child').textContent = 'Google 連携 済';
       }
-      gcalBtn.addEventListener('click', () => {
+      gcalBtn.addEventListener('click', async () => {
         // 既存 modal 削除
         document.getElementById('v3h-gcal-modal')?.remove();
         const overlay = document.createElement('div');
         overlay.id = 'v3h-gcal-modal';
         overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.65);backdrop-filter:blur(4px);z-index:2147483640;display:flex;align-items:center;justify-content:center;padding:24px;font-family:"Noto Sans JP",sans-serif;';
+
+        // ★ 2026-08-06 owner「連携 どうやって できてるか 見せて」対応:
+        // 既に link 済 なら 「連携 状態」 view を default 表示 (未連携 view の 代わり)
+        const storedToken = sessionStorage.getItem('fp-gcal-token');
+        const linkedAt = localStorage.getItem('fp-gcal-linked-at');
+        const linkedEmail = localStorage.getItem('fp-gcal-email');
+        if (storedToken && linkedAt) {
+          document.body.appendChild(overlay);
+          overlay.innerHTML = `
+            <div style="background:#fff;max-width:600px;width:100%;border-radius:14px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,0.35);">
+              <div style="padding:22px 28px 18px;border-bottom:1px solid #e3e5ea;display:flex;align-items:center;gap:12px;background:#e6f4ea;">
+                <div style="font-size:28px;line-height:1;">✅</div>
+                <div style="flex:1;">
+                  <h2 style="margin:0;font-size:19px;font-weight:800;color:#1a1f2c;">Google カレンダー · 連携 中</h2>
+                  <p style="margin:3px 0 0;font-size:12.5px;color:#1e7e34;font-weight:700;">接続 済 · 自動 sync 動作 中</p>
+                </div>
+                <button id="v3h-gcal-close" style="background:transparent;border:none;font-size:24px;color:#6b7280;cursor:pointer;padding:4px 10px;line-height:1;">×</button>
+              </div>
+              <div style="padding:22px 28px;font-size:14px;color:#3a4254;">
+                <table style="width:100%;border-collapse:collapse;font-size:13.5px;line-height:1.55;">
+                  <tr style="border-bottom:1px solid #f0f2f5;">
+                    <td style="padding:10px 0;font-weight:700;color:#6b7280;width:130px;">Google account</td>
+                    <td style="padding:10px 0;font-family:'JetBrains Mono',ui-monospace,monospace;color:#1a1f2c;font-weight:700;" id="v3h-gcal-status-email">${escapeHtml(linkedEmail || '(不明)')}</td>
+                  </tr>
+                  <tr style="border-bottom:1px solid #f0f2f5;">
+                    <td style="padding:10px 0;font-weight:700;color:#6b7280;">連携 日時</td>
+                    <td style="padding:10px 0;font-family:'JetBrains Mono',ui-monospace,monospace;color:#1a1f2c;">${escapeHtml(new Date(linkedAt).toLocaleString('ja-JP'))}</td>
+                  </tr>
+                  <tr style="border-bottom:1px solid #f0f2f5;">
+                    <td style="padding:10px 0;font-weight:700;color:#6b7280;">Token 有効期限</td>
+                    <td style="padding:10px 0;font-family:'JetBrains Mono',ui-monospace,monospace;color:#1a1f2c;" id="v3h-gcal-status-token">検証 中…</td>
+                  </tr>
+                  <tr style="border-bottom:1px solid #f0f2f5;">
+                    <td style="padding:10px 0;font-weight:700;color:#6b7280;">付与 scope</td>
+                    <td style="padding:10px 0;font-family:'JetBrains Mono',ui-monospace,monospace;color:#1a1f2c;font-size:11.5px;line-height:1.5;" id="v3h-gcal-status-scope">検証 中…</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:10px 0;font-weight:700;color:#6b7280;">Sync 履歴</td>
+                    <td style="padding:10px 0;color:#1a1f2c;font-size:12.5px;" id="v3h-gcal-status-history">読込 中…</td>
+                  </tr>
+                </table>
+                <div style="background:#e8f0f8;border-left:3px solid #0b5d9e;padding:10px 14px;border-radius:0 6px 6px 0;font-size:12.5px;color:#084577;margin-top:14px;line-height:1.6;">
+                  📌 <b>この test で 動作 確認 できます</b>: 下 の 「今 の 予定 1件 を Cal に 入れる」 を 押す と 30分後 に test event が 実際 に 入る。 Google Cal で 確認 可能。
+                </div>
+              </div>
+              <div style="padding:14px 28px;border-top:1px solid #e3e5ea;background:#f7f8fc;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;">
+                <button id="v3h-gcal-unlink" style="background:#fff;border:1px solid #c53030;color:#c53030;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">連携 解除</button>
+                <div style="display:flex;gap:8px;">
+                  <button id="v3h-gcal-open-cal" style="background:#fff;border:1px solid #d4d8df;color:#3a4254;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">Google Cal を 開く</button>
+                  <button id="v3h-gcal-test" style="background:#0b5d9e;color:#fff;border:none;padding:9px 18px;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;">動作 test</button>
+                </div>
+              </div>
+              <p id="v3h-gcal-test-result" style="margin:0;padding:0 28px 18px;font-size:12.5px;color:#3a4254;min-height:16px;text-align:right;"></p>
+            </div>
+          `;
+          const closeStatus = () => overlay.remove();
+          overlay.querySelector('#v3h-gcal-close')?.addEventListener('click', closeStatus);
+          overlay.addEventListener('click', (e) => { if (e.target === overlay) closeStatus(); });
+
+          // token 有効期限 + scope の 実測
+          (async () => {
+            try {
+              const ti = await fetch('https://oauth2.googleapis.com/tokeninfo?access_token=' + encodeURIComponent(storedToken));
+              if (ti.ok) {
+                const td = await ti.json();
+                const secs = parseInt(td.expires_in || '0', 10);
+                const tokenEl = document.getElementById('v3h-gcal-status-token');
+                if (tokenEl) tokenEl.innerHTML = secs > 0 ? `<span style="color:#1e7e34;">残 ${Math.round(secs/60)} 分 有効</span>` : '<span style="color:#c53030;">失効 (再連携 が 必要)</span>';
+                const scopes = (td.scope || '').split(' ').filter(s => s.includes('calendar'));
+                const scopeEl = document.getElementById('v3h-gcal-status-scope');
+                if (scopeEl) scopeEl.innerHTML = scopes.length ? scopes.map(s => `<div>✓ ${escapeHtml(s)}</div>`).join('') : '<span style="color:#c53030;">✗ Calendar scope 欠損</span>';
+              } else {
+                const tokenEl = document.getElementById('v3h-gcal-status-token');
+                if (tokenEl) tokenEl.innerHTML = '<span style="color:#c53030;">検証 失敗 (token 失効?)</span>';
+              }
+            } catch (e) {
+              const tokenEl = document.getElementById('v3h-gcal-status-token');
+              if (tokenEl) tokenEl.innerHTML = '<span style="color:#c53030;">検証 失敗: ' + escapeHtml(e.message || String(e)) + '</span>';
+            }
+          })();
+
+          // Sync 履歴 (localStorage に 記録 済 の 過去 sync)
+          try {
+            const history = JSON.parse(localStorage.getItem('fp-gcal-sync-log') || '[]');
+            const histEl = document.getElementById('v3h-gcal-status-history');
+            if (histEl) {
+              if (history.length === 0) {
+                histEl.innerHTML = '<span style="color:#6b7280;">まだ sync なし。 動作 test を 押して 試して ください</span>';
+              } else {
+                histEl.innerHTML = history.slice(-5).reverse().map(h =>
+                  `<div style="padding:2px 0;">✓ ${escapeHtml(new Date(h.at).toLocaleString('ja-JP'))} · ${escapeHtml(h.summary || '(untitled)')} ${h.htmlLink ? `<a href="${escapeHtml(h.htmlLink)}" target="_blank" style="color:#0b5d9e;margin-left:4px;">開く</a>` : ''}</div>`
+                ).join('');
+              }
+            }
+          } catch (_) {}
+
+          // 動作 test
+          overlay.querySelector('#v3h-gcal-test')?.addEventListener('click', async () => {
+            const resultEl = document.getElementById('v3h-gcal-test-result');
+            resultEl.textContent = 'Google Cal に 送信 中…';
+            try {
+              const token = sessionStorage.getItem('fp-gcal-token');
+              const ev = await gcalInsertTestEvent(token);
+              resultEl.innerHTML = `✓ 作成 済 — <a href="${escapeHtml(ev.htmlLink)}" target="_blank" rel="noopener" style="color:#0b5d9e;font-weight:700;">Google Cal で 確認</a>`;
+              // sync log に 記録
+              try {
+                const log = JSON.parse(localStorage.getItem('fp-gcal-sync-log') || '[]');
+                log.push({ at: new Date().toISOString(), summary: ev.summary, htmlLink: ev.htmlLink, id: ev.id });
+                localStorage.setItem('fp-gcal-sync-log', JSON.stringify(log.slice(-20)));
+                // 履歴表示 も 即更新
+                const histEl = document.getElementById('v3h-gcal-status-history');
+                if (histEl) {
+                  const history = JSON.parse(localStorage.getItem('fp-gcal-sync-log') || '[]');
+                  histEl.innerHTML = history.slice(-5).reverse().map(h =>
+                    `<div style="padding:2px 0;">✓ ${escapeHtml(new Date(h.at).toLocaleString('ja-JP'))} · ${escapeHtml(h.summary || '(untitled)')} ${h.htmlLink ? `<a href="${escapeHtml(h.htmlLink)}" target="_blank" style="color:#0b5d9e;margin-left:4px;">開く</a>` : ''}</div>`
+                  ).join('');
+                }
+              } catch(_){}
+            } catch (e) {
+              resultEl.textContent = '✗ 失敗: ' + (e.message || e);
+            }
+          });
+
+          // Google Cal を 開く
+          overlay.querySelector('#v3h-gcal-open-cal')?.addEventListener('click', () => {
+            window.open('https://calendar.google.com/', '_blank', 'noopener');
+          });
+
+          // 解除
+          overlay.querySelector('#v3h-gcal-unlink')?.addEventListener('click', () => {
+            if (!confirm('Google カレンダー 連携 を 解除 しますか?\n\n(以降、 予約 が Cal に 自動 sync されなくなります)')) return;
+            try {
+              sessionStorage.removeItem('fp-gcal-token');
+              sessionStorage.removeItem('fp-gcal-token-at');
+              localStorage.removeItem('fp-gcal-linked-at');
+              localStorage.removeItem('fp-gcal-email');
+              // sync log は 保持 (履歴 なので)
+            } catch(_){}
+            closeStatus();
+            try { renderDashboard(); } catch(_){}
+            alert('連携 を 解除 しました。 再連携 は 「Google カレンダー 連携」 button から。');
+          });
+          return;
+        }
+        // 未 link 状態 → 従来 の 「連携 案内」 modal
         overlay.innerHTML = `
           <div style="background:#fff;max-width:560px;width:100%;border-radius:14px;box-shadow:0 30px 80px rgba(0,0,0,0.35);overflow:hidden;">
             <div style="padding:24px 28px 20px;border-bottom:1px solid #e3e5ea;display:flex;align-items:center;gap:12px;">
@@ -1279,6 +1424,47 @@
     if (!token) throw new Error('Google Cal 未連携');
     return await gcalInsertEvent(token, event);
   };
+
+  // Fetch owner's Google Cal events for a time range (schedule view overlay 用)
+  async function gcalFetchEvents(accessToken, timeMin, timeMax) {
+    const url = new URL('https://www.googleapis.com/calendar/v3/calendars/primary/events');
+    url.searchParams.set('timeMin', timeMin.toISOString());
+    url.searchParams.set('timeMax', timeMax.toISOString());
+    url.searchParams.set('singleEvents', 'true');
+    url.searchParams.set('orderBy', 'startTime');
+    url.searchParams.set('maxResults', '250');
+    const res = await fetch(url.toString(), { headers: { 'Authorization': 'Bearer ' + accessToken } });
+    if (!res.ok) {
+      const t = await res.text();
+      throw new Error(`Cal API ${res.status}: ${t.slice(0, 200)}`);
+    }
+    const data = await res.json();
+    return data.items || [];
+  }
+  // Cache (5分 で expire)
+  window.__fpGcalEventsCache = { items: null, at: 0, range: null };
+  async function fetchGcalEventsForRange(start, end) {
+    const token = sessionStorage.getItem('fp-gcal-token');
+    if (!token) return [];
+    const rangeKey = start.toISOString() + '_' + end.toISOString();
+    const cache = window.__fpGcalEventsCache;
+    if (cache.range === rangeKey && cache.items && (Date.now() - cache.at) < 5 * 60 * 1000) {
+      return cache.items;
+    }
+    try {
+      const items = await gcalFetchEvents(token, start, end);
+      window.__fpGcalEventsCache = { items, at: Date.now(), range: rangeKey };
+      return items;
+    } catch (e) {
+      console.warn('[gcal] fetch fail:', e.message);
+      // 401 なら token 失効 の signal を 出す
+      if (String(e.message).includes('401')) {
+        try { sessionStorage.removeItem('fp-gcal-token'); } catch(_){}
+      }
+      return [];
+    }
+  }
+  window.__fpFetchGcalEventsForRange = fetchGcalEventsForRange;
 
   // ============================
   // 手動 TODO (owner が 自分 で 追加) — 2026-08-05 owner 明示
@@ -1903,6 +2089,43 @@
         title: t.title,
       });
     });
+    // ★ 2026-08-06 owner「自分 の Cal 情報 が 入ってきてない」対応:
+    // Google Cal 連携 済 なら owner の 個人 予定 を 灰色 chip で overlay
+    if (sessionStorage.getItem('fp-gcal-token')) {
+      // 非同期 fetch → 完了 後 に 再 render で 反映 (avoid blocking initial paint)
+      fetchGcalEventsForRange(start, end).then(items => {
+        if (!items || items.length === 0) return;
+        let added = 0;
+        items.forEach(ev => {
+          const startDt = ev.start?.dateTime || ev.start?.date;
+          if (!startDt) return;
+          const bd = new Date(startDt);
+          if (isNaN(bd)) return;
+          if (bd < start || bd >= end) return;
+          // FP Compass 自身 が 作った test event は skip (重複表示 避ける)
+          if ((ev.summary || '').startsWith('【FP Compass')) return;
+          const key = iso(bd);
+          if (!byDate.has(key)) byDate.set(key, []);
+          const hasTime = !!ev.start?.dateTime;
+          const time = hasTime ? `${String(bd.getHours()).padStart(2,'0')}:${String(bd.getMinutes()).padStart(2,'0')}` : '';
+          byDate.get(key).push({
+            type: 'gcal',
+            sortKey: bd.getTime(),
+            time,
+            clientId: '',
+            name: '',
+            title: ev.summary || '(タイトル なし)',
+            gcalHtmlLink: ev.htmlLink,
+          });
+          added++;
+        });
+        if (added > 0) {
+          // 再描画 (fetchGcalEventsForRange の cache を 使う ので 2回目 は 高速)
+          renderV3Schedule(clients, tasks, today);
+        }
+      }).catch(e => console.warn('[gcal overlay]', e));
+    }
+
     // sort within date
     byDate.forEach(arr => arr.sort((a,b) => a.sortKey - b.sortKey));
 
@@ -1923,9 +2146,12 @@
       const events = byDate.get(key) || [];
       const shownEvents = events.slice(0, maxEventsPerCell);
       const overflow = events.length - shownEvents.length;
-      const evHtml = shownEvents.map(e => `
-        <button class="v3h-sched-event ${e.type}" data-client-id="${escapeHtml(e.clientId)}" title="${escapeHtml((e.time ? e.time + ' · ' : '') + (e.name ? e.name + ' 様 · ' : '') + e.title)}">${e.time ? `<span class="time">${e.time}</span>` : ''}${escapeHtml((e.name || e.title).slice(0, 12))}${(e.name || e.title).length > 12 ? '…' : ''}</button>
-      `).join('');
+      const evHtml = shownEvents.map(e => {
+        const label = e.name || e.title;
+        const showText = escapeHtml(label.slice(0, 14)) + (label.length > 14 ? '…' : '');
+        const gcalAttr = e.gcalHtmlLink ? ` data-gcal-link="${escapeHtml(e.gcalHtmlLink)}"` : '';
+        return `<button class="v3h-sched-event ${e.type}" data-client-id="${escapeHtml(e.clientId)}"${gcalAttr} title="${escapeHtml((e.time ? e.time + ' · ' : '') + (e.name ? e.name + ' 様 · ' : '') + e.title)}">${e.time ? `<span class="time">${e.time}</span>` : ''}${showText}</button>`;
+      }).join('');
       cells.push(`
         <div class="v3h-sched-cell ${isToday ? 'today' : ''} ${isPast ? 'past' : ''} ${isOtherMonth ? 'other-month' : ''} ${weekendBg} ${dowCls}">
           <div class="v3h-sched-cell-date">
@@ -1941,6 +2167,9 @@
     // wire event click
     grid.querySelectorAll('.v3h-sched-event').forEach(el => {
       el.addEventListener('click', () => {
+        // gcal event なら Google Cal 側 の event URL を 開く
+        const gcalLink = el.dataset.gcalLink;
+        if (gcalLink) { window.open(gcalLink, '_blank', 'noopener'); return; }
         const id = el.dataset.clientId;
         if (id) openClientModal(id);
       });
