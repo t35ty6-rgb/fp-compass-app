@@ -1790,6 +1790,12 @@ table.clients td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .v3h-sched-event.gcal { border-left-color: #6b7280; background: repeating-linear-gradient(45deg, rgba(107,114,128,0.06), rgba(107,114,128,0.06) 4px, transparent 4px, transparent 8px); color: #545e70; font-style: italic; }
 .v3h-sched-event.gcal:hover { background: rgba(107,114,128,0.14); }
 
+/* 2026-08-07 owner「議事録 に AI で 質問」 */
+.fp-mai-qa-chip:hover { background: #ede9fe !important; border-color: #a78bfa !important; transform: translateY(-1px); }
+.fp-mai-qa-input:focus { border-color: #7c3aed !important; box-shadow: 0 0 0 3px rgba(124,58,237,0.1); }
+.fp-mai-qa-send:hover { transform: translateY(-1px); box-shadow: 0 4px 10px rgba(124,58,237,0.4) !important; }
+.fp-mai-qa-send:disabled { opacity: 0.6; cursor: wait; }
+
 /* 2026-08-07 owner「Google Cal iframe 埋込」 */
 .v3h-sched-embed-wrap { margin-top: 10px; padding: 0 4px; }
 .v3h-sched-embed-wrap .v3h-gcal-embed-controls {
