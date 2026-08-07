@@ -1555,10 +1555,10 @@
           ${overlayLines.map(l => `<div style="padding-left:12px;color:#fca5a5;">${escHtml(l)}</div>`).join('')}
           <div id="fp-diag-body-dump" style="color:#a5b4fc;margin-top:4px;">[body 直下 element (${bodyDirect.length})]:</div>
           ${bodyDirect.slice(0,20).map(l => `<div style="padding-left:12px;color:#cbd5e1;">· ${escHtml(l)}</div>`).join('')}
-          <div id="fp-diag-hover" style="margin-top:6px;padding:6px;background:#1e293b;border-radius:4px;color:#fbbf24;pointer-events:auto;">
+          <div id="fp-diag-hover" style="margin-top:6px;padding:6px;background:#1e293b;border-radius:4px;color:#fbbf24;">
             🖱 hover: (カーソル 動かして)
           </div>
-          <div id="fp-diag-click" style="margin-top:4px;padding:6px;background:#1e293b;border-radius:4px;color:#a7f3d0;pointer-events:auto;">
+          <div id="fp-diag-click" style="margin-top:4px;padding:6px;background:#1e293b;border-radius:4px;color:#a7f3d0;">
             👆 last click: (どこか click してみて)
           </div>
         `;
