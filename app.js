@@ -914,6 +914,7 @@
               localStorage.removeItem('fp-gcal-token-at');
               localStorage.removeItem('fp-gcal-linked-at');
               localStorage.removeItem('fp-gcal-email');
+              localStorage.removeItem('fp-gcal-token-stale');
               // sync log は 保持 (履歴 なので)
             } catch(_){}
             closeStatus();
@@ -1007,6 +1008,7 @@
             localStorage.setItem('fp-gcal-token', accessToken);
             localStorage.setItem('fp-gcal-token-at', new Date().toISOString());
             localStorage.setItem('fp-gcal-linked-at', new Date().toISOString());
+            localStorage.removeItem('fp-gcal-token-stale');
             const googleEmail = (user.providerData || []).find(p => p.providerId === 'google.com')?.email
               || result.user?.email || '';
             localStorage.setItem('fp-gcal-email', googleEmail);
@@ -1461,6 +1463,37 @@
     return getStoredGcalToken() || null;
   }
   window.__fpEnsureGcalToken = ensureGcalToken;
+
+  // ★ 2026-08-07Q owner「毎回 登録 させられる」対応:
+  // silent reauth (prompt=none) を owner 明示 click 時 だけ 走らせる (page load 時 は 走らない → freeze なし)
+  // 成功: 新 token を localStorage 反映 · fail: false 返す (呼出側 が 通常 popup に fallback)
+  async function trySilentGcalRefresh() {
+    const fp = window.__fp;
+    if (!fp?.GoogleAuthProvider || !fp?.auth?.currentUser) return false;
+    const user = fp.auth.currentUser;
+    const hasGoogleLink = (user.providerData || []).some(p => p.providerId === 'google.com');
+    if (!hasGoogleLink) return false;
+    try {
+      const provider = new fp.GoogleAuthProvider();
+      provider.addScope('https://www.googleapis.com/auth/calendar.events');
+      provider.addScope('https://www.googleapis.com/auth/calendar.readonly');
+      provider.setCustomParameters({ prompt: 'none', include_granted_scopes: 'true' });
+      const result = await fp.reauthenticateWithPopup(user, provider);
+      const cred = fp.GoogleAuthProvider.credentialFromResult(result);
+      const newTok = cred?.accessToken;
+      if (newTok) {
+        localStorage.setItem(GCAL_TOKEN_KEY, newTok);
+        localStorage.setItem(GCAL_TOKEN_AT_KEY, new Date().toISOString());
+        localStorage.removeItem('fp-gcal-token-stale');
+        console.log('[gcal] silent refresh OK');
+        return true;
+      }
+    } catch (e) {
+      console.log('[gcal] silent refresh fail:', e.code || e.message);
+    }
+    return false;
+  }
+  window.__fpTrySilentGcalRefresh = trySilentGcalRefresh;
   // Expose 実 sync helper (booking 確定 時 に 呼ばれる 想定)
   window.__fpGcalInsertEvent = async function(event) {
     const token = await ensureGcalToken();
@@ -1688,8 +1721,12 @@
     } catch (e) {
       console.warn('[gcal] fetch fail:', e.message);
       // 401 なら token 失効 の signal を 出す
+      // ★ 2026-08-07Q: 削除 じゃ なく stale flag に (owner 再認証 UX 改善)
       if (String(e.message).includes('401')) {
-        try { localStorage.removeItem('fp-gcal-token'); } catch(_){}
+        try {
+          localStorage.removeItem('fp-gcal-token');
+          localStorage.setItem('fp-gcal-token-stale', '1');
+        } catch(_){}
       }
       return [];
     }
@@ -1721,7 +1758,13 @@
       return items;
     } catch (e) {
       console.warn('[gcal list]', e.message);
-      if (String(e.message).includes('401')) { try { localStorage.removeItem('fp-gcal-token'); } catch(_){} }
+      // ★ 2026-08-07Q: 削除 + stale flag
+      if (String(e.message).includes('401')) {
+        try {
+          localStorage.removeItem('fp-gcal-token');
+          localStorage.setItem('fp-gcal-token-stale', '1');
+        } catch(_){}
+      }
       return [];
     }
   }
@@ -2446,12 +2489,56 @@
 
     if (!token) {
       wrap.dataset.state = currentKey;
-      wrap.innerHTML = `
-        <div class="v3h-empty" style="padding:32px 20px;text-align:center;">
-          <div style="font-size:36px;line-height:1;margin-bottom:10px;">🔒</div>
-          <p style="font-size:15px;font-weight:700;color:#3a4254;margin:0 0 6px;">Google Cal 連携 が 未完了</p>
-          <p style="font-size:13px;color:#6b7280;margin:0 0 14px;">上 の 「🗓️ Google カレンダー 連携」 で 連携 して ください</p>
-        </div>`;
+      // ★ 2026-08-07Q: 過去 連携 済 (linkedAt あり) と 完全 未連携 を 区別、
+      //   前者 は「認証 期限切れ · 1 click 更新」 UX に (owner 「毎回 登録 させられる」対応)
+      const linkedAtIso = localStorage.getItem('fp-gcal-linked-at');
+      const linkedEmail = localStorage.getItem('fp-gcal-email');
+      const wasStale = localStorage.getItem('fp-gcal-token-stale') === '1';
+      const previouslyLinked = !!linkedAtIso;
+      if (previouslyLinked) {
+        wrap.innerHTML = `
+          <div class="v3h-empty" style="padding:32px 20px;text-align:center;">
+            <div style="font-size:36px;line-height:1;margin-bottom:10px;">🔄</div>
+            <p style="font-size:15px;font-weight:700;color:#3a4254;margin:0 0 6px;">Google 認証 の 期限 切れ</p>
+            <p style="font-size:13px;color:#6b7280;margin:0 0 16px;">${escapeHtml(linkedEmail || '')} · 1 click で 更新 (登録 やり直し 不要)</p>
+            <button id="v3h-gcal-refresh" style="background:#0b5d9e;color:#fff;border:none;padding:10px 22px;border-radius:8px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">🔄 認証 更新</button>
+            <p id="v3h-gcal-refresh-hint" style="font-size:11px;color:#9ca3af;margin:12px 0 0;">初回 は 「連携 済 の Google account」 を 選ぶ だけ で 完了</p>
+          </div>`;
+        // wire: silent 試行 → fail 時 fullpopup に fallback
+        wrap.querySelector('#v3h-gcal-refresh')?.addEventListener('click', async () => {
+          const btn = wrap.querySelector('#v3h-gcal-refresh');
+          const hint = wrap.querySelector('#v3h-gcal-refresh-hint');
+          btn.disabled = true;
+          btn.textContent = '認証 更新 中…';
+          try {
+            // 1) silent 試行 (owner action 直後 なので brief popup も OK)
+            let ok = false;
+            try {
+              ok = await window.__fpTrySilentGcalRefresh?.();
+            } catch (_) {}
+            if (ok) {
+              hint.textContent = '✓ 更新 済 · Cal 読込み 中…';
+              wrap.dataset.state = ''; // force re-render
+              await renderV3GcalEmbed(clients, tasks, today);
+              return;
+            }
+            // 2) fallback: 通常 の 明示 popup (consent 画面 に なる 可能性 あり)
+            hint.textContent = '完全 な 認証 に なります · popup を 許可';
+            document.getElementById('v3h-cta-gcal')?.click();
+          } catch (e) {
+            btn.disabled = false;
+            btn.textContent = '🔄 認証 更新';
+            hint.textContent = '⚠️ 失敗: ' + (e.message || e.code || '不明');
+          }
+        });
+      } else {
+        wrap.innerHTML = `
+          <div class="v3h-empty" style="padding:32px 20px;text-align:center;">
+            <div style="font-size:36px;line-height:1;margin-bottom:10px;">🔒</div>
+            <p style="font-size:15px;font-weight:700;color:#3a4254;margin:0 0 6px;">Google Cal 連携 が 未完了</p>
+            <p style="font-size:13px;color:#6b7280;margin:0 0 14px;">上 の 「🗓️ Google カレンダー 連携」 で 連携 して ください</p>
+          </div>`;
+      }
       return;
     }
 
