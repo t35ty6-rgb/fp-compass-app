@@ -1495,11 +1495,66 @@
         .forEach(el => { console.log('[cleanup] removing stuck overlay z=', el.style.zIndex); el.remove(); });
     } catch (e) { console.warn('[cleanup] fail', e); }
   }
+
+  // ★ 2026-08-07 owner「まだ click できない」対応: emergency ?nuke=1 で 全 fixed overlay 強制除去
+  // 診断 も 兼ねる (全 fullscreen fixed element の id/class を log)
+  function nukeAllOverlaysIfRequested() {
+    try {
+      const p = new URLSearchParams(location.search);
+      const wantNuke = p.get('nuke') === '1';
+      const wantDiag = p.get('nuke') === '1' || p.get('diag') === '1';
+      const vw = window.innerWidth, vh = window.innerHeight;
+      const candidates = Array.from(document.querySelectorAll('body *')).filter(el => {
+        const s = getComputedStyle(el);
+        if (s.position !== 'fixed' && s.position !== 'absolute') return false;
+        if (s.display === 'none' || s.visibility === 'hidden') return false;
+        const r = el.getBoundingClientRect();
+        // 画面 の 80% 以上 覆う (見えない overlay 疑い)
+        return r.width > vw * 0.8 && r.height > vh * 0.8;
+      });
+      if (wantDiag) {
+        console.log(`[diag] fullscreen fixed/absolute overlays (${candidates.length}):`);
+        candidates.forEach(el => {
+          const s = getComputedStyle(el);
+          console.log(`  · ${el.tagName}#${el.id}.${(el.className||'').toString().slice(0,60)} z=${s.zIndex} pos=${s.position} bg=${s.backgroundColor.slice(0,30)} pe=${s.pointerEvents}`);
+        });
+      }
+      if (wantNuke) {
+        candidates.forEach(el => {
+          // 既知 の 安全 element は skip (login screen · dashboard 本体)
+          if (el.id === 'fp-gate-overlay' || el.tagName === 'MAIN' || el.classList.contains('app') || el.classList.contains('view')) return;
+          console.log('[NUKE] removing:', el.tagName, el.id, el.className.toString().slice(0,50));
+          el.remove();
+        });
+        // body 直下 全 pointer-events reset
+        document.body.style.pointerEvents = 'auto';
+        Array.from(document.body.children).forEach(el => {
+          if (el.style.pointerEvents === 'none') {
+            console.log('[NUKE] pointer-events:auto forced on', el.tagName, el.id);
+            el.style.pointerEvents = 'auto';
+          }
+        });
+        // banner で 通知
+        const banner = document.createElement('div');
+        banner.style.cssText = 'position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:2147483647;background:#dc2626;color:#fff;padding:10px 20px;border-radius:8px;font-family:sans-serif;font-size:13px;font-weight:800;box-shadow:0 8px 20px rgba(220,38,38,0.4);';
+        banner.textContent = '🚨 緊急 nuke 実行済 · 全 overlay 除去 (?nuke=1 外して 再読込)';
+        banner.onclick = () => banner.remove();
+        document.body.appendChild(banner);
+        setTimeout(() => banner.remove(), 8000);
+      }
+    } catch (e) { console.warn('[nuke] fail', e); }
+  }
   // fire once at load + also on visibility change (owner が tab 戻ってきた 時 の 保険)
-  if (document.readyState === 'complete' || document.readyState === 'interactive') {
+  function onLoadCleanup() {
     setTimeout(cleanupStuckModalsOnLoad, 100);
+    // nuke/diag は login 後 の 反映 も 見たい ので 5秒 後 に 再実行
+    setTimeout(nukeAllOverlaysIfRequested, 500);
+    setTimeout(nukeAllOverlaysIfRequested, 5000);
+  }
+  if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    onLoadCleanup();
   } else {
-    document.addEventListener('DOMContentLoaded', () => setTimeout(cleanupStuckModalsOnLoad, 100));
+    document.addEventListener('DOMContentLoaded', onLoadCleanup);
   }
   // Escape key で 任意 modal (gcal / onboarding) を 閉じる
   document.addEventListener('keydown', (e) => {
