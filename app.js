@@ -7531,41 +7531,75 @@ ${ctxText}${surveyTxt}`;
     '次回 面談 の 冒頭 30秒 script 案 を 作って',
   ];
   function renderMeetingAiQaBlock({ customerId, zoomMeetingId, transcript, summary }) {
-    // ★ 2026-08-07: zoomMeetingId 空 でも transcript あれば raw mode で 動作
     const hasTranscript = !!(transcript || summary);
     if (!hasTranscript && !zoomMeetingId) return '';
     const uid = 'qa-' + Math.random().toString(36).slice(2, 10);
-    // transcript を data attr に 埋込 (raw mode の 送信 payload)
-    // 長い の で 別 element の script tag に JSON で 埋込 (data attr は size 制限 + escape issue 回避)
     const payloadId = 'qa-payload-' + uid;
     const rawPayload = { rawTranscript: transcript || '', rawSummary: summary || '' };
     return `
-      <div class="fp-meeting-block fp-mai-qa" data-mai-qa data-customer-id="${escapeHtml(customerId || '')}" data-zoom-meeting-id="${escapeHtml(zoomMeetingId || '')}" data-qa-uid="${uid}" data-payload-id="${payloadId}">
+      <div class="fp-meeting-block fp-mai-qa" data-mai-qa data-customer-id="${escapeHtml(customerId || '')}" data-zoom-meeting-id="${escapeHtml(zoomMeetingId || '')}" data-qa-uid="${uid}" data-payload-id="${payloadId}" style="border:1.5px solid #ddd6fe;background:linear-gradient(180deg,#faf5ff,#ffffff);border-radius:12px;padding:14px 16px;">
         <script type="application/json" id="${payloadId}">${JSON.stringify(rawPayload).replace(/</g,'\\u003c')}</script>
-        <div class="fp-meeting-block-label" style="display:flex;align-items:center;gap:8px;">
+        <div class="fp-meeting-block-label" style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
           🤖 この 議事録 に AI で 質問
-          <span style="font-size:9.5px;font-weight:600;color:#7c3aed;background:#f5f3ff;padding:2px 8px;border-radius:99px;">Claude Haiku</span>
+          <span style="font-size:9.5px;font-weight:800;color:#7c3aed;background:#ede9fe;padding:2px 8px;border-radius:99px;letter-spacing:0.03em;">Claude Haiku · 会話 続きます</span>
+          <button type="button" class="fp-mai-qa-clear" style="margin-left:auto;background:transparent;border:none;color:#94a3b8;font-size:11px;cursor:pointer;padding:2px 6px;font-family:inherit;" title="この 会話 を クリア">↻ 新しい 会話</button>
         </div>
-        <div class="fp-mai-qa-chips" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
-          ${AI_QA_CHIPS.map((q, i) => `<button type="button" class="fp-mai-qa-chip" data-mai-chip data-q="${escapeHtml(q)}" style="background:#f5f3ff;border:1px solid #ddd6fe;color:#5b21b6;font-size:11.5px;font-weight:700;padding:5px 11px;border-radius:99px;cursor:pointer;font-family:inherit;transition:all 0.12s;">${escapeHtml(q.length > 22 ? q.slice(0, 22) + '…' : q)}</button>`).join('')}
+        <div class="fp-mai-qa-answers" style="display:flex;flex-direction:column;gap:10px;margin-bottom:12px;"></div>
+        <div class="fp-mai-qa-chips" data-role="initial-chips" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
+          ${AI_QA_CHIPS.map((q) => `<button type="button" class="fp-mai-qa-chip" data-mai-chip data-q="${escapeHtml(q)}" style="background:#fff;border:1.5px solid #ddd6fe;color:#5b21b6;font-size:11.5px;font-weight:700;padding:6px 12px;border-radius:99px;cursor:pointer;font-family:inherit;transition:all 0.12s;">${escapeHtml(q.length > 22 ? q.slice(0, 22) + '…' : q)}</button>`).join('')}
         </div>
         <div style="display:flex;gap:6px;">
-          <input type="text" class="fp-mai-qa-input" placeholder="自由 に 質問 (例: 保険 の 話 何 分間 くらい?)"
-            style="flex:1;padding:8px 12px;border:1.5px solid #ddd6fe;border-radius:6px;font-size:13px;font-family:inherit;outline:none;">
-          <button type="button" class="fp-mai-qa-send" style="background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff;border:none;padding:8px 18px;border-radius:6px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 2px 6px rgba(124,58,237,0.3);">聞く</button>
+          <input type="text" class="fp-mai-qa-input" placeholder="自由 に 質問 (Enter で 送信 · 会話 続けられます)"
+            style="flex:1;padding:9px 13px;border:1.5px solid #ddd6fe;border-radius:8px;font-size:13.5px;font-family:inherit;outline:none;">
+          <button type="button" class="fp-mai-qa-send" style="background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff;border:none;padding:9px 20px;border-radius:8px;font-size:13.5px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 2px 6px rgba(124,58,237,0.3);">聞く</button>
         </div>
-        <div class="fp-mai-qa-answers" style="margin-top:10px;display:flex;flex-direction:column;gap:8px;"></div>
       </div>
     `;
+  }
+
+  // ★ 2026-08-07: markdown → HTML 変換 (### 見出し / ** 太字 / - list) 議事録 QA 用
+  function renderQaMarkdown(md) {
+    if (!md) return '';
+    let html = escapeHtml(md);
+    // h4 見出し (### ...) — 大きく + 上下 margin + 色
+    html = html.replace(/^###\s*(.+)$/gm, (_, t) =>
+      `<div style="font-size:13.5px;font-weight:800;color:#5b21b6;margin:12px 0 6px;letter-spacing:-0.005em;">${t}</div>`);
+    // list (- item)
+    html = html.replace(/(?:^- .+(?:\n|$))+/gm, (block) => {
+      const items = block.trim().split('\n').map(l => l.replace(/^-\s*/, ''));
+      return `<ul style="margin:4px 0;padding-left:20px;font-size:13px;line-height:1.75;color:#1a1f2c;">${items.map(i => `<li style="margin-bottom:3px;">${i}</li>`).join('')}</ul>`;
+    });
+    // bold **text**
+    html = html.replace(/\*\*(.+?)\*\*/g, '<b style="color:#1a1f2c;font-weight:800;">$1</b>');
+    // paragraphs (double newline)
+    html = html.split(/\n\n+/).map(p => {
+      if (p.trim().startsWith('<div') || p.trim().startsWith('<ul')) return p;
+      return `<div style="margin:4px 0;font-size:13px;line-height:1.75;color:#1a1f2c;">${p.replace(/\n/g,'<br>')}</div>`;
+    }).join('');
+    return html;
   }
 
   // Delegated click handler (once per DOM) — fp-mai-qa 系 全部 拾う
   if (!window.__fpMaiQaWired) {
     window.__fpMaiQaWired = true;
     document.addEventListener('click', async (e) => {
+      // Clear button
+      const clearBtn = e.target.closest('.fp-mai-qa-clear');
+      if (clearBtn) {
+        const wrap = clearBtn.closest('[data-mai-qa]');
+        if (wrap) {
+          wrap.__qaState = { history: [] };
+          const answersEl = wrap.querySelector('.fp-mai-qa-answers');
+          if (answersEl) answersEl.innerHTML = '';
+          const initChips = wrap.querySelector('.fp-mai-qa-chips[data-role="initial-chips"]');
+          if (initChips) initChips.style.display = '';
+        }
+        return;
+      }
       const chip = e.target.closest('.fp-mai-qa-chip[data-mai-chip]');
       const send = e.target.closest('.fp-mai-qa-send');
-      if (!chip && !send) return;
+      const followupChip = e.target.closest('.fp-mai-qa-followup');
+      if (!chip && !send && !followupChip) return;
       const wrap = e.target.closest('[data-mai-qa]');
       if (!wrap) return;
       const customerId = wrap.dataset.customerId;
@@ -7573,22 +7607,35 @@ ${ctxText}${surveyTxt}`;
       const input = wrap.querySelector('.fp-mai-qa-input');
       const answersEl = wrap.querySelector('.fp-mai-qa-answers');
       const sendBtn = wrap.querySelector('.fp-mai-qa-send');
-      const question = chip ? chip.dataset.q : (input?.value || '').trim();
+      const initChips = wrap.querySelector('.fp-mai-qa-chips[data-role="initial-chips"]');
+      let question = '';
+      if (chip) question = chip.dataset.q || '';
+      else if (followupChip) question = followupChip.dataset.q || '';
+      else question = (input?.value || '').trim();
       if (!question) { input?.focus(); return; }
+
+      // 会話 state (per-wrap)
+      if (!wrap.__qaState) wrap.__qaState = { history: [] };
+      const state = wrap.__qaState;
+
+      // 初回 質問 の 時 は initial chips を hide (会話 mode に 入った 印)
+      if (state.history.length === 0 && initChips) initChips.style.display = 'none';
+
+      // 直前 の followup chips 削除 (次 の 答え で 新 chips が 出る)
+      wrap.querySelectorAll('.fp-mai-qa-followup-row').forEach(el => el.remove());
 
       // 質問 bubble (右) + loading answer bubble (左)
       const bubbleId = 'qa-b-' + Date.now();
       answersEl.insertAdjacentHTML('beforeend', `
         <div style="display:flex;justify-content:flex-end;">
-          <div style="max-width:78%;background:#7c3aed;color:#fff;padding:8px 12px;border-radius:12px 12px 4px 12px;font-size:12.5px;line-height:1.55;">${escapeHtml(question)}</div>
+          <div style="max-width:82%;background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff;padding:10px 14px;border-radius:14px 14px 4px 14px;font-size:13px;line-height:1.55;font-weight:500;box-shadow:0 2px 6px rgba(124,58,237,0.25);">${escapeHtml(question)}</div>
         </div>
         <div id="${bubbleId}" style="display:flex;justify-content:flex-start;">
-          <div style="max-width:88%;background:#f5f3ff;color:#3a4254;padding:8px 12px;border-radius:12px 12px 12px 4px;font-size:12.5px;line-height:1.7;border:1px solid #ddd6fe;">
-            <span style="opacity:0.7;">Claude が 議事録 を 読んでます…</span>
+          <div style="max-width:92%;background:#fff;color:#3a4254;padding:12px 14px;border-radius:14px 14px 14px 4px;font-size:12.5px;line-height:1.75;border:1.5px solid #ddd6fe;box-shadow:0 1px 3px rgba(124,58,237,0.08);">
+            <span style="opacity:0.6;font-style:italic;">🤖 Claude が 議事録 を 読み込み 中…</span>
           </div>
         </div>
       `);
-      // scroll
       answersEl.scrollTop = answersEl.scrollHeight;
       sendBtn.disabled = true;
       if (input) input.value = '';
@@ -7603,32 +7650,49 @@ ${ctxText}${surveyTxt}`;
         if (payloadId) {
           try { rawPayload = JSON.parse(document.getElementById(payloadId)?.textContent || '{}'); } catch(_) {}
         }
-        const callArgs = { tenantId: fp.tenantId, customerId, question };
-        if (zoomMeetingId) {
-          callArgs.zoomMeetingId = zoomMeetingId;
-        }
-        // 常に raw も 送る (Firestore lookup 失敗 時 の fallback として CF が rawInput 優先 する 実装 じゃない が、
-        // CF は meetingId/zoomMeetingId 無し + rawInput あり の 時 だけ raw mode に 入る)
+        const callArgs = {
+          tenantId: fp.tenantId,
+          customerId,
+          question,
+          history: state.history.slice(-10), // 直近 10 turn (context 保持 + cost 制御)
+        };
+        if (zoomMeetingId) callArgs.zoomMeetingId = zoomMeetingId;
         if (!zoomMeetingId && (rawPayload.rawTranscript || rawPayload.rawSummary)) {
           callArgs.rawTranscript = rawPayload.rawTranscript.slice(0, 30000);
           callArgs.rawSummary = rawPayload.rawSummary.slice(0, 5000);
         }
         const res = await fn(callArgs);
         const answer = res.data?.answer || '(回答 が 空 でした)';
+        const suggestions = Array.isArray(res.data?.suggestions) ? res.data.suggestions : [];
+
+        // 会話 履歴 更新
+        state.history.push({ role: 'user', content: question });
+        state.history.push({ role: 'assistant', content: answer });
+
         const bubble = document.getElementById(bubbleId);
         if (bubble) {
           bubble.innerHTML = `
-            <div style="max-width:88%;background:#fff;color:#1a1f2c;padding:10px 14px;border-radius:12px 12px 12px 4px;font-size:12.5px;line-height:1.75;border:1px solid #ddd6fe;">
-              ${window.renderStructuredSummary ? window.renderStructuredSummary(answer) : escapeHtml(answer).replace(/\n/g, '<br>')}
-              <div style="margin-top:6px;font-size:10px;color:#9ca3af;">🤖 Claude Haiku 4.5 · この 議事録 単体 から の 回答</div>
+            <div style="max-width:92%;background:#fff;color:#1a1f2c;padding:14px 16px;border-radius:14px 14px 14px 4px;border:1.5px solid #ddd6fe;box-shadow:0 2px 8px rgba(124,58,237,0.10);">
+              ${renderQaMarkdown(answer)}
+              <div style="margin-top:10px;padding-top:8px;border-top:1px dashed #e5e7eb;font-size:10px;color:#9ca3af;">🤖 Claude Haiku 4.5 · 会話 ターン ${Math.ceil(state.history.length / 2)}</div>
             </div>
           `;
+        }
+        // Follow-up suggestion chips (次 の 質問 提案)
+        if (suggestions.length > 0) {
+          const followupHtml = `
+            <div class="fp-mai-qa-followup-row" style="display:flex;flex-wrap:wrap;gap:6px;padding:2px 0 6px 4px;">
+              <span style="font-size:10.5px;color:#7c3aed;font-weight:800;margin-right:4px;align-self:center;letter-spacing:0.03em;">続けて 聞く →</span>
+              ${suggestions.map(s => `<button type="button" class="fp-mai-qa-chip fp-mai-qa-followup" data-q="${escapeHtml(s)}" style="background:#f5f3ff;border:1px solid #ddd6fe;color:#5b21b6;font-size:11.5px;font-weight:700;padding:5px 11px;border-radius:99px;cursor:pointer;font-family:inherit;">${escapeHtml(s)}</button>`).join('')}
+            </div>
+          `;
+          answersEl.insertAdjacentHTML('beforeend', followupHtml);
         }
       } catch (err) {
         const bubble = document.getElementById(bubbleId);
         if (bubble) {
           bubble.innerHTML = `
-            <div style="max-width:88%;background:#fee2e2;color:#7f1d1d;padding:8px 12px;border-radius:12px 12px 12px 4px;font-size:12px;line-height:1.6;border:1px solid #fca5a5;">
+            <div style="max-width:92%;background:#fee2e2;color:#7f1d1d;padding:10px 14px;border-radius:14px 14px 14px 4px;font-size:12px;line-height:1.6;border:1.5px solid #fca5a5;">
               ✗ 失敗: ${escapeHtml(err.message || err.code || String(err)).slice(0, 200)}
             </div>
           `;
@@ -7636,6 +7700,7 @@ ${ctxText}${surveyTxt}`;
       } finally {
         sendBtn.disabled = false;
         answersEl.scrollTop = answersEl.scrollHeight;
+        if (input) input.focus();
       }
     });
     // Enter で 送信
