@@ -1538,25 +1538,27 @@
             return `${el.tagName}#${el.id||'(no-id)'}.${(el.className||'').toString().slice(0,30)} pe=${s.pointerEvents} pos=${s.position}`;
           });
         // 画面上部 banner (inspector UI)
+        // ★ pointer-events:none で container 全体 は 下層 click を 阻害 しない、
+        //   操作 対象 (閉じる button / hover box / click box) だけ 個別 に auto に 戻す
         const insp = document.createElement('div');
         insp.id = 'fp-diag-inspector';
-        insp.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:2147483647;background:#0f172a;color:#fff;padding:8px 12px;font-family:ui-monospace,SFMono-Regular,monospace;font-size:11px;line-height:1.4;box-shadow:0 4px 12px rgba(0,0,0,0.4);pointer-events:auto;max-height:60vh;overflow-y:auto;';
+        insp.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:2147483647;background:#0f172a;color:#fff;padding:8px 12px;font-family:ui-monospace,SFMono-Regular,monospace;font-size:11px;line-height:1.4;box-shadow:0 4px 12px rgba(0,0,0,0.4);pointer-events:none;max-height:60vh;overflow-y:auto;';
         const escHtml = s => String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
         insp.innerHTML = `
           <div style="color:#FCD34D;font-weight:800;margin-bottom:4px;display:flex;align-items:center;gap:8px;">
             <span>🔍 DIAG INSPECTOR (?diag=1)</span>
             <span style="font-weight:400;color:#94a3b8;">— カーソル 乗せる と element 表示 · click で 犯人 特定</span>
-            <button id="fp-diag-close" style="margin-left:auto;background:#ef4444;color:#fff;border:0;padding:2px 8px;font-size:11px;cursor:pointer;border-radius:4px;">閉じる</button>
+            <button id="fp-diag-close" style="margin-left:auto;background:#ef4444;color:#fff;border:0;padding:2px 8px;font-size:11px;cursor:pointer;border-radius:4px;pointer-events:auto;">閉じる</button>
           </div>
-          <div style="color:#93c5fd;">[env] ${escHtml(envLine)}</div>
-          <div style="color:#a5b4fc;margin-top:4px;">[fullscreen overlays: ${candidates.length}]</div>
+          <div id="fp-diag-env" style="color:#93c5fd;">[env] ${escHtml(envLine)}</div>
+          <div id="fp-diag-overlays" style="color:#a5b4fc;margin-top:4px;">[fullscreen overlays: ${candidates.length}]</div>
           ${overlayLines.map(l => `<div style="padding-left:12px;color:#fca5a5;">${escHtml(l)}</div>`).join('')}
-          <div style="color:#a5b4fc;margin-top:4px;">[body 直下 element (${bodyDirect.length})]:</div>
+          <div id="fp-diag-body-dump" style="color:#a5b4fc;margin-top:4px;">[body 直下 element (${bodyDirect.length})]:</div>
           ${bodyDirect.slice(0,20).map(l => `<div style="padding-left:12px;color:#cbd5e1;">· ${escHtml(l)}</div>`).join('')}
-          <div id="fp-diag-hover" style="margin-top:6px;padding:6px;background:#1e293b;border-radius:4px;color:#fbbf24;">
+          <div id="fp-diag-hover" style="margin-top:6px;padding:6px;background:#1e293b;border-radius:4px;color:#fbbf24;pointer-events:auto;">
             🖱 hover: (カーソル 動かして)
           </div>
-          <div id="fp-diag-click" style="margin-top:4px;padding:6px;background:#1e293b;border-radius:4px;color:#a7f3d0;">
+          <div id="fp-diag-click" style="margin-top:4px;padding:6px;background:#1e293b;border-radius:4px;color:#a7f3d0;pointer-events:auto;">
             👆 last click: (どこか click してみて)
           </div>
         `;
@@ -1620,6 +1622,7 @@
         });
         // banner で 通知
         const banner = document.createElement('div');
+        banner.id = 'fp-nuke-banner';
         banner.style.cssText = 'position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:2147483647;background:#dc2626;color:#fff;padding:10px 20px;border-radius:8px;font-family:sans-serif;font-size:13px;font-weight:800;box-shadow:0 8px 20px rgba(220,38,38,0.4);';
         banner.textContent = '🚨 緊急 nuke 実行済 · 全 overlay 除去 (?nuke=1 外して 再読込)';
         banner.onclick = () => banner.remove();
