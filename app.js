@@ -7488,11 +7488,18 @@ ${ctxText}${surveyTxt}`;
     '客 の 「不安」「迷い」「反対意見」 を 抜粋 して',
     '次回 面談 の 冒頭 30秒 script 案 を 作って',
   ];
-  function renderMeetingAiQaBlock({ customerId, zoomMeetingId }) {
-    if (!customerId || !zoomMeetingId) return '';
+  function renderMeetingAiQaBlock({ customerId, zoomMeetingId, transcript, summary }) {
+    // ★ 2026-08-07: zoomMeetingId 空 でも transcript あれば raw mode で 動作
+    const hasTranscript = !!(transcript || summary);
+    if (!hasTranscript && !zoomMeetingId) return '';
     const uid = 'qa-' + Math.random().toString(36).slice(2, 10);
+    // transcript を data attr に 埋込 (raw mode の 送信 payload)
+    // 長い の で 別 element の script tag に JSON で 埋込 (data attr は size 制限 + escape issue 回避)
+    const payloadId = 'qa-payload-' + uid;
+    const rawPayload = { rawTranscript: transcript || '', rawSummary: summary || '' };
     return `
-      <div class="fp-meeting-block fp-mai-qa" data-mai-qa data-customer-id="${escapeHtml(customerId)}" data-zoom-meeting-id="${escapeHtml(zoomMeetingId)}" data-qa-uid="${uid}">
+      <div class="fp-meeting-block fp-mai-qa" data-mai-qa data-customer-id="${escapeHtml(customerId || '')}" data-zoom-meeting-id="${escapeHtml(zoomMeetingId || '')}" data-qa-uid="${uid}" data-payload-id="${payloadId}">
+        <script type="application/json" id="${payloadId}">${JSON.stringify(rawPayload).replace(/</g,'\\u003c')}</script>
         <div class="fp-meeting-block-label" style="display:flex;align-items:center;gap:8px;">
           🤖 この 議事録 に AI で 質問
           <span style="font-size:9.5px;font-weight:600;color:#7c3aed;background:#f5f3ff;padding:2px 8px;border-radius:99px;">Claude Haiku</span>
@@ -7548,12 +7555,23 @@ ${ctxText}${surveyTxt}`;
         const fp = window.__fp;
         const { getFunctions, httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-functions.js');
         const fn = httpsCallable(getFunctions(fp.auth.app, 'asia-northeast1'), 'askMeetingQuestion');
-        const res = await fn({
-          tenantId: fp.tenantId,
-          customerId,
-          zoomMeetingId,
-          question,
-        });
+        // payload: zoomMeetingId あれば Firestore lookup mode / なければ raw transcript mode
+        const payloadId = wrap.dataset.payloadId;
+        let rawPayload = { rawTranscript: '', rawSummary: '' };
+        if (payloadId) {
+          try { rawPayload = JSON.parse(document.getElementById(payloadId)?.textContent || '{}'); } catch(_) {}
+        }
+        const callArgs = { tenantId: fp.tenantId, customerId, question };
+        if (zoomMeetingId) {
+          callArgs.zoomMeetingId = zoomMeetingId;
+        }
+        // 常に raw も 送る (Firestore lookup 失敗 時 の fallback として CF が rawInput 優先 する 実装 じゃない が、
+        // CF は meetingId/zoomMeetingId 無し + rawInput あり の 時 だけ raw mode に 入る)
+        if (!zoomMeetingId && (rawPayload.rawTranscript || rawPayload.rawSummary)) {
+          callArgs.rawTranscript = rawPayload.rawTranscript.slice(0, 30000);
+          callArgs.rawSummary = rawPayload.rawSummary.slice(0, 5000);
+        }
+        const res = await fn(callArgs);
         const answer = res.data?.answer || '(回答 が 空 でした)';
         const bubble = document.getElementById(bubbleId);
         if (bubble) {
@@ -7958,6 +7976,8 @@ ${ctxText}${surveyTxt}`;
               ${renderMeetingAiQaBlock({
                 customerId: client._fsCustomerId || client.id || '',
                 zoomMeetingId: aiData.zoomMeetingId || aiData.meetingId || b.zoomMeetingId || '',
+                transcript: aiData.transcript || '',
+                summary: aiData.summary || aiData.transcript_summary || '',
               })}
             </div>
           `;
@@ -8041,6 +8061,8 @@ ${ctxText}${surveyTxt}`;
                 ${renderMeetingAiQaBlock({
                   customerId: client._fsCustomerId || client.id || '',
                   zoomMeetingId: a.zoomMeetingId || a.meetingId || '',
+                  transcript: a.transcript || '',
+                  summary: a.summary || a.transcript_summary || '',
                 })}
               </div>
             `;
