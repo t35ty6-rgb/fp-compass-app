@@ -1474,6 +1474,42 @@
   // ensureGcalToken() は そのまま (55min cache + 期限切れ 時 のみ silent 試行)
   // これで page load / reload は auth 影響 ゼロ = freeze なし
 
+  // ★ 2026-08-07 owner「どこも click できない bug」対応: page load 時 に 前 session の
+  // stuck modal 全 除去 + Escape key で 任意 modal を 閉じる safety net
+  function cleanupStuckModalsOnLoad() {
+    try {
+      // 既存 の overlay 系 全 除去 (previous session で 残った modal)
+      ['v3h-gcal-modal', 'fp-onboarding'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) { console.log('[cleanup] removing stale modal:', id); el.remove(); }
+      });
+      // z-index 極高 + fullscreen + display 見える 要素 を 掃除 (safety net)
+      Array.from(document.querySelectorAll('body > div[style*="position:fixed"]'))
+        .filter(el => {
+          const s = getComputedStyle(el);
+          const zi = parseInt(s.zIndex);
+          const r = el.getBoundingClientRect();
+          return !isNaN(zi) && zi > 2000000000 && r.width > 500 && r.height > 500
+                 && s.display !== 'none' && s.visibility !== 'hidden';
+        })
+        .forEach(el => { console.log('[cleanup] removing stuck overlay z=', el.style.zIndex); el.remove(); });
+    } catch (e) { console.warn('[cleanup] fail', e); }
+  }
+  // fire once at load + also on visibility change (owner が tab 戻ってきた 時 の 保険)
+  if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    setTimeout(cleanupStuckModalsOnLoad, 100);
+  } else {
+    document.addEventListener('DOMContentLoaded', () => setTimeout(cleanupStuckModalsOnLoad, 100));
+  }
+  // Escape key で 任意 modal (gcal / onboarding) を 閉じる
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    const m1 = document.getElementById('v3h-gcal-modal');
+    const m2 = document.getElementById('fp-onboarding');
+    if (m1) { m1.remove(); console.log('[Escape] closed v3h-gcal-modal'); }
+    if (m2) { m2.remove(); console.log('[Escape] closed fp-onboarding'); }
+  });
+
   // Fetch owner's Google Cal events for a time range (schedule view overlay 用)
   async function gcalFetchEvents(accessToken, timeMin, timeMax) {
     const url = new URL('https://www.googleapis.com/calendar/v3/calendars/primary/events');
