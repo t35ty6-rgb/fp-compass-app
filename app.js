@@ -1491,6 +1491,48 @@
     return await gcalInsertEvent(token, event);
   };
 
+  // ★ 2026-08-07 owner「また 未連携 が 出る」対応: login 後 に 自動 silent reauth
+  // Firebase Auth に Google account link 済 + local token 無し の 場合、
+  // popup 出さず (prompt='none') に token 再取得 を 試行 → owner 気付かず 連携済 状態 復元
+  async function autoHydrateGcalTokenOnStartup() {
+    if (window.__fpGcalAutoHydrated) return;
+    window.__fpGcalAutoHydrated = true;
+    // まず 手元 に fresh token あれば 何もしない
+    if (getStoredGcalToken() && isGcalTokenFresh()) return;
+    // Firebase Auth user + Google provider 検査
+    const fp = window.__fp;
+    if (!fp?.auth?.currentUser || !fp?.GoogleAuthProvider) return;
+    const user = fp.auth.currentUser;
+    const hasGoogleLink = (user.providerData || []).some(p => p.providerId === 'google.com');
+    if (!hasGoogleLink) return; // link 済 じゃ なければ silent 不可
+    console.log('[gcal] auto-hydrate: attempting silent reauth');
+    try {
+      const t = await ensureGcalToken();
+      if (t) {
+        console.log('[gcal] auto-hydrate OK · token 取得 復元');
+        // gcal button の 見た目 も 更新
+        try {
+          const btn = document.getElementById('v3h-cta-gcal');
+          if (btn) btn.classList.add('connected');
+        } catch (_) {}
+      } else {
+        console.log('[gcal] auto-hydrate: silent 失敗、 owner click 必要');
+      }
+    } catch (_) {}
+  }
+  // Fire on auth ready (poll auth.currentUser)
+  (function watchAuthForHydrate() {
+    let tries = 0;
+    const iv = setInterval(() => {
+      if (window.__fp?.auth?.currentUser) {
+        clearInterval(iv);
+        setTimeout(autoHydrateGcalTokenOnStartup, 1500); // 1.5s wait for full auth ready
+      } else if (++tries > 30) {
+        clearInterval(iv);
+      }
+    }, 500);
+  })();
+
   // Fetch owner's Google Cal events for a time range (schedule view overlay 用)
   async function gcalFetchEvents(accessToken, timeMin, timeMax) {
     const url = new URL('https://www.googleapis.com/calendar/v3/calendars/primary/events');
