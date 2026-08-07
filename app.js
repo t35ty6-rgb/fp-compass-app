@@ -1615,6 +1615,9 @@
         // body 直下 全 pointer-events reset
         document.body.style.pointerEvents = 'auto';
         Array.from(document.body.children).forEach(el => {
+          // ★ diag inspector 自身 は skip (自 pe:none で click pass-through 設計、
+          //   ここ で auto に 上書き する と inspector が click blocker に 戻る)
+          if (el.id === 'fp-diag-inspector' || el.id === 'fp-nuke-banner') return;
           if (el.style.pointerEvents === 'none') {
             console.log('[NUKE] pointer-events:auto forced on', el.tagName, el.id);
             el.style.pointerEvents = 'auto';
