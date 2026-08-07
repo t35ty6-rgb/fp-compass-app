@@ -1454,34 +1454,11 @@
     const ageMs = Date.now() - new Date(at).getTime();
     return ageMs < 55 * 60 * 1000; // 55min (5min safety margin from 1h expiry)
   }
+  // ★ 2026-08-07 lazy 化: token あれば return · 無ければ null (popup は 呼ばない)
+  // 期限切れ でも 手元 の token 返して 呼出側 に 401 は Cal API 側 で 検知 させる
+  // 明示 popup は 「連携」 button click 時 のみ (silent reauth は 廃止 · freeze 原因)
   async function ensureGcalToken() {
-    let token = getStoredGcalToken();
-    if (token && isGcalTokenFresh()) return token;
-    // silent reauth 試行 (prompt: 'none' = user consent なし で 即 token 更新)
-    const fp = window.__fp;
-    if (!fp?.GoogleAuthProvider || !fp?.auth?.currentUser) return token; // fallback: 期限切れ でも 手元 の token 返す
-    const user = fp.auth.currentUser;
-    const alreadyLinked = (user.providerData || []).some(p => p.providerId === 'google.com');
-    if (!alreadyLinked) return token; // Google account 未 link なら silent 不可
-    try {
-      const provider = new fp.GoogleAuthProvider();
-      provider.addScope('https://www.googleapis.com/auth/calendar.events');
-      provider.addScope('https://www.googleapis.com/auth/calendar.readonly');
-      provider.setCustomParameters({ prompt: 'none' }); // silent
-      const result = await fp.reauthenticateWithPopup(user, provider);
-      const cred = fp.GoogleAuthProvider.credentialFromResult(result);
-      const newTok = cred?.accessToken;
-      if (newTok) {
-        localStorage.setItem(GCAL_TOKEN_KEY, newTok);
-        localStorage.setItem(GCAL_TOKEN_AT_KEY, new Date().toISOString());
-        console.log('[gcal] silent reauth OK');
-        return newTok;
-      }
-    } catch (e) {
-      // silent 失敗 (interaction_required 等) → 手元 の token で とりあえず 動かす
-      console.log('[gcal] silent reauth fail, will need manual reauth:', e.code || e.message);
-    }
-    return token;
+    return getStoredGcalToken() || null;
   }
   window.__fpEnsureGcalToken = ensureGcalToken;
   // Expose 実 sync helper (booking 確定 時 に 呼ばれる 想定)
@@ -1491,47 +1468,11 @@
     return await gcalInsertEvent(token, event);
   };
 
-  // ★ 2026-08-07 owner「また 未連携 が 出る」対応: login 後 に 自動 silent reauth
-  // Firebase Auth に Google account link 済 + local token 無し の 場合、
-  // popup 出さず (prompt='none') に token 再取得 を 試行 → owner 気付かず 連携済 状態 復元
-  async function autoHydrateGcalTokenOnStartup() {
-    if (window.__fpGcalAutoHydrated) return;
-    window.__fpGcalAutoHydrated = true;
-    // まず 手元 に fresh token あれば 何もしない
-    if (getStoredGcalToken() && isGcalTokenFresh()) return;
-    // Firebase Auth user + Google provider 検査
-    const fp = window.__fp;
-    if (!fp?.auth?.currentUser || !fp?.GoogleAuthProvider) return;
-    const user = fp.auth.currentUser;
-    const hasGoogleLink = (user.providerData || []).some(p => p.providerId === 'google.com');
-    if (!hasGoogleLink) return; // link 済 じゃ なければ silent 不可
-    console.log('[gcal] auto-hydrate: attempting silent reauth');
-    try {
-      const t = await ensureGcalToken();
-      if (t) {
-        console.log('[gcal] auto-hydrate OK · token 取得 復元');
-        // gcal button の 見た目 も 更新
-        try {
-          const btn = document.getElementById('v3h-cta-gcal');
-          if (btn) btn.classList.add('connected');
-        } catch (_) {}
-      } else {
-        console.log('[gcal] auto-hydrate: silent 失敗、 owner click 必要');
-      }
-    } catch (_) {}
-  }
-  // Fire on auth ready (poll auth.currentUser)
-  (function watchAuthForHydrate() {
-    let tries = 0;
-    const iv = setInterval(() => {
-      if (window.__fp?.auth?.currentUser) {
-        clearInterval(iv);
-        setTimeout(autoHydrateGcalTokenOnStartup, 1500); // 1.5s wait for full auth ready
-      } else if (++tries > 30) {
-        clearInterval(iv);
-      }
-    }, 500);
-  })();
+  // ★ 2026-08-07 owner「リロード で 固まる bug」対応:
+  // auto-hydrate on startup は 削除 (reauthenticateWithPopup が prompt='none' でも popup 一瞬 開く → freeze 感)
+  // 代わり に lazy: gcal 機能 使う 時 (button click / Cal tab / auto-sync) の 時 のみ 認証 誘発
+  // ensureGcalToken() は そのまま (55min cache + 期限切れ 時 のみ silent 試行)
+  // これで page load / reload は auth 影響 ゼロ = freeze なし
 
   // Fetch owner's Google Cal events for a time range (schedule view overlay 用)
   async function gcalFetchEvents(accessToken, timeMin, timeMax) {
