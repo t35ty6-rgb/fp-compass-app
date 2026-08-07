@@ -1514,10 +1514,21 @@
       });
       if (wantDiag) {
         console.log(`[diag] fullscreen fixed/absolute overlays (${candidates.length}):`);
+        const lines = [`[diag] fullscreen overlays: ${candidates.length}`];
         candidates.forEach(el => {
           const s = getComputedStyle(el);
-          console.log(`  · ${el.tagName}#${el.id}.${(el.className||'').toString().slice(0,60)} z=${s.zIndex} pos=${s.position} bg=${s.backgroundColor.slice(0,30)} pe=${s.pointerEvents}`);
+          const line = `${el.tagName}#${el.id||'(no-id)'}.${(el.className||'').toString().slice(0,40)} z=${s.zIndex} pos=${s.position} pe=${s.pointerEvents} bg=${s.backgroundColor.slice(0,20)}`;
+          console.log('  · ' + line);
+          lines.push('· ' + line);
         });
+        // 画面上部 banner で 見える 化 (owner が devtools 開かなくて も 確認 可)
+        const diagBanner = document.createElement('div');
+        diagBanner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:2147483647;background:#1a1f2c;color:#fff;padding:10px 16px;font-family:ui-monospace,monospace;font-size:11px;line-height:1.5;max-height:200px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,0.3);pointer-events:none;';
+        diagBanner.innerHTML = `<div style="color:#FCD34D;font-weight:800;margin-bottom:4px;pointer-events:auto;">🔍 DIAG MODE (?diag=1) · click to dismiss</div>` +
+          lines.map(l => `<div>${l.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`).join('');
+        diagBanner.style.pointerEvents = 'auto';
+        diagBanner.addEventListener('click', () => diagBanner.remove());
+        document.body.appendChild(diagBanner);
       }
       if (wantNuke) {
         candidates.forEach(el => {
