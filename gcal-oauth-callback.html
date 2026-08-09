@@ -56,42 +56,48 @@
       <p>${msg}</p>`;
   }
 
-  // 1) error 系
+  // 全 分岐 で 親 window に postMessage を 送る (error でも 送る = 「popup 閉じ られました」 誤検知 を 潰す)
+  function postToOpener(payload) {
+    if (window.opener && !window.opener.closed) {
+      try {
+        window.opener.postMessage({
+          type: 'fp-gcal-oauth-callback',
+          ...payload,
+          redirectUri: location.origin + location.pathname,
+        }, location.origin);
+        return true;
+      } catch (e) { console.warn('[callback] postMessage fail:', e); }
+    }
+    return false;
+  }
+
   if (error) {
+    // Google 側 で キャンセル or 拒否 → error を 親 に 通知 して 自動 close
+    postToOpener({ error, error_description: err_desc || error });
     showError('認証 が キャンセル された', err_desc || error);
+    setTimeout(() => { try { window.close(); } catch(_){} }, 1200);
   } else if (!code) {
+    postToOpener({ error: 'no_code', error_description: 'URL が 壊れて いる 可能性 が あります' });
     showError('認証 code が 見つかりません', 'URL が 壊れて いる 可能性 が あります');
+    setTimeout(() => { try { window.close(); } catch(_){} }, 1200);
   } else {
-    // 2) state 検証 (owner が 開いた popup と 同一 か)
-    const savedState = sessionStorage.getItem('fp-gcal-oauth-state');
-    if (!savedState || savedState !== state) {
-      // popup mode (親 window に postMessage で code + state を 渡す)
-      // state 検証 は 親 window 側 で もう 一度 行う
-      if (window.opener && !window.opener.closed) {
-        try {
-          window.opener.postMessage({
-            type: 'fp-gcal-oauth-callback',
-            code,
-            state,
-            redirectUri: location.origin + location.pathname,
-          }, location.origin);
-          showOk('認証 情報 を 送信 しました。 元 window を 確認 して ください');
-          setTimeout(() => { try { window.close(); } catch(_){} }, 1500);
-        } catch (e) {
-          showError('postMessage 失敗', e.message);
-        }
+    // 成功: code を 親 に 送る (state 検証 は 親 window 側 で 行う)
+    const sent = postToOpener({ code, state });
+    if (sent) {
+      showOk('認証 情報 を 送信 しました。 元 window を 確認 して ください');
+      setTimeout(() => { try { window.close(); } catch(_){} }, 1200);
+    } else {
+      // 同 window (redirect mode) — 元 view に 戻る
+      const savedState = sessionStorage.getItem('fp-gcal-oauth-state');
+      if (savedState && savedState === state) {
+        sessionStorage.setItem('fp-gcal-oauth-code', code);
+        sessionStorage.setItem('fp-gcal-oauth-redirect-uri', location.origin + location.pathname);
+        sessionStorage.removeItem('fp-gcal-oauth-state');
+        const returnUrl = sessionStorage.getItem('fp-gcal-oauth-return') || '/';
+        location.replace(returnUrl);
       } else {
-        // 同 window (redirect mode) — sessionStorage state が 消えて いる の は 別 tab 経由 の 可能性
         showError('認証 state 不一致', 'popup を 開き直して ください');
       }
-    } else {
-      // same-window redirect flow: sessionStorage に code を stash して 元 view に 戻る
-      sessionStorage.setItem('fp-gcal-oauth-code', code);
-      sessionStorage.setItem('fp-gcal-oauth-redirect-uri', location.origin + location.pathname);
-      sessionStorage.removeItem('fp-gcal-oauth-state');
-      // 元 に 戻る
-      const returnUrl = sessionStorage.getItem('fp-gcal-oauth-return') || '/';
-      location.replace(returnUrl);
     }
   }
 </script>

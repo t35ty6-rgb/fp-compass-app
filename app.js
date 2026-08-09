@@ -940,12 +940,12 @@
               <div style="font-size:32px;line-height:1;">🗓️</div>
               <div style="flex:1;">
                 <h2 style="margin:0;font-size:20px;font-weight:800;color:#1a1f2c;letter-spacing:-0.01em;">Google カレンダー 連携</h2>
-                <p style="margin:4px 0 0;font-size:12.5px;color:#c53030;font-weight:700;">未接続 · 実装 準備 中</p>
+                <p style="margin:4px 0 0;font-size:12.5px;color:#6b7280;font-weight:700;">未連携 · 下 の button で 連携 可能</p>
               </div>
               <button id="v3h-gcal-close" style="background:transparent;border:none;font-size:24px;color:#6b7280;cursor:pointer;padding:4px 10px;line-height:1;">×</button>
             </div>
             <div style="padding:24px 28px;color:#3a4254;font-size:14px;line-height:1.75;">
-              <p style="margin:0 0 16px;font-weight:700;color:#1a1f2c;">実装 後 は こう 動きます:</p>
+              <p style="margin:0 0 16px;font-weight:700;color:#1a1f2c;">連携 する と こう なります:</p>
               <ol style="margin:0 0 20px;padding-left:22px;">
                 <li>この button を click → Google 認証 画面 が 開く</li>
                 <li>「FP Compass に Google カレンダー への アクセス を 許可」 で 承認</li>
@@ -959,7 +959,7 @@
                 <li>あなた の 個人 予定 (歯医者 · 家族 用事) も スケジュール view に 灰色 で 重ね 表示 → 二重予約 防止</li>
               </ol>
               <div style="background:#f0f2f5;border-left:3px solid #0b5d9e;padding:12px 16px;border-radius:0 6px 6px 0;font-size:13px;">
-                <b style="color:#084577;">実装 まで</b>: 2〜3時間 · owner の 手動 Google 認証 は 各 tenant 1回 のみ
+                <b style="color:#084577;">認証</b>: Google account 1 回 承認 · 以降 6 ヶ月 自動 更新 · popup 追加 なし
               </div>
             </div>
             <div style="padding:16px 28px;border-top:1px solid #e3e5ea;background:#f7f8fc;display:flex;justify-content:flex-end;gap:8px;">
@@ -1546,18 +1546,30 @@
     if (!popup) throw new Error('popup が block されました (browser 設定 確認)');
     return new Promise((resolve, reject) => {
       let done = false;
+      const finish = (fn) => { if (done) return; done = true; window.removeEventListener('message', onMsg); fn(); };
       // listener
       const onMsg = async (ev) => {
         if (ev.origin !== location.origin) return;
         if (ev.data?.type !== 'fp-gcal-oauth-callback') return;
+        // Google 側 で キャンセル / 拒否 / no_code 等 の error は callback page から postMessage で 来る
+        if (ev.data.error) {
+          const errCode = ev.data.error;
+          const errDesc = ev.data.error_description || errCode;
+          const friendly =
+            errCode === 'access_denied' ? '認証 を キャンセル しました (「許可」 を 押せば 完了 します)' :
+            errCode === 'no_code' ? '認証 情報 が 取得 できませんでした · もう 一度 押して ください' :
+            '認証 失敗: ' + errDesc;
+          finish(() => reject(new Error(friendly)));
+          return;
+        }
+        // 成功 path
         const savedState = sessionStorage.getItem('fp-gcal-oauth-state');
         if (!savedState || savedState !== ev.data.state) {
-          done = true; window.removeEventListener('message', onMsg);
-          reject(new Error('OAuth state 不一致 (CSRF 検証 失敗)'));
+          finish(() => reject(new Error('OAuth state 不一致 (CSRF 検証 失敗)')));
           return;
         }
         sessionStorage.removeItem('fp-gcal-oauth-state');
-        done = true; window.removeEventListener('message', onMsg);
+        finish(() => {});
         try {
           const { getFunctions, httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-functions.js');
           const fn = httpsCallable(getFunctions(fp.auth.app, 'asia-northeast1'), 'gcalExchangeCode');
@@ -1570,14 +1582,20 @@
         }
       };
       window.addEventListener('message', onMsg);
-      // popup 閉じ検知 (owner が 諦めた 場合)
+      // popup 閉じ検知 (owner が Google 画面 で X 押した 場合 の み 発火 想定)
+      // Google 側 で キャンセル した 場合 は 上 の error postMessage が 先 に 来て done=true → skip
       const iv = setInterval(() => {
         if (done) { clearInterval(iv); return; }
         try {
           if (popup.closed) {
             clearInterval(iv);
-            window.removeEventListener('message', onMsg);
-            reject(new Error('popup が 閉じ られました'));
+            // postMessage が 遅れて 来る 可能性 (Google リダイレクト 直前) の 為 1.5秒 grace
+            setTimeout(() => {
+              if (done) return;
+              window.removeEventListener('message', onMsg);
+              done = true;
+              reject(new Error('popup が 閉じ られました (Google 側 で キャンセル した 可能性)'));
+            }, 1500);
           }
         } catch (_) {}
       }, 500);
@@ -2645,42 +2663,16 @@
       return;
     }
 
-    // toggle state (仕事のみ = primary のみ / 全部 = 全 calendar)
-    const filter = currentFilter;
-    const isWork = filter === 'work';
-    // ★ 1 button toggle (owner 2026-08-07 「ボタン 1つ で 切替」)
-    // Header controls は 常に 同じ 構造 (iframe は 別 element で 温存)
+    // ★ 2026-08-09 owner「Google カレンダー だけ 表示 で いい」対応:
+    //   仕事/プライベート toggle 廃止 · primary Google Cal だけ を 常に 表示
     if (!wrap.querySelector('.v3h-gcal-embed-controls')) {
       wrap.innerHTML = `
         <div class="v3h-gcal-embed-controls">
-          <button type="button" id="v3h-gcal-toggle-single" class="v3h-gcal-embed-single ${isWork ? 'is-work' : 'is-all'}">
-            <span class="v3h-gcal-toggle-track"><span class="v3h-gcal-toggle-knob"></span></span>
-            <span class="v3h-gcal-toggle-label" id="v3h-gcal-toggle-label"></span>
-          </button>
+          <span style="font-size:13px;font-weight:700;color:#3a4254;padding:8px 0;">${escapeHtml(localStorage.getItem('fp-gcal-email') || 'Google カレンダー')}</span>
           <a href="https://calendar.google.com/" target="_blank" rel="noopener" class="v3h-gcal-embed-open">Google Cal を 別 tab で 開く ↗</a>
         </div>
         <div class="v3h-gcal-embed-frame" id="v3h-gcal-embed-frame"><div class="v3h-empty" style="padding:24px;text-align:center;color:#6b7280;">Google Cal 読込 中…</div></div>
       `;
-      // toggle click wire (once)
-      wrap.querySelector('#v3h-gcal-toggle-single')?.addEventListener('click', () => {
-        const cur = localStorage.getItem('fp-gcal-embed-filter') || 'work';
-        const next = cur === 'work' ? 'all' : 'work';
-        localStorage.setItem('fp-gcal-embed-filter', next);
-        // dataset 状態 mark を 消す ことで 再 render で iframe 更新
-        wrap.dataset.state = '';
-        renderV3GcalEmbed(clients, tasks, today);
-      });
-    }
-
-    // toggle 見た目 更新
-    const singleBtn = wrap.querySelector('#v3h-gcal-toggle-single');
-    if (singleBtn) {
-      singleBtn.classList.toggle('is-work', isWork);
-      singleBtn.classList.toggle('is-all', !isWork);
-    }
-    const label = wrap.querySelector('#v3h-gcal-toggle-label');
-    if (label) {
-      label.textContent = isWork ? '仕事 のみ 表示 中 (click で プライベート も 追加)' : 'プライベート も 表示 中 (click で 仕事 のみ)';
     }
 
     // Fetch calendar list to know which src to include
@@ -2700,10 +2692,9 @@
       }
       srcIds = [email];
     } else {
+      // ★ primary Google Cal だけ (他 の calendar は 表示 しない)
       const primary = cals.filter(c => c.primary);
-      const secondary = cals.filter(c => !c.primary && !c.deleted);
-      const selected = filter === 'work' ? primary : primary.concat(secondary);
-      srcIds = selected.map(c => c.id);
+      srcIds = primary.length > 0 ? primary.map(c => c.id) : [localStorage.getItem('fp-gcal-email') || ''].filter(Boolean);
     }
     renderEmbedFrame(srcIds, allCals);
     // state mark で 次回 呼出 で skip 可能 に
