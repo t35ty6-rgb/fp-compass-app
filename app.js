@@ -4514,14 +4514,30 @@
               const live = window.LineAppLiveData;
               if (!live) return;
               // ai_results を merge (同じbookingTsは backend版で上書き = transcript復元)
+              // ★ 2026-08-10 bug fix (owner「transcript が 5秒 で 消える」対応):
+              //   backend が 「transcript 省略」 で 返して きた 時、 単純 replace だと
+              //   localStorage/GAS 側 の transcript を 消して しまう → field-level merge に
               if (Array.isArray(detail.ai_results)) {
                 const existingKeyset = new Set();
                 (live.ai_results || []).forEach(a => existingKeyset.add(a.bookingTs || a.ts || a.createdAt));
                 detail.ai_results.forEach(a => {
                   const key = a.bookingTs || a.ts || a.createdAt;
                   const idx = (live.ai_results || []).findIndex(x => (x.bookingTs || x.ts || x.createdAt) === key);
-                  if (idx >= 0) live.ai_results[idx] = a;       // upgrade lite → full
-                  else (live.ai_results = live.ai_results || []).push(a);   // 新規追加 (lite cap で 落ちてた古いやつ)
+                  if (idx >= 0) {
+                    const existing = live.ai_results[idx] || {};
+                    // spread order: existing → backend で 上書き、 その後 non-empty 温存
+                    const merged = Object.assign({}, existing, a);
+                    // backend が 空 or undefined な のに existing に あった 重要 field は 温存
+                    const preserveFields = ['transcript', 'summary', 'transcript_summary', 'key_concerns', 'predicted_next_questions', 'next_meeting_suggestion'];
+                    preserveFields.forEach(f => {
+                      const bExists = (a[f] !== undefined && a[f] !== null && a[f] !== '' && !(Array.isArray(a[f]) && a[f].length === 0));
+                      const eExists = (existing[f] !== undefined && existing[f] !== null && existing[f] !== '' && !(Array.isArray(existing[f]) && existing[f].length === 0));
+                      if (!bExists && eExists) merged[f] = existing[f];
+                    });
+                    live.ai_results[idx] = merged;
+                  } else {
+                    (live.ai_results = live.ai_results || []).push(a);   // 新規追加
+                  }
                 });
               }
               if (Array.isArray(detail.line_messages)) {
@@ -8000,6 +8016,27 @@ ${ctxText}${surveyTxt}`;
   }
 
   // Delegated click handler (once per DOM) — fp-mai-qa 系 全部 拾う
+  // ★ 2026-08-10: 議事録 card の 折りたたみ toggle (owner「長い ので 目次 に 」)
+  if (!window.__fpMeetingCardToggleWired) {
+    window.__fpMeetingCardToggleWired = true;
+    document.addEventListener('click', (e) => {
+      const head = e.target.closest('[data-meeting-toggle]');
+      if (!head) return;
+      const card = head.closest('[data-meeting-card]');
+      if (!card) return;
+      const body = card.querySelector('[data-meeting-body]');
+      const icon = head.querySelector('.fp-meeting-toggle-icon');
+      if (!body) return;
+      const isOpen = !body.hasAttribute('hidden');
+      if (isOpen) {
+        body.setAttribute('hidden', '');
+        if (icon) { icon.textContent = '▶'; icon.style.transform = ''; }
+      } else {
+        body.removeAttribute('hidden');
+        if (icon) { icon.textContent = '▼'; icon.style.transform = ''; }
+      }
+    });
+  }
   if (!window.__fpMaiQaWired) {
     window.__fpMaiQaWired = true;
     document.addEventListener('click', async (e) => {
@@ -8429,18 +8466,19 @@ ${ctxText}${surveyTxt}`;
             const zKey = (aiData.bookingTs || '') + '|' + (aiData.ts || aiData.createdAt || '');
             const zN = aiZoomMap.get(zKey) || '?';
             return `
-            <div class="fp-meeting-card">
-              <div class="fp-meeting-card-head">
+            <div class="fp-meeting-card" data-meeting-card>
+              <div class="fp-meeting-card-head" data-meeting-toggle style="cursor:pointer;">
                 <div>
-                  <div class="fp-meeting-card-eyebrow" style="font-size:13px !important;font-weight:900 !important;color:#1B3A5C !important;letter-spacing:0 !important;">📹 Zoom ${zN}回目 ${aiData.ts || aiData.createdAt ? `<span style="font-size:11px;color:#9CA3AF;font-weight:700;margin-left:8px;font-family:Menlo,monospace;">#${(()=>{ const d=new Date(aiData.ts || aiData.createdAt); return d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0')+'-'+String(d.getHours()).padStart(2,'0')+String(d.getMinutes()).padStart(2,'0'); })()}</span>` : ''}</div>
+                  <div class="fp-meeting-card-eyebrow" style="font-size:13px !important;font-weight:900 !important;color:#1B3A5C !important;letter-spacing:0 !important;"><span class="fp-meeting-toggle-icon" style="display:inline-block;width:14px;font-size:10px;color:#94A3B8;margin-right:4px;transition:transform 0.15s;">▶</span>📹 Zoom ${zN}回目 ${aiData.ts || aiData.createdAt ? `<span style="font-size:11px;color:#9CA3AF;font-weight:700;margin-left:8px;font-family:Menlo,monospace;">#${(()=>{ const d=new Date(aiData.ts || aiData.createdAt); return d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0')+'-'+String(d.getHours()).padStart(2,'0')+String(d.getMinutes()).padStart(2,'0'); })()}</span>` : ''}</div>
                   <div class="fp-meeting-card-date" style="font-size:14px;font-weight:700;">${escapeHtml(fmtDateRobust(aiData.ts || aiData.createdAt) || fmtDateRobust(b.date))} ${escapeHtml(fmtJstTime(aiData.ts || aiData.createdAt) || fmtTimeRobust(b.time))} 面談</div>
                   ${aiData.ts || aiData.createdAt ? `<div class="fp-meeting-card-recstart" style="font-size:11.5px;color:#6B7280;font-weight:600;margin-top:3px;">録画開始: ${escapeHtml(fmtJstTime(aiData.ts || aiData.createdAt))} (${escapeHtml(fmtDateRobust(aiData.ts || aiData.createdAt))})</div>` : ''}
                 </div>
-                <div class="fp-meeting-card-actions" style="display:flex;gap:6px;flex-wrap:wrap;">
+                <div class="fp-meeting-card-actions" style="display:flex;gap:6px;flex-wrap:wrap;" onclick="event.stopPropagation()">
                   ${b.driveUrl ? `<a href="${escapeHtml(b.driveUrl)}" target="_blank" class="fp-btn fp-btn-sm fp-btn-gold">🎥 録画を見る</a>` : ''}
                   <button class="fp-meeting-delete" data-booking-ts="${escapeHtml(b.ts || '')}" data-ai-ts="${escapeHtml(aiData.ts || aiData.createdAt || '')}" style="background:#fff;border:1.5px solid #FCA5A5;color:#DC2626;font-size:11.5px;font-weight:700;padding:5px 11px;border-radius:5px;cursor:pointer;font-family:inherit;">🗑 削除</button>
                 </div>
               </div>
+              <div class="fp-meeting-card-body" data-meeting-body hidden>
               ${aiData.transcript ? `
                 <div class="fp-meeting-block">
                   <div class="fp-meeting-block-label" style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
@@ -8506,6 +8544,7 @@ ${ctxText}${surveyTxt}`;
                 transcript: aiData.transcript || '',
                 summary: aiData.summary || aiData.transcript_summary || '',
               })}
+              </div>
             </div>
           `;
           }).join('') + '</div>';
@@ -8544,17 +8583,18 @@ ${ctxText}${surveyTxt}`;
               const zKey = (a.bookingTs || '') + '|' + (a.ts || a.createdAt || '');
               const zN = aiZoomIdx.get(zKey) || '?';
               return `
-              <div class="fp-meeting-card">
-                <div class="fp-meeting-card-head">
+              <div class="fp-meeting-card" data-meeting-card>
+                <div class="fp-meeting-card-head" data-meeting-toggle style="cursor:pointer;">
                   <div>
-                    <div class="fp-meeting-card-eyebrow" style="font-size:13px !important;font-weight:900 !important;color:#1B3A5C !important;letter-spacing:0 !important;">📹 Zoom ${zN}回目 ${a.ts || a.createdAt ? `<span style="font-size:11px;color:#9CA3AF;font-weight:700;margin-left:8px;font-family:Menlo,monospace;">#${(()=>{ const d=new Date(a.ts || a.createdAt); return d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0')+'-'+String(d.getHours()).padStart(2,'0')+String(d.getMinutes()).padStart(2,'0'); })()}</span>` : ''}</div>
+                    <div class="fp-meeting-card-eyebrow" style="font-size:13px !important;font-weight:900 !important;color:#1B3A5C !important;letter-spacing:0 !important;"><span class="fp-meeting-toggle-icon" style="display:inline-block;width:14px;font-size:10px;color:#94A3B8;margin-right:4px;transition:transform 0.15s;">▶</span>📹 Zoom ${zN}回目 ${a.ts || a.createdAt ? `<span style="font-size:11px;color:#9CA3AF;font-weight:700;margin-left:8px;font-family:Menlo,monospace;">#${(()=>{ const d=new Date(a.ts || a.createdAt); return d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0')+'-'+String(d.getHours()).padStart(2,'0')+String(d.getMinutes()).padStart(2,'0'); })()}</span>` : ''}</div>
                     <div class="fp-meeting-card-date" style="font-size:14px;font-weight:700;">${escapeHtml(fmtDateRobust(a.ts || a.createdAt) || fmtDateRobust(a.date))} ${escapeHtml(fmtJstTime(a.ts || a.createdAt))} 面談</div>
                     ${a.ts || a.createdAt ? `<div class="fp-meeting-card-recstart" style="font-size:11.5px;color:#6B7280;font-weight:600;margin-top:3px;">録画開始: ${escapeHtml(fmtJstTime(a.ts || a.createdAt))} (${escapeHtml(fmtDateRobust(a.ts || a.createdAt))})</div>` : ''}
                   </div>
-                  <div class="fp-meeting-card-actions" style="display:flex;gap:6px;flex-wrap:wrap;">
+                  <div class="fp-meeting-card-actions" style="display:flex;gap:6px;flex-wrap:wrap;" onclick="event.stopPropagation()">
                     <button class="fp-meeting-delete" data-booking-ts="${escapeHtml(a.bookingTs || '')}" data-ai-ts="${escapeHtml(a.ts || a.createdAt || '')}" style="background:#fff;border:1.5px solid #FCA5A5;color:#DC2626;font-size:11.5px;font-weight:700;padding:5px 11px;border-radius:5px;cursor:pointer;font-family:inherit;">🗑 削除</button>
                   </div>
                 </div>
+                <div class="fp-meeting-card-body" data-meeting-body hidden>
                 ${a.transcript ? `
                   <div class="fp-meeting-block">
                     <div class="fp-meeting-block-label">AI 文字起こし (Whisper)</div>
@@ -8591,6 +8631,7 @@ ${ctxText}${surveyTxt}`;
                   transcript: a.transcript || '',
                   summary: a.summary || a.transcript_summary || '',
                 })}
+                </div>
               </div>
             `;
             }).join('') + '</div>';

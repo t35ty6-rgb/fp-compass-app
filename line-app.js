@@ -1943,7 +1943,14 @@
 
   // ★ 2026-08-07 owner「Zoom 決まったら 自動 Google Cal に 入れる」対応 の 共通 helper
   async function autoSyncBookingToGcal({ fsCustomerId, uid, dateStr, slotStr, zoomUrl }) {
-    if (!sessionStorage.getItem('fp-gcal-token')) return null;
+    // ★ 2026-08-10 bug fix (owner「候補日 3モーダル 確定 → Google Cal 入る?」対応):
+    //   旧: sessionStorage.getItem('fp-gcal-token') → 2026-07-27 の localStorage 移行 で 完全 死亡
+    //   fix: localStorage 直参照 + ensureGcalToken (CF 経由 silent refresh も 効く)
+    let token = localStorage.getItem('fp-gcal-token');
+    if (!token && typeof window.__fpEnsureGcalToken === 'function') {
+      try { token = await window.__fpEnsureGcalToken(); } catch (_) {}
+    }
+    if (!token) return null;
     if (typeof window.__fpGcalInsertEvent !== 'function') return null;
     // 客名 lookup
     let clientName = '客';
@@ -1963,7 +1970,8 @@
     const startISO = `${dateStr}T${hh}:${mm}:00+09:00`;
     const start = new Date(startISO);
     if (isNaN(start.getTime())) return null;
-    const end = new Date(start.getTime() + 30 * 60 * 1000);
+    // ★ 2026-08-10: 60min に (Zoom 側 confirmSlotMultiTenant duration=60 と 合わせる)
+    const end = new Date(start.getTime() + 60 * 60 * 1000);
     try {
       const ev = await window.__fpGcalInsertEvent({
         summary: `面談 · ${clientName} 様`,
