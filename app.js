@@ -964,7 +964,7 @@
             </div>
             <div style="padding:16px 28px;border-top:1px solid #e3e5ea;background:#f7f8fc;display:flex;justify-content:flex-end;gap:8px;">
               <button id="v3h-gcal-later" style="background:#fff;border:1px solid #d4d8df;color:#3a4254;padding:10px 20px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">後で 判断</button>
-              <button id="v3h-gcal-go" style="background:#0b5d9e;color:#fff;border:none;padding:10px 22px;border-radius:8px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">実装 GO</button>
+              <button id="v3h-gcal-go" style="background:#0b5d9e;color:#fff;border:none;padding:10px 22px;border-radius:8px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">連携 する</button>
             </div>
           </div>
         `;
@@ -1047,7 +1047,19 @@
               close();
               // 再 render で button の 状態 更新
               try { renderDashboard(); } catch(_) {}
+              // ★ 2026-08-09 emergency: 覆い overlay 残り の bug 対策 で 再走
+              try { cleanupStuckModalsOnLoad(); } catch(_) {}
             });
+            // ★ 2026-08-09 emergency: 4 秒 経ったら 自動 close (owner 「click できない」bug 対策)
+            //   success 表示 見て くれる 時間 は 4 秒 で 十分、 それ 以上 modal 開いてる と
+            //   周辺 UI 触れない と 誤解 する 事故 が 起きる
+            setTimeout(() => {
+              if (document.getElementById('v3h-gcal-modal')) {
+                close();
+                try { renderDashboard(); } catch(_) {}
+                try { cleanupStuckModalsOnLoad(); } catch(_) {}
+              }
+            }, 4000);
             overlay.querySelector('#v3h-gcal-test')?.addEventListener('click', async () => {
               const resultEl = overlay.querySelector('#v3h-gcal-test-result');
               resultEl.textContent = 'Google Cal に 送信 中…';
@@ -1060,7 +1072,7 @@
             });
           } catch (e) {
             btn.disabled = false;
-            btn.textContent = '実装 GO';
+            btn.textContent = '連携 する';
             const errMsg =
               e.code === 'auth/popup-blocked'      ? 'popup が browser で block されました。 popup を 許可 して 再試行 ください。' :
               e.code === 'auth/popup-closed-by-user' ? 'popup が closed されました。 再試行 ください。' :
