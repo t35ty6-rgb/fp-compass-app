@@ -1773,10 +1773,17 @@
       }
       if (wantNuke) {
         candidates.forEach(el => {
-          // 既知 の 安全 element は skip (login screen · dashboard 本体)
-          if (el.id === 'fp-gate-overlay' || el.tagName === 'MAIN' || el.classList.contains('app') || el.classList.contains('view')) return;
+          // 2026-08-10: fp-gate-overlay も 削除 対象 に (authed 済 owner の 手元 で 残留 事故)
+          //   MAIN / .app / .view = メイン UI · 残す
+          if (el.tagName === 'MAIN' || el.classList.contains('app') || el.classList.contains('view')) return;
           console.log('[NUKE] removing:', el.tagName, el.id, el.className.toString().slice(0,50));
           el.remove();
+        });
+        // ★ 2026-08-10 emergency+: 特大 z-index overlay (fp-gate-overlay / fp-billing-gate 等)
+        //   を id/z-index で 明示 撲滅 (fullscreen filter で 見逃す 可能性 対策)
+        ['fp-gate-overlay', 'fp-billing-gate', 'fp-onboarding', 'v3h-gcal-modal'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) { console.log('[NUKE] force-remove:', id); el.remove(); }
         });
         // body / html 全 pointer-events reset
         document.documentElement.style.pointerEvents = 'auto';
