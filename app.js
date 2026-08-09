@@ -1797,26 +1797,9 @@
             el.style.pointerEvents = 'auto';
           }
         });
-        // ★ 2026-08-09 nuclear+: css 全体 に * { pointer-events: auto !important } を 挿入
-        //   個別 element の inline style じゃ 効かない 「CSS class 由来 pe:none」 も 撲滅
-        if (!document.getElementById('fp-nuke-css')) {
-          const style = document.createElement('style');
-          style.id = 'fp-nuke-css';
-          // diag inspector container の pe:none は 保護 (下層 click pass-through 設計)
-          style.textContent = `body *:not(#fp-diag-inspector) { pointer-events: auto !important; } html, body { pointer-events: auto !important; }`;
-          document.head.appendChild(style);
-          console.log('[NUKE] injected * { pointer-events: auto !important } CSS');
-        }
-        // ★ 全 descendant に inline pe:auto を 直接 塗る (最後 の 保険)
-        document.querySelectorAll('body *').forEach(el => {
-          if (el.id === 'fp-diag-inspector' || el.id === 'fp-diag-hover' || el.id === 'fp-diag-click') return;
-          try {
-            const cs = getComputedStyle(el);
-            if (cs.pointerEvents === 'none') {
-              el.style.setProperty('pointer-events', 'auto', 'important');
-            }
-          } catch(_){}
-        });
+        // ★ 2026-08-10 revert: 前 版 の CSS 注入 (body * { pe:auto !important }) は
+        //   pass-through 前提 の 透明 overlay を click 拾い に 変換 して 逆 に 全 click 奪う
+        //   ため 撤去。 id 明示 force-remove + body 直下 pe reset まで で 十分。
         // banner で 通知
         const banner = document.createElement('div');
         banner.id = 'fp-nuke-banner';
