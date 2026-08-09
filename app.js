@@ -1043,23 +1043,36 @@
                 alert('もう一度 連携 の 前 に、 Google 側 の 認可 も 一度 取消 する と 確実:\n\n1. https://myaccount.google.com/permissions を 開く\n2. 「Skeleton FP Compass」 (or 類似) を 探す → 削除\n3. 戻ってきて 「Google カレンダー 連携」 button を 押す\n4. popup で Calendar への アクセス に ✓ 入れて 承認');
               }, 300);
             });
-            overlay.querySelector('#v3h-gcal-ok')?.addEventListener('click', () => {
-              close();
-              // 再 render で button の 状態 更新
-              try { renderDashboard(); } catch(_) {}
-              // ★ 2026-08-09 emergency: 覆い overlay 残り の bug 対策 で 再走
+            // ★ 2026-08-09 nuclear fix: 認証 成功 = 即 modal close + body pe reset
+            //   owner「認証 後 全 button 押せない」bug の 根本 対処
+            //   success 画面 は 表示 せず、 auto-close + toast だけ に する
+            const nukePostAuth = () => {
+              try { close(); } catch(_) {}
+              // 全 大 z-index overlay 掃除
               try { cleanupStuckModalsOnLoad(); } catch(_) {}
-            });
-            // ★ 2026-08-09 emergency: 4 秒 経ったら 自動 close (owner 「click できない」bug 対策)
-            //   success 表示 見て くれる 時間 は 4 秒 で 十分、 それ 以上 modal 開いてる と
-            //   周辺 UI 触れない と 誤解 する 事故 が 起きる
+              // body 全 pointer-events reset
+              try {
+                document.body.style.pointerEvents = 'auto';
+                document.documentElement.style.pointerEvents = 'auto';
+                Array.from(document.body.children).forEach(el => {
+                  if (el.style.pointerEvents === 'none') el.style.pointerEvents = 'auto';
+                });
+              } catch(_) {}
+              // toast (画面 上 · pointer-events:none で click 通す)
+              const toast = document.createElement('div');
+              toast.style.cssText = 'position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:2147483645;background:#059669;color:#fff;padding:12px 22px;border-radius:8px;font-weight:800;font-size:14px;box-shadow:0 8px 20px rgba(5,150,105,0.35);pointer-events:none;font-family:"Noto Sans JP",sans-serif;';
+              toast.textContent = hasCalScope
+                ? '✓ Google カレンダー 連携 完了 · ' + (googleEmail || 'account')
+                : '⚠ Google login OK · Calendar 権限 未承認 (もう一度 連携 して ください)';
+              document.body.appendChild(toast);
+              setTimeout(() => { try { toast.remove(); } catch(_) {} }, 4500);
+              try { renderDashboard(); } catch(_) {}
+            };
+            overlay.querySelector('#v3h-gcal-ok')?.addEventListener('click', nukePostAuth);
+            // 即 auto-close (500ms · owner が 「連携 する」 押した 直後 の feedback 一瞬 だけ 見せる)
             setTimeout(() => {
-              if (document.getElementById('v3h-gcal-modal')) {
-                close();
-                try { renderDashboard(); } catch(_) {}
-                try { cleanupStuckModalsOnLoad(); } catch(_) {}
-              }
-            }, 4000);
+              if (document.getElementById('v3h-gcal-modal')) nukePostAuth();
+            }, 500);
             overlay.querySelector('#v3h-gcal-test')?.addEventListener('click', async () => {
               const resultEl = overlay.querySelector('#v3h-gcal-test-result');
               resultEl.textContent = 'Google Cal に 送信 中…';
