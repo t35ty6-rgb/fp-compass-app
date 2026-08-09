@@ -2690,14 +2690,35 @@
 
     // ★ 2026-08-09 owner「Google カレンダー だけ 表示 で いい」対応:
     //   仕事/プライベート toggle 廃止 · primary Google Cal だけ を 常に 表示
+    // ★ 2026-08-09 D+: 認証 直後 の iframe auto-load で UI 重く なる bug 対策 →
+    //   iframe は owner 明示 click (「読み込む」 button) で 初めて 描画
+    const alreadyLoaded = sessionStorage.getItem('fp-gcal-embed-loaded') === '1';
     if (!wrap.querySelector('.v3h-gcal-embed-controls')) {
       wrap.innerHTML = `
         <div class="v3h-gcal-embed-controls">
           <span style="font-size:13px;font-weight:700;color:#3a4254;padding:8px 0;">${escapeHtml(localStorage.getItem('fp-gcal-email') || 'Google カレンダー')}</span>
           <a href="https://calendar.google.com/" target="_blank" rel="noopener" class="v3h-gcal-embed-open">Google Cal を 別 tab で 開く ↗</a>
         </div>
-        <div class="v3h-gcal-embed-frame" id="v3h-gcal-embed-frame"><div class="v3h-empty" style="padding:24px;text-align:center;color:#6b7280;">Google Cal 読込 中…</div></div>
+        <div class="v3h-gcal-embed-frame" id="v3h-gcal-embed-frame">
+          ${alreadyLoaded ? '<div class="v3h-empty" style="padding:24px;text-align:center;color:#6b7280;">Google Cal 読込 中…</div>' : `
+            <div style="padding:32px 20px;text-align:center;">
+              <p style="font-size:14px;color:#3a4254;margin:0 0 14px;">連携 済 (${escapeHtml(localStorage.getItem('fp-gcal-email') || '')})</p>
+              <button id="v3h-gcal-load-embed" style="background:#0b5d9e;color:#fff;border:none;padding:10px 22px;border-radius:8px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">📅 カレンダー を 読み込む</button>
+              <p style="font-size:11px;color:#9ca3af;margin:12px 0 0;">重い ので owner の click で 初回 だけ 読み込みます</p>
+            </div>
+          `}
+        </div>
       `;
+      wrap.querySelector('#v3h-gcal-load-embed')?.addEventListener('click', () => {
+        sessionStorage.setItem('fp-gcal-embed-loaded', '1');
+        wrap.dataset.state = ''; // force re-render
+        renderV3GcalEmbed(clients, tasks, today);
+      });
+    }
+    // 明示 click が 済んで ない 場合 は iframe fetch まで しない (heavy Google API skip)
+    if (!alreadyLoaded) {
+      wrap.dataset.state = currentKey;
+      return;
     }
 
     // Fetch calendar list to know which src to include
