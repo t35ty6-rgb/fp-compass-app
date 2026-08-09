@@ -3,6 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- ★ 2026-08-10 cache 撲滅: GitHub Pages が max-age=600 送ってくる ので meta で backup 上書き。
+     実効性 は browser 依存 だが、 主 防御 は app.js の 起動時 & 5min 毎 の version check + 自動 reload。 -->
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>FP Compass — ファイナンシャルプランナー向け 顧客管理 SaaS</title>
 <meta name="description" content="FP事業者向け 顧客管理 SaaS。 議事録 自動化 / LINE 統合 / 家族 タイムライン。 月¥19,800。 Skeleton Inc.">
 <link rel="icon" type="image/svg+xml" href="./favicon.svg">
@@ -2270,7 +2275,7 @@ window.fpReadyAfterAuth = function() {
 <script>
 (function(){
   // 最新の ver を 1 箇所に集約 (fpReadyAfterAuth 側と一致させる必要あり)
-    const FP_VERSION = "20260810C-revert-css-injection";
+    const FP_VERSION = "20260810D-auto-update-check";
   try { window.FP_VERSION = FP_VERSION; } catch(_) {}
 
   // 2026-07-13 v11: Chrome拡張 (Zoom タブ音声 レコーダー) 検知

@@ -8,6 +8,66 @@
   const LS_REAL_MODE = 'fp-crm-real-mode';
   const LS_REAL_CLIENTS = 'fp-crm-real-clients-v1';
 
+  // ============================================================
+  // ★ 2026-08-10 恒久 fix: stale cache 撲滅 (client の browser cache 対策)
+  // GitHub Pages が Cache-Control: max-age=600 送るため、 deploy 後 最大 10 分間、
+  // owner や 客 の browser に 古版 が 残り続ける → 「押せない」「動かない」bug の 温床
+  //
+  // 対処: 起動 直後 + 5 min 毎 に /index.html?_nc=X を network-only fetch し、
+  //  FP_VERSION 比較。 差分 あれば banner 通知 → 3 秒 で 自動 reload (caches 全掃除 付き)
+  // ============================================================
+  async function fpCheckForUpdate() {
+    try {
+      const res = await fetch('/index.html?_nc=' + Date.now(), { cache: 'no-store', credentials: 'omit' });
+      if (!res.ok) return;
+      const text = await res.text();
+      const m = text.match(/FP_VERSION\s*=\s*"([^"]+)"/);
+      const remoteVer = m?.[1];
+      const curVer = window.FP_VERSION;
+      if (!remoteVer || !curVer) return;
+      if (remoteVer !== curVer) {
+        console.log('[update] stale cache detected · local=' + curVer + ' remote=' + remoteVer);
+        fpShowUpdateBanner(remoteVer);
+      }
+    } catch (e) {
+      // network 落ち等 は 静か に skip
+    }
+  }
+  function fpShowUpdateBanner(newVer) {
+    if (document.getElementById('fp-update-banner')) return;
+    const banner = document.createElement('div');
+    banner.id = 'fp-update-banner';
+    banner.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:2147483000;background:linear-gradient(135deg,#0F172A 0%,#1E3A5F 100%);color:#fff;padding:14px 22px;border-radius:12px;font-family:"Noto Sans JP",-apple-system,sans-serif;font-size:13px;font-weight:800;box-shadow:0 12px 30px rgba(15,23,42,0.35);display:flex;align-items:center;gap:14px;letter-spacing:0.01em;';
+    banner.innerHTML = `
+      <span>🎉 新版 が あります · 3 秒 後 に 自動 更新</span>
+      <button id="fp-update-now" style="background:#3B82F6;color:#fff;border:0;padding:6px 14px;border-radius:6px;font-weight:800;cursor:pointer;font-family:inherit;font-size:12.5px;">今 すぐ 更新</button>
+    `;
+    document.body.appendChild(banner);
+    const doReload = async () => {
+      try {
+        if ('caches' in window) {
+          const keys = await caches.keys();
+          await Promise.all(keys.map(k => caches.delete(k)));
+        }
+      } catch(_) {}
+      // ?_nc= 付けて 明示的 に fresh 取得
+      const nc = 'nc_' + Date.now();
+      const u = new URL(location.href);
+      u.searchParams.set('_v', nc);
+      location.replace(u.toString());
+    };
+    document.getElementById('fp-update-now').addEventListener('click', doReload);
+    setTimeout(doReload, 3000);
+  }
+  // 起動 5 秒 後 に 初回 check (auth 落ち着く まで 待つ)
+  setTimeout(fpCheckForUpdate, 5000);
+  // 以降 5 min 毎
+  setInterval(fpCheckForUpdate, 5 * 60 * 1000);
+  // tab 復帰 時 (owner が しばらく 離れて 戻ってきた 時) にも check
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') setTimeout(fpCheckForUpdate, 500);
+  });
+
   // ============================
   // ★ 2026-06-26 重さ解消 Phase 5: 再render 削減ユーティリティ
   // ============================
