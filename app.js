@@ -907,11 +907,21 @@
           });
 
           // 解除
-          overlay.querySelector('#v3h-gcal-unlink')?.addEventListener('click', () => {
+          overlay.querySelector('#v3h-gcal-unlink')?.addEventListener('click', async () => {
             if (!confirm('Google カレンダー 連携 を 解除 しますか?\n\n(以降、 予約 が Cal に 自動 sync されなくなります)')) return;
             try {
+              // ★ 2026-08-08: Cloud Function 経由 で server 側 refresh_token も 削除
+              try {
+                const fp = window.__fp;
+                if (fp?.auth?.currentUser) {
+                  const { getFunctions, httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-functions.js');
+                  const fn = httpsCallable(getFunctions(fp.auth.app, 'asia-northeast1'), 'gcalUnlink');
+                  await fn({});
+                }
+              } catch (e) { console.warn('[gcal] server unlink fail:', e.message); }
               localStorage.removeItem('fp-gcal-token');
               localStorage.removeItem('fp-gcal-token-at');
+              localStorage.removeItem('fp-gcal-token-expires-at');
               localStorage.removeItem('fp-gcal-linked-at');
               localStorage.removeItem('fp-gcal-email');
               localStorage.removeItem('fp-gcal-token-stale');
@@ -964,66 +974,32 @@
         overlay.querySelector('#v3h-gcal-later')?.addEventListener('click', close);
         overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
         overlay.querySelector('#v3h-gcal-go')?.addEventListener('click', async () => {
-          // ★ 2026-08-06 実 OAuth 開始 (Firebase Auth Google provider + calendar scope)
+          // ★ 2026-08-08 恒久 fix: OAuth 2.0 offline access flow (refresh_token を server 保管)
+          //   startGcalOauthPopup() が Google 「同意 画面」 popup を 開く · callback page が code を postMessage で 返す
+          //   → CF gcalExchangeCode が refresh_token を Firestore に 保管 · access_token を client に 返す
+          //   → 以降 は refreshGcalTokenViaCF() が 期限切れ 検知 で 裏 更新 (popup 一切 なし)
           const btn = overlay.querySelector('#v3h-gcal-go');
           btn.disabled = true;
           btn.textContent = '認証 画面 開いてます…';
           try {
-            const fp = window.__fp;
-            if (!fp?.GoogleAuthProvider || !fp?.auth?.currentUser) {
-              throw new Error('Firebase Auth 初期化 待ち · 再読み込み して 再試行 ください');
-            }
-            const provider = new fp.GoogleAuthProvider();
-            provider.addScope('https://www.googleapis.com/auth/calendar.events');
-            provider.addScope('https://www.googleapis.com/auth/calendar.readonly');
-            // ★ 2026-08-06 owner「403 insufficient scopes」bug fix:
-            // `select_account` だけ だと 過去 認証 済 の 場合 Google が auto-approve して
-            // Calendar scope を skip する。 `consent` で 毎回 完全 consent 画面 を 出す。
-            provider.setCustomParameters({
-              prompt: 'consent',
-              access_type: 'online',
-              include_granted_scopes: 'true',
-            });
-
-            const user = fp.auth.currentUser;
-            const alreadyLinked = (user.providerData || []).some(p => p.providerId === 'google.com');
-            let result;
-            if (alreadyLinked) {
-              result = await fp.reauthenticateWithPopup(user, provider);
-            } else {
-              try {
-                result = await fp.linkWithPopup(user, provider);
-              } catch (e) {
-                // auth/credential-already-in-use = 他 の user と 既に link 済 → reauth に fallback
-                if (e.code === 'auth/credential-already-in-use' || e.code === 'auth/email-already-in-use') {
-                  result = await fp.reauthenticateWithPopup(user, provider);
-                } else { throw e; }
-              }
-            }
-            const credential = fp.GoogleAuthProvider.credentialFromResult(result);
-            const accessToken = credential?.accessToken;
+            const payload = await startGcalOauthPopup();
+            const accessToken = payload.accessToken;
+            const googleEmail = payload.email || '';
             if (!accessToken) throw new Error('access token 取得 失敗');
 
-            // 保存 (session = short-lived, local = linked 記録)
-            localStorage.setItem('fp-gcal-token', accessToken);
-            localStorage.setItem('fp-gcal-token-at', new Date().toISOString());
-            localStorage.setItem('fp-gcal-linked-at', new Date().toISOString());
-            localStorage.removeItem('fp-gcal-token-stale');
-            const googleEmail = (user.providerData || []).find(p => p.providerId === 'google.com')?.email
-              || result.user?.email || '';
-            localStorage.setItem('fp-gcal-email', googleEmail);
-
             // ★ scope 実測 (tokeninfo で 実際 に 何 の scope が 付与 されたか 検証)
-            let grantedScopes = '';
-            let hasCalScope = false;
-            try {
-              const ti = await fetch('https://oauth2.googleapis.com/tokeninfo?access_token=' + encodeURIComponent(accessToken));
-              if (ti.ok) {
-                const td = await ti.json();
-                grantedScopes = td.scope || '';
-                hasCalScope = /calendar\.events|calendar\.readonly|\/calendar( |$)/.test(grantedScopes);
-              }
-            } catch (_) {}
+            let grantedScopes = payload.scope || '';
+            let hasCalScope = /calendar\.events|calendar\.readonly|\/calendar( |$)/.test(grantedScopes);
+            if (!grantedScopes) {
+              try {
+                const ti = await fetch('https://oauth2.googleapis.com/tokeninfo?access_token=' + encodeURIComponent(accessToken));
+                if (ti.ok) {
+                  const td = await ti.json();
+                  grantedScopes = td.scope || '';
+                  hasCalScope = /calendar\.events|calendar\.readonly|\/calendar( |$)/.test(grantedScopes);
+                }
+              } catch (_) {}
+            }
             console.log('[gcal] granted scopes:', grantedScopes, 'hasCalScope:', hasCalScope);
 
             // 成功 画面 (scope 実測 情報 付き)
@@ -1435,9 +1411,15 @@
     });
   }
   // ★ 2026-08-07 owner「毎回 認証 うざい」対応: token 永続化 + silent refresh
-  // localStorage に 保存 (session だと tab 閉じたら 消える) + 期限 55分 で 自動 silent reauth
+  // 2026-08-08 恒久 fix: OAuth 2.0 offline access (refresh_token を server 保管) に 移行
+  //   一度 連携 → 以降 6ヶ月 完全 無人化 · popup 一切なし (Cloud Function gcalGetAccessToken 経由 で 透明 refresh)
   const GCAL_TOKEN_KEY = 'fp-gcal-token';
   const GCAL_TOKEN_AT_KEY = 'fp-gcal-token-at';
+  const GCAL_TOKEN_EXPIRES_AT_KEY = 'fp-gcal-token-expires-at'; // v20260809: absolute ms from CF
+  // 2026-08-08 OAuth Client ID (public, 埋込 可 · Secret は Cloud Function 側 のみ)
+  const GCAL_OAUTH_CLIENT_ID = '833972948597-vu4o2j7eojtu4h3rbdsc6khmesbvdtm6.apps.googleusercontent.com';
+  const GCAL_OAUTH_SCOPES = 'https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/calendar.readonly';
+  const GCAL_OAUTH_REDIRECT_PATH = '/gcal-oauth-callback.html';
   function getStoredGcalToken() {
     // 移行: 旧 sessionStorage → localStorage
     try {
@@ -1451,49 +1433,157 @@
     return localStorage.getItem(GCAL_TOKEN_KEY);
   }
   function isGcalTokenFresh() {
+    // v20260809: absolute expiry preferred (CF が返す), fallback は 55min age
+    const abs = parseInt(localStorage.getItem(GCAL_TOKEN_EXPIRES_AT_KEY) || '0');
+    if (abs) return abs > Date.now() + 60 * 1000; // 60秒 マージン
     const at = localStorage.getItem(GCAL_TOKEN_AT_KEY);
     if (!at) return false;
     const ageMs = Date.now() - new Date(at).getTime();
-    return ageMs < 55 * 60 * 1000; // 55min (5min safety margin from 1h expiry)
+    return ageMs < 55 * 60 * 1000;
   }
-  // ★ 2026-08-07 lazy 化: token あれば return · 無ければ null (popup は 呼ばない)
-  // 期限切れ でも 手元 の token 返して 呼出側 に 401 は Cal API 側 で 検知 させる
-  // 明示 popup は 「連携」 button click 時 のみ (silent reauth は 廃止 · freeze 原因)
+  function saveGcalTokenFromCF(payload) {
+    // payload = { accessToken, expiresAtMs, email }
+    if (!payload || !payload.accessToken) return;
+    localStorage.setItem(GCAL_TOKEN_KEY, payload.accessToken);
+    localStorage.setItem(GCAL_TOKEN_AT_KEY, new Date().toISOString());
+    if (payload.expiresAtMs) localStorage.setItem(GCAL_TOKEN_EXPIRES_AT_KEY, String(payload.expiresAtMs));
+    if (payload.email) localStorage.setItem('fp-gcal-email', payload.email);
+    localStorage.setItem('fp-gcal-linked-at', localStorage.getItem('fp-gcal-linked-at') || new Date().toISOString());
+    localStorage.removeItem('fp-gcal-token-stale');
+  }
+
+  // ★ 2026-08-08 恒久 fix: token 期限切れ に CF 経由 で 裏側 refresh
+  // 呼出側 は これ を await するだけ で fresh token 保証。 popup 一切 なし。
+  // refresh_token が Firestore に あれば silent 更新 · 無ければ null (popup 誘発 は 呼出側)
+  let __gcalRefreshInFlight = null;
+  async function refreshGcalTokenViaCF() {
+    if (__gcalRefreshInFlight) return __gcalRefreshInFlight;
+    __gcalRefreshInFlight = (async () => {
+      try {
+        const fp = window.__fp;
+        if (!fp?.auth?.currentUser) return null;
+        const { getFunctions, httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-functions.js');
+        const fn = httpsCallable(getFunctions(fp.auth.app, 'asia-northeast1'), 'gcalGetAccessToken');
+        const res = await fn({});
+        if (res.data?.accessToken) {
+          saveGcalTokenFromCF(res.data);
+          return res.data.accessToken;
+        }
+        return null;
+      } catch (e) {
+        // not-found (未連携) / unauthenticated (refresh_token 失効) → localStorage 掃除 + stale フラグ
+        const code = e?.code || '';
+        if (code === 'functions/not-found' || code === 'functions/unauthenticated') {
+          try {
+            localStorage.removeItem(GCAL_TOKEN_KEY);
+            localStorage.removeItem(GCAL_TOKEN_EXPIRES_AT_KEY);
+            localStorage.setItem('fp-gcal-token-stale', '1');
+          } catch (_) {}
+        }
+        console.warn('[gcal] CF refresh failed:', code || e.message);
+        return null;
+      } finally {
+        setTimeout(() => { __gcalRefreshInFlight = null; }, 50);
+      }
+    })();
+    return __gcalRefreshInFlight;
+  }
+  window.__fpRefreshGcalTokenViaCF = refreshGcalTokenViaCF;
+
+  // ★ 2026-08-08 恒久 fix: token 取得 の main entrypoint
+  //   1) local token が fresh → そのまま return
+  //   2) fresh じゃ ない (期限切れ or 60秒 未満) → CF で 裏 refresh
+  //   3) CF でも 取れない → null (呼出側 で 「連携」 UI 出す)
   async function ensureGcalToken() {
-    return getStoredGcalToken() || null;
+    const local = getStoredGcalToken();
+    if (local && isGcalTokenFresh()) return local;
+    // fresh じゃ ない → CF で silent refresh
+    const refreshed = await refreshGcalTokenViaCF();
+    return refreshed || local || null;
   }
   window.__fpEnsureGcalToken = ensureGcalToken;
 
-  // ★ 2026-08-07Q owner「毎回 登録 させられる」対応:
-  // silent reauth (prompt=none) を owner 明示 click 時 だけ 走らせる (page load 時 は 走らない → freeze なし)
-  // 成功: 新 token を localStorage 反映 · fail: false 返す (呼出側 が 通常 popup に fallback)
+  // ★ 2026-08-08 恒久 fix (client): trySilentGcalRefresh は refreshGcalTokenViaCF() の 別名 に
+  //   client 側 の 期限切れ 検知 → CF で refresh_token 使って 裏 更新 (popup 一切 なし)
   async function trySilentGcalRefresh() {
-    const fp = window.__fp;
-    if (!fp?.GoogleAuthProvider || !fp?.auth?.currentUser) return false;
-    const user = fp.auth.currentUser;
-    const hasGoogleLink = (user.providerData || []).some(p => p.providerId === 'google.com');
-    if (!hasGoogleLink) return false;
-    try {
-      const provider = new fp.GoogleAuthProvider();
-      provider.addScope('https://www.googleapis.com/auth/calendar.events');
-      provider.addScope('https://www.googleapis.com/auth/calendar.readonly');
-      provider.setCustomParameters({ prompt: 'none', include_granted_scopes: 'true' });
-      const result = await fp.reauthenticateWithPopup(user, provider);
-      const cred = fp.GoogleAuthProvider.credentialFromResult(result);
-      const newTok = cred?.accessToken;
-      if (newTok) {
-        localStorage.setItem(GCAL_TOKEN_KEY, newTok);
-        localStorage.setItem(GCAL_TOKEN_AT_KEY, new Date().toISOString());
-        localStorage.removeItem('fp-gcal-token-stale');
-        console.log('[gcal] silent refresh OK');
-        return true;
-      }
-    } catch (e) {
-      console.log('[gcal] silent refresh fail:', e.code || e.message);
-    }
-    return false;
+    const t = await refreshGcalTokenViaCF();
+    return !!t;
   }
   window.__fpTrySilentGcalRefresh = trySilentGcalRefresh;
+
+  // ★ 2026-08-08 恒久 fix: OAuth 2.0 offline access flow (initial 認証 · refresh_token 取得)
+  //   Google の 「同意 画面」 を popup で 開き、 callback page が postMessage で code を 返す。
+  //   Jobs 側 CF gcalExchangeCode が code を tokens に 交換 · refresh_token を Firestore に 保管、
+  //   client に は access_token + expiresAtMs + email のみ 返る。
+  //   これ 一発 で 完了、 以降 は refreshGcalTokenViaCF() が 裏 で 更新 する。
+  function generateGcalOauthState() {
+    const arr = new Uint8Array(24);
+    crypto.getRandomValues(arr);
+    return Array.from(arr).map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+  async function startGcalOauthPopup() {
+    const fp = window.__fp;
+    if (!fp?.auth?.currentUser) throw new Error('Firebase Auth 未初期化');
+    const state = generateGcalOauthState();
+    sessionStorage.setItem('fp-gcal-oauth-state', state);
+    const redirectUri = location.origin + GCAL_OAUTH_REDIRECT_PATH;
+    const params = new URLSearchParams({
+      client_id: GCAL_OAUTH_CLIENT_ID,
+      redirect_uri: redirectUri,
+      response_type: 'code',
+      scope: GCAL_OAUTH_SCOPES,
+      access_type: 'offline',
+      prompt: 'consent',
+      include_granted_scopes: 'true',
+      state,
+    });
+    const authUrl = 'https://accounts.google.com/o/oauth2/v2/auth?' + params.toString();
+    // popup で 開く · postMessage listener が 呼び戻す
+    const w = 480, h = 640;
+    const left = window.screenX + (window.outerWidth - w) / 2;
+    const top = window.screenY + (window.outerHeight - h) / 2;
+    const popup = window.open(authUrl, 'fp-gcal-oauth', `width=${w},height=${h},left=${left},top=${top},noopener=no`);
+    if (!popup) throw new Error('popup が block されました (browser 設定 確認)');
+    return new Promise((resolve, reject) => {
+      let done = false;
+      // listener
+      const onMsg = async (ev) => {
+        if (ev.origin !== location.origin) return;
+        if (ev.data?.type !== 'fp-gcal-oauth-callback') return;
+        const savedState = sessionStorage.getItem('fp-gcal-oauth-state');
+        if (!savedState || savedState !== ev.data.state) {
+          done = true; window.removeEventListener('message', onMsg);
+          reject(new Error('OAuth state 不一致 (CSRF 検証 失敗)'));
+          return;
+        }
+        sessionStorage.removeItem('fp-gcal-oauth-state');
+        done = true; window.removeEventListener('message', onMsg);
+        try {
+          const { getFunctions, httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-functions.js');
+          const fn = httpsCallable(getFunctions(fp.auth.app, 'asia-northeast1'), 'gcalExchangeCode');
+          const res = await fn({ code: ev.data.code, redirectUri: ev.data.redirectUri || redirectUri });
+          if (!res.data?.accessToken) throw new Error(res.data?.error || 'accessToken 空');
+          saveGcalTokenFromCF(res.data);
+          resolve(res.data);
+        } catch (e) {
+          reject(e);
+        }
+      };
+      window.addEventListener('message', onMsg);
+      // popup 閉じ検知 (owner が 諦めた 場合)
+      const iv = setInterval(() => {
+        if (done) { clearInterval(iv); return; }
+        try {
+          if (popup.closed) {
+            clearInterval(iv);
+            window.removeEventListener('message', onMsg);
+            reject(new Error('popup が 閉じ られました'));
+          }
+        } catch (_) {}
+      }, 500);
+    });
+  }
+  window.__fpStartGcalOauthPopup = startGcalOauthPopup;
   // Expose 実 sync helper (booking 確定 時 に 呼ばれる 想定)
   window.__fpGcalInsertEvent = async function(event) {
     const token = await ensureGcalToken();
@@ -1707,7 +1797,8 @@
   // Cache (5分 で expire)
   window.__fpGcalEventsCache = { items: null, at: 0, range: null };
   async function fetchGcalEventsForRange(start, end) {
-    const token = localStorage.getItem('fp-gcal-token');
+    // ★ 2026-08-08 恒久 fix: ensureGcalToken で local fresh check + CF silent refresh
+    let token = await ensureGcalToken();
     if (!token) return [];
     const rangeKey = start.toISOString() + '_' + end.toISOString();
     const cache = window.__fpGcalEventsCache;
@@ -1720,13 +1811,18 @@
       return items;
     } catch (e) {
       console.warn('[gcal] fetch fail:', e.message);
-      // 401 なら token 失効 の signal を 出す
-      // ★ 2026-08-07Q: 削除 じゃ なく stale flag に (owner 再認証 UX 改善)
       if (String(e.message).includes('401')) {
-        try {
-          localStorage.removeItem('fp-gcal-token');
-          localStorage.setItem('fp-gcal-token-stale', '1');
-        } catch(_){}
+        // 401 → CF で 裏 refresh してから 1 回 retry (透明)
+        const fresh = await refreshGcalTokenViaCF();
+        if (fresh) {
+          try {
+            const items = await gcalFetchEvents(fresh, start, end);
+            window.__fpGcalEventsCache = { items, at: Date.now(), range: rangeKey };
+            return items;
+          } catch (e2) {
+            console.warn('[gcal] fetch retry fail:', e2.message);
+          }
+        }
       }
       return [];
     }
@@ -1748,7 +1844,8 @@
   // cache 10分
   window.__fpGcalListCache = { items: null, at: 0 };
   async function fetchCachedCalList() {
-    const token = localStorage.getItem('fp-gcal-token');
+    // ★ 2026-08-08 恒久 fix: ensureGcalToken で local fresh check + CF silent refresh
+    let token = await ensureGcalToken();
     if (!token) return [];
     const c = window.__fpGcalListCache;
     if (c.items && (Date.now() - c.at) < 10 * 60 * 1000) return c.items;
@@ -1758,12 +1855,18 @@
       return items;
     } catch (e) {
       console.warn('[gcal list]', e.message);
-      // ★ 2026-08-07Q: 削除 + stale flag
       if (String(e.message).includes('401')) {
-        try {
-          localStorage.removeItem('fp-gcal-token');
-          localStorage.setItem('fp-gcal-token-stale', '1');
-        } catch(_){}
+        // 401 → CF で 裏 refresh してから 1 回 retry
+        const fresh = await refreshGcalTokenViaCF();
+        if (fresh) {
+          try {
+            const items = await gcalListCalendars(fresh);
+            window.__fpGcalListCache = { items, at: Date.now() };
+            return items;
+          } catch (e2) {
+            console.warn('[gcal list] retry fail:', e2.message);
+          }
+        }
       }
       return [];
     }

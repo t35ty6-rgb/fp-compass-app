@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Google Cal 認証 中… · FP Compass</title>
+<style>
+  html, body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Yu Gothic', sans-serif; background: #F8FAFC; color: #1a1f2c; }
+  .wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+  .card { max-width: 420px; width: 100%; background: #fff; border: 1.5px solid #E5E7EB; border-radius: 14px; padding: 28px 24px; text-align: center; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06); }
+  .spinner { width: 40px; height: 40px; margin: 0 auto 14px; border: 3px solid #E5E7EB; border-top-color: #0b5d9e; border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  h1 { font-size: 15px; font-weight: 800; margin: 0 0 6px; color: #1a1f2c; }
+  p { font-size: 12.5px; color: #6b7280; margin: 0; line-height: 1.6; }
+  .err { color: #b91c1c; }
+  .ok { color: #047857; }
+  .ico { font-size: 34px; line-height: 1; margin-bottom: 8px; }
+  code { font-family: ui-monospace, SFMono-Regular, monospace; font-size: 11px; background: #F1F5F9; padding: 2px 6px; border-radius: 4px; color: #334155; }
+  .btn { display: inline-block; margin-top: 12px; background: #0b5d9e; color: #fff; padding: 8px 16px; border-radius: 8px; font-size: 12.5px; font-weight: 800; cursor: pointer; border: none; text-decoration: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card" id="card">
+    <div class="spinner" id="spin"></div>
+    <h1 id="title">Google Cal 認証 中…</h1>
+    <p id="msg">数秒 で 元 の 画面 に 戻ります</p>
+  </div>
+</div>
+<script type="module">
+  // Google からの redirect: ?code=... &scope=... &state=... (state = FP Compass 側 の CSRF token)
+  const params = new URLSearchParams(location.search);
+  const code = params.get('code');
+  const state = params.get('state');
+  const error = params.get('error');
+  const err_desc = params.get('error_description');
+
+  const cardEl = document.getElementById('card');
+  const titleEl = document.getElementById('title');
+  const msgEl = document.getElementById('msg');
+  const spinEl = document.getElementById('spin');
+
+  function showError(title, msg) {
+    spinEl.style.display = 'none';
+    cardEl.innerHTML = `
+      <div class="ico">⚠️</div>
+      <h1 class="err">${title}</h1>
+      <p>${msg}</p>
+      <button class="btn" onclick="window.close()">閉じる</button>`;
+  }
+  function showOk(msg) {
+    spinEl.style.display = 'none';
+    cardEl.innerHTML = `
+      <div class="ico">✓</div>
+      <h1 class="ok">Google Cal 連携 完了</h1>
+      <p>${msg}</p>`;
+  }
+
+  // 1) error 系
+  if (error) {
+    showError('認証 が キャンセル された', err_desc || error);
+  } else if (!code) {
+    showError('認証 code が 見つかりません', 'URL が 壊れて いる 可能性 が あります');
+  } else {
+    // 2) state 検証 (owner が 開いた popup と 同一 か)
+    const savedState = sessionStorage.getItem('fp-gcal-oauth-state');
+    if (!savedState || savedState !== state) {
+      // popup mode (親 window に postMessage で code + state を 渡す)
+      // state 検証 は 親 window 側 で もう 一度 行う
+      if (window.opener && !window.opener.closed) {
+        try {
+          window.opener.postMessage({
+            type: 'fp-gcal-oauth-callback',
+            code,
+            state,
+            redirectUri: location.origin + location.pathname,
+          }, location.origin);
+          showOk('認証 情報 を 送信 しました。 元 window を 確認 して ください');
+          setTimeout(() => { try { window.close(); } catch(_){} }, 1500);
+        } catch (e) {
+          showError('postMessage 失敗', e.message);
+        }
+      } else {
+        // 同 window (redirect mode) — sessionStorage state が 消えて いる の は 別 tab 経由 の 可能性
+        showError('認証 state 不一致', 'popup を 開き直して ください');
+      }
+    } else {
+      // same-window redirect flow: sessionStorage に code を stash して 元 view に 戻る
+      sessionStorage.setItem('fp-gcal-oauth-code', code);
+      sessionStorage.setItem('fp-gcal-oauth-redirect-uri', location.origin + location.pathname);
+      sessionStorage.removeItem('fp-gcal-oauth-state');
+      // 元 に 戻る
+      const returnUrl = sessionStorage.getItem('fp-gcal-oauth-return') || '/';
+      location.replace(returnUrl);
+    }
+  }
+</script>
+</body>
+</html>
