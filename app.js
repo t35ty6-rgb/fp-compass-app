@@ -1778,7 +1778,8 @@
           console.log('[NUKE] removing:', el.tagName, el.id, el.className.toString().slice(0,50));
           el.remove();
         });
-        // body 直下 全 pointer-events reset
+        // body / html 全 pointer-events reset
+        document.documentElement.style.pointerEvents = 'auto';
         document.body.style.pointerEvents = 'auto';
         Array.from(document.body.children).forEach(el => {
           // ★ diag inspector 自身 は skip (自 pe:none で click pass-through 設計、
@@ -1788,6 +1789,26 @@
             console.log('[NUKE] pointer-events:auto forced on', el.tagName, el.id);
             el.style.pointerEvents = 'auto';
           }
+        });
+        // ★ 2026-08-09 nuclear+: css 全体 に * { pointer-events: auto !important } を 挿入
+        //   個別 element の inline style じゃ 効かない 「CSS class 由来 pe:none」 も 撲滅
+        if (!document.getElementById('fp-nuke-css')) {
+          const style = document.createElement('style');
+          style.id = 'fp-nuke-css';
+          // diag inspector container の pe:none は 保護 (下層 click pass-through 設計)
+          style.textContent = `body *:not(#fp-diag-inspector) { pointer-events: auto !important; } html, body { pointer-events: auto !important; }`;
+          document.head.appendChild(style);
+          console.log('[NUKE] injected * { pointer-events: auto !important } CSS');
+        }
+        // ★ 全 descendant に inline pe:auto を 直接 塗る (最後 の 保険)
+        document.querySelectorAll('body *').forEach(el => {
+          if (el.id === 'fp-diag-inspector' || el.id === 'fp-diag-hover' || el.id === 'fp-diag-click') return;
+          try {
+            const cs = getComputedStyle(el);
+            if (cs.pointerEvents === 'none') {
+              el.style.setProperty('pointer-events', 'auto', 'important');
+            }
+          } catch(_){}
         });
         // banner で 通知
         const banner = document.createElement('div');
