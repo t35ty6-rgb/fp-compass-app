@@ -1358,7 +1358,32 @@
       if (a.urgencyRank !== b.urgencyRank) return a.urgencyRank - b.urgencyRank;
       return (a.dueBy || 0) - (b.dueBy || 0);
     });
-    return tasks;
+
+    // ★ 2026-08-10 owner「議事録 自動 TODO 多すぎる → 大切 に 絞る」対応
+    //   (a) 同 client + 同 type + title 前 60 字 が 一致 する 議事録 宿題 は 1 件 に dedupe
+    //   (b) 議事録 宿題 (type=homework) の rank 2 (今月) は 各 client 1 件 まで cap (残り は noise)
+    //   (c) 議事録 宿題 の rank 2 で 90 日 超 の 提出 停滞 は 削除 (客 が 動かない = TODO で 追い立てても 意味なし)
+    const seenHomework = new Set();
+    const homeworkRank2PerClient = new Map();
+    const now = Date.now();
+    const filtered = [];
+    for (const t of tasks) {
+      if (t.type === 'homework') {
+        const kk = (t.clientId || '') + '|' + (t.title || '').slice(0, 60);
+        if (seenHomework.has(kk)) continue;
+        seenHomework.add(kk);
+        if (t.urgencyRank === 2) {
+          // rank2: client 別 に 1 件 cap
+          const cnt = homeworkRank2PerClient.get(t.clientId) || 0;
+          if (cnt >= 1) continue;
+          homeworkRank2PerClient.set(t.clientId, cnt + 1);
+          // 90 日 以上 前 の 期限 なら 削除
+          if (t.dueBy && (now - new Date(t.dueBy).getTime()) > 90 * 86400000) continue;
+        }
+      }
+      filtered.push(t);
+    }
+    return filtered;
   }
 
   function renderHomeTasksList(tasks, clients) {
@@ -1400,49 +1425,155 @@
       return;
     }
 
+    // ★ 2026-08-10 owner「完了 済 は 分離」 対応: done を 別 group に
+    const doneItems = tasks.filter(t => isTodoDone(t));
+    const activeTasks = tasks.filter(t => !isTodoDone(t));
     // urgencyRank 別 に グループ 化
     const groups = [
-      { rank: 0, title: '今日 中 に 対応', desc: '期限 到来 / 提案 停滞 / 面談 直前', tone: 'urgent',   items: tasks.filter(t => t.urgencyRank === 0) },
-      { rank: 1, title: '今週 中 に 対応', desc: '提案 期限 迫る / 面談 近い / 宿題 今週',    tone: 'warn',     items: tasks.filter(t => t.urgencyRank === 1) },
-      { rank: 2, title: '今月 の 予定',    desc: '長期 未接触 の 再 engagement 等',              tone: 'neutral',  items: tasks.filter(t => t.urgencyRank === 2) },
+      { rank: 0, title: '今日 中 に 対応', desc: '期限 到来 / 提案 停滞 / 面談 直前', tone: 'urgent',   items: activeTasks.filter(t => t.urgencyRank === 0), defaultOpen: true },
+      { rank: 1, title: '今週 中 に 対応', desc: '提案 期限 迫る / 面談 近い / 宿題 今週',    tone: 'warn',     items: activeTasks.filter(t => t.urgencyRank === 1), defaultOpen: true },
+      { rank: 2, title: '今月 の 予定',    desc: '長期 未接触 の 再 engagement 等',              tone: 'neutral',  items: activeTasks.filter(t => t.urgencyRank === 2), defaultOpen: false },  // ★ owner「多すぎ」対応 で 閉じる
     ];
 
     const cnt = document.getElementById('senior-counter');
-    if (cnt) cnt.textContent = tasks.length + ' 件';
+    if (cnt) cnt.textContent = activeTasks.length + ' 件';
 
     const iconHtml = (t) => `<div class="fp-task-icon fp-task-icon-${t.tone || 'neutral'}">${t.icon || '•'}</div>`;
-    const rowHtml = (t) => `
-      <button class="fp-task-row fp-task-row-${t.urgencyRank === 0 ? 'urgent' : (t.urgencyRank === 1 ? 'warn' : 'neutral')}" data-client-id="${escapeHtml(t.clientId)}" type="button">
-        ${iconHtml({ icon: t.icon, tone: t.urgencyRank === 0 ? 'urgent' : (t.urgencyRank === 1 ? 'warn' : 'neutral') })}
-        <div class="fp-task-body">
+    // ★ 2026-08-10 owner「LINE 返信・予定 再送 button 分かり づらい」対応:
+    //   task type ごと に 明示 action button を row 右側 に 追加
+    const actionButtonsFor = (t) => {
+      const btns = [];
+      if (t.type === 'line-reply') {
+        btns.push(`<button class="fp-task-act fp-task-act-primary" data-act="line-reply" data-client-id="${escapeHtml(t.clientId)}" onclick="event.stopPropagation()" title="LINE 返信 画面 を 開く">💬 返信 する</button>`);
+      } else if (t.type === 'schedule') {
+        if ((t.timeLabel || '').includes('要 発行')) {
+          btns.push(`<button class="fp-task-act fp-task-act-primary" data-act="zoom-issue" data-client-id="${escapeHtml(t.clientId)}" onclick="event.stopPropagation()" title="Zoom URL 発行 モーダル を 開く">🎥 Zoom URL 発行</button>`);
+        } else {
+          btns.push(`<button class="fp-task-act fp-task-act-secondary" data-act="slots-resend" data-client-id="${escapeHtml(t.clientId)}" onclick="event.stopPropagation()" title="候補日 を 再送 する">📅 候補日 再送</button>`);
+        }
+      } else if (t.type === 'booking') {
+        btns.push(`<button class="fp-task-act fp-task-act-secondary" data-act="open-client" data-client-id="${escapeHtml(t.clientId)}" onclick="event.stopPropagation()" title="客 カルテ 開く">📋 カルテ</button>`);
+      }
+      return btns.join('');
+    };
+    const rowHtml = (t) => {
+      const key = taskKeyFor(t);
+      const done = isTodoDone(t);
+      const rankTone = t.urgencyRank === 0 ? 'urgent' : (t.urgencyRank === 1 ? 'warn' : 'neutral');
+      return `
+      <div class="fp-task-row fp-task-row-${rankTone} ${done ? 'fp-task-row-done' : ''}" data-client-id="${escapeHtml(t.clientId)}" data-task-key="${escapeHtml(key)}" style="${done ? 'opacity:0.5;text-decoration:line-through;' : ''}">
+        <label class="fp-task-check" onclick="event.stopPropagation()" style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;flex-shrink:0;cursor:pointer;">
+          <input type="checkbox" class="fp-task-check-input" data-task-key="${escapeHtml(key)}" ${done ? 'checked' : ''} style="width:20px;height:20px;cursor:pointer;accent-color:#10B981;">
+        </label>
+        ${iconHtml({ icon: t.icon, tone: rankTone })}
+        <div class="fp-task-body" data-open-client="${escapeHtml(t.clientId)}" style="cursor:pointer;">
           <div class="fp-task-body-title"><span class="fp-task-body-who">${escapeHtml(t.clientName)} 様</span> ${escapeHtml(t.title)}</div>
           <div class="fp-task-body-sub">${escapeHtml(t.sub || '')}</div>
         </div>
+        <div class="fp-task-actions" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">${actionButtonsFor(t)}</div>
         <div class="fp-task-time">${escapeHtml(t.timeLabel || '')}</div>
-      </button>`;
+      </div>`;
+    };
 
-    list.innerHTML = `
-      <div class="fp-task-list">
-        ${groups.filter(g => g.items.length > 0).map(g => `
-          <div class="fp-task-group fp-task-group-${g.tone}">
-            <div class="fp-task-group-head">
-              <span class="fp-task-group-pill fp-task-group-pill-${g.tone}">${escapeHtml(g.title)}</span>
-              <span class="fp-task-group-count">${g.items.length} 件</span>
-              <span class="fp-task-group-desc">${escapeHtml(g.desc)}</span>
-            </div>
-            <div class="fp-task-group-items">
-              ${g.items.map(rowHtml).join('')}
-            </div>
+    const groupHtml = (g) => {
+      if (g.items.length === 0) return '';
+      const isCollapsed = g.defaultOpen === false;
+      return `
+        <div class="fp-task-group fp-task-group-${g.tone}" data-group-collapsed="${isCollapsed ? '1' : '0'}">
+          <div class="fp-task-group-head" data-group-toggle style="cursor:pointer;user-select:none;">
+            <span class="fp-task-group-arrow" style="display:inline-block;width:14px;font-size:11px;color:#94A3B8;">${isCollapsed ? '▶' : '▼'}</span>
+            <span class="fp-task-group-pill fp-task-group-pill-${g.tone}">${escapeHtml(g.title)}</span>
+            <span class="fp-task-group-count">${g.items.length} 件</span>
+            <span class="fp-task-group-desc">${escapeHtml(g.desc)}</span>
           </div>
-        `).join('')}
+          <div class="fp-task-group-items" style="${isCollapsed ? 'display:none;' : ''}">
+            ${g.items.map(rowHtml).join('')}
+          </div>
+        </div>
+      `;
+    };
+
+    const doneGroupHtml = doneItems.length === 0 ? '' : `
+      <div class="fp-task-group fp-task-group-done" data-group-collapsed="1">
+        <div class="fp-task-group-head" data-group-toggle style="cursor:pointer;user-select:none;opacity:0.6;">
+          <span class="fp-task-group-arrow" style="display:inline-block;width:14px;font-size:11px;color:#94A3B8;">▶</span>
+          <span class="fp-task-group-pill" style="background:#DCFCE7;color:#166534;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:800;">✓ 完了 済 (今日)</span>
+          <span class="fp-task-group-count">${doneItems.length} 件</span>
+        </div>
+        <div class="fp-task-group-items" style="display:none;">
+          ${doneItems.map(rowHtml).join('')}
+        </div>
       </div>
     `;
 
-    // Wire: row click → 客モーダル
-    list.querySelectorAll('.fp-task-row').forEach(row => {
-      row.addEventListener('click', () => {
-        const id = row.dataset.clientId;
+    list.innerHTML = `
+      <div class="fp-task-list">
+        ${groups.map(groupHtml).join('')}
+        ${doneGroupHtml}
+      </div>
+    `;
+
+    // Wire: task body click → 客モーダル
+    list.querySelectorAll('.fp-task-body[data-open-client]').forEach(el => {
+      el.addEventListener('click', (e) => {
+        const id = el.dataset.openClient;
         if (id) openClientModal(id);
+      });
+    });
+    // Wire: checkbox toggle → done state
+    list.querySelectorAll('.fp-task-check-input').forEach(cb => {
+      cb.addEventListener('change', (e) => {
+        e.stopPropagation();
+        const key = cb.dataset.taskKey;
+        const task = tasks.find(t => taskKeyFor(t) === key);
+        if (!task) return;
+        toggleTodoDone(task);
+        // 再 render (fresh state 反映)
+        try {
+          const freshTasks = generateHomeTasksFromRealData(clients).concat(manualTodosAsTasks(clients));
+          renderHomeTasksList(freshTasks, clients);
+        } catch (_) { /* fallback: full dashboard rerender */
+          try { renderDashboard(); } catch(_) {}
+        }
+      });
+    });
+    // Wire: group head toggle
+    list.querySelectorAll('[data-group-toggle]').forEach(h => {
+      h.addEventListener('click', (e) => {
+        if (e.target.closest('.fp-task-check')) return; // checkbox click 無視
+        const g = h.closest('.fp-task-group');
+        const items = g?.querySelector('.fp-task-group-items');
+        const arrow = h.querySelector('.fp-task-group-arrow');
+        if (!items) return;
+        const isHidden = items.style.display === 'none';
+        items.style.display = isHidden ? '' : 'none';
+        if (arrow) arrow.textContent = isHidden ? '▼' : '▶';
+        g.setAttribute('data-group-collapsed', isHidden ? '0' : '1');
+      });
+    });
+    // Wire: action buttons per task type
+    list.querySelectorAll('.fp-task-act').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const act = btn.dataset.act;
+        const cid = btn.dataset.clientId;
+        const c = (clients || []).find(x => x.id === cid);
+        if (!c) return;
+        if (act === 'line-reply') {
+          openClientModal(cid);
+          // LINE tab に auto switch (client modal 内 tab)
+          setTimeout(() => {
+            try { document.querySelector('.cd-tab[data-cdtab="line"]')?.click(); } catch(_) {}
+          }, 300);
+        } else if (act === 'zoom-issue') {
+          if (typeof openScheduleZoomModal === 'function') openScheduleZoomModal(c);
+          else openClientModal(cid);
+        } else if (act === 'slots-resend') {
+          if (typeof openSlotsSendModal === 'function') openSlotsSendModal(c);
+          else openClientModal(cid);
+        } else if (act === 'open-client') {
+          openClientModal(cid);
+        }
       });
     });
     // NOTE: v3 Home の render は renderDashboard 側 で 直接呼び出す (tasks 空 tenant でも カレンダー 描画 保証)
@@ -2006,6 +2137,49 @@
   function deleteManualTodo(id) {
     saveManualTodos(loadManualTodos().filter(t => t.id !== id));
   }
+
+  // ★ 2026-08-10 owner「TODO に チェックボックス + 完了 button」対応
+  // 完了 状態 は localStorage 「fp-todo-done」 に taskKey → { doneAt } で 保管
+  // taskKey = 手動なら m<id>、 auto生成なら `${type}|${clientId}|${title}` の 決定 論的 hash
+  const TODO_DONE_KEY = 'fp-todo-done';
+  function loadTodoDone() {
+    try { return JSON.parse(localStorage.getItem(TODO_DONE_KEY) || '{}'); } catch (_) { return {}; }
+  }
+  function saveTodoDone(map) {
+    try { localStorage.setItem(TODO_DONE_KEY, JSON.stringify(map || {})); } catch (_) {}
+  }
+  function taskKeyFor(t) {
+    if (t.__manualId) return 'm|' + t.__manualId;
+    // auto-gen: type + clientId + title で 一意化
+    return [t.type || '?', t.clientId || '?', (t.title || '').slice(0, 80)].join('|');
+  }
+  function isTodoDone(t) {
+    const m = loadTodoDone();
+    const rec = m[taskKeyFor(t)];
+    if (!rec) return false;
+    // 完了 は 「今日」 だけ 有効 · 翌日 に 自動 で undone に (auto-gen が 再生成 されれば 新 task として 出る 為)
+    const doneAtMs = new Date(rec.doneAt).getTime();
+    const todayStart = window.LifeEvents?.TODAY ? new Date(window.LifeEvents.TODAY) : new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    return doneAtMs >= todayStart.getTime();
+  }
+  function toggleTodoDone(t) {
+    const map = loadTodoDone();
+    const key = taskKeyFor(t);
+    if (map[key]) delete map[key];
+    else map[key] = { doneAt: new Date().toISOString() };
+    saveTodoDone(map);
+    // cleanup: 古い done は 削除 (localStorage 節約)
+    const cutoff = Date.now() - 7 * 86400000;
+    Object.keys(map).forEach(k => {
+      const rec = map[k];
+      if (rec?.doneAt && new Date(rec.doneAt).getTime() < cutoff) delete map[k];
+    });
+    saveTodoDone(map);
+  }
+  window.__fpToggleTodoDone = toggleTodoDone;
+  window.__fpIsTodoDone = isTodoDone;
+  window.__fpTaskKeyFor = taskKeyFor;
   function manualTodosAsTasks(clients) {
     const arr = loadManualTodos();
     const todayD = window.LifeEvents && window.LifeEvents.TODAY ? new Date(window.LifeEvents.TODAY) : new Date();
