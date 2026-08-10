@@ -25,6 +25,10 @@
   .mic-c::after{content:'';position:absolute;top:8px;right:8px;width:14px;height:14px;background:#DC2626;border-radius:50%;box-shadow:0 0 12px rgba(220,38,38,0.8);animation:pulse 1.4s ease-in-out infinite}
   @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.6;transform:scale(1.35)}}
   .rec-status{font-size:15px;font-weight:700;color:#DBEAFE;margin-bottom:8px}
+  .mic-meter{display:flex;align-items:flex-end;justify-content:center;gap:5px;height:52px;margin:0 auto 6px;width:200px}
+  .mic-bar{width:10px;background:linear-gradient(180deg,#10B981 0%,#059669 100%);border-radius:3px;height:6px;transition:height .08s ease;opacity:0.35}
+  .mic-bar.on{opacity:1}
+  .mic-hint{font-size:11.5px;color:#94A3B8;margin:0 0 18px;letter-spacing:0.03em}
   .rec-title{font-size:34px;font-weight:900;margin:0 0 10px;letter-spacing:-0.02em}
   .rec-client{font-size:16px;color:#94A3B8;margin:0 0 24px}
   .rec-timer{font-size:52px;font-weight:900;font-family:'JetBrains Mono',ui-monospace,monospace;letter-spacing:0.02em;margin-bottom:32px}
@@ -59,6 +63,21 @@
   <div class="rec-card">
     <div class="mic-c">🎙</div>
     <div class="rec-status" id="recStatus">起動 中…</div>
+    <div class="mic-meter" id="micMeter">
+      <span class="mic-bar"></span>
+      <span class="mic-bar"></span>
+      <span class="mic-bar"></span>
+      <span class="mic-bar"></span>
+      <span class="mic-bar"></span>
+      <span class="mic-bar"></span>
+      <span class="mic-bar"></span>
+      <span class="mic-bar"></span>
+      <span class="mic-bar"></span>
+      <span class="mic-bar"></span>
+      <span class="mic-bar"></span>
+      <span class="mic-bar"></span>
+    </div>
+    <div class="mic-hint" id="micHint">🎤 マイク 音量 · 喋る と bar が 動く = 録音 されて る 証拠</div>
     <h1 class="rec-title">面談 記録 中</h1>
     <p class="rec-client">吉田恭聡 様 と の 面談 (デモ)</p>
     <div class="rec-timer" id="timer">00:00</div>
@@ -74,9 +93,48 @@
   const recStatus=document.getElementById('recStatus');
   const endBtn=document.getElementById('endBtn');
   const statusEl=document.getElementById('status');
-  let popup=null,iv=null,startedAt=0;
+  const micHint=document.getElementById('micHint');
+  let popup=null,iv=null,startedAt=0,micStream=null,audioCtx=null,micIv=null;
 
-  startBtn.addEventListener('click',()=>{
+  async function startMicMeter(){
+    try{
+      micStream=await navigator.mediaDevices.getUserMedia({audio:true});
+      audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+      const src=audioCtx.createMediaStreamSource(micStream);
+      const analyser=audioCtx.createAnalyser();
+      analyser.fftSize=256;
+      src.connect(analyser);
+      const buf=new Uint8Array(analyser.frequencyBinCount);
+      const bars=document.querySelectorAll('#micMeter .mic-bar');
+      micHint.textContent='🎤 マイク OK · 喋ってみて (bar が 動く = 録音 されて る)';
+      micHint.style.color='#10B981';
+      micIv=setInterval(()=>{
+        analyser.getByteFrequencyData(buf);
+        // 12 バンド に 分けて 平均
+        const perBar=Math.floor(buf.length/bars.length);
+        bars.forEach((bar,i)=>{
+          let sum=0;
+          for(let j=i*perBar;j<(i+1)*perBar;j++)sum+=buf[j];
+          const avg=sum/perBar;
+          const h=Math.max(6,Math.min(52,(avg/255)*52*2.2));
+          bar.style.height=h+'px';
+          if(avg>15)bar.classList.add('on');else bar.classList.remove('on');
+        });
+      },50);
+      return true;
+    }catch(e){
+      micHint.textContent='⚠ マイク 許可 されて ない · Chrome address bar の 🎤 で 「常に 許可」 → 再 test';
+      micHint.style.color='#FCA5A5';
+      return false;
+    }
+  }
+  function stopMicMeter(){
+    try{if(micIv)clearInterval(micIv);}catch(_){}
+    try{if(micStream)micStream.getTracks().forEach(t=>t.stop());}catch(_){}
+    try{if(audioCtx)audioCtx.close();}catch(_){}
+    micStream=null;audioCtx=null;micIv=null;
+  }
+  startBtn.addEventListener('click',async ()=>{
     statusEl.className='status';statusEl.textContent='';
     overlay.classList.add('show');
     recStatus.textContent='起動 中…';
@@ -90,9 +148,16 @@
     ifr.style.cssText='position:absolute;bottom:0;right:0;width:1px;height:1px;opacity:0;border:0;pointer-events:none;';
     overlay.appendChild(ifr);
     popup=ifr;
-    recStatus.textContent='起動 済 · 録音 開始';
-    statusEl.className='status ok';
-    statusEl.innerHTML='✓ 隠し iframe で 起動 · 小 window は 一切 出ません。<br>本番 で は ここ に Zoom が 隠れて 動いて、 音声 だけ 拾います。';
+    recStatus.textContent='起動 済 · マイク 準備 中…';
+    const micOk=await startMicMeter();
+    if(micOk){
+      recStatus.textContent='● 録音 中';
+      statusEl.className='status ok';
+      statusEl.innerHTML='✓ マイク 拾えて ます · bar が 動けば 音 認識 済<br>本番 で は これ が そのまま Zoom cloud に 保存 されます。';
+    }else{
+      statusEl.className='status err';
+      statusEl.innerHTML='⚠ マイク 許可 されて ない · Chrome アドレス バー の 🎤 マーク click → 「許可」 → 再 test';
+    }
     startedAt=Date.now();
     iv=setInterval(()=>{
       const s=Math.floor((Date.now()-startedAt)/1000);
@@ -103,6 +168,7 @@
   endBtn.addEventListener('click',()=>{
     try{if(popup&&popup.tagName==='IFRAME')popup.remove();}catch(_){}
     if(iv)clearInterval(iv);
+    stopMicMeter();
     overlay.classList.remove('show');
   });
 </script>

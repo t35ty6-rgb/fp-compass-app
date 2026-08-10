@@ -10204,6 +10204,21 @@ STEP C: 結果報告
           <span id="fp-rec-dot" style="position:absolute;top:8px;right:8px;width:14px;height:14px;background:#DC2626;border-radius:50%;box-shadow:0 0 12px rgba(220,38,38,0.8);animation:fpRecPulse 1.4s ease-in-out infinite;"></span>
         </div>
         <div id="fp-inperson-status" style="font-size:15px;font-weight:700;color:#DBEAFE;margin-bottom:8px;">準備 中…</div>
+        <div id="fp-mic-meter" style="display:flex;align-items:flex-end;justify-content:center;gap:5px;height:52px;margin:0 auto 6px;width:200px;">
+          <span style="width:10px;background:linear-gradient(180deg,#10B981 0%,#059669 100%);border-radius:3px;height:6px;transition:height .08s ease;opacity:0.35;"></span>
+          <span style="width:10px;background:linear-gradient(180deg,#10B981 0%,#059669 100%);border-radius:3px;height:6px;transition:height .08s ease;opacity:0.35;"></span>
+          <span style="width:10px;background:linear-gradient(180deg,#10B981 0%,#059669 100%);border-radius:3px;height:6px;transition:height .08s ease;opacity:0.35;"></span>
+          <span style="width:10px;background:linear-gradient(180deg,#10B981 0%,#059669 100%);border-radius:3px;height:6px;transition:height .08s ease;opacity:0.35;"></span>
+          <span style="width:10px;background:linear-gradient(180deg,#10B981 0%,#059669 100%);border-radius:3px;height:6px;transition:height .08s ease;opacity:0.35;"></span>
+          <span style="width:10px;background:linear-gradient(180deg,#10B981 0%,#059669 100%);border-radius:3px;height:6px;transition:height .08s ease;opacity:0.35;"></span>
+          <span style="width:10px;background:linear-gradient(180deg,#10B981 0%,#059669 100%);border-radius:3px;height:6px;transition:height .08s ease;opacity:0.35;"></span>
+          <span style="width:10px;background:linear-gradient(180deg,#10B981 0%,#059669 100%);border-radius:3px;height:6px;transition:height .08s ease;opacity:0.35;"></span>
+          <span style="width:10px;background:linear-gradient(180deg,#10B981 0%,#059669 100%);border-radius:3px;height:6px;transition:height .08s ease;opacity:0.35;"></span>
+          <span style="width:10px;background:linear-gradient(180deg,#10B981 0%,#059669 100%);border-radius:3px;height:6px;transition:height .08s ease;opacity:0.35;"></span>
+          <span style="width:10px;background:linear-gradient(180deg,#10B981 0%,#059669 100%);border-radius:3px;height:6px;transition:height .08s ease;opacity:0.35;"></span>
+          <span style="width:10px;background:linear-gradient(180deg,#10B981 0%,#059669 100%);border-radius:3px;height:6px;transition:height .08s ease;opacity:0.35;"></span>
+        </div>
+        <div id="fp-mic-hint" style="font-size:11.5px;color:#94A3B8;margin:0 0 18px;letter-spacing:0.03em;">🎤 マイク 音量 · 喋る と bar が 動く = 録音 されて る 証拠</div>
         <h1 style="font-size:32px;font-weight:900;margin:0 0 10px;letter-spacing:-0.02em;">面談 記録 中</h1>
         <p style="font-size:15px;font-weight:600;color:#94A3B8;margin:0 0 20px;">${escapeHtml(client.name || 'お客様')} 様 と の 面談</p>
         <div id="fp-inperson-timer" style="font-size:44px;font-weight:900;color:#fff;font-variant-numeric:tabular-nums;font-family:'JetBrains Mono',ui-monospace,monospace;letter-spacing:0.02em;margin-bottom:28px;">00:00</div>
@@ -10217,8 +10232,51 @@ STEP C: 結果報告
     let stealthWin = null;
     let timerIv = null;
     let startedAt = null;
+    let micStream = null;
+    let audioCtx = null;
+    let micIv = null;
     const status = document.getElementById('fp-inperson-status');
     const endBtn = document.getElementById('fp-inperson-end');
+    const micHint = document.getElementById('fp-mic-hint');
+
+    async function startMicMeter() {
+      try {
+        micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const src = audioCtx.createMediaStreamSource(micStream);
+        const analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 256;
+        src.connect(analyser);
+        const buf = new Uint8Array(analyser.frequencyBinCount);
+        const bars = document.querySelectorAll('#fp-mic-meter span');
+        if (micHint) { micHint.textContent = '🎤 マイク 拾えて ます · bar が 動けば OK'; micHint.style.color = '#10B981'; }
+        micIv = setInterval(() => {
+          analyser.getByteFrequencyData(buf);
+          const perBar = Math.floor(buf.length / bars.length);
+          bars.forEach((bar, i) => {
+            let sum = 0;
+            for (let j = i * perBar; j < (i + 1) * perBar; j++) sum += buf[j];
+            const avg = sum / perBar;
+            const h = Math.max(6, Math.min(52, (avg / 255) * 52 * 2.2));
+            bar.style.height = h + 'px';
+            bar.style.opacity = (avg > 15) ? '1' : '0.35';
+          });
+        }, 50);
+        return true;
+      } catch (e) {
+        if (micHint) {
+          micHint.textContent = '⚠ マイク 未 許可 · Chrome アドレス バー の 🎤 で 「許可」 → 再試行';
+          micHint.style.color = '#FCA5A5';
+        }
+        return false;
+      }
+    }
+    function stopMicMeter() {
+      try { if (micIv) clearInterval(micIv); } catch(_) {}
+      try { if (micStream) micStream.getTracks().forEach(t => t.stop()); } catch(_) {}
+      try { if (audioCtx) audioCtx.close(); } catch(_) {}
+      micStream = null; audioCtx = null; micIv = null;
+    }
 
     const cleanup = () => {
       // iframe or popup どちら も 処理 (iframe 実装 に 変わったが 過去 popup path も 残す)
@@ -10229,6 +10287,7 @@ STEP C: 結果報告
         }
       } catch(_) {}
       try { if (timerIv) clearInterval(timerIv); } catch(_) {}
+      stopMicMeter();
       try { overlay.remove(); } catch(_) {}
     };
     endBtn.addEventListener('click', () => {
@@ -10278,7 +10337,10 @@ STEP C: 結果報告
       stealthIframe.style.cssText = 'position:absolute;bottom:0;right:0;width:1px;height:1px;opacity:0;border:0;pointer-events:none;';
       overlay.appendChild(stealthIframe);
       stealthWin = stealthIframe; // cleanup で iframe を remove する
-      status.textContent = 'Zoom 起動 済 · 録音 開始';
+      status.textContent = 'Zoom 起動 済 · マイク 準備 中…';
+      // マイク メーター 起動 (owner が 「録音 動いて る か」 目視 確認 用)
+      const micOk = await startMicMeter();
+      if (micOk) status.textContent = '● 録音 中';
       startedAt = Date.now();
       endBtn.disabled = false;
       endBtn.style.opacity = '1';
