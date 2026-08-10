@@ -10186,6 +10186,116 @@ STEP C: 結果報告
   //   owner 要望: 「ボタン多すぎ、 1個 で全部なんとかなるボタンがあるといい」
   //   + 「他人主催 Zoom (相手 が 送ってきた URL) でも 両側 声 認識 + AI 議事録 作りたい」
   //   4 経路 (今すぐ / 相手主催 URL 貼付 / 予約 / 電話のみ) を 1 modal に 集約
+
+  // ★ 2026-08-11 owner「対面 でも Zoom を 客 に 見せず 音声 だけ 拾いたい」
+  // 実装: startInstantZoom で Zoom cloud recording ON meeting 作成 → host URL を
+  //   ステルス popup (300x180 · 左下 隅) で 開く · 客 側 に は 見えない ように 隅 配置
+  //   FP Compass main window に 「🎙 面談 記録 中」 の 大 overlay 表示 · owner は これ を 客 に 見せる
+  //   終了 button で ステルス window close + overlay 撤去
+  async function startInPersonRecording(client) {
+    // FP Compass 側 大 overlay を 先 に 出す (loading 中 でも 「待って いる」 意図 が 伝わる)
+    const overlay = document.createElement('div');
+    overlay.id = 'fp-inperson-recording';
+    overlay.style.cssText = 'position:fixed;inset:0;background:linear-gradient(135deg,#0F172A 0%,#1E3A5F 100%);z-index:10250;display:flex;align-items:center;justify-content:center;padding:24px;font-family:"Noto Sans JP",-apple-system,sans-serif;color:#fff;';
+    overlay.innerHTML = `
+      <div style="max-width:520px;width:100%;text-align:center;">
+        <div style="width:120px;height:120px;background:rgba(220,38,38,0.15);border:3px solid #DC2626;border-radius:50%;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;font-size:52px;position:relative;">
+          🎙
+          <span id="fp-rec-dot" style="position:absolute;top:8px;right:8px;width:14px;height:14px;background:#DC2626;border-radius:50%;box-shadow:0 0 12px rgba(220,38,38,0.8);animation:fpRecPulse 1.4s ease-in-out infinite;"></span>
+        </div>
+        <div id="fp-inperson-status" style="font-size:15px;font-weight:700;color:#DBEAFE;margin-bottom:8px;">準備 中…</div>
+        <h1 style="font-size:32px;font-weight:900;margin:0 0 10px;letter-spacing:-0.02em;">面談 記録 中</h1>
+        <p style="font-size:15px;font-weight:600;color:#94A3B8;margin:0 0 20px;">${escapeHtml(client.name || 'お客様')} 様 と の 面談</p>
+        <div id="fp-inperson-timer" style="font-size:44px;font-weight:900;color:#fff;font-variant-numeric:tabular-nums;font-family:'JetBrains Mono',ui-monospace,monospace;letter-spacing:0.02em;margin-bottom:28px;">00:00</div>
+        <p style="font-size:12.5px;color:#64748B;margin:0 0 22px;line-height:1.7;">面談 内容 は 自動 で 議事録 化 されます · 面談 中 は この 画面 を 客 に 見せて OK · 終了 したら 下 の button で 停止</p>
+        <button id="fp-inperson-end" disabled style="background:#DC2626;color:#fff;border:none;padding:14px 32px;border-radius:10px;font-family:inherit;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 8px 20px rgba(220,38,38,0.35);opacity:0.6;letter-spacing:0.02em;">⏹ 面談 終了 (録音 停止)</button>
+      </div>
+      <style>@keyframes fpRecPulse { 0%,100%{opacity:1;transform:scale(1);} 50%{opacity:0.6;transform:scale(1.35);} }</style>
+    `;
+    document.body.appendChild(overlay);
+
+    let stealthWin = null;
+    let timerIv = null;
+    let startedAt = null;
+    const status = document.getElementById('fp-inperson-status');
+    const endBtn = document.getElementById('fp-inperson-end');
+
+    const cleanup = () => {
+      try { if (stealthWin && !stealthWin.closed) stealthWin.close(); } catch(_) {}
+      try { if (timerIv) clearInterval(timerIv); } catch(_) {}
+      try { overlay.remove(); } catch(_) {}
+    };
+    endBtn.addEventListener('click', () => {
+      if (!confirm('面談 を 終了 して 録音 を 停止 しますか?')) return;
+      cleanup();
+      // 議事録 生成 の 案内 (数 分 待ち)
+      const toast = document.createElement('div');
+      toast.style.cssText = 'position:fixed;top:24px;left:50%;transform:translateX(-50%);background:#059669;color:#fff;padding:14px 22px;border-radius:10px;font-family:"Noto Sans JP",sans-serif;font-size:13.5px;font-weight:800;z-index:10300;box-shadow:0 12px 30px rgba(5,150,105,0.4);letter-spacing:0.02em;';
+      toast.textContent = '✓ 録音 停止 · 数 分 で 議事録 が 生成 されます (Zoom cloud 経由)';
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 6000);
+    });
+
+    try {
+      status.textContent = 'Zoom 準備 中…';
+      const { initializeApp, getApps } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js');
+      const { getFunctions, httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-functions.js');
+      const fbApp = getApps()[0] || initializeApp({
+        apiKey: 'AIzaSyAmVAEe9l9e1Yo_dzzJdbTVU35wWKd2sH4',
+        authDomain: 'skeleton-fp-compass-632026.firebaseapp.com',
+        projectId: 'skeleton-fp-compass-632026',
+      });
+      const fns = getFunctions(fbApp, 'asia-northeast1');
+      const fn = httpsCallable(fns, 'startInstantZoom');
+      const fsCustomerId = client._fsCustomerId || client.id;
+      // 対面 mode: lineFriendId=null で LINE 送信 skip · noLine path で 早期 return
+      const res = await fn({ customerId: fsCustomerId, lineFriendId: null });
+      const data = (res && res.data) || {};
+      if (!data.startUrl) throw new Error('Zoom URL 取得 失敗');
+      // wc/join format (browser only · Zoom app 不要)
+      const forceWebUrl = (() => {
+        try {
+          const m = data.startUrl.match(/\/(j|s)\/(\d+)([?&].*)?/);
+          if (!m) return data.startUrl;
+          const u = new URL(data.startUrl);
+          return `https://${u.host}/wc/join/${m[2]}${m[3] || ''}`;
+        } catch (_) { return data.startUrl; }
+      })();
+      // ステルス popup: 左下 隅 · 小 サイズ · owner は それ 意識 せず FP Compass 大 overlay を 客 に 見せる
+      // (完全 hide は browser policy で 不可 · 小さく 隅 に 置いて 実質 見えない ように する)
+      stealthWin = window.open(
+        forceWebUrl,
+        'fp-inperson-zoom',
+        'width=280,height=180,left=8,top=' + (window.screen.height - 220) + ',menubar=no,toolbar=no,location=no,status=no'
+      );
+      if (!stealthWin) {
+        status.style.color = '#FCA5A5';
+        status.textContent = '⚠ popup が block されました。 browser 設定 で popup 許可 → 再試行';
+        return;
+      }
+      // ステルス window に focus 戻さず、 FP Compass overlay を 前面 に
+      try { window.focus(); } catch(_) {}
+      status.textContent = 'Zoom 起動 済 · 録音 開始';
+      startedAt = Date.now();
+      endBtn.disabled = false;
+      endBtn.style.opacity = '1';
+      timerIv = setInterval(() => {
+        const secs = Math.floor((Date.now() - startedAt) / 1000);
+        const mm = String(Math.floor(secs / 60)).padStart(2, '0');
+        const ss = String(secs % 60).padStart(2, '0');
+        const timerEl = document.getElementById('fp-inperson-timer');
+        if (timerEl) timerEl.textContent = `${mm}:${ss}`;
+      }, 1000);
+    } catch (e) {
+      console.error('[startInPersonRecording]', e);
+      status.style.color = '#FCA5A5';
+      status.textContent = '⚠ 失敗: ' + (e.message || e.code || String(e)).slice(0, 200);
+      endBtn.disabled = false;
+      endBtn.style.opacity = '1';
+      endBtn.textContent = '× 閉じる';
+    }
+  }
+
   function openMeetingStartModal(client) {
     const hasLine = !!(client.lineFriendId);
     const overlay = document.createElement('div');
@@ -10236,7 +10346,16 @@ STEP C: 結果報告
             </div>
           </button>
 
-          <!-- 経路 4: 電話 のみ (ghost、 tertiary) -->
+          <!-- 経路 4: 対面 面談 (owner 2026-08-11 「Zoom を 客 に 見せない · 音声 だけ 拾う」) -->
+          <button id="fp-ms-inperson" style="width:100%;background:#fff;color:#0F172A;border:2px solid #1E40AF;padding:14px 16px;border-radius:10px;font-family:inherit;font-size:13.5px;font-weight:800;cursor:pointer;text-align:left;display:flex;align-items:center;gap:12px;margin-bottom:10px;transition:border-color .15s,background .15s;box-shadow:0 3px 10px rgba(30,64,175,0.10);">
+            <div style="width:38px;height:38px;background:#DBEAFE;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#1E40AF;font-size:19px;">🎤</div>
+            <div style="flex:1;line-height:1.5;">
+              <div style="font-size:14px;font-weight:900;color:#0F172A;">対面 で 面談 (音声 だけ 録音)</div>
+              <div style="font-size:11.5px;font-weight:600;color:#475569;margin-top:2px;">客 に は Zoom 見せず、 音声 だけ 拾って 議事録 自動 生成</div>
+            </div>
+          </button>
+
+          <!-- 経路 5: 電話 のみ (ghost、 tertiary) -->
           <button id="fp-ms-phone" style="width:100%;background:transparent;color:#64748B;border:none;padding:10px 16px;border-radius:10px;font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer;text-align:left;display:flex;align-items:center;gap:12px;transition:background .15s;">
             <div style="width:30px;height:30px;background:transparent;border:1px solid #E2E8F0;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#94A3B8;font-size:15px;">☎</div>
             <div style="flex:1;line-height:1.4;">
@@ -10269,7 +10388,13 @@ STEP C: 結果報告
       openScheduleZoomModal(client);
     });
 
-    // 経路 4: 電話 のみ → 面談履歴 タブ に 遷移 して 手動 メモ 追加 促す (簡易 実装)
+    // 経路 4: 対面 面談 (Zoom 客 に 見せない · 音声 だけ 拾う) — owner 2026-08-11
+    overlay.querySelector('#fp-ms-inperson').addEventListener('click', () => {
+      overlay.remove();
+      startInPersonRecording(client);
+    });
+
+    // 経路 5: 電話 のみ → 面談履歴 タブ に 遷移 して 手動 メモ 追加 促す (簡易 実装)
     overlay.querySelector('#fp-ms-phone').addEventListener('click', () => {
       overlay.remove();
       const t = document.createElement('div');
