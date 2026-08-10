@@ -8197,11 +8197,14 @@ ${ctxText}${surveyTxt}`;
 
   // Delegated click handler (once per DOM) — fp-mai-qa 系 全部 拾う
   // ★ 2026-08-10: 議事録 card の 折りたたみ toggle (owner「長い ので 目次 に 」)
+  // fix (H+): actions 内 の click (削除 button 等) は toggle 起動 対象 外
   if (!window.__fpMeetingCardToggleWired) {
     window.__fpMeetingCardToggleWired = true;
     document.addEventListener('click', (e) => {
       const head = e.target.closest('[data-meeting-toggle]');
       if (!head) return;
+      // ★ actions 内 の click は 削除 等 に 譲る (toggle 抑止)
+      if (e.target.closest('.fp-meeting-card-actions')) return;
       const card = head.closest('[data-meeting-card]');
       if (!card) return;
       const body = card.querySelector('[data-meeting-body]');
@@ -8653,7 +8656,7 @@ ${ctxText}${surveyTxt}`;
                   <div class="fp-meeting-card-date" style="font-size:14px;font-weight:700;">${escapeHtml(fmtDateRobust(aiData.ts || aiData.createdAt) || fmtDateRobust(b.date))} ${escapeHtml(fmtJstTime(aiData.ts || aiData.createdAt) || fmtTimeRobust(b.time))} 面談</div>
                   ${aiData.ts || aiData.createdAt ? `<div class="fp-meeting-card-recstart" style="font-size:11.5px;color:#6B7280;font-weight:600;margin-top:3px;">録画開始: ${escapeHtml(fmtJstTime(aiData.ts || aiData.createdAt))} (${escapeHtml(fmtDateRobust(aiData.ts || aiData.createdAt))})</div>` : ''}
                 </div>
-                <div class="fp-meeting-card-actions" style="display:flex;gap:6px;flex-wrap:wrap;" onclick="event.stopPropagation()">
+                <div class="fp-meeting-card-actions" style="display:flex;gap:6px;flex-wrap:wrap;">
                   ${b.driveUrl ? `<a href="${escapeHtml(b.driveUrl)}" target="_blank" class="fp-btn fp-btn-sm fp-btn-gold">🎥 録画を見る</a>` : ''}
                   <button class="fp-meeting-delete" data-booking-ts="${escapeHtml(b.ts || '')}" data-ai-ts="${escapeHtml(aiData.ts || aiData.createdAt || '')}" style="background:#fff;border:1.5px solid #FCA5A5;color:#DC2626;font-size:11.5px;font-weight:700;padding:5px 11px;border-radius:5px;cursor:pointer;font-family:inherit;">🗑 削除</button>
                 </div>
@@ -8770,7 +8773,7 @@ ${ctxText}${surveyTxt}`;
                     <div class="fp-meeting-card-date" style="font-size:14px;font-weight:700;">${escapeHtml(fmtDateRobust(a.ts || a.createdAt) || fmtDateRobust(a.date))} ${escapeHtml(fmtJstTime(a.ts || a.createdAt))} 面談</div>
                     ${a.ts || a.createdAt ? `<div class="fp-meeting-card-recstart" style="font-size:11.5px;color:#6B7280;font-weight:600;margin-top:3px;">録画開始: ${escapeHtml(fmtJstTime(a.ts || a.createdAt))} (${escapeHtml(fmtDateRobust(a.ts || a.createdAt))})</div>` : ''}
                   </div>
-                  <div class="fp-meeting-card-actions" style="display:flex;gap:6px;flex-wrap:wrap;" onclick="event.stopPropagation()">
+                  <div class="fp-meeting-card-actions" style="display:flex;gap:6px;flex-wrap:wrap;">
                     <button class="fp-meeting-delete" data-booking-ts="${escapeHtml(a.bookingTs || '')}" data-ai-ts="${escapeHtml(a.ts || a.createdAt || '')}" style="background:#fff;border:1.5px solid #FCA5A5;color:#DC2626;font-size:11.5px;font-weight:700;padding:5px 11px;border-radius:5px;cursor:pointer;font-family:inherit;">🗑 削除</button>
                   </div>
                 </div>
