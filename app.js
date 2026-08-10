@@ -5307,10 +5307,12 @@
     const familyShort = childCount > 0 ? `配偶者 + 子${childCount}` :
       ((c.family || []).find(m => m.rel === 'spouse') ? '夫婦' : '単身');
     const days = daysSince(c.lastContact);
-    // ★ 2026-08-10 bug fix: c.aum が undefined/null で 「¥NaN万」 表示 されて た
-    //   0 は 「¥0万」 が 意味 ある · undefined/null/NaN の 場合 だけ 「—」 に
-    const _aumNum = Number(c.aum);
-    const aumDisp = !isFinite(_aumNum) ? '—'
+    // ★ 2026-08-10 bug fix: c.aum が undefined/null/'' で 「¥NaN万」 or 誤 「¥0万」 表示 されて た
+    //   意図: null/undefined/'' は 「未 記録」 = '—' · 数値 0 は 「¥0万」 (owner 明示 0 円)
+    //   Number(null)=0 の JS 挙動 で null が 「¥0万」 と 誤判定 されない よう == null で 別 gate
+    const _rawAum = c.aum;
+    const _aumNum = Number(_rawAum);
+    const aumDisp = (_rawAum == null || _rawAum === '' || !isFinite(_aumNum)) ? '—'
       : (_aumNum >= 100000000 ? `¥${(_aumNum/100000000).toFixed(2)}億` : `¥${Math.round(_aumNum/10000).toLocaleString()}万`);
     // 2026-08-01 owner fb: LINE 友達追加 直後 の 客 (topRec=null) は cd-flow-empty branch で 古い UI が 出てた。
     // 常に with-topRec branch (Zoom / LINE 2card + タグ / 情報編集) を 使う 為 fallback を default に。
