@@ -84,6 +84,7 @@
     <p class="rec-hint">これ が 本番 で 客 に 見せる 画面。 左下 の 小 window は そのまま 動かして OK。</p>
     <button class="rec-end" id="endBtn">⏹ 面談 終了 (test 停止)</button>
   </div>
+  <button id="debugBtn" style="position:absolute;top:14px;right:14px;background:rgba(255,255,255,0.06);color:#94A3B8;border:1px solid rgba(255,255,255,0.14);padding:7px 12px;border-radius:6px;font-family:inherit;font-size:11.5px;font-weight:700;cursor:pointer;letter-spacing:0.02em;">🔍 中身 (iframe) 確認</button>
 </div>
 
 <script>
@@ -170,6 +171,19 @@
     if(iv)clearInterval(iv);
     stopMicMeter();
     overlay.classList.remove('show');
+  });
+
+  // Debug toggle: iframe を 可視化 · 再 click で 隠す (owner 目視 確認 用)
+  const debugBtn=document.getElementById('debugBtn');
+  const HIDDEN_S='position:absolute;bottom:0;right:0;width:1px;height:1px;opacity:0;border:0;pointer-events:none;';
+  const VISIBLE_S='position:absolute;bottom:20px;right:20px;width:440px;height:280px;opacity:1;border:2px solid #10B981;border-radius:10px;box-shadow:0 20px 50px rgba(0,0,0,0.5);z-index:2;background:#000;';
+  let vis=false;
+  debugBtn.addEventListener('click',()=>{
+    const ifr=document.getElementById('demo-hidden-iframe');
+    if(!ifr){alert('先 に 「面談 開始」 を 押して');return;}
+    vis=!vis;
+    ifr.style.cssText=vis?VISIBLE_S:HIDDEN_S;
+    debugBtn.textContent=vis?'🙈 iframe 隠す':'🔍 中身 (iframe) 確認';
   });
 </script>
 

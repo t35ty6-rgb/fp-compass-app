@@ -10225,6 +10225,8 @@ STEP C: 結果報告
         <p style="font-size:12.5px;color:#64748B;margin:0 0 22px;line-height:1.7;">面談 内容 は 自動 で 議事録 化 されます · 面談 中 は この 画面 を 客 に 見せて OK · 終了 したら 下 の button で 停止</p>
         <button id="fp-inperson-end" disabled style="background:#DC2626;color:#fff;border:none;padding:14px 32px;border-radius:10px;font-family:inherit;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 8px 20px rgba(220,38,38,0.35);opacity:0.6;letter-spacing:0.02em;">⏹ 面談 終了 (録音 停止)</button>
       </div>
+      <!-- ★ 2026-08-11 owner「Zoom 実際 動いてる か 見えない」対応: 右上 隅 の 小 button で iframe を 可視化 (owner 目視 確認 用) -->
+      <button id="fp-inperson-debug" style="position:absolute;top:14px;right:14px;background:rgba(255,255,255,0.06);color:#94A3B8;border:1px solid rgba(255,255,255,0.14);padding:7px 12px;border-radius:6px;font-family:inherit;font-size:11.5px;font-weight:700;cursor:pointer;letter-spacing:0.02em;">🔍 Zoom 動作 確認</button>
       <style>@keyframes fpRecPulse { 0%,100%{opacity:1;transform:scale(1);} 50%{opacity:0.6;transform:scale(1.35);} }</style>
     `;
     document.body.appendChild(overlay);
@@ -10341,6 +10343,18 @@ STEP C: 結果報告
       // マイク メーター 起動 (owner が 「録音 動いて る か」 目視 確認 用)
       const micOk = await startMicMeter();
       if (micOk) status.textContent = '● 録音 中';
+      // ★ debug toggle wire: click で iframe を 可視化 · 再 click で 隠す
+      const debugBtn = document.getElementById('fp-inperson-debug');
+      let iframeVisible = false;
+      const HIDDEN_STYLE = 'position:absolute;bottom:0;right:0;width:1px;height:1px;opacity:0;border:0;pointer-events:none;';
+      const VISIBLE_STYLE = 'position:absolute;bottom:20px;right:20px;width:440px;height:280px;opacity:1;border:2px solid #10B981;border-radius:10px;box-shadow:0 20px 50px rgba(0,0,0,0.5);z-index:2;background:#000;';
+      if (debugBtn) {
+        debugBtn.addEventListener('click', () => {
+          iframeVisible = !iframeVisible;
+          stealthIframe.style.cssText = iframeVisible ? VISIBLE_STYLE : HIDDEN_STYLE;
+          debugBtn.textContent = iframeVisible ? '🙈 Zoom 隠す' : '🔍 Zoom 動作 確認';
+        });
+      }
       startedAt = Date.now();
       endBtn.disabled = false;
       endBtn.style.opacity = '1';
