@@ -5307,7 +5307,11 @@
     const familyShort = childCount > 0 ? `配偶者 + 子${childCount}` :
       ((c.family || []).find(m => m.rel === 'spouse') ? '夫婦' : '単身');
     const days = daysSince(c.lastContact);
-    const aumDisp = c.aum >= 100000000 ? `¥${(c.aum/100000000).toFixed(2)}億` : `¥${Math.round(c.aum/10000).toLocaleString()}万`;
+    // ★ 2026-08-10 bug fix: c.aum が undefined/null で 「¥NaN万」 表示 されて た
+    //   0 は 「¥0万」 が 意味 ある · undefined/null/NaN の 場合 だけ 「—」 に
+    const _aumNum = Number(c.aum);
+    const aumDisp = !isFinite(_aumNum) ? '—'
+      : (_aumNum >= 100000000 ? `¥${(_aumNum/100000000).toFixed(2)}億` : `¥${Math.round(_aumNum/10000).toLocaleString()}万`);
     // 2026-08-01 owner fb: LINE 友達追加 直後 の 客 (topRec=null) は cd-flow-empty branch で 古い UI が 出てた。
     // 常に with-topRec branch (Zoom / LINE 2card + タグ / 情報編集) を 使う 為 fallback を default に。
     const topRec = recs[0] || {
@@ -7240,7 +7244,7 @@ ${ctxText}${surveyTxt}`;
           if (c.birth) ctxParts.push(`生年: ${c.birth}`);
           if (c.occupation) ctxParts.push(`職業: ${c.occupation}`);
           if (c.family?.length) ctxParts.push(`家族: ${c.family.map(f => f.rel + ' ' + (f.name||'')).join(' / ')}`);
-          if (c.aum) ctxParts.push(`AUM: ¥${(c.aum/10000).toFixed(0)}万`);
+          if (c.aum && isFinite(Number(c.aum))) ctxParts.push(`AUM: ¥${(Number(c.aum)/10000).toFixed(0)}万`);
           if (c.note) ctxParts.push(`メモ: ${c.note.slice(0,200)}`);
           const result = await fn({
             customerId: c.id,
