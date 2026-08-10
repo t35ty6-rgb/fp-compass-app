@@ -10221,7 +10221,13 @@ STEP C: 結果報告
     const endBtn = document.getElementById('fp-inperson-end');
 
     const cleanup = () => {
-      try { if (stealthWin && !stealthWin.closed) stealthWin.close(); } catch(_) {}
+      // iframe or popup どちら も 処理 (iframe 実装 に 変わったが 過去 popup path も 残す)
+      try {
+        if (stealthWin) {
+          if (typeof stealthWin.close === 'function' && !stealthWin.closed) stealthWin.close();
+          else if (stealthWin.tagName === 'IFRAME') stealthWin.remove();
+        }
+      } catch(_) {}
       try { if (timerIv) clearInterval(timerIv); } catch(_) {}
       try { overlay.remove(); } catch(_) {}
     };
@@ -10261,20 +10267,17 @@ STEP C: 結果報告
           return `https://${u.host}/wc/join/${m[2]}${m[3] || ''}`;
         } catch (_) { return data.startUrl; }
       })();
-      // ステルス popup: 左下 隅 · 小 サイズ · owner は それ 意識 せず FP Compass 大 overlay を 客 に 見せる
-      // (完全 hide は browser policy で 不可 · 小さく 隅 に 置いて 実質 見えない ように する)
-      stealthWin = window.open(
-        forceWebUrl,
-        'fp-inperson-zoom',
-        'width=280,height=180,left=8,top=' + (window.screen.height - 220) + ',menubar=no,toolbar=no,location=no,status=no'
-      );
-      if (!stealthWin) {
-        status.style.color = '#FCA5A5';
-        status.textContent = '⚠ popup が block されました。 browser 設定 で popup 許可 → 再試行';
-        return;
-      }
-      // ステルス window に focus 戻さず、 FP Compass overlay を 前面 に
-      try { window.focus(); } catch(_) {}
+      // ★ 2026-08-11 owner「小 window も 完全 消したい」対応
+      //   popup 廃止 · 隠し iframe を FP Compass overlay 内 に 埋込 (1px + opacity 0 で invisible)
+      //   Zoom Web Client は iframe embed 対応 (X-Frame-Options 未 設定 · CSP frame-ancestors * )
+      //   マイク 許可 は 過去 に 与えた もの が 引き継がれる · 未 許可 の 場合 は 初回 のみ prompt
+      const stealthIframe = document.createElement('iframe');
+      stealthIframe.id = 'fp-inperson-zoom-iframe';
+      stealthIframe.src = forceWebUrl;
+      stealthIframe.allow = 'microphone; camera; autoplay; display-capture';
+      stealthIframe.style.cssText = 'position:absolute;bottom:0;right:0;width:1px;height:1px;opacity:0;border:0;pointer-events:none;';
+      overlay.appendChild(stealthIframe);
+      stealthWin = stealthIframe; // cleanup で iframe を remove する
       status.textContent = 'Zoom 起動 済 · 録音 開始';
       startedAt = Date.now();
       endBtn.disabled = false;

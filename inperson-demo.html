@@ -79,32 +79,29 @@
   startBtn.addEventListener('click',()=>{
     statusEl.className='status';statusEl.textContent='';
     overlay.classList.add('show');
-    recStatus.textContent='ウィンドウ 起動 中…';
-    popup=window.open(
-      'https://www.google.com/',
-      'inperson-demo',
-      'width=280,height=180,left=8,top='+(window.screen.height-220)+',menubar=no,toolbar=no,location=no'
-    );
-    if(!popup){
-      recStatus.style.color='#FCA5A5';
-      recStatus.textContent='⚠ popup が ブロック されました';
-      statusEl.className='status err';
-      statusEl.innerHTML='popup が block されたので、 本番 で も Zoom が 起動 しません。<br>URL 欄 の 「🚫」 で 許可 → 再 test。';
-    }else{
-      recStatus.textContent='起動 済 · 録音 開始';
-      statusEl.className='status ok';
-      statusEl.innerHTML='✓ popup 起動 成功 · 左下 隅 に 小 window が 出て ます。<br>本番 で も 同じ 動作 = Zoom 起動 する と 期待 して OK。';
-      startedAt=Date.now();
-      iv=setInterval(()=>{
-        const s=Math.floor((Date.now()-startedAt)/1000);
-        timerEl.textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
-      },1000);
-    }
-    window.focus();
+    recStatus.textContent='起動 中…';
+    // iframe 埋込 mode (popup 廃止 · 完全 隠し)
+    const existing=document.getElementById('demo-hidden-iframe');
+    if(existing)existing.remove();
+    const ifr=document.createElement('iframe');
+    ifr.id='demo-hidden-iframe';
+    ifr.src='https://www.google.com/';
+    ifr.allow='microphone; camera; autoplay; display-capture';
+    ifr.style.cssText='position:absolute;bottom:0;right:0;width:1px;height:1px;opacity:0;border:0;pointer-events:none;';
+    overlay.appendChild(ifr);
+    popup=ifr;
+    recStatus.textContent='起動 済 · 録音 開始';
+    statusEl.className='status ok';
+    statusEl.innerHTML='✓ 隠し iframe で 起動 · 小 window は 一切 出ません。<br>本番 で は ここ に Zoom が 隠れて 動いて、 音声 だけ 拾います。';
+    startedAt=Date.now();
+    iv=setInterval(()=>{
+      const s=Math.floor((Date.now()-startedAt)/1000);
+      timerEl.textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
+    },1000);
   });
 
   endBtn.addEventListener('click',()=>{
-    try{if(popup&&!popup.closed)popup.close()}catch(_){}
+    try{if(popup&&popup.tagName==='IFRAME')popup.remove();}catch(_){}
     if(iv)clearInterval(iv);
     overlay.classList.remove('show');
   });
