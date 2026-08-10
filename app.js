@@ -10266,10 +10266,24 @@ STEP C: 結果報告
         }, 50);
         return true;
       } catch (e) {
-        if (micHint) {
-          micHint.textContent = '⚠ マイク 未 許可 · Chrome アドレス バー の 🎤 で 「許可」 → 再試行';
-          micHint.style.color = '#FCA5A5';
+        // ★ 2026-08-11 qa FAIL #2 対応: エラー kind 別 に 具体 案内
+        const code = e?.name || e?.code || '';
+        let msg = '⚠ マイク 使え ません: ';
+        if (code === 'NotAllowedError' || code === 'PermissionDeniedError') {
+          msg = '⚠ マイク 拒否 済 · アドレス バー の 🎤 マーク click → 「許可」 → 再試行';
+        } else if (code === 'NotFoundError' || code === 'DevicesNotFoundError') {
+          msg = '⚠ マイク デバイス なし · Mac マイク 有効化 or USB マイク 接続 → 再試行';
+        } else if (code === 'NotReadableError') {
+          msg = '⚠ マイク 他 の app が 使用中 · 他 app 閉じて 再試行';
+        } else {
+          msg = '⚠ マイク エラー: ' + String(e.message || e).slice(0, 80);
         }
+        if (micHint) {
+          micHint.textContent = msg;
+          micHint.style.color = '#FCA5A5';
+          micHint.style.fontWeight = '700';
+        }
+        console.warn('[startMicMeter]', e);
         return false;
       }
     }
@@ -10292,8 +10306,28 @@ STEP C: 結果報告
       stopMicMeter();
       try { overlay.remove(); } catch(_) {}
     };
+    // ★ 2026-08-11 qa FAIL #1 対応: window.confirm() は iOS Safari / LINE 内 browser で
+    //   silent return false になる 場合 が ある → 2-step click に 変更 (「もう 一度 押す と 終了」)
+    let endConfirmPending = false;
+    let endConfirmResetIv = null;
     endBtn.addEventListener('click', () => {
-      if (!confirm('面談 を 終了 して 録音 を 停止 しますか?')) return;
+      if (!endConfirmPending) {
+        endConfirmPending = true;
+        const origText = endBtn.textContent;
+        const origBg = endBtn.style.background;
+        endBtn.textContent = '⚠ もう 一度 押す と 終了';
+        endBtn.style.background = '#F59E0B';
+        endBtn.style.boxShadow = '0 8px 20px rgba(245,158,11,0.35)';
+        endConfirmResetIv = setTimeout(() => {
+          endConfirmPending = false;
+          endBtn.textContent = origText;
+          endBtn.style.background = origBg || '#DC2626';
+          endBtn.style.boxShadow = '0 8px 20px rgba(220,38,38,0.35)';
+        }, 4000);
+        return;
+      }
+      // 2 回目 の click = 確定
+      if (endConfirmResetIv) clearTimeout(endConfirmResetIv);
       cleanup();
       // 議事録 生成 の 案内 (数 分 待ち)
       const toast = document.createElement('div');

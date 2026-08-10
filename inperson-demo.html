@@ -166,7 +166,17 @@
     },1000);
   });
 
+  let endConfirmPending=false, endResetIv=null;
   endBtn.addEventListener('click',()=>{
+    if(!endConfirmPending){
+      endConfirmPending=true;
+      const orig=endBtn.textContent;const origBg=endBtn.style.background;
+      endBtn.textContent='⚠ もう 一度 押す と 終了';
+      endBtn.style.background='#F59E0B';
+      endResetIv=setTimeout(()=>{endConfirmPending=false;endBtn.textContent=orig;endBtn.style.background=origBg||'#DC2626';},4000);
+      return;
+    }
+    if(endResetIv)clearTimeout(endResetIv);
     try{if(popup&&popup.tagName==='IFRAME')popup.remove();}catch(_){}
     if(iv)clearInterval(iv);
     stopMicMeter();
