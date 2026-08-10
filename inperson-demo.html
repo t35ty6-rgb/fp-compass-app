@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>対面 面談 mode デモ (実 動作 test)</title>
+<style>
+  html,body{margin:0;padding:0;font-family:"Noto Sans JP",-apple-system,sans-serif;background:#F1F5F9;color:#0F172A}
+  .wrap{max-width:640px;margin:60px auto;padding:32px;background:#fff;border-radius:14px;box-shadow:0 12px 30px rgba(15,23,42,0.10)}
+  h1{margin:0 0 12px;font-size:22px;font-weight:900;letter-spacing:-0.01em}
+  p{font-size:14px;line-height:1.75;color:#475569;margin:0 0 14px}
+  .steps{background:#F8FAFC;border-left:3px solid #059669;padding:14px 18px;border-radius:0 8px 8px 0;font-size:13.5px;line-height:1.9;color:#334155;margin:16px 0}
+  .btn{background:#059669;color:#fff;border:none;padding:14px 26px;border-radius:10px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 6px 18px rgba(5,150,105,0.30);letter-spacing:0.02em}
+  .btn:hover{background:#047857}
+  .status{margin-top:18px;padding:12px 14px;border-radius:8px;font-size:13px;font-weight:700;display:none}
+  .status.ok{background:#DCFCE7;color:#166534;display:block}
+  .status.err{background:#FEE2E2;color:#991B1B;display:block}
+  code{background:#F1F5F9;padding:2px 6px;border-radius:4px;font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px}
+
+  /* Recording overlay (same style as prod) */
+  .rec-overlay{position:fixed;inset:0;background:linear-gradient(135deg,#0F172A 0%,#1E3A5F 100%);z-index:9999;display:none;align-items:center;justify-content:center;padding:24px;color:#fff}
+  .rec-overlay.show{display:flex}
+  .rec-card{max-width:520px;width:100%;text-align:center}
+  .mic-c{width:120px;height:120px;background:rgba(220,38,38,0.15);border:3px solid #DC2626;border-radius:50%;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;font-size:52px;position:relative}
+  .mic-c::after{content:'';position:absolute;top:8px;right:8px;width:14px;height:14px;background:#DC2626;border-radius:50%;box-shadow:0 0 12px rgba(220,38,38,0.8);animation:pulse 1.4s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.6;transform:scale(1.35)}}
+  .rec-status{font-size:15px;font-weight:700;color:#DBEAFE;margin-bottom:8px}
+  .rec-title{font-size:34px;font-weight:900;margin:0 0 10px;letter-spacing:-0.02em}
+  .rec-client{font-size:16px;color:#94A3B8;margin:0 0 24px}
+  .rec-timer{font-size:52px;font-weight:900;font-family:'JetBrains Mono',ui-monospace,monospace;letter-spacing:0.02em;margin-bottom:32px}
+  .rec-hint{font-size:12.5px;color:#64748B;margin:0 0 26px;line-height:1.7}
+  .rec-end{background:#DC2626;color:#fff;border:none;padding:14px 32px;border-radius:10px;font-family:inherit;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 8px 20px rgba(220,38,38,0.35)}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <h1>🎤 対面 面談 mode · 実 動作 test</h1>
+  <p>これ は 本番 の <code>「対面 で 面談 (音声だけ 録音)」</code> button と 同じ 動作 を する デモ。 押した ら 何 が 起きる か、 実際 に 体験 して 確認 する 用。</p>
+  <div class="steps">
+    <b>手順</b><br>
+    1. 下 の 「面談 開始」 button を 押す<br>
+    2. 画面 が dark blue の 「面談 記録 中」 に なる<br>
+    3. 同時 に <b>左下 隅 に 小さい window</b> が 開く (本番 で は Zoom · ここ で は デモ 用 の Google)<br>
+    4. 左下 window が 出て いれば popup 許可 済 = 本番 も 動く<br>
+    5. 出ない = popup ブロック 中 · 手順 は 下 に
+  </div>
+  <button class="btn" id="startBtn">🎤 面談 開始 (対面 · 音声 だけ 録音)</button>
+  <div class="status" id="status"></div>
+
+  <hr style="margin:26px 0;border:0;border-top:1px solid #E2E8F0;">
+  <p style="font-size:13px;color:#64748B"><b>popup が ブロック された 場合</b>:<br>
+    Chrome の URL 欄 右端 に 「🚫」 マーク が 出る · click → 「常に 許可」 → 再 test。<br>
+    Safari の 場合: 設定 → Web サイト → ポップアップ ウィンドウ → skeleton-inc.jp を 「許可」。</p>
+</div>
+
+<!-- Recording overlay -->
+<div class="rec-overlay" id="overlay">
+  <div class="rec-card">
+    <div class="mic-c">🎙</div>
+    <div class="rec-status" id="recStatus">起動 中…</div>
+    <h1 class="rec-title">面談 記録 中</h1>
+    <p class="rec-client">吉田恭聡 様 と の 面談 (デモ)</p>
+    <div class="rec-timer" id="timer">00:00</div>
+    <p class="rec-hint">これ が 本番 で 客 に 見せる 画面。 左下 の 小 window は そのまま 動かして OK。</p>
+    <button class="rec-end" id="endBtn">⏹ 面談 終了 (test 停止)</button>
+  </div>
+</div>
+
+<script>
+  const startBtn=document.getElementById('startBtn');
+  const overlay=document.getElementById('overlay');
+  const timerEl=document.getElementById('timer');
+  const recStatus=document.getElementById('recStatus');
+  const endBtn=document.getElementById('endBtn');
+  const statusEl=document.getElementById('status');
+  let popup=null,iv=null,startedAt=0;
+
+  startBtn.addEventListener('click',()=>{
+    statusEl.className='status';statusEl.textContent='';
+    overlay.classList.add('show');
+    recStatus.textContent='ウィンドウ 起動 中…';
+    popup=window.open(
+      'https://www.google.com/',
+      'inperson-demo',
+      'width=280,height=180,left=8,top='+(window.screen.height-220)+',menubar=no,toolbar=no,location=no'
+    );
+    if(!popup){
+      recStatus.style.color='#FCA5A5';
+      recStatus.textContent='⚠ popup が ブロック されました';
+      statusEl.className='status err';
+      statusEl.innerHTML='popup が block されたので、 本番 で も Zoom が 起動 しません。<br>URL 欄 の 「🚫」 で 許可 → 再 test。';
+    }else{
+      recStatus.textContent='起動 済 · 録音 開始';
+      statusEl.className='status ok';
+      statusEl.innerHTML='✓ popup 起動 成功 · 左下 隅 に 小 window が 出て ます。<br>本番 で も 同じ 動作 = Zoom 起動 する と 期待 して OK。';
+      startedAt=Date.now();
+      iv=setInterval(()=>{
+        const s=Math.floor((Date.now()-startedAt)/1000);
+        timerEl.textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
+      },1000);
+    }
+    window.focus();
+  });
+
+  endBtn.addEventListener('click',()=>{
+    try{if(popup&&!popup.closed)popup.close()}catch(_){}
+    if(iv)clearInterval(iv);
+    overlay.classList.remove('show');
+  });
+</script>
+
+</body>
+</html>
