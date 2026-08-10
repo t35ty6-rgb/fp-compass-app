@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>過去 議事録 backfill · FP Compass</title>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<style>
+  html,body{margin:0;padding:0;font-family:"Noto Sans JP",-apple-system,sans-serif;background:#F1F5F9;color:#0F172A;line-height:1.65}
+  .wrap{max-width:760px;margin:40px auto;padding:32px;background:#fff;border-radius:14px;box-shadow:0 12px 30px rgba(15,23,42,0.10)}
+  h1{margin:0 0 8px;font-size:22px;font-weight:900;letter-spacing:-0.01em}
+  .sub{color:#64748B;font-size:13.5px;margin:0 0 22px}
+  .box{background:#F8FAFC;border-left:3px solid #0EA5E9;padding:14px 18px;border-radius:0 8px 8px 0;font-size:13px;color:#334155;margin:14px 0 20px}
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px}
+  th{background:#F1F5F9;color:#334155;font-weight:800;text-align:left;padding:10px 12px;border-bottom:2px solid #CBD5E1;font-size:12px;letter-spacing:0.04em}
+  td{padding:10px 12px;border-bottom:1px solid #E2E8F0;font-size:12.5px;color:#0F172A;vertical-align:top}
+  td.ok{color:#059669;font-weight:700}
+  td.err{color:#DC2626;font-weight:700}
+  .btn{background:#0EA5E9;color:#fff;border:none;padding:13px 26px;border-radius:10px;font-size:14.5px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 6px 18px rgba(14,165,233,0.30);letter-spacing:0.02em;margin-top:14px}
+  .btn:disabled{opacity:0.5;cursor:not-allowed}
+  .btn-primary{background:#059669}
+  .btn-primary:hover{background:#047857}
+  .progress{height:10px;background:#E2E8F0;border-radius:5px;overflow:hidden;margin:12px 0}
+  .progress-bar{height:100%;background:linear-gradient(90deg,#10B981,#059669);width:0%;transition:width 0.3s ease}
+  .status{margin-top:14px;padding:12px 16px;border-radius:8px;font-size:13px;font-weight:700;display:none}
+  .status.ok{background:#DCFCE7;color:#166534;display:block}
+  .status.err{background:#FEE2E2;color:#991B1B;display:block}
+  .status.info{background:#DBEAFE;color:#1E40AF;display:block}
+  code{background:#F1F5F9;padding:2px 6px;border-radius:4px;font-family:'JetBrains Mono',ui-monospace,monospace;font-size:11.5px;color:#334155}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>📤 過去 議事録 を Firestore に backfill</h1>
+  <p class="sub">この browser の localStorage に 残ってる 過去 議事録 を Firestore に upload · 他 device でも 見える 状態 に</p>
+
+  <div class="box">
+    <b>なぜ 必要?</b><br>
+    昔 の 議事録 は browser の localStorage に 溜まって て、 別 PC or 別 browser で は 見えない。 これ を Firestore (雲 上 の DB) に upload すれば 全 device で 見える ように なる。
+  </div>
+
+  <div id="preAuth" style="display:block">
+    <p>Firebase auth が 走った 状態 で 開く 必要 が あります。 まず <a href="/">https://app.skeleton-inc.jp/</a> で login して から この page を 再訪 して ください。</p>
+    <p style="font-size:12px;color:#64748B">認証 状態 確認 中…</p>
+  </div>
+
+  <div id="scanResult" style="display:none">
+    <h3 style="margin:24px 0 8px;font-size:16px;font-weight:900">📋 検出 された 議事録</h3>
+    <table>
+      <thead><tr><th>#</th><th>Key</th><th>件数</th><th>Transcript 有</th><th>Summary 有</th></tr></thead>
+      <tbody id="scanTable"></tbody>
+    </table>
+    <div id="totalStats" style="font-size:13px;color:#475569;margin:10px 0"></div>
+
+    <button class="btn btn-primary" id="uploadBtn" disabled>📤 全 件 Firestore に アップロード</button>
+    <div class="progress" id="progressBox" style="display:none"><div class="progress-bar" id="progressBar"></div></div>
+    <div class="status" id="status"></div>
+  </div>
+
+  <div style="margin-top:28px;padding-top:14px;border-top:1px solid #E2E8F0;font-size:11.5px;color:#94A3B8">
+    ※ localStorage の 元 データ は 削除 されず 残ります · Firestore に コピー する だけ · 何 度 実行 しても 冪等 (同 議事録 は 上書き)
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js';
+import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
+
+const app = getApps()[0] || initializeApp({
+  apiKey: 'AIzaSyAmVAEe9l9e1Yo_dzzJdbTVU35wWKd2sH4',
+  authDomain: 'skeleton-fp-compass-632026.firebaseapp.com',
+  projectId: 'skeleton-fp-compass-632026',
+});
+const auth = getAuth(app);
+
+const CLOUD_RUN = 'https://fp-compass-webhook-527726449426.asia-northeast1.run.app';
+const preAuth = document.getElementById('preAuth');
+const scanResult = document.getElementById('scanResult');
+const scanTable = document.getElementById('scanTable');
+const totalStats = document.getElementById('totalStats');
+const uploadBtn = document.getElementById('uploadBtn');
+const progressBox = document.getElementById('progressBox');
+const progressBar = document.getElementById('progressBar');
+const statusEl = document.getElementById('status');
+
+function esc(s){return String(s||'').replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]));}
+
+function scan(){
+  const keys = Object.keys(localStorage).filter(k => k.startsWith('fp-ai-'));
+  const rows = [];
+  let totalCount = 0, hasTranscriptCount = 0, hasSummaryCount = 0;
+  keys.forEach((k, i) => {
+    let arr = [];
+    try { arr = JSON.parse(localStorage.getItem(k) || '[]'); } catch(_) {}
+    if (!Array.isArray(arr)) return;
+    const withT = arr.filter(a => a && a.transcript && String(a.transcript).length > 20).length;
+    const withS = arr.filter(a => a && a.summary && String(a.summary).length > 20).length;
+    totalCount += arr.length;
+    hasTranscriptCount += withT;
+    hasSummaryCount += withS;
+    rows.push({ key: k, count: arr.length, withT, withS, arr });
+  });
+  return { rows, totalCount, hasTranscriptCount, hasSummaryCount };
+}
+
+function renderScan(data){
+  scanTable.innerHTML = data.rows.map((r, i) => `
+    <tr>
+      <td>${i+1}</td>
+      <td><code>${esc(r.key)}</code></td>
+      <td>${r.count}</td>
+      <td class="${r.withT > 0 ? 'ok' : ''}">${r.withT}</td>
+      <td class="${r.withS > 0 ? 'ok' : ''}">${r.withS}</td>
+    </tr>
+  `).join('') || '<tr><td colspan="5" style="text-align:center;color:#64748B;padding:20px">localStorage に 議事録 なし</td></tr>';
+  totalStats.textContent = `合計 ${data.totalCount} 件 · transcript 有 ${data.hasTranscriptCount} 件 · summary 有 ${data.hasSummaryCount} 件`;
+  uploadBtn.disabled = data.totalCount === 0;
+}
+
+async function uploadOne(entry){
+  const headers = window.getFpAuthHeaders ? await window.getFpAuthHeaders() : { 'Content-Type': 'application/json' };
+  const res = await fetch(CLOUD_RUN + '/api/save-ai-result', {
+    method: 'POST', headers, body: JSON.stringify({ entry, tasks: [], _backfill: true })
+  });
+  if (!res.ok) throw new Error('HTTP ' + res.status + ' ' + (await res.text()).slice(0,120));
+  const j = await res.json();
+  if (!j.ok) throw new Error(j.error || 'unknown');
+  return j;
+}
+
+async function doUpload(){
+  uploadBtn.disabled = true;
+  progressBox.style.display = 'block';
+  statusEl.className = 'status info';
+  statusEl.textContent = '📤 アップロード 中…';
+  const data = scan();
+  let done = 0, fail = 0;
+  const total = data.totalCount;
+  for (const row of data.rows) {
+    for (const e of row.arr) {
+      try {
+        await uploadOne(e);
+        done++;
+      } catch (err) {
+        console.warn('backfill fail', row.key, err.message);
+        fail++;
+      }
+      progressBar.style.width = ((done + fail) / total * 100).toFixed(1) + '%';
+    }
+  }
+  if (fail === 0) {
+    statusEl.className = 'status ok';
+    statusEl.textContent = `✓ ${done} 件 backfill 完了 · FP Compass reload で 全 device 反映`;
+  } else if (done > 0) {
+    statusEl.className = 'status info';
+    statusEl.textContent = `⚠ ${done} 件 成功 · ${fail} 件 失敗 (console log 確認)`;
+  } else {
+    statusEl.className = 'status err';
+    statusEl.textContent = `× 全 ${fail} 件 失敗 · console log 確認 → Jobs に 貼る`;
+  }
+  uploadBtn.disabled = false;
+}
+
+// getFpAuthHeaders helper (embedded, no external dep)
+window.getFpAuthHeaders = async () => {
+  const u = auth.currentUser;
+  if (!u) return { 'Content-Type': 'application/json' };
+  const t = await u.getIdToken();
+  return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + t };
+};
+
+onAuthStateChanged(auth, (user) => {
+  if (!user) {
+    preAuth.style.display = 'block';
+    scanResult.style.display = 'none';
+  } else {
+    preAuth.style.display = 'none';
+    scanResult.style.display = 'block';
+    const data = scan();
+    renderScan(data);
+  }
+});
+
+uploadBtn.addEventListener('click', doUpload);
+</script>
+</body>
+</html>
