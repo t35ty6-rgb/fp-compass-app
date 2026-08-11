@@ -2858,8 +2858,9 @@
     if (dowRow) dowRow.style.display = 'none';
     if (grid) grid.style.display = 'none';
 
-    // range 表示 は 「今週 (Google Cal 埋込)」
-    if (rangeEl) rangeEl.textContent = 'Google Cal 埋込';
+    // ★ 2026-08-11 owner「Google だけ で いい」対応: nav (‹/›/今日) + range も gcal では 無意味 なので 隠す
+    root.querySelectorAll('.v3h-sched-nav').forEach(b => { b.style.display = 'none'; });
+    if (rangeEl) rangeEl.style.display = 'none';
 
     const token = localStorage.getItem('fp-gcal-token');
     let wrap = document.getElementById('v3h-sched-embed-wrap');
