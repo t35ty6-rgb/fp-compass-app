@@ -2727,7 +2727,13 @@
     const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus') ? 'video/webm;codecs=vp9,opus'
       : MediaRecorder.isTypeSupported('video/webm') ? 'video/webm' : 'video/mp4';
     const mr = new MediaRecorder(stream, { mimeType });
-    mr.ondataavailable = e => { if (e.data && e.data.size > 0) chunks.push(e.data); };
+    // ★ 2026-08-12: chunk 逐次 IndexedDB 保存 (Wi-Fi 断 → 復帰 対応)
+    let __persistIdx2 = 0;
+    mr.ondataavailable = e => {
+      if (!e.data || e.data.size === 0) return;
+      chunks.push(e.data);
+      try { window.RecordingPersist?.saveChunk(bookingTs, __persistIdx2++, e.data); } catch(_) {}
+    };
     mr.onstop = async () => {
       stopBackgroundKeepAlive();
       stream.getTracks().forEach(t => t.stop());
@@ -2746,12 +2752,15 @@
       })();
       const fallbackBooking = { ts: bookingTs, name: customerName, userId: customerId, isInperson: true };
 
+      // ★ 2026-08-12: meta 保存 (復帰 用)
+      try { await window.RecordingPersist?.setMeta(bookingTs, { customerName, mimeType, booking: fallbackBooking, path: 'video' }); } catch(_) {}
+
       try { showUnifiedProgressPanel(customerName, blob); } catch (_) {}
       try { updateProgressStep('save', 'done'); updateProgressStep('drive', 'active'); updateProgressStep('ai', 'active'); } catch (_) {}
       try { showCenterToast('議事録 を 生成中…', `${customerName} 様 の 対面録画 → AI で 文字起こし + 議事録 作成 中。 30-60秒 ほど お待ちください`, { tone: 'progress', duration: 0 }); } catch (_) {}
 
       const drivePromise = autoUploadRecording(blob, bookingTs, customerName, fallbackBooking)
-        .then(() => { try { updateProgressStep('drive', 'done'); } catch(_){} })
+        .then(() => { try { updateProgressStep('drive', 'done'); } catch(_){} try { window.RecordingPersist?.markUploadedDrive(bookingTs); } catch(_) {} })
         .catch(() => { try { updateProgressStep('drive', 'error'); } catch(_){} });
 
       let aiResult = null;
@@ -2760,6 +2769,7 @@
         try { updateProgressStep('ai', 'done'); } catch(_){}
         window._fpAIResult = { result: aiResult, customerName: customerName, booking: fallbackBooking };
         try { autoSaveAIResult(aiResult, customerName, fallbackBooking); } catch(_){}
+        try { window.RecordingPersist?.markUploadedAI(bookingTs); } catch(_) {}
         try { showProgressDoneAction(); } catch(_){}
       } else {
         try { updateProgressStep('ai', 'error', aiResult?.error); } catch(_){}
@@ -3552,7 +3562,13 @@
     // ★ オーナーfb 2026-06-23: 長録画 (30/60分) を Cloud Run 32MB 制限に収めるため
     // bitrate を 24kbps に 下げる (音声明瞭度は維持されつつ 60分=10MB に収まる)
     const mr = new MediaRecorder(stream, mimeType ? { mimeType, audioBitsPerSecond: 24000 } : { audioBitsPerSecond: 24000 });
-    mr.ondataavailable = e => { if (e.data && e.data.size > 0) chunks.push(e.data); };
+    // ★ 2026-08-12 owner「Wi-Fi 切れて も 途中 復帰」対応: chunk を IndexedDB に 逐次 保存
+    let __persistIdx = 0;
+    mr.ondataavailable = e => {
+      if (!e.data || e.data.size === 0) return;
+      chunks.push(e.data);
+      try { window.RecordingPersist?.saveChunk(bookingTs, __persistIdx++, e.data); } catch(_) {}
+    };
     mr.onstop = async () => {
       stopBackgroundKeepAlive();
       stream.getTracks().forEach(t => t.stop());
@@ -3581,6 +3597,9 @@
       })();
       const fallbackBooking = { ts: bookingTs, name: customerName, userId: customerId, isInperson: true };
 
+      // ★ 2026-08-12: onstop 時 に meta 保存 (Wi-Fi 断 → 復帰 で 続き 上げる ため)
+      try { await window.RecordingPersist?.setMeta(bookingTs, { customerName, mimeType, booking: fallbackBooking, path: 'audio-only' }); } catch(_) {}
+
       // 進捗パネル
       try { showUnifiedProgressPanel(customerName, blob); } catch (_) {}
       try { updateProgressStep('save', 'done'); updateProgressStep('drive', 'active'); updateProgressStep('ai', 'active'); } catch (_) {}
@@ -3588,7 +3607,7 @@
 
       // Drive: 音声ファイル upload (並列)
       const drivePromise = autoUploadRecording(blob, bookingTs, customerName, fallbackBooking)
-        .then(() => { try { updateProgressStep('drive', 'done'); } catch(_){} })
+        .then(() => { try { updateProgressStep('drive', 'done'); } catch(_){} try { window.RecordingPersist?.markUploadedDrive(bookingTs); } catch(_) {} })
         .catch(() => { try { updateProgressStep('drive', 'error'); } catch(_){} });
 
       // AI: 同じ音声を Whisper + Claude で処理
@@ -3598,6 +3617,7 @@
         try { updateProgressStep('ai', 'done'); } catch(_){}
         window._fpAIResult = { result: aiResult, customerName: customerName, booking: fallbackBooking };
         try { autoSaveAIResult(aiResult, customerName, fallbackBooking); } catch(_){}
+        try { window.RecordingPersist?.markUploadedAI(bookingTs); } catch(_) {}
         try { showProgressDoneAction(); } catch(_){}
       } else {
         try { updateProgressStep('ai', 'error', aiResult?.error); } catch(_){}
@@ -3743,7 +3763,13 @@
         : MediaRecorder.isTypeSupported('audio/mp4') ? 'audio/mp4'
         : '';
       R.mediaRecorder = new MediaRecorder(audioOnlyStream, audioMime ? { mimeType: audioMime, audioBitsPerSecond: 24000 } : { audioBitsPerSecond: 24000 });
-      R.mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) R.chunks.push(e.data); };
+      // ★ 2026-08-12: Zoom 画面録画 も chunk を IndexedDB 逐次保存 (Wi-Fi 断 → 復帰 対応)
+      R.__persistIdx = 0;
+      R.mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size === 0) return;
+        R.chunks.push(e.data);
+        try { window.RecordingPersist?.saveChunk(R.bookingTs, R.__persistIdx++, e.data); } catch(_) {}
+      };
       R.mediaRecorder.onstop = async () => {
         stopBackgroundKeepAlive();
         const blob = new Blob(R.chunks, { type: 'audio/webm' });
@@ -3760,9 +3786,11 @@
         showCenterToast('議事録 を 生成中…', `${R.customerName} 様 の Zoom 録画 → AI で 文字起こし + 議事録 作成 中。 30-60秒 ほど お待ちください`, { tone: 'progress', duration: 0 });
         // booking が見つからなかった時の fallback (R.booking で保持済)
         const effectiveBooking = booking || R.booking || null;
+        // ★ 2026-08-12: meta 保存 (復帰 用)
+        try { await window.RecordingPersist?.setMeta(R.bookingTs, { customerName: R.customerName, mimeType: audioMime || 'audio/webm', booking: effectiveBooking, path: 'zoom-screen' }); } catch(_) {}
         // Drive: 音声ファイル (.webm) を upload
         const drivePromise = autoUploadRecording(blob, R.bookingTs, R.customerName, effectiveBooking)
-          .then(() => updateProgressStep('drive', 'done'))
+          .then(() => { updateProgressStep('drive', 'done'); try { window.RecordingPersist?.markUploadedDrive(R.bookingTs); } catch(_) {} })
           .catch(() => updateProgressStep('drive', 'error'));
         // AI: 同じ音声ファイルを送信
         const aiResult = await aiProcessRecording(blob, R.bookingTs, R.customerName, effectiveBooking);
@@ -3771,6 +3799,7 @@
           window._fpAIResult = { result: aiResult, customerName: R.customerName, booking: effectiveBooking };
           // ★ AI 結果を自動で顧客カードに保存 (手動ボタン押下不要)
           autoSaveAIResult(aiResult, R.customerName, effectiveBooking);
+          try { window.RecordingPersist?.markUploadedAI(R.bookingTs); } catch(_) {}
           showProgressDoneAction();
         } else {
           updateProgressStep('ai', 'error', aiResult && aiResult.error);
@@ -4366,20 +4395,41 @@
       const survey = ((liveData && liveData.survey_answers) || []).find(s => s.userId === (booking && booking.userId));
       const ctx = survey ? `テーマ: ${survey.q1_テーマ} / 年代: ${survey.q2_年代} / 家族: ${survey.q3_家族} / 年収: ${survey.q4_年収} / 悩み: ${survey.q5_悩み}` : '';
       // ★ オーナーfb 2026-06-23: 長録画 Whisper timeout 防止: クライアント側 timeout 10分
-      const controller = new AbortController();
-      const tid = setTimeout(() => controller.abort(), 10 * 60 * 1000);
-      const r = await fetch(CLOUD_RUN_BASE + '/api/process-recording', {
-        method: 'POST',
-        headers: await (window.getFpAuthHeaders ? window.getFpAuthHeaders() : Promise.resolve({ 'Content-Type': 'application/json' })),
-        body: JSON.stringify({
-          base64, mimeType: blob.type || 'audio/webm',
-          customerName, customerContext: ctx,
-          bookingTs, userId: booking && booking.userId,
-          tenantId: (window.__fp && window.__fp.tenantId) || '',
-        }),
-        signal: controller.signal,
-      });
-      clearTimeout(tid);
+      // ★ 2026-08-12: Wi-Fi 断 → 復帰 で 自動 再送
+      const doFetch = async () => {
+        const controller = new AbortController();
+        const tid = setTimeout(() => controller.abort(), 10 * 60 * 1000);
+        try {
+          return await fetch(CLOUD_RUN_BASE + '/api/process-recording', {
+            method: 'POST',
+            headers: await (window.getFpAuthHeaders ? window.getFpAuthHeaders() : Promise.resolve({ 'Content-Type': 'application/json' })),
+            body: JSON.stringify({
+              base64, mimeType: blob.type || 'audio/webm',
+              customerName, customerContext: ctx,
+              bookingTs, userId: booking && booking.userId,
+              tenantId: (window.__fp && window.__fp.tenantId) || '',
+            }),
+            signal: controller.signal,
+          });
+        } finally { clearTimeout(tid); }
+      };
+      let r = null;
+      if (window.RecordingPersist?.fetchWithRetry) {
+        let lastErr = null;
+        const maxRetries = 6;
+        for (let attempt = 0; attempt <= maxRetries; attempt++) {
+          if (!navigator.onLine) await window.RecordingPersist.waitForOnline();
+          try {
+            r = await doFetch();
+            if (r.status >= 500 && r.status < 600) { lastErr = new Error(`server ${r.status}`); r = null; }
+            else break;
+          } catch (e) { lastErr = e; }
+          if (attempt < maxRetries) await new Promise(res => setTimeout(res, Math.min(60000, 2000 * Math.pow(2, attempt))));
+        }
+        if (!r) return { ok: false, error: 'AI処理 例外: ' + (lastErr?.message || 'retry exhausted') };
+      } else {
+        r = await doFetch();
+      }
       if (!r.ok) {
         const text = await r.text().catch(() => '');
         const err = `HTTP ${r.status}: ${text.slice(0, 200)}`;
@@ -4575,14 +4625,36 @@
       reader.onerror = rej;
       reader.readAsDataURL(blob);
     });
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5 * 60 * 1000);
-    const r = await fetch(CLOUD_RUN_BASE + '/api/upload-recording', {
-      method: 'POST', headers: await (window.getFpAuthHeaders ? window.getFpAuthHeaders() : Promise.resolve({ 'Content-Type': 'application/json' })),
-      body: JSON.stringify({ ts: bookingTs, customerName, filename, mimeType: 'audio/webm', base64 }),
-      signal: controller.signal,
-    });
-    clearTimeout(timeoutId);
+    // ★ 2026-08-12: Wi-Fi 断 → 復帰 で 自動 再送 (RecordingPersist.fetchWithRetry)
+    const doFetch = async () => {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5 * 60 * 1000);
+      try {
+        return await fetch(CLOUD_RUN_BASE + '/api/upload-recording', {
+          method: 'POST', headers: await (window.getFpAuthHeaders ? window.getFpAuthHeaders() : Promise.resolve({ 'Content-Type': 'application/json' })),
+          body: JSON.stringify({ ts: bookingTs, customerName, filename, mimeType: 'audio/webm', base64 }),
+          signal: controller.signal,
+        });
+      } finally { clearTimeout(timeoutId); }
+    };
+    let r;
+    if (window.RecordingPersist?.fetchWithRetry) {
+      // retry wrapper に URL/options 直接 渡せない (auth header の async 生成 が ある ため)、 wrap 関数 として 実装
+      let lastErr = null;
+      const maxRetries = 6;
+      for (let attempt = 0; attempt <= maxRetries; attempt++) {
+        if (!navigator.onLine) { await window.RecordingPersist.waitForOnline(); }
+        try {
+          r = await doFetch();
+          if (r.status >= 500 && r.status < 600) { lastErr = new Error(`server ${r.status}`); r = null; }
+          else break;
+        } catch (e) { lastErr = e; }
+        if (attempt < maxRetries) await new Promise(res => setTimeout(res, Math.min(60000, 2000 * Math.pow(2, attempt))));
+      }
+      if (!r) throw lastErr || new Error('Drive upload retry exhausted');
+    } else {
+      r = await doFetch();
+    }
     const data = await r.json();
     if (!data.ok) throw new Error(data.error || 'Drive 保存失敗');
     return data;
@@ -10161,8 +10233,59 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
         // 再表示時 即 1回 リフレッシュ
         document.addEventListener('visibilitychange', () => { if (!document.hidden) fetchLiveData(); });
       }
+      // ★ 2026-08-12: 起動 時 に 未 送信 の 録音 を scan → 自動 再送
+      try { resumePendingRecordings(); } catch(_) {}
     }
   };
+
+  // ★ 2026-08-12 owner「Wi-Fi 切れた ら 途中 復帰」対応: 起動 時 orphan scan
+  async function resumePendingRecordings() {
+    if (!window.RecordingPersist) return;
+    let pending;
+    try { pending = await window.RecordingPersist.listPending(); } catch(_) { return; }
+    if (!pending || !pending.length) return;
+    console.log('[resume] pending recordings:', pending.length);
+    for (const item of pending) {
+      const { bookingTs, meta } = item;
+      if (!meta || (meta.uploadedDrive && meta.uploadedAI)) continue;
+      // 直近 5 分以内 更新 = まだ生きて る session → skip (二重処理 防止)
+      if (meta.updatedAt && (Date.now() - meta.updatedAt) < 5 * 60 * 1000) {
+        console.log('[resume] skip fresh:', bookingTs);
+        continue;
+      }
+      let blob;
+      try { blob = await window.RecordingPersist.rebuildBlob(bookingTs, meta.mimeType); }
+      catch (e) { console.warn('[resume] rebuild fail', bookingTs, e); continue; }
+      if (!blob || blob.size === 0) {
+        try { await window.RecordingPersist.clear(bookingTs); } catch(_) {}
+        continue;
+      }
+      try {
+        showCenterToast('前回 の 録音 を 復帰 中…',
+          `${meta.customerName || '不明'} 様 (${new Date(Number(bookingTs)).toLocaleString('ja-JP')}) の 議事録 を 再送 中`,
+          { tone: 'progress', duration: 0 });
+      } catch(_) {}
+      // Drive 未完了 なら upload
+      if (!meta.uploadedDrive) {
+        try {
+          await autoUploadRecording(blob, bookingTs, meta.customerName, meta.booking);
+          await window.RecordingPersist.markUploadedDrive(bookingTs);
+        } catch (e) { console.warn('[resume] drive fail', bookingTs, e); }
+      }
+      // AI 未完了 なら 送信
+      if (!meta.uploadedAI) {
+        try {
+          const aiResult = await aiProcessRecording(blob, bookingTs, meta.customerName, meta.booking);
+          if (aiResult && aiResult.ok) {
+            try { autoSaveAIResult(aiResult, meta.customerName, meta.booking); } catch(_) {}
+            await window.RecordingPersist.markUploadedAI(bookingTs);
+            try { showCenterToast('議事録 復帰 完了', `${meta.customerName || '不明'} 様 の 議事録 を 再生成 しました`, { tone: 'success', duration: 6000 }); } catch(_) {}
+          }
+        } catch (e) { console.warn('[resume] ai fail', bookingTs, e); }
+      }
+    }
+    try { await fetchLiveData(); } catch(_) {}
+  }
 
   // 自動起動: app.js より後にロードされる line-app.js が IIFE 完了時に即 liveData fetch を開始
   // → LineApp タブを開いてなくても顧客台帳に LINE 友だちが反映される
