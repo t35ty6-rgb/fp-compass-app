@@ -1107,11 +1107,9 @@
               <section class="v3h-sched">
                 <div class="v3h-sched-head">
                   <p class="v3h-sched-title">スケジュール</p>
-                  <div class="v3h-sched-tabs" role="tablist">
-                    <button type="button" data-mode="week" class="active" role="tab">週</button>
-                    <button type="button" data-mode="2week" role="tab">2週</button>
-                    <button type="button" data-mode="month" role="tab">月</button>
-                    <button type="button" data-mode="gcal" role="tab" title="Google カレンダー を そのまま 埋込">📅 Google</button>
+                  <!-- ★ 2026-08-11 owner「週/2週/月 は 要らない · Google だけ で いい」 対応: 3 mode 削除 · gcal 1 択 -->
+                  <div class="v3h-sched-tabs" role="tablist" style="display:none;">
+                    <button type="button" data-mode="gcal" class="active" role="tab" title="Google カレンダー を そのまま 埋込">📅 Google</button>
                   </div>
                   <button type="button" class="v3h-sched-nav" data-nav="prev" title="前へ">‹</button>
                   <span class="v3h-sched-range" id="v3h-sched-range">—</span>
@@ -2275,7 +2273,7 @@ window.fpReadyAfterAuth = function() {
 <script>
 (function(){
   // 最新の ver を 1 箇所に集約 (fpReadyAfterAuth 側と一致させる必要あり)
-    const FP_VERSION = "20260811E-qa-fail-fixes";
+    const FP_VERSION = "20260811F-gcal-only-schedule";
   try { window.FP_VERSION = FP_VERSION; } catch(_) {}
 
   // 2026-07-13 v11: Chrome拡張 (Zoom タブ音声 レコーダー) 検知

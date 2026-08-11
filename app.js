@@ -2643,7 +2643,7 @@
     if (!root || !grid) return;
 
     // state (module scope)
-    window.__v3SchedState = window.__v3SchedState || { mode: 'week', anchor: null };
+    window.__v3SchedState = window.__v3SchedState || { mode: 'gcal', anchor: null };
     const state = window.__v3SchedState;
     if (!state.anchor) state.anchor = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
@@ -3053,7 +3053,7 @@
     root.querySelectorAll('.v3h-sched-tabs button').forEach(btn => {
       btn.addEventListener('click', () => {
         const mode = btn.dataset.mode;
-        if (!window.__v3SchedState) window.__v3SchedState = { mode: 'week', anchor: null };
+        if (!window.__v3SchedState) window.__v3SchedState = { mode: 'gcal', anchor: null };
         window.__v3SchedState.mode = mode;
         root.querySelectorAll('.v3h-sched-tabs button').forEach(b => b.classList.toggle('active', b === btn));
         try { renderDashboard(); } catch(_) {}
@@ -3062,7 +3062,7 @@
     // prev/next/today nav
     root.querySelectorAll('.v3h-sched-nav').forEach(btn => {
       btn.addEventListener('click', () => {
-        const st = window.__v3SchedState || (window.__v3SchedState = { mode: 'week', anchor: null });
+        const st = window.__v3SchedState || (window.__v3SchedState = { mode: 'gcal', anchor: null });
         const today = window.LifeEvents?.TODAY || new Date();
         if (!st.anchor) st.anchor = new Date(today.getFullYear(), today.getMonth(), today.getDate());
         const nav = btn.dataset.nav;
