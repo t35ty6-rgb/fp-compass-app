@@ -8653,8 +8653,17 @@ ${ctxText}${surveyTxt}`;
             <div class="fp-meeting-card" data-meeting-card>
               <div class="fp-meeting-card-head" data-meeting-toggle style="cursor:pointer;">
                 <div>
-                  <div class="fp-meeting-card-eyebrow" style="font-size:13px !important;font-weight:900 !important;color:#1B3A5C !important;letter-spacing:0 !important;"><span class="fp-meeting-toggle-icon" style="display:inline-block;width:14px;font-size:10px;color:#94A3B8;margin-right:4px;transition:transform 0.15s;">▶</span>📹 Zoom ${zN}回目 ${aiData.ts || aiData.createdAt ? `<span style="font-size:11px;color:#9CA3AF;font-weight:700;margin-left:8px;font-family:Menlo,monospace;">#${(()=>{ const d=new Date(aiData.ts || aiData.createdAt); return d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0')+'-'+String(d.getHours()).padStart(2,'0')+String(d.getMinutes()).padStart(2,'0'); })()}</span>` : ''}</div>
-                  <div class="fp-meeting-card-date" style="font-size:14px;font-weight:700;">${escapeHtml(fmtDateRobust(aiData.ts || aiData.createdAt) || fmtDateRobust(b.date))} ${escapeHtml(fmtJstTime(aiData.ts || aiData.createdAt) || fmtTimeRobust(b.time))} 面談</div>
+                  ${(() => {
+                    // ★ 2026-08-12 owner GO (A-1): タイトル 表示 = HH:MM {AI title} {客名} 様 (例 08:56 FP Compass デモ 吉田恭聡 様)
+                    //   fallback 順: aiData.title (Haiku 生成 済) → key_concerns[0] → 「Zoom N 回目」
+                    const dt = aiData.ts || aiData.createdAt;
+                    const hhmm = dt ? fmtJstTime(dt) : '';
+                    const cname = (client && (client.name || client.customerName)) || aiData.customerName || '';
+                    const rawTitle = aiData.title || (Array.isArray(aiData.key_concerns) && aiData.key_concerns[0]) || `Zoom ${zN}回目`;
+                    const label = [hhmm, escapeHtml(String(rawTitle).slice(0, 30)), cname ? escapeHtml(cname) + ' 様' : ''].filter(Boolean).join(' ');
+                    return `<div class="fp-meeting-card-eyebrow" style="font-size:13px !important;font-weight:900 !important;color:#1B3A5C !important;letter-spacing:0 !important;"><span class="fp-meeting-toggle-icon" style="display:inline-block;width:14px;font-size:10px;color:#94A3B8;margin-right:4px;transition:transform 0.15s;">▶</span>📹 ${label}</div>`;
+                  })()}
+                  <div class="fp-meeting-card-date" style="font-size:12.5px;font-weight:600;color:#6B7280;">Zoom ${zN}回目 · ${escapeHtml(fmtDateRobust(aiData.ts || aiData.createdAt) || fmtDateRobust(b.date))} ${escapeHtml(fmtJstTime(aiData.ts || aiData.createdAt) || fmtTimeRobust(b.time))}</div>
                   ${aiData.ts || aiData.createdAt ? `<div class="fp-meeting-card-recstart" style="font-size:11.5px;color:#6B7280;font-weight:600;margin-top:3px;">録画開始: ${escapeHtml(fmtJstTime(aiData.ts || aiData.createdAt))} (${escapeHtml(fmtDateRobust(aiData.ts || aiData.createdAt))})</div>` : ''}
                 </div>
                 <div class="fp-meeting-card-actions" style="display:flex;gap:6px;flex-wrap:wrap;">
@@ -8770,8 +8779,16 @@ ${ctxText}${surveyTxt}`;
               <div class="fp-meeting-card" data-meeting-card>
                 <div class="fp-meeting-card-head" data-meeting-toggle style="cursor:pointer;">
                   <div>
-                    <div class="fp-meeting-card-eyebrow" style="font-size:13px !important;font-weight:900 !important;color:#1B3A5C !important;letter-spacing:0 !important;"><span class="fp-meeting-toggle-icon" style="display:inline-block;width:14px;font-size:10px;color:#94A3B8;margin-right:4px;transition:transform 0.15s;">▶</span>📹 Zoom ${zN}回目 ${a.ts || a.createdAt ? `<span style="font-size:11px;color:#9CA3AF;font-weight:700;margin-left:8px;font-family:Menlo,monospace;">#${(()=>{ const d=new Date(a.ts || a.createdAt); return d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0')+'-'+String(d.getHours()).padStart(2,'0')+String(d.getMinutes()).padStart(2,'0'); })()}</span>` : ''}</div>
-                    <div class="fp-meeting-card-date" style="font-size:14px;font-weight:700;">${escapeHtml(fmtDateRobust(a.ts || a.createdAt) || fmtDateRobust(a.date))} ${escapeHtml(fmtJstTime(a.ts || a.createdAt))} 面談</div>
+                    ${(() => {
+                      // ★ 2026-08-12 owner GO (A-1): タイトル 表示 = HH:MM {AI title} {客名} 様
+                      const dt = a.ts || a.createdAt;
+                      const hhmm = dt ? fmtJstTime(dt) : '';
+                      const cname = (client && (client.name || client.customerName)) || a.customerName || '';
+                      const rawTitle = a.title || (Array.isArray(a.key_concerns) && a.key_concerns[0]) || `Zoom ${zN}回目`;
+                      const label = [hhmm, escapeHtml(String(rawTitle).slice(0, 30)), cname ? escapeHtml(cname) + ' 様' : ''].filter(Boolean).join(' ');
+                      return `<div class="fp-meeting-card-eyebrow" style="font-size:13px !important;font-weight:900 !important;color:#1B3A5C !important;letter-spacing:0 !important;"><span class="fp-meeting-toggle-icon" style="display:inline-block;width:14px;font-size:10px;color:#94A3B8;margin-right:4px;transition:transform 0.15s;">▶</span>📹 ${label}</div>`;
+                    })()}
+                    <div class="fp-meeting-card-date" style="font-size:12.5px;font-weight:600;color:#6B7280;">Zoom ${zN}回目 · ${escapeHtml(fmtDateRobust(a.ts || a.createdAt) || fmtDateRobust(a.date))} ${escapeHtml(fmtJstTime(a.ts || a.createdAt))}</div>
                     ${a.ts || a.createdAt ? `<div class="fp-meeting-card-recstart" style="font-size:11.5px;color:#6B7280;font-weight:600;margin-top:3px;">録画開始: ${escapeHtml(fmtJstTime(a.ts || a.createdAt))} (${escapeHtml(fmtDateRobust(a.ts || a.createdAt))})</div>` : ''}
                   </div>
                   <div class="fp-meeting-card-actions" style="display:flex;gap:6px;flex-wrap:wrap;">

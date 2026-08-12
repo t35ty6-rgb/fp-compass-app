@@ -4092,6 +4092,7 @@
       next_meeting_suggestion: result.next_meeting_suggestion || '',
       lifeEventCandidates: result.lifeEventCandidates || [],
       extractedProfile: result.extractedProfile || {},
+      title: '',  // ★ 2026-08-12: generateMeetingTitle で 埋める (A-1)
       createdAt: new Date().toISOString(),
     };
     // ★ ライフイベント自動抽出: 抽出された 候補 を 該当顧客の customEvents[] に積む
@@ -4179,6 +4180,23 @@
     //   3. 失敗時 pending-sync 蓄積 → 起動時 自動再送
     const persistKey = 'fp-ai-backup-' + (bookingTs || userId || nameKey || Date.now()) + '-' + Date.now();
     try { localStorage.setItem(persistKey, JSON.stringify({ entry, tasks: newTasks })); } catch (_) {}
+    // ★ 2026-08-12 owner GO (A-1): 議事録 タイトル を Claude Haiku で 生成 → entry.title
+    //   例: 「FP Compass デモ」「iDeCo 相談」「住宅 ローン 見直し」
+    //   非同期 で 進める · 完了 したら entry.title 更新 + saveWithRetry に 渡す
+    async function generateTitleForEntry() {
+      try {
+        const app = (await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js')).getApps()[0];
+        if (!app) return;
+        const { getFunctions, httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-functions.js');
+        const fn = httpsCallable(getFunctions(app, 'asia-northeast1'), 'generateMeetingTitle');
+        const r = await fn({
+          summary: entry.summary || entry.transcript_summary || '',
+          transcript: (entry.transcript || '').slice(0, 2000),
+        });
+        const t = r?.data?.title;
+        if (t) { entry.title = String(t); console.log('[generateMeetingTitle] title:', t); }
+      } catch (e) { console.warn('[generateMeetingTitle] fail:', e.message || e); }
+    }
     async function saveWithRetry(maxRetries) {
       const delays = [3000, 6000, 12000];
       for (let attempt = 0; attempt <= maxRetries; attempt++) {
@@ -4199,9 +4217,13 @@
       }
       return { ok: false, error: 'retries exhausted' };
     }
-    saveWithRetry(3).then(d => {
+    // ★ 2026-08-12: title 生成 (Claude Haiku、 最大 10s) → save → 保存 の 順、
+    //   title 生成 が 遅れて も 全体 flow が 止まら ない よう Promise.race で 10s cap
+    Promise.race([generateTitleForEntry(), new Promise(r => setTimeout(r, 10000))])
+      .then(() => saveWithRetry(3))
+      .then(d => {
       if (d.ok) {
-        console.log('[autoSaveAIResult] GAS 保存 OK');
+        console.log('[autoSaveAIResult] GAS 保存 OK · title:', entry.title || '(空)');
         // 成功 → pending-sync から persistKey 削除 (まだ蓄積してなくても無害)
         try {
           const pending = JSON.parse(localStorage.getItem('fp-ai-pending-sync') || '[]');
