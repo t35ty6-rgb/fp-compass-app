@@ -2309,14 +2309,19 @@
       if (p === 'p1') urgencyRank = 0;
       else if (p === 'p3') urgencyRank = 2;
       const c = (clients || []).find(x => x.id === m.clientId);
+      // ★ 2026-08-12 qa-reviewer FAIL fix:
+      //   新 quick-add で addManualTodo({task: title, ...}) だが 旧 UI は {text: 内容}
+      //   → m.text || m.task で 両 経路 対応 · undefined 落ち 回避
+      // ★ CONCERN fix: priority field を return object に 含める
       return {
         clientId: m.clientId || '',
         clientName: c?.name || (m.clientId ? '(不明)' : ''),
         icon: '📝', type: 'manual',
-        title: m.text,
+        title: m.text || m.task || '(内容 未 記載)',
         sub: '手動 追加',
         urgency: '手動 TODO',
         urgencyRank,
+        priority: m.priority || (urgencyRank === 0 ? 'p1' : urgencyRank === 1 ? 'p2' : 'p3'),
         timeLabel,
         dueBy: dueBy || new Date(todayD.getTime() + 30*86400000),
         __manualId: m.id,
