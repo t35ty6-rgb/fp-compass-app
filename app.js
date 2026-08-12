@@ -1428,17 +1428,39 @@
     // ★ 2026-08-10 owner「完了 済 は 分離」 対応: done を 別 group に
     const doneItems = tasks.filter(t => isTodoDone(t));
     const activeTasks = tasks.filter(t => !isTodoDone(t));
-    // urgencyRank 別 に グループ 化
+
+    // ★ 2026-08-12 owner 明示 「議事録 自動 生成 の TODO が 30-40 件 に なって しまう · 大切 な もの だけ」対応:
+    //   各 group で default は top 5 のみ 表示 · 残り は 「+ N 件 表示」 button で 展開
+    //   ソート key: urgencyRank (低 = 急ぎ) → priority (p1>p2>p3) → 作成 日 新
+    const TOP_N = 5;
+    const priorityKey = (t) => t.priority === 'p1' ? 0 : t.priority === 'p2' ? 1 : t.priority === 'p3' ? 2 : 3;
+    const sortByImportance = (a, b) => {
+      const ra = a.urgencyRank !== undefined ? a.urgencyRank : 2;
+      const rb = b.urgencyRank !== undefined ? b.urgencyRank : 2;
+      if (ra !== rb) return ra - rb;
+      return priorityKey(a) - priorityKey(b);
+    };
+    // urgencyRank 別 に グループ 化 (各 group は 上位 top-5 default)
     const groups = [
-      { rank: 0, title: '今日 中 に 対応', desc: '期限 到来 / 提案 停滞 / 面談 直前', tone: 'urgent',   items: activeTasks.filter(t => t.urgencyRank === 0), defaultOpen: true },
-      { rank: 1, title: '今週 中 に 対応', desc: '提案 期限 迫る / 面談 近い / 宿題 今週',    tone: 'warn',     items: activeTasks.filter(t => t.urgencyRank === 1), defaultOpen: true },
-      { rank: 2, title: '今月 の 予定',    desc: '長期 未接触 の 再 engagement 等',              tone: 'neutral',  items: activeTasks.filter(t => t.urgencyRank === 2), defaultOpen: false },  // ★ owner「多すぎ」対応 で 閉じる
+      { rank: 0, title: '今日 中 に 対応', desc: '期限 到来 / 提案 停滞 / 面談 直前', tone: 'urgent',   items: activeTasks.filter(t => t.urgencyRank === 0).sort(sortByImportance), defaultOpen: true },
+      { rank: 1, title: '今週 中 に 対応', desc: '提案 期限 迫る / 面談 近い / 宿題 今週',    tone: 'warn',     items: activeTasks.filter(t => t.urgencyRank === 1).sort(sortByImportance), defaultOpen: true },
+      { rank: 2, title: '今月 の 予定',    desc: '長期 未接触 の 再 engagement 等',              tone: 'neutral',  items: activeTasks.filter(t => t.urgencyRank === 2).sort(sortByImportance), defaultOpen: false },
     ];
 
     const cnt = document.getElementById('senior-counter');
     if (cnt) cnt.textContent = activeTasks.length + ' 件';
 
-    const iconHtml = (t) => `<div class="fp-task-icon fp-task-icon-${t.tone || 'neutral'}">${t.icon || '•'}</div>`;
+    // avatar = 客名 initial (Todoist 準拠 · 案 A で 実測 承認 済)
+    const initialOf = (name) => {
+      const n = String(name || '?').replace(/\s+/g, '');
+      return n.charAt(0) || '?';
+    };
+    const iconHtml = (t) => `<div class="fp-task-icon fp-task-icon-${t.tone || 'neutral'}">${escapeHtml(initialOf(t.clientName || t.who))}</div>`;
+    // ★ 案 A · P1-P4 三角 flag (SVG · 色 は 既存 red/amber/slate 準拠)
+    const FLAG_SVG = `<svg viewBox="0 0 12 12"><path d="M2 1 L2 11 M2 1 L10 1 L8 4 L10 7 L2 7 Z" stroke-width="1"/></svg>`;
+    const flagHtml = () => `<div class="fp-task-flag">${FLAG_SVG}</div>`;
+    // priority 判定 (urgencyRank → p1/p2/p3)
+    const priorityOf = (t) => t.priority || (t.urgencyRank === 0 ? 'p1' : t.urgencyRank === 1 ? 'p2' : 'p3');
     // ★ 2026-08-10 owner「LINE 返信・予定 再送 button 分かり づらい」対応:
     //   task type ごと に 明示 action button を row 右側 に 追加
     const actionButtonsFor = (t) => {
@@ -1460,34 +1482,46 @@
       const key = taskKeyFor(t);
       const done = isTodoDone(t);
       const rankTone = t.urgencyRank === 0 ? 'urgent' : (t.urgencyRank === 1 ? 'warn' : 'neutral');
+      const p = priorityOf(t);
       return `
-      <div class="fp-task-row fp-task-row-${rankTone} ${done ? 'fp-task-row-done' : ''}" data-client-id="${escapeHtml(t.clientId)}" data-task-key="${escapeHtml(key)}" style="${done ? 'opacity:0.5;text-decoration:line-through;' : ''}">
-        <label class="fp-task-check" onclick="event.stopPropagation()" style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;flex-shrink:0;cursor:pointer;">
-          <input type="checkbox" class="fp-task-check-input" data-task-key="${escapeHtml(key)}" ${done ? 'checked' : ''} style="width:20px;height:20px;cursor:pointer;accent-color:#10B981;">
+      <div class="fp-task-row fp-task-row-${rankTone} ${done ? 'fp-task-row-done' : ''}" data-client-id="${escapeHtml(t.clientId)}" data-task-key="${escapeHtml(key)}" data-priority="${escapeHtml(p)}">
+        <label class="fp-task-check" onclick="event.stopPropagation()">
+          <input type="checkbox" class="fp-task-check-input" data-task-key="${escapeHtml(key)}" ${done ? 'checked' : ''}>
         </label>
-        ${iconHtml({ icon: t.icon, tone: rankTone })}
-        <div class="fp-task-body" data-open-client="${escapeHtml(t.clientId)}" style="cursor:pointer;">
-          <div class="fp-task-body-title"><span class="fp-task-body-who">${escapeHtml(t.clientName)} 様</span> ${escapeHtml(t.title)}</div>
+        ${iconHtml({ ...t, tone: rankTone })}
+        <div class="fp-task-body" data-open-client="${escapeHtml(t.clientId)}">
+          <div class="fp-task-body-title"><span class="fp-task-body-who">${escapeHtml(t.clientName)}</span>${escapeHtml(t.title)}</div>
           <div class="fp-task-body-sub">${escapeHtml(t.sub || '')}</div>
         </div>
-        <div class="fp-task-actions" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">${actionButtonsFor(t)}</div>
-        <div class="fp-task-time">${escapeHtml(t.timeLabel || '')}</div>
+        <div class="fp-task-meta" style="display:flex;align-items:center;gap:10px;">
+          <div class="fp-task-actions">${actionButtonsFor(t)}</div>
+          <div class="fp-task-deadline">${escapeHtml(t.timeLabel || '')}</div>
+        </div>
+        ${flagHtml()}
       </div>`;
     };
 
     const groupHtml = (g) => {
       if (g.items.length === 0) return '';
       const isCollapsed = g.defaultOpen === false;
+      // ★ 2026-08-12 「大切 な もの だけ」 対応: top-N のみ default 表示 · 残り は 展開 button
+      const topItems = g.items.slice(0, TOP_N);
+      const restItems = g.items.slice(TOP_N);
+      const groupId = 'fpg-' + g.tone;
       return `
         <div class="fp-task-group fp-task-group-${g.tone}" data-group-collapsed="${isCollapsed ? '1' : '0'}">
-          <div class="fp-task-group-head" data-group-toggle style="cursor:pointer;user-select:none;">
-            <span class="fp-task-group-arrow" style="display:inline-block;width:14px;font-size:11px;color:#94A3B8;">${isCollapsed ? '▶' : '▼'}</span>
+          <div class="fp-task-group-head" data-group-toggle>
+            <span class="fp-task-group-arrow">▶</span>
             <span class="fp-task-group-pill fp-task-group-pill-${g.tone}">${escapeHtml(g.title)}</span>
-            <span class="fp-task-group-count">${g.items.length} 件</span>
+            <span class="fp-task-group-count">${g.items.length}</span>
             <span class="fp-task-group-desc">${escapeHtml(g.desc)}</span>
           </div>
           <div class="fp-task-group-items" style="${isCollapsed ? 'display:none;' : ''}">
-            ${g.items.map(rowHtml).join('')}
+            ${topItems.map(rowHtml).join('')}
+            ${restItems.length > 0 ? `
+              <div class="fp-task-showmore-hidden" id="${groupId}-rest">${restItems.map(rowHtml).join('')}</div>
+              <button class="fp-task-showmore" data-showmore="${groupId}-rest">+ 残り ${restItems.length} 件 を 表示 (大切 でない 可能性)</button>
+            ` : ''}
           </div>
         </div>
       `;
@@ -1506,13 +1540,57 @@
       </div>
     `;
 
+    // ★ 案 A · quick add bar (Todoist 準拠 · @客 記法 hint)
+    const quickAddHtml = `
+      <div class="fp-quick-add" title="task を 追加 · 例 「@吉田 · 提案 書 続き · 金 · P2」">
+        <span class="fp-quick-add-plus">+</span>
+        <input class="fp-quick-add-input" type="text" placeholder="task を 追加 · 例 「@吉田 · 提案 書 続き · 金 · P2」" data-quickadd>
+        <span class="fp-quick-add-hint"><code>@客</code><code>期限</code><code>P1</code></span>
+      </div>
+    `;
     list.innerHTML = `
       <div class="fp-task-list">
+        ${quickAddHtml}
         ${groups.map(groupHtml).join('')}
         ${doneGroupHtml}
       </div>
     `;
 
+    // Wire: 「+ 残り N 件」 button で 隠された 部分 を 展開
+    list.querySelectorAll('[data-showmore]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const targetId = btn.dataset.showmore;
+        const target = document.getElementById(targetId);
+        if (target) target.classList.remove('fp-task-showmore-hidden');
+        btn.remove();
+      });
+    });
+    // Wire: quick add (Enter で 手動 task 追加)
+    list.querySelectorAll('[data-quickadd]').forEach(input => {
+      input.addEventListener('keydown', (e) => {
+        if (e.key !== 'Enter') return;
+        const raw = input.value.trim();
+        if (!raw) return;
+        // parse: 「@客名 · 内容 · 期限 · P1」 の 簡易 分解
+        const parts = raw.split(/[·・]/).map(s => s.trim()).filter(Boolean);
+        let who = '', title = raw, due = 'week', priority = 'p3';
+        parts.forEach(p => {
+          if (p.startsWith('@')) who = p.slice(1);
+          else if (/^p[1-4]$/i.test(p)) priority = p.toLowerCase();
+          else if (/(今日|today)/i.test(p)) due = 'today';
+          else if (/(明日|tomorrow)/i.test(p)) due = 'tomorrow';
+          else if (/(週|week|月|火|水|木|金|土|日)/i.test(p)) due = 'week';
+          else if (title === raw) title = p;
+        });
+        if (who && !title.includes(who)) title = `${who} 様 · ${title}`;
+        addManualTodo({ task: title, due, priority, dueLabel: due === 'today' ? '今日 中' : due === 'tomorrow' ? '明日' : '今週 中' });
+        input.value = '';
+        try {
+          const freshTasks = generateHomeTasksFromRealData(clients).concat(manualTodosAsTasks(clients));
+          renderHomeTasksList(freshTasks, clients);
+        } catch(_) {}
+      });
+    });
     // Wire: task body click → 客モーダル
     list.querySelectorAll('.fp-task-body[data-open-client]').forEach(el => {
       el.addEventListener('click', (e) => {
