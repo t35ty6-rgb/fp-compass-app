@@ -2941,9 +2941,17 @@
     const alreadyLoaded = sessionStorage.getItem('fp-gcal-embed-loaded') === '1';
     if (!wrap.querySelector('.v3h-gcal-embed-controls')) {
       wrap.innerHTML = `
-        <div class="v3h-gcal-embed-controls">
+        <div class="v3h-gcal-embed-controls" style="position:relative;">
           <span style="font-size:13px;font-weight:700;color:#3a4254;padding:8px 0;">${escapeHtml(localStorage.getItem('fp-gcal-email') || 'Google カレンダー')}</span>
+          <button id="v3h-gcal-cal-picker-btn" title="表示 する 予定 表 を 選ぶ (複数 可 · 共有 も 選択 可)" style="background:#f1f5f9;border:1px solid #cbd5e1;color:#0f172a;font-size:12px;font-weight:800;padding:6px 12px;border-radius:6px;cursor:pointer;font-family:inherit;">📚 予定 表 選択</button>
           <a href="https://calendar.google.com/" target="_blank" rel="noopener" class="v3h-gcal-embed-open">Google Cal を 別 tab で 開く ↗</a>
+          <div id="v3h-gcal-cal-picker-menu" style="display:none;position:absolute;top:48px;right:0;background:#fff;border:1px solid #cbd5e1;border-radius:10px;box-shadow:0 12px 30px rgba(15,23,42,0.15);padding:14px 16px;min-width:280px;max-width:360px;max-height:380px;overflow-y:auto;z-index:20;">
+            <div style="font-size:11.5px;font-weight:800;color:#475569;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px;">表示 する 予定 表</div>
+            <div id="v3h-gcal-cal-picker-list" style="display:flex;flex-direction:column;gap:6px;font-size:13px;"></div>
+            <div style="margin-top:10px;padding-top:10px;border-top:1px solid #e2e8f0;display:flex;gap:8px;justify-content:flex-end;">
+              <button id="v3h-gcal-cal-picker-close" style="background:#0b5d9e;color:#fff;border:none;padding:6px 14px;border-radius:6px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;">閉じる</button>
+            </div>
+          </div>
         </div>
         <div class="v3h-gcal-embed-frame" id="v3h-gcal-embed-frame">
           ${alreadyLoaded ? '<div class="v3h-empty" style="padding:24px;text-align:center;color:#6b7280;">Google Cal 読込 中…</div>' : `
@@ -2959,6 +2967,54 @@
         sessionStorage.setItem('fp-gcal-embed-loaded', '1');
         wrap.dataset.state = ''; // force re-render
         renderV3GcalEmbed(clients, tasks, today);
+      });
+      // ★ 2026-08-12: 予定 表 選択 picker (複数 選択 可 · 共有 calendar も 対象)
+      const pickerBtn = wrap.querySelector('#v3h-gcal-cal-picker-btn');
+      const pickerMenu = wrap.querySelector('#v3h-gcal-cal-picker-menu');
+      const pickerList = wrap.querySelector('#v3h-gcal-cal-picker-list');
+      const pickerClose = wrap.querySelector('#v3h-gcal-cal-picker-close');
+      async function buildPickerList() {
+        const calsForPicker = await fetchCachedCalList();
+        let stored;
+        try { stored = JSON.parse(localStorage.getItem('fp-gcal-embed-cal-ids') || 'null'); } catch(_) { stored = null; }
+        const validIds = new Set(calsForPicker.map(c => c.id));
+        let selected = Array.isArray(stored) ? stored.filter(id => validIds.has(id)) : null;
+        if (!selected || selected.length === 0) selected = calsForPicker.map(c => c.id);
+        pickerList.innerHTML = calsForPicker.map(c => {
+          const checked = selected.includes(c.id);
+          const col = (c.backgroundColor || '#94a3b8').replace('#','');
+          const isFpCompass = /FPコンパス|FP Compass/.test(c.summary || '');
+          return `<label style="display:flex;align-items:center;gap:9px;cursor:pointer;padding:5px 6px;border-radius:6px;${isFpCompass ? 'background:#eff6ff;border:1px solid #93c5fd;' : ''}">
+            <input type="checkbox" data-cal-id="${escapeHtml(c.id)}" ${checked ? 'checked' : ''} style="cursor:pointer;">
+            <span style="width:11px;height:11px;border-radius:50%;background:#${col};display:inline-block;flex-shrink:0;"></span>
+            <span style="flex:1;font-weight:${isFpCompass ? '800' : '600'};color:#1f2937;">${escapeHtml(c.summary || c.id)}</span>
+            ${c.primary ? '<span style="font-size:9.5px;background:#dbeafe;color:#1e40af;padding:1px 6px;border-radius:8px;font-weight:800;">primary</span>' : ''}
+            ${isFpCompass ? '<span style="font-size:9.5px;background:#3b82f6;color:#fff;padding:1px 6px;border-radius:8px;font-weight:800;">FP面談</span>' : ''}
+          </label>`;
+        }).join('');
+        pickerList.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+          cb.addEventListener('change', () => {
+            const ids = [...pickerList.querySelectorAll('input[type="checkbox"]:checked')].map(x => x.dataset.calId);
+            localStorage.setItem('fp-gcal-embed-cal-ids', JSON.stringify(ids));
+            wrap.dataset.state = ''; // force re-render on next tick
+            setTimeout(() => renderV3GcalEmbed(clients, tasks, today), 100);
+          });
+        });
+      }
+      pickerBtn?.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        if (pickerMenu.style.display === 'none') {
+          await buildPickerList();
+          pickerMenu.style.display = 'block';
+        } else {
+          pickerMenu.style.display = 'none';
+        }
+      });
+      pickerClose?.addEventListener('click', () => { pickerMenu.style.display = 'none'; });
+      document.addEventListener('click', (e) => {
+        if (pickerMenu.style.display === 'block' && !pickerMenu.contains(e.target) && e.target !== pickerBtn) {
+          pickerMenu.style.display = 'none';
+        }
       });
     }
     // 明示 click が 済んで ない 場合 は iframe fetch まで しない (heavy Google API skip)
@@ -2984,9 +3040,19 @@
       }
       srcIds = [email];
     } else {
-      // ★ primary Google Cal だけ (他 の calendar は 表示 しない)
-      const primary = cals.filter(c => c.primary);
-      srcIds = primary.length > 0 ? primary.map(c => c.id) : [localStorage.getItem('fp-gcal-email') || ''].filter(Boolean);
+      // ★ 2026-08-12 owner「1 tag しか 選べ ない · 共有 も 選べ る よう に」対応:
+      //   選択 UI の SSOT = localStorage 'fp-gcal-embed-cal-ids' (checkbox picker で 選ばれた calendarId 配列)
+      //   未 選択 or 初回 = 全 accessible calendar を default で 表示 (「1つ しか 出ない」 現象 の 修復)
+      let stored;
+      try { stored = JSON.parse(localStorage.getItem('fp-gcal-embed-cal-ids') || 'null'); } catch(_) { stored = null; }
+      const validIds = new Set(cals.map(c => c.id));
+      const selected = Array.isArray(stored) ? stored.filter(id => validIds.has(id)) : null;
+      if (selected && selected.length > 0) {
+        srcIds = selected;
+      } else {
+        // default: 全 calendar (primary + 共有 + FP面談 全部) を 表示
+        srcIds = cals.map(c => c.id);
+      }
     }
     renderEmbedFrame(srcIds, allCals);
     // state mark で 次回 呼出 で skip 可能 に
