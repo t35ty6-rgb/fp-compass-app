@@ -1028,11 +1028,11 @@
           </a>
         `).join('')}
       </div>
-      <!-- フロー説明 -->
+      <!-- フロー説明 (2026-08-12 owner GO で 「自動 確定 化」 反映) -->
       <div style="background:#fdfbf4;border:1px solid #e8d9a8;border-radius:8px;padding:14px 20px;margin-bottom:36px;font-size:11.5px;color:#5e4d1a;line-height:1.7;">
         <div style="font-size:10px;font-weight:700;color:#8b7d5d;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:6px;">How it works</div>
-        <strong style="color:#1f2a3f;font-weight:700;">01</strong> アンケート回答+候補日3つが届いたら確定 →
-        <strong style="color:#1f2a3f;font-weight:700;">02</strong> Zoom URLが発行され面談日待ち → 面談当日「録画ONでZoom開始」で録画開始 → 終了後 面談履歴タブに自動アーカイブ
+        <strong style="color:#1f2a3f;font-weight:700;">01</strong> 客 が アンケート + 候補日 3つ を LINE で 送る → 「候補 送付 済 · 返信 待ち」 状態 で 01 に 表示 →
+        <strong style="color:#1f2a3f;font-weight:700;">02</strong> 客 が LINE で 候補X tap → <strong style="color:#166534;">自動 で Zoom URL + LINE 通知 + カレンダー まで 発火</strong> · 02 に 「🤖 客 選択 → 自動 確定」 badge 付き で 出現 → 当日 「録画ONで Zoom 開始」 で 録画 → 終了 後 面談 履歴 に アーカイブ
       </div>
 
       <section class="board-section" id="section-confirm">
@@ -1043,7 +1043,10 @@
           </div>
           <button id="fp-toggle-cal" style="font-size:11.5px;padding:8px 14px;background:#fff;border:1px solid #c19a3a;border-radius:5px;cursor:pointer;font-family:inherit;color:#5e4d1a;font-weight:700;letter-spacing:0.04em;">自分の Google カレンダーを並べて表示</button>
         </div>
-        <p style="color:#6b7280;font-size:12.5px;margin:0 0 18px;line-height:1.65;letter-spacing:0.02em;">第1〜第3希望から1つタップで確定 / Zoom URL発行・LINE通知・Googleカレンダー登録が同時に動きます</p>
+        <p style="color:#6b7280;font-size:12.5px;margin:0 0 18px;line-height:1.65;letter-spacing:0.02em;">
+          <strong style="color:#7a1530;">通常</strong>: 客 が LINE で 候補X を tap → 自動 で Zoom URL 発行 + LINE 通知 まで 動く · 下の Zoom 打ち合わせ 予定 に 表示 されます<br>
+          <strong style="color:#92400e;">⚠ 自動 確定 失敗 時 の み</strong>: このリストに 残り、 第1〜第3希望から 1つ タップ で FP が 手動 確定 する
+        </p>
         <div id="confirm-list"></div>
       </section>
 
@@ -1504,6 +1507,8 @@
       q7_候補2: (c.meetingCandidates||[])[1],
       q8_候補3: (c.meetingCandidates||[])[2],
       ts: c.createdAt?.toDate?.()?.toISOString?.() || null,
+      // ★ 2026-08-12 owner GO: 「候補 送付 済 · 返信 待ち」 と 「客 選択 済 · 自動 確定 失敗」 を 見分ける
+      _pendingSelection: c.pendingCandidateSelection || null,
     }));
     const pending = pendingLegacy.concat(pendingFs);
     if (pending.length === 0) {
@@ -1541,9 +1546,15 @@
             <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end;">
               <button data-focus-cal="${escapeHtml(s.userId || '')}" data-name="${escapeHtml(displayName)}" style="font-size:11.5px;font-weight:700;padding:6px 12px;background:#eef2ff;color:#3730a3;border:1px solid #c7d2fe;border-radius:6px;cursor:pointer;font-family:inherit;">📅 この方を見る</button>
               <button data-reschedule="${escapeHtml(s.userId || '')}" data-name="${escapeHtml(displayName)}" title="3つとも合わない時 → 改めて候補日を依頼" style="font-size:11.5px;font-weight:700;padding:6px 12px;background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;border-radius:6px;cursor:pointer;font-family:inherit;">✕ 別日再調整</button>
-              <span class="status-pill important">確定待ち</span>
+              ${s._pendingSelection
+                ? `<span class="status-pill" style="background:#fef3c7;color:#92400e;border:1px solid #fbbf24;">⚠ 客 選択 済 · 自動 確定 失敗</span>`
+                : `<span class="status-pill important">候補 送付 済 · 返信 待ち</span>`}
             </div>
           </div>
+          ${s._pendingSelection ? `
+          <div style="background:#fef3c7;border:1px solid #fbbf24;border-radius:8px;padding:10px 14px;margin-bottom:10px;font-size:12.5px;color:#78350f;line-height:1.55;">
+            <strong style="font-weight:700;">客 が 候補${escapeHtml(s._pendingSelection.index || '?')}</strong> (${escapeHtml(s._pendingSelection.slotText || s._pendingSelection.chosen || '?')}) を 選択 · 自動 確定 が 失敗 (LINE token or Zoom 認証 の 可能性)。 下 の 候補 タップ で 手動 確定 する か、 <a href="/account.html" style="color:#78350f;text-decoration:underline;font-weight:700;">連携 設定 を 確認</a>。
+          </div>` : ''}
           <div style="font-size:12px;color:var(--muted);letter-spacing:0.02em;margin-bottom:10px;">
             ${escapeHtml(s.q2_年代 || '-')} / ${escapeHtml(s.q3_家族 || '-')} / ${escapeHtml(s.q4_年収 || '-')} / userId:${uidShort}…
           </div>
@@ -1625,8 +1636,12 @@
       'name': (a, b) => String(a.name || '').localeCompare(String(b.name || ''), 'ja'),
     }[sortMode] || ((a, b) => 0);
     // ★ legacy proxy bookings + Firestore (多テナント) 確定済 を 合流
+    // ★ 2026-08-12 owner fb 「キャンセル で 予約 が 見つかりません」 fix:
+    //   confirmedAt/createdAt が 未 resolve でも 必ず ts を 埋める (fs:{docId} fallback)
+    //   + 自動 確定 か 手動 確定 か の badge 用 field 追加
     const fsConfirmed = (window._fpFirestoreConfirmed || []).map(c => {
       const [d, t] = String(c.confirmedSlot || '').split(' ');
+      const stableTs = c.confirmedAt?.toDate?.()?.toISOString?.() || c.createdAt?.toDate?.()?.toISOString?.() || `fs:${c.docId}`;
       return {
         _fsCustomerId: c.docId,
         userId: 'fs:' + c.docId,
@@ -1634,9 +1649,11 @@
         date: d || '',
         time: t || '',
         zoomUrl: c.zoomUrl,
-        ts: c.confirmedAt?.toDate?.()?.toISOString?.() || c.createdAt?.toDate?.()?.toISOString?.() || '',
+        ts: stableTs,
         status: 'confirmed',
         recordingStatus: null,
+        _confirmedVia: c.confirmedVia || (c.pendingCandidateSelection ? 'line_webhook_auto' : 'admin_manual'),
+        _pendingSelection: c.pendingCandidateSelection || null,
       };
     });
     const allBookings = (((liveData && liveData.bookings) || []).concat(fsConfirmed)).slice().sort(cmp);
@@ -1744,6 +1761,16 @@
       }
       const recPill = rec === 'recording' ? '<span class="rec-pill recording">● 録画中</span>'
         : rec === 'saved' ? '<span class="rec-pill saved">📼 録画保存済</span>' : '';
+      // ★ 2026-08-12 owner GO: 「客 が どの 候補 を 選んで 何日 に 確定 したか」 を FP が 把握 できる 表示
+      //   自動 確定 (客 LINE tap → Cloud Function 自動 発火) vs 手動 確定 (FP が admin で 押した) を 見分ける
+      const viaPill = b._confirmedVia === 'line_webhook_auto'
+        ? `<span style="font-size:10.5px;background:#dcfce7;color:#166534;border:1px solid #86efac;padding:2px 8px;border-radius:10px;font-weight:800;letter-spacing:0.02em;">🤖 客 選択 → 自動 確定</span>`
+        : b._confirmedVia === 'admin_manual'
+        ? `<span style="font-size:10.5px;background:#dbeafe;color:#1e40af;border:1px solid #93c5fd;padding:2px 8px;border-radius:10px;font-weight:800;letter-spacing:0.02em;">👤 FP が 手動 確定</span>`
+        : '';
+      const selectionLine = b._pendingSelection
+        ? `<div style="font-size:11.5px;color:#166534;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:6px 10px;margin-bottom:10px;">👉 客 が 選んだ 候補: <strong>候補${escapeHtml(b._pendingSelection.index || '?')}</strong> (${escapeHtml(b._pendingSelection.slotText || b._pendingSelection.chosen || '')})</div>`
+        : '';
       return `
         <div style="background:var(--surface);border:1px solid var(--line);border-left:4px solid ${rec === 'recording' ? 'var(--red)' : 'var(--line-green)'};border-radius:10px;padding:18px 22px;margin-bottom:10px;box-shadow:var(--shadow-xs);display:grid;grid-template-columns:104px 1fr;gap:18px;">
           <div style="border-right:1px solid var(--line);padding-right:14px;">
@@ -1757,8 +1784,9 @@
                 ${avatarHtml}
                 <strong style="font-size:15.5px;">${escapeHtml(displayName)} 様</strong>
               </div>
-              ${recPill}
+              <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">${viaPill}${recPill}</div>
             </div>
+            ${selectionLine}
             ${b.zoomUrl ? `<div style="font-size:10.5px;color:var(--muted);font-family:ui-monospace,Menlo,monospace;margin-bottom:12px;word-break:break-all;line-height:1.5;">${escapeHtml(b.zoomUrl)}</div>` : ''}
             <div style="display:flex;gap:8px;flex-wrap:wrap;">${cta}</div>
           </div>
@@ -5896,6 +5924,7 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
       });
     });
     // ✕ キャンセル → テンプレ選択モーダル (オーナーfb 2026-06-25: Firestore confirmed booking も lookup対象に)
+    // ★ 2026-08-12 owner fb 「予約 が 見つかりません」 fix: fs:{docId} fallback + _fsCustomerId 直 lookup
     document.querySelectorAll('.fp-cancel-booking').forEach(btn => {
       btn.addEventListener('click', () => {
         const tsEnc = btn.dataset.cancelTs;
@@ -5907,10 +5936,15 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
           date: String(c.confirmedSlot || '').split(' ')[0] || '',
           time: String(c.confirmedSlot || '').split(' ')[1] || '',
           zoomUrl: c.zoomUrl,
-          ts: c.confirmedAt?.toDate?.()?.toISOString?.() || '',
+          ts: c.confirmedAt?.toDate?.()?.toISOString?.() || c.createdAt?.toDate?.()?.toISOString?.() || `fs:${c.docId}`,
         }));
         const all = ((liveData && liveData.bookings) || []).concat(fsAsBookings);
-        const b = all.find(x => String(x.ts).slice(0,19) === ts.slice(0,19));
+        // primary: ts 完全 一致 · fallback: fs:{docId} pattern · fallback2: docId 部分 一致
+        let b = all.find(x => String(x.ts).slice(0,19) === ts.slice(0,19));
+        if (!b && ts.startsWith('fs:')) {
+          const docId = ts.slice(3);
+          b = all.find(x => x._fsCustomerId === docId);
+        }
         if (!b) { alert('予約が見つかりません (legacy + Firestore 両方確認しましたが該当なし)'); return; }
         showCancelTemplatePicker(b);
       });
