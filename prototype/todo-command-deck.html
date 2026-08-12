@@ -3,455 +3,686 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>FP Compass · TODO (prototype v3)</title>
+<title>FP Compass · TODO 5 案 見比べ</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700;800;900&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700;800;900&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --indigo: #5B5BF0;
-    --indigo-hover: #4747D8;
-    --indigo-soft: #EEF0FF;
-    --ink: #0F172A;
-    --slate-500: #64748B;
-    --slate-400: #94A3B8;
-    --slate-300: #CBD5E1;
-    --slate-200: #E2E8F0;
-    --slate-100: #F1F5F9;
-    --slate-50:  #F8FAFC;
-    --white: #FFFFFF;
-    --red: #DC2626;
-    --red-soft: #FEE2E2;
-    --amber: #D97706;
-    --amber-soft: #FEF3C7;
-  }
   * { box-sizing: border-box; }
-  html, body {
-    background: var(--slate-50);
-    color: var(--ink);
-    font-family: 'Noto Sans JP', -apple-system, sans-serif;
-    font-size: 14px;
-    line-height: 1.55;
-    margin: 0; padding: 0;
-    -webkit-font-smoothing: antialiased;
-  }
-  .frame { max-width: 780px; margin: 0 auto; padding: 40px 32px 120px; }
+  html, body { margin: 0; padding: 0; -webkit-font-smoothing: antialiased; font-family: 'Noto Sans JP', sans-serif; }
 
-  .card {
-    background: var(--white);
-    border: 1px solid var(--slate-200);
-    border-radius: 12px;
-    box-shadow: 0 1px 3px rgba(15,23,42,0.03);
-    overflow: hidden;
+  /* ─────────────────────────────────────
+     TAB SWITCHER (共通)
+     ───────────────────────────────────── */
+  .switcher {
+    position: sticky; top: 0; z-index: 100;
+    background: #0F172A; color: #fff;
+    display: flex; align-items: center;
+    padding: 10px 16px;
+    gap: 6px; overflow-x: auto;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+    font-family: 'Inter', 'Noto Sans JP', sans-serif;
   }
-  .card-head {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 18px 22px 14px;
-    border-bottom: 1px solid var(--slate-200);
-    gap: 16px;
+  .switcher-label {
+    font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: #94A3B8; font-weight: 700;
+    margin-right: 6px; white-space: nowrap;
   }
-  .card-title {
-    font-size: 15px; font-weight: 800; color: var(--ink);
-    margin: 0; display: flex; align-items: center; gap: 9px;
+  .switcher-btn {
+    background: transparent; color: #CBD5E1;
+    border: 1px solid #334155; border-radius: 6px;
+    padding: 6px 12px; font-family: inherit;
+    font-size: 12px; font-weight: 600; letter-spacing: 0.01em;
+    cursor: pointer; white-space: nowrap;
+    transition: all 150ms;
   }
-  .card-title-icon {
-    width: 26px; height: 26px;
-    background: var(--indigo-soft); color: var(--indigo);
-    border-radius: 7px;
-    display: inline-flex; align-items: center; justify-content: center;
+  .switcher-btn:hover { color: #fff; border-color: #64748B; }
+  .switcher-btn.is-active { background: #fff; color: #0F172A; border-color: #fff; }
+  .switcher-btn small {
+    display: block; font-size: 9.5px; font-weight: 500;
+    color: currentColor; opacity: 0.72; letter-spacing: 0.02em; margin-top: 1px;
+  }
+
+  .stage { min-height: calc(100vh - 60px); }
+  .variant { display: none; }
+  .variant.is-active { display: block; }
+
+  /* ─────────────────────────────────────
+     案 A · Todoist 風 (P1-P4 flag · quick add · shadcn indigo)
+     ───────────────────────────────────── */
+  .v-a { background: #F8FAFC; padding: 40px 24px; }
+  .v-a-inner { max-width: 720px; margin: 0 auto; }
+  .v-a-hd {
+    display: flex; align-items: baseline; justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .v-a-hd h1 {
+    margin: 0; font-size: 20px; font-weight: 800; color: #0F172A;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .v-a-hd h1 .icon {
+    width: 26px; height: 26px; background: #EEF0FF; color: #5B5BF0;
+    border-radius: 7px; display: inline-flex; align-items: center; justify-content: center;
     font-size: 14px;
   }
-  .card-count { font-family: 'Manrope', sans-serif; font-size: 12px; font-weight: 700; color: var(--slate-500); }
-  .card-count b { color: var(--indigo); font-weight: 800; font-size: 14px; margin-right: 2px; font-family: 'Manrope', sans-serif; }
-
-  /* Quick add bar (Todoist inspired) */
-  .quick-add {
+  .v-a-hd .count { font-family: 'Manrope', sans-serif; font-size: 12px; font-weight: 700; color: #64748B; }
+  .v-a-hd .count b { color: #5B5BF0; font-weight: 800; font-size: 14px; }
+  .v-a-quick {
     display: flex; align-items: center; gap: 10px;
-    padding: 12px 22px;
-    border-bottom: 1px solid var(--slate-100);
-    background: var(--slate-50);
+    background: #fff; border: 1px solid #E2E8F0; border-radius: 10px;
+    padding: 10px 14px; margin-bottom: 12px;
   }
-  .quick-add-plus {
-    width: 24px; height: 24px; border-radius: 50%;
-    border: 1.5px dashed var(--slate-300); color: var(--slate-400);
-    display: inline-flex; align-items: center; justify-content: center; font-size: 14px;
-    transition: border-color 150ms, color 150ms;
-    flex-shrink: 0;
+  .v-a-quick-plus {
+    width: 22px; height: 22px; border: 1.5px dashed #CBD5E1;
+    color: #94A3B8; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 14px; flex-shrink: 0;
   }
-  .quick-add:hover .quick-add-plus { border-color: var(--indigo); color: var(--indigo); }
-  .quick-add-input {
-    flex: 1; border: none; background: transparent;
-    font-family: inherit; font-size: 13px; color: var(--ink);
-    outline: none; padding: 4px 0;
+  .v-a-quick input {
+    flex: 1; border: 0; background: transparent;
+    font-family: inherit; font-size: 13px; color: #0F172A; outline: none;
   }
-  .quick-add-input::placeholder { color: var(--slate-400); }
-  .quick-add-hint {
-    font-family: 'Manrope', sans-serif; font-size: 10.5px; color: var(--slate-400);
-    letter-spacing: 0.02em; white-space: nowrap;
+  .v-a-quick input::placeholder { color: #94A3B8; }
+  .v-a-quick .hint {
+    font-family: 'Manrope', sans-serif; font-size: 10.5px; color: #94A3B8;
     display: flex; gap: 4px;
   }
-  .quick-add-hint code {
-    font-family: 'Manrope', sans-serif;
-    background: var(--white); border: 1px solid var(--slate-200);
-    padding: 1px 6px; border-radius: 4px;
-    color: var(--slate-500); font-size: 10.5px;
+  .v-a-quick .hint code {
+    background: #F1F5F9; border: 1px solid #E2E8F0; border-radius: 4px;
+    padding: 1px 6px; font-size: 10.5px; color: #64748B;
   }
-
-  /* Section (folder) */
-  .section { padding: 6px 22px 4px; }
-  .section + .section { border-top: 1px solid var(--slate-100); }
-  .section-head {
-    display: flex; align-items: center; gap: 10px;
-    padding: 14px 0 8px;
+  .v-a-section { background: #fff; border: 1px solid #E2E8F0; border-radius: 10px; margin-bottom: 10px; overflow: hidden; }
+  .v-a-sec-hd {
+    display: flex; align-items: center; gap: 10px; padding: 12px 16px;
     cursor: pointer; user-select: none;
+    border-bottom: 1px solid #F1F5F9;
   }
-  .section-arrow {
-    width: 10px; color: var(--slate-400); font-size: 10px;
-    transition: transform 180ms ease; display: inline-block;
+  .v-a-sec-hd .arrow { color: #94A3B8; font-size: 10px; transition: transform 180ms; }
+  .v-a-section.is-open .v-a-sec-hd .arrow { transform: rotate(90deg); }
+  .v-a-sec-hd .title { font-size: 13px; font-weight: 800; color: #0F172A; }
+  .v-a-sec-hd .cnt { font-family: 'Manrope', sans-serif; font-size: 11px; font-weight: 700;
+    color: #64748B; background: #F1F5F9; padding: 2px 8px; border-radius: 999px; }
+  .v-a-section.is-alarm .v-a-sec-hd .cnt { background: #FEE2E2; color: #DC2626; }
+  .v-a-section.is-warn .v-a-sec-hd .cnt { background: #FEF3C7; color: #D97706; }
+  .v-a-body { display: none; }
+  .v-a-section.is-open .v-a-body { display: block; }
+  .v-a-row {
+    display: grid; grid-template-columns: 20px 1fr auto 14px;
+    gap: 12px; align-items: center;
+    padding: 10px 16px; border-bottom: 1px solid #F1F5F9;
+    cursor: pointer; transition: background 150ms;
   }
-  .section.is-open .section-arrow { transform: rotate(90deg); }
-  .section-title { font-size: 13px; font-weight: 800; color: var(--ink); letter-spacing: 0.01em; }
-  .section-count {
-    font-family: 'Manrope', sans-serif; font-size: 11.5px; font-weight: 700;
-    color: var(--slate-500); background: var(--slate-100);
-    padding: 2px 8px; border-radius: 999px;
+  .v-a-row:last-child { border-bottom: 0; }
+  .v-a-row:hover { background: #F8FAFC; }
+  .v-a-row.done { opacity: 0.42; }
+  .v-a-check {
+    width: 18px; height: 18px; border-radius: 50%;
+    border: 1.5px solid #CBD5E1;
+    display: flex; align-items: center; justify-content: center;
   }
-  .section.is-alarm .section-count { background: var(--red-soft); color: var(--red); }
-  .section.is-warn  .section-count { background: var(--amber-soft); color: var(--amber); }
-  .section-desc { font-size: 11.5px; color: var(--slate-400); margin-left: auto; }
-  .section-body { display: none; }
-  .section.is-open .section-body { display: block; }
+  .v-a-check.on { background: #5B5BF0; border-color: #5B5BF0; }
+  .v-a-check svg { width: 10px; height: 10px; color: #fff; opacity: 0; transition: opacity 180ms; }
+  .v-a-check.on svg { opacity: 1; }
+  .v-a-title { font-size: 13px; font-weight: 600; color: #0F172A; line-height: 1.35; }
+  .v-a-title .who { font-weight: 700; }
+  .v-a-title .who::after { content: '様 · '; color: #94A3B8; font-weight: 500; font-size: 11px; margin: 0 4px 0 2px; }
+  .v-a-due { font-family: 'Manrope', sans-serif; font-size: 11px; color: #64748B; font-weight: 600; white-space: nowrap; }
+  .v-a-row[data-p="p1"] .v-a-due { color: #DC2626; font-weight: 700; }
+  .v-a-row[data-p="p2"] .v-a-due { color: #D97706; font-weight: 700; }
+  .v-a-flag svg { width: 12px; height: 12px; display: block; }
+  .v-a-row[data-p="p1"] .v-a-flag svg { fill: #DC2626; }
+  .v-a-row[data-p="p2"] .v-a-flag svg { fill: #D97706; }
+  .v-a-row[data-p="p3"] .v-a-flag svg { fill: #94A3B8; }
 
-  /* Task row */
-  .task-row {
-    display: grid;
-    grid-template-columns: 22px 32px 1fr auto 14px;
-    gap: 12px;
-    align-items: center;
-    padding: 11px 4px;
-    border-bottom: 1px solid var(--slate-100);
-    transition: background 180ms, opacity 400ms;
+  /* ─────────────────────────────────────
+     案 B · Things 3 風 (白 · 円 checkbox · minimal · adaptive expand)
+     ───────────────────────────────────── */
+  .v-b { background: #FFFFFF; padding: 44px 24px; min-height: 100vh; }
+  .v-b-inner { max-width: 560px; margin: 0 auto; }
+  .v-b h1 {
+    font-size: 28px; font-weight: 800; color: #1D1D1F;
+    letter-spacing: -0.01em; margin: 0 0 4px;
+    font-family: -apple-system, 'Noto Sans JP', sans-serif;
+  }
+  .v-b .sub { font-size: 13px; color: #86868B; margin: 0 0 28px; }
+  .v-b-group { margin-bottom: 32px; }
+  .v-b-group-hd {
+    font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: #86868B; font-weight: 700; margin-bottom: 10px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .v-b-group.alarm .v-b-group-hd { color: #FF3B30; }
+  .v-b-group-hd .dot {
+    width: 8px; height: 8px; border-radius: 50%; background: currentColor;
+    display: inline-block; opacity: 0.6;
+  }
+  .v-b-row {
+    display: grid; grid-template-columns: 22px 1fr auto;
+    gap: 14px; align-items: start;
+    padding: 12px 0; border-bottom: 1px solid #F5F5F7;
     cursor: pointer;
   }
-  .task-row:hover { background: var(--slate-50); }
-  .task-row:hover .task-action { opacity: 1; transform: translateX(0); }
-  .task-row.is-done { opacity: 0.42; }
-  .task-row.is-expanded {
-    background: var(--slate-50);
-    border-bottom-color: var(--slate-200);
-  }
-  .task-row.is-expanded .task-expand { display: block; }
-
-  .task-check {
+  .v-b-row.done { opacity: 0.36; }
+  .v-b-check {
     width: 20px; height: 20px; border-radius: 50%;
-    border: 1.5px solid var(--slate-300);
+    border: 1.5px solid #C7C7CC; margin-top: 2px;
     display: flex; align-items: center; justify-content: center;
-    transition: border-color 180ms, background 180ms;
-    flex-shrink: 0;
+    transition: all 200ms;
   }
-  .task-check:hover { border-color: var(--indigo); }
-  .task-check svg {
-    width: 11px; height: 11px; color: var(--white);
-    opacity: 0; transform: scale(0.4);
-    transition: opacity 200ms, transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  .v-b-check.on { background: #0071E3; border-color: #0071E3; }
+  .v-b-check svg { width: 10px; height: 10px; color: #fff; opacity: 0; }
+  .v-b-check.on svg { opacity: 1; }
+  .v-b-title { font-size: 15px; color: #1D1D1F; line-height: 1.4; font-weight: 500; }
+  .v-b-title .who { font-weight: 600; }
+  .v-b-title .who::after { content: '様 '; color: #86868B; font-weight: 400; font-size: 12.5px; margin: 0 3px; }
+  .v-b-note { font-size: 12.5px; color: #86868B; margin: 3px 0 0; line-height: 1.5; }
+  .v-b-row.is-expanded .v-b-body { grid-column: 2 / -1; }
+  .v-b-tags { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+  .v-b-tag {
+    font-size: 11px; color: #86868B;
+    background: #F5F5F7; padding: 2px 8px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
   }
-  .task-check.is-checked { border-color: var(--indigo); background: var(--indigo); }
-  .task-check.is-checked svg { opacity: 1; transform: scale(1); }
+  .v-b-tag.alarm { color: #FF3B30; background: #FFE5E3; }
+  .v-b-tag.warn { color: #FF9500; background: #FFF3E0; }
+  .v-b-due {
+    font-size: 12px; color: #86868B; font-family: 'JetBrains Mono', monospace;
+    white-space: nowrap; margin-top: 2px;
+  }
+  .v-b-row[data-p="p1"] .v-b-due { color: #FF3B30; }
+  .v-b-expand { display: none; }
+  .v-b-row.is-expanded .v-b-expand { display: block; margin-top: 8px; padding: 10px 12px; background: #F5F5F7; border-radius: 8px; }
+  .v-b-expand-item { font-size: 12px; color: #1D1D1F; margin: 3px 0; }
+  .v-b-expand-item b { color: #86868B; font-weight: 500; margin-right: 8px; font-size: 11px; }
 
-  .task-avatar {
-    width: 28px; height: 28px; border-radius: 50%;
-    background: var(--indigo-soft); color: var(--indigo);
+  /* ─────────────────────────────────────
+     案 C · Linear 風 (dark navy · monospace · P0-P4 タグ · triage)
+     ───────────────────────────────────── */
+  .v-c { background: #0B0E14; color: #C4C6CB; padding: 32px 24px; min-height: 100vh;
+    font-family: 'Inter', 'Noto Sans JP', sans-serif; }
+  .v-c-inner { max-width: 900px; margin: 0 auto; }
+  .v-c-hd {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;
+    padding-bottom: 16px; border-bottom: 1px solid #1F232B;
+  }
+  .v-c-hd h1 { font-size: 15px; font-weight: 600; color: #E6E8EB; margin: 0; letter-spacing: -0.005em; }
+  .v-c-hd .meta { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #6E7580; letter-spacing: 0.02em; }
+  .v-c-toolbar {
+    display: flex; gap: 6px; align-items: center; margin-bottom: 14px;
+    padding: 8px 0; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #6E7580;
+  }
+  .v-c-toolbar .kbd {
+    background: #151920; color: #C4C6CB; padding: 2px 6px; border-radius: 4px;
+    border: 1px solid #1F232B; font-size: 10px; font-weight: 600;
+  }
+  .v-c-table { background: transparent; border-radius: 6px; overflow: hidden; }
+  .v-c-thead {
+    display: grid; grid-template-columns: 30px 60px 120px 1fr 80px 80px;
+    gap: 12px; align-items: center;
+    padding: 6px 12px;
+    font-family: 'JetBrains Mono', monospace; font-size: 10.5px;
+    color: #6E7580; letter-spacing: 0.08em; text-transform: uppercase;
+    border-bottom: 1px solid #1F232B;
+  }
+  .v-c-row {
+    display: grid; grid-template-columns: 30px 60px 120px 1fr 80px 80px;
+    gap: 12px; align-items: center;
+    padding: 10px 12px;
+    border-bottom: 1px solid #151920;
+    cursor: pointer; transition: background 120ms;
+  }
+  .v-c-row:hover { background: #12161D; }
+  .v-c-row.done { opacity: 0.42; }
+  .v-c-check {
+    width: 16px; height: 16px; border: 1.5px solid #3F4550; border-radius: 4px;
     display: flex; align-items: center; justify-content: center;
-    font-family: 'Manrope', sans-serif; font-size: 12px; font-weight: 800;
-    flex-shrink: 0;
+  }
+  .v-c-check.on { background: #5E6AD2; border-color: #5E6AD2; }
+  .v-c-check svg { width: 10px; height: 10px; color: #fff; opacity: 0; }
+  .v-c-check.on svg { opacity: 1; }
+  .v-c-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #6E7580; }
+  .v-c-pri {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600;
+  }
+  .v-c-pri .pill { width: 10px; height: 10px; border-radius: 3px; }
+  .v-c-row[data-p="p1"] .v-c-pri { color: #EE4B4B; }
+  .v-c-row[data-p="p1"] .v-c-pri .pill { background: #EE4B4B; }
+  .v-c-row[data-p="p2"] .v-c-pri { color: #F2994A; }
+  .v-c-row[data-p="p2"] .v-c-pri .pill { background: #F2994A; }
+  .v-c-row[data-p="p3"] .v-c-pri { color: #F2C94C; }
+  .v-c-row[data-p="p3"] .v-c-pri .pill { background: #F2C94C; }
+  .v-c-row[data-p="p4"] .v-c-pri { color: #6E7580; }
+  .v-c-row[data-p="p4"] .v-c-pri .pill { background: #3F4550; }
+  .v-c-title { font-size: 13px; color: #E6E8EB; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .v-c-title .who { color: #C4C6CB; font-weight: 600; }
+  .v-c-due { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #6E7580; }
+  .v-c-tag {
+    display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    padding: 2px 6px; border-radius: 3px;
+    background: #1F232B; color: #C4C6CB;
   }
 
-  .task-body { min-width: 0; }
-  .task-who {
-    font-size: 13.5px; font-weight: 700; color: var(--ink);
-    letter-spacing: 0.005em; line-height: 1.35;
+  /* ─────────────────────────────────────
+     案 D · Notion 風 (database table · property カラム · gray)
+     ───────────────────────────────────── */
+  .v-d { background: #FFFFFF; color: #37352F; padding: 32px 40px; min-height: 100vh;
+    font-family: 'Inter', 'Noto Sans JP', sans-serif; }
+  .v-d-inner { max-width: 980px; margin: 0 auto; }
+  .v-d-hd {
+    margin-bottom: 20px;
   }
-  .task-who .sama {
-    font-weight: 500; color: var(--slate-500); font-size: 11.5px; margin-left: 3px;
+  .v-d-hd h1 {
+    font-size: 32px; font-weight: 700; color: #37352F; margin: 0 0 4px;
+    letter-spacing: -0.01em;
   }
-  .task-desc {
-    font-size: 12px; color: var(--slate-500); margin: 1px 0 0;
-    line-height: 1.4;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  .v-d-hd .sub { font-size: 13px; color: #9B9A97; margin: 0; }
+  .v-d-viewbar {
+    display: flex; gap: 4px; padding: 10px 0;
+    border-bottom: 1px solid #EBEBEA;
+    margin-bottom: 6px;
   }
+  .v-d-view {
+    font-size: 12px; padding: 4px 10px; border-radius: 4px;
+    color: #787774; font-weight: 500; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .v-d-view.active { background: #EDECEC; color: #37352F; }
+  .v-d-table {
+    display: table; width: 100%; border-collapse: collapse;
+    font-size: 13px;
+  }
+  .v-d-thead { display: table-header-group; }
+  .v-d-tr { display: table-row; }
+  .v-d-th, .v-d-td {
+    display: table-cell; padding: 8px 10px;
+    border-right: 1px solid #EBEBEA; border-bottom: 1px solid #EBEBEA;
+    vertical-align: middle;
+  }
+  .v-d-th {
+    font-size: 11.5px; color: #9B9A97; font-weight: 500;
+    background: transparent;
+    display: table-cell; align-items: center; gap: 4px;
+  }
+  .v-d-tbody { display: table-row-group; }
+  .v-d-tbody .v-d-tr:hover { background: #F7F6F3; cursor: pointer; }
+  .v-d-tr.done { opacity: 0.4; }
+  .v-d-check {
+    width: 16px; height: 16px; border: 1.5px solid #C4C3BF; border-radius: 3px;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .v-d-check.on { background: #2383E2; border-color: #2383E2; }
+  .v-d-check svg { width: 10px; height: 10px; color: #fff; opacity: 0; }
+  .v-d-check.on svg { opacity: 1; }
+  .v-d-title { color: #37352F; font-weight: 500; }
+  .v-d-who { color: #37352F; font-weight: 600; }
+  .v-d-tag {
+    font-size: 12px; padding: 2px 8px; border-radius: 3px;
+    display: inline-block; font-weight: 500;
+  }
+  .v-d-tag.p1 { background: #FBE4E4; color: #9E4E4B; }
+  .v-d-tag.p2 { background: #FADEC9; color: #97522B; }
+  .v-d-tag.p3 { background: #F8F0DC; color: #A08A48; }
+  .v-d-tag.p4 { background: #E2E2E0; color: #5E5C57; }
+  .v-d-due { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #787774; }
+  .v-d-cat {
+    font-size: 11.5px; padding: 2px 8px; border-radius: 3px;
+    background: #E2E2E0; color: #5E5C57; display: inline-block;
+  }
+  .v-d-cat.line { background: #DAE6F1; color: #305A8E; }
+  .v-d-cat.zoom { background: #E0E9DA; color: #4E6F3F; }
+  .v-d-cat.proposal { background: #F3E1F2; color: #8B3D82; }
 
-  .task-meta { display: flex; align-items: center; gap: 12px; }
-  .task-deadline {
-    font-family: 'Manrope', sans-serif; font-size: 11.5px;
-    color: var(--slate-500); font-weight: 600;
-    letter-spacing: 0.02em; white-space: nowrap;
+  /* ─────────────────────────────────────
+     案 E · Sunsama 風 (時間 boxing · 上部 time bar · card)
+     ───────────────────────────────────── */
+  .v-e { background: #FAFAF7; padding: 32px 24px; min-height: 100vh; }
+  .v-e-inner { max-width: 720px; margin: 0 auto; }
+  .v-e-hd { margin-bottom: 22px; }
+  .v-e-hd h1 {
+    font-size: 22px; font-weight: 700; color: #2A3547; margin: 0 0 4px;
   }
-  .task-row[data-priority="p1"] .task-deadline { color: var(--red); font-weight: 700; }
-  .task-row[data-priority="p2"] .task-deadline { color: var(--amber); font-weight: 700; }
-
-  /* Priority flag (Todoist inspired) */
-  .task-flag { width: 12px; height: 12px; flex-shrink: 0; }
-  .task-flag svg { width: 100%; height: 100%; display: block; }
-  .task-row[data-priority="p1"] .task-flag svg { fill: var(--red); stroke: var(--red); }
-  .task-row[data-priority="p2"] .task-flag svg { fill: var(--amber); stroke: var(--amber); }
-  .task-row[data-priority="p3"] .task-flag svg { fill: var(--slate-400); stroke: var(--slate-400); }
-  .task-row:not([data-priority]) .task-flag svg,
-  .task-row[data-priority=""] .task-flag svg { fill: none; stroke: var(--slate-200); }
-
-  .task-action {
-    background: var(--white); color: var(--ink);
-    border: 1px solid var(--slate-300);
-    padding: 5px 10px; border-radius: 6px;
-    font-family: inherit; font-size: 11.5px; font-weight: 700;
-    cursor: pointer;
-    opacity: 0; transform: translateX(3px);
-    transition: opacity 180ms, transform 180ms, background 150ms, border-color 150ms, color 150ms;
+  .v-e-hd .sub { font-size: 13px; color: #7B8194; margin: 0; }
+  .v-e-timebar {
+    display: flex; align-items: stretch; gap: 4px;
+    padding: 12px 0; margin-bottom: 20px;
+    border-bottom: 1px solid #E5E4DC;
+  }
+  .v-e-hour {
+    flex: 1; text-align: center;
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #A0A5B3;
+  }
+  .v-e-hour-bar {
+    height: 6px; background: #F0EDE4; border-radius: 3px; margin-bottom: 5px;
+  }
+  .v-e-hour.busy .v-e-hour-bar { background: #7C6BAA; }
+  .v-e-hour.now .v-e-hour-bar { background: #E8B04B; }
+  .v-e-hour.free .v-e-hour-bar { background: #C8D3B0; }
+  .v-e-summary {
+    display: flex; gap: 22px; padding: 10px 0 20px;
+    font-size: 12px; color: #7B8194;
+  }
+  .v-e-summary b { color: #2A3547; margin-right: 3px; }
+  .v-e-group { margin-bottom: 18px; }
+  .v-e-group h3 {
+    font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: #7B8194; font-weight: 700; margin: 0 0 10px;
+  }
+  .v-e-card {
+    background: #fff; border: 1px solid #E5E4DC; border-radius: 10px;
+    padding: 12px 14px; margin-bottom: 8px;
+    display: grid; grid-template-columns: 20px 1fr auto;
+    gap: 12px; align-items: center; cursor: pointer;
+    transition: box-shadow 150ms, transform 150ms;
+  }
+  .v-e-card:hover { box-shadow: 0 4px 14px rgba(42,53,71,0.08); transform: translateY(-1px); }
+  .v-e-card.done { opacity: 0.45; }
+  .v-e-check {
+    width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid #C8D3B0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .v-e-check.on { background: #7C6BAA; border-color: #7C6BAA; }
+  .v-e-check svg { width: 10px; height: 10px; color: #fff; opacity: 0; }
+  .v-e-check.on svg { opacity: 1; }
+  .v-e-body { min-width: 0; }
+  .v-e-title { font-size: 13.5px; color: #2A3547; font-weight: 600; line-height: 1.35; }
+  .v-e-title .who { font-weight: 700; color: #2A3547; }
+  .v-e-title .who::after { content: '様 · '; color: #A0A5B3; font-weight: 400; margin: 0 3px; }
+  .v-e-note { font-size: 11.5px; color: #7B8194; margin: 2px 0 0; }
+  .v-e-slot {
+    background: #F0EDE4; color: #6B5F8F; font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 4px;
     white-space: nowrap;
   }
-  .task-action:hover { background: var(--indigo); color: var(--white); border-color: var(--indigo); }
-  .task-row[data-priority="p1"] .task-action {
-    background: var(--indigo); color: var(--white); border-color: var(--indigo);
-    opacity: 1; transform: translateX(0);
-  }
-  .task-row[data-priority="p1"] .task-action:hover { background: var(--indigo-hover); border-color: var(--indigo-hover); }
+  .v-e-card.urgent .v-e-slot { background: #E8B04B; color: #fff; }
 
-  /* Expanded detail (Things 3 tap-to-expand) */
-  .task-expand {
-    grid-column: 1 / -1;
-    display: none;
-    padding: 10px 0 4px 44px;
-    margin-top: 6px;
-    border-top: 1px dashed var(--slate-200);
-  }
-  .task-expand-meta {
-    display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 8px 22px;
-    font-family: 'Manrope', sans-serif; font-size: 11.5px;
-    color: var(--slate-500); letter-spacing: 0.02em;
-    line-height: 1.55;
-  }
-  .task-expand-meta div { display: flex; gap: 6px; align-items: baseline; }
-  .task-expand-meta b {
-    color: var(--slate-400); font-weight: 700; font-size: 10.5px;
-    text-transform: uppercase; letter-spacing: 0.08em;
-    min-width: 68px;
-  }
-  .task-expand-meta span { color: var(--ink); font-family: 'Noto Sans JP', sans-serif; }
-  .task-expand-actions {
-    display: flex; gap: 8px; margin-top: 10px;
-  }
-  .task-expand-actions button {
-    background: var(--white); color: var(--slate-500);
-    border: 1px solid var(--slate-200);
-    padding: 5px 10px; border-radius: 6px;
-    font-family: inherit; font-size: 11px; font-weight: 600;
-    cursor: pointer;
-    transition: color 150ms, border-color 150ms;
-  }
-  .task-expand-actions button:hover { color: var(--indigo); border-color: var(--indigo); }
-
-  .empty { text-align: center; padding: 56px 20px 40px; }
-  .empty-emoji { font-size: 44px; margin-bottom: 12px; }
-  .empty-title { font-size: 17px; font-weight: 800; color: var(--ink); margin: 0 0 6px; }
-  .empty-sub { font-size: 12.5px; color: var(--slate-500); margin: 0 0 20px; }
-  .empty-cta {
-    display: inline-flex; align-items: center; gap: 6px;
-    background: var(--indigo); color: var(--white); border: none;
-    padding: 9px 18px; border-radius: 8px;
-    font-family: inherit; font-size: 12.5px; font-weight: 800; cursor: pointer;
-  }
-  .empty-cta + .empty-cta { background: var(--white); color: var(--ink); border: 1px solid var(--slate-300); margin-left: 8px; }
-
-  .proto-bar {
-    position: fixed; top: 12px; right: 12px;
-    background: var(--ink); color: var(--white);
-    padding: 7px 12px; border-radius: 6px;
-    font-size: 10.5px; letter-spacing: 0.08em;
-    z-index: 100;
-    display: flex; gap: 8px; align-items: center;
-    font-family: 'Manrope', sans-serif; font-weight: 600;
-  }
-  .proto-bar-btn {
-    background: transparent; color: var(--slate-300);
-    border: 1px solid var(--slate-500);
-    padding: 3px 8px; border-radius: 4px;
-    font-family: inherit; font-size: 10px; cursor: pointer;
-    transition: background 150ms, color 150ms;
-  }
-  .proto-bar-btn:hover { background: var(--white); color: var(--ink); border-color: var(--white); }
-
+  /* mobile */
   @media (max-width: 640px) {
-    .frame { padding: 24px 12px 100px; }
-    .card-head { padding: 16px 16px 12px; }
-    .quick-add { padding: 10px 16px; }
-    .section { padding: 4px 16px; }
-    .task-row { grid-template-columns: 20px 28px 1fr auto 12px; gap: 10px; padding: 10px 2px; }
-    .task-row .task-action { display: none; }
-    .task-who { font-size: 13px; }
-    .task-desc { font-size: 11.5px; }
-    .quick-add-hint { display: none; }
-    .section-desc { display: none; }
-    .task-expand { padding-left: 30px; }
+    .v-a { padding: 24px 12px; }
+    .v-b { padding: 32px 20px; }
+    .v-c { padding: 20px 10px; }
+    .v-c-thead, .v-c-row { grid-template-columns: 20px 40px 90px 1fr 60px; gap: 8px; padding: 8px; }
+    .v-c-thead > :nth-child(6), .v-c-row > :nth-child(6) { display: none; }
+    .v-d { padding: 24px 14px; }
+    .v-d-th, .v-d-td { padding: 6px 8px; font-size: 12px; }
+    .v-e { padding: 24px 14px; }
+    .v-e-hour { font-size: 8px; }
   }
 </style>
 </head>
 <body>
 
-<div class="proto-bar">
-  <span>PROTOTYPE v3 · Todoist+Things3+Linear 抽出</span>
-  <button class="proto-bar-btn" id="btn-empty">空</button>
-  <button class="proto-bar-btn" id="btn-full">サンプル</button>
+<div class="switcher">
+  <span class="switcher-label">TODO UI 5案</span>
+  <button class="switcher-btn is-active" data-v="a">A · Todoist<small>P1-P4 flag · quick add</small></button>
+  <button class="switcher-btn" data-v="b">B · Things 3<small>白 · 極 minimal · expand</small></button>
+  <button class="switcher-btn" data-v="c">C · Linear<small>dark · monospace · triage</small></button>
+  <button class="switcher-btn" data-v="d">D · Notion<small>table · property カラム</small></button>
+  <button class="switcher-btn" data-v="e">E · Sunsama<small>時間 boxing · 儀式</small></button>
 </div>
 
-<div class="frame" id="frame"></div>
+<div class="stage">
+
+  <!-- 案 A · Todoist 風 -->
+  <section class="variant v-a is-active" data-vv="a">
+    <div class="v-a-inner">
+      <div class="v-a-hd">
+        <h1><span class="icon">📝</span>今日 の TODO</h1>
+        <div class="count"><b>7</b>件 未 対応</div>
+      </div>
+      <div class="v-a-quick">
+        <span class="v-a-quick-plus">+</span>
+        <input type="text" placeholder="task を 追加 · 例 「@吉田 · 提案 書 続き · 金 · P2」">
+        <span class="hint"><code>@客</code><code>期限</code><code>P1</code></span>
+      </div>
+      <div id="v-a-body"></div>
+    </div>
+  </section>
+
+  <!-- 案 B · Things 3 風 -->
+  <section class="variant v-b" data-vv="b">
+    <div class="v-b-inner">
+      <h1>今日</h1>
+      <p class="sub">7 件 の 対応 · 2 件 完了 済</p>
+      <div id="v-b-body"></div>
+    </div>
+  </section>
+
+  <!-- 案 C · Linear 風 -->
+  <section class="variant v-c" data-vv="c">
+    <div class="v-c-inner">
+      <div class="v-c-hd">
+        <h1>FP-TODO · Today</h1>
+        <div class="meta">7 open · 2 done · 41 total</div>
+      </div>
+      <div class="v-c-toolbar">
+        <span class="kbd">C</span> create ·
+        <span class="kbd">P</span> priority ·
+        <span class="kbd">F</span> filter ·
+        <span class="kbd">/</span> search
+      </div>
+      <div class="v-c-thead">
+        <div></div><div>ID</div><div>PRIORITY</div><div>TITLE</div><div>DUE</div><div>TAG</div>
+      </div>
+      <div id="v-c-body"></div>
+    </div>
+  </section>
+
+  <!-- 案 D · Notion 風 -->
+  <section class="variant v-d" data-vv="d">
+    <div class="v-d-inner">
+      <div class="v-d-hd">
+        <h1>📋 今日 の TODO</h1>
+        <p class="sub">FP 対応 タスク · 7 未 対応 / 2 完了 済</p>
+      </div>
+      <div class="v-d-viewbar">
+        <span class="v-d-view active">≡ Table</span>
+        <span class="v-d-view">📅 Calendar</span>
+        <span class="v-d-view">📊 Board</span>
+        <span class="v-d-view">＋ Filter</span>
+      </div>
+      <div class="v-d-table" id="v-d-body"></div>
+    </div>
+  </section>
+
+  <!-- 案 E · Sunsama 風 -->
+  <section class="variant v-e" data-vv="e">
+    <div class="v-e-inner">
+      <div class="v-e-hd">
+        <h1>本日 の 業務 プラン</h1>
+        <p class="sub">9:00-19:00 · 空き 3.5h · 予定 6.5h</p>
+      </div>
+      <div class="v-e-timebar" id="v-e-timebar"></div>
+      <div class="v-e-summary">
+        <span><b>7</b>件 対応 予定</span>
+        <span><b>3.5h</b> 空き</span>
+        <span><b>4</b>件 期限 今日</span>
+      </div>
+      <div id="v-e-body"></div>
+    </div>
+  </section>
+
+</div>
 
 <script>
-  const CHECK_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
-  const FLAG_SVG = `<svg viewBox="0 0 12 12" stroke-width="1.2"><path d="M2 1 L2 11 M2 1 L10 1 L8 4 L10 7 L2 7 Z"/></svg>`;
+  const CHECK = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+  const FLAG = `<svg viewBox="0 0 12 12"><path d="M2 1 L2 11 M2 1 L10 1 L8 4 L10 7 L2 7 Z" stroke-width="1"/></svg>`;
 
-  const DATA = {
-    total: 41,
-    active: 7,
-    sections: [
-      {
-        tone: 'alarm', title: '今日 中 に 対応', desc: '期限 到来 · 面談 直前', open: true,
-        items: [
-          { p: 'p1', who: '吉田 恭聡', desc: 'LINE 質問 に 返信', deadline: '今日 中', action: '💬 返信',
-            expand: { '客 の 発言': '「NISA と iDeCo · どちら 優先?」', '経過': '6 時間 未 応答', '最終 接触': '昨日 20:32' } },
-          { p: 'p1', who: '田中 花子', desc: 'Zoom URL 発行 (面談 18:00)', deadline: '15:00 前', action: '🎥 発行',
-            expand: { '候補日': '本日 18:00-19:00 · 客 選択 済', '期限': '15:00 まで に 発行', 'アンケート': '回答 済' } },
-        ],
-      },
-      {
-        tone: 'warn', title: '今週 中 に 対応', desc: '週内 決着', open: true,
-        items: [
-          { p: 'p2', who: '佐藤 一郎', desc: '候補日 3 送付', deadline: '木', action: '📅 候補日 送信',
-            expand: { '状況': '初回 面談 依頼', 'アンケート': '回答 済 (2 日 前)', '客 情報': '30 代 · 夫婦 · 世帯 年収 800 万' } },
-          { p: 'p2', who: '鈴木 誠', desc: 'iDeCo 提案 書 完成', deadline: '金', action: '📋 続き',
-            expand: { '出典': '前回 面談 (2 週間 前) の 議事録', '前提': '掛金 32,000 円', '進捗': '構成 半分 · グラフ 未' } },
-          { p: 'p3', who: '山田 太郎', desc: '面談 後 追加 質問', deadline: '木', action: '💬 返信',
-            expand: { '客 の 発言': '「配偶者 の 保険 も 一緒 に 相談 したい」', '経過': '3 日 前 · 未 応答' } },
-        ],
-      },
-      {
-        tone: 'neutral', title: '今月 の 予定', desc: '見守り · 布石', open: false,
-        items: [
-          { p: 'p3', who: '高橋 恵子', desc: '追加 提案 検討', deadline: '今月 中', action: '📋 カルテ',
-            expand: { '経過': '前回 面談 から 45 日', 'メモ': '学資 保険 追加 の 可能性 · お子様 誕生 予定' } },
-          { p: 'p3', who: '中村 誠', desc: '更新 前 の 確認', deadline: '今月 末', action: '📋 カルテ',
-            expand: { '状況': '保険 満期 6 週間 前', 'メモ': '見直し 提案 の 種' } },
-        ],
-      },
-      {
-        tone: 'done', title: '完了 済 (今日)', desc: '', open: false,
-        items: [
-          { p: '', who: '安井 康介', desc: '議事録 送付 済', deadline: '09:22', done: true },
-          { p: '', who: '池田 弥生', desc: '提案 書 送付 済', deadline: '11:04', done: true },
-        ],
-      },
-    ],
-  };
+  const DATA = [
+    { p: 'p1', who: '吉田 恭聡', desc: 'LINE 質問 に 返信', due: '今日 中', due_s: '15h', tag: 'LINE', slot: '10:00' },
+    { p: 'p1', who: '田中 花子', desc: 'Zoom URL 発行 (面談 18:00)', due: '15:00', due_s: '3h', tag: 'Zoom', slot: '14:00' },
+    { p: 'p2', who: '佐藤 一郎', desc: '候補日 3 送付', due: '木', due_s: '2d', tag: 'Zoom', slot: '11:00' },
+    { p: 'p2', who: '鈴木 誠', desc: 'iDeCo 提案 書 完成', due: '金', due_s: '3d', tag: '提案', slot: '13:00' },
+    { p: 'p3', who: '山田 太郎', desc: '面談 後 追加 質問', due: '木', due_s: '2d', tag: 'LINE', slot: '16:00' },
+    { p: 'p3', who: '高橋 恵子', desc: '追加 提案 検討', due: '今月 中', due_s: '15d', tag: '提案', slot: '' },
+    { p: 'p3', who: '中村 誠', desc: '更新 前 の 確認', due: '今月 末', due_s: '20d', tag: '検討', slot: '' },
+    { p: 'p4', who: '安井 康介', desc: '議事録 送付 済', due: '09:22', due_s: 'done', tag: '完了', done: true, slot: '09:22' },
+    { p: 'p4', who: '池田 弥生', desc: '提案 書 送付 済', due: '11:04', due_s: 'done', tag: '完了', done: true, slot: '11:04' },
+  ];
+  const initial = n => n.replace(/\s+/g,'').charAt(0);
 
-  const initial = (n) => n.replace(/\s+/g, '').charAt(0);
-
-  const renderRow = (t) => `
-    <div class="task-row ${t.done ? 'is-done' : ''}" data-priority="${t.p || ''}" data-row>
-      <div class="task-check ${t.done ? 'is-checked' : ''}" data-check>${CHECK_SVG}</div>
-      <div class="task-avatar">${initial(t.who)}</div>
-      <div class="task-body">
-        <div class="task-who">${t.who} <span class="sama">様</span></div>
-        <div class="task-desc">${t.desc}</div>
-      </div>
-      <div class="task-meta">
-        <div class="task-deadline">${t.deadline}</div>
-        ${t.action ? `<button class="task-action" data-action>${t.action}</button>` : ''}
-      </div>
-      <div class="task-flag" title="優先度 ${t.p || 'なし'}">${FLAG_SVG}</div>
-      ${t.expand ? `<div class="task-expand">
-        <div class="task-expand-meta">
-          ${Object.entries(t.expand).map(([k,v]) => `<div><b>${k}</b><span>${v}</span></div>`).join('')}
+  // 案 A
+  (function renderA() {
+    const sections = [
+      { tone: 'alarm', title: '今日 中 に 対応', items: DATA.filter(t => t.p === 'p1' && !t.done) },
+      { tone: 'warn', title: '今週 中 に 対応', items: DATA.filter(t => (t.p === 'p2' || t.p === 'p3') && !t.done && t.due_s.includes('d')) },
+      { tone: 'neutral', title: '今月 の 予定', items: DATA.filter(t => !t.done && !t.due_s.includes('d') && t.p === 'p3') },
+      { tone: 'done', title: '完了 済', items: DATA.filter(t => t.done) },
+    ];
+    const rowA = t => `
+      <div class="v-a-row" data-p="${t.p}" data-row-a>
+        <div class="v-a-check ${t.done?'on':''}" data-check>${CHECK}</div>
+        <div class="v-a-title"><span class="who">${t.who}</span>${t.desc}</div>
+        <div class="v-a-due">${t.due}</div>
+        <div class="v-a-flag">${FLAG}</div>
+      </div>`;
+    document.getElementById('v-a-body').innerHTML = sections.map(s => `
+      <div class="v-a-section is-open is-${s.tone}">
+        <div class="v-a-sec-hd" data-toggle>
+          <span class="arrow">▶</span>
+          <span class="title">${s.title}</span>
+          <span class="cnt">${s.items.length}</span>
         </div>
-        <div class="task-expand-actions">
-          <button>📋 カルテ を 開く</button>
-          <button>📅 期限 変更</button>
-          <button>🚩 優先度 変更</button>
-          <button>🗑 削除</button>
+        <div class="v-a-body">${s.items.map(rowA).join('')}</div>
+      </div>
+    `).join('');
+  })();
+
+  // 案 B
+  (function renderB() {
+    const groups = [
+      { tone: 'alarm', title: '今日 中', items: DATA.filter(t => t.p === 'p1' && !t.done) },
+      { tone: 'normal', title: '今週', items: DATA.filter(t => (t.p === 'p2' || t.p === 'p3') && !t.done && t.due_s.includes('d')) },
+      { tone: 'normal', title: '今月', items: DATA.filter(t => !t.done && !t.due_s.includes('d') && t.p === 'p3') },
+      { tone: 'normal', title: 'Logbook', items: DATA.filter(t => t.done) },
+    ];
+    const rowB = t => `
+      <div class="v-b-row ${t.done?'done':''}" data-p="${t.p}" data-row-b>
+        <div class="v-b-check ${t.done?'on':''}" data-check>${CHECK}</div>
+        <div class="v-b-body">
+          <div class="v-b-title"><span class="who">${t.who}</span>${t.desc}</div>
+          <p class="v-b-note">${t.tag ? t.tag + ' · ' : ''}${t.slot ? '目安 ' + t.slot : ''}</p>
+          <div class="v-b-expand">
+            <div class="v-b-expand-item"><b>期限</b>${t.due}</div>
+            <div class="v-b-expand-item"><b>タグ</b>${t.tag}</div>
+            <div class="v-b-expand-item"><b>目安 時間</b>${t.slot || '未 設定'}</div>
+          </div>
         </div>
-      </div>` : ''}
-    </div>`;
+        <div class="v-b-due">${t.due}</div>
+      </div>`;
+    document.getElementById('v-b-body').innerHTML = groups.map(g => `
+      <div class="v-b-group ${g.tone}">
+        <div class="v-b-group-hd"><span class="dot"></span>${g.title} · ${g.items.length}</div>
+        ${g.items.map(rowB).join('')}
+      </div>
+    `).join('');
+  })();
 
-  const renderSection = (s) => `
-    <div class="section ${s.open ? 'is-open' : ''} is-${s.tone}">
-      <div class="section-head" data-section-toggle>
-        <span class="section-arrow">▶</span>
-        <span class="section-title">${s.title}</span>
-        <span class="section-count">${s.items.length}</span>
-        ${s.desc ? `<span class="section-desc">· ${s.desc}</span>` : ''}
-      </div>
-      <div class="section-body">${s.items.map(renderRow).join('')}</div>
-    </div>`;
+  // 案 C
+  (function renderC() {
+    const rowC = (t, i) => `
+      <div class="v-c-row ${t.done?'done':''}" data-p="${t.p}" data-row-c>
+        <div class="v-c-check ${t.done?'on':''}" data-check>${CHECK}</div>
+        <div class="v-c-id">FP-${String(101+i).padStart(3,'0')}</div>
+        <div class="v-c-pri"><span class="pill"></span>${(t.p||'p4').toUpperCase()}</div>
+        <div class="v-c-title"><span class="who">${t.who} 様</span> · ${t.desc}</div>
+        <div class="v-c-due">${t.due}</div>
+        <div><span class="v-c-tag">${t.tag}</span></div>
+      </div>`;
+    document.getElementById('v-c-body').innerHTML = DATA.map(rowC).join('');
+  })();
 
-  const renderFull = () => `
-    <div class="card">
-      <div class="card-head">
-        <h2 class="card-title"><span class="card-title-icon">📝</span>今日 の TODO</h2>
-        <div class="card-count"><b>${DATA.active}</b>件 未 対応</div>
+  // 案 D
+  (function renderD() {
+    const rowD = (t, i) => `
+      <div class="v-d-tr ${t.done?'done':''}" data-row-d>
+        <div class="v-d-td"><div class="v-d-check ${t.done?'on':''}" data-check>${CHECK}</div></div>
+        <div class="v-d-td v-d-who">${t.who}</div>
+        <div class="v-d-td v-d-title">${t.desc}</div>
+        <div class="v-d-td"><span class="v-d-tag ${t.p||'p4'}">${(t.p||'p4').toUpperCase()}</span></div>
+        <div class="v-d-td v-d-due">${t.due}</div>
+        <div class="v-d-td"><span class="v-d-cat ${t.tag === 'LINE' ? 'line' : t.tag === 'Zoom' ? 'zoom' : t.tag === '提案' ? 'proposal' : ''}">${t.tag}</span></div>
+      </div>`;
+    document.getElementById('v-d-body').innerHTML = `
+      <div class="v-d-thead">
+        <div class="v-d-tr">
+          <div class="v-d-th" style="width:36px;"></div>
+          <div class="v-d-th">👤 客</div>
+          <div class="v-d-th">📝 タスク</div>
+          <div class="v-d-th">🚩 優先度</div>
+          <div class="v-d-th">📅 期限</div>
+          <div class="v-d-th">🏷 分類</div>
+        </div>
       </div>
-      <div class="quick-add">
-        <span class="quick-add-plus">+</span>
-        <input class="quick-add-input" type="text" placeholder="task を 追加 · 例 「@吉田 · 提案 書 続き · 金 · P2」">
-        <span class="quick-add-hint">
-          <code>@客</code><code>期限</code><code>P1</code>
-        </span>
-      </div>
-      ${DATA.sections.map(renderSection).join('')}
-    </div>`;
+      <div class="v-d-tbody">${DATA.map(rowD).join('')}</div>`;
+  })();
 
-  const renderEmpty = () => `
-    <div class="card">
-      <div class="card-head">
-        <h2 class="card-title"><span class="card-title-icon">📝</span>今日 の TODO</h2>
-        <div class="card-count"><b>0</b>件 未 対応</div>
+  // 案 E
+  (function renderE() {
+    // time bar 9:00 - 19:00
+    const bar = [];
+    for (let h = 9; h < 19; h++) {
+      const label = h + ':00';
+      const status = [10, 11, 14].includes(h) ? 'busy' : h === 13 ? 'now' : 'free';
+      bar.push(`<div class="v-e-hour ${status}"><div class="v-e-hour-bar"></div>${label}</div>`);
+    }
+    document.getElementById('v-e-timebar').innerHTML = bar.join('');
+    const groups = [
+      { title: '🌅 午前 (急ぎ)', items: DATA.filter(t => t.slot && parseInt(t.slot) < 12 && !t.done) },
+      { title: '☀ 午後', items: DATA.filter(t => t.slot && parseInt(t.slot) >= 12 && parseInt(t.slot) < 18 && !t.done) },
+      { title: '🌙 未 割振', items: DATA.filter(t => !t.slot && !t.done) },
+      { title: '✓ 完了 済', items: DATA.filter(t => t.done) },
+    ];
+    const rowE = t => `
+      <div class="v-e-card ${t.done?'done':''} ${t.p==='p1'?'urgent':''}" data-row-e>
+        <div class="v-e-check ${t.done?'on':''}" data-check>${CHECK}</div>
+        <div class="v-e-body">
+          <div class="v-e-title"><span class="who">${t.who}</span>${t.desc}</div>
+          <p class="v-e-note">${t.tag} · 期限 ${t.due}</p>
+        </div>
+        <div class="v-e-slot">${t.slot || '—'}</div>
+      </div>`;
+    document.getElementById('v-e-body').innerHTML = groups.map(g => `
+      <div class="v-e-group">
+        <h3>${g.title} · ${g.items.length}</h3>
+        ${g.items.map(rowE).join('')}
       </div>
-      <div class="quick-add">
-        <span class="quick-add-plus">+</span>
-        <input class="quick-add-input" type="text" placeholder="task を 追加 · 例 「@吉田 · 提案 書 続き · 金 · P2」">
-        <span class="quick-add-hint"><code>@客</code><code>期限</code><code>P1</code></span>
-      </div>
-      <div class="empty">
-        <div class="empty-emoji">✨</div>
-        <p class="empty-title">今日 は 急ぎ 対応 すべき方 は いません</p>
-        <p class="empty-sub">全 ${DATA.total} 名 と 直近 21 日 以内 に 接触 済 · 次 の 打ち手 を どうぞ</p>
-        <button class="empty-cta">🔔 ご無沙汰 フォロー</button>
-        <button class="empty-cta">👥 顧客 台帳</button>
-      </div>
-    </div>`;
+    `).join('');
+  })();
 
-  const frame = document.getElementById('frame');
-  const setState = (mode) => {
-    frame.innerHTML = mode === 'empty' ? renderEmpty() : renderFull();
-    frame.querySelectorAll('[data-section-toggle]').forEach(h => {
-      h.addEventListener('click', () => h.closest('.section').classList.toggle('is-open'));
+  // switcher
+  const btns = document.querySelectorAll('.switcher-btn');
+  const variants = document.querySelectorAll('.variant');
+  btns.forEach(b => b.addEventListener('click', () => {
+    const v = b.dataset.v;
+    btns.forEach(x => x.classList.toggle('is-active', x === b));
+    variants.forEach(x => x.classList.toggle('is-active', x.dataset.vv === v));
+    localStorage.setItem('todo-proto-v', v);
+  }));
+  const saved = localStorage.getItem('todo-proto-v');
+  if (saved) {
+    const b = document.querySelector(`.switcher-btn[data-v="${saved}"]`);
+    if (b) b.click();
+  }
+
+  // check toggle · row toggle (B tap expand)
+  document.querySelectorAll('[data-check]').forEach(el => {
+    el.addEventListener('click', e => {
+      e.stopPropagation();
+      el.classList.toggle('on');
+      const row = el.closest('[data-row-a],[data-row-b],[data-row-c],[data-row-d],[data-row-e]');
+      if (row) setTimeout(() => row.classList.toggle('done'), 200);
     });
-    frame.querySelectorAll('[data-row]').forEach(row => {
-      row.addEventListener('click', (e) => {
-        if (e.target.closest('[data-check]') || e.target.closest('[data-action]') || e.target.closest('.task-expand-actions')) return;
-        row.classList.toggle('is-expanded');
-      });
+  });
+  document.querySelectorAll('[data-toggle]').forEach(el => {
+    el.addEventListener('click', () => el.closest('.v-a-section').classList.toggle('is-open'));
+  });
+  document.querySelectorAll('[data-row-b]').forEach(row => {
+    row.addEventListener('click', e => {
+      if (e.target.closest('[data-check]')) return;
+      row.classList.toggle('is-expanded');
     });
-    frame.querySelectorAll('[data-check]').forEach(el => {
-      el.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const row = el.closest('.task-row');
-        const now = el.classList.toggle('is-checked');
-        if (now) setTimeout(() => row.classList.add('is-done'), 220);
-        else row.classList.remove('is-done');
-      });
-    });
-  };
-  document.getElementById('btn-empty').addEventListener('click', () => setState('empty'));
-  document.getElementById('btn-full').addEventListener('click', () => setState('full'));
-  setState('full');
+  });
 </script>
 </body>
 </html>
