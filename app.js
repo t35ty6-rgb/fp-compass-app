@@ -1585,6 +1585,43 @@
   // ============================
   // Google Calendar API helpers — 2026-08-06 owner「1-click sync」
   // ============================
+  // ★ 2026-08-12 owner「Cal から 直接 編集」対応 (B案): events.list / patch / delete helpers
+  async function gcalListEvents(accessToken, calendarId, timeMin, timeMax) {
+    const params = new URLSearchParams({
+      timeMin: timeMin.toISOString(),
+      timeMax: timeMax.toISOString(),
+      singleEvents: 'true',
+      orderBy: 'startTime',
+      maxResults: '50',
+    });
+    const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?${params}`;
+    const res = await fetch(url, { headers: { Authorization: 'Bearer ' + accessToken } });
+    if (!res.ok) throw new Error(`events.list ${res.status}: ${(await res.text()).slice(0,120)}`);
+    return (await res.json()).items || [];
+  }
+  async function gcalPatchEvent(accessToken, calendarId, eventId, patch) {
+    const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(eventId)}`;
+    const res = await fetch(url, {
+      method: 'PATCH',
+      headers: { Authorization: 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
+      body: JSON.stringify(patch),
+    });
+    if (!res.ok) throw new Error(`events.patch ${res.status}: ${(await res.text()).slice(0,120)}`);
+    return await res.json();
+  }
+  async function gcalDeleteEvent(accessToken, calendarId, eventId) {
+    const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(eventId)}`;
+    const res = await fetch(url, {
+      method: 'DELETE',
+      headers: { Authorization: 'Bearer ' + accessToken },
+    });
+    if (!res.ok && res.status !== 410 && res.status !== 404) throw new Error(`events.delete ${res.status}`);
+    return true;
+  }
+  window.__fpGcalListEvents = gcalListEvents;
+  window.__fpGcalPatchEvent = gcalPatchEvent;
+  window.__fpGcalDeleteEvent = gcalDeleteEvent;
+
   async function gcalInsertEvent(accessToken, event) {
     // ★ 2026-08-07 owner「FP Compass タグ」対応: extendedProperties.private.source='fp-compass' + colorId='9' (blueberry navy)
     // Google Cal 側 で FP Compass 由来 か 判別 可能 + owner の 他 event と 色 差別化
@@ -3102,6 +3139,198 @@
       }
       frame.innerHTML = `<iframe src="${escapeHtml(url)}" data-cal-url="${escapeHtml(url)}" style="border:0;width:100%;height:680px;border-radius:8px;" title="Google Calendar embed" loading="lazy"></iframe>
         <p style="margin:8px 0 0;font-size:11.5px;color:#6b7280;">${escapeHtml(ids.length)} calendar 表示 中${allCals ? ` (全 ${allCals.length} 中)` : ''}</p>`;
+      // ★ 2026-08-12 owner「Cal から 直接 編集」対応 (B案): embed の 下 に FP面談 予定 の 編集 可能 リスト
+      renderFpCalEditableList(wrap, allCals).catch(e => console.warn('[editable list]', e));
+    }
+  }
+
+  // ★ 2026-08-12 owner GO (B案): 「近日 の FP 面談 予定 (編集 可能)」 セクション
+  //   embed 表示 は そのまま · 別 tab 開かず に FP Compass 内 で 日時 · タイトル · メモ · 削除 が 完結
+  async function renderFpCalEditableList(wrap, allCals) {
+    let existing = wrap.querySelector('#v3h-fpcal-edit-section');
+    if (!existing) {
+      existing = document.createElement('div');
+      existing.id = 'v3h-fpcal-edit-section';
+      existing.style.cssText = 'margin-top:16px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:14px 18px;';
+      wrap.appendChild(existing);
+    }
+    // FP 面談 calendar を 見つける
+    const fpCal = (allCals || []).find(c => /FP面談|FPコンパス|FP Compass/i.test(c.summary || ''));
+    if (!fpCal) {
+      existing.innerHTML = '<p style="font-size:12px;color:#6b7280;margin:0;">「FP面談」 calendar が 見 つかり ません · 初回 予約 確定 で 自動 作成 されます</p>';
+      return;
+    }
+    const token = await ensureGcalToken();
+    if (!token) { existing.innerHTML = '<p style="font-size:12px;color:#6b7280;margin:0;">gcal 未 連携</p>'; return; }
+    let events;
+    try {
+      const from = new Date();
+      const to = new Date(Date.now() + 60 * 86400000);
+      events = await gcalListEvents(token, fpCal.id, from, to);
+    } catch (e) {
+      existing.innerHTML = `<p style="font-size:12px;color:#c53030;margin:0;">event 取得 失敗: ${escapeHtml(e.message)}</p>`;
+      return;
+    }
+    if (!events.length) {
+      existing.innerHTML = `<div style="font-size:12px;font-weight:800;color:#475569;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:6px;">📅 近日 の FP 面談 予定 (編集 可能)</div>
+        <p style="font-size:13px;color:#6b7280;margin:0;">今後 60 日 の 予定 なし</p>`;
+      return;
+    }
+    existing.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <div style="font-size:12px;font-weight:800;color:#475569;letter-spacing:0.06em;text-transform:uppercase;">📅 近日 の FP 面談 予定 · <span style="color:#0b5d9e;">別 tab 開かず に 編集</span></div>
+        <span style="font-size:10.5px;color:#94a3b8;">${events.length} 件 (今後 60 日)</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;">${events.map(ev => renderFpEventRow(ev, fpCal.id)).join('')}</div>
+    `;
+    // wire edit / delete
+    existing.querySelectorAll('[data-fp-ev-edit]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const eventId = btn.dataset.fpEvEdit;
+        const ev = events.find(e => e.id === eventId);
+        if (ev) openFpCalEditModal(ev, fpCal.id, () => { wrap.dataset.state = ''; setTimeout(() => renderV3GcalEmbed(null, null, new Date()), 200); });
+      });
+    });
+    existing.querySelectorAll('[data-fp-ev-del]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const eventId = btn.dataset.fpEvDel;
+        const ev = events.find(e => e.id === eventId);
+        const label = ev ? (ev.summary || '(無題)') + ' · ' + (ev.start?.dateTime || ev.start?.date) : eventId;
+        if (!confirm(`本当 に 削除?\n\n${label}\n\n※ Google Cal · Firestore 両方 から 消えます (元 に 戻せません)`)) return;
+        btn.disabled = true; btn.textContent = '削除 中…';
+        try {
+          const tk = await ensureGcalToken();
+          await gcalDeleteEvent(tk, fpCal.id, eventId);
+          // Firestore 側 の customer doc 探して gcalEventId が 一致 する なら クリア (best-effort)
+          try { await clearGcalEventFromFirestore(eventId); } catch(_) {}
+          alert('✅ 削除 済');
+          wrap.dataset.state = ''; setTimeout(() => renderV3GcalEmbed(null, null, new Date()), 200);
+        } catch (e) {
+          alert('❌ 削除 失敗: ' + (e.message || e));
+          btn.disabled = false; btn.textContent = '🗑 削除';
+        }
+      });
+    });
+  }
+  function renderFpEventRow(ev, calId) {
+    const start = ev.start?.dateTime || ev.start?.date || '';
+    const startDt = start ? new Date(start) : null;
+    const dateLabel = startDt ? startDt.toLocaleDateString('ja-JP', { month: '2-digit', day: '2-digit', weekday: 'short' }) : '?';
+    const timeLabel = startDt && ev.start?.dateTime ? startDt.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' }) : '終日';
+    return `
+      <div style="display:flex;align-items:center;gap:12px;background:#f8fafc;border:1px solid #e2e8f0;border-left:3px solid #3F51B5;border-radius:8px;padding:10px 14px;">
+        <div style="min-width:78px;font-family:'Inter',sans-serif;font-weight:800;color:#3F51B5;font-size:13px;line-height:1.3;">
+          ${escapeHtml(dateLabel)}<br><span style="font-size:11.5px;color:#64748b;font-weight:600;">${escapeHtml(timeLabel)}</span>
+        </div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:13.5px;font-weight:700;color:#0f172a;word-break:break-word;">${escapeHtml(ev.summary || '(無題)')}</div>
+          ${ev.location ? `<div style="font-size:11px;color:#6b7280;margin-top:2px;">📍 ${escapeHtml(ev.location)}</div>` : ''}
+        </div>
+        <div style="display:flex;gap:6px;">
+          <button data-fp-ev-edit="${escapeHtml(ev.id)}" style="background:#fff;border:1px solid #cbd5e1;color:#0f172a;font-size:11.5px;font-weight:800;padding:5px 11px;border-radius:6px;cursor:pointer;font-family:inherit;">✏ 編集</button>
+          <button data-fp-ev-del="${escapeHtml(ev.id)}" style="background:#fff;border:1px solid #fca5a5;color:#dc2626;font-size:11.5px;font-weight:800;padding:5px 11px;border-radius:6px;cursor:pointer;font-family:inherit;">🗑 削除</button>
+        </div>
+      </div>`;
+  }
+  function openFpCalEditModal(ev, calId, onDone) {
+    const existing = document.getElementById('fp-cal-edit-modal'); if (existing) existing.remove();
+    const startISO = ev.start?.dateTime || (ev.start?.date ? ev.start.date + 'T00:00:00+09:00' : new Date().toISOString());
+    const start = new Date(startISO);
+    const endISO = ev.end?.dateTime || (ev.end?.date ? ev.end.date + 'T00:00:00+09:00' : new Date(Date.now()+3600000).toISOString());
+    const end = new Date(endISO);
+    const pad = n => String(n).padStart(2, '0');
+    const dateVal = `${start.getFullYear()}-${pad(start.getMonth()+1)}-${pad(start.getDate())}`;
+    const timeVal = `${pad(start.getHours())}:${pad(start.getMinutes())}`;
+    const durationMin = Math.max(15, Math.round((end - start) / 60000));
+    const ov = document.createElement('div');
+    ov.id = 'fp-cal-edit-modal';
+    ov.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.55);z-index:99999;display:flex;align-items:center;justify-content:center;font-family:"Hiragino Sans",sans-serif;';
+    ov.innerHTML = `
+      <div style="background:#fff;border-radius:12px;max-width:480px;width:92%;padding:24px 28px;box-shadow:0 32px 80px rgba(0,0,0,0.4);">
+        <div style="font-size:11px;font-weight:800;color:#3F51B5;letter-spacing:0.14em;margin-bottom:6px;">EDIT EVENT · FP 面談</div>
+        <h2 style="font-size:19px;font-weight:800;color:#0f172a;margin:0 0 16px;font-family:'Noto Sans JP',serif;">予定 を 編集</h2>
+        <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:5px;">タイトル</label>
+        <input id="fp-cal-edit-title" type="text" value="${escapeHtml(ev.summary || '')}" style="width:100%;padding:9px 12px;border:1.5px solid #e5e7eb;border-radius:6px;font-size:14px;font-family:inherit;margin-bottom:12px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;">
+          <div>
+            <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:5px;">日付</label>
+            <input id="fp-cal-edit-date" type="date" value="${dateVal}" style="width:100%;padding:9px 10px;border:1.5px solid #e5e7eb;border-radius:6px;font-size:13px;font-family:inherit;">
+          </div>
+          <div>
+            <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:5px;">開始 時刻</label>
+            <input id="fp-cal-edit-time" type="time" value="${timeVal}" style="width:100%;padding:9px 10px;border:1.5px solid #e5e7eb;border-radius:6px;font-size:13px;font-family:inherit;">
+          </div>
+          <div>
+            <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:5px;">時間 (分)</label>
+            <input id="fp-cal-edit-dur" type="number" min="15" step="15" value="${durationMin}" style="width:100%;padding:9px 10px;border:1.5px solid #e5e7eb;border-radius:6px;font-size:13px;font-family:inherit;">
+          </div>
+        </div>
+        <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:5px;">場所</label>
+        <input id="fp-cal-edit-loc" type="text" value="${escapeHtml(ev.location || '')}" placeholder="Zoom URL / 住所 / メモ" style="width:100%;padding:9px 12px;border:1.5px solid #e5e7eb;border-radius:6px;font-size:14px;font-family:inherit;margin-bottom:12px;">
+        <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:5px;">メモ</label>
+        <textarea id="fp-cal-edit-desc" rows="3" style="width:100%;padding:9px 12px;border:1.5px solid #e5e7eb;border-radius:6px;font-size:13px;font-family:inherit;margin-bottom:18px;resize:vertical;">${escapeHtml(ev.description || '')}</textarea>
+        <div style="display:flex;gap:8px;justify-content:flex-end;">
+          <button id="fp-cal-edit-cancel" style="background:#fff;border:1.5px solid #cbd5e1;color:#475569;padding:10px 20px;border-radius:8px;font-size:13.5px;font-weight:800;cursor:pointer;font-family:inherit;">キャンセル</button>
+          <button id="fp-cal-edit-save" style="background:#3F51B5;color:#fff;border:none;padding:10px 22px;border-radius:8px;font-size:13.5px;font-weight:800;cursor:pointer;font-family:inherit;">💾 保存</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(ov);
+    document.getElementById('fp-cal-edit-cancel').onclick = () => ov.remove();
+    document.getElementById('fp-cal-edit-save').onclick = async () => {
+      const title = document.getElementById('fp-cal-edit-title').value.trim();
+      const dateStr = document.getElementById('fp-cal-edit-date').value;
+      const timeStr = document.getElementById('fp-cal-edit-time').value;
+      const dur = parseInt(document.getElementById('fp-cal-edit-dur').value, 10) || 60;
+      const loc = document.getElementById('fp-cal-edit-loc').value.trim();
+      const desc = document.getElementById('fp-cal-edit-desc').value.trim();
+      if (!title || !dateStr || !timeStr) { alert('タイトル · 日付 · 時刻 は 必須'); return; }
+      const startIso = `${dateStr}T${timeStr}:00+09:00`;
+      const s = new Date(startIso);
+      if (isNaN(s.getTime())) { alert('日付 or 時刻 の 書式 不正'); return; }
+      const e = new Date(s.getTime() + dur * 60000);
+      const btn = document.getElementById('fp-cal-edit-save');
+      btn.disabled = true; btn.textContent = '保存 中…';
+      try {
+        const token = await ensureGcalToken();
+        await gcalPatchEvent(token, calId, ev.id, {
+          summary: title,
+          location: loc,
+          description: desc,
+          start: { dateTime: s.toISOString(), timeZone: 'Asia/Tokyo' },
+          end:   { dateTime: e.toISOString(),   timeZone: 'Asia/Tokyo' },
+        });
+        // Firestore の confirmedSlot も 同期 更新 (best-effort)
+        try { await patchGcalTimeToFirestore(ev.id, `${dateStr} ${timeStr}`); } catch(_) {}
+        ov.remove();
+        if (typeof onDone === 'function') onDone();
+      } catch (err) {
+        alert('❌ 保存 失敗: ' + (err.message || err));
+        btn.disabled = false; btn.textContent = '💾 保存';
+      }
+    };
+  }
+  // Firestore best-effort: gcalEventId で customer doc 特定 → confirmedSlot と gcal* をクリア/更新
+  async function clearGcalEventFromFirestore(eventId) {
+    if (!window.__fp?.db || !window.__fp?.tenantId) return;
+    const { collection, query, where, getDocs, doc, updateDoc } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js');
+    const q = query(collection(window.__fp.db, 'tenants', window.__fp.tenantId, 'customers'), where('gcalEventId', '==', eventId));
+    const snap = await getDocs(q);
+    for (const d of snap.docs) {
+      await updateDoc(doc(window.__fp.db, 'tenants', window.__fp.tenantId, 'customers', d.id), {
+        gcalEventId: '',
+        gcalEventHtmlLink: '',
+        bookingCancelledAt: new Date(),
+      });
+    }
+  }
+  async function patchGcalTimeToFirestore(eventId, newSlot) {
+    if (!window.__fp?.db || !window.__fp?.tenantId) return;
+    const { collection, query, where, getDocs, doc, updateDoc } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js');
+    const q = query(collection(window.__fp.db, 'tenants', window.__fp.tenantId, 'customers'), where('gcalEventId', '==', eventId));
+    const snap = await getDocs(q);
+    for (const d of snap.docs) {
+      await updateDoc(doc(window.__fp.db, 'tenants', window.__fp.tenantId, 'customers', d.id), { confirmedSlot: newSlot });
     }
   }
 
