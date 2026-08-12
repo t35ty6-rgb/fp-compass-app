@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FP Compass · Command Deck (TODO prototype)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Inter+Tight:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0E1526;
+    --ink-2: #1F2A44;
+    --paper: #F7F5EF;
+    --paper-2: #EFEBE1;
+    --brass: #B08A4D;
+    --brass-soft: rgba(176,138,77,0.14);
+    --alarm: #C8302E;
+    --moss: #4A5D50;
+    --mist: #A5B2C2;
+    --line: #D8D2C4;
+    --hairline: rgba(14,21,38,0.08);
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Inter Tight', -apple-system, 'Hiragino Sans', sans-serif;
+    font-size: 14px;
+    line-height: 1.55;
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+  }
+  .frame {
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 56px 44px 120px;
+  }
+  /* ── header ── */
+  .deck-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    padding-bottom: 26px;
+    border-bottom: 1px solid var(--hairline);
+    margin-bottom: 44px;
+  }
+  .deck-head-left { }
+  .deck-eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    letter-spacing: 0.22em;
+    color: var(--brass);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .deck-title {
+    font-family: 'Marcellus', serif;
+    font-size: 40px;
+    line-height: 1;
+    color: var(--ink);
+    margin: 0;
+    letter-spacing: -0.005em;
+  }
+  .deck-sub {
+    margin: 12px 0 0;
+    color: var(--mist);
+    font-size: 13px;
+    letter-spacing: 0.02em;
+  }
+  .deck-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink);
+    text-align: right;
+    line-height: 1.7;
+    opacity: 0.72;
+  }
+  .deck-meta b { color: var(--brass); font-weight: 600; }
+  /* ── section ── */
+  .section {
+    margin-bottom: 44px;
+    position: relative;
+  }
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    gap: 22px;
+    margin-bottom: 22px;
+  }
+  .section-num {
+    font-family: 'Marcellus', serif;
+    font-size: 36px;
+    color: var(--brass);
+    line-height: 1;
+    min-width: 60px;
+    letter-spacing: 0.02em;
+  }
+  .section-num-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    background: var(--brass);
+    border-radius: 50%;
+    vertical-align: middle;
+    margin: 0 8px 6px;
+  }
+  .section-title-wrap { flex: 1; }
+  .section-title {
+    font-family: 'Marcellus', serif;
+    font-size: 22px;
+    color: var(--ink);
+    margin: 0;
+    letter-spacing: 0.01em;
+  }
+  .section-title.is-alarm { color: var(--alarm); }
+  .section-desc {
+    color: var(--mist);
+    font-size: 12px;
+    letter-spacing: 0.02em;
+    margin: 4px 0 0;
+  }
+  .section-count {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: var(--ink);
+    opacity: 0.55;
+    letter-spacing: 0.06em;
+  }
+  /* ── task list ── */
+  .task-row {
+    display: grid;
+    grid-template-columns: 30px 44px 1fr auto auto;
+    gap: 16px;
+    align-items: center;
+    padding: 16px 4px;
+    border-bottom: 1px solid var(--hairline);
+    transition: background 200ms ease, opacity 400ms ease;
+    cursor: default;
+  }
+  .task-row:hover { background: rgba(176,138,77,0.045); }
+  .task-row:hover .task-action { opacity: 1; transform: translateX(0); }
+  .task-row.is-done {
+    opacity: 0.42;
+  }
+  .task-row.is-done .task-title,
+  .task-row.is-done .task-sub { text-decoration: none; } /* Things 3 準拠 · 打ち消し線 なし */
+  /* checkbox = 円 */
+  .task-check {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 1.5px solid var(--mist);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: border-color 200ms ease, background 200ms ease, transform 150ms ease;
+    position: relative;
+  }
+  .task-check:hover { border-color: var(--brass); }
+  .task-check::after {
+    content: '';
+    width: 8px;
+    height: 8px;
+    background: var(--brass);
+    border-radius: 50%;
+    opacity: 0;
+    transform: scale(0.4);
+    transition: opacity 250ms ease, transform 250ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .task-check.is-checked {
+    border-color: var(--brass);
+    background: var(--brass);
+  }
+  .task-check.is-checked::after {
+    opacity: 1;
+    transform: scale(1);
+    background: var(--paper);
+  }
+  /* avatar */
+  .task-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--paper-2);
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Marcellus', serif;
+    font-size: 15px;
+    letter-spacing: 0;
+    border: 1px solid var(--line);
+  }
+  /* body */
+  .task-body-wrap { min-width: 0; }
+  .task-title {
+    font-family: 'Inter Tight', sans-serif;
+    font-size: 14px;
+    color: var(--ink);
+    margin: 0 0 4px;
+    font-weight: 500;
+    letter-spacing: 0.005em;
+  }
+  .task-title .who {
+    font-family: 'Marcellus', serif;
+    font-size: 15.5px;
+    letter-spacing: 0.01em;
+    color: var(--ink);
+    font-weight: 400;
+    margin-right: 8px;
+  }
+  .task-title .who .sama {
+    font-family: 'Inter Tight', sans-serif;
+    font-size: 11.5px;
+    color: var(--mist);
+    font-weight: 400;
+    margin-left: 3px;
+    letter-spacing: 0.06em;
+  }
+  .task-sub {
+    font-family: 'Inter Tight', sans-serif;
+    font-size: 12px;
+    color: var(--mist);
+    margin: 0;
+    letter-spacing: 0.01em;
+  }
+  /* deadline */
+  .task-deadline {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: var(--ink);
+    opacity: 0.7;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+  }
+  .task-deadline.is-alarm {
+    color: var(--alarm);
+    opacity: 1;
+    font-weight: 600;
+  }
+  .task-deadline .icon {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: currentColor;
+    margin-right: 6px;
+    opacity: 0.6;
+    vertical-align: middle;
+  }
+  /* action button (hover reveal) */
+  .task-action {
+    background: transparent;
+    color: var(--ink);
+    border: 1px solid var(--line);
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-family: 'Inter Tight', sans-serif;
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    opacity: 0;
+    transform: translateX(4px);
+    transition: opacity 200ms ease, transform 200ms ease, background 150ms ease, border-color 150ms ease;
+    white-space: nowrap;
+  }
+  .task-action:hover { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .task-action.is-primary {
+    background: var(--ink);
+    color: var(--paper);
+    border-color: var(--ink);
+    opacity: 1;
+    transform: translateX(0);
+  }
+  .task-action.is-primary:hover { background: var(--brass); border-color: var(--brass); }
+  /* ── compass rose divider ── */
+  .compass-divider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 0 8px;
+  }
+  .compass-rose {
+    width: 28px;
+    height: 28px;
+    opacity: 0.75;
+  }
+  /* ── empty state ── */
+  .empty-state {
+    text-align: center;
+    padding: 80px 20px 60px;
+  }
+  .empty-compass {
+    width: 88px;
+    height: 88px;
+    margin: 0 auto 22px;
+    animation: rotate-slow 22s linear infinite;
+    opacity: 0.75;
+  }
+  @keyframes rotate-slow { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) {
+    .empty-compass { animation: none; }
+  }
+  .empty-copy {
+    font-family: 'Marcellus', serif;
+    font-size: 22px;
+    color: var(--ink);
+    margin: 0 0 6px;
+    letter-spacing: 0.01em;
+  }
+  .empty-sub {
+    color: var(--mist);
+    font-size: 12.5px;
+    letter-spacing: 0.02em;
+  }
+  /* ── prototype toolbar ── */
+  .proto-bar {
+    position: fixed;
+    top: 12px;
+    right: 12px;
+    background: var(--ink);
+    color: var(--paper);
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    letter-spacing: 0.1em;
+    z-index: 100;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+  .proto-bar-btn {
+    background: transparent;
+    color: var(--brass);
+    border: 1px solid var(--brass);
+    padding: 4px 10px;
+    border-radius: 3px;
+    font-family: inherit;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    transition: background 150ms, color 150ms;
+  }
+  .proto-bar-btn:hover { background: var(--brass); color: var(--ink); }
+  /* ── done pile ── */
+  .done-pile {
+    margin-top: 60px;
+    padding-top: 22px;
+    border-top: 1px dashed var(--line);
+  }
+  .done-pile-head {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    letter-spacing: 0.18em;
+    color: var(--mist);
+    text-transform: uppercase;
+    margin-bottom: 14px;
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .done-pile-head .arrow { transition: transform 200ms; display: inline-block; }
+  .done-pile.is-open .arrow { transform: rotate(90deg); }
+  .done-pile-body { display: none; }
+  .done-pile.is-open .done-pile-body { display: block; }
+  /* responsive */
+  @media (max-width: 720px) {
+    .frame { padding: 40px 22px 100px; }
+    .deck-head { flex-direction: column; align-items: flex-start; gap: 18px; }
+    .deck-title { font-size: 32px; }
+    .deck-meta { text-align: left; }
+    .section-num { font-size: 30px; min-width: 50px; }
+    .section-title { font-size: 19px; }
+    .task-row { grid-template-columns: 26px 36px 1fr auto; gap: 12px; padding: 14px 2px; }
+    .task-row .task-action { display: none; }
+    .task-avatar { width: 32px; height: 32px; font-size: 14px; }
+    .task-title .who { font-size: 14px; }
+    .task-title { font-size: 13px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="proto-bar">
+  <span>PROTOTYPE · TODO Command Deck</span>
+  <button class="proto-bar-btn" id="btn-empty">EMPTY STATE</button>
+  <button class="proto-bar-btn" id="btn-full">SAMPLE</button>
+</div>
+
+<!-- ── Compass rose SVG (referenced by <use>) ── -->
+<svg style="display:none">
+  <symbol id="compass-rose" viewBox="0 0 32 32">
+    <g fill="none" stroke="#B08A4D" stroke-width="1" stroke-linecap="round">
+      <circle cx="16" cy="16" r="14.5" opacity="0.35"/>
+      <circle cx="16" cy="16" r="10" opacity="0.25"/>
+      <!-- 4 principal directions (N,S,E,W) as filled brass triangles -->
+      <path d="M16 3 L18 15 L16 17 L14 15 Z" fill="#B08A4D" stroke="none"/>
+      <path d="M16 29 L14 17 L16 15 L18 17 Z" fill="#B08A4D" stroke="none" opacity="0.5"/>
+      <path d="M29 16 L17 14 L15 16 L17 18 Z" fill="#B08A4D" stroke="none" opacity="0.5"/>
+      <path d="M3 16 L15 18 L17 16 L15 14 Z" fill="#B08A4D" stroke="none" opacity="0.5"/>
+      <!-- inter-cardinal marks -->
+      <line x1="6.7" y1="6.7" x2="9.5" y2="9.5" opacity="0.55"/>
+      <line x1="22.5" y1="6.7" x2="25.3" y2="9.5" opacity="0.55"/>
+      <line x1="6.7" y1="25.3" x2="9.5" y2="22.5" opacity="0.55"/>
+      <line x1="22.5" y1="25.3" x2="25.3" y2="22.5" opacity="0.55"/>
+      <!-- center dot -->
+      <circle cx="16" cy="16" r="1.5" fill="#0E1526" stroke="none"/>
+    </g>
+  </symbol>
+</svg>
+
+<div class="frame" id="frame"></div>
+
+<script>
+  // Sample data
+  const DATA = {
+    countActive: 7,
+    countDone: 2,
+    sections: [
+      {
+        num: '01',
+        title: '今 動 く',
+        desc: '本日 内 に 舵 を 切る · 逃す と 損なう 客 反応',
+        alarm: true,
+        items: [
+          { who: '吉田 恭聡', task: 'LINE 質問 に 返信', sub: '「NISA と iDeCo どちら 優先?」 の 相談 · 未 応答 6h', deadline: '今日中 · 残 4h', action: '💬 返信', alarm: true },
+          { who: '田中 花子', task: 'Zoom URL 発行', sub: '候補日 選択 済 · 面談 18:00 開始', deadline: '本日 15:00 前', action: '🎥 発行', alarm: true },
+        ],
+      },
+      {
+        num: '02',
+        title: '今週 決 着',
+        desc: '週内 に 完了 させて 積み残さ ない',
+        items: [
+          { who: '佐藤 一郎', task: '候補日 3 送付', sub: '初回 面談 · アンケート 回答 済', deadline: '木 まで', action: '📅 候補送付' },
+          { who: '鈴木 誠',   task: 'iDeCo 提案 書 完成', sub: '前回 面談 議事録 · 掛金 32,000 円 前提', deadline: '金 まで', action: '📝 続き' },
+          { who: '山田 太郎', task: '面談 議事録 の 追加 質問', sub: '客 から 「配偶者 の 保険 も 相談 したい」', deadline: '木 まで', action: '💬 返信' },
+        ],
+      },
+      {
+        num: '03',
+        title: '見 守 り',
+        desc: '追い風 の うち に 布石 · 焦らず に',
+        items: [
+          { who: '高橋 恵子', task: '追加 提案 検討', sub: '前回 面談 から 45日 · 学資 追加 の 可能性', deadline: '今月 中' },
+          { who: '中村 誠',   task: '更新 前 の 確認', sub: '保険 満期 6 週 前 · 見直し 提案 の 種', deadline: '今月 末' },
+        ],
+      },
+    ],
+    done: [
+      { who: '安井 康介', task: '議事録 送付 済', sub: '本日 09:22 送信', deadline: '完了' },
+      { who: '池田 弥生', task: '提案 書 送付 済', sub: '本日 11:04 送信', deadline: '完了' },
+    ],
+  };
+
+  const initial = (name) => name.replace(/\s+/g, '').charAt(0);
+  const renderTaskRow = (t, done = false) => `
+    <div class="task-row ${done ? 'is-done' : ''}" data-task>
+      <div class="task-check ${done ? 'is-checked' : ''}" data-check></div>
+      <div class="task-avatar">${initial(t.who)}</div>
+      <div class="task-body-wrap">
+        <div class="task-title"><span class="who">${t.who}<span class="sama">SAMA</span></span>${t.task}</div>
+        <div class="task-sub">${t.sub}</div>
+      </div>
+      <div class="task-deadline ${t.alarm ? 'is-alarm' : ''}"><span class="icon"></span>${t.deadline}</div>
+      ${t.action ? `<button class="task-action ${t.alarm ? 'is-primary' : ''}">${t.action}</button>` : '<span></span>'}
+    </div>
+  `;
+  const compassSvg = `<svg class="compass-rose"><use href="#compass-rose"/></svg>`;
+  const renderSection = (s, isLast) => `
+    <div class="section">
+      <div class="section-head">
+        <div class="section-num">${s.num}<span class="section-num-dot"></span></div>
+        <div class="section-title-wrap">
+          <h2 class="section-title ${s.alarm ? 'is-alarm' : ''}">${s.title}</h2>
+          <p class="section-desc">${s.desc}</p>
+        </div>
+        <div class="section-count">${s.items.length} 件</div>
+      </div>
+      <div>${s.items.map(t => renderTaskRow(t)).join('')}</div>
+      ${!isLast ? `<div class="compass-divider">${compassSvg}</div>` : ''}
+    </div>
+  `;
+  const renderFull = () => {
+    const now = new Date();
+    const today = now.toLocaleDateString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', weekday: 'short' });
+    const time = now.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+    return `
+      <header class="deck-head">
+        <div class="deck-head-left">
+          <div class="deck-eyebrow">Command Deck · 舵取り 台</div>
+          <h1 class="deck-title">本日 の 舵</h1>
+          <p class="deck-sub">7 件 · 今 動く 事 と 積み残し の 見極め</p>
+        </div>
+        <div class="deck-meta">
+          ${today}<br><b>${time}</b>
+        </div>
+      </header>
+      ${DATA.sections.map((s, i) => renderSection(s, i === DATA.sections.length - 1)).join('')}
+      <div class="done-pile" id="done-pile">
+        <div class="done-pile-head" data-done-toggle>
+          <span class="arrow">▶</span> Done · 完了 済 (${DATA.done.length})
+        </div>
+        <div class="done-pile-body">
+          ${DATA.done.map(t => renderTaskRow(t, true)).join('')}
+        </div>
+      </div>
+    `;
+  };
+  const renderEmpty = () => `
+    <header class="deck-head">
+      <div class="deck-head-left">
+        <div class="deck-eyebrow">Command Deck · 舵取り 台</div>
+        <h1 class="deck-title">本日 の 舵</h1>
+        <p class="deck-sub">追い風 · 舵 を 見守り に</p>
+      </div>
+      <div class="deck-meta">${new Date().toLocaleDateString('ja-JP', {year:'numeric',month:'2-digit',day:'2-digit',weekday:'short'})}</div>
+    </header>
+    <div class="empty-state">
+      <svg class="empty-compass"><use href="#compass-rose"/></svg>
+      <p class="empty-copy">今日 は 追い風</p>
+      <p class="empty-sub">舵 を 見守り に · 41 名 と 21 日 以内 に 接触 済</p>
+    </div>
+  `;
+  const frame = document.getElementById('frame');
+  const setState = (mode) => {
+    frame.innerHTML = mode === 'empty' ? renderEmpty() : renderFull();
+    // wire checkbox toggle
+    frame.querySelectorAll('[data-check]').forEach(el => {
+      el.addEventListener('click', () => {
+        const row = el.closest('.task-row');
+        const isChecked = el.classList.toggle('is-checked');
+        if (isChecked) {
+          // brief lock, then fade + move visually
+          setTimeout(() => { row.classList.add('is-done'); }, 260);
+        } else {
+          row.classList.remove('is-done');
+        }
+      });
+    });
+    // wire done pile toggle
+    const donePile = document.getElementById('done-pile');
+    if (donePile) {
+      const head = donePile.querySelector('[data-done-toggle]');
+      head.addEventListener('click', () => donePile.classList.toggle('is-open'));
+    }
+  };
+  document.getElementById('btn-empty').addEventListener('click', () => setState('empty'));
+  document.getElementById('btn-full').addEventListener('click', () => setState('full'));
+  setState('full');
+</script>
+</body>
+</html>
