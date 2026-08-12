@@ -2066,12 +2066,11 @@
             });
             const fn = httpsCallable(getFunctions(app, 'asia-northeast1'), 'confirmSlotMultiTenant');
             const res = await fn({ customerId: fsCustomerId, confirmedSlot: `${dateStr} ${slotStr}` });
-            // ★ 2026-08-07 owner「Zoom 決まったら 自動 Cal 登録」対応
-            let gcalMsg = '';
-            try {
-              const gcalRes = await autoSyncBookingToGcal({ fsCustomerId, uid, dateStr, slotStr, zoomUrl: res.data.zoomUrl });
-              if (gcalRes) gcalMsg = '\nGoogle Cal 登録済 ✓';
-            } catch (_) {}
+            // ★ 2026-08-12 qa-reviewer FAIL fix: server-side _doConfirmSlotCore 内 で
+            //   既に「FP面談」専用 calendar へ events.insert 完結 済 (primary 汚染 なし)。
+            //   ここ で client-side autoSyncBookingToGcal を 呼ぶ と primary にも 追加 されて 二重 化 する。
+            //   → client-side gcal 呼び出し は 廃止、 server の返り値 で 登録 状態 判定
+            const gcalMsg = res.data?.gcalCalendarId ? '\nGoogle Cal 登録済 (FP面談 専用)' : '';
             alert('✅ 確定\n\nZoom URL: ' + res.data.zoomUrl + '\nお客様 に LINE カード 自動送信済' + gcalMsg);
             if (window.refreshFirestoreCustomers) window.refreshFirestoreCustomers();
             renderLeadHubInner();
@@ -2091,13 +2090,10 @@
           });
           const data = await r.json();
           if (data.ok) {
-            // ★ 2026-08-07 owner「Zoom 決まったら 自動 Cal 登録」対応 (Cloud Run 経路)
-            let gcalMsg = '';
-            try {
-              const gcalRes = await autoSyncBookingToGcal({ uid, dateStr, slotStr, zoomUrl: data.zoomUrl });
-              if (gcalRes) gcalMsg = '\nGoogle Cal 登録済 (owner Cal) ✓';
-            } catch (_) {}
-            alert('✅ 確定\n\nZoom URL: ' + data.zoomUrl + '\nお客様にLINE通知済' + gcalMsg);
+            // ★ 2026-08-12 qa-reviewer FAIL fix: Cloud Run 経路 (legacy tenant) では 現状 server-side
+            //   gcal insert 未対応 だが、 primary への 二重書き は 混乱 元 な の で 撤去。
+            //   Cloud Run 側 に server-side gcal insert を 移植 する か 検討 · owner GO 待ち で 別 turn
+            alert('✅ 確定\n\nZoom URL: ' + data.zoomUrl + '\nお客様にLINE通知済\n(Cloud Run 経路 · gcal 手動 反映 が 必要 な 可能性)');
             await fetchLiveData();
             renderLeadHubInner();
           } else {
