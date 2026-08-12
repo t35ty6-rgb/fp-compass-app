@@ -3,18 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>FP Compass · TODO (prototype)</title>
+<title>FP Compass · TODO (prototype v3)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700;800;900&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700;800;900&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root {
-    /* 既存 FP Compass palette (実測 済 · そのまま 維持) */
     --indigo: #5B5BF0;
-    --indigo-soft: #EEF0FF;
     --indigo-hover: #4747D8;
+    --indigo-soft: #EEF0FF;
     --ink: #0F172A;
-    --ink-2: #1E293B;
     --slate-500: #64748B;
     --slate-400: #94A3B8;
     --slate-300: #CBD5E1;
@@ -22,12 +20,10 @@
     --slate-100: #F1F5F9;
     --slate-50:  #F8FAFC;
     --white: #FFFFFF;
-    --emerald: #059669;
-    --emerald-soft: #D1FAE5;
     --red: #DC2626;
     --red-soft: #FEE2E2;
-    --amber-soft: #FEF3C7;
     --amber: #D97706;
+    --amber-soft: #FEF3C7;
   }
   * { box-sizing: border-box; }
   html, body {
@@ -35,454 +31,381 @@
     color: var(--ink);
     font-family: 'Noto Sans JP', -apple-system, sans-serif;
     font-size: 14px;
-    line-height: 1.6;
-    margin: 0;
-    padding: 0;
+    line-height: 1.55;
+    margin: 0; padding: 0;
     -webkit-font-smoothing: antialiased;
   }
-  .frame {
-    max-width: 780px;
-    margin: 0 auto;
-    padding: 40px 32px 120px;
-  }
-  /* ── card container (既存 FP Compass の dashboard card 準拠) ── */
+  .frame { max-width: 780px; margin: 0 auto; padding: 40px 32px 120px; }
+
   .card {
     background: var(--white);
     border: 1px solid var(--slate-200);
     border-radius: 12px;
-    padding: 24px 26px;
     box-shadow: 0 1px 3px rgba(15,23,42,0.03);
+    overflow: hidden;
   }
-  /* ── card head ── */
   .card-head {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    padding-bottom: 16px;
-    margin-bottom: 8px;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 22px 14px;
     border-bottom: 1px solid var(--slate-200);
+    gap: 16px;
   }
   .card-title {
-    font-size: 15px;
-    font-weight: 800;
-    color: var(--ink);
-    margin: 0;
-    letter-spacing: 0.01em;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    font-size: 15px; font-weight: 800; color: var(--ink);
+    margin: 0; display: flex; align-items: center; gap: 9px;
   }
   .card-title-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 26px;
-    height: 26px;
-    background: var(--indigo-soft);
-    color: var(--indigo);
-    border-radius: 6px;
+    width: 26px; height: 26px;
+    background: var(--indigo-soft); color: var(--indigo);
+    border-radius: 7px;
+    display: inline-flex; align-items: center; justify-content: center;
     font-size: 14px;
   }
-  .card-count {
+  .card-count { font-family: 'Manrope', sans-serif; font-size: 12px; font-weight: 700; color: var(--slate-500); }
+  .card-count b { color: var(--indigo); font-weight: 800; font-size: 14px; margin-right: 2px; font-family: 'Manrope', sans-serif; }
+
+  /* Quick add bar (Todoist inspired) */
+  .quick-add {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 22px;
+    border-bottom: 1px solid var(--slate-100);
+    background: var(--slate-50);
+  }
+  .quick-add-plus {
+    width: 24px; height: 24px; border-radius: 50%;
+    border: 1.5px dashed var(--slate-300); color: var(--slate-400);
+    display: inline-flex; align-items: center; justify-content: center; font-size: 14px;
+    transition: border-color 150ms, color 150ms;
+    flex-shrink: 0;
+  }
+  .quick-add:hover .quick-add-plus { border-color: var(--indigo); color: var(--indigo); }
+  .quick-add-input {
+    flex: 1; border: none; background: transparent;
+    font-family: inherit; font-size: 13px; color: var(--ink);
+    outline: none; padding: 4px 0;
+  }
+  .quick-add-input::placeholder { color: var(--slate-400); }
+  .quick-add-hint {
+    font-family: 'Manrope', sans-serif; font-size: 10.5px; color: var(--slate-400);
+    letter-spacing: 0.02em; white-space: nowrap;
+    display: flex; gap: 4px;
+  }
+  .quick-add-hint code {
     font-family: 'Manrope', sans-serif;
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--slate-500);
-    letter-spacing: 0.02em;
+    background: var(--white); border: 1px solid var(--slate-200);
+    padding: 1px 6px; border-radius: 4px;
+    color: var(--slate-500); font-size: 10.5px;
   }
-  .card-count b {
-    color: var(--indigo);
-    font-weight: 800;
-    font-size: 14px;
-    margin-right: 2px;
+
+  /* Section (folder) */
+  .section { padding: 6px 22px 4px; }
+  .section + .section { border-top: 1px solid var(--slate-100); }
+  .section-head {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 0 8px;
+    cursor: pointer; user-select: none;
   }
-  /* ── group (section) ── */
-  .group {
-    padding: 14px 0 4px;
+  .section-arrow {
+    width: 10px; color: var(--slate-400); font-size: 10px;
+    transition: transform 180ms ease; display: inline-block;
   }
-  .group + .group {
-    border-top: 1px dashed var(--slate-200);
-    margin-top: 4px;
-    padding-top: 18px;
+  .section.is-open .section-arrow { transform: rotate(90deg); }
+  .section-title { font-size: 13px; font-weight: 800; color: var(--ink); letter-spacing: 0.01em; }
+  .section-count {
+    font-family: 'Manrope', sans-serif; font-size: 11.5px; font-weight: 700;
+    color: var(--slate-500); background: var(--slate-100);
+    padding: 2px 8px; border-radius: 999px;
   }
-  .group-head {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 10px;
-    cursor: pointer;
-    user-select: none;
-  }
-  .group-arrow {
-    display: inline-block;
-    width: 10px;
-    height: 10px;
-    color: var(--slate-400);
-    font-size: 10px;
-    transition: transform 180ms ease;
-  }
-  .group.is-open .group-arrow { transform: rotate(90deg); }
-  .group-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 3px 10px 3px 8px;
-    border-radius: 999px;
-    font-size: 11px;
-    font-weight: 800;
-    letter-spacing: 0.02em;
-  }
-  .group-pill.is-urgent  { background: var(--red-soft);   color: var(--red); }
-  .group-pill.is-warn    { background: var(--amber-soft); color: var(--amber); }
-  .group-pill.is-neutral { background: var(--slate-100);  color: var(--slate-500); }
-  .group-pill-dot {
-    display: inline-block;
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: currentColor;
-  }
-  .group-count {
-    font-family: 'Manrope', sans-serif;
-    font-size: 11.5px;
-    font-weight: 700;
-    color: var(--slate-500);
-    letter-spacing: 0.02em;
-  }
-  .group-desc {
-    font-size: 11.5px;
-    color: var(--slate-400);
-    letter-spacing: 0.01em;
-    margin-left: 4px;
-  }
-  .group-body { display: none; }
-  .group.is-open .group-body { display: block; }
-  /* ── task row ── */
+  .section.is-alarm .section-count { background: var(--red-soft); color: var(--red); }
+  .section.is-warn  .section-count { background: var(--amber-soft); color: var(--amber); }
+  .section-desc { font-size: 11.5px; color: var(--slate-400); margin-left: auto; }
+  .section-body { display: none; }
+  .section.is-open .section-body { display: block; }
+
+  /* Task row */
   .task-row {
     display: grid;
-    grid-template-columns: 22px 1fr auto auto;
+    grid-template-columns: 22px 32px 1fr auto 14px;
     gap: 12px;
     align-items: center;
-    padding: 12px 4px 12px 2px;
+    padding: 11px 4px;
     border-bottom: 1px solid var(--slate-100);
-    transition: background 180ms ease, opacity 400ms ease;
-    position: relative;
+    transition: background 180ms, opacity 400ms;
+    cursor: pointer;
   }
-  .task-row:last-child { border-bottom: 0; }
   .task-row:hover { background: var(--slate-50); }
   .task-row:hover .task-action { opacity: 1; transform: translateX(0); }
   .task-row.is-done { opacity: 0.42; }
-  /* circle checkbox (Things 3 準拠 · palette は 既存 indigo) */
+  .task-row.is-expanded {
+    background: var(--slate-50);
+    border-bottom-color: var(--slate-200);
+  }
+  .task-row.is-expanded .task-expand { display: block; }
+
   .task-check {
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
+    width: 20px; height: 20px; border-radius: 50%;
     border: 1.5px solid var(--slate-300);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: border-color 180ms ease, background 180ms ease;
+    display: flex; align-items: center; justify-content: center;
+    transition: border-color 180ms, background 180ms;
     flex-shrink: 0;
   }
   .task-check:hover { border-color: var(--indigo); }
-  .task-check::after {
-    content: '';
-    width: 10px;
-    height: 8px;
-    background:
-      linear-gradient(to bottom right, transparent 47%, var(--white) 47%, var(--white) 53%, transparent 53%),
-      linear-gradient(to bottom left,  transparent 47%, var(--white) 47%, var(--white) 53%, transparent 53%);
-    background-size: 60% 100%, 60% 100%;
-    background-position: 100% 0, 0 0;
-    background-repeat: no-repeat;
-    opacity: 0;
-    transform: scale(0.4);
-    transition: opacity 220ms ease, transform 220ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  .task-check svg {
+    width: 11px; height: 11px; color: var(--white);
+    opacity: 0; transform: scale(0.4);
+    transition: opacity 200ms, transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1);
   }
-  .task-check.is-checked {
-    border-color: var(--indigo);
-    background: var(--indigo);
+  .task-check.is-checked { border-color: var(--indigo); background: var(--indigo); }
+  .task-check.is-checked svg { opacity: 1; transform: scale(1); }
+
+  .task-avatar {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--indigo-soft); color: var(--indigo);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Manrope', sans-serif; font-size: 12px; font-weight: 800;
+    flex-shrink: 0;
   }
-  .task-check.is-checked::after {
-    opacity: 1;
-    transform: scale(1);
-  }
-  /* task body */
+
   .task-body { min-width: 0; }
-  .task-title {
-    font-size: 13.5px;
-    color: var(--ink);
-    margin: 0 0 2px;
-    font-weight: 600;
-    letter-spacing: 0.005em;
+  .task-who {
+    font-size: 13.5px; font-weight: 700; color: var(--ink);
+    letter-spacing: 0.005em; line-height: 1.35;
   }
-  .task-title .who {
-    color: var(--ink);
-    font-weight: 700;
+  .task-who .sama {
+    font-weight: 500; color: var(--slate-500); font-size: 11.5px; margin-left: 3px;
   }
-  .task-title .who::after {
-    content: '様 ·';
-    color: var(--slate-400);
-    font-weight: 500;
-    margin: 0 6px 0 2px;
-    font-size: 11.5px;
-    letter-spacing: 0.04em;
+  .task-desc {
+    font-size: 12px; color: var(--slate-500); margin: 1px 0 0;
+    line-height: 1.4;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
-  .task-sub {
-    font-size: 11.5px;
-    color: var(--slate-500);
-    margin: 0;
-    letter-spacing: 0.01em;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  /* deadline */
+
+  .task-meta { display: flex; align-items: center; gap: 12px; }
   .task-deadline {
-    font-family: 'Manrope', 'JetBrains Mono', sans-serif;
-    font-size: 11.5px;
-    color: var(--slate-500);
-    font-weight: 600;
-    letter-spacing: 0.02em;
-    white-space: nowrap;
-    display: flex;
-    align-items: center;
-    gap: 5px;
+    font-family: 'Manrope', sans-serif; font-size: 11.5px;
+    color: var(--slate-500); font-weight: 600;
+    letter-spacing: 0.02em; white-space: nowrap;
   }
-  .task-deadline .icon {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: currentColor;
-    opacity: 0.5;
-  }
-  .task-row[data-tone="urgent"] .task-deadline { color: var(--red); }
-  .task-row[data-tone="urgent"] .task-deadline .icon { opacity: 1; }
-  .task-row[data-tone="warn"] .task-deadline { color: var(--amber); }
-  /* action button */
+  .task-row[data-priority="p1"] .task-deadline { color: var(--red); font-weight: 700; }
+  .task-row[data-priority="p2"] .task-deadline { color: var(--amber); font-weight: 700; }
+
+  /* Priority flag (Todoist inspired) */
+  .task-flag { width: 12px; height: 12px; flex-shrink: 0; }
+  .task-flag svg { width: 100%; height: 100%; display: block; }
+  .task-row[data-priority="p1"] .task-flag svg { fill: var(--red); stroke: var(--red); }
+  .task-row[data-priority="p2"] .task-flag svg { fill: var(--amber); stroke: var(--amber); }
+  .task-row[data-priority="p3"] .task-flag svg { fill: var(--slate-400); stroke: var(--slate-400); }
+  .task-row:not([data-priority]) .task-flag svg,
+  .task-row[data-priority=""] .task-flag svg { fill: none; stroke: var(--slate-200); }
+
   .task-action {
-    background: var(--white);
-    color: var(--ink);
+    background: var(--white); color: var(--ink);
     border: 1px solid var(--slate-300);
-    padding: 5px 11px;
-    border-radius: 6px;
-    font-family: inherit;
-    font-size: 11.5px;
-    font-weight: 700;
-    letter-spacing: 0.01em;
+    padding: 5px 10px; border-radius: 6px;
+    font-family: inherit; font-size: 11.5px; font-weight: 700;
     cursor: pointer;
-    opacity: 0;
-    transform: translateX(3px);
-    transition: opacity 180ms ease, transform 180ms ease, background 150ms, border-color 150ms, color 150ms;
+    opacity: 0; transform: translateX(3px);
+    transition: opacity 180ms, transform 180ms, background 150ms, border-color 150ms, color 150ms;
     white-space: nowrap;
   }
-  .task-action:hover {
-    background: var(--indigo);
-    color: var(--white);
-    border-color: var(--indigo);
+  .task-action:hover { background: var(--indigo); color: var(--white); border-color: var(--indigo); }
+  .task-row[data-priority="p1"] .task-action {
+    background: var(--indigo); color: var(--white); border-color: var(--indigo);
+    opacity: 1; transform: translateX(0);
   }
-  .task-action.is-primary {
-    background: var(--indigo);
-    color: var(--white);
-    border-color: var(--indigo);
-    opacity: 1;
-    transform: translateX(0);
-  }
-  .task-action.is-primary:hover { background: var(--indigo-hover); border-color: var(--indigo-hover); }
-  /* empty state */
-  .empty-state {
-    text-align: center;
-    padding: 56px 20px 40px;
-  }
-  .empty-emoji {
-    font-size: 44px;
-    margin-bottom: 12px;
-    line-height: 1;
-  }
-  .empty-title {
-    font-size: 17px;
-    font-weight: 800;
-    color: var(--ink);
-    margin: 0 0 6px;
-    letter-spacing: 0.005em;
-  }
-  .empty-sub {
-    font-size: 12.5px;
-    color: var(--slate-500);
-    margin: 0 0 20px;
-    letter-spacing: 0.01em;
-  }
-  .empty-cta {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: var(--indigo);
-    color: var(--white);
-    border: none;
-    padding: 9px 18px;
-    border-radius: 8px;
-    font-family: inherit;
-    font-size: 12.5px;
-    font-weight: 800;
-    letter-spacing: 0.02em;
-    cursor: pointer;
-  }
-  .empty-cta + .empty-cta {
-    background: var(--white);
-    color: var(--ink);
-    border: 1px solid var(--slate-300);
-    margin-left: 8px;
-  }
-  /* done pile */
-  .done-pile {
-    margin-top: 18px;
-    padding-top: 14px;
+  .task-row[data-priority="p1"] .task-action:hover { background: var(--indigo-hover); border-color: var(--indigo-hover); }
+
+  /* Expanded detail (Things 3 tap-to-expand) */
+  .task-expand {
+    grid-column: 1 / -1;
+    display: none;
+    padding: 10px 0 4px 44px;
+    margin-top: 6px;
     border-top: 1px dashed var(--slate-200);
   }
-  /* proto toolbar */
+  .task-expand-meta {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 8px 22px;
+    font-family: 'Manrope', sans-serif; font-size: 11.5px;
+    color: var(--slate-500); letter-spacing: 0.02em;
+    line-height: 1.55;
+  }
+  .task-expand-meta div { display: flex; gap: 6px; align-items: baseline; }
+  .task-expand-meta b {
+    color: var(--slate-400); font-weight: 700; font-size: 10.5px;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    min-width: 68px;
+  }
+  .task-expand-meta span { color: var(--ink); font-family: 'Noto Sans JP', sans-serif; }
+  .task-expand-actions {
+    display: flex; gap: 8px; margin-top: 10px;
+  }
+  .task-expand-actions button {
+    background: var(--white); color: var(--slate-500);
+    border: 1px solid var(--slate-200);
+    padding: 5px 10px; border-radius: 6px;
+    font-family: inherit; font-size: 11px; font-weight: 600;
+    cursor: pointer;
+    transition: color 150ms, border-color 150ms;
+  }
+  .task-expand-actions button:hover { color: var(--indigo); border-color: var(--indigo); }
+
+  .empty { text-align: center; padding: 56px 20px 40px; }
+  .empty-emoji { font-size: 44px; margin-bottom: 12px; }
+  .empty-title { font-size: 17px; font-weight: 800; color: var(--ink); margin: 0 0 6px; }
+  .empty-sub { font-size: 12.5px; color: var(--slate-500); margin: 0 0 20px; }
+  .empty-cta {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--indigo); color: var(--white); border: none;
+    padding: 9px 18px; border-radius: 8px;
+    font-family: inherit; font-size: 12.5px; font-weight: 800; cursor: pointer;
+  }
+  .empty-cta + .empty-cta { background: var(--white); color: var(--ink); border: 1px solid var(--slate-300); margin-left: 8px; }
+
   .proto-bar {
-    position: fixed;
-    top: 12px;
-    right: 12px;
-    background: var(--ink);
-    color: var(--white);
-    padding: 7px 12px;
-    border-radius: 6px;
-    font-size: 10.5px;
-    letter-spacing: 0.08em;
+    position: fixed; top: 12px; right: 12px;
+    background: var(--ink); color: var(--white);
+    padding: 7px 12px; border-radius: 6px;
+    font-size: 10.5px; letter-spacing: 0.08em;
     z-index: 100;
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    font-family: 'Manrope', sans-serif;
-    font-weight: 600;
+    display: flex; gap: 8px; align-items: center;
+    font-family: 'Manrope', sans-serif; font-weight: 600;
   }
   .proto-bar-btn {
-    background: transparent;
-    color: var(--slate-300);
+    background: transparent; color: var(--slate-300);
     border: 1px solid var(--slate-500);
-    padding: 3px 8px;
-    border-radius: 4px;
-    font-family: inherit;
-    font-size: 10px;
-    letter-spacing: 0.06em;
-    cursor: pointer;
+    padding: 3px 8px; border-radius: 4px;
+    font-family: inherit; font-size: 10px; cursor: pointer;
     transition: background 150ms, color 150ms;
   }
   .proto-bar-btn:hover { background: var(--white); color: var(--ink); border-color: var(--white); }
-  /* responsive */
+
   @media (max-width: 640px) {
-    .frame { padding: 28px 16px 100px; }
-    .card { padding: 18px 16px; border-radius: 10px; }
-    .task-row { grid-template-columns: 20px 1fr auto; gap: 10px; padding: 11px 2px; }
+    .frame { padding: 24px 12px 100px; }
+    .card-head { padding: 16px 16px 12px; }
+    .quick-add { padding: 10px 16px; }
+    .section { padding: 4px 16px; }
+    .task-row { grid-template-columns: 20px 28px 1fr auto 12px; gap: 10px; padding: 10px 2px; }
     .task-row .task-action { display: none; }
-    .task-title { font-size: 13px; }
-    .task-sub { font-size: 11px; }
-    .group-desc { display: none; }
+    .task-who { font-size: 13px; }
+    .task-desc { font-size: 11.5px; }
+    .quick-add-hint { display: none; }
+    .section-desc { display: none; }
+    .task-expand { padding-left: 30px; }
   }
 </style>
 </head>
 <body>
 
 <div class="proto-bar">
-  <span>PROTOTYPE · TODO 洗練</span>
-  <button class="proto-bar-btn" id="btn-empty">空 の 状態</button>
+  <span>PROTOTYPE v3 · Todoist+Things3+Linear 抽出</span>
+  <button class="proto-bar-btn" id="btn-empty">空</button>
   <button class="proto-bar-btn" id="btn-full">サンプル</button>
 </div>
 
 <div class="frame" id="frame"></div>
 
 <script>
+  const CHECK_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+  const FLAG_SVG = `<svg viewBox="0 0 12 12" stroke-width="1.2"><path d="M2 1 L2 11 M2 1 L10 1 L8 4 L10 7 L2 7 Z"/></svg>`;
+
   const DATA = {
-    countActive: 7,
-    countTotal: 41,
-    groups: [
+    total: 41,
+    active: 7,
+    sections: [
       {
-        tone: 'urgent',
-        title: '今日 中 に 対応',
-        desc: '期限 到来 / 提案 停滞 / 面談 直前',
-        open: true,
+        tone: 'alarm', title: '今日 中 に 対応', desc: '期限 到来 · 面談 直前', open: true,
         items: [
-          { who: '吉田 恭聡', task: 'LINE 質問 に 返信', sub: '「NISA と iDeCo どちら 優先?」 · 未 応答 6h', deadline: '今日中', action: '💬 返信 する', primary: true },
-          { who: '田中 花子', task: 'Zoom URL 発行', sub: '候補日 選択 済 · 面談 18:00 開始', deadline: '15:00 前', action: '🎥 Zoom URL 発行', primary: true },
+          { p: 'p1', who: '吉田 恭聡', desc: 'LINE 質問 に 返信', deadline: '今日 中', action: '💬 返信',
+            expand: { '客 の 発言': '「NISA と iDeCo · どちら 優先?」', '経過': '6 時間 未 応答', '最終 接触': '昨日 20:32' } },
+          { p: 'p1', who: '田中 花子', desc: 'Zoom URL 発行 (面談 18:00)', deadline: '15:00 前', action: '🎥 発行',
+            expand: { '候補日': '本日 18:00-19:00 · 客 選択 済', '期限': '15:00 まで に 発行', 'アンケート': '回答 済' } },
         ],
       },
       {
-        tone: 'warn',
-        title: '今週 中 に 対応',
-        desc: '提案 期限 迫る / 面談 近い',
-        open: true,
+        tone: 'warn', title: '今週 中 に 対応', desc: '週内 決着', open: true,
         items: [
-          { who: '佐藤 一郎', task: '候補日 3 を 送付', sub: '初回 面談 · アンケート 回答 済', deadline: '木 まで', action: '📅 候補日 再送' },
-          { who: '鈴木 誠',   task: 'iDeCo 提案 書 完成', sub: '前回 議事録 · 掛金 32,000 円 前提', deadline: '金 まで', action: '📋 カルテ' },
-          { who: '山田 太郎', task: '面談 議事録 の 追加 質問', sub: '客 から 「配偶者 の 保険 も」', deadline: '木 まで', action: '💬 返信 する' },
+          { p: 'p2', who: '佐藤 一郎', desc: '候補日 3 送付', deadline: '木', action: '📅 候補日 送信',
+            expand: { '状況': '初回 面談 依頼', 'アンケート': '回答 済 (2 日 前)', '客 情報': '30 代 · 夫婦 · 世帯 年収 800 万' } },
+          { p: 'p2', who: '鈴木 誠', desc: 'iDeCo 提案 書 完成', deadline: '金', action: '📋 続き',
+            expand: { '出典': '前回 面談 (2 週間 前) の 議事録', '前提': '掛金 32,000 円', '進捗': '構成 半分 · グラフ 未' } },
+          { p: 'p3', who: '山田 太郎', desc: '面談 後 追加 質問', deadline: '木', action: '💬 返信',
+            expand: { '客 の 発言': '「配偶者 の 保険 も 一緒 に 相談 したい」', '経過': '3 日 前 · 未 応答' } },
         ],
       },
       {
-        tone: 'neutral',
-        title: '今月 の 予定',
-        desc: '長期 未 接触 の 再 engagement 等',
-        open: false,
+        tone: 'neutral', title: '今月 の 予定', desc: '見守り · 布石', open: false,
         items: [
-          { who: '高橋 恵子', task: '追加 提案 検討', sub: '前回 面談 から 45 日 · 学資 追加 の 可能性', deadline: '今月 中', action: '📋 カルテ' },
-          { who: '中村 誠',   task: '更新 前 の 確認', sub: '保険 満期 6 週 前 · 見直し の 種', deadline: '今月 末', action: '📋 カルテ' },
+          { p: 'p3', who: '高橋 恵子', desc: '追加 提案 検討', deadline: '今月 中', action: '📋 カルテ',
+            expand: { '経過': '前回 面談 から 45 日', 'メモ': '学資 保険 追加 の 可能性 · お子様 誕生 予定' } },
+          { p: 'p3', who: '中村 誠', desc: '更新 前 の 確認', deadline: '今月 末', action: '📋 カルテ',
+            expand: { '状況': '保険 満期 6 週間 前', 'メモ': '見直し 提案 の 種' } },
         ],
       },
-    ],
-    done: [
-      { who: '安井 康介', task: '議事録 送付 済', sub: '本日 09:22 送信', deadline: '完了' },
-      { who: '池田 弥生', task: '提案 書 送付 済', sub: '本日 11:04 送信', deadline: '完了' },
+      {
+        tone: 'done', title: '完了 済 (今日)', desc: '', open: false,
+        items: [
+          { p: '', who: '安井 康介', desc: '議事録 送付 済', deadline: '09:22', done: true },
+          { p: '', who: '池田 弥生', desc: '提案 書 送付 済', deadline: '11:04', done: true },
+        ],
+      },
     ],
   };
 
-  const renderRow = (t, tone = 'neutral', done = false) => `
-    <div class="task-row ${done ? 'is-done' : ''}" data-tone="${tone}">
-      <div class="task-check ${done ? 'is-checked' : ''}" data-check></div>
-      <div class="task-body">
-        <div class="task-title"><span class="who">${t.who}</span>${t.task}</div>
-        <div class="task-sub">${t.sub}</div>
-      </div>
-      <div class="task-deadline"><span class="icon"></span>${t.deadline}</div>
-      ${t.action ? `<button class="task-action ${t.primary ? 'is-primary' : ''}">${t.action}</button>` : '<span></span>'}
-    </div>
-  `;
+  const initial = (n) => n.replace(/\s+/g, '').charAt(0);
 
-  const renderGroup = (g) => `
-    <div class="group ${g.open ? 'is-open' : ''}">
-      <div class="group-head" data-group-toggle>
-        <span class="group-arrow">▶</span>
-        <span class="group-pill is-${g.tone}"><span class="group-pill-dot"></span>${g.title}</span>
-        <span class="group-count">${g.items.length} 件</span>
-        <span class="group-desc">· ${g.desc}</span>
+  const renderRow = (t) => `
+    <div class="task-row ${t.done ? 'is-done' : ''}" data-priority="${t.p || ''}" data-row>
+      <div class="task-check ${t.done ? 'is-checked' : ''}" data-check>${CHECK_SVG}</div>
+      <div class="task-avatar">${initial(t.who)}</div>
+      <div class="task-body">
+        <div class="task-who">${t.who} <span class="sama">様</span></div>
+        <div class="task-desc">${t.desc}</div>
       </div>
-      <div class="group-body">
-        ${g.items.map(t => renderRow(t, g.tone)).join('')}
+      <div class="task-meta">
+        <div class="task-deadline">${t.deadline}</div>
+        ${t.action ? `<button class="task-action" data-action>${t.action}</button>` : ''}
       </div>
-    </div>
-  `;
+      <div class="task-flag" title="優先度 ${t.p || 'なし'}">${FLAG_SVG}</div>
+      ${t.expand ? `<div class="task-expand">
+        <div class="task-expand-meta">
+          ${Object.entries(t.expand).map(([k,v]) => `<div><b>${k}</b><span>${v}</span></div>`).join('')}
+        </div>
+        <div class="task-expand-actions">
+          <button>📋 カルテ を 開く</button>
+          <button>📅 期限 変更</button>
+          <button>🚩 優先度 変更</button>
+          <button>🗑 削除</button>
+        </div>
+      </div>` : ''}
+    </div>`;
+
+  const renderSection = (s) => `
+    <div class="section ${s.open ? 'is-open' : ''} is-${s.tone}">
+      <div class="section-head" data-section-toggle>
+        <span class="section-arrow">▶</span>
+        <span class="section-title">${s.title}</span>
+        <span class="section-count">${s.items.length}</span>
+        ${s.desc ? `<span class="section-desc">· ${s.desc}</span>` : ''}
+      </div>
+      <div class="section-body">${s.items.map(renderRow).join('')}</div>
+    </div>`;
 
   const renderFull = () => `
     <div class="card">
       <div class="card-head">
         <h2 class="card-title"><span class="card-title-icon">📝</span>今日 の TODO</h2>
-        <div class="card-count"><b>${DATA.countActive}</b>件 未 対応</div>
+        <div class="card-count"><b>${DATA.active}</b>件 未 対応</div>
       </div>
-      ${DATA.groups.map(renderGroup).join('')}
-      <div class="done-pile">
-        <div class="group" id="done-group">
-          <div class="group-head" data-group-toggle>
-            <span class="group-arrow">▶</span>
-            <span class="group-pill" style="background:#DCFCE7;color:#166534;"><span class="group-pill-dot"></span>完了 済 (今日)</span>
-            <span class="group-count">${DATA.done.length} 件</span>
-          </div>
-          <div class="group-body">
-            ${DATA.done.map(t => renderRow(t, 'neutral', true)).join('')}
-          </div>
-        </div>
+      <div class="quick-add">
+        <span class="quick-add-plus">+</span>
+        <input class="quick-add-input" type="text" placeholder="task を 追加 · 例 「@吉田 · 提案 書 続き · 金 · P2」">
+        <span class="quick-add-hint">
+          <code>@客</code><code>期限</code><code>P1</code>
+        </span>
       </div>
-    </div>
-  `;
+      ${DATA.sections.map(renderSection).join('')}
+    </div>`;
 
   const renderEmpty = () => `
     <div class="card">
@@ -490,29 +413,40 @@
         <h2 class="card-title"><span class="card-title-icon">📝</span>今日 の TODO</h2>
         <div class="card-count"><b>0</b>件 未 対応</div>
       </div>
-      <div class="empty-state">
+      <div class="quick-add">
+        <span class="quick-add-plus">+</span>
+        <input class="quick-add-input" type="text" placeholder="task を 追加 · 例 「@吉田 · 提案 書 続き · 金 · P2」">
+        <span class="quick-add-hint"><code>@客</code><code>期限</code><code>P1</code></span>
+      </div>
+      <div class="empty">
         <div class="empty-emoji">✨</div>
         <p class="empty-title">今日 は 急ぎ 対応 すべき方 は いません</p>
-        <p class="empty-sub">全 ${DATA.countTotal} 名 と 直近 21 日 以内 に 接触 済 · 次 の 打ち手 を どうぞ</p>
+        <p class="empty-sub">全 ${DATA.total} 名 と 直近 21 日 以内 に 接触 済 · 次 の 打ち手 を どうぞ</p>
         <button class="empty-cta">🔔 ご無沙汰 フォロー</button>
         <button class="empty-cta">👥 顧客 台帳</button>
       </div>
-    </div>
-  `;
+    </div>`;
 
   const frame = document.getElementById('frame');
   const setState = (mode) => {
     frame.innerHTML = mode === 'empty' ? renderEmpty() : renderFull();
+    frame.querySelectorAll('[data-section-toggle]').forEach(h => {
+      h.addEventListener('click', () => h.closest('.section').classList.toggle('is-open'));
+    });
+    frame.querySelectorAll('[data-row]').forEach(row => {
+      row.addEventListener('click', (e) => {
+        if (e.target.closest('[data-check]') || e.target.closest('[data-action]') || e.target.closest('.task-expand-actions')) return;
+        row.classList.toggle('is-expanded');
+      });
+    });
     frame.querySelectorAll('[data-check]').forEach(el => {
-      el.addEventListener('click', () => {
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
         const row = el.closest('.task-row');
         const now = el.classList.toggle('is-checked');
         if (now) setTimeout(() => row.classList.add('is-done'), 220);
         else row.classList.remove('is-done');
       });
-    });
-    frame.querySelectorAll('[data-group-toggle]').forEach(head => {
-      head.addEventListener('click', () => head.closest('.group').classList.toggle('is-open'));
     });
   };
   document.getElementById('btn-empty').addEventListener('click', () => setState('empty'));
