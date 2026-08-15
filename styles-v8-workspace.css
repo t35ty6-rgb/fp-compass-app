@@ -12393,3 +12393,155 @@ label.fp-task-check:has(input:checked) { background: #5B5BF0; border-color: #5B5
   .fp-sheet, .fp-sheet-backdrop { animation: none; }
   .fp-pcard:hover { transform: none; }
 }
+
+/* ============================================
+ * 2026-08-16 owner「Trello みたい な TODO に」 対応 · kanban 4 列 board
+ * 既 存 FP Compass palette (Indigo #5B5BF0 + Slate) 100% 維持 · Trello の 構造 のみ 抜粋
+ * ============================================ */
+.fp-kanban-board {
+  display: flex;
+  gap: 12px;
+  padding: 4px 0 20px;
+  overflow-x: auto;
+  align-items: flex-start;
+  min-height: 400px;
+}
+.fp-kanban-col {
+  flex: 0 0 280px;
+  max-height: 620px;
+  background: rgba(241, 245, 249, 0.72);
+  border: 1px solid #E2E8F0;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.fp-kanban-col-head {
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(203, 213, 225, 0.4);
+}
+.fp-kanban-col-title { font-size: 12.5px; font-weight: 800; color: #0F172A; letter-spacing: 0.02em; }
+.fp-kanban-col-count {
+  font-family: 'Manrope', sans-serif; font-size: 11px; font-weight: 700;
+  color: #64748B; background: #F1F5F9;
+  padding: 2px 8px; border-radius: 999px;
+}
+.fp-kanban-col.is-alarm .fp-kanban-col-title { color: #DC2626; }
+.fp-kanban-col.is-alarm .fp-kanban-col-count { background: #FEE2E2; color: #DC2626; }
+.fp-kanban-col.is-warn .fp-kanban-col-title { color: #D97706; }
+.fp-kanban-col.is-warn .fp-kanban-col-count { background: #FEF3C7; color: #D97706; }
+.fp-kanban-col.is-done .fp-kanban-col-title { color: #059669; }
+.fp-kanban-col.is-done .fp-kanban-col-count { background: #D1FAE5; color: #059669; }
+.fp-kanban-col-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 8px 4px;
+  display: flex; flex-direction: column; gap: 8px;
+  min-height: 60px;
+}
+.fp-kanban-col-body.is-drop-target { background: rgba(91, 91, 240, 0.06); }
+.fp-kanban-card {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  padding: 10px 12px;
+  box-shadow: 0 1px 2px rgba(15,23,42,0.05);
+  cursor: grab;
+  transition: transform 120ms, box-shadow 120ms, opacity 200ms;
+  position: relative;
+}
+.fp-kanban-card:hover { box-shadow: 0 2px 6px rgba(15,23,42,0.09); transform: translateY(-1px); }
+.fp-kanban-card:active { cursor: grabbing; }
+.fp-kanban-card.dragging { opacity: 0.4; }
+.fp-kanban-card.done { opacity: 0.5; background: #F8FAFC; }
+.fp-kanban-card::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+  width: 3px; border-top-left-radius: 8px; border-bottom-left-radius: 8px;
+  background: #CBD5E1;
+}
+.fp-kanban-card[data-p="p1"]::before { background: #DC2626; }
+.fp-kanban-card[data-p="p2"]::before { background: #D97706; }
+.fp-kanban-card[data-p="p3"]::before { background: #94A3B8; }
+.fp-kanban-card-labels {
+  display: flex; gap: 4px; margin-bottom: 6px;
+}
+.fp-kanban-card-label { height: 6px; width: 28px; border-radius: 3px; background: #CBD5E1; }
+.fp-kanban-card-label.p1 { background: #DC2626; }
+.fp-kanban-card-label.p2 { background: #D97706; }
+.fp-kanban-card-label.line { background: #06C755; }
+.fp-kanban-card-label.zoom { background: #2D8CFF; }
+.fp-kanban-card-label.proposal { background: #A855F7; }
+.fp-kanban-card-label.manual { background: #6B46C1; }
+.fp-kanban-card-title {
+  font-size: 13px; font-weight: 600; color: #0F172A;
+  line-height: 1.4; margin: 0 0 6px;
+  letter-spacing: 0.005em;
+  overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
+}
+.fp-kanban-card-meta {
+  display: flex; align-items: center; gap: 8px; margin-top: 8px;
+}
+.fp-kanban-card-avatar {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: #EEF0FF; color: #5B5BF0;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-family: 'Manrope', sans-serif; font-size: 10.5px; font-weight: 800;
+  flex-shrink: 0; overflow: hidden;
+}
+.fp-kanban-card-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+.fp-kanban-card-who { font-size: 11.5px; color: #64748B; font-weight: 600; }
+.fp-kanban-card-due {
+  margin-left: auto;
+  font-family: 'Manrope', sans-serif;
+  font-size: 11px; color: #64748B; font-weight: 700;
+  padding: 2px 7px; border-radius: 4px;
+  background: #F1F5F9;
+  display: inline-flex; align-items: center; gap: 4px;
+  white-space: nowrap;
+}
+.fp-kanban-card-due .icon { width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: 0.6; }
+.fp-kanban-card[data-p="p1"] .fp-kanban-card-due { color: #DC2626; background: #FEE2E2; }
+.fp-kanban-card[data-p="p2"] .fp-kanban-card-due { color: #D97706; background: #FEF3C7; }
+.fp-kanban-card-check {
+  background: #FFFFFF; border: 1.5px solid #CBD5E1;
+  color: #64748B;
+  width: 20px; height: 20px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer; padding: 0;
+  transition: all 150ms; flex-shrink: 0;
+}
+.fp-kanban-card-check:hover { border-color: #059669; color: #059669; }
+.fp-kanban-card-check svg { width: 10px; height: 10px; opacity: 0; }
+.fp-kanban-card-check.on { background: #059669; border-color: #059669; color: #FFFFFF; }
+.fp-kanban-card-check.on svg { opacity: 1; }
+.fp-kanban-card-actions {
+  display: flex; gap: 4px; margin-top: 8px; flex-wrap: wrap;
+}
+.fp-kanban-card-actions button {
+  background: #FFFFFF; color: #0F172A;
+  border: 1px solid #CBD5E1;
+  padding: 4px 8px; border-radius: 5px;
+  font-family: inherit; font-size: 11px; font-weight: 700;
+  cursor: pointer; white-space: nowrap;
+  transition: background 150ms, border-color 150ms, color 150ms;
+}
+.fp-kanban-card-actions button:hover { background: #5B5BF0; color: #fff; border-color: #5B5BF0; }
+.fp-kanban-card-actions button.is-primary {
+  background: #5B5BF0; color: #fff; border-color: #5B5BF0;
+}
+.fp-kanban-card-actions button.is-primary:hover { background: #4747D8; border-color: #4747D8; }
+.fp-kanban-col-add {
+  margin: 2px 8px 8px;
+  background: transparent; border: 0;
+  color: #64748B; font-family: inherit;
+  font-size: 12px; font-weight: 600;
+  text-align: left;
+  padding: 8px 10px; border-radius: 6px;
+  cursor: pointer;
+  transition: background 150ms, color 150ms;
+}
+.fp-kanban-col-add:hover { background: rgba(91,91,240,0.08); color: #5B5BF0; }
+@media (max-width: 640px) {
+  .fp-kanban-col { flex: 0 0 260px; max-height: none; }
+}

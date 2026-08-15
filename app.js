@@ -2492,124 +2492,29 @@
     // Google Calendar 風 view (owner 2026-08-06: 週/2週/月 切替)
     renderV3Schedule(clients, tasks, today);
 
-    // 今日 の TODO — 5 category (LINE返信 / 日程調整 / 今日Zoom / その他至急 / 提案) に 色分/箱分 (owner 2026-08-05 明示)
+    // ★ 2026-08-16 owner「Trello みたい な TODO に」対応:
+    //   today + tomorrow の 2 縦 list → 1 kanban 4 列 board (今日 / 今週 / 今月 / 完了)
+    //   drag drop で 列 間 移動 · 移動 状態 は localStorage に override 保存
+    //   FIRST: 明日 section を hide (v3h-tomorrow section)
+    const tomorrowSection = document.getElementById('v3h-tomorrow-list')?.closest('.v3h-section');
+    if (tomorrowSection) tomorrowSection.style.display = 'none';
+
     const todayList = document.getElementById('v3h-today-list');
     const todayCountEl = document.getElementById('v3h-today-count');
-    const todayTasks = tasks.filter(t => t.urgencyRank === 0);
-    if (todayCountEl) todayCountEl.textContent = `·  ${todayTasks.length}`;
+    const activeTasks = tasks.filter(t => !isTodoDone(t));
+    if (todayCountEl) todayCountEl.textContent = `·  ${activeTasks.length}`;
     if (todayList) {
-      // ★ 2026-08-16 owner「案 A · quick add bar 上 」対応: today list 先頭 に 追加
-      const quickAddHtml = `
-        <div class="fp-quick-add" style="margin-bottom:12px;">
-          <span class="fp-quick-add-plus">+</span>
-          <input class="fp-quick-add-input" type="text" placeholder="task を 追加 · 例 「@吉田 · 提案 書 続き · 金 · P2」" data-quickadd-main>
-          <span class="fp-quick-add-hint"><code>@客</code><code>期限</code><code>P1</code></span>
-        </div>`;
-      if (todayTasks.length === 0) {
-        todayList.innerHTML = quickAddHtml + `<div class="v3h-empty">今日 急ぎ で 対応 する タスク は ありません。 明日 以降 の 予定 を 下 で 確認。</div>`;
-      } else {
-        // client map for avatar lookup
-        const cMap = new Map();
-        (clients || []).forEach(c => { if (c.id) cMap.set(c.id, c); });
-        // 5 buckets (owner 明示 順序: LINE 返信 → 日程調整 → 今日 Zoom → 手動 → その他)
-        const groups = [
-          { key: 'line',     title: 'LINE 返信',   icon: '💬', tone: 'urgent',   items: [] },
-          { key: 'schedule', title: '日程調整',    icon: '📅', tone: 'urgent',   items: [] },
-          { key: 'zoom',     title: '今日 の Zoom', icon: '📞', tone: 'urgent',   items: [] },
-          { key: 'manual',   title: '手動 メモ',   icon: '📝', tone: 'neutral',  items: [] },
-          { key: 'other',    title: 'その他 至急', icon: '🔴', tone: 'urgent',   items: [] },
-        ];
-        todayTasks.forEach(t => {
-          const bucket =
-            t.type === 'line-reply' ? 'line' :
-            t.type === 'schedule'   ? 'schedule' :
-            t.type === 'booking'    ? 'zoom' :
-            t.type === 'manual'     ? 'manual' :
-            'other';
-          groups.find(g => g.key === bucket)?.items.push(t);
-        });
-        const shown = groups.filter(g => g.items.length > 0);
-        // ★ 2026-08-16 「大切 な もの だけ」 対応: 各 group top-5 default + 残り は 展開 button
-        const TOP_N = 5;
-        todayList.innerHTML = quickAddHtml + shown.map((g, gi) => {
-          const top = g.items.slice(0, TOP_N);
-          const rest = g.items.slice(TOP_N);
-          const gid = 'v3-today-rest-' + gi;
-          return `
-          <div class="fp-task-group fp-task-group-${g.tone}" data-group-collapsed="0">
-            <div class="fp-task-group-head">
-              <span class="fp-task-group-arrow">▶</span>
-              <span class="fp-task-group-pill fp-task-group-pill-${g.tone}">${g.icon} ${escapeHtml(g.title)}</span>
-              <span class="fp-task-group-count">${g.items.length}</span>
-            </div>
-            <div class="fp-task-group-items">
-              ${top.map((t, i) => v3TodoHtml(t, i, cMap)).join('')}
-              ${rest.length > 0 ? `
-                <div class="fp-task-showmore-hidden" id="${gid}">${rest.map((t, i) => v3TodoHtml(t, TOP_N + i, cMap)).join('')}</div>
-                <button class="fp-task-showmore" data-showmore="${gid}" type="button">+ 残り ${rest.length} 件 を 表示 (大切 でない 可能性)</button>
-              ` : ''}
-            </div>
-          </div>`;
-        }).join('');
-        // Wire: 「+ 残り N 件」 button
-        todayList.querySelectorAll('[data-showmore]').forEach(btn => {
-          btn.addEventListener('click', () => {
-            const t = document.getElementById(btn.dataset.showmore);
-            if (t) t.classList.remove('fp-task-showmore-hidden');
-            btn.remove();
-          });
-        });
-        // Wire: quick add (Enter で 手動 task 追加)
-        todayList.querySelectorAll('[data-quickadd-main]').forEach(input => {
-          input.addEventListener('keydown', (e) => {
-            if (e.key !== 'Enter') return;
-            const raw = input.value.trim(); if (!raw) return;
-            const parts = raw.split(/[·・]/).map(s => s.trim()).filter(Boolean);
-            let who = '', title = raw, due = 'today', priority = 'p2';
-            parts.forEach(p => {
-              if (p.startsWith('@')) who = p.slice(1);
-              else if (/^p[1-4]$/i.test(p)) priority = p.toLowerCase();
-              else if (/(今日|today)/i.test(p)) due = 'today';
-              else if (/(明日|tomorrow)/i.test(p)) due = 'tomorrow';
-              else if (/(週|week|月|火|水|木|金|土|日)/i.test(p)) due = 'week';
-              else if (title === raw) title = p;
-            });
-            if (who && !title.includes(who)) title = `${who} 様 · ${title}`;
-            addManualTodo({ task: title, due, priority, dueLabel: due === 'today' ? '今日 中' : due === 'tomorrow' ? '明日' : '今週 中' });
-            input.value = '';
-            try { renderDashboard(); } catch(_) {}
-          });
-        });
-        // Wire: task body / row click → 客モーダル + checkbox toggle
-        todayList.querySelectorAll('.fp-task-row').forEach(el => {
-          el.addEventListener('click', (ev) => {
-            if (ev.target.closest('.fp-task-check') || ev.target.closest('.fp-task-act') || ev.target.closest('.fp-task-showmore')) return;
-            const id = el.dataset.clientId;
-            if (id) openClientModal(id);
-          });
-          el.querySelector('.fp-task-check-input')?.addEventListener('change', (ev) => {
-            ev.stopPropagation();
-            const checked = ev.target.checked;
-            if (checked) setTimeout(() => el.classList.add('fp-task-row-done'), 220);
-            else el.classList.remove('fp-task-row-done');
-            updateV3Progress();
-          });
-        });
-      }
+      renderV3KanbanBoard(todayList, tasks, clients);
     }
 
-    // 明日 の TODO (urgencyRank === 1 の うち 面談 予約)
-    const tomorrowList = document.getElementById('v3h-tomorrow-list');
-    const tomorrowCountEl = document.getElementById('v3h-tomorrow-count');
-    const tomorrowTitle = document.getElementById('v3h-tomorrow-title');
-    const tomorrow = new Date(today.getTime() + 86400000);
-    if (tomorrowTitle) tomorrowTitle.textContent = `明日 · ${tomorrow.getMonth()+1}/${tomorrow.getDate()} (${W[tomorrow.getDay()]})`;
-    const tomorrowTasks = tasks.filter(t => t.urgencyRank === 1);
-    if (tomorrowCountEl) tomorrowCountEl.textContent = `·  ${tomorrowTasks.length}`;
-    if (tomorrowList) {
-      if (tomorrowTasks.length === 0) {
+    // ★ 2026-08-16: 明日 section は kanban に 統合 済 (今週 列) · render skip
+    //   dead-code guard で 元 の 明日 render は false 判定 で 実行 されない
+    if (false) {
+      const tomorrowList = document.getElementById('v3h-tomorrow-list');
+      const tomorrowTasks = tasks.filter(t => t.urgencyRank === 1);
+      if (tomorrowList && tomorrowTasks.length === 0) {
         tomorrowList.innerHTML = `<div class="v3h-empty">今週 予定 の タスク なし。</div>`;
-      } else {
+      } else if (tomorrowList) {
         // owner 2026-08-06: 明日 section も 今日 と 同じ group box treatment
         const cMap2 = new Map();
         (clients || []).forEach(c => { if (c.id) cMap2.set(c.id, c); });
@@ -2759,6 +2664,202 @@
       </div>
     `;
   }
+
+  // ★ 2026-08-16 owner「Trello みたい な TODO に · それ で 実装 させよう」対応
+  //   4 列 kanban board: 今日 / 今週 / 今月 / 完了
+  //   drag drop で 列 間 移動 · localStorage `fp-kanban-col-override` に taskKey→col の 上書き 保存
+  //   quick add · check button · 「+ カード を 追加」 · action button 全 実装
+  const KANBAN_COL_KEY = 'fp-kanban-col-override';
+  function loadKanbanOverride() {
+    try { return JSON.parse(localStorage.getItem(KANBAN_COL_KEY) || '{}'); } catch(_) { return {}; }
+  }
+  function saveKanbanOverride(map) {
+    try { localStorage.setItem(KANBAN_COL_KEY, JSON.stringify(map || {})); } catch(_) {}
+  }
+  function kanbanColOf(t, override) {
+    const key = taskKeyFor(t);
+    if (override[key]) return override[key];
+    if (isTodoDone(t)) return 'done';
+    if (t.urgencyRank === 0) return 'today';
+    if (t.urgencyRank === 1) return 'week';
+    return 'month';
+  }
+  function v3KanbanCardHtml(t, cMap) {
+    const key = taskKeyFor(t);
+    const p = t.priority || (t.urgencyRank === 0 ? 'p1' : t.urgencyRank === 1 ? 'p2' : 'p3');
+    const done = isTodoDone(t);
+    const hasClient = !!(t.clientName && t.clientId);
+    const c = hasClient && cMap ? cMap.get(t.clientId) : null;
+    const avatarUrl = c && (c.linePictureUrl || c.pictureUrl) ? (c.linePictureUrl || c.pictureUrl) : null;
+    const initial = (t.clientName || '?').replace(/\s+/g, '').charAt(0) || '?';
+    const avatarInner = avatarUrl
+      ? `<img src="${escapeHtml(avatarUrl)}" alt="" loading="lazy" onerror="this.outerHTML='${escapeHtml(initial)}'">`
+      : escapeHtml(initial);
+    const labels = [];
+    if (p === 'p1') labels.push('p1');
+    else if (p === 'p2') labels.push('p2');
+    if (t.type === 'line-reply') labels.push('line');
+    else if (t.type === 'schedule' || t.type === 'booking') labels.push('zoom');
+    else if (t.type === 'proposal') labels.push('proposal');
+    else if (t.type === 'manual') labels.push('manual');
+    let actionBtn = '';
+    if (t.type === 'line-reply') {
+      actionBtn = `<button class="is-primary" data-act="line-reply" data-client-id="${escapeHtml(t.clientId)}" onclick="event.stopPropagation()" type="button">💬 返信</button>`;
+    } else if (t.type === 'schedule') {
+      if ((t.timeLabel || '').includes('要 発行')) {
+        actionBtn = `<button class="is-primary" data-act="zoom-issue" data-client-id="${escapeHtml(t.clientId)}" onclick="event.stopPropagation()" type="button">🎥 Zoom URL</button>`;
+      } else {
+        actionBtn = `<button data-act="slots-resend" data-client-id="${escapeHtml(t.clientId)}" onclick="event.stopPropagation()" type="button">📅 候補日</button>`;
+      }
+    }
+    const delBtn = t.__manualId
+      ? `<button data-manual-id="${escapeHtml(t.__manualId)}" onclick="event.stopPropagation()" type="button" style="border-color:#FCA5A5;color:#DC2626;">✕</button>`
+      : '';
+    return `
+      <div class="fp-kanban-card ${done ? 'done' : ''}" draggable="true" data-p="${escapeHtml(p)}" data-card-key="${escapeHtml(key)}" data-client-id="${escapeHtml(t.clientId || '')}">
+        ${labels.length ? `<div class="fp-kanban-card-labels">${labels.map(l => `<span class="fp-kanban-card-label ${l}"></span>`).join('')}</div>` : ''}
+        <p class="fp-kanban-card-title">${hasClient ? `<b>${escapeHtml(t.clientName)} 様</b> · ` : ''}${escapeHtml(t.title)}</p>
+        <div class="fp-kanban-card-meta">
+          <button class="fp-kanban-card-check ${done ? 'on' : ''}" data-check onclick="event.stopPropagation()" title="完了" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </button>
+          <span class="fp-kanban-card-avatar">${avatarInner}</span>
+          ${hasClient ? `<span class="fp-kanban-card-who">${escapeHtml(t.clientName)}</span>` : ''}
+          ${t.timeLabel ? `<span class="fp-kanban-card-due"><span class="icon"></span>${escapeHtml(t.timeLabel)}</span>` : ''}
+        </div>
+        ${(actionBtn || delBtn) ? `<div class="fp-kanban-card-actions">${actionBtn}${delBtn}</div>` : ''}
+      </div>`;
+  }
+  function renderV3KanbanBoard(container, tasks, clients) {
+    const cMap = new Map();
+    (clients || []).forEach(c => { if (c.id) cMap.set(c.id, c); });
+    const override = loadKanbanOverride();
+    const cols = [
+      { id: 'today', title: '今日 中', tone: 'alarm', tasks: [] },
+      { id: 'week',  title: '今週 中', tone: 'warn',  tasks: [] },
+      { id: 'month', title: '今月',    tone: 'neutral', tasks: [] },
+      { id: 'done',  title: '完了',    tone: 'done',  tasks: [] },
+    ];
+    tasks.forEach(t => {
+      const col = kanbanColOf(t, override);
+      const target = cols.find(c => c.id === col) || cols[2];
+      target.tasks.push(t);
+    });
+    const quickAddHtml = `
+      <div class="fp-quick-add" style="margin-bottom:14px;">
+        <span class="fp-quick-add-plus">+</span>
+        <input class="fp-quick-add-input" type="text" placeholder="task を 追加 · 例 「@吉田 · 提案 書 続き · 金 · P2」" data-quickadd-kanban>
+        <span class="fp-quick-add-hint"><code>@客</code><code>期限</code><code>P1</code></span>
+      </div>`;
+    const boardHtml = `
+      <div class="fp-kanban-board">
+        ${cols.map(col => `
+          <section class="fp-kanban-col is-${col.tone}" data-col-id="${col.id}">
+            <div class="fp-kanban-col-head">
+              <span class="fp-kanban-col-title">${escapeHtml(col.title)}</span>
+              <span class="fp-kanban-col-count">${col.tasks.length}</span>
+            </div>
+            <div class="fp-kanban-col-body" data-drop>
+              ${col.tasks.map(t => v3KanbanCardHtml(t, cMap)).join('')}
+            </div>
+            <button class="fp-kanban-col-add" data-add-col="${col.id}" type="button">+ カード を 追加</button>
+          </section>
+        `).join('')}
+      </div>`;
+    container.innerHTML = quickAddHtml + boardHtml;
+    // Wire: quick add
+    container.querySelector('[data-quickadd-kanban]')?.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter') return;
+      const raw = e.target.value.trim(); if (!raw) return;
+      const parts = raw.split(/[·・]/).map(s => s.trim()).filter(Boolean);
+      let who = '', title = raw, due = 'today', priority = 'p3';
+      parts.forEach(p => {
+        if (p.startsWith('@')) who = p.slice(1);
+        else if (/^p[1-4]$/i.test(p)) priority = p.toLowerCase();
+        else if (/(今日|today)/i.test(p)) due = 'today';
+        else if (/(明日|tomorrow)/i.test(p)) due = 'tomorrow';
+        else if (/(週|week|月|火|水|木|金|土|日)/i.test(p)) due = 'week';
+        else if (title === raw) title = p;
+      });
+      if (who && !title.includes(who)) title = `${who} 様 · ${title}`;
+      addManualTodo({ task: title, due, priority, dueLabel: due === 'today' ? '今日 中' : due === 'tomorrow' ? '明日' : '今週 中' });
+      e.target.value = '';
+      try { renderDashboard(); } catch(_) {}
+    });
+    // Wire: drag drop
+    container.querySelectorAll('.fp-kanban-card').forEach(el => {
+      el.addEventListener('dragstart', (e) => {
+        e.dataTransfer.setData('text/plain', el.dataset.cardKey);
+        e.dataTransfer.effectAllowed = 'move';
+        setTimeout(() => el.classList.add('dragging'), 0);
+      });
+      el.addEventListener('dragend', () => el.classList.remove('dragging'));
+    });
+    container.querySelectorAll('[data-drop]').forEach(body => {
+      body.addEventListener('dragover', (e) => { e.preventDefault(); body.classList.add('is-drop-target'); });
+      body.addEventListener('dragleave', () => body.classList.remove('is-drop-target'));
+      body.addEventListener('drop', (e) => {
+        e.preventDefault();
+        body.classList.remove('is-drop-target');
+        const key = e.dataTransfer.getData('text/plain');
+        const targetColId = body.closest('.fp-kanban-col')?.dataset.colId;
+        if (!key || !targetColId) return;
+        const ov = loadKanbanOverride();
+        ov[key] = targetColId;
+        // done col への drop = 自動 done set
+        if (targetColId === 'done') {
+          const t = tasks.find(x => taskKeyFor(x) === key);
+          if (t && !isTodoDone(t)) toggleTodoDone(t);
+        }
+        saveKanbanOverride(ov);
+        try { renderDashboard(); } catch(_) {}
+      });
+    });
+    // Wire: check button
+    container.querySelectorAll('[data-check]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const card = btn.closest('.fp-kanban-card');
+        const key = card?.dataset.cardKey;
+        const t = tasks.find(x => taskKeyFor(x) === key);
+        if (!t) return;
+        btn.classList.toggle('on');
+        setTimeout(() => {
+          toggleTodoDone(t);
+          try { renderDashboard(); } catch(_) {}
+        }, 220);
+      });
+    });
+    // Wire: card click → 客モーダル
+    container.querySelectorAll('.fp-kanban-card').forEach(el => {
+      el.addEventListener('click', (e) => {
+        if (e.target.closest('[data-check]') || e.target.closest('.fp-kanban-card-actions button')) return;
+        const id = el.dataset.clientId;
+        if (id) openClientModal(id);
+      });
+    });
+    // Wire: 「+ カード を 追加」
+    container.querySelectorAll('[data-add-col]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const colId = btn.dataset.addCol;
+        const t = prompt('新しい カード の 内容 (@客 · 期限 · P1 の 形式 も 可)');
+        if (!t) return;
+        let due = colId === 'today' ? 'today' : colId === 'week' ? 'week' : 'none';
+        let priority = colId === 'today' ? 'p1' : colId === 'week' ? 'p2' : 'p3';
+        addManualTodo({ task: t, due, priority, dueLabel: colId === 'today' ? '今日 中' : colId === 'week' ? '今週 中' : '' });
+        try { renderDashboard(); } catch(_) {}
+      });
+    });
+    // Wire: delete manual + action buttons (既 存 wire flow に 委任)
+    container.querySelectorAll('[data-manual-id]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const id = btn.dataset.manualId;
+        if (id) { deleteManualTodo(id); try { renderDashboard(); } catch(_) {} }
+      });
+    });
+  }
+  window.renderV3KanbanBoard = renderV3KanbanBoard;
 
   function buildV3WaitingList(clients) {
     const todayD = window.LifeEvents.TODAY || new Date();
