@@ -4101,11 +4101,26 @@
     const bookingTs = (booking && booking.ts) || '';
     const userId   = (booking && booking.userId) || '';
     const nameKey  = customerName || (booking && booking.name) || '';
-    const newTasks = (result.tasks || []).map(t => ({
+    // ★ 2026-08-16 owner 明示 「議事録 → TODO 候補 提示 → 選別 → 追加」対応:
+    //   auto 追加 廃止 · 候補 として localStorage `fp-ai-task-candidates` に 積む
+    //   render 直後 の toast/modal で owner が レビュー · 「追加」 click 時 のみ 実 TODO 化
+    const candidates = (result.tasks || []).map(t => ({
+      id: 'aic-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7),
       task: t.task, due: t.dueDate, priority: t.priority, icon: t.icon,
       recommendedAction: t.recommendedAction, actionTemplate: t.lineDraft,
-      createdAt: new Date().toISOString(), customerName: nameKey, bookingTs,
+      createdAt: new Date().toISOString(),
+      customerName: nameKey, clientId: booking?.clientId || booking?.userId || '',
+      bookingTs, source: 'ai-meeting',
     }));
+    if (candidates.length > 0) {
+      try {
+        const stored = JSON.parse(localStorage.getItem('fp-ai-task-candidates') || '[]');
+        localStorage.setItem('fp-ai-task-candidates', JSON.stringify([...stored, ...candidates]));
+        // owner 通知: 「議事録 生成 完了 · TODO 候補 X 件 · レビュー する」 button
+        try { showAiTaskCandidateReviewToast(candidates.length, nameKey); } catch(_) {}
+      } catch(_) {}
+    }
+    const newTasks = []; // ★ 旧 auto 追加 の 空 化 (下記 GAS 保存 は entry のみ · tasks は 別 経路)
     const entry = {
       bookingTs, userId, customerName: nameKey,
       date: booking && booking.date,
@@ -10338,6 +10353,109 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
     }
     try { await fetchLiveData(); } catch(_) {}
   }
+
+  // ★ 2026-08-16 owner「議事録 → TODO 候補 → 選別 → 追加」対応
+  //   toast (通知): 議事録 生成 完了 · 候補 X 件 · 「レビュー」 button
+  function showAiTaskCandidateReviewToast(count, name) {
+    // 既 存 toast 撤去
+    document.getElementById('fp-ai-cand-toast')?.remove();
+    const t = document.createElement('div');
+    t.id = 'fp-ai-cand-toast';
+    t.style.cssText = 'position:fixed;bottom:24px;right:24px;background:#0F172A;color:#fff;padding:14px 18px;border-radius:10px;box-shadow:0 12px 30px rgba(15,23,42,0.35);font-family:"Noto Sans JP",sans-serif;font-size:13px;z-index:99998;display:flex;align-items:center;gap:12px;max-width:400px;';
+    t.innerHTML = `
+      <span style="font-size:20px;">💡</span>
+      <div style="flex:1;">
+        <div style="font-weight:800;margin-bottom:2px;">議事録 完了 · TODO 候補 ${count} 件</div>
+        <div style="font-size:11.5px;color:#94A3B8;">${escapeHtml(name || '')} 様 の 面談 から 抽出</div>
+      </div>
+      <button id="fp-ai-cand-review" style="background:#5B5BF0;color:#fff;border:none;padding:8px 14px;border-radius:6px;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;">レビュー</button>
+      <button id="fp-ai-cand-dismiss" style="background:transparent;color:#94A3B8;border:none;font-size:18px;cursor:pointer;padding:0 4px;">×</button>
+    `;
+    document.body.appendChild(t);
+    document.getElementById('fp-ai-cand-review').onclick = () => { t.remove(); openAiTaskCandidateReviewModal(); };
+    document.getElementById('fp-ai-cand-dismiss').onclick = () => t.remove();
+    setTimeout(() => { if (document.body.contains(t)) t.remove(); }, 30000);
+  }
+  window.showAiTaskCandidateReviewToast = showAiTaskCandidateReviewToast;
+
+  // modal: 候補 全 表示 · チェック で 選別 · 「追加」 で kanban に 積む
+  function openAiTaskCandidateReviewModal() {
+    const cands = (function() { try { return JSON.parse(localStorage.getItem('fp-ai-task-candidates') || '[]'); } catch(_) { return []; } })();
+    if (cands.length === 0) { alert('レビュー する 候補 なし'); return; }
+    document.getElementById('fp-ai-cand-modal')?.remove();
+    const priorityLabel = { p1: '🔴 至急', p2: '🟠 今週', p3: '🔵 いつか' };
+    const overlay = document.createElement('div');
+    overlay.id = 'fp-ai-cand-modal';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.55);z-index:99999;display:flex;align-items:center;justify-content:center;font-family:"Noto Sans JP",sans-serif;';
+    overlay.innerHTML = `
+      <div style="background:#fff;border-radius:12px;max-width:640px;width:92%;max-height:82vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 32px 80px rgba(0,0,0,0.4);">
+        <div style="padding:22px 26px;border-bottom:1px solid #E2E8F0;">
+          <div style="font-size:11.5px;font-weight:800;color:#5B5BF0;letter-spacing:0.1em;margin-bottom:4px;">MEETING → TODO</div>
+          <h2 style="font-size:18px;font-weight:800;color:#0F172A;margin:0;">議事録 から 抽出 した TODO 候補</h2>
+          <p style="font-size:12.5px;color:#64748B;margin:6px 0 0;">追加 する もの に ☑ を 入れて 下 の 「追加」 を 押してください。 チェック 外し は 破棄。</p>
+        </div>
+        <div style="padding:16px 26px;overflow-y:auto;flex:1;" id="fp-ai-cand-list">
+          ${cands.map(c => `
+            <label style="display:flex;align-items:flex-start;gap:12px;padding:11px 12px;border:1px solid #E2E8F0;border-radius:8px;margin-bottom:8px;cursor:pointer;background:#F8FAFC;">
+              <input type="checkbox" data-cand-id="${escapeHtml(c.id)}" checked style="width:18px;height:18px;accent-color:#5B5BF0;margin-top:2px;cursor:pointer;flex-shrink:0;">
+              <div style="flex:1;min-width:0;">
+                <div style="font-size:13.5px;font-weight:700;color:#0F172A;line-height:1.4;">${c.icon ? c.icon + ' ' : ''}${escapeHtml(c.task || '(内容 未 記載)')}</div>
+                <div style="font-size:11.5px;color:#64748B;margin-top:4px;display:flex;gap:12px;flex-wrap:wrap;">
+                  <span>${escapeHtml(c.customerName || '客 未 特定')} 様</span>
+                  <span>${priorityLabel[c.priority] || '🔵 いつか'}</span>
+                  ${c.due ? `<span>期限 ${escapeHtml(c.due)}</span>` : ''}
+                </div>
+                ${c.recommendedAction ? `<div style="font-size:11.5px;color:#64748B;margin-top:5px;background:#F1F5F9;padding:6px 10px;border-radius:6px;">推奨: ${escapeHtml(c.recommendedAction)}</div>` : ''}
+              </div>
+            </label>
+          `).join('')}
+        </div>
+        <div style="padding:16px 26px;border-top:1px solid #E2E8F0;display:flex;gap:8px;justify-content:flex-end;">
+          <button id="fp-ai-cand-cancel" style="background:#fff;border:1px solid #CBD5E1;color:#475569;padding:9px 18px;border-radius:8px;font-family:inherit;font-size:13px;font-weight:800;cursor:pointer;">キャンセル</button>
+          <button id="fp-ai-cand-toggle-all" style="background:#fff;border:1px solid #CBD5E1;color:#475569;padding:9px 18px;border-radius:8px;font-family:inherit;font-size:13px;font-weight:800;cursor:pointer;">☑ 全 選択 / 解除</button>
+          <button id="fp-ai-cand-add" style="background:#5B5BF0;color:#fff;border:none;padding:9px 22px;border-radius:8px;font-family:inherit;font-size:13px;font-weight:800;cursor:pointer;">➕ TODO に 追加</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    document.getElementById('fp-ai-cand-cancel').onclick = () => overlay.remove();
+    document.getElementById('fp-ai-cand-toggle-all').onclick = () => {
+      const boxes = overlay.querySelectorAll('input[data-cand-id]');
+      const allOn = [...boxes].every(b => b.checked);
+      boxes.forEach(b => b.checked = !allOn);
+    };
+    document.getElementById('fp-ai-cand-add').onclick = () => {
+      const selected = [...overlay.querySelectorAll('input[data-cand-id]:checked')].map(b => b.dataset.candId);
+      const stored = (function() { try { return JSON.parse(localStorage.getItem('fp-ai-task-candidates') || '[]'); } catch(_) { return []; } })();
+      const toAdd = stored.filter(c => selected.includes(c.id));
+      // add via app.js addManualTodo (window.__fpAddManualTodo か 既存 helper 経由)
+      toAdd.forEach(c => {
+        const dueMap = { 'today': 'today', 'tomorrow': 'tomorrow', 'week': 'week' };
+        const dueKey = dueMap[String(c.due).toLowerCase()] || (c.priority === 'p1' ? 'today' : c.priority === 'p2' ? 'week' : 'none');
+        if (typeof window.__fpAddManualTodo === 'function') {
+          window.__fpAddManualTodo({
+            task: `${c.customerName || '客'} 様 · ${c.task}`,
+            due: dueKey,
+            priority: c.priority || 'p2',
+            dueLabel: dueKey === 'today' ? '今日 中' : dueKey === 'tomorrow' ? '明日' : dueKey === 'week' ? '今週 中' : '',
+            clientId: c.clientId,
+            memo: c.recommendedAction || '',
+            source: 'ai-meeting',
+            bookingTs: c.bookingTs,
+          });
+        }
+      });
+      // 選ばれた 候補 を stored から 削除、 選ばれ なかった の は 継続 保持 (次 レビュー で 再表示)
+      const remaining = stored.filter(c => !selected.includes(c.id));
+      try { localStorage.setItem('fp-ai-task-candidates', JSON.stringify(remaining)); } catch(_) {}
+      overlay.remove();
+      // reload dashboard で 新規 追加 分 反映
+      try { if (window.renderDashboard) window.renderDashboard(); } catch(_) {}
+      try { if (window.FPCrmRefreshClients) window.FPCrmRefreshClients(); } catch(_) {}
+      alert(`✓ ${toAdd.length} 件 を TODO に 追加 しました`);
+    };
+  }
+  window.openAiTaskCandidateReviewModal = openAiTaskCandidateReviewModal;
 
   // 自動起動: app.js より後にロードされる line-app.js が IIFE 完了時に即 liveData fetch を開始
   // → LineApp タブを開いてなくても顧客台帳に LINE 友だちが反映される

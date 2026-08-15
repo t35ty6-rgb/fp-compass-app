@@ -2252,6 +2252,17 @@
   function deleteManualTodo(id) {
     saveManualTodos(loadManualTodos().filter(t => t.id !== id));
   }
+  function updateManualTodo(id, patch) {
+    const arr = loadManualTodos();
+    const idx = arr.findIndex(t => t.id === id);
+    if (idx === -1) return;
+    arr[idx] = { ...arr[idx], ...patch, updatedAt: new Date().toISOString() };
+    saveManualTodos(arr);
+  }
+  // ★ 2026-08-16: line-app.js の 議事録 → TODO 候補 追加 modal から 呼ばれる · 公開
+  window.__fpAddManualTodo = addManualTodo;
+  window.__fpUpdateManualTodo = updateManualTodo;
+  window.__fpDeleteManualTodo = deleteManualTodo;
 
   // ★ 2026-08-10 owner「TODO に チェックボックス + 完了 button」対応
   // 完了 状態 は localStorage 「fp-todo-done」 に taskKey → { doneAt } で 保管
@@ -2712,13 +2723,22 @@
         actionBtn = `<button data-act="slots-resend" data-client-id="${escapeHtml(t.clientId)}" onclick="event.stopPropagation()" type="button">📅 候補日</button>`;
       }
     }
-    const delBtn = t.__manualId
-      ? `<button data-manual-id="${escapeHtml(t.__manualId)}" onclick="event.stopPropagation()" type="button" style="border-color:#FCA5A5;color:#DC2626;">✕</button>`
+    // ★ 2026-08-16 owner「✕ 位置 デザイン 性 ない」 対応: ✕ は 右 上 に hover reveal · actions 枠 から 撤去
+    const cornerDel = t.__manualId
+      ? `<button class="fp-kanban-card-del" data-manual-id="${escapeHtml(t.__manualId)}" onclick="event.stopPropagation()" type="button" title="削除">×</button>`
       : '';
+    // メモ / URL 付き の 表示
+    const memo = t.memo || '';
+    const url = t.url || '';
+    const memoHtml = memo ? `<div class="fp-kanban-card-memo">${escapeHtml(memo)}</div>` : '';
+    const urlHtml = url ? `<a class="fp-kanban-card-url" href="${escapeHtml(url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">🔗 ${escapeHtml(url.replace(/^https?:\/\//,'').slice(0,32))}${url.length>32?'…':''}</a>` : '';
     return `
       <div class="fp-kanban-card ${done ? 'done' : ''}" draggable="true" data-p="${escapeHtml(p)}" data-card-key="${escapeHtml(key)}" data-client-id="${escapeHtml(t.clientId || '')}">
+        ${cornerDel}
         ${labels.length ? `<div class="fp-kanban-card-labels">${labels.map(l => `<span class="fp-kanban-card-label ${l}"></span>`).join('')}</div>` : ''}
         <p class="fp-kanban-card-title">${hasClient ? `<b>${escapeHtml(t.clientName)} 様</b> · ` : ''}${escapeHtml(t.title)}</p>
+        ${memoHtml}
+        ${urlHtml}
         <div class="fp-kanban-card-meta">
           <button class="fp-kanban-card-check ${done ? 'on' : ''}" data-check onclick="event.stopPropagation()" title="完了" type="button">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
@@ -2727,12 +2747,119 @@
           ${hasClient ? `<span class="fp-kanban-card-who">${escapeHtml(t.clientName)}</span>` : ''}
           ${t.timeLabel ? `<span class="fp-kanban-card-due"><span class="icon"></span>${escapeHtml(t.timeLabel)}</span>` : ''}
         </div>
-        ${(actionBtn || delBtn) ? `<div class="fp-kanban-card-actions">${actionBtn}${delBtn}</div>` : ''}
+        ${actionBtn ? `<div class="fp-kanban-card-actions">${actionBtn}</div>` : ''}
       </div>`;
   }
+
+  // ★ 2026-08-16 owner「メモ · URL 貼付 · 編集 でき ない」対応: card 詳細 modal
+  function openKanbanCardDetailModal(t) {
+    document.getElementById('fp-kanban-card-modal')?.remove();
+    const p = t.priority || (t.urgencyRank === 0 ? 'p1' : t.urgencyRank === 1 ? 'p2' : 'p3');
+    const isManual = !!t.__manualId;
+    const overlay = document.createElement('div');
+    overlay.id = 'fp-kanban-card-modal';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.55);z-index:99999;display:flex;align-items:center;justify-content:center;font-family:"Noto Sans JP",sans-serif;';
+    overlay.innerHTML = `
+      <div style="background:#fff;border-radius:12px;max-width:520px;width:92%;max-height:82vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 32px 80px rgba(0,0,0,0.4);">
+        <div style="padding:20px 24px;border-bottom:1px solid #E2E8F0;display:flex;align-items:baseline;justify-content:space-between;gap:10px;">
+          <div>
+            <div style="font-size:10.5px;font-weight:800;color:#5B5BF0;letter-spacing:0.14em;margin-bottom:3px;">TASK · ${isManual ? '手動' : (t.type || 'auto')}</div>
+            <h2 style="font-size:16px;font-weight:800;color:#0F172A;margin:0;">${t.clientName ? escapeHtml(t.clientName) + ' 様 · ' : ''}${escapeHtml(t.title)}</h2>
+          </div>
+          <button id="fp-kmodal-close" style="background:transparent;border:0;font-size:22px;color:#94A3B8;cursor:pointer;padding:0 4px;">×</button>
+        </div>
+        <div style="padding:16px 24px;overflow-y:auto;flex:1;">
+          <label style="display:block;font-size:11.5px;font-weight:700;color:#475569;margin-bottom:5px;">タイトル</label>
+          <input id="fp-kmodal-title" type="text" value="${escapeHtml(t.title || '')}" ${isManual ? '' : 'readonly style="background:#F1F5F9;"'} style="width:100%;padding:9px 12px;border:1.5px solid #E2E8F0;border-radius:6px;font-family:inherit;font-size:14px;margin-bottom:12px;">
+
+          <label style="display:block;font-size:11.5px;font-weight:700;color:#475569;margin-bottom:5px;">📝 メモ</label>
+          <textarea id="fp-kmodal-memo" rows="4" placeholder="自由 に メモ を 記入" style="width:100%;padding:9px 12px;border:1.5px solid #E2E8F0;border-radius:6px;font-family:inherit;font-size:13px;margin-bottom:12px;resize:vertical;">${escapeHtml(t.memo || '')}</textarea>
+
+          <label style="display:block;font-size:11.5px;font-weight:700;color:#475569;margin-bottom:5px;">🔗 関連 URL</label>
+          <input id="fp-kmodal-url" type="url" placeholder="https://…" value="${escapeHtml(t.url || '')}" style="width:100%;padding:9px 12px;border:1.5px solid #E2E8F0;border-radius:6px;font-family:inherit;font-size:13px;margin-bottom:12px;">
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <div>
+              <label style="display:block;font-size:11.5px;font-weight:700;color:#475569;margin-bottom:5px;">🚩 優先度</label>
+              <select id="fp-kmodal-priority" style="width:100%;padding:9px 10px;border:1.5px solid #E2E8F0;border-radius:6px;font-family:inherit;font-size:13px;">
+                <option value="p1" ${p==='p1'?'selected':''}>🔴 P1 至急</option>
+                <option value="p2" ${p==='p2'?'selected':''}>🟠 P2 今週</option>
+                <option value="p3" ${p==='p3'?'selected':''}>🔵 P3 いつか</option>
+              </select>
+            </div>
+            <div>
+              <label style="display:block;font-size:11.5px;font-weight:700;color:#475569;margin-bottom:5px;">📅 期限</label>
+              <select id="fp-kmodal-due" style="width:100%;padding:9px 10px;border:1.5px solid #E2E8F0;border-radius:6px;font-family:inherit;font-size:13px;">
+                <option value="today" ${t.due==='today'?'selected':''}>今日 中</option>
+                <option value="tomorrow" ${t.due==='tomorrow'?'selected':''}>明日</option>
+                <option value="week" ${t.due==='week'?'selected':''}>今週 中</option>
+                <option value="none" ${(!t.due||t.due==='none')?'selected':''}>期限 なし</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div style="padding:14px 24px;border-top:1px solid #E2E8F0;display:flex;gap:8px;justify-content:space-between;">
+          ${isManual ? `<button id="fp-kmodal-del" style="background:#fff;border:1px solid #FCA5A5;color:#DC2626;padding:9px 16px;border-radius:8px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;">🗑 削除</button>` : '<div></div>'}
+          <div style="display:flex;gap:8px;">
+            <button id="fp-kmodal-cancel" style="background:#fff;border:1px solid #CBD5E1;color:#475569;padding:9px 16px;border-radius:8px;font-family:inherit;font-size:13px;font-weight:800;cursor:pointer;">キャンセル</button>
+            <button id="fp-kmodal-save" style="background:#5B5BF0;color:#fff;border:none;padding:9px 22px;border-radius:8px;font-family:inherit;font-size:13px;font-weight:800;cursor:pointer;">💾 保存</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    const close = () => overlay.remove();
+    document.getElementById('fp-kmodal-close').onclick = close;
+    document.getElementById('fp-kmodal-cancel').onclick = close;
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+    const del = document.getElementById('fp-kmodal-del');
+    if (del) del.onclick = () => {
+      if (!confirm('この TODO を 削除?')) return;
+      deleteManualTodo(t.__manualId);
+      close();
+      try { renderDashboard(); } catch(_) {}
+    };
+    document.getElementById('fp-kmodal-save').onclick = () => {
+      const patch = {
+        memo: document.getElementById('fp-kmodal-memo').value.trim(),
+        url: document.getElementById('fp-kmodal-url').value.trim(),
+        priority: document.getElementById('fp-kmodal-priority').value,
+        due: document.getElementById('fp-kmodal-due').value,
+      };
+      if (isManual) {
+        const newTitle = document.getElementById('fp-kmodal-title').value.trim();
+        if (newTitle) patch.text = newTitle;
+        updateManualTodo(t.__manualId, patch);
+      } else {
+        // auto-gen task: memo/url は task-key 別 の localStorage に override 保存
+        try {
+          const key = taskKeyFor(t);
+          const ov = JSON.parse(localStorage.getItem('fp-task-meta-override') || '{}');
+          ov[key] = { ...(ov[key] || {}), ...patch };
+          localStorage.setItem('fp-task-meta-override', JSON.stringify(ov));
+        } catch(_) {}
+      }
+      close();
+      try { renderDashboard(); } catch(_) {}
+    };
+  }
+  window.__fpOpenKanbanCardDetail = openKanbanCardDetailModal;
   function renderV3KanbanBoard(container, tasks, clients) {
     const cMap = new Map();
     (clients || []).forEach(c => { if (c.id) cMap.set(c.id, c); });
+    // ★ 2026-08-16: auto-gen task に メモ/URL の override を 適用 (詳細 modal で 保存 分)
+    try {
+      const metaOv = JSON.parse(localStorage.getItem('fp-task-meta-override') || '{}');
+      tasks.forEach(t => {
+        const key = taskKeyFor(t);
+        const ov = metaOv[key];
+        if (ov) {
+          if (ov.memo != null) t.memo = ov.memo;
+          if (ov.url != null) t.url = ov.url;
+          if (ov.priority) t.priority = ov.priority;
+        }
+      });
+    } catch(_) {}
     const override = loadKanbanOverride();
     const cols = [
       { id: 'today', title: '今日 中', tone: 'alarm', tasks: [] },
@@ -2830,13 +2957,24 @@
         }, 220);
       });
     });
-    // Wire: card click → 客モーダル
+    // Wire: card click → 詳細 modal (メモ/URL/編集/削除) · client アイコン だけ 客 モーダル
     container.querySelectorAll('.fp-kanban-card').forEach(el => {
       el.addEventListener('click', (e) => {
-        if (e.target.closest('[data-check]') || e.target.closest('.fp-kanban-card-actions button')) return;
-        const id = el.dataset.clientId;
-        if (id) openClientModal(id);
+        if (e.target.closest('[data-check]') || e.target.closest('.fp-kanban-card-actions button') || e.target.closest('.fp-kanban-card-del') || e.target.closest('.fp-kanban-card-url')) return;
+        const key = el.dataset.cardKey;
+        const t = tasks.find(x => taskKeyFor(x) === key);
+        if (t) openKanbanCardDetailModal(t);
       });
+      // 客名 部分 click で 客 モーダル (優先)
+      const whoEl = el.querySelector('.fp-kanban-card-who');
+      if (whoEl) {
+        whoEl.style.cursor = 'pointer';
+        whoEl.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const id = el.dataset.clientId;
+          if (id) openClientModal(id);
+        });
+      }
     });
     // Wire: 「+ カード を 追加」
     container.querySelectorAll('[data-add-col]').forEach(btn => {
