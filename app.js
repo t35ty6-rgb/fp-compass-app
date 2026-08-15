@@ -2498,19 +2498,26 @@
     const todayTasks = tasks.filter(t => t.urgencyRank === 0);
     if (todayCountEl) todayCountEl.textContent = `·  ${todayTasks.length}`;
     if (todayList) {
+      // ★ 2026-08-16 owner「案 A · quick add bar 上 」対応: today list 先頭 に 追加
+      const quickAddHtml = `
+        <div class="fp-quick-add" style="margin-bottom:12px;">
+          <span class="fp-quick-add-plus">+</span>
+          <input class="fp-quick-add-input" type="text" placeholder="task を 追加 · 例 「@吉田 · 提案 書 続き · 金 · P2」" data-quickadd-main>
+          <span class="fp-quick-add-hint"><code>@客</code><code>期限</code><code>P1</code></span>
+        </div>`;
       if (todayTasks.length === 0) {
-        todayList.innerHTML = `<div class="v3h-empty">今日 急ぎ で 対応 する タスク は ありません。 明日 以降 の 予定 を 下 で 確認。</div>`;
+        todayList.innerHTML = quickAddHtml + `<div class="v3h-empty">今日 急ぎ で 対応 する タスク は ありません。 明日 以降 の 予定 を 下 で 確認。</div>`;
       } else {
         // client map for avatar lookup
         const cMap = new Map();
         (clients || []).forEach(c => { if (c.id) cMap.set(c.id, c); });
         // 5 buckets (owner 明示 順序: LINE 返信 → 日程調整 → 今日 Zoom → 手動 → その他)
         const groups = [
-          { key: 'line',     title: 'LINE 返信',   icon: '💬', tone: 'line',     items: [] },
-          { key: 'schedule', title: '日程調整',    icon: '📅', tone: 'schedule', items: [] },
-          { key: 'zoom',     title: '今日 の Zoom', icon: '📞', tone: 'zoom',     items: [] },
-          { key: 'manual',   title: '手動 メモ',   icon: '📝', tone: 'manual',   items: [] },
-          { key: 'other',    title: 'その他 至急', icon: '🔴', tone: 'other',    items: [] },
+          { key: 'line',     title: 'LINE 返信',   icon: '💬', tone: 'urgent',   items: [] },
+          { key: 'schedule', title: '日程調整',    icon: '📅', tone: 'urgent',   items: [] },
+          { key: 'zoom',     title: '今日 の Zoom', icon: '📞', tone: 'urgent',   items: [] },
+          { key: 'manual',   title: '手動 メモ',   icon: '📝', tone: 'neutral',  items: [] },
+          { key: 'other',    title: 'その他 至急', icon: '🔴', tone: 'urgent',   items: [] },
         ];
         todayTasks.forEach(t => {
           const bucket =
@@ -2522,28 +2529,69 @@
           groups.find(g => g.key === bucket)?.items.push(t);
         });
         const shown = groups.filter(g => g.items.length > 0);
-        todayList.innerHTML = shown.map(g => `
-          <div class="v3h-group v3h-group-${g.tone}">
-            <div class="v3h-group-head">
-              <span class="v3h-group-icon">${g.icon}</span>
-              <span class="v3h-group-title">${escapeHtml(g.title)}</span>
-              <span class="v3h-group-count">${g.items.length} 件</span>
+        // ★ 2026-08-16 「大切 な もの だけ」 対応: 各 group top-5 default + 残り は 展開 button
+        const TOP_N = 5;
+        todayList.innerHTML = quickAddHtml + shown.map((g, gi) => {
+          const top = g.items.slice(0, TOP_N);
+          const rest = g.items.slice(TOP_N);
+          const gid = 'v3-today-rest-' + gi;
+          return `
+          <div class="fp-task-group fp-task-group-${g.tone}" data-group-collapsed="0">
+            <div class="fp-task-group-head">
+              <span class="fp-task-group-arrow">▶</span>
+              <span class="fp-task-group-pill fp-task-group-pill-${g.tone}">${g.icon} ${escapeHtml(g.title)}</span>
+              <span class="fp-task-group-count">${g.items.length}</span>
             </div>
-            <div class="v3h-group-body">
-              ${g.items.map((t, i) => v3TodoHtml(t, i, cMap)).join('')}
+            <div class="fp-task-group-items">
+              ${top.map((t, i) => v3TodoHtml(t, i, cMap)).join('')}
+              ${rest.length > 0 ? `
+                <div class="fp-task-showmore-hidden" id="${gid}">${rest.map((t, i) => v3TodoHtml(t, TOP_N + i, cMap)).join('')}</div>
+                <button class="fp-task-showmore" data-showmore="${gid}" type="button">+ 残り ${rest.length} 件 を 表示 (大切 でない 可能性)</button>
+              ` : ''}
             </div>
-          </div>
-        `).join('');
-        todayList.querySelectorAll('.v3h-todo').forEach(el => {
+          </div>`;
+        }).join('');
+        // Wire: 「+ 残り N 件」 button
+        todayList.querySelectorAll('[data-showmore]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const t = document.getElementById(btn.dataset.showmore);
+            if (t) t.classList.remove('fp-task-showmore-hidden');
+            btn.remove();
+          });
+        });
+        // Wire: quick add (Enter で 手動 task 追加)
+        todayList.querySelectorAll('[data-quickadd-main]').forEach(input => {
+          input.addEventListener('keydown', (e) => {
+            if (e.key !== 'Enter') return;
+            const raw = input.value.trim(); if (!raw) return;
+            const parts = raw.split(/[·・]/).map(s => s.trim()).filter(Boolean);
+            let who = '', title = raw, due = 'today', priority = 'p2';
+            parts.forEach(p => {
+              if (p.startsWith('@')) who = p.slice(1);
+              else if (/^p[1-4]$/i.test(p)) priority = p.toLowerCase();
+              else if (/(今日|today)/i.test(p)) due = 'today';
+              else if (/(明日|tomorrow)/i.test(p)) due = 'tomorrow';
+              else if (/(週|week|月|火|水|木|金|土|日)/i.test(p)) due = 'week';
+              else if (title === raw) title = p;
+            });
+            if (who && !title.includes(who)) title = `${who} 様 · ${title}`;
+            addManualTodo({ task: title, due, priority, dueLabel: due === 'today' ? '今日 中' : due === 'tomorrow' ? '明日' : '今週 中' });
+            input.value = '';
+            try { renderDashboard(); } catch(_) {}
+          });
+        });
+        // Wire: task body / row click → 客モーダル + checkbox toggle
+        todayList.querySelectorAll('.fp-task-row').forEach(el => {
           el.addEventListener('click', (ev) => {
-            if (ev.target.classList.contains('v3h-todo-check')) return;
-            if (ev.target.classList.contains('v3h-todo-del')) return;
+            if (ev.target.closest('.fp-task-check') || ev.target.closest('.fp-task-act') || ev.target.closest('.fp-task-showmore')) return;
             const id = el.dataset.clientId;
             if (id) openClientModal(id);
           });
-          el.querySelector('.v3h-todo-check')?.addEventListener('click', (ev) => {
+          el.querySelector('.fp-task-check-input')?.addEventListener('change', (ev) => {
             ev.stopPropagation();
-            el.classList.toggle('done');
+            const checked = ev.target.checked;
+            if (checked) setTimeout(() => el.classList.add('fp-task-row-done'), 220);
+            else el.classList.remove('fp-task-row-done');
             updateV3Progress();
           });
         });
@@ -2581,22 +2629,38 @@
           tGroups.find(g => g.key === bucket)?.items.push(t);
         });
         const shown = tGroups.filter(g => g.items.length > 0);
-        tomorrowList.innerHTML = shown.map(g => `
-          <div class="v3h-group v3h-group-${g.tone}">
-            <div class="v3h-group-head">
-              <span class="v3h-group-icon">${g.icon}</span>
-              <span class="v3h-group-title">${escapeHtml(g.title)}</span>
-              <span class="v3h-group-count">${g.items.length} 件</span>
+        // ★ 2026-08-16 案 A 適用: fp-task-group + top-5 filter
+        const TOP_N2 = 5;
+        tomorrowList.innerHTML = shown.map((g, gi) => {
+          const top = g.items.slice(0, TOP_N2);
+          const rest = g.items.slice(TOP_N2);
+          const gid = 'v3-tom-rest-' + gi;
+          return `
+          <div class="fp-task-group fp-task-group-warn" data-group-collapsed="0">
+            <div class="fp-task-group-head">
+              <span class="fp-task-group-arrow">▶</span>
+              <span class="fp-task-group-pill fp-task-group-pill-warn">${g.icon} ${escapeHtml(g.title)}</span>
+              <span class="fp-task-group-count">${g.items.length}</span>
             </div>
-            <div class="v3h-group-body">
-              ${g.items.map((t, i) => v3TodoHtml(t, i, cMap2)).join('')}
+            <div class="fp-task-group-items">
+              ${top.map((t, i) => v3TodoHtml(t, i, cMap2)).join('')}
+              ${rest.length > 0 ? `
+                <div class="fp-task-showmore-hidden" id="${gid}">${rest.map((t, i) => v3TodoHtml(t, TOP_N2 + i, cMap2)).join('')}</div>
+                <button class="fp-task-showmore" data-showmore="${gid}" type="button">+ 残り ${rest.length} 件 を 表示 (大切 でない 可能性)</button>
+              ` : ''}
             </div>
-          </div>
-        `).join('');
-        tomorrowList.querySelectorAll('.v3h-todo').forEach(el => {
+          </div>`;
+        }).join('');
+        tomorrowList.querySelectorAll('[data-showmore]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const t = document.getElementById(btn.dataset.showmore);
+            if (t) t.classList.remove('fp-task-showmore-hidden');
+            btn.remove();
+          });
+        });
+        tomorrowList.querySelectorAll('.fp-task-row').forEach(el => {
           el.addEventListener('click', (ev) => {
-            if (ev.target.classList.contains('v3h-todo-check')) return;
-            if (ev.target.classList.contains('v3h-todo-del')) return;
+            if (ev.target.closest('.fp-task-check') || ev.target.closest('.fp-task-act') || ev.target.closest('.fp-task-showmore')) return;
             const id = el.dataset.clientId;
             if (id) openClientModal(id);
           });
@@ -2647,63 +2711,51 @@
   }
 
   function v3TodoHtml(t, i, cMap) {
-    // priority: urgencyRank 0=p1 / 1=p2 / 2=p3 / それ以外=p4
+    // ★ 2026-08-16 owner「案 A で deploy」対応: v3h-todo を fp-task-row (Todoist 風) に 差替
+    //   priority flag (P1/P2/P3) · avatar 円 · hover reveal action · 打ち消し 線 なし の 完了 fade
+    //   既 存 の fp-task-* CSS (styles-v8-workspace.css) 全 流用
     const p = t.urgencyRank === 0 ? 'p1' : (t.urgencyRank === 1 ? 'p2' : (t.urgencyRank === 2 ? 'p3' : 'p4'));
-    const dueClass = t.urgencyRank === 0 ? (t.type === 'proposal' ? 'overdue' : 'soon') :
-                     (t.urgencyRank === 1 ? 'soon' : (t.type === 'booking' ? 'today' : ''));
-    const dotColor = t.type === 'booking' ? '#0b5d9e' :
-                     t.type === 'proposal' ? '#b7791f' :
-                     t.type === 'homework' ? '#1e7e34' :
-                     t.type === 'cancel' ? '#c53030' :
-                     t.type === 'manual' ? '#6b46c1' :
-                     t.type === 'line-reply' ? '#06C755' :
-                     t.type === 'schedule' ? '#0369A1' :
-                     t.type === 'dormant' ? '#6b7280' : '#0b5d9e';
+    const rankTone = t.urgencyRank === 0 ? 'urgent' : (t.urgencyRank === 1 ? 'warn' : 'neutral');
     const hasClient = !!(t.clientName && t.clientId);
-    const titleHtml = hasClient
-      ? `<b>${escapeHtml(t.clientName)} 様</b> · ${escapeHtml(t.title)}`
-      : escapeHtml(t.title);
-    const manualBadge = t.type === 'manual' ? `<span class="v3h-todo-manual-badge">MEMO</span>` : '';
-    const delBtn = t.__manualId
-      ? `<button class="v3h-todo-del" data-manual-id="${escapeHtml(t.__manualId)}" title="この TODO を 削除" type="button">✕</button>`
-      : '';
-    // LINE avatar: client の linePictureUrl (or pictureUrl fallback)
     const c = hasClient && cMap ? cMap.get(t.clientId) : null;
     const avatarUrl = c && (c.linePictureUrl || c.pictureUrl) ? (c.linePictureUrl || c.pictureUrl) : null;
-    // 2026-08-06 owner 「グループ 内 で のっぺり」対応: 大きな avatar 左 + 客名 大字 + 内容 muted + time右 の 3-col layout
-    const bigAvatarHtml = avatarUrl
-      ? `<img class="v3h-avatar-lg" src="${escapeHtml(avatarUrl)}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='inline-flex';">
-         <span class="v3h-avatar-lg-fb" style="display:none;background:${dotColor};">${escapeHtml((t.clientName || '?').charAt(0))}</span>`
-      : `<span class="v3h-avatar-lg-fb" style="background:${dotColor};">${escapeHtml((t.clientName || '?').charAt(0))}</span>`;
-    // 客名 と 内容 を 分離
-    const clientLine = hasClient ? `<div class="v3h-todo-client">${escapeHtml(t.clientName)} 様${manualBadge}</div>` : (t.title ? `<div class="v3h-todo-client">${manualBadge || 'メモ'}</div>` : '');
-    // task title (内容) — 客名 を title 先頭から 剥がす
-    const cleanTitle = hasClient ? t.title : t.title;
-    const subLine = t.sub && t.type !== 'manual' ? `<div class="v3h-todo-quote">${escapeHtml(t.sub)}</div>` : '';
-    // type badge
-    const typeLabelMap = {
-      'line-reply': '💬 LINE返信', 'schedule': '📅 日程調整',
-      'booking': '📞 Zoom 面談', 'manual': '📝 メモ',
-      'proposal': '📋 提案', 'homework': '📝 宿題',
-      'cancel': '⚠️ フォロー', 'dormant': '🌿 再engage',
-    };
-    const typeBadge = typeLabelMap[t.type] ? `<span class="v3h-todo-type-badge type-${t.type}">${typeLabelMap[t.type]}</span>` : '';
+    const initial = (t.clientName || '?').replace(/\s+/g, '').charAt(0) || '?';
+    const avatarHtml = avatarUrl
+      ? `<img class="fp-task-icon" src="${escapeHtml(avatarUrl)}" alt="" loading="lazy" style="object-fit:cover;" onerror="this.outerHTML=\`<div class='fp-task-icon fp-task-icon-${rankTone}'>${escapeHtml(initial)}</div>\`;">`
+      : `<div class="fp-task-icon fp-task-icon-${rankTone}">${escapeHtml(initial)}</div>`;
+    // action button (type 別 の 主 action · hover reveal は CSS 側 で 制御)
+    let actionBtn = '';
+    if (t.type === 'line-reply') {
+      actionBtn = `<button class="fp-task-act fp-task-act-primary" data-act="line-reply" data-client-id="${escapeHtml(t.clientId)}" onclick="event.stopPropagation()" title="LINE 返信 画面 を 開く" type="button">💬 返信</button>`;
+    } else if (t.type === 'schedule') {
+      if ((t.timeLabel || '').includes('要 発行')) {
+        actionBtn = `<button class="fp-task-act fp-task-act-primary" data-act="zoom-issue" data-client-id="${escapeHtml(t.clientId)}" onclick="event.stopPropagation()" title="Zoom URL 発行 モーダル を 開く" type="button">🎥 Zoom URL 発行</button>`;
+      } else {
+        actionBtn = `<button class="fp-task-act" data-act="slots-resend" data-client-id="${escapeHtml(t.clientId)}" onclick="event.stopPropagation()" title="候補日 を 再送 する" type="button">📅 候補日 再送</button>`;
+      }
+    } else if (t.type === 'booking') {
+      actionBtn = `<button class="fp-task-act" data-act="open-client" data-client-id="${escapeHtml(t.clientId)}" onclick="event.stopPropagation()" title="客 カルテ 開く" type="button">📋 カルテ</button>`;
+    }
+    const delBtn = t.__manualId
+      ? `<button class="fp-task-act" data-manual-id="${escapeHtml(t.__manualId)}" title="この TODO を 削除" type="button" onclick="event.stopPropagation()" style="border-color:#FCA5A5;color:#DC2626;">✕</button>`
+      : '';
+    // Priority 三角 flag (SVG)
+    const flagSvg = `<svg viewBox="0 0 12 12"><path d="M2 1 L2 11 M2 1 L10 1 L8 4 L10 7 L2 7 Z" stroke-width="1"/></svg>`;
     return `
-      <div class="v3h-todo ${p}" data-client-id="${escapeHtml(t.clientId || '')}" data-idx="${i}">
-        <span class="v3h-todo-check"></span>
-        <div class="v3h-todo-avatar-wrap">${bigAvatarHtml}</div>
-        <div class="v3h-todo-body">
-          ${clientLine}
-          <div class="v3h-todo-content">${escapeHtml(cleanTitle)}</div>
-          ${subLine}
-          <div class="v3h-todo-meta">
-            ${typeBadge}
-          </div>
+      <div class="fp-task-row fp-task-row-${rankTone} v3h-todo" data-client-id="${escapeHtml(t.clientId || '')}" data-idx="${i}" data-priority="${escapeHtml(p)}">
+        <label class="fp-task-check" onclick="event.stopPropagation()">
+          <input type="checkbox" class="fp-task-check-input v3h-todo-check">
+        </label>
+        ${avatarHtml}
+        <div class="fp-task-body">
+          <div class="fp-task-body-title">${hasClient ? `<span class="fp-task-body-who">${escapeHtml(t.clientName)}</span>` : ''}${escapeHtml(t.title)}</div>
+          ${t.sub ? `<div class="fp-task-body-sub">${escapeHtml(t.sub)}</div>` : ''}
         </div>
-        <div class="v3h-todo-right">
-          ${t.timeLabel ? `<span class="v3h-todo-due-big ${dueClass}">${escapeHtml(t.timeLabel)}</span>` : ''}
-          ${delBtn}
+        <div class="fp-task-meta" style="display:flex;align-items:center;gap:10px;">
+          <div class="fp-task-actions">${actionBtn}${delBtn}</div>
+          ${t.timeLabel ? `<div class="fp-task-deadline">${escapeHtml(t.timeLabel)}</div>` : ''}
         </div>
+        <div class="fp-task-flag">${flagSvg}</div>
       </div>
     `;
   }
