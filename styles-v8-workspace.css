@@ -12623,9 +12623,31 @@ body:not([data-home-view]) [data-view-target="cal"] { display: none !important; 
   transition: background 150ms;
 }
 .fp-kanban-card-url:hover { background: #5B5BF0; color: #fff; }
-/* ★ 2026-08-16 owner「完了 button 四角 が ある だけ 分かり づらい」対応 (Trello 準拠)
- * 常時 表示 の 大きな 「完了 に する」 ボタン · 完了 済 は 緑 badge 表示 */
-.fp-kanban-card-checkbtn {
+/* ★ 2026-08-17 owner「完了 button 多 すぎ · 主 情報 埋没」対応:
+ * 大 button 撤去 · card 左 上 に 小 円 checkbox (hover reveal + tooltip) */
+.fp-kanban-card-check-mini {
+  position: absolute; top: 8px; left: 8px;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: #FFFFFF; border: 1.5px solid #CBD5E1;
+  color: #FFFFFF;
+  display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer; padding: 0;
+  transition: all 150ms;
+  opacity: 0;
+  z-index: 2;
+}
+.fp-kanban-card:hover .fp-kanban-card-check-mini { opacity: 1; }
+.fp-kanban-card-check-mini:hover { border-color: #059669; background: #ECFDF5; }
+.fp-kanban-card-check-mini svg { width: 10px; height: 10px; opacity: 0; transition: opacity 150ms; }
+.fp-kanban-card-check-mini.on {
+  background: #059669; border-color: #059669; opacity: 1;
+}
+.fp-kanban-card-check-mini.on svg { opacity: 1; color: #FFFFFF; }
+.fp-kanban-card { padding-left: 34px; }
+@media (max-width: 640px) { .fp-kanban-card-check-mini { opacity: 1; } }
+/* 旧 大 button hide */
+.fp-kanban-card-checkbtn { display: none !important; }
+.fp-kanban-card-checkbtn-legacy {
   /* ★ 2026-08-16: size 縮小 (48px 高 → 32px 相当) */
   display: flex; align-items: center; gap: 7px;
   width: 100%;
