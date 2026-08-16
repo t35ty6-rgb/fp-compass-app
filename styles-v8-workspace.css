@@ -12398,16 +12398,25 @@ label.fp-task-check:has(input:checked) { background: #5B5BF0; border-color: #5B5
  * 2026-08-16 owner「Trello みたい な TODO に」 対応 · kanban 4 列 board
  * 既 存 FP Compass palette (Indigo #5B5BF0 + Slate) 100% 維持 · Trello の 構造 のみ 抜粋
  * ============================================ */
+/* ★ 2026-08-16 owner「バランス おかしい · 横 スクロール で しか 見え ない」対応
+ *   home tab の container max-width を home では 撤去 · 実 幅 で kanban 全 展開
+ *   4 列 が 1440 viewport で 余裕 で 収まる よう col 240px + gap 10px */
+.tab-panel[data-panel="home"] .container,
+#home .container,
+.home-shell {
+  max-width: none;
+}
 .fp-kanban-board {
   display: flex;
-  gap: 12px;
+  gap: 10px;
   padding: 4px 0 20px;
   overflow-x: auto;
   align-items: flex-start;
   min-height: 400px;
 }
 .fp-kanban-col {
-  flex: 0 0 280px;
+  flex: 0 0 240px;
+  min-width: 240px;
   max-height: 620px;
   background: rgba(241, 245, 249, 0.72);
   border: 1px solid #E2E8F0;
@@ -12416,6 +12425,9 @@ label.fp-task-check:has(input:checked) { background: #5B5BF0; border-color: #5B5
   flex-direction: column;
   overflow: hidden;
 }
+/* home tab で shell 全 幅 (別 CSS の 1150px 上書き 対策) */
+.v3h-shell { grid-template-columns: 1fr !important; }
+.v3h-shell > .v3h-main { min-width: 0; width: 100%; }
 .fp-kanban-col-head {
   display: flex; align-items: center; gap: 8px;
   padding: 12px 14px;
@@ -12544,10 +12556,11 @@ label.fp-task-check:has(input:checked) { background: #5B5BF0; border-color: #5B5
 .fp-kanban-col-add:hover { background: rgba(91,91,240,0.08); color: #5B5BF0; }
 /* ★ 2026-08-16 owner「✕ 位置 デザイン 性 ない」対応: 右 上 · hover reveal */
 .fp-kanban-card-del {
-  position: absolute; top: 4px; right: 4px;
-  width: 20px; height: 20px; border-radius: 4px;
+  /* ★ 2026-08-16 owner「バツ 大き すぎる」 対応: 20→16px 縮小 · 位置 更 右 上 */
+  position: absolute; top: 6px; right: 6px;
+  width: 16px; height: 16px; border-radius: 4px;
   background: transparent; border: 0;
-  color: #94A3B8; font-size: 15px; line-height: 1;
+  color: #CBD5E1; font-size: 12px; line-height: 1;
   cursor: pointer; padding: 0;
   opacity: 0; transition: opacity 150ms, background 150ms, color 150ms;
   display: inline-flex; align-items: center; justify-content: center;
@@ -12578,15 +12591,16 @@ label.fp-task-check:has(input:checked) { background: #5B5BF0; border-color: #5B5
 /* ★ 2026-08-16 owner「完了 button 四角 が ある だけ 分かり づらい」対応 (Trello 準拠)
  * 常時 表示 の 大きな 「完了 に する」 ボタン · 完了 済 は 緑 badge 表示 */
 .fp-kanban-card-checkbtn {
-  display: flex; align-items: center; gap: 8px;
+  /* ★ 2026-08-16: size 縮小 (48px 高 → 32px 相当) */
+  display: flex; align-items: center; gap: 7px;
   width: 100%;
-  margin-top: 10px;
-  padding: 8px 12px;
+  margin-top: 8px;
+  padding: 5px 10px;
   background: #F8FAFC;
   border: 1.5px solid #E2E8F0;
   border-radius: 6px;
   color: #64748B;
-  font-family: inherit; font-size: 12px; font-weight: 700;
+  font-family: inherit; font-size: 11.5px; font-weight: 700;
   cursor: pointer;
   transition: all 150ms;
   text-align: left;
@@ -12597,7 +12611,7 @@ label.fp-task-check:has(input:checked) { background: #5B5BF0; border-color: #5B5
   color: #059669;
 }
 .fp-kanban-card-checkbtn-circle {
-  width: 18px; height: 18px; border-radius: 50%;
+  width: 15px; height: 15px; border-radius: 50%;
   border: 1.5px solid currentColor;
   display: inline-flex; align-items: center; justify-content: center;
   flex-shrink: 0;
