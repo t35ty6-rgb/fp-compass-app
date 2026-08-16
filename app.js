@@ -2817,10 +2817,44 @@
           <input id="fp-kmodal-title" type="text" value="${escapeHtml(t.title || '')}" ${isManual ? '' : 'readonly style="background:#F1F5F9;"'} style="width:100%;padding:9px 12px;border:1.5px solid #E2E8F0;border-radius:6px;font-family:inherit;font-size:14px;margin-bottom:12px;">
 
           <label style="display:block;font-size:11.5px;font-weight:700;color:#475569;margin-bottom:5px;">👤 客</label>
-          <select id="fp-kmodal-client" ${isManual ? '' : 'disabled style="background:#F1F5F9;"'} style="width:100%;padding:9px 12px;border:1.5px solid #E2E8F0;border-radius:6px;font-family:inherit;font-size:13px;margin-bottom:12px;">
-            <option value="">(客 なし · 個人 メモ)</option>
-            ${(window.DUMMY_CLIENTS || []).map(c => `<option value="${escapeHtml(c.id)}" ${c.id === t.clientId ? 'selected' : ''}>${escapeHtml(c.name || '(無名)')} 様</option>`).join('')}
-          </select>
+          <div id="fp-kmodal-client-wrap" style="position:relative;margin-bottom:12px;">
+            <button type="button" id="fp-kmodal-client-btn" ${isManual ? '' : 'disabled'} style="width:100%;padding:8px 12px;border:1.5px solid #E2E8F0;border-radius:6px;background:${isManual ? '#fff' : '#F1F5F9'};font-family:inherit;font-size:13px;cursor:${isManual ? 'pointer' : 'not-allowed'};display:flex;align-items:center;gap:8px;text-align:left;">
+              <span id="fp-kmodal-client-selected" style="display:flex;align-items:center;gap:8px;flex:1;color:#0F172A;">
+                ${(() => {
+                  const sel = (window.DUMMY_CLIENTS || []).find(c => c.id === t.clientId);
+                  if (!sel) return '<span style="color:#94A3B8;">(客 なし · 個人 メモ)</span>';
+                  const avatarUrl = sel.linePictureUrl || sel.pictureUrl || '';
+                  const initial = (sel.name || '?').replace(/\s+/g, '').charAt(0);
+                  const avatar = avatarUrl
+                    ? `<img src="${escapeHtml(avatarUrl)}" alt="" style="width:24px;height:24px;border-radius:50%;object-fit:cover;">`
+                    : `<span style="width:24px;height:24px;border-radius:50%;background:#EEF0FF;color:#5B5BF0;display:inline-flex;align-items:center;justify-content:center;font-family:Manrope,sans-serif;font-weight:800;font-size:11px;">${escapeHtml(initial)}</span>`;
+                  return `${avatar}<span>${escapeHtml(sel.name)} 様</span>`;
+                })()}
+              </span>
+              <input type="hidden" id="fp-kmodal-client" value="${escapeHtml(t.clientId || '')}">
+              <span style="color:#94A3B8;">▾</span>
+            </button>
+            <div id="fp-kmodal-client-panel" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1px solid #E2E8F0;border-radius:8px;box-shadow:0 12px 30px rgba(15,23,42,0.15);max-height:300px;overflow-y:auto;z-index:10;">
+              <input type="search" id="fp-kmodal-client-search" placeholder="客名 で 検索…" style="width:100%;padding:9px 12px;border:0;border-bottom:1px solid #F1F5F9;background:#F8FAFC;font-family:inherit;font-size:12.5px;outline:none;">
+              <div id="fp-kmodal-client-list">
+                <button type="button" data-picker-id="" style="width:100%;padding:8px 12px;border:0;background:transparent;text-align:left;cursor:pointer;font-family:inherit;font-size:12.5px;color:#94A3B8;display:flex;align-items:center;gap:8px;">
+                  <span style="width:24px;height:24px;border-radius:50%;border:1.5px dashed #CBD5E1;display:inline-block;"></span>
+                  (客 なし · 個人 メモ)
+                </button>
+                ${(window.DUMMY_CLIENTS || []).map(c => {
+                  const avatarUrl = c.linePictureUrl || c.pictureUrl || '';
+                  const initial = (c.name || '?').replace(/\s+/g, '').charAt(0);
+                  const avatar = avatarUrl
+                    ? `<img src="${escapeHtml(avatarUrl)}" alt="" style="width:24px;height:24px;border-radius:50%;object-fit:cover;">`
+                    : `<span style="width:24px;height:24px;border-radius:50%;background:#EEF0FF;color:#5B5BF0;display:inline-flex;align-items:center;justify-content:center;font-family:Manrope,sans-serif;font-weight:800;font-size:11px;">${escapeHtml(initial)}</span>`;
+                  return `<button type="button" data-picker-id="${escapeHtml(c.id)}" data-picker-name="${escapeHtml(c.name || '')}" style="width:100%;padding:8px 12px;border:0;background:transparent;text-align:left;cursor:pointer;font-family:inherit;font-size:13px;color:#0F172A;display:flex;align-items:center;gap:8px;">
+                    ${avatar}
+                    <span>${escapeHtml(c.name || '(無名)')} 様</span>
+                  </button>`;
+                }).join('')}
+              </div>
+            </div>
+          </div>
 
           <label style="display:block;font-size:11.5px;font-weight:700;color:#475569;margin-bottom:5px;">📝 メモ</label>
           <textarea id="fp-kmodal-memo" rows="4" placeholder="自由 に メモ を 記入" style="width:100%;padding:9px 12px;border:1.5px solid #E2E8F0;border-radius:6px;font-family:inherit;font-size:13px;margin-bottom:12px;resize:vertical;">${escapeHtml(t.memo || '')}</textarea>
@@ -2869,6 +2903,40 @@
       close();
       try { renderDashboard(); } catch(_) {}
     };
+    // Wire: client picker (LINE avatar + 名前 表示 · v3h-picker 準拠)
+    (function wireClientPicker() {
+      const btn = document.getElementById('fp-kmodal-client-btn');
+      const panel = document.getElementById('fp-kmodal-client-panel');
+      const search = document.getElementById('fp-kmodal-client-search');
+      const list = document.getElementById('fp-kmodal-client-list');
+      const hidden = document.getElementById('fp-kmodal-client');
+      const selEl = document.getElementById('fp-kmodal-client-selected');
+      if (!btn || !panel) return;
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+        if (panel.style.display === 'block') search?.focus();
+      });
+      document.addEventListener('click', (e) => {
+        if (!panel.contains(e.target) && e.target !== btn) panel.style.display = 'none';
+      });
+      search?.addEventListener('input', () => {
+        const q = search.value.trim().toLowerCase();
+        list?.querySelectorAll('[data-picker-id]').forEach(el => {
+          const name = (el.dataset.pickerName || '').toLowerCase();
+          const show = !q || name.includes(q) || el.dataset.pickerId === '';
+          el.style.display = show ? 'flex' : 'none';
+        });
+      });
+      list?.querySelectorAll('[data-picker-id]').forEach(el => {
+        el.addEventListener('click', () => {
+          const cid = el.dataset.pickerId;
+          hidden.value = cid;
+          selEl.innerHTML = el.innerHTML;
+          panel.style.display = 'none';
+        });
+      });
+    })();
     document.getElementById('fp-kmodal-save').onclick = () => {
       const clientId = document.getElementById('fp-kmodal-client')?.value || '';
       const clientName = clientId ? ((window.DUMMY_CLIENTS || []).find(c => c.id === clientId)?.name || '') : '';
