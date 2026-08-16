@@ -2328,7 +2328,7 @@
       // ★ CONCERN fix: priority field を return object に 含める
       return {
         clientId: m.clientId || '',
-        clientName: c?.name || (m.clientId ? '(不明)' : ''),
+        clientName: c?.name || m.clientName || (m.clientId ? '(不明)' : ''),
         icon: '📝', type: 'manual',
         title: m.text || m.task || '(内容 未 記載)',
         sub: '手動 追加',
@@ -2816,6 +2816,12 @@
           <label style="display:block;font-size:11.5px;font-weight:700;color:#475569;margin-bottom:5px;">タイトル</label>
           <input id="fp-kmodal-title" type="text" value="${escapeHtml(t.title || '')}" ${isManual ? '' : 'readonly style="background:#F1F5F9;"'} style="width:100%;padding:9px 12px;border:1.5px solid #E2E8F0;border-radius:6px;font-family:inherit;font-size:14px;margin-bottom:12px;">
 
+          <label style="display:block;font-size:11.5px;font-weight:700;color:#475569;margin-bottom:5px;">👤 客</label>
+          <select id="fp-kmodal-client" ${isManual ? '' : 'disabled style="background:#F1F5F9;"'} style="width:100%;padding:9px 12px;border:1.5px solid #E2E8F0;border-radius:6px;font-family:inherit;font-size:13px;margin-bottom:12px;">
+            <option value="">(客 なし · 個人 メモ)</option>
+            ${(window.DUMMY_CLIENTS || []).map(c => `<option value="${escapeHtml(c.id)}" ${c.id === t.clientId ? 'selected' : ''}>${escapeHtml(c.name || '(無名)')} 様</option>`).join('')}
+          </select>
+
           <label style="display:block;font-size:11.5px;font-weight:700;color:#475569;margin-bottom:5px;">📝 メモ</label>
           <textarea id="fp-kmodal-memo" rows="4" placeholder="自由 に メモ を 記入" style="width:100%;padding:9px 12px;border:1.5px solid #E2E8F0;border-radius:6px;font-family:inherit;font-size:13px;margin-bottom:12px;resize:vertical;">${escapeHtml(t.memo || '')}</textarea>
 
@@ -2864,11 +2870,15 @@
       try { renderDashboard(); } catch(_) {}
     };
     document.getElementById('fp-kmodal-save').onclick = () => {
+      const clientId = document.getElementById('fp-kmodal-client')?.value || '';
+      const clientName = clientId ? ((window.DUMMY_CLIENTS || []).find(c => c.id === clientId)?.name || '') : '';
       const patch = {
         memo: document.getElementById('fp-kmodal-memo').value.trim(),
         url: document.getElementById('fp-kmodal-url').value.trim(),
         priority: document.getElementById('fp-kmodal-priority').value,
         due: document.getElementById('fp-kmodal-due').value,
+        clientId,
+        clientName,
       };
       if (isNew) {
         const newTitle = document.getElementById('fp-kmodal-title').value.trim();
@@ -2880,6 +2890,7 @@
           url: patch.url,
           priority: patch.priority,
           due: patch.due,
+          clientId, clientName,
           dueLabel: patch.due === 'today' ? '今日 中' : patch.due === 'tomorrow' ? '明日' : patch.due === 'week' ? '今週 中' : '',
         });
         close();
