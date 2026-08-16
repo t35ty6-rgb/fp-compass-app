@@ -1384,7 +1384,8 @@ table.clients td.num { text-align: right; font-variant-numeric: tabular-nums; }
   --v3h-amber: #b7791f;
   --v3h-amber-soft: #fef3c7;
   display: grid;
-  grid-template-columns: 1fr 320px;
+  /* ★ 2026-08-16 owner「side panel 削除 · kanban 全 幅」対応: 320px 側 撤去 · 1fr のみ */
+  grid-template-columns: 1fr;
   gap: 0;
   background: var(--bg);
   min-height: calc(100vh - 200px);

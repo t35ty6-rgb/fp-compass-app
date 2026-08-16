@@ -12575,6 +12575,59 @@ label.fp-task-check:has(input:checked) { background: #5B5BF0; border-color: #5B5
   transition: background 150ms;
 }
 .fp-kanban-card-url:hover { background: #5B5BF0; color: #fff; }
+/* ★ 2026-08-16 owner「完了 button 四角 が ある だけ 分かり づらい」対応 (Trello 準拠)
+ * 常時 表示 の 大きな 「完了 に する」 ボタン · 完了 済 は 緑 badge 表示 */
+.fp-kanban-card-checkbtn {
+  display: flex; align-items: center; gap: 8px;
+  width: 100%;
+  margin-top: 10px;
+  padding: 8px 12px;
+  background: #F8FAFC;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 6px;
+  color: #64748B;
+  font-family: inherit; font-size: 12px; font-weight: 700;
+  cursor: pointer;
+  transition: all 150ms;
+  text-align: left;
+}
+.fp-kanban-card-checkbtn:hover {
+  background: #ECFDF5;
+  border-color: #059669;
+  color: #059669;
+}
+.fp-kanban-card-checkbtn-circle {
+  width: 18px; height: 18px; border-radius: 50%;
+  border: 1.5px solid currentColor;
+  display: inline-flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: background 150ms;
+}
+.fp-kanban-card-checkbtn-circle svg { width: 10px; height: 10px; opacity: 0; }
+.fp-kanban-card-checkbtn:hover .fp-kanban-card-checkbtn-circle { background: #ECFDF5; }
+.fp-kanban-card-checkbtn.on {
+  background: #ECFDF5;
+  border-color: #059669;
+  color: #059669;
+}
+.fp-kanban-card-checkbtn.on .fp-kanban-card-checkbtn-circle {
+  background: #059669;
+  border-color: #059669;
+  color: #fff;
+}
+.fp-kanban-card-checkbtn.on .fp-kanban-card-checkbtn-circle svg { opacity: 1; }
+/* done badge (card 前面 · 明示) */
+.fp-kanban-card-donebadge {
+  display: inline-block;
+  font-size: 10.5px; font-weight: 800;
+  background: #059669; color: #fff;
+  padding: 2px 8px; border-radius: 4px;
+  letter-spacing: 0.04em;
+  margin-bottom: 6px;
+  font-family: 'Manrope', 'Noto Sans JP', sans-serif;
+}
+.fp-kanban-card.done { opacity: 1; background: #F0FDF4; border-color: #86EFAC; } /* opacity 半 透明 撤去 · 明示 緑 背景 で 完了 感 */
+.fp-kanban-card.done .fp-kanban-card-title { color: #166534; }
 @media (max-width: 640px) {
   .fp-kanban-col { flex: 0 0 260px; max-height: none; }
   .fp-kanban-card-del { opacity: 1; } /* mobile では 常時 表示 */

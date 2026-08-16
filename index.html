@@ -1178,25 +1178,14 @@
               </section>
             </main>
 
-            <aside class="v3h-context">
-              <div class="v3h-progress">
-                <p class="v3h-progress-title">今日 の 進捗</p>
-                <div class="v3h-progress-num"><span id="v3h-progress-done">0</span> <span>/ <span id="v3h-progress-total">0</span></span></div>
-                <div class="v3h-progress-bar"><div class="v3h-progress-bar-fill" id="v3h-progress-fill" style="width:0%"></div></div>
-                <p class="v3h-progress-note" id="v3h-progress-note">今日 の タスク 消化 状況</p>
-              </div>
-
-              <div class="v3h-ctx-section">
-                <h2>客 反応 待ち</h2>
-                <p class="subtitle">こちら は 送信 済 で 相手 の 返答 待ち。 時間 経過 順。</p>
-                <div id="v3h-waiting-list"></div>
-              </div>
-
-              <div class="v3h-ctx-section">
-                <p class="v3h-ctx-section-title">今週 の サマリー</p>
-                <div class="v3h-summary-card" id="v3h-summary-card">—</div>
-              </div>
-            </aside>
+            <!-- ★ 2026-08-16 owner「kanban が 横 一列 に 並べない · side panel 削除 で いい」対応:
+                 v3h-context (今日 の 進捗 / 客 反応 待ち / 今週 サマリー) を DOM から 撤去 · main 全 幅 で kanban 4 列 展開
+                 元 の 要素 は id 参照 だけ 残す (js 側 で 存在 check あり · 壊れない) -->
+            <div style="display:none;">
+              <span id="v3h-progress-done">0</span><span id="v3h-progress-total">0</span>
+              <div id="v3h-progress-fill"></div><div id="v3h-progress-note"></div>
+              <div id="v3h-waiting-list"></div><div id="v3h-summary-card"></div>
+            </div>
           </div>
 
           <!-- (旧 senior cards は v3h-today-list に統合。 action-list は id を渡す 為 上に維持) -->
@@ -1523,7 +1512,7 @@ window.fpReadyAfterAuth = function() {
     });
   })();
 
-  const ver = "20260816C-card-detail-review";
+  const ver = "20260816D-sidepanel-off-checkbtn";
   // ★ 2026-06-26 perf: critical (画面初期表示に必須) と deferred (LINE/charts) を 分離
   // critical: 顧客台帳・ホーム描画に必須
   // deferred: LINE タブ (line-app.js 555KB) / dashboard charts (charts.js) → idle で 後ロード
@@ -2274,7 +2263,7 @@ window.fpReadyAfterAuth = function() {
 <script>
 (function(){
   // 最新の ver を 1 箇所に集約 (fpReadyAfterAuth 側と一致させる必要あり)
-    const FP_VERSION = "20260816C-card-detail-review";
+    const FP_VERSION = "20260816D-sidepanel-off-checkbtn";
   try { window.FP_VERSION = FP_VERSION; } catch(_) {}
 
   // 2026-07-13 v11: Chrome拡張 (Zoom タブ音声 レコーダー) 検知
