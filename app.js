@@ -7231,6 +7231,48 @@
 
     // ★ 2026-07-10: 議事録 カード 削除 — event delegation (lazy-render 後にも 反応する)
     //   注意: この関数 (openClientModal) は modal 開くたび に走るが、 delegation handler は 1回だけ 登録
+    // ★ 2026-08-17 owner「過去 の 議事録 から も TODO 候補 レビュー できる ように」対応: 議事録 card に 「📋 TODO 候補 レビュー」 button 追加 · click で 該当 議事録 の tasks を candidates に 積んで modal 発火
+    if (!window._fpMeetingTodoReviewBound) {
+      window._fpMeetingTodoReviewBound = true;
+      document.body.addEventListener('click', (ev) => {
+        const btn = ev.target && ev.target.closest && ev.target.closest('.fp-meeting-todo-review');
+        if (!btn) return;
+        ev.preventDefault(); ev.stopPropagation();
+        const bookingTs = btn.dataset.bookingTs || '';
+        const aiTs = btn.dataset.aiTs || '';
+        const clientId = btn.dataset.clientId || '';
+        const clientName = btn.dataset.clientName || '';
+        // ai_results から 該当 議事録 の tasks を 拾う
+        const live = window.LineAppLiveData || {};
+        const aiResults = live.ai_results || [];
+        const aiTasks = live.ai_tasks || [];
+        const match = aiResults.find(r => (r.bookingTs || '') === bookingTs);
+        // ai_results[i].tasks か ai_tasks[bookingTs] 経由
+        let tasks = [];
+        if (match && Array.isArray(match.tasks)) tasks = match.tasks;
+        if (tasks.length === 0) tasks = aiTasks.filter(t => (t.bookingTs || '') === bookingTs);
+        if (tasks.length === 0) { alert('この 議事録 に は 抽出 済 の TODO 候補 が ありません'); return; }
+        // candidates に 積む
+        const cands = tasks.map(t => ({
+          id: 'aic-past-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
+          task: t.task || t.title || '', due: t.dueDate || t.due || '', priority: t.priority || 'p2',
+          icon: t.icon || '📝',
+          recommendedAction: t.recommendedAction || t.actionTemplate || '',
+          createdAt: new Date().toISOString(),
+          customerName: clientName, clientId,
+          bookingTs, source: 'ai-meeting-past',
+        }));
+        try {
+          const stored = JSON.parse(localStorage.getItem('fp-ai-task-candidates') || '[]');
+          localStorage.setItem('fp-ai-task-candidates', JSON.stringify([...stored, ...cands]));
+        } catch(_) {}
+        if (typeof window.openAiTaskCandidateReviewModal === 'function') {
+          window.openAiTaskCandidateReviewModal();
+        } else {
+          alert('レビュー modal 関数 未 load');
+        }
+      });
+    }
     if (!window._fpMeetingDeleteHandlerBound) {
       window._fpMeetingDeleteHandlerBound = true;
       document.body.addEventListener('click', async (ev) => {
@@ -9472,6 +9514,7 @@ ${ctxText}${surveyTxt}`;
                 </div>
                 <div class="fp-meeting-card-actions" style="display:flex;gap:6px;flex-wrap:wrap;">
                   ${b.driveUrl ? `<a href="${escapeHtml(b.driveUrl)}" target="_blank" class="fp-btn fp-btn-sm fp-btn-gold">🎥 録画を見る</a>` : ''}
+                  <button class="fp-meeting-todo-review" data-booking-ts="${escapeHtml(b.ts || '')}" data-ai-ts="${escapeHtml(aiData.ts || aiData.createdAt || '')}" data-client-id="${escapeHtml(client?.id || '')}" data-client-name="${escapeHtml(client?.name || '')}" style="background:#EEF0FF;border:1.5px solid #5B5BF0;color:#5B5BF0;font-size:11.5px;font-weight:700;padding:5px 11px;border-radius:5px;cursor:pointer;font-family:inherit;">📋 TODO 候補 レビュー</button>
                   <button class="fp-meeting-delete" data-booking-ts="${escapeHtml(b.ts || '')}" data-ai-ts="${escapeHtml(aiData.ts || aiData.createdAt || '')}" style="background:#fff;border:1.5px solid #FCA5A5;color:#DC2626;font-size:11.5px;font-weight:700;padding:5px 11px;border-radius:5px;cursor:pointer;font-family:inherit;">🗑 削除</button>
                 </div>
               </div>
@@ -9596,6 +9639,7 @@ ${ctxText}${surveyTxt}`;
                     ${a.ts || a.createdAt ? `<div class="fp-meeting-card-recstart" style="font-size:11.5px;color:#6B7280;font-weight:600;margin-top:3px;">録画開始: ${escapeHtml(fmtJstTime(a.ts || a.createdAt))} (${escapeHtml(fmtDateRobust(a.ts || a.createdAt))})</div>` : ''}
                   </div>
                   <div class="fp-meeting-card-actions" style="display:flex;gap:6px;flex-wrap:wrap;">
+                    <button class="fp-meeting-todo-review" data-booking-ts="${escapeHtml(a.bookingTs || '')}" data-ai-ts="${escapeHtml(a.ts || a.createdAt || '')}" data-client-id="${escapeHtml(client?.id || '')}" data-client-name="${escapeHtml(client?.name || a.customerName || '')}" style="background:#EEF0FF;border:1.5px solid #5B5BF0;color:#5B5BF0;font-size:11.5px;font-weight:700;padding:5px 11px;border-radius:5px;cursor:pointer;font-family:inherit;">📋 TODO 候補 レビュー</button>
                     <button class="fp-meeting-delete" data-booking-ts="${escapeHtml(a.bookingTs || '')}" data-ai-ts="${escapeHtml(a.ts || a.createdAt || '')}" style="background:#fff;border:1.5px solid #FCA5A5;color:#DC2626;font-size:11.5px;font-weight:700;padding:5px 11px;border-radius:5px;cursor:pointer;font-family:inherit;">🗑 削除</button>
                   </div>
                 </div>
