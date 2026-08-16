@@ -2765,7 +2765,7 @@
     // ★ 2026-08-17 owner screenshot「AI に なって る · かぶって る · 文字 ない」対応:
     //   card 上部 に 独立 chip 「◯ 完了 に する」 常時 表示 (かぶり 皆無)
     //   done: chip が 緑 塗り + 「✓ 完了 済」 に 変わる (badge 兼用 · 別 badge 撤去)
-    const checkChipLabel = done ? '✓ 完了 済' : '◯ 完了 に する';
+    const checkChipLabel = done ? '✓ 完了' : '◯ 完了';
     return `
       <div class="fp-kanban-card ${done ? 'done' : ''}" draggable="true" data-p="${escapeHtml(p)}" data-card-key="${escapeHtml(key)}" data-client-id="${escapeHtml(t.clientId || '')}">
         ${cornerDel}
@@ -2784,10 +2784,22 @@
   }
 
   // ★ 2026-08-16 owner「メモ · URL 貼付 · 編集 でき ない」対応: card 詳細 modal
-  function openKanbanCardDetailModal(t) {
+  // ★ 2026-08-17 owner「TODO 追加 と カード 追加 で UI 違う」対応: t=null で 新規 モード 対応
+  function openKanbanCardDetailModal(t, opts) {
+    opts = opts || {};
+    const isNew = !t;
+    if (isNew) {
+      const dc = opts.defaultCol || 'week';
+      t = {
+        title: '', memo: '', url: '',
+        priority: dc === 'today' ? 'p1' : dc === 'week' ? 'p2' : 'p3',
+        due: dc === 'today' ? 'today' : dc === 'week' ? 'week' : 'none',
+        clientName: '', clientId: '',
+      };
+    }
     document.getElementById('fp-kanban-card-modal')?.remove();
     const p = t.priority || (t.urgencyRank === 0 ? 'p1' : t.urgencyRank === 1 ? 'p2' : 'p3');
-    const isManual = !!t.__manualId;
+    const isManual = isNew || !!t.__manualId;
     const overlay = document.createElement('div');
     overlay.id = 'fp-kanban-card-modal';
     overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.55);z-index:99999;display:flex;align-items:center;justify-content:center;font-family:"Noto Sans JP",sans-serif;';
@@ -2795,8 +2807,8 @@
       <div style="background:#fff;border-radius:12px;max-width:520px;width:92%;max-height:82vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 32px 80px rgba(0,0,0,0.4);">
         <div style="padding:20px 24px;border-bottom:1px solid #E2E8F0;display:flex;align-items:baseline;justify-content:space-between;gap:10px;">
           <div>
-            <div style="font-size:10.5px;font-weight:800;color:#5B5BF0;letter-spacing:0.14em;margin-bottom:3px;">TASK · ${isManual ? '手動' : (t.type || 'auto')}</div>
-            <h2 style="font-size:16px;font-weight:800;color:#0F172A;margin:0;">${t.clientName ? escapeHtml(t.clientName) + ' 様 · ' : ''}${escapeHtml(t.title)}</h2>
+            <div style="font-size:10.5px;font-weight:800;color:#5B5BF0;letter-spacing:0.14em;margin-bottom:3px;">TASK · ${isNew ? '新規' : (isManual ? '手動' : (t.type || 'auto'))}</div>
+            <h2 style="font-size:16px;font-weight:800;color:#0F172A;margin:0;">${isNew ? '新しい カード を 追加' : (t.clientName ? escapeHtml(t.clientName) + ' 様 · ' : '') + escapeHtml(t.title)}</h2>
           </div>
           <button id="fp-kmodal-close" style="background:transparent;border:0;font-size:22px;color:#94A3B8;cursor:pointer;padding:0 4px;">×</button>
         </div>
@@ -2858,6 +2870,22 @@
         priority: document.getElementById('fp-kmodal-priority').value,
         due: document.getElementById('fp-kmodal-due').value,
       };
+      if (isNew) {
+        const newTitle = document.getElementById('fp-kmodal-title').value.trim();
+        if (!newTitle) { alert('タイトル を 入力 して ください'); return; }
+        addManualTodo({
+          task: newTitle,
+          text: newTitle,
+          memo: patch.memo,
+          url: patch.url,
+          priority: patch.priority,
+          due: patch.due,
+          dueLabel: patch.due === 'today' ? '今日 中' : patch.due === 'tomorrow' ? '明日' : patch.due === 'week' ? '今週 中' : '',
+        });
+        close();
+        try { renderDashboard(); } catch(_) {}
+        return;
+      }
       if (isManual) {
         const newTitle = document.getElementById('fp-kmodal-title').value.trim();
         if (newTitle) patch.text = newTitle;
@@ -3008,16 +3036,12 @@
         });
       }
     });
-    // Wire: 「+ カード を 追加」
+    // Wire: 「+ カード を 追加」 → 詳細 modal (新規) で 開く (owner 明示 「TODO 追加 と 統一」 2026-08-17)
     container.querySelectorAll('[data-add-col]').forEach(btn => {
       btn.addEventListener('click', () => {
         const colId = btn.dataset.addCol;
-        const t = prompt('新しい カード の 内容 (@客 · 期限 · P1 の 形式 も 可)');
-        if (!t) return;
-        let due = colId === 'today' ? 'today' : colId === 'week' ? 'week' : 'none';
-        let priority = colId === 'today' ? 'p1' : colId === 'week' ? 'p2' : 'p3';
-        addManualTodo({ task: t, due, priority, dueLabel: colId === 'today' ? '今日 中' : colId === 'week' ? '今週 中' : '' });
-        try { renderDashboard(); } catch(_) {}
+        if (colId === 'done') return; // done 列 は 新規 追加 なし
+        openKanbanCardDetailModal(null, { defaultCol: colId });
       });
     });
     // Wire: delete manual + action buttons (既 存 wire flow に 委任)

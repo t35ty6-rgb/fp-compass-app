@@ -12627,18 +12627,19 @@ body:not([data-home-view]) [data-view-target="cal"] { display: none !important; 
  * card 上部 に 独立 chip 「◯ 完了 に する」 常時 表示 · かぶり 皆無 · 文字 明示
  * done 時: chip 緑 塗り + 「✓ 完了 済」 に 変化 (別 badge 撤去) */
 .fp-kanban-card-checkchip {
+  /* ★ 2026-08-17 owner「chip 大き すぎ · もっと 小さく」対応: font 9.5px · padding 極 少 */
   display: inline-block;
-  background: #F1F5F9;
-  color: #64748B;
+  background: transparent;
+  color: #94A3B8;
   border: 1px solid #E2E8F0;
-  padding: 3px 10px;
+  padding: 1px 7px;
   border-radius: 999px;
   font-family: inherit;
-  font-size: 11px;
+  font-size: 9.5px;
   font-weight: 700;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.04em;
   cursor: pointer;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
   transition: all 150ms;
 }
 .fp-kanban-card-checkchip:hover {
