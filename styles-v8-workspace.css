@@ -12480,6 +12480,24 @@ body:not([data-home-view]) [data-view-target="cal"] { display: none !important; 
 .fp-kanban-col.is-warn .fp-kanban-col-count { background: #FEF3C7; color: #D97706; }
 .fp-kanban-col.is-done .fp-kanban-col-title { color: #059669; }
 .fp-kanban-col.is-done .fp-kanban-col-count { background: #D1FAE5; color: #059669; }
+.fp-kanban-col.is-overdue { background: #FEF2F2; border-color: #FCA5A5; }
+.fp-kanban-col.is-overdue .fp-kanban-col-title { color: #B91C1C; }
+.fp-kanban-col.is-overdue .fp-kanban-col-count { background: #FCA5A5; color: #7F1D1D; }
+.fp-kanban-card-deadline {
+  display: inline-block;
+  font-size: 10.5px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 4px;
+  margin-bottom: 6px;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+}
+.fp-kanban-card-deadline.overdue { background: #7F1D1D; color: #FEE2E2; }
+.fp-kanban-card-deadline.urgent  { background: #FEE2E2; color: #B91C1C; }
+.fp-kanban-card-deadline.warn    { background: #FEF3C7; color: #B45309; }
+.fp-kanban-card-deadline.soft    { background: #FEF0E0; color: #C2410C; }
+.fp-kanban-card-deadline.calm    { background: #E0E7FF; color: #3730A3; }
 .fp-kanban-col-body {
   flex: 1;
   overflow-y: auto;

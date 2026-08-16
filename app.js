@@ -2311,21 +2311,33 @@
   function manualTodosAsTasks(clients) {
     const arr = loadManualTodos();
     const todayD = window.LifeEvents && window.LifeEvents.TODAY ? new Date(window.LifeEvents.TODAY) : new Date();
+    todayD.setHours(0, 0, 0, 0);
     return arr.map(m => {
       let dueBy = null, urgencyRank = 2, timeLabel = m.dueLabel || '';
       const p = m.priority || 'p2';
-      if (m.due === 'today') { dueBy = new Date(todayD); dueBy.setHours(23,59,0,0); urgencyRank = 0; timeLabel = '今日 中'; }
+      // ★ 2026-08-17 owner「カレンダー で 開始 日 · 終了 日 設定」対応:
+      //   endDate が あれば dueBy · timeLabel を 実 日付 から 逆算 (プリセット より 優先)
+      if (m.endDate) {
+        const end = new Date(m.endDate + 'T23:59:00');
+        dueBy = end;
+        const days = Math.floor((end.getTime() - todayD.getTime()) / 86400000);
+        if (days < 0) { urgencyRank = 0; timeLabel = `⚠ 期限 切れ ${Math.abs(days)} 日 超過`; }
+        else if (days === 0) { urgencyRank = 0; timeLabel = '今日 中'; }
+        else if (days <= 3) { urgencyRank = 0; timeLabel = `あと ${days} 日`; }
+        else if (days <= 7) { urgencyRank = 1; timeLabel = `あと ${days} 日 (今週)`; }
+        else if (days <= 14) { urgencyRank = 1; timeLabel = `あと ${days} 日 (2 週間)`; }
+        else { urgencyRank = 2; timeLabel = `${m.endDate} まで`; }
+      } else if (m.due === 'today') { dueBy = new Date(todayD); dueBy.setHours(23,59,0,0); urgencyRank = 0; timeLabel = '今日 中'; }
       else if (m.due === 'tomorrow') { dueBy = new Date(todayD.getTime()+86400000); urgencyRank = 1; timeLabel = '明日'; }
       else if (m.due === 'week') { dueBy = new Date(todayD.getTime()+7*86400000); urgencyRank = 1; timeLabel = '今週 中'; }
       else { urgencyRank = 2; timeLabel = '期限 なし'; }
-      // priority override urgencyRank
-      if (p === 'p1') urgencyRank = 0;
-      else if (p === 'p3') urgencyRank = 2;
+      // priority override urgencyRank (期限 切れ は overdue 判定 が 優先 なので p1 上書き しない)
+      const isOverdue = m.endDate && new Date(m.endDate + 'T23:59:00').getTime() < todayD.getTime();
+      if (!isOverdue) {
+        if (p === 'p1') urgencyRank = 0;
+        else if (p === 'p3' && !m.endDate) urgencyRank = 2;
+      }
       const c = (clients || []).find(x => x.id === m.clientId);
-      // ★ 2026-08-12 qa-reviewer FAIL fix:
-      //   新 quick-add で addManualTodo({task: title, ...}) だが 旧 UI は {text: 内容}
-      //   → m.text || m.task で 両 経路 対応 · undefined 落ち 回避
-      // ★ CONCERN fix: priority field を return object に 含める
       return {
         clientId: m.clientId || '',
         clientName: c?.name || m.clientName || (m.clientId ? '(不明)' : ''),
@@ -2337,6 +2349,8 @@
         priority: m.priority || (urgencyRank === 0 ? 'p1' : urgencyRank === 1 ? 'p2' : 'p3'),
         timeLabel,
         dueBy: dueBy || new Date(todayD.getTime() + 30*86400000),
+        startDate: m.startDate || '',
+        endDate: m.endDate || '',
         __manualId: m.id,
       };
     });
@@ -2720,8 +2734,16 @@
   }
   function kanbanColOf(t, override) {
     const key = taskKeyFor(t);
-    if (override[key]) return override[key];
     if (isTodoDone(t)) return 'done';
+    // ★ 2026-08-17 owner「期限 切れ は 切れ た ところ に 移動」対応:
+    //   endDate < 今日 は override 無視 で overdue 列 に 強制 (見逃し 防止)
+    if (t.endDate) {
+      const today = window.LifeEvents && window.LifeEvents.TODAY ? new Date(window.LifeEvents.TODAY) : new Date();
+      today.setHours(0, 0, 0, 0);
+      const end = new Date(t.endDate + 'T23:59:00');
+      if (end.getTime() < today.getTime()) return 'overdue';
+    }
+    if (override[key]) return override[key];
     if (t.urgencyRank === 0) return 'today';
     if (t.urgencyRank === 1) return 'week';
     return 'month';
@@ -2762,15 +2784,28 @@
     const url = t.url || '';
     const memoHtml = memo ? `<div class="fp-kanban-card-memo">${escapeHtml(memo)}</div>` : '';
     const urlHtml = url ? `<a class="fp-kanban-card-url" href="${escapeHtml(url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">🔗 ${escapeHtml(url.replace(/^https?:\/\//,'').slice(0,32))}${url.length>32?'…':''}</a>` : '';
-    // ★ 2026-08-17 owner screenshot「AI に なって る · かぶって る · 文字 ない」対応:
-    //   card 上部 に 独立 chip 「◯ 完了 に する」 常時 表示 (かぶり 皆無)
-    //   done: chip が 緑 塗り + 「✓ 完了 済」 に 変わる (badge 兼用 · 別 badge 撤去)
     const checkChipLabel = done ? '✓ 完了' : '◯ 完了';
+    // ★ 2026-08-17 owner「期限 の 3日 前 に なったら 『3日 前 です』 tag · 1週間 · 2週間」対応:
+    //   endDate から 残り 日数 で 色 分け badge を 生成 (card 上部 · label と 並列)
+    let deadlineBadge = '';
+    if (t.endDate && !done) {
+      const today = window.LifeEvents && window.LifeEvents.TODAY ? new Date(window.LifeEvents.TODAY) : new Date();
+      today.setHours(0, 0, 0, 0);
+      const end = new Date(t.endDate + 'T23:59:00');
+      const days = Math.floor((end.getTime() - today.getTime()) / 86400000);
+      if (days < 0) deadlineBadge = `<span class="fp-kanban-card-deadline overdue">⚠ 期限 切れ ${Math.abs(days)} 日 超過</span>`;
+      else if (days === 0) deadlineBadge = `<span class="fp-kanban-card-deadline urgent">🔥 今日 が 期限</span>`;
+      else if (days <= 3) deadlineBadge = `<span class="fp-kanban-card-deadline urgent">🚨 ${days} 日 前 です</span>`;
+      else if (days <= 7) deadlineBadge = `<span class="fp-kanban-card-deadline warn">⏰ あと ${days} 日 (1 週間)</span>`;
+      else if (days <= 14) deadlineBadge = `<span class="fp-kanban-card-deadline soft">📅 あと ${days} 日 (2 週間)</span>`;
+      else deadlineBadge = `<span class="fp-kanban-card-deadline calm">📆 ${t.endDate}</span>`;
+    }
     return `
       <div class="fp-kanban-card ${done ? 'done' : ''}" draggable="true" data-p="${escapeHtml(p)}" data-card-key="${escapeHtml(key)}" data-client-id="${escapeHtml(t.clientId || '')}">
         ${cornerDel}
         <button class="fp-kanban-card-checkchip ${done ? 'on' : ''}" data-check onclick="event.stopPropagation()" type="button">${checkChipLabel}</button>
         ${labels.length ? `<div class="fp-kanban-card-labels">${labels.map(l => `<span class="fp-kanban-card-label ${l}"></span>`).join('')}</div>` : ''}
+        ${deadlineBadge}
         <p class="fp-kanban-card-title">${hasClient ? `<b>${escapeHtml(t.clientName)} 様</b> · ` : ''}${escapeHtml(t.title)}</p>
         ${memoHtml}
         ${urlHtml}
@@ -2862,7 +2897,7 @@
           <label style="display:block;font-size:11.5px;font-weight:700;color:#475569;margin-bottom:5px;">🔗 関連 URL</label>
           <input id="fp-kmodal-url" type="url" placeholder="https://…" value="${escapeHtml(t.url || '')}" style="width:100%;padding:9px 12px;border:1.5px solid #E2E8F0;border-radius:6px;font-family:inherit;font-size:13px;margin-bottom:12px;">
 
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
             <div>
               <label style="display:block;font-size:11.5px;font-weight:700;color:#475569;margin-bottom:5px;">🚩 優先度</label>
               <select id="fp-kmodal-priority" style="width:100%;padding:9px 10px;border:1.5px solid #E2E8F0;border-radius:6px;font-family:inherit;font-size:13px;">
@@ -2872,14 +2907,22 @@
               </select>
             </div>
             <div>
-              <label style="display:block;font-size:11.5px;font-weight:700;color:#475569;margin-bottom:5px;">📅 期限</label>
-              <select id="fp-kmodal-due" style="width:100%;padding:9px 10px;border:1.5px solid #E2E8F0;border-radius:6px;font-family:inherit;font-size:13px;">
-                <option value="today" ${t.due==='today'?'selected':''}>今日 中</option>
-                <option value="tomorrow" ${t.due==='tomorrow'?'selected':''}>明日</option>
-                <option value="week" ${t.due==='week'?'selected':''}>今週 中</option>
-                <option value="none" ${(!t.due||t.due==='none')?'selected':''}>期限 なし</option>
-              </select>
+              <label style="display:block;font-size:11.5px;font-weight:700;color:#475569;margin-bottom:5px;">📅 開始 日</label>
+              <input type="date" id="fp-kmodal-startdate" value="${escapeHtml(t.startDate || '')}" style="width:100%;padding:9px 10px;border:1.5px solid #E2E8F0;border-radius:6px;font-family:inherit;font-size:13px;">
             </div>
+            <div>
+              <label style="display:block;font-size:11.5px;font-weight:700;color:#475569;margin-bottom:5px;">🏁 終了 日 (期限)</label>
+              <input type="date" id="fp-kmodal-enddate" value="${escapeHtml(t.endDate || '')}" style="width:100%;padding:9px 10px;border:1.5px solid #E2E8F0;border-radius:6px;font-family:inherit;font-size:13px;">
+            </div>
+          </div>
+          <div style="margin-top:8px;">
+            <label style="display:block;font-size:11.5px;font-weight:700;color:#475569;margin-bottom:5px;">or 期限 プリセット</label>
+            <select id="fp-kmodal-due" style="width:100%;padding:9px 10px;border:1.5px solid #E2E8F0;border-radius:6px;font-family:inherit;font-size:13px;">
+              <option value="today" ${t.due==='today'?'selected':''}>今日 中</option>
+              <option value="tomorrow" ${t.due==='tomorrow'?'selected':''}>明日</option>
+              <option value="week" ${t.due==='week'?'selected':''}>今週 中</option>
+              <option value="none" ${(!t.due||t.due==='none')?'selected':''}>期限 なし (date で 直接 指定)</option>
+            </select>
           </div>
         </div>
         <div style="padding:14px 24px;border-top:1px solid #E2E8F0;display:flex;gap:8px;justify-content:space-between;">
@@ -2940,11 +2983,15 @@
     document.getElementById('fp-kmodal-save').onclick = () => {
       const clientId = document.getElementById('fp-kmodal-client')?.value || '';
       const clientName = clientId ? ((window.DUMMY_CLIENTS || []).find(c => c.id === clientId)?.name || '') : '';
+      const startDate = document.getElementById('fp-kmodal-startdate')?.value || '';
+      const endDate = document.getElementById('fp-kmodal-enddate')?.value || '';
       const patch = {
         memo: document.getElementById('fp-kmodal-memo').value.trim(),
         url: document.getElementById('fp-kmodal-url').value.trim(),
         priority: document.getElementById('fp-kmodal-priority').value,
         due: document.getElementById('fp-kmodal-due').value,
+        startDate,
+        endDate,
         clientId,
         clientName,
       };
@@ -2958,8 +3005,9 @@
           url: patch.url,
           priority: patch.priority,
           due: patch.due,
+          startDate, endDate,
           clientId, clientName,
-          dueLabel: patch.due === 'today' ? '今日 中' : patch.due === 'tomorrow' ? '明日' : patch.due === 'week' ? '今週 中' : '',
+          dueLabel: endDate ? '' : (patch.due === 'today' ? '今日 中' : patch.due === 'tomorrow' ? '明日' : patch.due === 'week' ? '今週 中' : ''),
         });
         close();
         try { renderDashboard(); } catch(_) {}
@@ -3001,6 +3049,7 @@
     } catch(_) {}
     const override = loadKanbanOverride();
     const cols = [
+      { id: 'overdue', title: '⚠ 期限 切れ', tone: 'overdue', tasks: [] },
       { id: 'today', title: '今日 中', tone: 'alarm', tasks: [] },
       { id: 'week',  title: '今週 中', tone: 'warn',  tasks: [] },
       { id: 'month', title: '今月',    tone: 'neutral', tasks: [] },
@@ -3008,7 +3057,7 @@
     ];
     tasks.forEach(t => {
       const col = kanbanColOf(t, override);
-      const target = cols.find(c => c.id === col) || cols[2];
+      const target = cols.find(c => c.id === col) || cols[3];
       target.tasks.push(t);
     });
     const quickAddHtml = `
