@@ -2762,18 +2762,14 @@
     const url = t.url || '';
     const memoHtml = memo ? `<div class="fp-kanban-card-memo">${escapeHtml(memo)}</div>` : '';
     const urlHtml = url ? `<a class="fp-kanban-card-url" href="${escapeHtml(url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">🔗 ${escapeHtml(url.replace(/^https?:\/\//,'').slice(0,32))}${url.length>32?'…':''}</a>` : '';
-    // ★ 2026-08-17 owner「完了 button 多 すぎ · 大事 な ところ 見づらい」対応:
-    //   大 button 撤去 · 左 上 に 小 円 checkbox のみ (Trello 本家 準拠) · hover で tooltip
-    //   done 時: 緑 「✓ 完了 済」 badge (前面) · card 緑 化 で 明示
-    const doneBadge = done ? `<div class="fp-kanban-card-donebadge">✓ 完了 済</div>` : '';
-    const checkTitle = done ? '未完 に 戻す' : '完了 に する';
+    // ★ 2026-08-17 owner screenshot「AI に なって る · かぶって る · 文字 ない」対応:
+    //   card 上部 に 独立 chip 「◯ 完了 に する」 常時 表示 (かぶり 皆無)
+    //   done: chip が 緑 塗り + 「✓ 完了 済」 に 変わる (badge 兼用 · 別 badge 撤去)
+    const checkChipLabel = done ? '✓ 完了 済' : '◯ 完了 に する';
     return `
       <div class="fp-kanban-card ${done ? 'done' : ''}" draggable="true" data-p="${escapeHtml(p)}" data-card-key="${escapeHtml(key)}" data-client-id="${escapeHtml(t.clientId || '')}">
-        <button class="fp-kanban-card-check-mini ${done ? 'on' : ''}" data-check onclick="event.stopPropagation()" title="${checkTitle}" type="button" aria-label="${checkTitle}">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-        </button>
         ${cornerDel}
-        ${doneBadge}
+        <button class="fp-kanban-card-checkchip ${done ? 'on' : ''}" data-check onclick="event.stopPropagation()" type="button">${checkChipLabel}</button>
         ${labels.length ? `<div class="fp-kanban-card-labels">${labels.map(l => `<span class="fp-kanban-card-label ${l}"></span>`).join('')}</div>` : ''}
         <p class="fp-kanban-card-title">${hasClient ? `<b>${escapeHtml(t.clientName)} 様</b> · ` : ''}${escapeHtml(t.title)}</p>
         ${memoHtml}
