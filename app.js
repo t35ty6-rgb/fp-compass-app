@@ -592,6 +592,8 @@
   function renderDashboard() {
     // ★ 2026-08-05 owner「実際の画面 じゃない」 対応: ?demo=cal で real admin に demo データ inject
     try { seedDemoDataForCalendar(); } catch (e) { console.warn('[demo-seed]', e); }
+    // ★ 2026-08-16 owner「TODO / カレンダー tab 切替」 init (idempotent)
+    try { initHomeViewTabs(); } catch(_) {}
 
     const totalClients = clients.length;
     const importantCount = clients.filter(c => c.status === 'important').length;
@@ -2675,6 +2677,35 @@
       </div>
     `;
   }
+
+  // ★ 2026-08-16 owner「ホーム ごちゃごちゃ · TODO / カレンダー それぞれ 開いた 方 が いい」対応
+  //   home 上部 2 tab (TODO / カレンダー) · body[data-home-view] で CSS 切替 · localStorage 記憶
+  function initHomeViewTabs() {
+    const bar = document.getElementById('v3h-view-tabs');
+    if (!bar || bar.__inited) return;
+    bar.__inited = true;
+    const saved = localStorage.getItem('fp-home-view') || 'todo';
+    applyHomeView(saved);
+    bar.querySelectorAll('[data-view]').forEach(b => {
+      b.addEventListener('click', () => applyHomeView(b.dataset.view));
+    });
+  }
+  function applyHomeView(view) {
+    if (!['todo', 'cal'].includes(view)) view = 'todo';
+    document.body.setAttribute('data-home-view', view);
+    localStorage.setItem('fp-home-view', view);
+    document.querySelectorAll('#v3h-view-tabs [data-view]').forEach(b => {
+      b.classList.toggle('active', b.dataset.view === view);
+    });
+    // カレンダー tab 選択 時 は embed lazy load を トリガー
+    if (view === 'cal') {
+      try {
+        const loadBtn = document.getElementById('v3h-gcal-load-embed');
+        if (loadBtn) loadBtn.click();
+      } catch(_) {}
+    }
+  }
+  window.__fpApplyHomeView = applyHomeView;
 
   // ★ 2026-08-16 owner「Trello みたい な TODO に · それ で 実装 させよう」対応
   //   4 列 kanban board: 今日 / 今週 / 今月 / 完了

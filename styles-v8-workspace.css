@@ -12428,6 +12428,41 @@ label.fp-task-check:has(input:checked) { background: #5B5BF0; border-color: #5B5
 /* home tab で shell 全 幅 (別 CSS の 1150px 上書き 対策) */
 .v3h-shell { grid-template-columns: 1fr !important; }
 .v3h-shell > .v3h-main { min-width: 0; width: 100%; }
+/* ★ 2026-08-16 owner「ホーム ごちゃごちゃ · TODO / カレンダー それぞれ 開いた 方 が いい」対応
+ * home 上部 の 2 tab 切替 · 一方 のみ 表示 · localStorage 記憶 */
+.v3h-view-tabs {
+  display: flex;
+  gap: 4px;
+  margin-top: 14px;
+  padding: 4px;
+  background: #F1F5F9;
+  border-radius: 8px;
+  width: fit-content;
+}
+.v3h-view-tab {
+  background: transparent;
+  border: 0;
+  color: #64748B;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 7px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 150ms, color 150ms;
+  letter-spacing: 0.02em;
+}
+.v3h-view-tab:hover { color: #0F172A; }
+.v3h-view-tab.active {
+  background: #FFFFFF;
+  color: #5B5BF0;
+  box-shadow: 0 1px 3px rgba(15,23,42,0.08);
+}
+/* view target 制御 · body に data-home-view を 付与 で toggle */
+body[data-home-view="todo"] [data-view-target="cal"] { display: none !important; }
+body[data-home-view="cal"] [data-view-target="todo"] { display: none !important; }
+/* default (data-home-view 未 set) = TODO */
+body:not([data-home-view]) [data-view-target="cal"] { display: none !important; }
 .fp-kanban-col-head {
   display: flex; align-items: center; gap: 8px;
   padding: 12px 14px;

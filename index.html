@@ -1101,10 +1101,15 @@
                 <div class="v3h-stats" id="v3h-stats"></div>
                 <!-- ショートカット: 見落とし 防止 button (owner 2026-08-05 明示 「日程調整 見落とさない」) -->
                 <div class="v3h-shortcuts" id="v3h-shortcuts"></div>
+                <!-- ★ 2026-08-16 owner「ホーム ごちゃごちゃ · TODO/カレンダー それぞれ 開いた 方 が いい」対応: 2 tab 切替 -->
+                <div class="v3h-view-tabs" role="tablist" id="v3h-view-tabs">
+                  <button type="button" class="v3h-view-tab active" data-view="todo" role="tab">📋 TODO</button>
+                  <button type="button" class="v3h-view-tab" data-view="cal" role="tab">📅 カレンダー</button>
+                </div>
               </header>
 
               <!-- 2026-08-06 owner: Google Calendar 風 [週/2週/月] 切替 view -->
-              <section class="v3h-sched">
+              <section class="v3h-sched" data-view-target="cal">
                 <div class="v3h-sched-head">
                   <p class="v3h-sched-title">スケジュール</p>
                   <!-- ★ 2026-08-11 owner「週/2週/月 は 要らない · Google だけ で いい」 対応: 3 mode 削除 · gcal 1 択 -->
@@ -1125,7 +1130,7 @@
 
               <div id="notice-area"></div>
 
-              <section class="v3h-section">
+              <section class="v3h-section" data-view-target="todo">
                 <div class="v3h-section-head">
                   <h2>今日</h2>
                   <span class="count" id="v3h-today-count">·  0</span>
@@ -1512,7 +1517,7 @@ window.fpReadyAfterAuth = function() {
     });
   })();
 
-  const ver = "20260816E-fit-columns";
+  const ver = "20260816F-home-tabs";
   // ★ 2026-06-26 perf: critical (画面初期表示に必須) と deferred (LINE/charts) を 分離
   // critical: 顧客台帳・ホーム描画に必須
   // deferred: LINE タブ (line-app.js 555KB) / dashboard charts (charts.js) → idle で 後ロード
@@ -2263,7 +2268,7 @@ window.fpReadyAfterAuth = function() {
 <script>
 (function(){
   // 最新の ver を 1 箇所に集約 (fpReadyAfterAuth 側と一致させる必要あり)
-    const FP_VERSION = "20260816E-fit-columns";
+    const FP_VERSION = "20260816F-home-tabs";
   try { window.FP_VERSION = FP_VERSION; } catch(_) {}
 
   // 2026-07-13 v11: Chrome拡張 (Zoom タブ音声 レコーダー) 検知
