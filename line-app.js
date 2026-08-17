@@ -6440,6 +6440,53 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
 
   const LIVE_CACHE_KEY = 'fp-livedata-cache-v1';
 
+  // ★ 2026-08-17 owner「LINE 送っても 反映 されない」bug root cause fix:
+  //   Cloud Run backend (2026-07-21 deploy · revision 1 個) は 旧 schema で root `line_messages`
+  //   collection を 読む が、 現行 lineWebhook は `tenants/{tid}/customers/{cid}/line_messages` の
+  //   sub-collection に 保存。 → backend response で line_messages 常 に 空。
+  //   client 側 で Firestore 直接 pull で bypass。
+  async function pullLineMessagesFromFirestore() {
+    try {
+      const tenantId = (window.__fp && window.__fp.tenantId) || localStorage.getItem('fp-tenantId');
+      if (!tenantId) return [];
+      const { getFirestore, collection, collectionGroup, getDocs, query, orderBy, limit, where } =
+        await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js');
+      const db = window.__fp?.db || getFirestore();
+      // customer sub-collection loop (10 客 以下 想定 なら 十分 軽い · 大量 に なる 場合 collectionGroup + tenant filter に 差替)
+      const custsSnap = await getDocs(collection(db, `tenants/${tenantId}/customers`));
+      const out = [];
+      for (const cDoc of custsSnap.docs) {
+        try {
+          const msgsSnap = await getDocs(query(
+            collection(db, `tenants/${tenantId}/customers/${cDoc.id}/line_messages`),
+            orderBy('ts', 'desc'),
+            limit(50)
+          ));
+          const cData = cDoc.data() || {};
+          msgsSnap.docs.forEach(m => {
+            const md = m.data() || {};
+            const ts = md.ts?.toDate?.()?.toISOString?.() || md.ts || md.createdAt?.toDate?.()?.toISOString?.() || '';
+            out.push({
+              userId: cData.userId || cDoc.id,
+              customerId: cDoc.id,
+              customerName: cData.name || cData.displayName || '',
+              text: md.text || md.message || '',
+              ts,
+              date: String(ts).slice(0, 10),
+              direction: md.direction || md.from || 'unknown',
+              from: md.direction === 'out' ? 'fp' : 'user',
+              _fromFirestore: true,
+            });
+          });
+        } catch (subErr) { /* per-customer read fail は skip · loop 続行 */ }
+      }
+      return out;
+    } catch (e) {
+      console.warn('[pullLineMessagesFromFirestore] fail:', e.message || e);
+      return [];
+    }
+  }
+
   async function fetchLiveData() {
     // ★ fpId が 未設定 (= 旧 GAS データ 誤注入 防止) なら GAS フェッチ スキップ
     if (!currentFpId()) {
@@ -6483,6 +6530,21 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
         liveData.line_messages = capArray(liveData.line_messages, 1000);
         liveData.bookings = liveData.bookings || [];
       }
+      // ★ 2026-08-17 backend line_messages が Cloud Run 旧 schema で 空 → Firestore 直 pull で 補完
+      try {
+        const fsMsgs = await pullLineMessagesFromFirestore();
+        if (fsMsgs.length > 0) {
+          // ts 完全 一致 で dedupe
+          const seen = new Set((liveData.line_messages || []).map(m => `${m.userId}|${String(m.ts||'').slice(0,19)}`));
+          const merged = (liveData.line_messages || []).slice();
+          fsMsgs.forEach(m => {
+            const key = `${m.userId}|${String(m.ts||'').slice(0,19)}`;
+            if (!seen.has(key)) { merged.push(m); seen.add(key); }
+          });
+          liveData.line_messages = merged;
+          console.log('[fetchLiveData] Firestore pull merged', fsMsgs.length, '→ total', merged.length, 'line_messages');
+        }
+      } catch (fsErr) { console.warn('[fetchLiveData] fs pull fail:', fsErr.message || fsErr); }
       // ※ 削除済: 旧コード「cleared flag で liveData 全配列空に強制上書き」
       //   → GAS resetAll で実データを消したので強制上書き不要。
       //   → リセット後に新規予約しても、この強制上書きで消えてしまうバグの原因だった。
