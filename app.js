@@ -1542,14 +1542,8 @@
       </div>
     `;
 
-    // ★ 案 A · quick add bar (Todoist 準拠 · @客 記法 hint)
-    const quickAddHtml = `
-      <div class="fp-quick-add" title="task を 追加 · 例 「@吉田 · 提案 書 続き · 金 · P2」">
-        <span class="fp-quick-add-plus">+</span>
-        <input class="fp-quick-add-input" type="text" placeholder="task を 追加 · 例 「@吉田 · 提案 書 続き · 金 · P2」" data-quickadd>
-        <span class="fp-quick-add-hint"><code>@客</code><code>期限</code><code>P1</code></span>
-      </div>
-    `;
+    // ★ 2026-08-17 owner「使いづらくて 意味 が わかんない」 明示 削除 (kanban 側 と 統一)
+    const quickAddHtml = '';
     list.innerHTML = `
       <div class="fp-task-list">
         ${quickAddHtml}
