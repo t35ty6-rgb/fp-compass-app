@@ -2911,26 +2911,25 @@
           </div>
           <input type="hidden" id="fp-kmodal-priority" value="${escapeHtml(p)}">
 
-          <label style="display:block;font-size:11.5px;font-weight:700;color:#475569;margin-bottom:6px;">📅 期間 (開始 日 → 終了 日)</label>
-          <div id="fp-kmodal-daterange" style="border:1.5px solid #E2E8F0;border-radius:8px;padding:12px;background:#F8FAFC;">
-            <!-- step 1: 開始 日 -->
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
-              <span id="fp-kmodal-step1-mark" style="width:22px;height:22px;border-radius:50%;background:#5B5BF0;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;font-family:'Manrope',sans-serif;flex-shrink:0;">1</span>
-              <div style="flex:1;">
-                <div style="font-size:11px;font-weight:700;color:#475569;margin-bottom:3px;">まず 開始 日 を 選ぶ</div>
-                <input type="date" id="fp-kmodal-startdate" value="${escapeHtml(t.startDate || '')}" style="width:100%;padding:8px 10px;border:1.5px solid #CBD5E1;border-radius:6px;font-family:inherit;font-size:13px;background:#fff;">
-              </div>
+          <label style="display:block;font-size:11.5px;font-weight:700;color:#475569;margin-bottom:6px;">📅 期間 (カレンダー で 開始 日 → 終了 日 の 順 に click)</label>
+          <div id="fp-kmodal-daterange-summary" style="font-size:12px;color:#5B5BF0;font-weight:700;margin-bottom:6px;min-height:16px;">まず 開始 日 を click して ください</div>
+          <div id="fp-kmodal-daterange" style="border:1.5px solid #E2E8F0;border-radius:10px;padding:10px 12px;background:#fff;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+              <button type="button" id="fp-kmodal-cal-prev" aria-label="前 の 月" style="width:28px;height:28px;border-radius:6px;border:1px solid #E2E8F0;background:#fff;color:#475569;font-family:inherit;font-size:14px;font-weight:800;cursor:pointer;">‹</button>
+              <div id="fp-kmodal-cal-title" style="font-family:'Manrope',sans-serif;font-size:13.5px;font-weight:800;color:#0F172A;letter-spacing:0.02em;"></div>
+              <button type="button" id="fp-kmodal-cal-next" aria-label="次 の 月" style="width:28px;height:28px;border-radius:6px;border:1px solid #E2E8F0;background:#fff;color:#475569;font-family:inherit;font-size:14px;font-weight:800;cursor:pointer;">›</button>
             </div>
-            <!-- step 2: 終了 日 -->
-            <div style="display:flex;align-items:center;gap:10px;">
-              <span id="fp-kmodal-step2-mark" style="width:22px;height:22px;border-radius:50%;background:#CBD5E1;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;font-family:'Manrope',sans-serif;flex-shrink:0;">2</span>
-              <div style="flex:1;">
-                <div style="font-size:11px;font-weight:700;color:#475569;margin-bottom:3px;">次 に 終了 日 (期限) を 選ぶ</div>
-                <input type="date" id="fp-kmodal-enddate" value="${escapeHtml(t.endDate || '')}" style="width:100%;padding:8px 10px;border:1.5px solid #CBD5E1;border-radius:6px;font-family:inherit;font-size:13px;background:#fff;">
-              </div>
+            <div id="fp-kmodal-cal-wkhdr" style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px;font-family:'Manrope',sans-serif;font-size:10.5px;font-weight:700;color:#94A3B8;text-align:center;">
+              <div style="color:#DC2626;">日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div style="color:#2563EB;">土</div>
             </div>
-            <button type="button" id="fp-kmodal-daterange-clear" style="margin-top:10px;background:transparent;border:0;color:#94A3B8;font-family:inherit;font-size:11px;cursor:pointer;text-decoration:underline;">× 期間 を 消す</button>
+            <div id="fp-kmodal-cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;"></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
+              <button type="button" id="fp-kmodal-cal-today" style="background:transparent;border:0;color:#5B5BF0;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;">今日 に 戻る</button>
+              <button type="button" id="fp-kmodal-daterange-clear" style="background:transparent;border:0;color:#94A3B8;font-family:inherit;font-size:11px;cursor:pointer;text-decoration:underline;">× 期間 を 消す</button>
+            </div>
           </div>
+          <input type="hidden" id="fp-kmodal-startdate" value="${escapeHtml(t.startDate || '')}">
+          <input type="hidden" id="fp-kmodal-enddate" value="${escapeHtml(t.endDate || '')}">
           <input type="hidden" id="fp-kmodal-due" value="${escapeHtml(t.due || 'none')}">
         </div>
         <div style="padding:14px 24px;border-top:1px solid #E2E8F0;display:flex;gap:8px;justify-content:space-between;">
@@ -3013,39 +3012,131 @@
       if (initBtn) applyOn(initBtn);
       btns.forEach(b => b.addEventListener('click', () => applyOn(b)));
     })();
-    // Wire: date range stepper (2026-08-17 owner「1つで 順番 に · 開始 → 終了」)
-    (function wireDateStepper() {
+    // Wire: date range picker (2026-08-17 owner「1つ の カレンダー で 1回目=開始 · 2回目=終了 · 間 ハイライト」)
+    (function wireDateRangePicker() {
       const startEl = document.getElementById('fp-kmodal-startdate');
       const endEl   = document.getElementById('fp-kmodal-enddate');
-      const mark1   = document.getElementById('fp-kmodal-step1-mark');
-      const mark2   = document.getElementById('fp-kmodal-step2-mark');
+      const summary = document.getElementById('fp-kmodal-daterange-summary');
+      const titleEl = document.getElementById('fp-kmodal-cal-title');
+      const gridEl  = document.getElementById('fp-kmodal-cal-grid');
+      const prevBtn = document.getElementById('fp-kmodal-cal-prev');
+      const nextBtn = document.getElementById('fp-kmodal-cal-next');
+      const todayBtn = document.getElementById('fp-kmodal-cal-today');
       const clearBtn = document.getElementById('fp-kmodal-daterange-clear');
-      const refreshMarks = () => {
-        const s = startEl.value, e = endEl.value;
-        // step1 = 開始 未 選 → primary、 選択 済 → 完了 (緑)
-        if (s) { mark1.style.background = '#059669'; mark1.textContent = '✓'; }
-        else   { mark1.style.background = '#5B5BF0'; mark1.textContent = '1'; }
-        // step2 = 開始 未 → 灰、 開始 選択 済 未 終了 → primary、 完了 → 緑
-        if (!s) { mark2.style.background = '#CBD5E1'; mark2.textContent = '2'; }
-        else if (!e) { mark2.style.background = '#5B5BF0'; mark2.textContent = '2'; }
-        else { mark2.style.background = '#059669'; mark2.textContent = '✓'; }
-      };
-      refreshMarks();
-      startEl.addEventListener('change', () => {
-        // 終了 日 の min = 開始 日 (逆転 防止)
-        if (startEl.value) endEl.min = startEl.value;
-        // 開始 未 で 終了 空 なら 終了 に focus 移動 (owner の 「次 に 終了」 flow)
-        if (startEl.value && !endEl.value) {
-          setTimeout(() => { try { endEl.focus(); endEl.showPicker?.(); } catch(_) {} }, 100);
+      if (!gridEl) return;
+      const pad2 = n => String(n).padStart(2,'0');
+      const toISO = d => `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
+      const parseISO = s => { const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); };
+      const todayD = window.LifeEvents?.TODAY ? new Date(window.LifeEvents.TODAY) : new Date();
+      todayD.setHours(0,0,0,0);
+      const todayISO = toISO(todayD);
+      // 初期 view = 選択 済 の start 月、 なければ 今月
+      const seed = startEl.value ? parseISO(startEl.value) : todayD;
+      let viewYear = seed.getFullYear(), viewMonth = seed.getMonth();
+      const state = { start: startEl.value || '', end: endEl.value || '', hover: '' };
+      const isBetween = (iso, a, b) => iso > a && iso < b;
+      const refreshSummary = () => {
+        if (state.start && state.end) {
+          const dS = parseISO(state.start), dE = parseISO(state.end);
+          const days = Math.round((dE - dS) / 86400000) + 1;
+          summary.textContent = `📌 ${state.start} → ${state.end} (${days} 日 間)`;
+          summary.style.color = '#059669';
+        } else if (state.start) {
+          summary.textContent = `📌 開始 ${state.start} · 次 に 終了 日 を click`;
+          summary.style.color = '#5B5BF0';
+        } else {
+          summary.textContent = 'まず 開始 日 を click して ください';
+          summary.style.color = '#5B5BF0';
         }
-        refreshMarks();
+      };
+      const render = () => {
+        titleEl.textContent = `${viewYear} 年 ${viewMonth + 1} 月`;
+        const first = new Date(viewYear, viewMonth, 1);
+        const firstWeekday = first.getDay(); // 0=Sun
+        const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+        const cells = [];
+        // prev-month tail
+        const prevDays = new Date(viewYear, viewMonth, 0).getDate();
+        for (let i = firstWeekday - 1; i >= 0; i--) {
+          cells.push({ iso: '', day: prevDays - i, muted: true });
+        }
+        for (let d = 1; d <= daysInMonth; d++) {
+          cells.push({ iso: toISO(new Date(viewYear, viewMonth, d)), day: d, muted: false });
+        }
+        // pad to 42
+        let dd = 1;
+        while (cells.length < 42) {
+          cells.push({ iso: '', day: dd++, muted: true });
+        }
+        // build HTML
+        const s = state.start, e = state.end, h = state.hover;
+        const rangeHi = (iso) => {
+          if (!iso) return false;
+          if (s && e) return iso > s && iso < e;
+          if (s && !e && h && h > s) return iso > s && iso < h;
+          return false;
+        };
+        gridEl.innerHTML = cells.map((c, idx) => {
+          const wk = idx % 7; // 0=Sun 6=Sat
+          const isToday = c.iso === todayISO;
+          const isStart = c.iso && c.iso === s;
+          const isEnd = c.iso && c.iso === e;
+          const isEndpoint = isStart || isEnd;
+          const inRange = rangeHi(c.iso);
+          if (c.muted) {
+            return `<div style="height:36px;display:flex;align-items:center;justify-content:center;color:#CBD5E1;font-size:12px;font-family:'Manrope',sans-serif;">${c.day}</div>`;
+          }
+          let bg = 'transparent', color = wk === 0 ? '#DC2626' : wk === 6 ? '#2563EB' : '#0F172A', extra = '';
+          if (isEndpoint) { bg = '#5B5BF0'; color = '#fff'; extra = 'font-weight:800;'; }
+          else if (inRange) { bg = '#EEF0FF'; color = '#5B5BF0'; }
+          const border = isToday && !isEndpoint ? 'border:1.5px solid #5B5BF0;' : 'border:1.5px solid transparent;';
+          return `<button type="button" data-iso="${c.iso}" class="fp-cal-cell" style="height:36px;display:flex;align-items:center;justify-content:center;background:${bg};color:${color};font-family:'Manrope',sans-serif;font-size:12.5px;${extra}${border}border-radius:6px;cursor:pointer;padding:0;transition:background 100ms;">${c.day}</button>`;
+        }).join('');
+        // wire cells
+        gridEl.querySelectorAll('.fp-cal-cell').forEach(el => {
+          el.addEventListener('click', () => {
+            const iso = el.dataset.iso;
+            if (!iso) return;
+            // 状態遷移: nothing→start=iso / start-only→(iso<start? start=iso,end='' : end=iso) / both→start=iso,end=''
+            if (!state.start || (state.start && state.end)) {
+              state.start = iso; state.end = '';
+            } else {
+              if (iso < state.start) { state.start = iso; state.end = ''; }
+              else if (iso === state.start) { /* no-op */ }
+              else { state.end = iso; }
+            }
+            startEl.value = state.start; endEl.value = state.end;
+            // dispatch change so 呼び手 側 も 反応 可
+            startEl.dispatchEvent(new Event('change', { bubbles: true }));
+            endEl.dispatchEvent(new Event('change', { bubbles: true }));
+            state.hover = '';
+            render(); refreshSummary();
+          });
+          el.addEventListener('mouseenter', () => {
+            const iso = el.dataset.iso;
+            if (!iso) return;
+            if (state.start && !state.end) { state.hover = iso; render(); }
+          });
+        });
+      };
+      prevBtn.addEventListener('click', () => {
+        viewMonth--; if (viewMonth < 0) { viewMonth = 11; viewYear--; }
+        render();
       });
-      endEl.addEventListener('change', refreshMarks);
-      clearBtn?.addEventListener('click', () => {
-        startEl.value = ''; endEl.value = ''; endEl.min = '';
-        refreshMarks();
+      nextBtn.addEventListener('click', () => {
+        viewMonth++; if (viewMonth > 11) { viewMonth = 0; viewYear++; }
+        render();
       });
-      if (startEl.value) endEl.min = startEl.value;
+      todayBtn.addEventListener('click', () => {
+        viewYear = todayD.getFullYear(); viewMonth = todayD.getMonth();
+        render();
+      });
+      clearBtn.addEventListener('click', () => {
+        state.start = ''; state.end = ''; state.hover = '';
+        startEl.value = ''; endEl.value = '';
+        render(); refreshSummary();
+      });
+      render(); refreshSummary();
     })();
     document.getElementById('fp-kmodal-save').onclick = () => {
       const clientId = document.getElementById('fp-kmodal-client')?.value || '';

@@ -1540,7 +1540,7 @@ window.fpReadyAfterAuth = function() {
     });
   })();
 
-  const ver = "20260817K-prio-btn-daterange-stepper";
+  const ver = "20260817L-daterange-inline-calendar";
   // ★ 2026-06-26 perf: critical (画面初期表示に必須) と deferred (LINE/charts) を 分離
   // critical: 顧客台帳・ホーム描画に必須
   // deferred: LINE タブ (line-app.js 555KB) / dashboard charts (charts.js) → idle で 後ロード
@@ -2291,7 +2291,7 @@ window.fpReadyAfterAuth = function() {
 <script>
 (function(){
   // 最新の ver を 1 箇所に集約 (fpReadyAfterAuth 側と一致させる必要あり)
-    const FP_VERSION = "20260817K-prio-btn-daterange-stepper";
+    const FP_VERSION = "20260817L-daterange-inline-calendar";
   try { window.FP_VERSION = FP_VERSION; } catch(_) {}
 
   // 2026-07-13 v11: Chrome拡張 (Zoom タブ音声 レコーダー) 検知
