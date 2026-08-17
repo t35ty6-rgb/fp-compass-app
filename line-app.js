@@ -10049,15 +10049,7 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
       hoursSince,
     };
   }
-  window.LineApp = window.LineApp || {};
-  window.LineApp.computeReplyStatus = computeReplyStatus;
-  window.LineApp.getClientsWithReplyStatus = function() {
-    const cs = _lchGetClients().filter(c => c.lineFriendId || (Array.isArray(c.lineHistory) && c.lineHistory.length > 0));
-    return cs.map(c => ({ client: c, status: computeReplyStatus(c) }));
-  };
-  window.LineApp.runLineIntentAnalysis = runLineIntentAnalysis;
-  window.LineApp.getRescheduleAlerts = getRescheduleAlerts;
-  window.LineApp.markRescheduleHandled = markRescheduleHandled;
+  // ★ helpers は 下方 の main window.LineApp = {...} assignment に 同居 (上書き 事故 防止)
 
   function renderLineChatHub() {
     const container = document.getElementById('lineChatHub');
@@ -10065,7 +10057,7 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
     // ★ 2026-08-17 home stats pill から の filter 引継 (fp-line-hub-filter localStorage)
     try {
       const preF = localStorage.getItem('fp-line-hub-filter');
-      if (preF && ['unread','needsReply','awaitingReply','linked','all'].includes(preF)) {
+      if (preF && ['unread','needsReply','awaitingReply','reschedule','linked','all'].includes(preF)) {
         _lchState.filter = preF;
         localStorage.removeItem('fp-line-hub-filter');
       }
@@ -10392,6 +10384,15 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
   // 初期化 (LINEタブが activate されたら)
   // ============================
   window.LineApp = {
+    // ★ 2026-08-17 LINE 意図 pickup helpers (main assignment に 同居 で 上書き 事故 防止)
+    computeReplyStatus: computeReplyStatus,
+    getClientsWithReplyStatus: function() {
+      const cs = _lchGetClients().filter(c => c.lineFriendId || (Array.isArray(c.lineHistory) && c.lineHistory.length > 0));
+      return cs.map(c => ({ client: c, status: computeReplyStatus(c) }));
+    },
+    runLineIntentAnalysis: runLineIntentAnalysis,
+    getRescheduleAlerts: getRescheduleAlerts,
+    markRescheduleHandled: markRescheduleHandled,
     activateSubview: activateSubview,
     renderMeetingHistory: renderMeetingHistory,
     renderLineChatHub: renderLineChatHub,
