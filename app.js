@@ -2487,19 +2487,54 @@
         <button class="stat${unreadCount > 0 ? ' warn' : ''}" type="button" data-jump="line-reply"><b>${unreadCount}</b>LINE 返信</button>
         <button class="stat${tasks.length > 0 ? ' warn' : ' ok'}" type="button" data-jump="all"><b>${tasks.length}</b>未完了</button>
       `;
+      // ★ 2026-08-17 owner「stats button 押しても そこ に アクセス できない」対応:
+      //   旧 .v3h-group-* は kanban 化 で 消滅 → null 参照 で 反応 なし bug
+      //   LINE 返信 → LINE トーク hub tab へ nav。 他 は kanban 内 の 対象 card を highlight
       stats.querySelectorAll('button.stat').forEach(btn => {
         btn.addEventListener('click', () => {
           const key = btn.dataset.jump;
-          const cls = key === 'line-reply' ? '.v3h-group-line' :
-                      key === 'schedule'   ? '.v3h-group-schedule' :
-                      key === 'zoom'       ? '.v3h-group-zoom' :
-                      key === 'all'        ? '.v3h-group' : '';
-          const el = cls ? document.querySelector(cls) : null;
-          if (el) {
-            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            el.style.transition = 'box-shadow 0.3s';
-            el.style.boxShadow = '0 0 0 4px rgba(11,93,158,0.2)';
-            setTimeout(() => { el.style.boxShadow = ''; }, 1500);
+          // LINE 返信 は 別 tab へ 直 nav
+          if (key === 'line-reply') {
+            try { activateTab('lineChat'); } catch(_) {}
+            return;
+          }
+          // 他: TODO tab に 切替 (kanban 表示) + 対象 card を highlight
+          try { document.body.setAttribute('data-home-view', 'todo'); } catch(_) {}
+          const board = document.querySelector('.fp-kanban-board');
+          if (!board) return;
+          board.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          // 対象 filter
+          const matchCard = (card) => {
+            const cid = card.dataset.cardKey || '';
+            // type は data-attr で 判定 でき ない ので、 col + label 併用
+            const col = card.closest('.fp-kanban-col')?.dataset.colId;
+            const labels = [...card.querySelectorAll('.fp-kanban-card-label')].map(l => l.className);
+            const hasLabel = (name) => labels.some(cls => cls.includes(name));
+            if (key === 'zoom')     return col === 'today' && (hasLabel('zoom') || hasLabel('line'));
+            if (key === 'schedule') return hasLabel('zoom') || hasLabel('proposal');
+            if (key === 'all')      return col !== 'done';
+            return false;
+          };
+          const cards = [...board.querySelectorAll('.fp-kanban-card')];
+          const matched = cards.filter(matchCard);
+          // 全 card を 一旦 灰 out
+          cards.forEach(c => { c.style.transition = 'opacity 200ms, box-shadow 200ms'; c.style.opacity = '0.35'; });
+          matched.forEach((c, i) => {
+            c.style.opacity = '1';
+            c.style.boxShadow = '0 0 0 3px rgba(91,91,240,0.35)';
+            if (i === 0) c.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          });
+          // 1.8s 後 に 元 に 戻す
+          setTimeout(() => {
+            cards.forEach(c => { c.style.opacity = ''; c.style.boxShadow = ''; });
+          }, 1800);
+          // 該当 0 件 なら 分かり やすく toast 的 に summary 表示
+          if (matched.length === 0) {
+            const stripSummary = document.createElement('div');
+            stripSummary.textContent = `${btn.textContent.replace(/\s+/g,' ').trim()} · 該当 なし`;
+            stripSummary.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#0F172A;color:#fff;padding:9px 18px;border-radius:20px;font-family:inherit;font-size:12.5px;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,0.25);';
+            document.body.appendChild(stripSummary);
+            setTimeout(() => stripSummary.remove(), 1500);
           }
         });
       });
