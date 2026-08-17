@@ -3049,94 +3049,101 @@
           summary.style.color = '#5B5BF0';
         }
       };
-      const render = () => {
-        titleEl.textContent = `${viewYear} 年 ${viewMonth + 1} 月`;
-        const first = new Date(viewYear, viewMonth, 1);
-        const firstWeekday = first.getDay(); // 0=Sun
-        const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
-        const cells = [];
-        // prev-month tail
-        const prevDays = new Date(viewYear, viewMonth, 0).getDate();
-        for (let i = firstWeekday - 1; i >= 0; i--) {
-          cells.push({ iso: '', day: prevDays - i, muted: true });
-        }
-        for (let d = 1; d <= daysInMonth; d++) {
-          cells.push({ iso: toISO(new Date(viewYear, viewMonth, d)), day: d, muted: false });
-        }
-        // pad to 42
-        let dd = 1;
-        while (cells.length < 42) {
-          cells.push({ iso: '', day: dd++, muted: true });
-        }
-        // build HTML
+      // ★ 2026-08-17 bug fix: hover 時 に full re-render すると DOM が 差替 わって click miss
+      //   → 部分 update: cell 一覧 は 一度 だけ build、 style は data-* attr で 判定 して 塗り替え
+      let cellsMeta = [];
+      const paintCells = () => {
         const s = state.start, e = state.end, h = state.hover;
-        const rangeHi = (iso) => {
+        const inRange = (iso) => {
           if (!iso) return false;
           if (s && e) return iso > s && iso < e;
           if (s && !e && h && h > s) return iso > s && iso < h;
           return false;
         };
-        gridEl.innerHTML = cells.map((c, idx) => {
-          const wk = idx % 7; // 0=Sun 6=Sat
-          const isToday = c.iso === todayISO;
-          const isStart = c.iso && c.iso === s;
-          const isEnd = c.iso && c.iso === e;
-          const isEndpoint = isStart || isEnd;
-          const inRange = rangeHi(c.iso);
-          if (c.muted) {
-            return `<div style="height:36px;display:flex;align-items:center;justify-content:center;color:#CBD5E1;font-size:12px;font-family:'Manrope',sans-serif;">${c.day}</div>`;
-          }
-          let bg = 'transparent', color = wk === 0 ? '#DC2626' : wk === 6 ? '#2563EB' : '#0F172A', extra = '';
-          if (isEndpoint) { bg = '#5B5BF0'; color = '#fff'; extra = 'font-weight:800;'; }
-          else if (inRange) { bg = '#EEF0FF'; color = '#5B5BF0'; }
-          const border = isToday && !isEndpoint ? 'border:1.5px solid #5B5BF0;' : 'border:1.5px solid transparent;';
-          return `<button type="button" data-iso="${c.iso}" class="fp-cal-cell" style="height:36px;display:flex;align-items:center;justify-content:center;background:${bg};color:${color};font-family:'Manrope',sans-serif;font-size:12.5px;${extra}${border}border-radius:6px;cursor:pointer;padding:0;transition:background 100ms;">${c.day}</button>`;
-        }).join('');
-        // wire cells
         gridEl.querySelectorAll('.fp-cal-cell').forEach(el => {
-          el.addEventListener('click', () => {
-            const iso = el.dataset.iso;
-            if (!iso) return;
-            // 状態遷移: nothing→start=iso / start-only→(iso<start? start=iso,end='' : end=iso) / both→start=iso,end=''
-            if (!state.start || (state.start && state.end)) {
-              state.start = iso; state.end = '';
-            } else {
-              if (iso < state.start) { state.start = iso; state.end = ''; }
-              else if (iso === state.start) { /* no-op */ }
-              else { state.end = iso; }
-            }
-            startEl.value = state.start; endEl.value = state.end;
-            // dispatch change so 呼び手 側 も 反応 可
-            startEl.dispatchEvent(new Event('change', { bubbles: true }));
-            endEl.dispatchEvent(new Event('change', { bubbles: true }));
-            state.hover = '';
-            render(); refreshSummary();
-          });
-          el.addEventListener('mouseenter', () => {
-            const iso = el.dataset.iso;
-            if (!iso) return;
-            if (state.start && !state.end) { state.hover = iso; render(); }
-          });
+          const iso = el.dataset.iso;
+          const wk = Number(el.dataset.wk);
+          const isToday = iso === todayISO;
+          const isStart = iso && iso === s;
+          const isEnd = iso && iso === e;
+          const isEndpoint = isStart || isEnd;
+          const inRng = inRange(iso);
+          let bg = 'transparent', color = wk === 0 ? '#DC2626' : wk === 6 ? '#2563EB' : '#0F172A';
+          if (isEndpoint) { bg = '#5B5BF0'; color = '#fff'; el.style.fontWeight = '800'; }
+          else { el.style.fontWeight = ''; if (inRng) { bg = '#EEF0FF'; color = '#5B5BF0'; } }
+          el.style.background = bg;
+          el.style.color = color;
+          el.style.border = isToday && !isEndpoint ? '1.5px solid #5B5BF0' : '1.5px solid transparent';
         });
       };
+      const buildGrid = () => {
+        titleEl.textContent = `${viewYear} 年 ${viewMonth + 1} 月`;
+        const first = new Date(viewYear, viewMonth, 1);
+        const firstWeekday = first.getDay();
+        const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+        const cells = [];
+        const prevDays = new Date(viewYear, viewMonth, 0).getDate();
+        for (let i = firstWeekday - 1; i >= 0; i--) cells.push({ iso: '', day: prevDays - i, muted: true });
+        for (let d = 1; d <= daysInMonth; d++) cells.push({ iso: toISO(new Date(viewYear, viewMonth, d)), day: d, muted: false });
+        let dd = 1;
+        while (cells.length < 42) cells.push({ iso: '', day: dd++, muted: true });
+        cellsMeta = cells;
+        gridEl.innerHTML = cells.map((c, idx) => {
+          const wk = idx % 7;
+          if (c.muted) return `<div style="height:36px;display:flex;align-items:center;justify-content:center;color:#CBD5E1;font-size:12px;font-family:'Manrope',sans-serif;">${c.day}</div>`;
+          const baseColor = wk === 0 ? '#DC2626' : wk === 6 ? '#2563EB' : '#0F172A';
+          return `<button type="button" data-iso="${c.iso}" data-wk="${wk}" class="fp-cal-cell" style="height:36px;display:flex;align-items:center;justify-content:center;background:transparent;color:${baseColor};font-family:'Manrope',sans-serif;font-size:12.5px;border:1.5px solid transparent;border-radius:6px;cursor:pointer;padding:0;transition:background 100ms;">${c.day}</button>`;
+        }).join('');
+        paintCells();
+      };
+      // event delegation on grid (survives cell re-paint)
+      gridEl.addEventListener('click', (ev) => {
+        const el = ev.target.closest('.fp-cal-cell');
+        if (!el || !gridEl.contains(el)) return;
+        const iso = el.dataset.iso;
+        if (!iso) return;
+        if (!state.start || (state.start && state.end)) {
+          state.start = iso; state.end = '';
+        } else {
+          if (iso < state.start) { state.start = iso; state.end = ''; }
+          else if (iso === state.start) { /* no-op */ }
+          else { state.end = iso; }
+        }
+        startEl.value = state.start; endEl.value = state.end;
+        state.hover = '';
+        paintCells(); refreshSummary();
+      });
+      gridEl.addEventListener('mouseover', (ev) => {
+        const el = ev.target.closest('.fp-cal-cell');
+        if (!el) return;
+        const iso = el.dataset.iso;
+        if (!iso) return;
+        if (state.start && !state.end && state.hover !== iso) {
+          state.hover = iso;
+          paintCells();
+        }
+      });
+      gridEl.addEventListener('mouseleave', () => {
+        if (state.hover) { state.hover = ''; paintCells(); }
+      });
       prevBtn.addEventListener('click', () => {
         viewMonth--; if (viewMonth < 0) { viewMonth = 11; viewYear--; }
-        render();
+        buildGrid();
       });
       nextBtn.addEventListener('click', () => {
         viewMonth++; if (viewMonth > 11) { viewMonth = 0; viewYear++; }
-        render();
+        buildGrid();
       });
       todayBtn.addEventListener('click', () => {
         viewYear = todayD.getFullYear(); viewMonth = todayD.getMonth();
-        render();
+        buildGrid();
       });
       clearBtn.addEventListener('click', () => {
         state.start = ''; state.end = ''; state.hover = '';
         startEl.value = ''; endEl.value = '';
-        render(); refreshSummary();
+        paintCells(); refreshSummary();
       });
-      render(); refreshSummary();
+      buildGrid(); refreshSummary();
     })();
     document.getElementById('fp-kmodal-save').onclick = () => {
       const clientId = document.getElementById('fp-kmodal-client')?.value || '';
