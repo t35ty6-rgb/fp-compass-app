@@ -10043,6 +10043,25 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
     const arr = (c.lineHistory || []).slice().sort((a,b) => _lchTsStr(a.ts||a.date||'').localeCompare(_lchTsStr(b.ts||b.date||'')));
     return arr[arr.length - 1] || null;
   }
+  // ★ 2026-08-17 owner「送信 分 が 客 avatar で 表示 される (localStorage 汚染)」対応:
+  //   render 側 heuristics で FP 側 定型 pattern を out 判別 · 汚染 direction を bypass
+  function _lchIsOwnerSideByText(text) {
+    const t = String(text || '');
+    if (!t) return false;
+    if (/^\[flex\]/.test(t)) return true;
+    // 「様」+ 改行 → 客 宛 敬称 = owner 送信
+    if (/様[\s\r\n]{1,3}/.test(t) && /(候補|Zoom|担当 FP|次回|お待ち|お送り|申し訳|承り|お礼|リマインド)/.test(t)) return true;
+    if (/(大変申し訳|担当 FP が 確認|次回 Zoom 面談|今から Zoom|Zoom URL 発行 済|お待ち ください|下記URL からご参加|お送り します)/.test(t)) return true;
+    if (/[—―─]\s*(福田|Skeleton|FP|担当)/.test(t)) return true;
+    return false;
+  }
+  function _lchIsInMsg(m) {
+    // 元 direction を 優先 · fallback で heuristics
+    const rawIsIn = m.direction === 'in' || m.from === 'user';
+    if (!rawIsIn) return false;
+    // rawIsIn=true でも 文言 heuristics で owner 側 なら out に override
+    return !_lchIsOwnerSideByText(m.text || m.message);
+  }
 
   // ★ 2026-08-17 AI 意図 分類 (Claude Haiku 経由): 客 message の 「日程 再調整」 検出
   //   localStorage `fp-ai-line-intents` に customerId|ts → { intent, confidence, handledAt? }
@@ -10189,18 +10208,29 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
       </div>
     `;
     _lchRenderList(eligible);
-    // ★ 2026-08-17 owner「LINE 送っても 反映 されない」対応:
-    //   hub 開いた とき に 最新 fetch を kick off (kick 後 の merge で 再 render)
-    setTimeout(() => { try { fetchLiveData(); } catch(_) {} }, 100);
-    // 手動 更新 button (即 fetch → merge → 再 render)
+    // ★ 2026-08-17 owner「読み込み中 なら そういった 表記 に して」対応
     const refreshBtn = document.getElementById('lch-refresh-btn');
+    const setLoading = (on) => {
+      const listEl = document.getElementById('lch-list');
+      if (on && listEl && listEl.children.length === 0) {
+        listEl.innerHTML = '<div style="padding:40px 20px;text-align:center;color:#5B5BF0;font-size:12.5px;">🔄 読み込み 中…</div>';
+      }
+      if (refreshBtn) {
+        refreshBtn.disabled = !!on;
+        refreshBtn.textContent = on ? '🔄 更新 中…' : '🔄 更新';
+      }
+    };
+    // hub 開いた 直後 に fetch (loading 表示 · 完了 で 自動 re-render)
+    setLoading(true);
+    setTimeout(async () => {
+      try { await fetchLiveData(); } catch(_) {}
+      setLoading(false);
+    }, 100);
     if (refreshBtn) {
       refreshBtn.addEventListener('click', async () => {
-        refreshBtn.disabled = true;
-        refreshBtn.textContent = '🔄 更新 中…';
+        setLoading(true);
         try { await fetchLiveData(); } catch (_) {}
-        refreshBtn.disabled = false;
-        refreshBtn.textContent = '🔄 更新';
+        setLoading(false);
       });
     }
     container.querySelectorAll('.lch-lf').forEach(btn => {
@@ -10326,7 +10356,7 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
           const dayLbl = _lchDayLabel(m.ts || m.date);
           let day = '';
           if (dayLbl && dayLbl !== lastDay) { day = `<div class="lch-day"><span>${_lchEscape(dayLbl)}</span></div>`; lastDay = dayLbl; }
-          const isIn = m.direction === 'in' || m.from === 'user';
+          const isIn = _lchIsInMsg(m);
           const side = isIn ? 'them' : 'me';
           const time = _lchTimeShort(m.ts || m.date);
           const read = !isIn ? '<span class="lch-msg-read">既読</span>' : '';
@@ -10515,6 +10545,51 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
     },
     // 起動直後に外部から呼べる: タブに関わらず liveData を取って FPCrmRefreshClients を発火
     bootLiveData: function () {
+      // ★ 2026-08-17 owner「送信 分 が 客 avatar で 表示」bug: 旧 direction=in 汚染 の 一括 migration
+      //   fp-line-history-* + DUMMY_CLIENTS.lineHistory の 各 entry を heuristics で 正しく direction 再判定 → 上書き
+      try {
+        if (localStorage.getItem('fp-line-direction-migrated-v1') !== '1') {
+          let migrated = 0;
+          Object.keys(localStorage).filter(k => k.startsWith('fp-line-history-')).forEach(k => {
+            try {
+              const arr = JSON.parse(localStorage.getItem(k) || '[]');
+              let changed = false;
+              arr.forEach(e => {
+                if ((e.direction === 'in' || e.from === 'user') && _lchIsOwnerSideByText(e.text || e.message)) {
+                  e.direction = 'out'; e.from = 'fp'; changed = true; migrated++;
+                }
+              });
+              if (changed) localStorage.setItem(k, JSON.stringify(arr));
+            } catch (_) {}
+          });
+          try {
+            const raw = localStorage.getItem('fp-crm-clients-v1');
+            if (raw) {
+              const cs = JSON.parse(raw);
+              let changed = false;
+              (cs || []).forEach(c => {
+                (c.lineHistory || []).forEach(e => {
+                  if ((e.direction === 'in' || e.from === 'user') && _lchIsOwnerSideByText(e.text || e.message)) {
+                    e.direction = 'out'; e.from = 'fp'; changed = true; migrated++;
+                  }
+                });
+              });
+              if (changed) localStorage.setItem('fp-crm-clients-v1', JSON.stringify(cs));
+            }
+          } catch (_) {}
+          if (window.DUMMY_CLIENTS) {
+            window.DUMMY_CLIENTS.forEach(c => {
+              (c.lineHistory || []).forEach(e => {
+                if ((e.direction === 'in' || e.from === 'user') && _lchIsOwnerSideByText(e.text || e.message)) {
+                  e.direction = 'out'; e.from = 'fp'; migrated++;
+                }
+              });
+            });
+          }
+          localStorage.setItem('fp-line-direction-migrated-v1', '1');
+          console.log('[migration] LINE direction 一括 migration:', migrated, 'entries fixed');
+        }
+      } catch (mErr) { console.warn('[migration] fail:', mErr); }
       fetchLiveData();
       // 30秒ごとに自動更新 (LINE 友だち追加や bookings 反映が常時走るよう)
       // ★ 2026-06-25 軽量化: 30s → 60s + 非表示時 skip (重い fetch を 裏で 回さない)
