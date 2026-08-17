@@ -6595,7 +6595,17 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
             const ts = String(m.ts || '').slice(0, 19);
             const seen = c.lineHistory.some(h => String(h.ts || '').slice(0, 19) === ts && (h.text || h.message) === m.text);
             if (seen) return;
-            const entry = { from: 'user', direction: 'in', text: m.text, message: m.text, ts: m.ts, date: String(m.ts || '').slice(0, 10), source: 'gas-webhook' };
+            // ★ 2026-08-17 owner「こっち から 送ってる の が hub に 反映 されて ない」bug fix:
+            //   direction を hardcode 'in' して た → owner 送信 out msg も 「客 送信 in」 で 表示 → 送信 分 消え
+            //   fix: m.direction / m.from から 判定 (fallback は 従来 in)
+            const _isOut = m.direction === 'out' || m.from === 'fp' || m.from === 'owner' || m.direction === 'outbound';
+            const entry = {
+              from: _isOut ? 'fp' : 'user',
+              direction: _isOut ? 'out' : 'in',
+              text: m.text, message: m.text, ts: m.ts,
+              date: String(m.ts || '').slice(0, 10),
+              source: m.source || 'gas-webhook',
+            };
             c.lineHistory.push(entry);
             // 独立キーにも保存 (リロード耐性) — 古いLINE消すと FPの業務に支障 → cap せず 全保持
             try {
