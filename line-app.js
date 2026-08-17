@@ -10545,50 +10545,48 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
     },
     // 起動直後に外部から呼べる: タブに関わらず liveData を取って FPCrmRefreshClients を発火
     bootLiveData: function () {
-      // ★ 2026-08-17 owner「送信 分 が 客 avatar で 表示」bug: 旧 direction=in 汚染 の 一括 migration
-      //   fp-line-history-* + DUMMY_CLIENTS.lineHistory の 各 entry を heuristics で 正しく direction 再判定 → 上書き
+      // ★ 2026-08-17 owner「送信 分 が 客 avatar で 表示」bug: 旧 direction=in 汚染 の 毎回 idempotent 修正
+      //   fp-line-history-* + fp-crm-clients-v1 + DUMMY_CLIENTS の 各 entry を heuristics で direction 再判定
+      //   idempotent (既 out は そのまま · 汚染 in→out に fix) · flag 不要 で hard reload 1 回 で 効く
       try {
-        if (localStorage.getItem('fp-line-direction-migrated-v1') !== '1') {
-          let migrated = 0;
-          Object.keys(localStorage).filter(k => k.startsWith('fp-line-history-')).forEach(k => {
-            try {
-              const arr = JSON.parse(localStorage.getItem(k) || '[]');
-              let changed = false;
-              arr.forEach(e => {
+        let migrated = 0;
+        Object.keys(localStorage).filter(k => k.startsWith('fp-line-history-')).forEach(k => {
+          try {
+            const arr = JSON.parse(localStorage.getItem(k) || '[]');
+            let changed = false;
+            arr.forEach(e => {
+              if ((e.direction === 'in' || e.from === 'user') && _lchIsOwnerSideByText(e.text || e.message)) {
+                e.direction = 'out'; e.from = 'fp'; changed = true; migrated++;
+              }
+            });
+            if (changed) localStorage.setItem(k, JSON.stringify(arr));
+          } catch (_) {}
+        });
+        try {
+          const raw = localStorage.getItem('fp-crm-clients-v1');
+          if (raw) {
+            const cs = JSON.parse(raw);
+            let changed = false;
+            (cs || []).forEach(c => {
+              (c.lineHistory || []).forEach(e => {
                 if ((e.direction === 'in' || e.from === 'user') && _lchIsOwnerSideByText(e.text || e.message)) {
                   e.direction = 'out'; e.from = 'fp'; changed = true; migrated++;
                 }
               });
-              if (changed) localStorage.setItem(k, JSON.stringify(arr));
-            } catch (_) {}
-          });
-          try {
-            const raw = localStorage.getItem('fp-crm-clients-v1');
-            if (raw) {
-              const cs = JSON.parse(raw);
-              let changed = false;
-              (cs || []).forEach(c => {
-                (c.lineHistory || []).forEach(e => {
-                  if ((e.direction === 'in' || e.from === 'user') && _lchIsOwnerSideByText(e.text || e.message)) {
-                    e.direction = 'out'; e.from = 'fp'; changed = true; migrated++;
-                  }
-                });
-              });
-              if (changed) localStorage.setItem('fp-crm-clients-v1', JSON.stringify(cs));
-            }
-          } catch (_) {}
-          if (window.DUMMY_CLIENTS) {
-            window.DUMMY_CLIENTS.forEach(c => {
-              (c.lineHistory || []).forEach(e => {
-                if ((e.direction === 'in' || e.from === 'user') && _lchIsOwnerSideByText(e.text || e.message)) {
-                  e.direction = 'out'; e.from = 'fp'; migrated++;
-                }
-              });
             });
+            if (changed) localStorage.setItem('fp-crm-clients-v1', JSON.stringify(cs));
           }
-          localStorage.setItem('fp-line-direction-migrated-v1', '1');
-          console.log('[migration] LINE direction 一括 migration:', migrated, 'entries fixed');
+        } catch (_) {}
+        if (window.DUMMY_CLIENTS) {
+          window.DUMMY_CLIENTS.forEach(c => {
+            (c.lineHistory || []).forEach(e => {
+              if ((e.direction === 'in' || e.from === 'user') && _lchIsOwnerSideByText(e.text || e.message)) {
+                e.direction = 'out'; e.from = 'fp'; migrated++;
+              }
+            });
+          });
         }
+        if (migrated > 0) console.log('[migration] LINE direction 一括 fix:', migrated, 'entries');
       } catch (mErr) { console.warn('[migration] fail:', mErr); }
       fetchLiveData();
       // 30秒ごとに自動更新 (LINE 友だち追加や bookings 反映が常時走るよう)
