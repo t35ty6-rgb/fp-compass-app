@@ -2479,12 +2479,22 @@
 
     const stats = document.getElementById('v3h-stats');
     if (stats) {
-      // 2026-08-07 owner「1つの並びでいい」対応: shortcuts 統合 で 日程調整 も stats に 追加 (横 4 pill 1 行)
+      // 2026-08-07 owner「1つの並びでいい」対応: shortcuts 統合 で 日程調整 も stats に 追加
+      // ★ 2026-08-17 owner「LINE 返信 · 返答 待ち を pickup」対応: LINE 返信 を 2 pill に 分割
       const scheduleCount = tasks.filter(t => t.type === 'schedule').length;
+      let needsReplyCount = 0, awaitingReplyCount = 0, rescheduleCount = 0;
+      try {
+        const cs = window.LineApp?.getClientsWithReplyStatus?.() || [];
+        needsReplyCount    = cs.filter(x => x.status.needsReply).length;
+        awaitingReplyCount = cs.filter(x => x.status.awaitingReply).length;
+        rescheduleCount    = (window.LineApp?.getRescheduleAlerts?.() || []).length;
+      } catch(_) {}
       stats.innerHTML = `
         <button class="stat" type="button" data-jump="zoom"><b>${zoomToday}</b>今日 Zoom</button>
         <button class="stat${scheduleCount > 0 ? ' warn' : ''}" type="button" data-jump="schedule"><b>${scheduleCount}</b>日程調整</button>
-        <button class="stat${unreadCount > 0 ? ' warn' : ''}" type="button" data-jump="line-reply"><b>${unreadCount}</b>LINE 返信</button>
+        <button class="stat${rescheduleCount > 0 ? ' warn' : ''}" type="button" data-jump="reschedule" title="客 が LINE で 日程 変更 依頼 して きた の を AI が 検出"><b>${rescheduleCount}</b>再調整 依頼 <span style="font-size:8px;font-weight:800;background:#5B5BF0;color:#fff;padding:1px 4px;border-radius:3px;margin-left:2px;">AI</span></button>
+        <button class="stat${needsReplyCount > 0 ? ' warn' : ''}" type="button" data-jump="needs-reply"><b>${needsReplyCount}</b>返信 要</button>
+        <button class="stat${awaitingReplyCount > 0 ? ' warn' : ''}" type="button" data-jump="awaiting-reply"><b>${awaitingReplyCount}</b>返答 待ち</button>
         <button class="stat${tasks.length > 0 ? ' warn' : ' ok'}" type="button" data-jump="all"><b>${tasks.length}</b>未完了</button>
       `;
       // ★ 2026-08-17 owner「stats button 押しても そこ に アクセス できない」対応:
@@ -2493,9 +2503,13 @@
       stats.querySelectorAll('button.stat').forEach(btn => {
         btn.addEventListener('click', () => {
           const key = btn.dataset.jump;
-          // LINE 返信 は 別 tab へ 直 nav
-          if (key === 'line-reply') {
-            try { activateTab('lineChat'); } catch(_) {}
+          // LINE 返信 系 は LINE hub tab へ nav + filter 適用
+          if (key === 'line-reply' || key === 'needs-reply' || key === 'awaiting-reply' || key === 'reschedule') {
+            try {
+              const filterMap = { 'line-reply': 'unread', 'needs-reply': 'needsReply', 'awaiting-reply': 'awaitingReply', 'reschedule': 'reschedule' };
+              localStorage.setItem('fp-line-hub-filter', filterMap[key] || '');
+              activateTab('lineChat');
+            } catch(_) {}
             return;
           }
           // 他: TODO tab に 切替 (kanban 表示) + 対象 card を highlight

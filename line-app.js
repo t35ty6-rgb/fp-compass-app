@@ -6547,6 +6547,8 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
           if (merged > 0) {
             localStorage.setItem('fp-crm-clients-v1', JSON.stringify(window.DUMMY_CLIENTS));
             console.log('[line_messages] merged', merged, 'incoming msgs to client.lineHistory');
+            // ★ 2026-08-17 AI 意図 分類 (Haiku): 新着 客 message を batch 分析 → 「再調整 依頼」 検出
+            try { runLineIntentAnalysis(); } catch (aiErr) { console.warn('[ai-intent] fail:', aiErr); }
           }
         }
       } catch (mergeErr) { console.warn('line_messages merge fail:', mergeErr); }
@@ -9960,12 +9962,120 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
     return arr[arr.length - 1] || null;
   }
 
+  // ★ 2026-08-17 AI 意図 分類 (Claude Haiku 経由): 客 message の 「日程 再調整」 検出
+  //   localStorage `fp-ai-line-intents` に customerId|ts → { intent, confidence, handledAt? }
+  //   処理: bootLiveData / line_messages merge 後 に batch (max 20) で Cloud Function 呼ぶ
+  const AI_INTENTS_KEY = 'fp-ai-line-intents';
+  function _aiLoadIntents() { try { return JSON.parse(localStorage.getItem(AI_INTENTS_KEY) || '{}'); } catch (_) { return {}; } }
+  function _aiSaveIntents(m) { try { localStorage.setItem(AI_INTENTS_KEY, JSON.stringify(m || {})); } catch (_) {} }
+  function _aiKey(customerId, ts) { return `${customerId}|${String(ts || '').slice(0, 19)}`; }
+
+  async function runLineIntentAnalysis() {
+    // 未 login or firebase 未 準備 なら skip
+    if (!window.__fp?.functions || !window.__fp?.httpsCallable) return;
+    if (!window.__fp?.auth?.currentUser) return;
+    const clients = _lchGetClients();
+    const intents = _aiLoadIntents();
+    const pending = [];
+    for (const c of clients) {
+      const arr = (c.lineHistory || []).slice(-5);
+      for (const m of arr) {
+        const isIn = m.direction === 'in' || m.from === 'user';
+        if (!isIn) continue;
+        const ts = String(m.ts || m.date || '');
+        const text = String(m.text || m.message || '').trim();
+        if (!text || text.length < 3) continue;
+        const key = _aiKey(c.id, ts);
+        if (intents[key]) continue;
+        pending.push({ customerId: c.id, ts, text });
+        if (pending.length >= 20) break;
+      }
+      if (pending.length >= 20) break;
+    }
+    if (pending.length === 0) return;
+    try {
+      const call = window.__fp.httpsCallable(window.__fp.functions, 'analyzeLineMessages');
+      const res = await call({ messages: pending });
+      const results = res?.data?.results || [];
+      const now = _aiLoadIntents();
+      results.forEach(r => {
+        now[_aiKey(r.customerId, r.ts)] = { intent: r.intent, confidence: r.confidence, at: Date.now() };
+      });
+      _aiSaveIntents(now);
+      console.log('[ai-intent] analyzed', pending.length, 'msgs · reschedule=' + results.filter(r => r.intent === 'reschedule').length);
+      // 分析 後 は home stats を 更新 (pill 数値 反映)
+      try { if (typeof window.renderDashboardIfActive === 'function') window.renderDashboardIfActive(); } catch(_) {}
+    } catch (e) {
+      console.warn('[ai-intent] call fail:', e.message || e);
+    }
+  }
+  function getRescheduleAlerts() {
+    // 各 客 の 最新 「in」 message が reschedule 判定 され かつ 未 handled の 客 を 抽出
+    const intents = _aiLoadIntents();
+    const out = [];
+    _lchGetClients().forEach(c => {
+      const arr = (c.lineHistory || []).slice().reverse();
+      const lastIn = arr.find(m => m.direction === 'in' || m.from === 'user');
+      if (!lastIn) return;
+      const ts = String(lastIn.ts || lastIn.date || '');
+      const rec = intents[_aiKey(c.id, ts)];
+      if (rec && rec.intent === 'reschedule' && rec.confidence >= 0.5 && !rec.handledAt) {
+        out.push({ client: c, ts, confidence: rec.confidence });
+      }
+    });
+    return out;
+  }
+  function markRescheduleHandled(customerId, ts) {
+    const m = _aiLoadIntents();
+    const k = _aiKey(customerId, ts);
+    if (m[k]) { m[k].handledAt = Date.now(); _aiSaveIntents(m); }
+  }
+
+  // ★ 2026-08-17 owner「返信 要 / 返答 待ち を pickup」対応:
+  //   最新 message の 方向 と 経過 時間 で 判定 (無料 · AI 不要)
+  //   needsReply    = 最新 客→owner で > 1h 未 返信 (owner が 返す 番)
+  //   awaitingReply = 最新 owner→客 で > 24h 未 返信 (客 の 返事 待ち · 追撃 検討)
+  function computeReplyStatus(c) {
+    const last = _lchLastMsg(c);
+    if (!last) return { needsReply: false, awaitingReply: false, hoursSince: null };
+    const isIn = last.direction === 'in' || last.from === 'user';
+    const isOut = last.direction === 'out' || last.from === 'fp';
+    const tsMs = new Date(_lchTsStr(last.ts || last.date || 0)).getTime();
+    if (!tsMs || isNaN(tsMs)) return { needsReply: false, awaitingReply: false, hoursSince: null };
+    const hoursSince = (Date.now() - tsMs) / 3600000;
+    return {
+      needsReply:    isIn  && hoursSince > 1,
+      awaitingReply: isOut && hoursSince > 24,
+      hoursSince,
+    };
+  }
+  window.LineApp = window.LineApp || {};
+  window.LineApp.computeReplyStatus = computeReplyStatus;
+  window.LineApp.getClientsWithReplyStatus = function() {
+    const cs = _lchGetClients().filter(c => c.lineFriendId || (Array.isArray(c.lineHistory) && c.lineHistory.length > 0));
+    return cs.map(c => ({ client: c, status: computeReplyStatus(c) }));
+  };
+  window.LineApp.runLineIntentAnalysis = runLineIntentAnalysis;
+  window.LineApp.getRescheduleAlerts = getRescheduleAlerts;
+  window.LineApp.markRescheduleHandled = markRescheduleHandled;
+
   function renderLineChatHub() {
     const container = document.getElementById('lineChatHub');
     if (!container) return;
+    // ★ 2026-08-17 home stats pill から の filter 引継 (fp-line-hub-filter localStorage)
+    try {
+      const preF = localStorage.getItem('fp-line-hub-filter');
+      if (preF && ['unread','needsReply','awaitingReply','linked','all'].includes(preF)) {
+        _lchState.filter = preF;
+        localStorage.removeItem('fp-line-hub-filter');
+      }
+    } catch(_) {}
     const allClients = _lchGetClients();
     const eligible = allClients.filter(c => c.lineFriendId || (Array.isArray(c.lineHistory) && c.lineHistory.length > 0));
     const totalUnread = eligible.reduce((n, c) => n + _lchUnreadCount(c), 0);
+    const needsReplyCnt    = eligible.filter(c => computeReplyStatus(c).needsReply).length;
+    const awaitingReplyCnt = eligible.filter(c => computeReplyStatus(c).awaitingReply).length;
+    const rescheduleCnt    = (getRescheduleAlerts() || []).length;
     try {
       const badge = document.getElementById('nav-count-line-unread');
       if (badge) {
@@ -9984,6 +10094,9 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
           <div class="lch-list-filter">
             <button class="lch-lf ${_lchState.filter === 'all' ? 'active' : ''}" data-f="all">すべて</button>
             <button class="lch-lf ${_lchState.filter === 'unread' ? 'active' : ''}" data-f="unread">未読 ${totalUnread > 0 ? '('+totalUnread+')' : ''}</button>
+            <button class="lch-lf ${_lchState.filter === 'reschedule' ? 'active' : ''}" data-f="reschedule" title="AI が 日程 変更 依頼 と 判定">再調整 ${rescheduleCnt > 0 ? '('+rescheduleCnt+')' : ''} <span style="font-size:8px;font-weight:800;background:#5B5BF0;color:#fff;padding:1px 4px;border-radius:3px;margin-left:2px;">AI</span></button>
+            <button class="lch-lf ${_lchState.filter === 'needsReply' ? 'active' : ''}" data-f="needsReply">返信 要 ${needsReplyCnt > 0 ? '('+needsReplyCnt+')' : ''}</button>
+            <button class="lch-lf ${_lchState.filter === 'awaitingReply' ? 'active' : ''}" data-f="awaitingReply">返答 待ち ${awaitingReplyCnt > 0 ? '('+awaitingReplyCnt+')' : ''}</button>
             <button class="lch-lf ${_lchState.filter === 'linked' ? 'active' : ''}" data-f="linked">LINE連携済</button>
           </div>
           <div class="lch-list" id="lch-list"></div>
@@ -10032,6 +10145,12 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
     let arr = clients.slice();
     if (filter === 'unread') arr = arr.filter(c => _lchUnreadCount(c) > 0);
     if (filter === 'linked') arr = arr.filter(c => !!c.lineFriendId);
+    if (filter === 'needsReply')    arr = arr.filter(c => computeReplyStatus(c).needsReply);
+    if (filter === 'awaitingReply') arr = arr.filter(c => computeReplyStatus(c).awaitingReply);
+    if (filter === 'reschedule') {
+      const alertIds = new Set((getRescheduleAlerts() || []).map(a => a.client.id));
+      arr = arr.filter(c => alertIds.has(c.id));
+    }
     if (searchLc) {
       arr = arr.filter(c => {
         if (String(c.name || '').toLowerCase().indexOf(searchLc) >= 0) return true;
