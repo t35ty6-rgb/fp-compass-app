@@ -6547,6 +6547,16 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
           if (merged > 0) {
             localStorage.setItem('fp-crm-clients-v1', JSON.stringify(window.DUMMY_CLIENTS));
             console.log('[line_messages] merged', merged, 'incoming msgs to client.lineHistory');
+            // ★ 2026-08-17 owner「LINE 送っても 画面 に 反映 されない」対応:
+            //   merge 後 に LINE hub view を re-render (旧: activate 時 だけ 呼ばれ 更新 されない bug)
+            try {
+              const hubActive = document.querySelector('.tab.active')?.dataset?.tab === 'lineChat';
+              if (hubActive) {
+                renderLineChatHub();
+                // 選択 中 の client chat pane も 更新
+                if (_lchState.selectedClientId) _lchSelectClient(_lchState.selectedClientId);
+              }
+            } catch (renderErr) { console.warn('[lineChat] re-render fail:', renderErr); }
             // ★ 2026-08-17 AI 意図 分類 (Haiku): 新着 客 message を batch 分析 → 「再調整 依頼」 検出
             try { runLineIntentAnalysis(); } catch (aiErr) { console.warn('[ai-intent] fail:', aiErr); }
           }
@@ -10080,7 +10090,10 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
       <div class="lch-wrap">
         <aside class="lch-list-pane">
           <div class="lch-list-head">
-            <h2 class="lch-list-title"><span class="lch-live-dot"></span>LINE トーク</h2>
+            <h2 class="lch-list-title" style="display:flex;align-items:center;justify-content:space-between;">
+              <span><span class="lch-live-dot"></span>LINE トーク</span>
+              <button id="lch-refresh-btn" title="最新 の LINE メッセージ を fetch" style="background:transparent;border:1px solid #E5E7EB;border-radius:6px;padding:4px 10px;font-family:inherit;font-size:11px;font-weight:700;color:#6B7280;cursor:pointer;">🔄 更新</button>
+            </h2>
             <input type="text" class="lch-search" id="lch-search" placeholder="名前 · メッセージ で 検索" value="${_lchEscape(_lchState.search)}">
           </div>
           <div class="lch-list-filter">
@@ -10104,6 +10117,20 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
       </div>
     `;
     _lchRenderList(eligible);
+    // ★ 2026-08-17 owner「LINE 送っても 反映 されない」対応:
+    //   hub 開いた とき に 最新 fetch を kick off (kick 後 の merge で 再 render)
+    setTimeout(() => { try { fetchLiveData(); } catch(_) {} }, 100);
+    // 手動 更新 button (即 fetch → merge → 再 render)
+    const refreshBtn = document.getElementById('lch-refresh-btn');
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', async () => {
+        refreshBtn.disabled = true;
+        refreshBtn.textContent = '🔄 更新 中…';
+        try { await fetchLiveData(); } catch (_) {}
+        refreshBtn.disabled = false;
+        refreshBtn.textContent = '🔄 更新';
+      });
+    }
     container.querySelectorAll('.lch-lf').forEach(btn => {
       btn.addEventListener('click', () => {
         _lchState.filter = btn.dataset.f;
