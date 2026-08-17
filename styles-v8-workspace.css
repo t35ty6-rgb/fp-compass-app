@@ -12493,6 +12493,9 @@ body:not([data-home-view]) [data-view-target="cal"] { display: none !important; 
   letter-spacing: 0.02em;
   line-height: 1.2;
 }
+.fp-prio-btn { transition: transform 100ms, box-shadow 100ms, border-color 100ms, background 100ms; }
+.fp-prio-btn:hover { transform: translateY(-1px); border-color: #94A3B8 !important; }
+.fp-prio-btn:active { transform: translateY(0); }
 .fp-kanban-card-deadline.overdue { background: #7F1D1D; color: #FEE2E2; }
 .fp-kanban-card-deadline.urgent  { background: #FEE2E2; color: #B91C1C; }
 .fp-kanban-card-deadline.warn    { background: #FEF3C7; color: #B45309; }

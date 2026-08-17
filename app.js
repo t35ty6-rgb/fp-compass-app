@@ -2891,33 +2891,47 @@
           <label style="display:block;font-size:11.5px;font-weight:700;color:#475569;margin-bottom:5px;">🔗 関連 URL</label>
           <input id="fp-kmodal-url" type="url" placeholder="https://…" value="${escapeHtml(t.url || '')}" style="width:100%;padding:9px 12px;border:1.5px solid #E2E8F0;border-radius:6px;font-family:inherit;font-size:13px;margin-bottom:12px;">
 
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
-            <div>
-              <label style="display:block;font-size:11.5px;font-weight:700;color:#475569;margin-bottom:5px;">🚩 優先度</label>
-              <select id="fp-kmodal-priority" style="width:100%;padding:9px 10px;border:1.5px solid #E2E8F0;border-radius:6px;font-family:inherit;font-size:13px;">
-                <option value="p1" ${p==='p1'?'selected':''}>🔴 P1 至急</option>
-                <option value="p2" ${p==='p2'?'selected':''}>🟠 P2 今週</option>
-                <option value="p3" ${p==='p3'?'selected':''}>🔵 P3 いつか</option>
-              </select>
-            </div>
-            <div>
-              <label style="display:block;font-size:11.5px;font-weight:700;color:#475569;margin-bottom:5px;">📅 開始 日</label>
-              <input type="date" id="fp-kmodal-startdate" value="${escapeHtml(t.startDate || '')}" style="width:100%;padding:9px 10px;border:1.5px solid #E2E8F0;border-radius:6px;font-family:inherit;font-size:13px;">
-            </div>
-            <div>
-              <label style="display:block;font-size:11.5px;font-weight:700;color:#475569;margin-bottom:5px;">🏁 終了 日 (期限)</label>
-              <input type="date" id="fp-kmodal-enddate" value="${escapeHtml(t.endDate || '')}" style="width:100%;padding:9px 10px;border:1.5px solid #E2E8F0;border-radius:6px;font-family:inherit;font-size:13px;">
-            </div>
+          <label style="display:block;font-size:11.5px;font-weight:700;color:#475569;margin-bottom:6px;">🚩 優先度</label>
+          <div id="fp-kmodal-priority-seg" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:14px;">
+            <button type="button" data-prio="p1" class="fp-prio-btn ${p==='p1'?'on':''}" style="padding:12px 8px;border:2px solid #E2E8F0;border-radius:8px;background:#fff;font-family:inherit;cursor:pointer;text-align:center;">
+              <div style="font-size:20px;line-height:1;margin-bottom:3px;">🔴</div>
+              <div style="font-size:13px;font-weight:800;color:#0F172A;">至急</div>
+              <div style="font-size:10px;color:#94A3B8;margin-top:1px;">今日 やる</div>
+            </button>
+            <button type="button" data-prio="p2" class="fp-prio-btn ${p==='p2'?'on':''}" style="padding:12px 8px;border:2px solid #E2E8F0;border-radius:8px;background:#fff;font-family:inherit;cursor:pointer;text-align:center;">
+              <div style="font-size:20px;line-height:1;margin-bottom:3px;">🟠</div>
+              <div style="font-size:13px;font-weight:800;color:#0F172A;">今週</div>
+              <div style="font-size:10px;color:#94A3B8;margin-top:1px;">今週 中 に</div>
+            </button>
+            <button type="button" data-prio="p3" class="fp-prio-btn ${p==='p3'?'on':''}" style="padding:12px 8px;border:2px solid #E2E8F0;border-radius:8px;background:#fff;font-family:inherit;cursor:pointer;text-align:center;">
+              <div style="font-size:20px;line-height:1;margin-bottom:3px;">🔵</div>
+              <div style="font-size:13px;font-weight:800;color:#0F172A;">いつか</div>
+              <div style="font-size:10px;color:#94A3B8;margin-top:1px;">急ぎ で ない</div>
+            </button>
           </div>
-          <div style="margin-top:8px;">
-            <label style="display:block;font-size:11.5px;font-weight:700;color:#475569;margin-bottom:5px;">or 期限 プリセット</label>
-            <select id="fp-kmodal-due" style="width:100%;padding:9px 10px;border:1.5px solid #E2E8F0;border-radius:6px;font-family:inherit;font-size:13px;">
-              <option value="today" ${t.due==='today'?'selected':''}>今日 中</option>
-              <option value="tomorrow" ${t.due==='tomorrow'?'selected':''}>明日</option>
-              <option value="week" ${t.due==='week'?'selected':''}>今週 中</option>
-              <option value="none" ${(!t.due||t.due==='none')?'selected':''}>期限 なし (date で 直接 指定)</option>
-            </select>
+          <input type="hidden" id="fp-kmodal-priority" value="${escapeHtml(p)}">
+
+          <label style="display:block;font-size:11.5px;font-weight:700;color:#475569;margin-bottom:6px;">📅 期間 (開始 日 → 終了 日)</label>
+          <div id="fp-kmodal-daterange" style="border:1.5px solid #E2E8F0;border-radius:8px;padding:12px;background:#F8FAFC;">
+            <!-- step 1: 開始 日 -->
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+              <span id="fp-kmodal-step1-mark" style="width:22px;height:22px;border-radius:50%;background:#5B5BF0;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;font-family:'Manrope',sans-serif;flex-shrink:0;">1</span>
+              <div style="flex:1;">
+                <div style="font-size:11px;font-weight:700;color:#475569;margin-bottom:3px;">まず 開始 日 を 選ぶ</div>
+                <input type="date" id="fp-kmodal-startdate" value="${escapeHtml(t.startDate || '')}" style="width:100%;padding:8px 10px;border:1.5px solid #CBD5E1;border-radius:6px;font-family:inherit;font-size:13px;background:#fff;">
+              </div>
+            </div>
+            <!-- step 2: 終了 日 -->
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span id="fp-kmodal-step2-mark" style="width:22px;height:22px;border-radius:50%;background:#CBD5E1;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;font-family:'Manrope',sans-serif;flex-shrink:0;">2</span>
+              <div style="flex:1;">
+                <div style="font-size:11px;font-weight:700;color:#475569;margin-bottom:3px;">次 に 終了 日 (期限) を 選ぶ</div>
+                <input type="date" id="fp-kmodal-enddate" value="${escapeHtml(t.endDate || '')}" style="width:100%;padding:8px 10px;border:1.5px solid #CBD5E1;border-radius:6px;font-family:inherit;font-size:13px;background:#fff;">
+              </div>
+            </div>
+            <button type="button" id="fp-kmodal-daterange-clear" style="margin-top:10px;background:transparent;border:0;color:#94A3B8;font-family:inherit;font-size:11px;cursor:pointer;text-decoration:underline;">× 期間 を 消す</button>
           </div>
+          <input type="hidden" id="fp-kmodal-due" value="${escapeHtml(t.due || 'none')}">
         </div>
         <div style="padding:14px 24px;border-top:1px solid #E2E8F0;display:flex;gap:8px;justify-content:space-between;">
           ${isManual ? `<button id="fp-kmodal-del" style="background:#fff;border:1px solid #FCA5A5;color:#DC2626;padding:9px 16px;border-radius:8px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;">🗑 削除</button>` : '<div></div>'}
@@ -2973,6 +2987,65 @@
           panel.style.display = 'none';
         });
       });
+    })();
+    // Wire: priority segmented control (2026-08-17 owner「わかりづらい · 選びやすく」)
+    (function wirePriorityBtns() {
+      const hidden = document.getElementById('fp-kmodal-priority');
+      const btns = document.querySelectorAll('#fp-kmodal-priority-seg .fp-prio-btn');
+      const applyOn = (btn) => {
+        btns.forEach(b => {
+          b.classList.remove('on');
+          b.style.background = '#fff';
+          b.style.borderColor = '#E2E8F0';
+          b.style.boxShadow = '';
+        });
+        btn.classList.add('on');
+        const prio = btn.dataset.prio;
+        const color = prio === 'p1' ? '#DC2626' : prio === 'p2' ? '#D97706' : '#2563EB';
+        const bg    = prio === 'p1' ? '#FEE2E2' : prio === 'p2' ? '#FEF3C7' : '#DBEAFE';
+        btn.style.background = bg;
+        btn.style.borderColor = color;
+        btn.style.boxShadow = `0 2px 8px ${color}22`;
+        hidden.value = prio;
+      };
+      // 初期 on-state を 適用
+      const initBtn = document.querySelector(`#fp-kmodal-priority-seg .fp-prio-btn.on`);
+      if (initBtn) applyOn(initBtn);
+      btns.forEach(b => b.addEventListener('click', () => applyOn(b)));
+    })();
+    // Wire: date range stepper (2026-08-17 owner「1つで 順番 に · 開始 → 終了」)
+    (function wireDateStepper() {
+      const startEl = document.getElementById('fp-kmodal-startdate');
+      const endEl   = document.getElementById('fp-kmodal-enddate');
+      const mark1   = document.getElementById('fp-kmodal-step1-mark');
+      const mark2   = document.getElementById('fp-kmodal-step2-mark');
+      const clearBtn = document.getElementById('fp-kmodal-daterange-clear');
+      const refreshMarks = () => {
+        const s = startEl.value, e = endEl.value;
+        // step1 = 開始 未 選 → primary、 選択 済 → 完了 (緑)
+        if (s) { mark1.style.background = '#059669'; mark1.textContent = '✓'; }
+        else   { mark1.style.background = '#5B5BF0'; mark1.textContent = '1'; }
+        // step2 = 開始 未 → 灰、 開始 選択 済 未 終了 → primary、 完了 → 緑
+        if (!s) { mark2.style.background = '#CBD5E1'; mark2.textContent = '2'; }
+        else if (!e) { mark2.style.background = '#5B5BF0'; mark2.textContent = '2'; }
+        else { mark2.style.background = '#059669'; mark2.textContent = '✓'; }
+      };
+      refreshMarks();
+      startEl.addEventListener('change', () => {
+        // 終了 日 の min = 開始 日 (逆転 防止)
+        if (startEl.value) endEl.min = startEl.value;
+        // 開始 未 で 終了 空 なら 終了 に focus 移動 (owner の 「次 に 終了」 flow)
+        if (startEl.value && !endEl.value) {
+          setTimeout(() => { try { endEl.focus(); endEl.showPicker?.(); } catch(_) {} }, 100);
+        }
+        refreshMarks();
+      });
+      endEl.addEventListener('change', refreshMarks);
+      clearBtn?.addEventListener('click', () => {
+        startEl.value = ''; endEl.value = ''; endEl.min = '';
+        refreshMarks();
+      });
+      if (startEl.value) endEl.min = startEl.value;
     })();
     document.getElementById('fp-kmodal-save').onclick = () => {
       const clientId = document.getElementById('fp-kmodal-client')?.value || '';
