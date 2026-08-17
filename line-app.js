@@ -10053,9 +10053,16 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
       const unread = _lchUnreadCount(c);
       const active = _lchState.selectedClientId === c.id ? 'active' : '';
       const tag = (c.status && c.status !== 'active') ? c.status : (c.lineFriendId ? '' : '未連携');
+      // ★ 2026-08-17 owner「LINE トーク で アイコン 取れて ない」対応:
+      //   linePictureUrl / pictureUrl が あれば img、 なければ 漢字 1 文字 fallback (kanban 実装 と 統一)
+      const avatarUrl = c.linePictureUrl || c.pictureUrl || '';
+      const initial = _lchAvatarChar(c.name);
+      const avatarInner = avatarUrl
+        ? `<img src="${_lchEscape(avatarUrl)}" alt="" loading="lazy" onerror="this.outerHTML='${_lchEscape(initial)}';" style="width:100%;height:100%;border-radius:50%;object-fit:cover;display:block;">`
+        : _lchEscape(initial);
       return `
         <div class="lch-item ${active}" data-cid="${_lchEscape(c.id)}">
-          <div class="lch-item-avatar ${_lchAvatarClass(c.id)}">${_lchEscape(_lchAvatarChar(c.name))}</div>
+          <div class="lch-item-avatar ${_lchAvatarClass(c.id)}">${avatarInner}</div>
           <div class="lch-item-main">
             <div class="lch-item-name">${_lchEscape(c.name || '(名前 未設定)')}${tag ? ` <span style="font-size:9.5px;font-weight:800;color:#6B7280;background:#F1F3F5;padding:1px 6px;border-radius:3px;margin-left:4px;">${_lchEscape(tag)}</span>` : ''}</div>
             <div class="lch-item-preview">${_lchEscape(preview)}</div>
