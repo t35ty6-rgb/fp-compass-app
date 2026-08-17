@@ -698,17 +698,40 @@
 
   function attachUserBar() {
     if (document.getElementById("fp-user-bar")) return;
-    const bar = document.createElement("div");
-    bar.id = "fp-user-bar";
-    bar.style.cssText = "position:fixed;top:12px;right:16px;z-index:999;background:rgba(15,23,42,0.92);color:#fff;padding:7px 14px;border-radius:999px;font-family:'Manrope',sans-serif;font-size:12px;display:flex;align-items:center;gap:10px;backdrop-filter:blur(8px);box-shadow:0 8px 24px rgba(0,0,0,0.2);";
-    bar.innerHTML = `
-      <span style="font-weight:600;">${window.__fp.userEmail || ""}</span>
-      <span style="font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:0.08em;color:#FFE9A8;">${(window.__fp.tenantId || "").toUpperCase()}</span>
-      <a href="./referral.html" style="background:rgba(255,233,168,0.18);color:#FFE9A8;padding:4px 10px;border-radius:6px;text-decoration:none;font-weight:700;font-size:11px;">🎁 紹介</a>
-      <a href="./account.html" style="background:rgba(255,255,255,0.1);color:#fff;padding:4px 10px;border-radius:6px;text-decoration:none;font-weight:700;font-size:11px;">⚙ アカウント</a>
-      <button id="fp-logout-btn" style="background:transparent;color:#FFB5B5;border:1px solid rgba(255,181,181,0.3);padding:4px 10px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:11px;font-weight:600;">ログアウト</button>
+    // ★ 2026-08-17 owner「大きすぎて 邪魔 · 目立たない ところ に」対応:
+    //   32px 円 avatar + click で popover 展開 (email / tenant / 紹介 / アカウント / ログアウト)
+    const email = window.__fp.userEmail || "";
+    const initial = (email || "?").charAt(0).toUpperCase();
+    const tenant = (window.__fp.tenantId || "").toUpperCase();
+    const wrap = document.createElement("div");
+    wrap.id = "fp-user-bar";
+    wrap.style.cssText = "position:fixed;top:10px;right:12px;z-index:999;font-family:'Manrope',sans-serif;";
+    wrap.innerHTML = `
+      <button id="fp-user-avatar" title="${email}" style="width:32px;height:32px;border-radius:50%;background:rgba(15,23,42,0.85);color:#FFE9A8;border:0;font-family:inherit;font-size:13px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,0.2);backdrop-filter:blur(8px);opacity:0.7;transition:opacity 120ms;">${initial}</button>
+      <div id="fp-user-popover" style="display:none;position:absolute;top:calc(100% + 6px);right:0;min-width:220px;background:rgba(15,23,42,0.96);color:#fff;padding:12px 14px;border-radius:10px;font-size:12px;backdrop-filter:blur(8px);box-shadow:0 12px 32px rgba(0,0,0,0.28);">
+        <div style="font-weight:600;margin-bottom:2px;word-break:break-all;">${email}</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.08em;color:#FFE9A8;margin-bottom:10px;">${tenant}</div>
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          <a href="./referral.html" style="background:rgba(255,233,168,0.18);color:#FFE9A8;padding:6px 10px;border-radius:6px;text-decoration:none;font-weight:700;font-size:11.5px;text-align:left;">🎁 紹介</a>
+          <a href="./account.html" style="background:rgba(255,255,255,0.1);color:#fff;padding:6px 10px;border-radius:6px;text-decoration:none;font-weight:700;font-size:11.5px;text-align:left;">⚙ アカウント</a>
+          <button id="fp-logout-btn" style="background:transparent;color:#FFB5B5;border:1px solid rgba(255,181,181,0.3);padding:6px 10px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:11.5px;font-weight:600;text-align:left;">ログアウト</button>
+        </div>
+      </div>
     `;
-    document.body.appendChild(bar);
+    document.body.appendChild(wrap);
+    const av = document.getElementById("fp-user-avatar");
+    const pop = document.getElementById("fp-user-popover");
+    av.addEventListener("mouseenter", () => av.style.opacity = "1");
+    av.addEventListener("mouseleave", () => { if (pop.style.display === "none") av.style.opacity = "0.7"; });
+    av.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const open = pop.style.display !== "none";
+      pop.style.display = open ? "none" : "block";
+      av.style.opacity = open ? "0.7" : "1";
+    });
+    document.addEventListener("click", (e) => {
+      if (!wrap.contains(e.target)) { pop.style.display = "none"; av.style.opacity = "0.7"; }
+    });
     document.getElementById("fp-logout-btn").addEventListener("click", async () => {
       await signOut(auth);
       location.reload();
@@ -1517,7 +1540,7 @@ window.fpReadyAfterAuth = function() {
     });
   })();
 
-  const ver = "20260817G-deadline-tags";
+  const ver = "20260817I-userbar-avatar";
   // ★ 2026-06-26 perf: critical (画面初期表示に必須) と deferred (LINE/charts) を 分離
   // critical: 顧客台帳・ホーム描画に必須
   // deferred: LINE タブ (line-app.js 555KB) / dashboard charts (charts.js) → idle で 後ロード
@@ -2268,7 +2291,7 @@ window.fpReadyAfterAuth = function() {
 <script>
 (function(){
   // 最新の ver を 1 箇所に集約 (fpReadyAfterAuth 側と一致させる必要あり)
-    const FP_VERSION = "20260817G-deadline-tags";
+    const FP_VERSION = "20260817I-userbar-avatar";
   try { window.FP_VERSION = FP_VERSION; } catch(_) {}
 
   // 2026-07-13 v11: Chrome拡張 (Zoom タブ音声 レコーダー) 検知

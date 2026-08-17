@@ -3060,12 +3060,9 @@
       const target = cols.find(c => c.id === col) || cols[3];
       target.tasks.push(t);
     });
-    const quickAddHtml = `
-      <div class="fp-quick-add" style="margin-bottom:14px;">
-        <span class="fp-quick-add-plus">+</span>
-        <input class="fp-quick-add-input" type="text" placeholder="task を 追加 · 例 「@吉田 · 提案 書 続き · 金 · P2」" data-quickadd-kanban>
-        <span class="fp-quick-add-hint"><code>@客</code><code>期限</code><code>P1</code></span>
-      </div>`;
+    // ★ 2026-08-17 owner「使いづらくて 意味 が わかんない」 明示 削除
+    //   カード 追加 は 各 col 下 の 「+ カード を 追加」 button (modal 経由) で 一本化
+    const quickAddHtml = '';
     const boardHtml = `
       <div class="fp-kanban-board">
         ${cols.map(col => `
