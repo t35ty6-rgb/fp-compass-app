@@ -11974,17 +11974,19 @@ STEP C: 結果報告
       const CLOUD_RUN_BASE = 'https://fp-compass-webhook-527726449426.asia-northeast1.run.app';
       let fnOk = false;
       let fnErr = null;
+      // ★ 2026-08-18 qa-reviewer FAIL #4 fix: fbApp / fsCustomerId を try 外 に 出す (REST fallback path から も 参照 可 に)
+      let fbApp = null;
+      const fsCustomerId = client._fsCustomerId || client.id;
       try {
         const { initializeApp, getApps } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js');
         const { getFunctions, httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-functions.js');
-        const fbApp = getApps()[0] || initializeApp({
+        fbApp = getApps()[0] || initializeApp({
           apiKey: 'AIzaSyAmVAEe9l9e1Yo_dzzJdbTVU35wWKd2sH4',
           authDomain: 'skeleton-fp-compass-632026.firebaseapp.com',
           projectId: 'skeleton-fp-compass-632026',
         });
         const fns = getFunctions(fbApp, 'asia-northeast1');
         const sendFn = httpsCallable(fns, 'sendLineMessage');
-        const fsCustomerId = client._fsCustomerId || client.id;
         const callRes = await sendFn({
           customerId: fsCustomerId,
           lineFriendId: client.lineFriendId || null,
@@ -12057,6 +12059,15 @@ STEP C: 結果報告
           sendBtn.textContent = '✓ 送信済 (text)';
           // qa-reviewer FAIL #1 fix: REST fallback でも setDoc + refresh (両 path 共通 helper)
           try {
+            const { initializeApp: initApp2, getApps: getApps2 } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js');
+            if (!fbApp) {
+              // Fn path import 自体 が fail した case: REST 側 で 再 initialize
+              fbApp = getApps2()[0] || initApp2({
+                apiKey: 'AIzaSyAmVAEe9l9e1Yo_dzzJdbTVU35wWKd2sH4',
+                authDomain: 'skeleton-fp-compass-632026.firebaseapp.com',
+                projectId: 'skeleton-fp-compass-632026',
+              });
+            }
             const { getFirestore, doc: fsDoc, setDoc, serverTimestamp, deleteField } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js');
             const fsDb = getFirestore(fbApp);
             const tid = window.__fp?.tenantId;
