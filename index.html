@@ -925,9 +925,9 @@
       <span class="kbd">⌘K</span>
     </div>
 
-    <!-- ★ サイドバー直下: 急遽 面談開始 (Zoom即発行 or 対面録音 を選べる) -->
+    <!-- ★ 2026-08-18 owner「Zoom 使う」明示 で label 更新 (対面 でも Zoom 経由 で 録画) -->
     <button id="sidebar-quick-inperson" class="sidebar-quick-rec"
-      title="急にお客様から相談入った時 → Zoom 即発行 or 対面録音 を 選んで 即開始">
+      title="急 に 面談 入った 時 → Zoom 即 発行 (対面 でも Zoom 経由 で 録画)">
       <span class="sidebar-quick-rec-dot"></span>
       <span class="sidebar-quick-rec-label">急遽 面談スタート</span>
       <span class="sidebar-quick-rec-pill">予約不要</span>
@@ -1540,7 +1540,7 @@ window.fpReadyAfterAuth = function() {
     });
   })();
 
-  const ver = "20260818C-slot-send-const-scope-fix";
+  const ver = "20260818D-zoom-only-inperson";
   // ★ 2026-06-26 perf: critical (画面初期表示に必須) と deferred (LINE/charts) を 分離
   // critical: 顧客台帳・ホーム描画に必須
   // deferred: LINE タブ (line-app.js 555KB) / dashboard charts (charts.js) → idle で 後ロード
@@ -2102,7 +2102,7 @@ window.fpReadyAfterAuth = function() {
         },
         {
           icon: '🎥', title: '② Zoom or 対面 で 録画',
-          body: 'サイドバー「急遽 面談スタート」 → Zoom 即発行 / 対面 録音 を 選択。 終了で AI が 議事録 + タスク + LINE下書き を 自動生成 (60分 で 約30秒)。',
+          body: 'サイドバー「急遽 面談スタート」 → Zoom 即 発行 (対面 でも Zoom 経由 で 録画)。 終了 で AI が 議事録 + タスク + LINE 下書き を 自動 生成 (60分 で 約 30 秒)。',
           cta: '次へ',
         },
         {
@@ -2291,7 +2291,7 @@ window.fpReadyAfterAuth = function() {
 <script>
 (function(){
   // 最新の ver を 1 箇所に集約 (fpReadyAfterAuth 側と一致させる必要あり)
-    const FP_VERSION = "20260818C-slot-send-const-scope-fix";
+    const FP_VERSION = "20260818D-zoom-only-inperson";
   try { window.FP_VERSION = FP_VERSION; } catch(_) {}
 
   // 2026-07-13 v11: Chrome拡張 (Zoom タブ音声 レコーダー) 検知

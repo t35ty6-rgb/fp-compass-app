@@ -970,13 +970,13 @@
           <h1 style="font-family:'Noto Sans JP',serif;font-size:28px;font-weight:700;letter-spacing:0.02em;margin:0 0 6px;color:#1f2a3f;">新規相談</h1>
           <p style="color:#6b7280;font-size:13px;margin:0;line-height:1.6;">LINE — アンケート — 候補日 — Zoom面談 — 完了 までの進行状況</p>
         </div>
-        <!-- ★ 急遽対面録画 (予約不要・お客様が突然来た時用) -->
+        <!-- ★ 2026-08-18 owner「Zoom 使う」明示 で 対面 録音 撤去 · Zoom 発行 一本 化 -->
         <button id="fp-quick-inperson"
           style="background:linear-gradient(135deg,#7C3AED,#5B21B6);color:#fff;border:none;padding:14px 22px;border-radius:10px;font-size:13.5px;font-weight:800;cursor:pointer;font-family:'Hiragino Sans',sans-serif;letter-spacing:0.04em;box-shadow:0 6px 20px rgba(124,58,237,0.35);display:flex;align-items:center;gap:10px;white-space:nowrap;"
-          title="急に対面相談が入った時 → ボタン1つで録画開始 (議事録は自動で作られます)">
+          title="急 に 面談 が 入った 時 → ボタン 1つ で Zoom 発行 (対面 でも Zoom 経由 で 録画)">
           <span style="font-size:18px;line-height:1;">●</span>
-          <span>急遽 対面録画開始</span>
-          <span style="background:rgba(255,255,255,0.18);font-size:10px;padding:2px 7px;border-radius:10px;font-weight:700;letter-spacing:0.06em;">予約不要</span>
+          <span>急遽 面談 開始 (Zoom)</span>
+          <span style="background:rgba(255,255,255,0.18);font-size:10px;padding:2px 7px;border-radius:10px;font-weight:700;letter-spacing:0.06em;">予約 不要</span>
         </button>
       </div>
 
@@ -1164,7 +1164,7 @@
         <button id="fp-qi-close-top" aria-label="閉じる" style="position:absolute;top:12px;right:12px;background:transparent;border:none;font-size:26px;line-height:1;color:#6B7280;cursor:pointer;padding:4px 10px;border-radius:6px;font-weight:600;">×</button>
         <div style="font-size:11px;font-weight:800;color:#9A5A18;letter-spacing:0.14em;margin-bottom:6px;">QUICK START</div>
         <h2 style="font-size:20px;font-weight:800;color:#111827;margin:0 0 6px;font-family:'Noto Sans JP',serif;">急遽 面談スタート</h2>
-        <p style="font-size:13px;color:#6b7280;line-height:1.65;margin:0 0 18px;">予約なしで お客様から相談が入った時はこちら。 <strong style="color:#9A5A18;">Zoom リンクを 即発行 して 双方参加</strong> するか、 <strong style="color:#1F2A3F;">対面で 録音だけ する</strong> かを 選んで 開始してください。</p>
+        <p style="font-size:13px;color:#6b7280;line-height:1.65;margin:0 0 18px;">予約なしで お客様から相談が入った時はこちら。 <strong style="color:#9A5A18;">Zoom リンクを 即発行 して 双方参加</strong> · 対面 相談 でも Zoom 経由 で 録画 する 運用 (owner 明示 · 2026-08-18)。</p>
 
         <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;letter-spacing:0.04em;margin-bottom:6px;">お客様を選択</label>
         <select id="fp-qi-client" style="width:100%;padding:11px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:14px;font-family:inherit;margin-bottom:14px;background:#fff;">
@@ -1180,36 +1180,24 @@
           <input id="fp-qi-newname" type="text" placeholder="例: 山田 太郎" style="width:100%;padding:11px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:14px;font-family:inherit;">
         </div>
 
-        <!-- ★ 急遽 開始 — 2モード (Zoom即発行 / 対面録音) — カメラ/マイク権限は対面のみ必要 -->
-        <!-- 音声設定 案内 (Bluetooth ヘッドホン 使用時の 相手声録音対策) -->
-        <div id="fp-audio-setup-hint" style="background:#FFF7E6;border-left:3px solid #D97706;padding:10px 14px;border-radius:4px;margin-bottom:14px;font-size:12px;line-height:1.6;color:#78350F;">
-          <strong style="color:#92400E;">💡 AirPods 等 Bluetooth ヘッドホン 使用時 は 事前 に <a href="/audio-setup.html" target="_blank" style="color:#C1462C;font-weight:700;">音声設定 (5分)</a> が 必要 です。</strong>
-          <span style="color:#92400E;">未設定 だと 議事録 に 相手 の 声 が 入りません。</span>
-        </div>
-        <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;letter-spacing:0.04em;margin-bottom:8px;">面談スタイル</label>
+        <!-- ★ 2026-08-18 owner 明示「対面 でも Zoom 使う」対応:
+             audio (対面 PC マイク 録音) モード を 撤去 · Zoom 一本 化 (memo は 残す) -->
+        <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;letter-spacing:0.04em;margin-bottom:8px;">面談 スタイル</label>
         <div id="fp-qi-mode-grid" style="display:grid;grid-template-columns:1fr;gap:8px;margin-bottom:16px;">
           <label class="fp-qi-mode" data-mode="zoom" style="display:flex;gap:12px;padding:16px 18px;border:1.5px solid #E5E7EB;border-radius:10px;cursor:pointer;background:#fff;transition:border-color .12s,background .12s;">
             <input type="radio" name="fp-qi-mode" value="zoom" checked style="margin-top:3px;flex-shrink:0;">
             <div style="flex:1;">
               <div style="font-size:11px;font-weight:800;color:#9A5A18;letter-spacing:0.12em;margin-bottom:3px;">RECOMMENDED</div>
-              <div style="font-size:15px;font-weight:800;color:#1F2A3F;line-height:1.4;">🎥 Zoom リンクを 今すぐ発行 → 双方参加</div>
-              <div style="font-size:12px;color:#6b7280;margin-top:4px;line-height:1.6;">お客様の LINE に Zoom URL を 即push。 FP も 新タブで host参加。 マイク/カメラ 権限は不要 (Zoom 側で設定)。</div>
-            </div>
-          </label>
-          <label class="fp-qi-mode" data-mode="audio" style="display:flex;gap:12px;padding:16px 18px;border:1.5px solid #E5E7EB;border-radius:10px;cursor:pointer;background:#fff;transition:border-color .12s,background .12s;">
-            <input type="radio" name="fp-qi-mode" value="audio" style="margin-top:3px;flex-shrink:0;">
-            <div style="flex:1;">
-              <div style="font-size:11px;font-weight:800;color:#6B7280;letter-spacing:0.12em;margin-bottom:3px;">IN-PERSON</div>
-              <div style="font-size:15px;font-weight:800;color:#1F2A3F;line-height:1.4;">🎤 対面で録音だけ する</div>
-              <div style="font-size:12px;color:#6b7280;margin-top:4px;line-height:1.6;">対面相談時に PC のマイクで 録音 → AI議事録 自動生成。 マイク権限が必要。</div>
+              <div style="font-size:15px;font-weight:800;color:#1F2A3F;line-height:1.4;">🎥 Zoom リンクを 今 すぐ 発行 → 双方 参加 (対面 相談 でも Zoom 経由 で 録画)</div>
+              <div style="font-size:12px;color:#6b7280;margin-top:4px;line-height:1.6;">お客様 の LINE に Zoom URL を 即 push。 FP も 新 tab で host 参加。 対面 相談 の 場合 は 同 席 で 客 側 の 端末 or 共有 device で Zoom join · 録画 は Zoom side で 完結。</div>
             </div>
           </label>
           <label class="fp-qi-mode" data-mode="memo" style="display:flex;gap:12px;padding:14px 18px;border:1.5px solid #E5E7EB;border-radius:10px;cursor:pointer;background:#fff;transition:border-color .12s,background .12s;">
             <input type="radio" name="fp-qi-mode" value="memo" style="margin-top:3px;flex-shrink:0;">
             <div style="flex:1;">
               <div style="font-size:11px;font-weight:800;color:#6B7280;letter-spacing:0.12em;margin-bottom:3px;">TEXT ONLY</div>
-              <div style="font-size:14px;font-weight:800;color:#1F2A3F;line-height:1.4;">📝 録音せず メモだけ 書く</div>
-              <div style="font-size:11.5px;color:#6b7280;margin-top:3px;line-height:1.55;">手入力で議事録を残す。 自動生成はなし。</div>
+              <div style="font-size:14px;font-weight:800;color:#1F2A3F;line-height:1.4;">📝 録音 せず メモ だけ 書く</div>
+              <div style="font-size:11.5px;color:#6b7280;margin-top:3px;line-height:1.55;">手 入力 で 議事録 を 残す。 自動 生成 なし。</div>
             </div>
           </label>
         </div>
