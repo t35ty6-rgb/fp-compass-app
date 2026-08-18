@@ -12000,18 +12000,30 @@ STEP C: 結果報告
           //   送信 成功 と 同時 に Firestore customer doc に meetingCandidates を write →
           //   admin 「新規相談」 pending list に 出る + 客 タップ 前 の 「送信済 反応 待ち」 状態 見える
           try {
-            const { getFirestore, doc: fsDoc, setDoc, serverTimestamp } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js');
+            const { getFirestore, doc: fsDoc, setDoc, serverTimestamp, deleteField } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js');
             const fsDb = getFirestore(fbApp);
             const tid = window.__fp?.tenantId;
             if (tid && fsCustomerId) {
               const candArr = slots.map(s => `${s.date} ${s.time}`);
+              // ★ 2026-08-18 owner「同 客 に 3 回 送っても 反映 されない」bug fix
+              //   memory: feedback_overwrite_impl_must_clear_opposite_flag.md (bookingCancelledAt ゾンビ 事件 再発 pattern)
+              //   前 の 確定 済 flag (confirmedSlot / zoomUrl 等) を 明示 delete で clear しない と
+              //   renderLeadHubInner の pending filter (`!c.confirmedSlot`) で drop され 新規相談 に 出ない
               await setDoc(fsDoc(fsDb, `tenants/${tid}/customers/${fsCustomerId}`), {
                 meetingCandidates: candArr,
                 meetingCandidatesAt: serverTimestamp(),
                 lastCandidatesSentAt: serverTimestamp(),
                 lastContactAt: serverTimestamp(),
+                // 逆 flag 明示 clear (前 の 予約 の 残骸 を 消して 新 candidates flow に する)
+                confirmedSlot: deleteField(),
+                confirmedAt: deleteField(),
+                zoomUrl: deleteField(),
+                hostZoomUrl: deleteField(),
+                zoomMeetingId: deleteField(),
+                pendingCandidateSelection: deleteField(),
+                bookingCancelledAt: deleteField(),
               }, { merge: true });
-              console.log('[slots-send] meetingCandidates write to Firestore:', candArr);
+              console.log('[slots-send] meetingCandidates write + 前 予約 flag 全 clear:', candArr);
             }
           } catch (fsErr) { console.warn('[slots-send] Firestore write fail:', fsErr); }
           setTimeout(() => overlay.remove(), 2000);
