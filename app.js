@@ -11999,33 +11999,42 @@ STEP C: 結果報告
           // 2026-08-05 owner fb 「新規相談 に 反映 されない」 fix:
           //   送信 成功 と 同時 に Firestore customer doc に meetingCandidates を write →
           //   admin 「新規相談」 pending list に 出る + 客 タップ 前 の 「送信済 反応 待ち」 状態 見える
-          try {
+          // ★ 2026-08-18 qa-reviewer FAIL #1/#2/#3 fix: setDoc を helper 化 · fn/rest 両 path で 呼ぶ · fail 時 status 警告 + refresh
+          const slotsSendCommitCandidates = async () => {
             const { getFirestore, doc: fsDoc, setDoc, serverTimestamp, deleteField } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js');
             const fsDb = getFirestore(fbApp);
             const tid = window.__fp?.tenantId;
-            if (tid && fsCustomerId) {
-              const candArr = slots.map(s => `${s.date} ${s.time}`);
-              // ★ 2026-08-18 owner「同 客 に 3 回 送っても 反映 されない」bug fix
-              //   memory: feedback_overwrite_impl_must_clear_opposite_flag.md (bookingCancelledAt ゾンビ 事件 再発 pattern)
-              //   前 の 確定 済 flag (confirmedSlot / zoomUrl 等) を 明示 delete で clear しない と
-              //   renderLeadHubInner の pending filter (`!c.confirmedSlot`) で drop され 新規相談 に 出ない
-              await setDoc(fsDoc(fsDb, `tenants/${tid}/customers/${fsCustomerId}`), {
-                meetingCandidates: candArr,
-                meetingCandidatesAt: serverTimestamp(),
-                lastCandidatesSentAt: serverTimestamp(),
-                lastContactAt: serverTimestamp(),
-                // 逆 flag 明示 clear (前 の 予約 の 残骸 を 消して 新 candidates flow に する)
-                confirmedSlot: deleteField(),
-                confirmedAt: deleteField(),
-                zoomUrl: deleteField(),
-                hostZoomUrl: deleteField(),
-                zoomMeetingId: deleteField(),
-                pendingCandidateSelection: deleteField(),
-                bookingCancelledAt: deleteField(),
-              }, { merge: true });
-              console.log('[slots-send] meetingCandidates write + 前 予約 flag 全 clear:', candArr);
-            }
-          } catch (fsErr) { console.warn('[slots-send] Firestore write fail:', fsErr); }
+            if (!tid || !fsCustomerId) throw new Error('tenantId or fsCustomerId 欠落');
+            const candArr = slots.map(s => `${s.date} ${s.time}`);
+            await setDoc(fsDoc(fsDb, `tenants/${tid}/customers/${fsCustomerId}`), {
+              meetingCandidates: candArr,
+              meetingCandidatesAt: serverTimestamp(),
+              lastCandidatesSentAt: serverTimestamp(),
+              lastContactAt: serverTimestamp(),
+              // 前 の 予約 flag 全 clear (memory: feedback_overwrite_impl_must_clear_opposite_flag)
+              confirmedSlot: deleteField(),
+              confirmedAt: deleteField(),
+              zoomUrl: deleteField(),
+              hostZoomUrl: deleteField(),
+              zoomMeetingId: deleteField(),
+              pendingCandidateSelection: deleteField(),
+              bookingCancelledAt: deleteField(),
+            }, { merge: true });
+            console.log('[slots-send] setDoc OK:', candArr);
+            // qa-reviewer FAIL #3 fix: UI 反映 用 refresh
+            try { if (window.refreshFirestoreCustomers) await window.refreshFirestoreCustomers(); } catch(_) {}
+          };
+          try {
+            await slotsSendCommitCandidates();
+          } catch (fsErr) {
+            // qa-reviewer FAIL #2 fix: silent じゃ なく status に 赤 警告
+            console.error('[slots-send] Firestore write FAIL:', fsErr);
+            status.style.color = '#DC2626';
+            status.textContent = '⚠ LINE 送信 済 だが Firestore 保存 fail: ' + (fsErr.message || fsErr).toString().slice(0, 120) + ' — 新規相談 に 出ない 可能性、 owner action 必要';
+            sendBtn.textContent = '⚠ 保存 fail';
+            setTimeout(() => overlay.remove(), 6000);
+            return;
+          }
           setTimeout(() => overlay.remove(), 2000);
           return;
         } else {
@@ -12034,6 +12043,7 @@ STEP C: 結果報告
       } catch (e) { fnErr = e && (e.message || String(e)); console.warn('[slots-send] Fn fail:', fnErr); }
 
       // fallback: REST plain text (Firebase Function が 401/CORS/config で fail 時)
+      // qa-reviewer FAIL #1 fix: REST path でも setDoc 実行 (旧 bug: LINE 届く が Firestore 未 write で 新規相談 に 出ない)
       try {
         const headers = window.getFpAuthHeaders ? await window.getFpAuthHeaders() : { 'Content-Type': 'application/json' };
         const r = await fetch(CLOUD_RUN_BASE + '/api/send-line', {
@@ -12045,6 +12055,34 @@ STEP C: 結果報告
         if (d.ok) {
           status.style.color = '#F59E0B'; status.textContent = '⚠ Flex fail → text 形式 で 送信 (Fn err: ' + (fnErr||'').slice(0,60) + ')';
           sendBtn.textContent = '✓ 送信済 (text)';
+          // qa-reviewer FAIL #1 fix: REST fallback でも setDoc + refresh (両 path 共通 helper)
+          try {
+            const { getFirestore, doc: fsDoc, setDoc, serverTimestamp, deleteField } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js');
+            const fsDb = getFirestore(fbApp);
+            const tid = window.__fp?.tenantId;
+            if (tid && fsCustomerId) {
+              const candArr = slots.map(s => `${s.date} ${s.time}`);
+              await setDoc(fsDoc(fsDb, `tenants/${tid}/customers/${fsCustomerId}`), {
+                meetingCandidates: candArr,
+                meetingCandidatesAt: serverTimestamp(),
+                lastCandidatesSentAt: serverTimestamp(),
+                lastContactAt: serverTimestamp(),
+                confirmedSlot: deleteField(),
+                confirmedAt: deleteField(),
+                zoomUrl: deleteField(),
+                hostZoomUrl: deleteField(),
+                zoomMeetingId: deleteField(),
+                pendingCandidateSelection: deleteField(),
+                bookingCancelledAt: deleteField(),
+              }, { merge: true });
+              console.log('[slots-send REST fallback] setDoc OK:', candArr);
+              try { if (window.refreshFirestoreCustomers) await window.refreshFirestoreCustomers(); } catch(_) {}
+            }
+          } catch (fsErr) {
+            console.error('[slots-send REST fallback] Firestore write FAIL:', fsErr);
+            status.style.color = '#DC2626';
+            status.textContent = '⚠ LINE 届いた が Firestore 保存 fail: ' + (fsErr.message || fsErr).toString().slice(0, 100);
+          }
           setTimeout(() => overlay.remove(), 3500);
           return;
         }
