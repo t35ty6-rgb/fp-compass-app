@@ -6760,6 +6760,11 @@
                 <span style="font-size:22px;line-height:1;">🎙</span>
                 <span style="text-align:left;line-height:1.35;">面談 を 開始<br><span style="font-size:12px;font-weight:600;letter-spacing:0.01em;">今すぐ / 予約 / 相手主催 URL / 電話 · 全部 ここから</span></span>
               </button>
+              <!-- ★ 2026-08-19 owner「顧客モーダルからも 対面で商談 button を 追加」対応 · 対面録音 shortcut -->
+              <button id="cd-inperson-start-btn" data-client-id="${escapeHtml(c.id)}" style="margin-top:8px;width:100%;background:#fff;color:#1E40AF;border:2px solid #1E40AF;padding:14px 18px;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer;font-family:'Noto Sans JP',sans-serif;box-shadow:0 3px 10px rgba(30,64,175,0.10);display:flex;align-items:center;justify-content:center;gap:10px;transition:background .15s,box-shadow .15s;">
+                <span style="font-size:18px;line-height:1;color:#1E40AF;">🎤</span>
+                <span style="text-align:left;line-height:1.3;">対面 で 商談 を 開始<span style="display:block;font-size:11px;font-weight:600;color:#475569;margin-top:2px;">Zoom 使わず 音声 だけ 録音 → AI 議事録</span></span>
+              </button>
               <!-- 旧 button 互換 (別 code path から click 発火 される ため hidden で 残置) -->
               <button id="cd-instant-zoom-btn" data-client-id="${escapeHtml(c.id)}" style="display:none;"></button>
               <button id="cd-schedule-zoom-btn" data-client-id="${escapeHtml(c.id)}" style="display:none;"></button>
@@ -8118,6 +8123,19 @@ ${ctxText}${surveyTxt}`;
     const meetingStartBtn = document.getElementById('cd-meeting-start-btn');
     if (meetingStartBtn) {
       meetingStartBtn.addEventListener('click', () => openMeetingStartModal(c));
+    }
+    // 2026-08-19: 対面 で 商談 shortcut (openMeetingStartModal を bypass、 直 startInPersonRecording)
+    const inpersonBtn = document.getElementById('cd-inperson-start-btn');
+    if (inpersonBtn) {
+      inpersonBtn.addEventListener('click', async () => {
+        if (typeof startInPersonRecording === 'function') {
+          startInPersonRecording(c);
+        } else {
+          // fallback: modal 経由 で 対面 mode に 誘導
+          openMeetingStartModal(c);
+          setTimeout(() => document.getElementById('fp-ms-inperson')?.click(), 100);
+        }
+      });
     }
     // ★ クイックアクション (AI推奨ブロック内 内包)
     document.querySelectorAll('[data-quick-instant]').forEach(b => b.addEventListener('click', () => document.getElementById('cd-instant-zoom-btn')?.click()));

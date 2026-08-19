@@ -1167,29 +1167,62 @@
         <p style="font-size:13px;color:#6b7280;line-height:1.65;margin:0 0 18px;">予約なしで お客様から相談が入った時はこちら。 <strong style="color:#9A5A18;">Zoom リンクを 即発行 して 双方参加</strong> · 対面 相談 でも Zoom 経由 で 録画 する 運用 (owner 明示 · 2026-08-18)。</p>
 
         <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;letter-spacing:0.04em;margin-bottom:6px;">お客様を選択</label>
-        <select id="fp-qi-client" style="width:100%;padding:11px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:14px;font-family:inherit;margin-bottom:14px;background:#fff;">
-          <option value="">— 顧客を選んでください —</option>
-          <option value="__new__">＋ 新規お客様として記録 (後で顧客登録)</option>
-          <optgroup label="既存顧客 (${clients.length}名)">
-            ${clients.map(c => `<option value="${escapeHtml(c.id)}">${escapeHtml(c.name || '?')} 様</option>`).join('')}
-          </optgroup>
-        </select>
+        <!-- ★ 2026-08-19: 旧 native select → カスタム list (LINE アバター/未連携 pill 表示、 owner「LINEのアイコンとか出ない」対応) -->
+        <div id="fp-qi-client-wrap" style="border:1.5px solid #e5e7eb;border-radius:10px;background:#fff;margin-bottom:14px;overflow:hidden;">
+          <input id="fp-qi-client-search" type="text" placeholder="🔍 お客様名 で 検索" style="width:100%;padding:11px 14px;border:none;border-bottom:1px solid #F1F5F9;font-size:13.5px;font-family:inherit;box-sizing:border-box;outline:none;background:#FAFAF9;">
+          <div id="fp-qi-client-list" style="max-height:224px;overflow-y:auto;">
+            <button type="button" class="fp-qi-cli-row" data-cid="__new__" style="width:100%;display:flex;align-items:center;gap:11px;padding:12px 14px;border:none;border-bottom:1px dashed #E5E7EB;background:#fff;cursor:pointer;text-align:left;font-family:inherit;transition:background .12s;">
+              <div style="width:36px;height:36px;background:#FBF5E3;border:1.5px dashed #C19A3A;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#9A5A18;font-size:19px;font-weight:800;">＋</div>
+              <div style="flex:1;line-height:1.3;min-width:0;">
+                <div style="font-size:13.5px;font-weight:800;color:#1F2A3F;">新規 お客様 として 記録</div>
+                <div style="font-size:11px;font-weight:500;color:#6b7280;margin-top:1px;">後 で 顧客登録 · この場 で 名前 だけ 入力</div>
+              </div>
+            </button>
+            ${clients.map(c => {
+              const hasLine = !!c.lineFriendId;
+              const pic = c.linePictureUrl || c.pictureUrl || '';
+              const initial = escapeHtml((c.name || '?').slice(0, 1));
+              const avatarInner = pic
+                ? `<img src="${escapeHtml(pic)}" alt="" style="width:36px;height:36px;border-radius:10px;object-fit:cover;border:2px solid ${hasLine ? '#06C755' : '#E5E7EB'};" onerror="this.replaceWith(Object.assign(document.createElement('div'),{style:'width:36px;height:36px;border-radius:10px;background:#EEF1FE;color:#5B5BF0;font-weight:900;font-size:14.5px;display:flex;align-items:center;justify-content:center;',textContent:'${initial}'}))">`
+                : `<div style="width:36px;height:36px;border-radius:10px;background:${hasLine ? '#ECFDF5' : '#F1F5F9'};color:${hasLine ? '#06C755' : '#6B7280'};font-weight:900;font-size:14.5px;display:flex;align-items:center;justify-content:center;border:${hasLine ? '2px solid #06C755' : '1.5px solid #E5E7EB'};box-sizing:border-box;">${initial}</div>`;
+              const linePill = hasLine
+                ? `<span style="display:inline-flex;align-items:center;gap:3px;background:#ECFDF5;color:#047847;border:1px solid #ABEFC6;padding:2px 7px;border-radius:999px;font-size:10px;font-weight:800;letter-spacing:0.02em;">💬 LINE 連携</span>`
+                : `<span style="display:inline-flex;align-items:center;gap:3px;background:#FEF3C7;color:#92400E;border:1px solid #FDE68A;padding:2px 7px;border-radius:999px;font-size:10px;font-weight:800;letter-spacing:0.02em;">⚠ 未連携</span>`;
+              return `<button type="button" class="fp-qi-cli-row" data-cid="${escapeHtml(c.id)}" style="width:100%;display:flex;align-items:center;gap:11px;padding:11px 14px;border:none;border-bottom:1px solid #F1F5F9;background:#fff;cursor:pointer;text-align:left;font-family:inherit;transition:background .12s;">
+                ${avatarInner}
+                <div style="flex:1;line-height:1.3;min-width:0;">
+                  <div style="font-size:13.5px;font-weight:800;color:#1F2A3F;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(c.name || '?')} 様</div>
+                  <div style="display:flex;gap:6px;align-items:center;margin-top:3px;">${linePill}</div>
+                </div>
+              </button>`;
+            }).join('')}
+          </div>
+        </div>
+        <input type="hidden" id="fp-qi-client" value="">
 
         <div id="fp-qi-newname-row" style="display:none;margin-bottom:14px;">
           <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;letter-spacing:0.04em;margin-bottom:6px;">新規お客様のお名前 (議事録ラベル用)</label>
           <input id="fp-qi-newname" type="text" placeholder="例: 山田 太郎" style="width:100%;padding:11px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:14px;font-family:inherit;">
         </div>
 
-        <!-- ★ 2026-08-18 owner 明示「対面 でも Zoom 使う」対応:
-             audio (対面 PC マイク 録音) モード を 撤去 · Zoom 一本 化 (memo は 残す) -->
+        <!-- ★ 2026-08-19 owner「対面録音 消えてるじゃん」で 3 mode 復活
+             Zoom (recommended) + 対面 audio + memo -->
         <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;letter-spacing:0.04em;margin-bottom:8px;">面談 スタイル</label>
         <div id="fp-qi-mode-grid" style="display:grid;grid-template-columns:1fr;gap:8px;margin-bottom:16px;">
           <label class="fp-qi-mode" data-mode="zoom" style="display:flex;gap:12px;padding:16px 18px;border:1.5px solid #E5E7EB;border-radius:10px;cursor:pointer;background:#fff;transition:border-color .12s,background .12s;">
             <input type="radio" name="fp-qi-mode" value="zoom" checked style="margin-top:3px;flex-shrink:0;">
             <div style="flex:1;">
               <div style="font-size:11px;font-weight:800;color:#9A5A18;letter-spacing:0.12em;margin-bottom:3px;">RECOMMENDED</div>
-              <div style="font-size:15px;font-weight:800;color:#1F2A3F;line-height:1.4;">🎥 Zoom リンクを 今 すぐ 発行 → 双方 参加 (対面 相談 でも Zoom 経由 で 録画)</div>
-              <div style="font-size:12px;color:#6b7280;margin-top:4px;line-height:1.6;">お客様 の LINE に Zoom URL を 即 push。 FP も 新 tab で host 参加。 対面 相談 の 場合 は 同 席 で 客 側 の 端末 or 共有 device で Zoom join · 録画 は Zoom side で 完結。</div>
+              <div style="font-size:15px;font-weight:800;color:#1F2A3F;line-height:1.4;">🎥 Zoom リンク を 今 すぐ 発行 → 双方 参加</div>
+              <div style="font-size:12px;color:#6b7280;margin-top:4px;line-height:1.6;">お客様 の LINE に Zoom URL を 即 push。 FP も 新 tab で host 参加。 録画 は Zoom side で 完結。</div>
+            </div>
+          </label>
+          <label class="fp-qi-mode" data-mode="audio" style="display:flex;gap:12px;padding:16px 18px;border:1.5px solid #E5E7EB;border-radius:10px;cursor:pointer;background:#fff;transition:border-color .12s,background .12s;">
+            <input type="radio" name="fp-qi-mode" value="audio" style="margin-top:3px;flex-shrink:0;">
+            <div style="flex:1;">
+              <div style="font-size:11px;font-weight:800;color:#1E40AF;letter-spacing:0.12em;margin-bottom:3px;">IN-PERSON</div>
+              <div style="font-size:15px;font-weight:800;color:#1F2A3F;line-height:1.4;">🎙 対面 で 音声 だけ 録音</div>
+              <div style="font-size:12px;color:#6b7280;margin-top:4px;line-height:1.6;">Zoom を 客 に 見せず、 端末 マイク で 音声 のみ 録音 → whisper で 文字起こし → AI 議事録 化。 対面 商談 で 客 が Zoom アレルギー の 時 用。</div>
             </div>
           </label>
           <label class="fp-qi-mode" data-mode="memo" style="display:flex;gap:12px;padding:14px 18px;border:1.5px solid #E5E7EB;border-radius:10px;cursor:pointer;background:#fff;transition:border-color .12s,background .12s;">
@@ -1220,11 +1253,41 @@
     const newRow = ov.querySelector('#fp-qi-newname-row');
     const newInput = ov.querySelector('#fp-qi-newname');
     const startBtn = ov.querySelector('#fp-qi-start');
-    sel.addEventListener('change', () => {
-      const v = sel.value;
-      newRow.style.display = v === '__new__' ? '' : 'none';
-      const valid = v && (v !== '__new__' || (newInput.value || '').trim().length > 0);
+    const listEl = ov.querySelector('#fp-qi-client-list');
+    const searchEl = ov.querySelector('#fp-qi-client-search');
+
+    // カスタム list: click → hidden input に cid 保存 + 選択 状態 highlight + start button 有効化
+    function chooseClient(cid) {
+      sel.value = cid;
+      listEl.querySelectorAll('.fp-qi-cli-row').forEach(b => {
+        const active = b.dataset.cid === cid;
+        b.style.background = active ? '#FBF5E3' : '#fff';
+        b.style.boxShadow = active ? 'inset 3px 0 0 #C19A3A' : 'none';
+      });
+      newRow.style.display = cid === '__new__' ? '' : 'none';
+      const valid = cid && (cid !== '__new__' || (newInput.value || '').trim().length > 0);
       startBtn.disabled = !valid;
+    }
+    listEl.addEventListener('click', e => {
+      const btn = e.target.closest('.fp-qi-cli-row');
+      if (!btn) return;
+      chooseClient(btn.dataset.cid);
+    });
+    listEl.addEventListener('mouseover', e => {
+      const btn = e.target.closest('.fp-qi-cli-row');
+      if (btn && sel.value !== btn.dataset.cid) btn.style.background = '#F8FAFC';
+    });
+    listEl.addEventListener('mouseout', e => {
+      const btn = e.target.closest('.fp-qi-cli-row');
+      if (btn && sel.value !== btn.dataset.cid) btn.style.background = '#fff';
+    });
+    searchEl.addEventListener('input', () => {
+      const q = searchEl.value.trim().toLowerCase();
+      listEl.querySelectorAll('.fp-qi-cli-row').forEach(btn => {
+        if (btn.dataset.cid === '__new__') return;
+        const name = btn.querySelector('div > div:first-child')?.textContent?.toLowerCase() || '';
+        btn.style.display = !q || name.includes(q) ? '' : 'none';
+      });
     });
     newInput.addEventListener('input', () => {
       startBtn.disabled = !(sel.value === '__new__' && newInput.value.trim().length > 0);
