@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>サポート — FP Compass</title>
+<meta name="description" content="FP Compass の サポート 情報 · スケルトン株式会社">
+<link rel="icon" type="image/png" href="/icons/favicon-32.png">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="theme-color" content="#5B5BF0">
+<style>
+  :root {
+    --ink: #0A0A0A; --ink-2: #3F3F46; --ink-3: #6B6B6B;
+    --accent: #5B5BF0; --bg: #F7F7F5; --paper: #FFFFFF;
+    --line: #ECECEA;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: "Noto Sans JP", -apple-system, "Helvetica Neue", sans-serif;
+    line-height: 1.7; letter-spacing: 0;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 640px; margin: 0 auto; padding: 40px 22px 80px; }
+  .brand {
+    display: inline-flex; align-items: center; gap: 12px;
+    padding-bottom: 24px; border-bottom: 1px solid var(--line); margin-bottom: 30px;
+  }
+  .logo {
+    width: 42px; height: 42px; background: var(--accent); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 11px; font-weight: 900; letter-spacing: -0.02em;
+    box-shadow: 0 4px 12px rgba(91, 91, 240, 0.3);
+  }
+  .brand-name { font-weight: 800; font-size: 17px; line-height: 1.2; }
+  .brand-name small { display: block; color: var(--ink-3); font-weight: 500; font-size: 12px; margin-top: 2px; }
+  h1 { font-size: 28px; font-weight: 900; letter-spacing: -0.025em; margin: 0 0 8px; }
+  .lead { color: var(--ink-2); font-size: 16px; margin-bottom: 28px; }
+  h2 {
+    font-size: 17px; font-weight: 800; letter-spacing: -0.01em;
+    margin: 32px 0 12px; padding-bottom: 6px; border-bottom: 1.5px solid var(--line);
+  }
+  .card {
+    background: var(--paper); border: 1px solid var(--line); border-radius: 14px;
+    padding: 20px 22px; margin-bottom: 16px;
+    box-shadow: 0 1px 0 rgba(16, 24, 40, 0.04);
+  }
+  .card .label {
+    font-size: 11.5px; font-weight: 700; color: var(--ink-3);
+    letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 5px;
+  }
+  .card .value { font-weight: 700; font-size: 15.5px; color: var(--ink); }
+  .card a { color: var(--accent); text-decoration: none; font-weight: 700; }
+  .card a:hover { text-decoration: underline; }
+  ul.faq { list-style: none; padding: 0; margin: 0; }
+  ul.faq li {
+    background: var(--paper); border: 1px solid var(--line); border-radius: 12px;
+    padding: 14px 18px; margin-bottom: 8px;
+  }
+  ul.faq li strong { display: block; font-weight: 800; margin-bottom: 4px; font-size: 14.5px; }
+  ul.faq li p { margin: 0; color: var(--ink-2); font-size: 13.5px; line-height: 1.65; }
+  .footer {
+    margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--line);
+    text-align: center; font-size: 12.5px; color: var(--ink-3);
+  }
+  .footer a { color: var(--ink-2); text-decoration: none; margin: 0 8px; }
+  .footer a:hover { color: var(--accent); text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">
+    <div class="logo">FP</div>
+    <div class="brand-name">FP Compass<small>Skeleton Inc.</small></div>
+  </div>
+
+  <h1>サポート</h1>
+  <p class="lead">FP Compass に 関する ご質問・ご要望・不具合 報告 は 下記 まで お寄せ ください。</p>
+
+  <h2>お問い合わせ</h2>
+
+  <div class="card">
+    <div class="label">Email · 24時間 受付 (平日 24時間 以内 返信)</div>
+    <div class="value"><a href="mailto:support@skeleton-inc.jp">support@skeleton-inc.jp</a></div>
+  </div>
+
+  <div class="card">
+    <div class="label">公式サイト</div>
+    <div class="value"><a href="https://app.skeleton-inc.jp/">app.skeleton-inc.jp</a></div>
+  </div>
+
+  <h2>よくある ご質問</h2>
+
+  <ul class="faq">
+    <li>
+      <strong>LINE 連携 が うまくいきません</strong>
+      <p>お客様 の LINE 公式アカウント の Channel Access Token / Secret を 「LINE 設定」 画面 に 正しく 入力 して ください。 期限 切れ の 場合 は LINE Developers Console で 再発行 が 必要 です。</p>
+    </li>
+    <li>
+      <strong>Zoom URL が 発行 されません</strong>
+      <p>「Zoom 連携」 画面 で Account ID / Client ID / Client Secret を 設定 して ください。 Zoom Marketplace で Server-to-Server OAuth App を 作成 する 必要 が あります。</p>
+    </li>
+    <li>
+      <strong>議事録 が 生成 されません</strong>
+      <p>面談 の 録音 データ が 保存 されて いる か 確認 して ください。 「面談履歴」 画面 で 音声 ファイル が アップロード 済み なら AI 処理 に 通常 30秒〜3分 かかります。</p>
+    </li>
+    <li>
+      <strong>解約 したい です</strong>
+      <p>「マイページ → プラン管理」 から 解約 手続き が できます。 解約 後 も 現 プラン 期間 終了 まで ご 利用 頂けます。</p>
+    </li>
+    <li>
+      <strong>データ を エクスポート したい です</strong>
+      <p>顧客 データ の CSV エクスポート は 「顧客リスト → メニュー → エクスポート」 から 可能 です。</p>
+    </li>
+  </ul>
+
+  <h2>提供元</h2>
+  <div class="card">
+    <div class="label">会社</div>
+    <div class="value">スケルトン株式会社</div>
+  </div>
+
+  <div class="footer">
+    <a href="/legal/specified-commercial.html">特商法 表記</a> ·
+    <a href="/legal/privacy.html">プライバシー</a> ·
+    <a href="/legal/index.html">利用規約</a>
+  </div>
+</div>
+</body>
+</html>
