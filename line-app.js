@@ -1163,7 +1163,7 @@
       <div style="background:#fff;border-radius:16px;max-width:480px;width:92%;padding:28px;box-shadow:0 32px 80px rgba(0,0,0,0.4);position:relative;">
         <button id="fp-qi-close-top" aria-label="閉じる" style="position:absolute;top:12px;right:12px;background:transparent;border:none;font-size:26px;line-height:1;color:#6B7280;cursor:pointer;padding:4px 10px;border-radius:6px;font-weight:600;">×</button>
         <div style="font-size:11px;font-weight:800;color:#9A5A18;letter-spacing:0.14em;margin-bottom:6px;">QUICK START</div>
-        <h2 style="font-size:20px;font-weight:800;color:#111827;margin:0 0 6px;font-family:'Noto Sans JP',serif;">急遽 面談スタート</h2>
+        <h2 style="font-size:20px;font-weight:800;color:#111827;margin:0 0 6px;font-family:'Noto Sans JP',sans-serif;">急遽 面談スタート</h2>
         <p style="font-size:13px;color:#6b7280;line-height:1.65;margin:0 0 18px;">予約なしで お客様から相談が入った時はこちら。 <strong style="color:#9A5A18;">Zoom リンクを 即発行 して 双方参加</strong> · 対面 相談 でも Zoom 経由 で 録画 する 運用 (owner 明示 · 2026-08-18)。</p>
 
         <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;letter-spacing:0.04em;margin-bottom:6px;">お客様を選択</label>
@@ -1229,8 +1229,8 @@
             <input type="radio" name="fp-qi-mode" value="memo" style="margin-top:3px;flex-shrink:0;">
             <div style="flex:1;">
               <div style="font-size:11px;font-weight:800;color:#6B7280;letter-spacing:0.12em;margin-bottom:3px;">TEXT ONLY</div>
-              <div style="font-size:14px;font-weight:800;color:#1F2A3F;line-height:1.4;">📝 録音 せず メモ だけ 書く</div>
-              <div style="font-size:11.5px;color:#6b7280;margin-top:3px;line-height:1.55;">手 入力 で 議事録 を 残す。 自動 生成 なし。</div>
+              <div style="font-size:15px;font-weight:800;color:#1F2A3F;line-height:1.4;">📝 録音 せず メモ だけ 書く</div>
+              <div style="font-size:12px;color:#6b7280;margin-top:4px;line-height:1.55;">手 入力 で 議事録 を 残す。 自動 生成 なし。</div>
             </div>
           </label>
         </div>
