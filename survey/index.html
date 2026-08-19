@@ -164,6 +164,43 @@
       @media (max-width: 420px) { .slot-row-selects { grid-template-columns: 1fr; gap: 8px; } }
     </style>
 
+    <!-- 2026-08-19 SP UI 折返し fix: 「四角い枠 から 文字 が はみ出る」 対策 -->
+    <style>
+      @media (max-width: 480px) {
+        .wrap { padding: 20px 12px 80px; }
+        .card { padding: 22px 16px; }
+        .q-label { font-size: 18px; letter-spacing: -0.01em; line-height: 1.35; }
+        .q-sub { font-size: 13px; }
+        /* opts-3col は SP で 収まらない ので 2col に fallback */
+        .opts.opts-3col { grid-template-columns: 1fr 1fr; }
+        /* opt card padding + font 縮小、 折返し 許可 */
+        .opt {
+          padding: 14px 12px;
+          font-size: 15px;
+          min-height: 52px;
+          word-break: keep-all;
+          overflow-wrap: break-word;
+          line-height: 1.35;
+        }
+        .opt input { width: 18px; height: 18px; }
+        input[type=text], input[type=tel], input[type=number], textarea, select {
+          font-size: 16px; /* iOS zoom 防止 の 16px 下限 維持 */
+          padding: 13px 14px;
+        }
+        .btn { font-size: 17px; padding: 18px 20px; min-height: 58px; }
+        .btn-ghost { font-size: 15px; padding: 16px 12px; min-height: 58px; }
+        .wizard-nav { grid-template-columns: 1fr 1.5fr; gap: 10px; }
+        h1 { font-size: 22px; }
+        .lead { font-size: 15px; }
+        .bf-select { font-size: 15px; padding: 13px 10px; padding-right: 34px; }
+      }
+      /* 「その他」 系 の 短い 選択肢 で も 折返し 余地 確保 */
+      .opt > span {
+        min-width: 0;
+        flex: 1;
+      }
+    </style>
+
     <h1>FP相談 事前ヒアリング</h1>
     <div class="lead"><strong>13問</strong>に答えるだけ (約4分)。1問ずつ表示されます。</div>
     <div class="fp-name-badge" id="fp-name-badge"></div>
@@ -239,7 +276,7 @@
     <div class="step" data-step="10" data-field="q10_生年月日" data-multi="" data-text="1" data-slots="" style="display:none;">
       <div class="q-label"><span class="q-no">Q10</span>生年月日</div>
       <div class="q-sub">キャッシュフロー試算 や お子様の進学時期 算出 に使用いたします。</div>
-      <input type="date" name="q10_生年月日" max="2026-06-09" style="width:100%;padding:13px 14px;font-size:16px;border:1.5px solid #E2E8F0;border-radius:10px;background:#fff;">
+      <input type="date" name="q10_生年月日" id="birthdayInput" style="width:100%;padding:13px 14px;font-size:16px;border:1.5px solid #E2E8F0;border-radius:10px;background:#fff;">
     </div>
       
     <div class="step" data-step="11" data-field="q14_理想" data-multi="" data-text="1" data-slots="" style="display:none;">
@@ -264,7 +301,6 @@
       <div class="slot-row-selects">
         <select name="d1" class="bf-select" required>
           <option value="">日付を選ぶ</option>
-          <option value="2026-06-18">6月18日 (木)</option><option value="2026-06-19">6月19日 (金)</option><option value="2026-06-20">6月20日 (土)</option><option value="2026-06-21">6月21日 (日)</option><option value="2026-06-22">6月22日 (月)</option><option value="2026-06-23">6月23日 (火)</option><option value="2026-06-24">6月24日 (水)</option><option value="2026-06-25">6月25日 (木)</option><option value="2026-06-26">6月26日 (金)</option><option value="2026-06-27">6月27日 (土)</option><option value="2026-06-28">6月28日 (日)</option><option value="2026-06-29">6月29日 (月)</option><option value="2026-06-30">6月30日 (火)</option><option value="2026-07-01">7月1日 (水)</option>
         </select>
         <select name="t1" class="bf-select" required>
           <option value="">時間を選ぶ</option>
@@ -279,7 +315,6 @@
       <div class="slot-row-selects">
         <select name="d2" class="bf-select" required>
           <option value="">日付を選ぶ</option>
-          <option value="2026-06-18">6月18日 (木)</option><option value="2026-06-19">6月19日 (金)</option><option value="2026-06-20">6月20日 (土)</option><option value="2026-06-21">6月21日 (日)</option><option value="2026-06-22">6月22日 (月)</option><option value="2026-06-23">6月23日 (火)</option><option value="2026-06-24">6月24日 (水)</option><option value="2026-06-25">6月25日 (木)</option><option value="2026-06-26">6月26日 (金)</option><option value="2026-06-27">6月27日 (土)</option><option value="2026-06-28">6月28日 (日)</option><option value="2026-06-29">6月29日 (月)</option><option value="2026-06-30">6月30日 (火)</option><option value="2026-07-01">7月1日 (水)</option>
         </select>
         <select name="t2" class="bf-select" required>
           <option value="">時間を選ぶ</option>
@@ -294,7 +329,6 @@
       <div class="slot-row-selects">
         <select name="d3" class="bf-select" required>
           <option value="">日付を選ぶ</option>
-          <option value="2026-06-18">6月18日 (木)</option><option value="2026-06-19">6月19日 (金)</option><option value="2026-06-20">6月20日 (土)</option><option value="2026-06-21">6月21日 (日)</option><option value="2026-06-22">6月22日 (月)</option><option value="2026-06-23">6月23日 (火)</option><option value="2026-06-24">6月24日 (水)</option><option value="2026-06-25">6月25日 (木)</option><option value="2026-06-26">6月26日 (金)</option><option value="2026-06-27">6月27日 (土)</option><option value="2026-06-28">6月28日 (日)</option><option value="2026-06-29">6月29日 (月)</option><option value="2026-06-30">6月30日 (火)</option><option value="2026-07-01">7月1日 (水)</option>
         </select>
         <select name="t3" class="bf-select" required>
           <option value="">時間を選ぶ</option>
@@ -329,6 +363,46 @@
     </div>
 
     <script>
+    // 2026-08-19 Bug 1 fix: 日付 select を 動的 生成 (旧 は 6/18-7/1 hardcode で 過去 日付 しか 選べ ない bug)
+    //   翌日 から 60日 先 まで の 日付 を 3つ の select に 埋め込む
+    // 2026-08-19 生年月日 max も 動的化 (旧 は 2026-06-09 hardcode で 2ヶ月 遅れ)
+    (function setBirthdayMax(){
+      const b = document.getElementById('birthdayInput');
+      if (!b) return;
+      const now = new Date();
+      const y = now.getFullYear(), m = String(now.getMonth() + 1).padStart(2, '0'), d = String(now.getDate()).padStart(2, '0');
+      b.max = `${y}-${m}-${d}`;
+    })();
+
+    (function populateSlotDates(){
+      const WEEK = ['日','月','火','水','木','金','土'];
+      const now = new Date();
+      // 明日 の 0時 を 起点 (今日 は 選択 不可、 少なくとも 翌日 から)
+      const start = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+      const options = [];
+      for (let i = 0; i < 60; i++) {
+        const d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        const w = WEEK[d.getDay()];
+        const value = `${y}-${m}-${dd}`;
+        const label = `${d.getMonth() + 1}月${d.getDate()}日 (${w})`;
+        options.push(`<option value="${value}">${label}</option>`);
+      }
+      const optionsHtml = options.join('');
+      ['d1', 'd2', 'd3'].forEach(name => {
+        const sel = document.querySelector(`select[name="${name}"]`);
+        if (!sel) return;
+        // 既存 の placeholder (value="") 以外 を 全 削除 してから append
+        const placeholder = sel.querySelector('option[value=""]');
+        sel.innerHTML = '';
+        if (placeholder) sel.appendChild(placeholder);
+        else sel.insertAdjacentHTML('afterbegin', '<option value="">日付を選ぶ</option>');
+        sel.insertAdjacentHTML('beforeend', optionsHtml);
+      });
+    })();
+
     // ★ LIFF 早期 init — tenant の liffId を Cloud Function で取得 → liff.init → profile取得
     //   リッチメニュー など URLに ?uid= 無くても LINE内ブラウザなら userId/displayName/pictureUrl が拾える
     (async function initLiff(){
