@@ -1158,13 +1158,15 @@
     const clients = (window.DUMMY_CLIENTS || []);
     const ov = document.createElement('div');
     ov.id = 'fp-quick-inperson-modal';
-    ov.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.72);z-index:99999;display:flex;align-items:center;justify-content:center;font-family:"Hiragino Sans",sans-serif;';
+    // 2026-08-19 SP 途切れ fix: modal 外枠 に padding + overflow-y:auto、 card に max-height:90vh + inner scroll
+    //   (owner「対面選択してスクロールしても対面録画途切れてできない」 対応)
+    ov.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.72);z-index:99999;display:flex;align-items:flex-start;justify-content:center;padding:20px 0;overflow-y:auto;-webkit-overflow-scrolling:touch;font-family:"Hiragino Sans",sans-serif;';
     ov.innerHTML = `
-      <div style="background:#fff;border-radius:16px;max-width:480px;width:92%;padding:28px;box-shadow:0 32px 80px rgba(0,0,0,0.4);position:relative;">
+      <div style="background:#fff;border-radius:16px;max-width:480px;width:92%;padding:28px;box-shadow:0 32px 80px rgba(0,0,0,0.4);position:relative;max-height:calc(100vh - 40px);overflow-y:auto;-webkit-overflow-scrolling:touch;margin:auto;">
         <button id="fp-qi-close-top" aria-label="閉じる" style="position:absolute;top:12px;right:12px;background:transparent;border:none;font-size:26px;line-height:1;color:#6B7280;cursor:pointer;padding:4px 10px;border-radius:6px;font-weight:600;">×</button>
         <div style="font-size:11px;font-weight:800;color:#9A5A18;letter-spacing:0.14em;margin-bottom:6px;">QUICK START</div>
         <h2 style="font-size:20px;font-weight:800;color:#111827;margin:0 0 6px;font-family:'Noto Sans JP',sans-serif;">急遽 面談スタート</h2>
-        <p style="font-size:13px;color:#6b7280;line-height:1.65;margin:0 0 18px;">予約なしで お客様から相談が入った時はこちら。 <strong style="color:#9A5A18;">Zoom リンクを 即発行 して 双方参加</strong> · 対面 相談 でも Zoom 経由 で 録画 する 運用 (owner 明示 · 2026-08-18)。</p>
+        <p style="font-size:13px;color:#6b7280;line-height:1.65;margin:0 0 18px;">予約なしで お客様から相談が入った時はこちら。 <strong style="color:#9A5A18;">Zoom 送付</strong> · <strong style="color:#1E40AF;">対面 録音</strong> · <strong style="color:#6B7280;">メモ のみ</strong> の 3 通り から 選べます。</p>
 
         <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;letter-spacing:0.04em;margin-bottom:6px;">お客様を選択</label>
         <!-- ★ 2026-08-19: 旧 native select → カスタム list (LINE アバター/未連携 pill 表示、 owner「LINEのアイコンとか出ない」対応) -->
