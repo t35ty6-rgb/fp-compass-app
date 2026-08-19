@@ -171,15 +171,18 @@
         .card { padding: 22px 16px; }
         .q-label { font-size: 18px; letter-spacing: -0.01em; line-height: 1.35; }
         .q-sub { font-size: 13px; }
-        /* opts-3col は SP で 収まらない ので 2col に fallback */
-        .opts.opts-3col { grid-template-columns: 1fr 1fr; }
-        /* opt card padding + font 縮小、 折返し 許可 */
+        /* SP で は 全 opts を 1col 縦並び に (金額/長 label の 折返し 崩れ 防止) */
+        .opts,
+        .opts.opts-2col,
+        .opts.opts-3col { grid-template-columns: 1fr; gap: 8px; }
+        /* opt card padding + font 縮小、 縦並び で 折返し 発生 しない */
         .opt {
-          padding: 14px 12px;
+          padding: 14px 14px;
           font-size: 15px;
           min-height: 52px;
-          word-break: keep-all;
-          overflow-wrap: break-word;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
           line-height: 1.35;
         }
         .opt input { width: 18px; height: 18px; }
