@@ -11461,20 +11461,41 @@ STEP C: 結果報告
       try { overlay.remove(); } catch(_) {}
     };
     // ★ 2026-08-20 緊急 close handler (owner「何もさわれない」対応、 Zoom load 詰まり escape)
+    //   qa-reviewer FAIL#1 fix: iOS Safari / LINE 内 browser で window.confirm() が silent
+    //   return false する 既知 bug (endBtn L11467 と 同じ理由) → 2-step click pattern で 対応
     const forceCloseBtn = document.getElementById('fp-inperson-force-close');
+    let forceClosePending = false;
+    let forceCloseResetIv = null;
     if (forceCloseBtn) {
       forceCloseBtn.addEventListener('click', () => {
-        if (!confirm('録音 を 破棄 して 閉じます。 議事録 は 保存 されません。 続行 しますか?')) return;
+        if (!forceClosePending) {
+          forceClosePending = true;
+          forceCloseBtn.textContent = '⚠ もう一度 押す と 閉じる';
+          forceCloseBtn.style.background = 'rgba(220,38,38,0.5)';
+          forceCloseBtn.style.color = '#fff';
+          forceCloseResetIv = setTimeout(() => {
+            forceClosePending = false;
+            forceCloseBtn.textContent = '✕ 緊急 閉じる';
+            forceCloseBtn.style.background = 'rgba(220,38,38,0.14)';
+            forceCloseBtn.style.color = '#FCA5A5';
+          }, 4000);
+          return;
+        }
+        if (forceCloseResetIv) clearTimeout(forceCloseResetIv);
         try { cleanup(); } catch (_) {}
+        document.removeEventListener('keydown', _escInpersonHandler);
       });
     }
-    // Escape key で も 緊急 close (PC 用)
+    // Escape key で も 緊急 close (PC 用) · 2-step は Escape 押しにくい ので confirm 済み扱い
     const _escInpersonHandler = (e) => {
       if (e.key === 'Escape' && document.body.contains(overlay)) {
-        if (confirm('録音 を 破棄 して 閉じます。 続行 しますか?')) {
-          try { cleanup(); } catch (_) {}
-          document.removeEventListener('keydown', _escInpersonHandler);
+        // 2-step: 1回目 で pending 発火、 2回目 or 4秒 以内 の Escape で 実 close
+        if (!forceClosePending && forceCloseBtn) {
+          forceCloseBtn.click(); // 1回目 の Escape → 2-step の 1回目 として 扱う
+          return;
         }
+        try { cleanup(); } catch (_) {}
+        document.removeEventListener('keydown', _escInpersonHandler);
       }
     };
     document.addEventListener('keydown', _escInpersonHandler);
