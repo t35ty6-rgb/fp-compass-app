@@ -11350,7 +11350,9 @@ STEP C: 結果報告
     //   full ⇄ mini toggle は 何度 でも 切替 可 · 録音 は 中断 なし
     const overlay = document.createElement('div');
     overlay.id = 'fp-inperson-recording';
-    overlay.dataset.mode = 'full';
+    // 2026-08-20 owner「デフォルトで縮小バージョンでいいよ」明示 · 起動 直後 から mini 浮遊 widget で 開始
+    // full 表示 が 必要 な 時 は widget の 「⛶ 拡大」 button で いつでも 切替可
+    overlay.dataset.mode = 'mini';
     overlay.style.cssText = 'position:fixed;inset:0;background:linear-gradient(135deg,#0F172A 0%,#1E3A5F 100%);z-index:10250;display:flex;align-items:center;justify-content:center;padding:24px;font-family:"Noto Sans JP",-apple-system,sans-serif;color:#fff;transition:none;';
     overlay.innerHTML = `
       <div class="fp-full-only" style="max-width:520px;width:100%;text-align:center;">
