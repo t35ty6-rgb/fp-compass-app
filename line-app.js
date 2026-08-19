@@ -1317,20 +1317,9 @@
       }
       const mode = ov.querySelector('input[name="fp-qi-mode"]:checked')?.value || 'zoom';
       const inpersonTs = 'quick-' + Date.now();
-      // ★ 2026-08-04 iOS Safari fix: user gesture 消失 対策
-      //   後 の await addDoc / import を 挟むと iOS Safari が gesture context を 失い、
-      //   getUserMedia が SecurityError で reject される known bug。
-      //   audio mode の 場合 は button click の 直後 に getUserMedia を 呼び、 stream を 引き継ぐ。
-      let earlyAudioStream = null;
-      if (mode === 'audio') {
-        try {
-          const constraint = { echoCancellation: true, noiseSuppression: true, sampleRate: 44100 };
-          earlyAudioStream = await navigator.mediaDevices.getUserMedia({ audio: constraint });
-        } catch (permErr) {
-          alert('🎤 マイク アクセス できません\n\niPhone/iPad: 設定 → Safari → マイク で 「許可」 を ON\nMac: システム設定 → プライバシーとセキュリティ → マイク で ブラウザ を ON\n\n技術詳細: ' + (permErr?.name || permErr?.message || permErr));
-          return;
-        }
-      }
+      // 2026-08-20 owner「機能同じなのでUI合わせて」 対応: audio mode を startInPersonRecording (Zoom stealth) に 統合
+      //   顧客カード の 「対面 で 商談」 button と 同 実装 → UI 統一 · 挙動 統一
+      //   earlyAudioStream の 事前 getUserMedia は 不要 (startInPersonRecording 内 で startMicMeter が 実行)
       // ★ 2026-06-22 roundM: 新規お客様 (clientId が quick-) で 録音/メモ モード時は、
       //   先に Firestore に customer doc を 作成して resolvedClientId を 取得 → 顧客台帳 自動反映
       let effectiveClientId = clientId;
@@ -1358,7 +1347,17 @@
       ov.remove();
       // モード分岐
       if (mode === 'zoom')        await startQuickZoom(effectiveClientId, clientName);
-      else if (mode === 'audio')  await startAudioOnlyRecording(inpersonTs, earlyAudioStream);
+      else if (mode === 'audio')  {
+        // 2026-08-20 統合: 顧客カード の 「対面 で 商談」 と 同 実装 (startInPersonRecording · Zoom stealth)
+        //   fallback: startInPersonRecording 未定義 なら 旧 startAudioOnlyRecording (Firestore 未初期化 環境 等)
+        if (typeof window.startInPersonRecording === 'function') {
+          await window.startInPersonRecording({ id: effectiveClientId, _fsCustomerId: effectiveClientId, name: clientName });
+        } else if (typeof startInPersonRecording === 'function') {
+          await startInPersonRecording({ id: effectiveClientId, _fsCustomerId: effectiveClientId, name: clientName });
+        } else {
+          await startAudioOnlyRecording(inpersonTs);
+        }
+      }
       else                        await openMemoOnlyForQuick(inpersonTs, effectiveClientId, clientName);
     });
   }

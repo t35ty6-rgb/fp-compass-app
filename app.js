@@ -11342,6 +11342,8 @@ STEP C: 結果報告
   //   ステルス popup (300x180 · 左下 隅) で 開く · 客 側 に は 見えない ように 隅 配置
   //   FP Compass main window に 「🎙 面談 記録 中」 の 大 overlay 表示 · owner は これ を 客 に 見せる
   //   終了 button で ステルス window close + overlay 撤去
+  // 2026-08-20: line-app.js の 急遽 modal audio mode から も 呼べる よう window に expose
+  window.startInPersonRecording = startInPersonRecording;
   async function startInPersonRecording(client) {
     // FP Compass 側 大 overlay を 先 に 出す (loading 中 でも 「待って いる」 意図 が 伝わる)
     const overlay = document.createElement('div');
@@ -11377,6 +11379,8 @@ STEP C: 結果報告
       </div>
       <!-- ★ 2026-08-11 owner「Zoom 実際 動いてる か 見えない」対応: 右上 隅 の 小 button で iframe を 可視化 (owner 目視 確認 用) -->
       <button id="fp-inperson-debug" style="position:absolute;top:14px;right:14px;background:rgba(255,255,255,0.06);color:#94A3B8;border:1px solid rgba(255,255,255,0.14);padding:7px 12px;border-radius:6px;font-family:inherit;font-size:11.5px;font-weight:700;cursor:pointer;letter-spacing:0.02em;">🔍 Zoom 動作 確認</button>
+      <!-- ★ 2026-08-20 owner「何もさわれない」対応 · 緊急 escape hatch (Zoom 起動 fail / iframe 詰まり で 通常 end button が disabled で 抜け出せない bug の 恒久 escape) -->
+      <button id="fp-inperson-force-close" title="緊急 閉じる (録音 は 保存 されません)" style="position:absolute;top:14px;left:14px;background:rgba(220,38,38,0.14);color:#FCA5A5;border:1px solid rgba(220,38,38,0.35);padding:7px 12px;border-radius:6px;font-family:inherit;font-size:11.5px;font-weight:800;cursor:pointer;letter-spacing:0.02em;">✕ 緊急 閉じる</button>
       <style>@keyframes fpRecPulse { 0%,100%{opacity:1;transform:scale(1);} 50%{opacity:0.6;transform:scale(1.35);} }</style>
     `;
     document.body.appendChild(overlay);
@@ -11456,6 +11460,24 @@ STEP C: 結果報告
       stopMicMeter();
       try { overlay.remove(); } catch(_) {}
     };
+    // ★ 2026-08-20 緊急 close handler (owner「何もさわれない」対応、 Zoom load 詰まり escape)
+    const forceCloseBtn = document.getElementById('fp-inperson-force-close');
+    if (forceCloseBtn) {
+      forceCloseBtn.addEventListener('click', () => {
+        if (!confirm('録音 を 破棄 して 閉じます。 議事録 は 保存 されません。 続行 しますか?')) return;
+        try { cleanup(); } catch (_) {}
+      });
+    }
+    // Escape key で も 緊急 close (PC 用)
+    const _escInpersonHandler = (e) => {
+      if (e.key === 'Escape' && document.body.contains(overlay)) {
+        if (confirm('録音 を 破棄 して 閉じます。 続行 しますか?')) {
+          try { cleanup(); } catch (_) {}
+          document.removeEventListener('keydown', _escInpersonHandler);
+        }
+      }
+    };
+    document.addEventListener('keydown', _escInpersonHandler);
     // ★ 2026-08-11 qa FAIL #1 対応: window.confirm() は iOS Safari / LINE 内 browser で
     //   silent return false になる 場合 が ある → 2-step click に 変更 (「もう 一度 押す と 終了」)
     let endConfirmPending = false;
