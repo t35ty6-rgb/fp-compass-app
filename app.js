@@ -6739,7 +6739,9 @@
             <div class="cd-profile-kana">${escapeHtml(c.kana)}</div>
             <div class="cd-profile-pills">
               <span class="status-pill ${c.status}">${statusLabel(c.status)}</span>
-              ${c.lineFriendId ? '<span class="cd-line-pill"><i data-lucide="message-circle"></i>LINE連携</span>' : ''}
+              ${c.lineFriendId
+                ? '<span class="cd-line-pill"><i data-lucide="message-circle"></i>LINE連携</span>'
+                : '<span class="cd-line-pill" style="background:#FEF3C7;color:#92400E;border:1px solid #FDE68A;" title="この 客 は 公式 LINE に 友だち追加 して ない ため、 admin から の LINE 送信 は できません。 客 に 友だち追加 URL / QR を 案内 する か、 情報編集 で LINE friend ID を 手動 登録 して ください。"><i data-lucide="alert-triangle"></i>LINE 未連携</span>'}
               ${(function(){
                 // ★ オーナーfb: ステータスpill 並びにタグも表示
                 const master = getTagsMaster();
@@ -8127,7 +8129,11 @@ ${ctxText}${surveyTxt}`;
     if (instantBtn) {
       instantBtn.addEventListener('click', async () => {
         const status = document.getElementById('cd-instant-zoom-status');
-        if (!confirm(c.name + ' 様 に 「今すぐ Zoom 開始」 します。\n\n・Zoom Instant Meeting が 作成されます\n・URL が LINE で 即送信されます\n・ FP の Zoom が この後 新タブで 開きます (録画ON)\n\nよろしいですか?')) return;
+        const _hasLine = !!c.lineFriendId;
+        const _lineLine = _hasLine
+          ? '・URL が LINE で 即送信されます'
+          : '・⚠ LINE 未連携 の 客 のため LINE 送信 skip (Zoom URL は copy or 電話 案内 で 客 に 伝えて ください)';
+        if (!confirm(c.name + ' 様 に 「今すぐ Zoom 開始」 します。\n\n・Zoom Instant Meeting が 作成されます\n' + _lineLine + '\n・ FP の Zoom が この後 新タブで 開きます (録画ON)\n\nよろしいですか?')) return;
         const origHtml = instantBtn.innerHTML;
         instantBtn.disabled = true;
         instantBtn.style.opacity = '0.7';
