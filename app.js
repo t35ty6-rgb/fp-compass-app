@@ -11404,14 +11404,7 @@ STEP C: 結果報告
         #fp-inperson-recording[data-mode="mini"] .fp-full-only { display: none !important; }
         #fp-inperson-recording[data-mode="mini"] #fp-inperson-debug,
         #fp-inperson-recording[data-mode="mini"] #fp-inperson-force-close { display: none !important; }
-        #fp-inperson-recording[data-mode="mini"] #fp-inperson-minimize {
-          position: static !important;
-          background: transparent !important;
-          border: none !important;
-          color: #93C5FD !important;
-          padding: 0 !important;
-          font-size: 11px !important;
-        }
+        #fp-inperson-recording[data-mode="mini"] #fp-inperson-minimize { display: none !important; }
         #fp-inperson-recording[data-mode="mini"] #fp-mini-content { display: flex !important; }
         #fp-inperson-recording[data-mode="full"] #fp-mini-content { display: none !important; }
       </style>
