@@ -11583,6 +11583,26 @@ STEP C: 結果報告
       setTimeout(() => toast.remove(), 6000);
     });
 
+    // ★ 2026-08-20 qa FAIL#1/#2 fix: miniEndBtn listener を try 外 に 移動 (Zoom fail path でも 有効)
+    //   + text sync (miniEndBtn の text を endBtn と 同期 して 「⚠ もう一度」 の visual feedback を mini でも 出す)
+    const miniEndBtn = document.getElementById('fp-mini-end');
+    if (miniEndBtn) {
+      miniEndBtn.addEventListener('click', () => {
+        endBtn.click();
+        // endBtn の text 変化 (2-step の 「⚠ もう一度」) を mini 側 に 同期
+        setTimeout(() => {
+          if (miniEndBtn && endBtn) miniEndBtn.textContent = endConfirmPending ? '⚠ もう一度 押す と 終了' : (endBtn.textContent || '⏹ 面談 終了');
+        }, 30);
+      });
+      // 4秒 reset で mini 側 の text も 戻す (endBtn の setTimeout timing に 合わせる)
+      const _miniTextResetIv = setInterval(() => {
+        if (!document.body.contains(overlay)) { clearInterval(_miniTextResetIv); return; }
+        if (miniEndBtn && !endConfirmPending && miniEndBtn.textContent && miniEndBtn.textContent.includes('⚠')) {
+          miniEndBtn.textContent = '⏹ 面談 終了 (録音 停止)';
+        }
+      }, 500);
+    }
+
     try {
       status.textContent = 'Zoom 準備 中…';
       const { initializeApp, getApps } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js');
@@ -11648,12 +11668,10 @@ STEP C: 結果報告
         if (timerEl) timerEl.textContent = t;
         if (miniTimer) miniTimer.textContent = t;
       }, 1000);
-      // mini end button も enabled にする (endBtn と 同 click 経路)
-      const miniEndBtn = document.getElementById('fp-mini-end');
+      // mini end button の enable のみ (listener は try 外 で 既 登録)
       if (miniEndBtn) {
         miniEndBtn.disabled = false;
         miniEndBtn.style.opacity = '1';
-        miniEndBtn.addEventListener('click', () => endBtn.click()); // 同 2-step click flow を 経由
       }
     } catch (e) {
       console.error('[startInPersonRecording]', e);
@@ -11662,6 +11680,12 @@ STEP C: 結果報告
       endBtn.disabled = false;
       endBtn.style.opacity = '1';
       endBtn.textContent = '× 閉じる';
+      // ★ 2026-08-20 qa FAIL#1 fix: catch でも miniEndBtn を enable + text 同期
+      if (miniEndBtn) {
+        miniEndBtn.disabled = false;
+        miniEndBtn.style.opacity = '1';
+        miniEndBtn.textContent = '× 閉じる';
+      }
     }
   }
 
