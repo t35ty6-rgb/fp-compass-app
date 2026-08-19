@@ -11345,12 +11345,15 @@ STEP C: 結果報告
   // 2026-08-20: line-app.js の 急遽 modal audio mode から も 呼べる よう window に expose
   window.startInPersonRecording = startInPersonRecording;
   async function startInPersonRecording(client) {
-    // FP Compass 側 大 overlay を 先 に 出す (loading 中 でも 「待って いる」 意図 が 伝わる)
+    // 2026-08-20 owner「録音してる間にFPコンパス触れない」対応:
+    //   overlay に 「最小化」 button 追加 · 最小化 で 右下 浮遊 widget 化 = admin panel 完全 操作可能
+    //   full ⇄ mini toggle は 何度 でも 切替 可 · 録音 は 中断 なし
     const overlay = document.createElement('div');
     overlay.id = 'fp-inperson-recording';
-    overlay.style.cssText = 'position:fixed;inset:0;background:linear-gradient(135deg,#0F172A 0%,#1E3A5F 100%);z-index:10250;display:flex;align-items:center;justify-content:center;padding:24px;font-family:"Noto Sans JP",-apple-system,sans-serif;color:#fff;';
+    overlay.dataset.mode = 'full';
+    overlay.style.cssText = 'position:fixed;inset:0;background:linear-gradient(135deg,#0F172A 0%,#1E3A5F 100%);z-index:10250;display:flex;align-items:center;justify-content:center;padding:24px;font-family:"Noto Sans JP",-apple-system,sans-serif;color:#fff;transition:none;';
     overlay.innerHTML = `
-      <div style="max-width:520px;width:100%;text-align:center;">
+      <div class="fp-full-only" style="max-width:520px;width:100%;text-align:center;">
         <div style="width:120px;height:120px;background:rgba(220,38,38,0.15);border:3px solid #DC2626;border-radius:50%;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;font-size:52px;position:relative;">
           🎙
           <span id="fp-rec-dot" style="position:absolute;top:8px;right:8px;width:14px;height:14px;background:#DC2626;border-radius:50%;box-shadow:0 0 12px rgba(220,38,38,0.8);animation:fpRecPulse 1.4s ease-in-out infinite;"></span>
@@ -11379,9 +11382,52 @@ STEP C: 結果報告
       </div>
       <!-- ★ 2026-08-11 owner「Zoom 実際 動いてる か 見えない」対応: 右上 隅 の 小 button で iframe を 可視化 (owner 目視 確認 用) -->
       <button id="fp-inperson-debug" style="position:absolute;top:14px;right:14px;background:rgba(255,255,255,0.06);color:#94A3B8;border:1px solid rgba(255,255,255,0.14);padding:7px 12px;border-radius:6px;font-family:inherit;font-size:11.5px;font-weight:700;cursor:pointer;letter-spacing:0.02em;">🔍 Zoom 動作 確認</button>
-      <!-- ★ 2026-08-20 owner「何もさわれない」対応 · 緊急 escape hatch (Zoom 起動 fail / iframe 詰まり で 通常 end button が disabled で 抜け出せない bug の 恒久 escape) -->
+      <!-- ★ 2026-08-20 owner「何もさわれない」対応 · 緊急 escape hatch -->
       <button id="fp-inperson-force-close" title="緊急 閉じる (録音 は 保存 されません)" style="position:absolute;top:14px;left:14px;background:rgba(220,38,38,0.14);color:#FCA5A5;border:1px solid rgba(220,38,38,0.35);padding:7px 12px;border-radius:6px;font-family:inherit;font-size:11.5px;font-weight:800;cursor:pointer;letter-spacing:0.02em;">✕ 緊急 閉じる</button>
-      <style>@keyframes fpRecPulse { 0%,100%{opacity:1;transform:scale(1);} 50%{opacity:0.6;transform:scale(1.35);} }</style>
+      <!-- ★ 2026-08-20 owner「録音してる間にFPコンパス触れない」対応 · 最小化 button (mini widget に 変換) -->
+      <button id="fp-inperson-minimize" title="最小化 (録音は継続、admin panel 操作可)" style="position:absolute;top:14px;left:135px;background:rgba(59,130,246,0.14);color:#93C5FD;border:1px solid rgba(59,130,246,0.35);padding:7px 12px;border-radius:6px;font-family:inherit;font-size:11.5px;font-weight:800;cursor:pointer;letter-spacing:0.02em;">— 最小化</button>
+      <style>
+        @keyframes fpRecPulse { 0%,100%{opacity:1;transform:scale(1);} 50%{opacity:0.6;transform:scale(1.35);} }
+        /* mini widget state */
+        #fp-inperson-recording[data-mode="mini"] {
+          inset: auto !important;
+          bottom: 20px !important;
+          right: 20px !important;
+          width: 280px !important;
+          height: auto !important;
+          padding: 14px 16px !important;
+          border-radius: 14px !important;
+          box-shadow: 0 12px 40px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.08) !important;
+          background: linear-gradient(135deg,#0F172A 0%,#1E3A5F 100%) !important;
+          display: block !important;
+        }
+        #fp-inperson-recording[data-mode="mini"] .fp-full-only { display: none !important; }
+        #fp-inperson-recording[data-mode="mini"] #fp-inperson-debug,
+        #fp-inperson-recording[data-mode="mini"] #fp-inperson-force-close { display: none !important; }
+        #fp-inperson-recording[data-mode="mini"] #fp-inperson-minimize {
+          position: static !important;
+          background: transparent !important;
+          border: none !important;
+          color: #93C5FD !important;
+          padding: 0 !important;
+          font-size: 11px !important;
+        }
+        #fp-inperson-recording[data-mode="mini"] #fp-mini-content { display: flex !important; }
+        #fp-inperson-recording[data-mode="full"] #fp-mini-content { display: none !important; }
+      </style>
+      <!-- mini widget content (最小化時 のみ 表示) -->
+      <div id="fp-mini-content" style="display:none;flex-direction:column;gap:10px;color:#fff;font-family:'Noto Sans JP',-apple-system,sans-serif;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+          <div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1;">
+            <span style="width:10px;height:10px;background:#DC2626;border-radius:50%;box-shadow:0 0 10px rgba(220,38,38,0.9);animation:fpRecPulse 1.4s ease-in-out infinite;flex-shrink:0;"></span>
+            <span style="font-size:11px;font-weight:800;color:#FCA5A5;letter-spacing:0.06em;">録音 中</span>
+            <span id="fp-mini-timer" style="font-size:13.5px;font-weight:900;color:#fff;margin-left:auto;font-variant-numeric:tabular-nums;font-family:'JetBrains Mono',ui-monospace,monospace;">00:00</span>
+          </div>
+          <button id="fp-inperson-restore" title="全画面 に 戻す" style="background:rgba(59,130,246,0.14);color:#93C5FD;border:1px solid rgba(59,130,246,0.35);padding:4px 8px;border-radius:5px;font-family:inherit;font-size:10.5px;font-weight:800;cursor:pointer;flex-shrink:0;">⛶ 拡大</button>
+        </div>
+        <div style="font-size:12.5px;font-weight:700;color:#DBEAFE;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(client.name || 'お客様')} 様 の 面談</div>
+        <button id="fp-mini-end" disabled style="background:#DC2626;color:#fff;border:none;padding:9px 12px;border-radius:7px;font-family:inherit;font-size:12.5px;font-weight:800;cursor:pointer;letter-spacing:0.02em;opacity:0.6;">⏹ 面談 終了 (録音 停止)</button>
+      </div>
     `;
     document.body.appendChild(overlay);
 
@@ -11499,6 +11545,20 @@ STEP C: 結果報告
       }
     };
     document.addEventListener('keydown', _escInpersonHandler);
+    // 2026-08-20 最小化 / 復元 toggle (mini widget ↔ full)
+    const minimizeBtn = document.getElementById('fp-inperson-minimize');
+    if (minimizeBtn) {
+      minimizeBtn.addEventListener('click', () => {
+        overlay.dataset.mode = 'mini';
+      });
+    }
+    // mini widget の 「⛶ 拡大」 button (DOM 上 存在、 mini 時 のみ 表示)
+    const restoreBtn = document.getElementById('fp-inperson-restore');
+    if (restoreBtn) {
+      restoreBtn.addEventListener('click', () => {
+        overlay.dataset.mode = 'full';
+      });
+    }
     // ★ 2026-08-11 qa FAIL #1 対応: window.confirm() は iOS Safari / LINE 内 browser で
     //   silent return false になる 場合 が ある → 2-step click に 変更 (「もう 一度 押す と 終了」)
     let endConfirmPending = false;
@@ -11589,9 +11649,19 @@ STEP C: 結果報告
         const secs = Math.floor((Date.now() - startedAt) / 1000);
         const mm = String(Math.floor(secs / 60)).padStart(2, '0');
         const ss = String(secs % 60).padStart(2, '0');
+        const t = `${mm}:${ss}`;
         const timerEl = document.getElementById('fp-inperson-timer');
-        if (timerEl) timerEl.textContent = `${mm}:${ss}`;
+        const miniTimer = document.getElementById('fp-mini-timer');
+        if (timerEl) timerEl.textContent = t;
+        if (miniTimer) miniTimer.textContent = t;
       }, 1000);
+      // mini end button も enabled にする (endBtn と 同 click 経路)
+      const miniEndBtn = document.getElementById('fp-mini-end');
+      if (miniEndBtn) {
+        miniEndBtn.disabled = false;
+        miniEndBtn.style.opacity = '1';
+        miniEndBtn.addEventListener('click', () => endBtn.click()); // 同 2-step click flow を 経由
+      }
     } catch (e) {
       console.error('[startInPersonRecording]', e);
       status.style.color = '#FCA5A5';
