@@ -8157,6 +8157,12 @@ ${ctxText}${surveyTxt}`;
         instantBtn.style.opacity = '0.7';
         instantBtn.style.cursor = 'wait';
         status.style.color = '#2D8CFF'; status.textContent = '⏳ Zoom Meeting 作成中 + LINE 送信中…';
+        // 2026-08-20 qa WARN 対応: gesture 保持 (about:blank 先行 open) — startInPersonRecording と 同 pattern
+        //   Safari で await 3回 後 の window.open は 100% blocked → try 冒頭 で 保持 して 後 で URL 差替
+        let _instantPreOpenedWin = null;
+        try {
+          _instantPreOpenedWin = window.open('about:blank', 'fp-instant-zoom-' + Date.now());
+        } catch (_) {}
         try {
           const { initializeApp, getApps } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js');
           const { getFunctions, httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-functions.js');
@@ -8187,7 +8193,13 @@ ${ctxText}${surveyTxt}`;
                 window.armTabRecorder(fsCustomerId, c.name, window.currentTenantId);
               }
             } catch (e) { console.warn('armTabRecorder failed:', e); }
-            window.open(forceWebUrl, '_blank');
+            // 2026-08-20 gesture 保持 pattern: 先行 open した window を URL 差替 (Safari 対策)
+            if (_instantPreOpenedWin && !_instantPreOpenedWin.closed) {
+              try { _instantPreOpenedWin.location.href = forceWebUrl; }
+              catch (_) { window.open(forceWebUrl, '_blank'); }
+            } else {
+              window.open(forceWebUrl, '_blank');
+            }
             if (data.lineSent) {
               status.style.color = '#059669';
               status.textContent = '✅ LINE 送付完了 / FP の Zoom を 別タブ で 開きました (Meeting ID: ' + (data.meetingId || '?') + ')';
