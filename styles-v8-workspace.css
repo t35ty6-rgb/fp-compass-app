@@ -9173,16 +9173,26 @@ body.modal-open {
   }
   /* distributionHub view の min-width 解除 */
   [data-line-view="distributionHub"] { min-width: 0 !important; max-width: 100% !important; }
-  /* 配信タブ内 サブタブ button (今日送る/予定/テンプレ/送信ログ) を 横並び 表示 */
-  [data-line-view="distributionHub"] > div:first-child {
-    flex-wrap: wrap !important;
+  /* 配信タブ内 サブタブ button (今日送る/予定/テンプレ/送信ログ) を 横並び 表示
+     2026-08-20 fix: div:first-child は 「銃明バナー」を 誤 target してた
+       → :has(> [data-dist-subtab]) で サブタブ 親 を 正確 に 特定、
+       flex-wrap:wrap で 縦字化 に なってた の を 横スクロール 一行 に */
+  [data-line-view="distributionHub"] > div:has(> [data-dist-subtab]) {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
     gap: 6px !important;
+    padding-bottom: 4px !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
   }
+  [data-line-view="distributionHub"] > div:has(> [data-dist-subtab])::-webkit-scrollbar { display: none; }
   [data-line-view="distributionHub"] [data-dist-subtab] {
     padding: 10px 14px !important;
     font-size: 12.5px !important;
     min-height: 44px !important;
-    flex: 1 1 auto !important;
+    flex: 0 0 auto !important;
+    white-space: nowrap !important;
   }
 
   /* D. 設定 セクションヘッダ 紫×紫 解消 */
@@ -10294,12 +10304,41 @@ body.modal-open {
     flex-shrink: 0 !important;
     cursor: pointer !important;
   }
-  /* cd-close は fixed 配置 でスクロール しても 常に viewport 右上 */
+  /* cd-close は fixed 配置 でスクロール しても 常に viewport 右上
+     2026-08-20 owner「戻るボタンがない、 分かりづらい」対応:
+       携帯 で は 「× アイコン だけ の 右上 円」 を 「‹ 戻る」 pill に 差替え、 iOS Nav Bar 慣習 に 寄せる */
   .cd-modal .cd-close {
     position: fixed !important;
     top: max(12px, env(safe-area-inset-top, 12px)) !important;
-    right: 12px !important;
-    box-shadow: 0 4px 12px rgba(15,23,42,0.15) !important;
+    right: auto !important;
+    left: 10px !important;
+    width: auto !important;
+    min-width: 0 !important;
+    height: 40px !important;
+    min-height: 40px !important;
+    padding: 0 14px 0 8px !important;
+    border-radius: 999px !important;
+    background: rgba(255,255,255,0.96) !important;
+    color: #0F172A !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.02em !important;
+    gap: 4px !important;
+    box-shadow: 0 4px 14px rgba(15,23,42,0.18) !important;
+    backdrop-filter: saturate(180%) blur(12px);
+    -webkit-backdrop-filter: saturate(180%) blur(12px);
+  }
+  /* × icon は 隠して chevron-left + 「戻る」 label で 置換 */
+  .cd-modal .cd-close i[data-lucide],
+  .cd-modal .cd-close svg.lucide { display: none !important; }
+  .cd-modal .cd-close::before {
+    content: '‹ 戻る' !important;
+    display: inline !important;
+    font-family: -apple-system, 'Hiragino Sans', 'Noto Sans JP', sans-serif !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.02em !important;
+    color: #0F172A !important;
   }
   /* zoom-sch modal の ✕ は hero header 内に 維持 */
   div[style*="z-index: 10200"] [id$="-close"] {

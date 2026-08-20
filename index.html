@@ -45,6 +45,15 @@
 <!--   どちらも DOMContentLoaded 後ハイドレートで OK (lucide: setInterval scan / chart: tryRender polling) -->
 <script defer src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<!-- ★ 2026-08-20 owner「認証中 で 5分 待たされる」fix:
+     旧: 認証後 に fpReadyAfterAuth で critical scripts を 直列 fetch → mobile 4G で 5-8 秒
+     新: login 画面 表示 中 に 平行 preload (browser cache に 入れる、 実行 は 認証後) → 認証後 は 実質 0秒 -->
+<link rel="preload" as="script" href="life-events.js?v=20260819A-inperson-restored">
+<link rel="preload" as="script" href="recommender.js?v=20260819A-inperson-restored">
+<link rel="preload" as="script" href="line-data.js?v=20260819A-inperson-restored">
+<link rel="preload" as="script" href="recording-persist.js?v=20260819A-inperson-restored">
+<link rel="preload" as="script" href="app.js?v=20260819A-inperson-restored">
+<link rel="preload" as="script" href="line-app.js?v=20260819A-inperson-restored">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -507,13 +516,18 @@
 
   // ===== 認証状態の監視 + Firestore からデータ読み込み =====
   let signupInProgress = false;
-  async function loadTenantData(tenantId) {
+  async function loadTenantData(tenantId, onProgress) {
     // ★ オーナーfb 2026-06-24 (重さ解消):
     //   旧: 全顧客 × 全 line_messages を 初回ロードで 一括読込 → 顧客100名×msg100通=10,000docs で 重くなる
     //   新: 初回は 顧客リスト + 最新20件 LINE のみ。 残り (= 顧客モーダル open 時) に lazy load
+    // ★ owner「認証中 5分」 fix 2026-08-20:
+    //   旧: for-loop 直列 await (顧客N人 × 2subquery = 逐次 N*RTT)
+    //   新: Promise.all 全並列 (顧客N人 で 1 RTT) → 9客 5sec → ~700ms
     const snap = await getDocs(collection(db, "tenants", tenantId, "customers"));
-    const list = [];
-    for (const d of snap.docs) {
+    const total = snap.docs.length;
+    if (onProgress) onProgress(0, total);
+    let done = 0;
+    const list = await Promise.all(snap.docs.map(async d => {
       const c = { id: d.id, ...d.data() };
       if (c.pictureUrl && !c.linePictureUrl) c.linePictureUrl = c.pictureUrl;
       // ★ 初期ロード は 最新20件 + cancellations のみ (キャンセル件数は通常 少ない)
@@ -528,8 +542,10 @@
       c.lineHistory = recent20;
       c._lineHistoryPartial = recent20.length === 20; // フル取得 が 必要なら lazy load
       c.cancellations = cxlSnap ? cxlSnap.docs.map(x => x.data()).sort((a,b) => (a.idx||0) - (b.idx||0)) : [];
-      list.push(c);
-    }
+      done++;
+      if (onProgress) onProgress(done, total);
+      return c;
+    }));
     return list;
   }
 
@@ -669,8 +685,11 @@
 
     try {
       console.log("[fp diag] loadTenantData start", { tenantId: window.__fp.tenantId, uid: user.uid });
-      const clients = await loadTenantData(window.__fp.tenantId);
-      console.log("[fp diag] loadTenantData success", { count: clients.length });
+      const _tLoad0 = Date.now();
+      const clients = await loadTenantData(window.__fp.tenantId, (done, total) => {
+        if (total > 0) msg("ok", `${window.__fp.tenantName} の 顧客 データ 読込中… ${done} / ${total}`);
+      });
+      console.log("[fp diag] loadTenantData success", { count: clients.length, ms: Date.now() - _tLoad0 });
       window.DUMMY_CLIENTS = clients;
       window.DUMMY_CLIENTS_VERSION = `firestore-${window.__fp.tenantId}`;
       window.UPCOMING_BOOKINGS = window.UPCOMING_BOOKINGS || [];
