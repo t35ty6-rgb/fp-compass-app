@@ -11411,10 +11411,18 @@ STEP C: 結果報告
       clearInterval(elapsedIv);
       badge.remove();
       const b = _minutesBadges.get(cid);
-      if (b && b.unsubscribe) try { b.unsubscribe(); } catch (_) {}
+      if (b) {
+        b.aborted = true; // BUG#3: 未 立ち上げ の listener 中断 signal
+        if (b.unsubscribe) try { b.unsubscribe(); } catch (_) {}
+      }
       _minutesBadges.delete(cid);
     });
     container.appendChild(badge);
+
+    // 2026-08-20 qa BUG#3 fix: placeholder set を import 前 に 追加。 ✕ close race で listener leak しない よう
+    //   entry.aborted=true で listener 生成 前 の 中断 検知
+    const entry = { el: badge, unsubscribe: null, startedAt, aborted: false };
+    _minutesBadges.set(cid, entry);
 
     // Firestore watcher: 該当 客 の meetings/recordings で minutes 生成 検知
     let unsubscribe = null;
@@ -11422,6 +11430,7 @@ STEP C: 結果報告
       const tid = window.__fp?.tenantId;
       if (tid && window.__fp?.db) {
         import('https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js').then(({ collection, onSnapshot, query, where, orderBy, limit }) => {
+          if (entry.aborted) return; // ✕ close 先行 → listener 立ち上げず 抜ける
           try {
             const q = query(
               collection(window.__fp.db, `tenants/${tid}/customers/${cid}/meetings`),
@@ -11432,7 +11441,12 @@ STEP C: 結果報告
                 const data = d.data();
                 const createdAt = data.createdAt?.toMillis?.() || 0;
                 if (createdAt < startedAt - 60000) continue; // この 面談 開始 前 の 古い doc は skip
-                if (data.minutes || data.minutesText || data.transcript || data.hasMinutes) {
+                // 2026-08-20 qa BUG#1 fix: 実 Firestore schema (functions/index.js L5020-5033) は
+                //   { transcript, summary, ... } を 書く。 空文字 '' falsy で 永久 表示 事故 防止 の ため
+                //   trim().length > 0 で 判定 (transcript か summary の どちら か が 有 content)
+                const hasT = typeof data.transcript === 'string' && data.transcript.trim().length > 0;
+                const hasS = typeof data.summary === 'string' && data.summary.trim().length > 0;
+                if (hasT || hasS || data.minutes || data.minutesText || data.hasMinutes) {
                   // 議事録 生成 完了
                   clearInterval(elapsedIv);
                   badge.style.background = 'linear-gradient(135deg,#10B981,#059669)';
@@ -11455,18 +11469,23 @@ STEP C: 結果報告
                 }
               }
             });
-            _minutesBadges.set(cid, { el: badge, unsubscribe, startedAt });
+            entry.unsubscribe = unsubscribe; // placeholder entry を 更新 (double set 廃止)
           } catch (e) { console.warn('minutes watcher init fail:', e); }
         }).catch(e => console.warn('firestore import fail:', e));
       }
     } catch (_) {}
-    // 30分 経ったら 自動 で 「時間 経過 · 履歴 tab で 確認 して ください」 に 切替
+    // 30分 経ったら 自動 で 「時間 経過 · 履歴 tab で 確認 して ください」 に 切替 + memory leak 防止
+    //   2026-08-20 qa BUG#2 fix: 30分 timeout で elapsedIv clearInterval + Firestore unsubscribe 追加
     setTimeout(() => {
       if (!document.body.contains(badge)) return;
       const label = badge.querySelector('div > div:first-child');
       if (label) label.textContent = '⚠ 生成 に 30分 以上';
       const sub = badge.querySelector('div > div:nth-child(2)');
       if (sub) sub.textContent = escapeHtml(client.name || 'お客様') + ' 様 · 履歴 tab で 確認';
+      try { clearInterval(elapsedIv); } catch (_) {}
+      const b = _minutesBadges.get(cid);
+      if (b?.unsubscribe) { try { b.unsubscribe(); } catch (_) {} }
+      _minutesBadges.delete(cid);
     }, 30 * 60 * 1000);
   }
   window.showMinutesGeneratingBadge = showMinutesGeneratingBadge;
