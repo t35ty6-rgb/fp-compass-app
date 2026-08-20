@@ -12823,6 +12823,27 @@ body:not([data-home-view]) [data-view-target="cal"] { display: none !important; 
     overflow-wrap: normal !important;
   }
 
+  /* 6. 議事録 tab の 面談 card head: title + 右側 actions (TODO 候補 レビュー + 削除) が
+     flex row space-between で mobile では 右側 button 群 が 縦圧迫。
+     mobile で は head を 縦stack 化、 actions 行 は タイトル 下 全幅 */
+  .fp-meeting-card .fp-meeting-card-head {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+  .fp-meeting-card .fp-meeting-card-actions {
+    justify-content: flex-start !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+  .fp-meeting-card .fp-meeting-card-actions > button,
+  .fp-meeting-card .fp-meeting-card-actions > a {
+    flex: 0 0 auto !important;
+    font-size: 12px !important;
+    padding: 6px 12px !important;
+    white-space: nowrap !important;
+  }
+
   /* 1. tiny badge (LINE / アンケ未回答 / DEMO MODE / 候補日 等 inline 9.5px) → 11px 昇格
      inline style 直書き の 場所 が 30+ 箇所 ある ので 一括 attribute selector で 上書き */
   [style*="font-size:9.5px"],
