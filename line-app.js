@@ -1247,7 +1247,8 @@
           </label>
         </div>
 
-        <div style="display:flex;gap:10px;">
+        <!-- 2026-08-21 owner「モーダル 途切れ」fix: 開始 button を sticky footer 化 (mobile で 常時 見える) -->
+        <div class="fp-qi-footer" style="display:flex;gap:10px;${_isMobileQI ? 'position:sticky;bottom:calc(env(safe-area-inset-bottom,0px) - 20px);background:#fff;padding:14px 0 4px;margin-top:8px;border-top:1px solid #F1F5F9;box-shadow:0 -8px 24px -4px rgba(15,23,42,0.08);z-index:2;' : ''}">
           <button id="fp-qi-start" class="btn-cta-primary" style="flex:2;justify-content:center;" disabled>
             <span>選んだスタイルで開始</span>
             <span class="cta-arrow">→</span>
