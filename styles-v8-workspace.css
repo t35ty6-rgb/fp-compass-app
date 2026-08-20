@@ -9193,6 +9193,10 @@ body.modal-open {
     min-height: 44px !important;
     flex: 0 0 auto !important;
     white-space: nowrap !important;
+    /* 上 の `[data-line-view="distributionHub"] * { width: 100% !important }` を undo
+       (アグレッシブ * selector が button を 全幅 化 し 1 tab per viewport に なる) */
+    width: auto !important;
+    max-width: none !important;
   }
 
   /* D. 設定 セクションヘッダ 紫×紫 解消 */
