@@ -8132,10 +8132,31 @@ ${ctxText}${surveyTxt}`;
     if (inpersonBtn) {
       inpersonBtn.addEventListener('click', async () => {
         const inpersonTs = 'quick-' + Date.now();
-        // マイク permission を click gesture 内 で 先取り (iOS Safari 対策)
+        // 2026-08-20 owner「PC で 勝手 に 携帯 マイク 繋がる」対応:
+        //   macOS Continuity で iPhone マイク が default input に なる ケース あり →
+        //   enumerateDevices で 「MacBook / Built-in / 内蔵」 系 label を 優先 選択、
+        //   iPhone (label に 「iPhone」 含む) を 明示的 に 避ける
+        async function pickPreferredAudioInput() {
+          try {
+            // 1回目 の getUserMedia (default) で permission 通し、 その後 device 列挙
+            const tmpStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const inputs = devices.filter(d => d.kind === 'audioinput');
+            tmpStream.getTracks().forEach(t => t.stop());
+            const isIphone = d => /iPhone|Continuity/i.test(d.label || '');
+            const isMacBuiltin = d => /MacBook|Built-?in|内蔵/i.test(d.label || '');
+            const preferred = inputs.find(isMacBuiltin) || inputs.find(d => !isIphone(d)) || inputs[0];
+            console.log('[fp-inperson] audio inputs:', inputs.map(d => d.label), '→ 選択:', preferred?.label);
+            return preferred;
+          } catch (_) { return null; }
+        }
         let earlyStream = null;
         try {
-          earlyStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, sampleRate: 44100 } });
+          const pref = await pickPreferredAudioInput();
+          const audioConstraint = pref?.deviceId
+            ? { deviceId: { ideal: pref.deviceId }, echoCancellation: true, noiseSuppression: true, sampleRate: 44100 }
+            : { echoCancellation: true, noiseSuppression: true, sampleRate: 44100 };
+          earlyStream = await navigator.mediaDevices.getUserMedia({ audio: audioConstraint });
         } catch (permErr) {
           alert('🎤 マイク アクセス できません\n\niPhone/iPad: 設定 → Safari → マイク で 「許可」 を ON\nMac: システム設定 → プライバシーとセキュリティ → マイク で ブラウザ を ON');
           return;
