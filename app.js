@@ -11427,6 +11427,7 @@ STEP C: 結果報告
     document.body.appendChild(overlay);
 
     let stealthWin = null;
+    let popupWatcherIv = null;
     let timerIv = null;
     let startedAt = null;
     let micStream = null;
@@ -11498,6 +11499,7 @@ STEP C: 結果報告
         }
       } catch(_) {}
       try { if (timerIv) clearInterval(timerIv); } catch(_) {}
+      try { if (popupWatcherIv) clearInterval(popupWatcherIv); } catch(_) {}
       stopMicMeter();
       try { overlay.remove(); } catch(_) {}
     };
@@ -11630,31 +11632,50 @@ STEP C: 結果報告
           return `https://${u.host}/wc/join/${m[2]}${m[3] || ''}`;
         } catch (_) { return data.startUrl; }
       })();
-      // ★ 2026-08-11 owner「小 window も 完全 消したい」対応
-      //   popup 廃止 · 隠し iframe を FP Compass overlay 内 に 埋込 (1px + opacity 0 で invisible)
-      //   Zoom Web Client は iframe embed 対応 (X-Frame-Options 未 設定 · CSP frame-ancestors * )
-      //   マイク 許可 は 過去 に 与えた もの が 引き継がれる · 未 許可 の 場合 は 初回 のみ prompt
-      const stealthIframe = document.createElement('iframe');
-      stealthIframe.id = 'fp-inperson-zoom-iframe';
-      stealthIframe.src = forceWebUrl;
-      stealthIframe.allow = 'microphone; camera; autoplay; display-capture';
-      stealthIframe.style.cssText = 'position:absolute;bottom:0;right:0;width:1px;height:1px;opacity:0;border:0;pointer-events:none;';
-      overlay.appendChild(stealthIframe);
-      stealthWin = stealthIframe; // cleanup で iframe を remove する
-      status.textContent = 'Zoom 起動 済 · マイク 準備 中…';
-      // マイク メーター 起動 (owner が 「録音 動いて る か」 目視 確認 用)
+      // ★ 2026-08-20 Zoom 実 join 不能 fix (owner 実測: iframe stealth では 「waiting」 の まま で 誰も 参加 し ない):
+      //   iframe → popup window に 差替 (Zoom Web Client の host 認証 flow が iframe embed で 通ら ない 定番 issue)
+      //   popup は 右下 400×300 で 常時 前面、 owner は FP Compass main window を そのまま 触れる (mini widget と 並行)
+      //   popup blocked 時 は 新 tab に fallback (window.open 戻り値 で 検知)
+      const popupW = 400, popupH = 300;
+      const popupLeft = Math.max(0, (window.screen.availWidth || window.innerWidth) - popupW - 20);
+      const popupTop = Math.max(0, (window.screen.availHeight || window.innerHeight) - popupH - 60);
+      const popupFeatures = `width=${popupW},height=${popupH},left=${popupLeft},top=${popupTop},menubar=no,toolbar=no,location=no,status=no,scrollbars=yes,resizable=yes`;
+      stealthWin = window.open(forceWebUrl, 'fp-inperson-zoom-recorder-' + Date.now(), popupFeatures);
+      if (!stealthWin || stealthWin.closed) {
+        // popup blocked → 客 に 案内 (new tab で 開く · 手動 で 参加 して もらう)
+        status.textContent = '⚠ ポップアップ ブロック → 新 tab で Zoom 開きます';
+        stealthWin = window.open(forceWebUrl, '_blank');
+        if (!stealthWin) {
+          throw new Error('Zoom を 開けません。 ブラウザ の popup 許可 で 「app.skeleton-inc.jp」 を 追加 して ください');
+        }
+      }
+      // FP Compass main window に focus 戻す (popup が 前面 に 来 続ける の を 避ける)
+      try { window.focus(); } catch (_) {}
+      status.textContent = 'Zoom 起動 中 · popup で 認証 完了 して ください…';
+      // マイク メーター 起動 (main window 側 で 動作 · popup が 閉じられて も 起動 は 保持)
       const micOk = await startMicMeter();
-      if (micOk) status.textContent = '● 録音 中';
-      // ★ debug toggle wire: click で iframe を 可視化 · 再 click で 隠す
+      if (micOk) status.textContent = '● 録音 中 (Zoom popup 開き中)';
+      // popup 閉じられ 検知 (recording 中断 と 見做す、 endBtn を 発火 する か どうか は owner が 判断)
+      popupWatcherIv = setInterval(() => {
+        if (stealthWin && stealthWin.closed) {
+          clearInterval(popupWatcherIv);
+          popupWatcherIv = null;
+          status.textContent = '⚠ Zoom popup が 閉じられ ました · 録音 は 継続 中 (Zoom 側 は 停止)';
+        }
+      }, 2000);
+      // ★ debug button: popup に focus (Zoom 認証 が hang して たら owner が 見に行く 用)
       const debugBtn = document.getElementById('fp-inperson-debug');
-      let iframeVisible = false;
-      const HIDDEN_STYLE = 'position:absolute;bottom:0;right:0;width:1px;height:1px;opacity:0;border:0;pointer-events:none;';
-      const VISIBLE_STYLE = 'position:absolute;bottom:20px;right:20px;width:440px;height:280px;opacity:1;border:2px solid #10B981;border-radius:10px;box-shadow:0 20px 50px rgba(0,0,0,0.5);z-index:2;background:#000;';
       if (debugBtn) {
+        debugBtn.textContent = '🔍 Zoom popup へ';
         debugBtn.addEventListener('click', () => {
-          iframeVisible = !iframeVisible;
-          stealthIframe.style.cssText = iframeVisible ? VISIBLE_STYLE : HIDDEN_STYLE;
-          debugBtn.textContent = iframeVisible ? '🙈 Zoom 隠す' : '🔍 Zoom 動作 確認';
+          try {
+            if (stealthWin && !stealthWin.closed) { stealthWin.focus(); }
+            else {
+              // 閉じられて たら 再 open
+              stealthWin = window.open(forceWebUrl, 'fp-inperson-zoom-recorder-' + Date.now(), popupFeatures);
+              try { window.focus(); } catch (_) {}
+            }
+          } catch (_) {}
         });
       }
       startedAt = Date.now();
