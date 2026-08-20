@@ -1160,9 +1160,19 @@
     ov.id = 'fp-quick-inperson-modal';
     // 2026-08-19 SP 途切れ fix: modal 外枠 に padding + overflow-y:auto、 card に max-height:90vh + inner scroll
     //   (owner「対面選択してスクロールしても対面録画途切れてできない」 対応)
-    ov.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.72);z-index:99999;display:flex;align-items:flex-start;justify-content:center;padding:20px 0;overflow-y:auto;-webkit-overflow-scrolling:touch;font-family:"Hiragino Sans",sans-serif;';
+    // 2026-08-20 mobile fit fix: 携帯 で bottom nav / 空 backdrop に 被って いた の を bottom sheet 化
+    //   (owner「携帯で開いた時 崩れる ように なって る」 対応)
+    const _isMobileQI = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
+    ov.style.cssText = _isMobileQI
+      ? 'position:fixed;inset:0;background:rgba(15,23,42,0.55);z-index:99999;display:flex;align-items:flex-end;justify-content:center;padding:0;font-family:"Hiragino Sans",sans-serif;'
+      : 'position:fixed;inset:0;background:rgba(15,23,42,0.72);z-index:99999;display:flex;align-items:flex-start;justify-content:center;padding:20px 0;overflow-y:auto;-webkit-overflow-scrolling:touch;font-family:"Hiragino Sans",sans-serif;';
+    const _cardStyle = _isMobileQI
+      ? 'background:#fff;border-radius:18px 18px 0 0;width:100%;max-width:100%;padding:22px 20px calc(24px + env(safe-area-inset-bottom,0px));box-shadow:0 -18px 44px rgba(0,0,0,0.28);position:relative;max-height:calc(100vh - 40px - env(safe-area-inset-top,0px));overflow-y:auto;-webkit-overflow-scrolling:touch;animation:fpQIslide .28s cubic-bezier(.32,.72,0,1);'
+      : 'background:#fff;border-radius:16px;max-width:480px;width:92%;padding:28px;box-shadow:0 32px 80px rgba(0,0,0,0.4);position:relative;max-height:calc(100vh - 40px);overflow-y:auto;-webkit-overflow-scrolling:touch;margin:auto;';
     ov.innerHTML = `
-      <div style="background:#fff;border-radius:16px;max-width:480px;width:92%;padding:28px;box-shadow:0 32px 80px rgba(0,0,0,0.4);position:relative;max-height:calc(100vh - 40px);overflow-y:auto;-webkit-overflow-scrolling:touch;margin:auto;">
+      <style>@keyframes fpQIslide { from { transform: translateY(100%); } to { transform: translateY(0); } }</style>
+      <div style="${_cardStyle}">
+        ${_isMobileQI ? '<div style="width:36px;height:4px;background:#CBD5E1;border-radius:999px;margin:-6px auto 12px;"></div>' : ''}
         <button id="fp-qi-close-top" aria-label="閉じる" style="position:absolute;top:12px;right:12px;background:transparent;border:none;font-size:26px;line-height:1;color:#6B7280;cursor:pointer;padding:4px 10px;border-radius:6px;font-weight:600;">×</button>
         <div style="font-size:11px;font-weight:800;color:#9A5A18;letter-spacing:0.14em;margin-bottom:6px;">QUICK START</div>
         <h2 style="font-size:20px;font-weight:800;color:#111827;margin:0 0 6px;font-family:'Noto Sans JP',sans-serif;">急遽 面談スタート</h2>

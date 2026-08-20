@@ -12739,3 +12739,53 @@ body:not([data-home-view]) [data-view-target="cal"] { display: none !important; 
   .fp-kanban-col { flex: 0 0 260px; max-height: none; }
   .fp-kanban-card-del { opacity: 1; } /* mobile では 常時 表示 */
 }
+
+/* ============================================================
+   2026-08-20 mobile 崩れ fix pack (owner「携帯 で 崩れる · デザイン 変えず に 崩れ ない よう」明示)
+   デザイン token (色 / font / 余白 スタイル) は 触ら ず、
+   モバイル で 読め ない / 押せ ない / 被る 箇所 だけ を surgical に 直す。
+   ============================================================ */
+@media (max-width: 768px) {
+  /* 1. tiny badge (LINE / アンケ未回答 / DEMO MODE / 候補日 等 inline 9.5px) → 11px 昇格
+     inline style 直書き の 場所 が 30+ 箇所 ある ので 一括 attribute selector で 上書き */
+  [style*="font-size:9.5px"],
+  [style*="font-size: 9.5px"] {
+    font-size: 11px !important;
+    letter-spacing: 0.02em !important;
+  }
+  /* .mh-kind (面談履歴 の Zoom/対面 pill) も 同じ */
+  .mh-kind { font-size: 11px !important; padding: 3px 8px !important; }
+
+  /* 2. bottom nav 被り 対策: 各 view の 一番 下 に padding を 明示 */
+  #kpi-board, #mh-root, [data-view="clients"] .container, [data-view="dashboard"] .container {
+    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  /* 3. 客詳細 modal 内 の tab bar (概観 / ライフ / 議事録 / Q&A) が 横 狭い 時 折返さ ず 横スクロール */
+  .cd-tabs, [class*="cd-tab-bar"] {
+    display: flex !important;
+    overflow-x: auto !important;
+    flex-wrap: nowrap !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .cd-tabs::-webkit-scrollbar, [class*="cd-tab-bar"]::-webkit-scrollbar { display: none; }
+  .cd-tabs > *, [class*="cd-tab-bar"] > * { flex-shrink: 0 !important; }
+
+  /* 4. Filter chip row (顧客タブ の 「〜30日 / 31〜90日」 等) の wrap を 抑えて 横 swipe に */
+  .fp-filter-chips, .cl-filter-chips, [class*="filter-chips"] {
+    display: flex !important;
+    overflow-x: auto !important;
+    flex-wrap: nowrap !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 4px !important;
+  }
+  .fp-filter-chips::-webkit-scrollbar,
+  .cl-filter-chips::-webkit-scrollbar,
+  [class*="filter-chips"]::-webkit-scrollbar { display: none; }
+  .fp-filter-chips > *, .cl-filter-chips > *, [class*="filter-chips"] > * {
+    flex-shrink: 0 !important;
+    white-space: nowrap !important;
+  }
+}
