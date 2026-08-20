@@ -11350,6 +11350,127 @@ STEP C: 結果報告
   //   終了 button で ステルス window close + overlay 撤去
   // 2026-08-20: line-app.js の 急遽 modal audio mode から も 呼べる よう window に expose
   window.startInPersonRecording = startInPersonRecording;
+
+  // 2026-08-20 owner「議事録生成中 badge を 出し続けて」対応:
+  //   右下 に 小 badge (280×48)、 Firestore watcher で minutes 生成 検知 → 消える + 「議事録 できた」 toast
+  //   複数 面談 同時 進行 でも 積み重なる (list 管理)
+  const _minutesBadges = new Map(); // customerId → { el, unsubscribe, startedAt }
+  function showMinutesGeneratingBadge(client) {
+    if (!client || !client._fsCustomerId && !client.id) return;
+    const cid = client._fsCustomerId || client.id;
+    if (_minutesBadges.has(cid)) return; // 既 表示 中 は skip
+
+    // container (初回 のみ 作成)
+    let container = document.getElementById('fp-minutes-badges');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'fp-minutes-badges';
+      container.style.cssText = 'position:fixed;bottom:20px;right:20px;z-index:10240;display:flex;flex-direction:column;gap:8px;pointer-events:none;font-family:"Noto Sans JP",-apple-system,sans-serif;';
+      document.body.appendChild(container);
+    }
+    const startedAt = Date.now();
+    const badge = document.createElement('div');
+    badge.dataset.customerId = cid;
+    badge.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 14px;background:linear-gradient(135deg,#F59E0B,#D97706);color:#fff;border-radius:10px;box-shadow:0 8px 24px rgba(217,119,6,0.32),0 0 0 1px rgba(255,255,255,0.08);font-size:12.5px;font-weight:800;letter-spacing:0.02em;pointer-events:auto;cursor:pointer;min-width:240px;max-width:320px;';
+    badge.innerHTML = `
+      <span class="fp-minutes-spinner" style="display:inline-block;width:14px;height:14px;border:2.5px solid rgba(255,255,255,0.35);border-top-color:#fff;border-radius:50%;animation:fpMinutesSpin 1s linear infinite;flex-shrink:0;"></span>
+      <div style="flex:1;min-width:0;line-height:1.35;">
+        <div style="font-size:12.5px;font-weight:800;">議事録 生成 中</div>
+        <div style="font-size:11px;font-weight:600;opacity:0.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(client.name || 'お客様')} 様 · <span class="fp-minutes-elapsed">00:00</span></div>
+      </div>
+      <button class="fp-minutes-close" title="非表示 (生成 は バックグラウンド 継続)" style="background:transparent;color:rgba(255,255,255,0.75);border:none;font-size:16px;line-height:1;cursor:pointer;padding:2px 4px;flex-shrink:0;">×</button>
+    `;
+    if (!document.getElementById('fp-minutes-badges-style')) {
+      const st = document.createElement('style');
+      st.id = 'fp-minutes-badges-style';
+      st.textContent = '@keyframes fpMinutesSpin { to { transform: rotate(360deg); } }';
+      document.head.appendChild(st);
+    }
+    // 経過時間 更新
+    const elapsedEl = badge.querySelector('.fp-minutes-elapsed');
+    const elapsedIv = setInterval(() => {
+      if (!document.body.contains(badge)) { clearInterval(elapsedIv); return; }
+      const secs = Math.floor((Date.now() - startedAt) / 1000);
+      const mm = String(Math.floor(secs / 60)).padStart(2, '0');
+      const ss = String(secs % 60).padStart(2, '0');
+      if (elapsedEl) elapsedEl.textContent = `${mm}:${ss}`;
+    }, 1000);
+    // click で 顧客 の 面談履歴 tab に navigate
+    badge.addEventListener('click', (e) => {
+      if (e.target.classList.contains('fp-minutes-close')) return;
+      try {
+        // 顧客カード を 開く (client detail modal or navigation)
+        if (typeof window.openClientCard === 'function') window.openClientCard(cid);
+        else if (typeof window.showCustomerDetail === 'function') window.showCustomerDetail(cid);
+        else location.hash = '#/clients/' + cid;
+      } catch (_) {}
+    });
+    // ✕ で 非表示 (生成 は 継続、 badge は 消す)
+    badge.querySelector('.fp-minutes-close').addEventListener('click', (e) => {
+      e.stopPropagation();
+      clearInterval(elapsedIv);
+      badge.remove();
+      const b = _minutesBadges.get(cid);
+      if (b && b.unsubscribe) try { b.unsubscribe(); } catch (_) {}
+      _minutesBadges.delete(cid);
+    });
+    container.appendChild(badge);
+
+    // Firestore watcher: 該当 客 の meetings/recordings で minutes 生成 検知
+    let unsubscribe = null;
+    try {
+      const tid = window.__fp?.tenantId;
+      if (tid && window.__fp?.db) {
+        import('https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js').then(({ collection, onSnapshot, query, where, orderBy, limit }) => {
+          try {
+            const q = query(
+              collection(window.__fp.db, `tenants/${tid}/customers/${cid}/meetings`),
+              orderBy('createdAt', 'desc'), limit(3)
+            );
+            unsubscribe = onSnapshot(q, (snap) => {
+              for (const d of snap.docs) {
+                const data = d.data();
+                const createdAt = data.createdAt?.toMillis?.() || 0;
+                if (createdAt < startedAt - 60000) continue; // この 面談 開始 前 の 古い doc は skip
+                if (data.minutes || data.minutesText || data.transcript || data.hasMinutes) {
+                  // 議事録 生成 完了
+                  clearInterval(elapsedIv);
+                  badge.style.background = 'linear-gradient(135deg,#10B981,#059669)';
+                  badge.style.boxShadow = '0 8px 24px rgba(16,185,129,0.32),0 0 0 1px rgba(255,255,255,0.08)';
+                  const spinner = badge.querySelector('.fp-minutes-spinner');
+                  if (spinner) spinner.style.cssText = 'display:inline-block;width:14px;height:14px;border-radius:50%;background:#fff;flex-shrink:0;';
+                  const label = badge.querySelector('div > div:first-child');
+                  const sub = badge.querySelector('div > div:nth-child(2)');
+                  if (label) label.textContent = '✓ 議事録 できました';
+                  if (sub) sub.textContent = escapeHtml(client.name || 'お客様') + ' 様 · タップ で 開く';
+                  // 20秒 後 に 自動 fade out
+                  setTimeout(() => {
+                    badge.style.transition = 'opacity 0.5s';
+                    badge.style.opacity = '0';
+                    setTimeout(() => badge.remove(), 500);
+                  }, 20000);
+                  if (unsubscribe) try { unsubscribe(); } catch (_) {}
+                  _minutesBadges.delete(cid);
+                  break;
+                }
+              }
+            });
+            _minutesBadges.set(cid, { el: badge, unsubscribe, startedAt });
+          } catch (e) { console.warn('minutes watcher init fail:', e); }
+        }).catch(e => console.warn('firestore import fail:', e));
+      }
+    } catch (_) {}
+    // 30分 経ったら 自動 で 「時間 経過 · 履歴 tab で 確認 して ください」 に 切替
+    setTimeout(() => {
+      if (!document.body.contains(badge)) return;
+      const label = badge.querySelector('div > div:first-child');
+      if (label) label.textContent = '⚠ 生成 に 30分 以上';
+      const sub = badge.querySelector('div > div:nth-child(2)');
+      if (sub) sub.textContent = escapeHtml(client.name || 'お客様') + ' 様 · 履歴 tab で 確認';
+    }, 30 * 60 * 1000);
+  }
+  window.showMinutesGeneratingBadge = showMinutesGeneratingBadge;
+
   async function startInPersonRecording(client) {
     // 2026-08-20 owner「録音してる間にFPコンパス触れない」対応:
     //   overlay に 「最小化」 button 追加 · 最小化 で 右下 浮遊 widget 化 = admin panel 完全 操作可能
@@ -11589,6 +11710,9 @@ STEP C: 結果報告
       toast.textContent = '✓ 録音 停止 · 数 分 で 議事録 が 生成 されます (Zoom cloud 経由)';
       document.body.appendChild(toast);
       setTimeout(() => toast.remove(), 6000);
+      // ★ 2026-08-20 owner「議事録生成中」ボタン 出し続けて」対応: 生成 完了 まで 表示 する 小 badge (右下 浮遊)
+      //   Firestore の customers/{id}/meetings で minutes 有り の doc 出現 で 消える + click で 顧客カード へ
+      try { showMinutesGeneratingBadge && showMinutesGeneratingBadge(client); } catch (_) {}
     });
 
     // ★ 2026-08-20 qa FAIL#1/#2 fix: miniEndBtn listener を try 外 に 移動 (Zoom fail path でも 有効)
