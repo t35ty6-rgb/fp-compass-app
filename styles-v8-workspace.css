@@ -12789,6 +12789,40 @@ body:not([data-home-view]) [data-view-target="cal"] { display: none !important; 
    モバイル で 読め ない / 押せ ない / 被る 箇所 だけ を surgical に 直す。
    ============================================================ */
 @media (max-width: 768px) {
+  /* 5. 客詳細 概観 tab の 緑 hero card:
+     grid-template-columns: 56px 1fr auto が 3列 で 中央 1fr が 100px 未満 に 圧迫、
+     「ランタンさん」 名前 が 「ランタン / さん」 に 2行 折返し + 情報 行 も 崩壊。
+     mobile で は 2 段 に 分ける: 上=avatar+name, 下=info+CTA */
+  .cd-modal [class*="c1s"] > div[style*="grid-template-columns:56px 1fr auto"],
+  .cd-modal div[style*="grid-template-columns:56px 1fr auto"][style*="linear-gradient(135deg,#ECFDF5"] {
+    grid-template-columns: 48px 1fr !important;
+    grid-template-rows: auto auto !important;
+    row-gap: 8px !important;
+  }
+  .cd-modal div[style*="grid-template-columns:56px 1fr auto"][style*="linear-gradient(135deg,#ECFDF5"] > .c1s-jump-overview,
+  .cd-modal div[style*="grid-template-columns:56px 1fr auto"][style*="linear-gradient(135deg,#ECFDF5"] > button[type="button"] {
+    grid-column: 1 / -1 !important;
+    justify-self: stretch !important;
+    width: 100% !important;
+    padding: 10px 14px !important;
+    font-size: 13px !important;
+  }
+  .cd-modal div[style*="grid-template-columns:56px 1fr auto"][style*="linear-gradient(135deg,#ECFDF5"] > div:first-child {
+    width: 48px !important;
+    height: 48px !important;
+    font-size: 18px !important;
+  }
+  /* 名前 の flex-wrap で tag 落ち が name を 圧迫 → 名前 は 独立行 で nowrap */
+  .cd-modal div[style*="grid-template-columns:56px 1fr auto"][style*="linear-gradient(135deg,#ECFDF5"] > div:nth-child(2) > div:first-child {
+    flex-wrap: wrap !important;
+  }
+  .cd-modal div[style*="grid-template-columns:56px 1fr auto"][style*="linear-gradient(135deg,#ECFDF5"] > div:nth-child(2) > div:first-child > span:first-child {
+    display: inline-block !important;
+    max-width: 100% !important;
+    word-break: keep-all !important;
+    overflow-wrap: normal !important;
+  }
+
   /* 1. tiny badge (LINE / アンケ未回答 / DEMO MODE / 候補日 等 inline 9.5px) → 11px 昇格
      inline style 直書き の 場所 が 30+ 箇所 ある ので 一括 attribute selector で 上書き */
   [style*="font-size:9.5px"],
