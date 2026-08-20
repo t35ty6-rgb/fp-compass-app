@@ -8171,13 +8171,13 @@ ${ctxText}${surveyTxt}`;
           const res = await fn({ customerId: fsCustomerId, lineFriendId: c.lineFriendId || null });
           const data = (res && res.data) || {};
           if (data.startUrl) {
-            // ★ 2026-07-18 revert: /wc/join/{id} format (急遽ボタン で 動いてた format と 統一)
+            // ★ 2026-08-20 qa FAIL#1 CRITICAL fix: wc/join → wc/start (host 認証 経路)
             const forceWebUrl = (() => {
               try {
                 const m = data.startUrl.match(/\/(j|s)\/(\d+)([?&].*)?/);
                 if (!m) return data.startUrl;
                 const u = new URL(data.startUrl);
-                return `https://${u.host}/wc/join/${m[2]}${m[3] || ''}`;
+                return `https://${u.host}/wc/start/${m[2]}${m[3] || ''}`;
               } catch (_) { return data.startUrl; }
             })();
             // ★ 2026-07-18 bug fix: 拡張機能 に 客名 arm (前客 の 名前 が 残る バグ 対応)
@@ -11491,13 +11491,11 @@ STEP C: 結果報告
     }
 
     const cleanup = () => {
-      // iframe or popup どちら も 処理 (iframe 実装 に 変わったが 過去 popup path も 残す)
+      // 2026-08-20 qa FAIL#3/#4 fix: popup 実装 に 統一 (iframe は 廃止 済)、 cleanup 後 stealthWin=null 化
       try {
-        if (stealthWin) {
-          if (typeof stealthWin.close === 'function' && !stealthWin.closed) stealthWin.close();
-          else if (stealthWin.tagName === 'IFRAME') stealthWin.remove();
-        }
+        if (stealthWin && typeof stealthWin.close === 'function' && !stealthWin.closed) stealthWin.close();
       } catch(_) {}
+      stealthWin = null;
       try { if (timerIv) clearInterval(timerIv); } catch(_) {}
       try { if (popupWatcherIv) clearInterval(popupWatcherIv); } catch(_) {}
       stopMicMeter();
@@ -11609,6 +11607,23 @@ STEP C: 結果報告
 
     try {
       status.textContent = 'Zoom 準備 中…';
+      // ★ 2026-08-20 qa FAIL#2 HIGH fix: gesture context 保持 (await 前 に window.open)
+      //   Safari/iOS で は await を 挟む と transient activation 失効 → popup 100% blocked。
+      //   about:blank で 先行 open して gesture 保持 → 後 で location.href 差替 pattern。
+      const popupW = 400, popupH = 300;
+      const popupLeft = Math.max(0, (window.screen.availWidth || window.innerWidth) - popupW - 20);
+      const popupTop = Math.max(0, (window.screen.availHeight || window.innerHeight) - popupH - 60);
+      const popupFeatures = `width=${popupW},height=${popupH},left=${popupLeft},top=${popupTop},menubar=no,toolbar=no,location=no,status=no,scrollbars=yes,resizable=yes`;
+      stealthWin = window.open('about:blank', 'fp-inperson-zoom-recorder-' + Date.now(), popupFeatures);
+      if (!stealthWin || stealthWin.closed) {
+        // popup blocked → new tab に fallback (gesture 有効 な の で 通常 通る)
+        status.textContent = '⚠ popup blocked → 新 tab で Zoom 開きます';
+        stealthWin = window.open('about:blank', '_blank');
+        if (!stealthWin) {
+          throw new Error('Zoom を 開けません。 ブラウザ の popup 許可 で 「app.skeleton-inc.jp」 を 追加 して ください');
+        }
+      }
+      try { window.focus(); } catch (_) {}
       const { initializeApp, getApps } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js');
       const { getFunctions, httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-functions.js');
       const fbApp = getApps()[0] || initializeApp({
@@ -11623,33 +11638,24 @@ STEP C: 結果報告
       const res = await fn({ customerId: fsCustomerId, lineFriendId: null });
       const data = (res && res.data) || {};
       if (!data.startUrl) throw new Error('Zoom URL 取得 失敗');
-      // wc/join format (browser only · Zoom app 不要)
+      // 2026-08-20 qa FAIL#1 CRITICAL fix: wc/join → wc/start (host 認証 · ZAK 経路)
+      //   旧: wc/join = 参加者 URL、 host 認証 なし → status="waiting" のまま で cloud recording 発火 しない
+      //   新: wc/start = host URL、 ZAK token で 認証 通り 実 meeting 開始 + 自動 record
       const forceWebUrl = (() => {
         try {
           const m = data.startUrl.match(/\/(j|s)\/(\d+)([?&].*)?/);
           if (!m) return data.startUrl;
           const u = new URL(data.startUrl);
-          return `https://${u.host}/wc/join/${m[2]}${m[3] || ''}`;
+          return `https://${u.host}/wc/start/${m[2]}${m[3] || ''}`;
         } catch (_) { return data.startUrl; }
       })();
-      // ★ 2026-08-20 Zoom 実 join 不能 fix (owner 実測: iframe stealth では 「waiting」 の まま で 誰も 参加 し ない):
-      //   iframe → popup window に 差替 (Zoom Web Client の host 認証 flow が iframe embed で 通ら ない 定番 issue)
-      //   popup は 右下 400×300 で 常時 前面、 owner は FP Compass main window を そのまま 触れる (mini widget と 並行)
-      //   popup blocked 時 は 新 tab に fallback (window.open 戻り値 で 検知)
-      const popupW = 400, popupH = 300;
-      const popupLeft = Math.max(0, (window.screen.availWidth || window.innerWidth) - popupW - 20);
-      const popupTop = Math.max(0, (window.screen.availHeight || window.innerHeight) - popupH - 60);
-      const popupFeatures = `width=${popupW},height=${popupH},left=${popupLeft},top=${popupTop},menubar=no,toolbar=no,location=no,status=no,scrollbars=yes,resizable=yes`;
-      stealthWin = window.open(forceWebUrl, 'fp-inperson-zoom-recorder-' + Date.now(), popupFeatures);
-      if (!stealthWin || stealthWin.closed) {
-        // popup blocked → 客 に 案内 (new tab で 開く · 手動 で 参加 して もらう)
-        status.textContent = '⚠ ポップアップ ブロック → 新 tab で Zoom 開きます';
-        stealthWin = window.open(forceWebUrl, '_blank');
-        if (!stealthWin) {
-          throw new Error('Zoom を 開けません。 ブラウザ の popup 許可 で 「app.skeleton-inc.jp」 を 追加 して ください');
-        }
+      // ★ 2026-08-20 gesture 先行 open pattern: 既 open 済 popup の location.href を 差替
+      try { stealthWin.location.href = forceWebUrl; } catch (e) {
+        // 稀に COOP/COEP で block される case → 再 open trial
+        try { stealthWin.close(); } catch (_) {}
+        stealthWin = window.open(forceWebUrl, 'fp-inperson-zoom-recorder-retry', popupFeatures);
+        if (!stealthWin) throw new Error('Zoom popup 開けません: ' + e.message);
       }
-      // FP Compass main window に focus 戻す (popup が 前面 に 来 続ける の を 避ける)
       try { window.focus(); } catch (_) {}
       status.textContent = 'Zoom 起動 中 · popup で 認証 完了 して ください…';
       // マイク メーター 起動 (main window 側 で 動作 · popup が 閉じられて も 起動 は 保持)
