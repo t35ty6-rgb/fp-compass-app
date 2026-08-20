@@ -1317,9 +1317,19 @@
       }
       const mode = ov.querySelector('input[name="fp-qi-mode"]:checked')?.value || 'zoom';
       const inpersonTs = 'quick-' + Date.now();
-      // 2026-08-20 owner「機能同じなのでUI合わせて」 対応: audio mode を startInPersonRecording (Zoom stealth) に 統合
-      //   顧客カード の 「対面 で 商談」 button と 同 実装 → UI 統一 · 挙動 統一
-      //   earlyAudioStream の 事前 getUserMedia は 不要 (startInPersonRecording 内 で startMicMeter が 実行)
+      // 2026-08-20 owner「ワンボタンで完結、 Zoom 開かない」対応:
+      //   audio mode = 純 マイク 録音 (startAudioOnlyRecording) に revert · Zoom stealth 廃止
+      //   earlyAudioStream 事前 取得 (iOS Safari の gesture 消失 対策) を 復活
+      let earlyAudioStream = null;
+      if (mode === 'audio') {
+        try {
+          const constraint = { echoCancellation: true, noiseSuppression: true, sampleRate: 44100 };
+          earlyAudioStream = await navigator.mediaDevices.getUserMedia({ audio: constraint });
+        } catch (permErr) {
+          alert('🎤 マイク アクセス できません\n\niPhone/iPad: 設定 → Safari → マイク で 「許可」 を ON\nMac: システム設定 → プライバシーとセキュリティ → マイク で ブラウザ を ON\n\n技術詳細: ' + (permErr?.name || permErr?.message || permErr));
+          return;
+        }
+      }
       // ★ 2026-06-22 roundM: 新規お客様 (clientId が quick-) で 録音/メモ モード時は、
       //   先に Firestore に customer doc を 作成して resolvedClientId を 取得 → 顧客台帳 自動反映
       let effectiveClientId = clientId;
@@ -1347,17 +1357,7 @@
       ov.remove();
       // モード分岐
       if (mode === 'zoom')        await startQuickZoom(effectiveClientId, clientName);
-      else if (mode === 'audio')  {
-        // 2026-08-20 統合: 顧客カード の 「対面 で 商談」 と 同 実装 (startInPersonRecording · Zoom stealth)
-        //   fallback: startInPersonRecording 未定義 なら 旧 startAudioOnlyRecording (Firestore 未初期化 環境 等)
-        if (typeof window.startInPersonRecording === 'function') {
-          await window.startInPersonRecording({ id: effectiveClientId, _fsCustomerId: effectiveClientId, name: clientName });
-        } else if (typeof startInPersonRecording === 'function') {
-          await startInPersonRecording({ id: effectiveClientId, _fsCustomerId: effectiveClientId, name: clientName });
-        } else {
-          await startAudioOnlyRecording(inpersonTs);
-        }
-      }
+      else if (mode === 'audio')  await startAudioOnlyRecording(inpersonTs, earlyAudioStream);
       else                        await openMemoOnlyForQuick(inpersonTs, effectiveClientId, clientName);
     });
   }
@@ -3586,7 +3586,12 @@
 
   // ★ 2026-06-22 roundG: マイクのみ録音 fallback (カメラ NotFound / 不要 時)
   //   音声 → 同じパイプライン (upload → AI議事録)
-  async function startAudioOnlyRecording(bookingTs, prefetchedStream) {
+  // 2026-08-20: app.js の 顧客カード の 対面 button から も 呼べる よう window に expose
+  async function startAudioOnlyRecording(bookingTs, prefetchedStream, clientOverride) {
+    // 2026-08-20: 3番目 引数 clientOverride で 客名 と id を 上書き 可 (app.js 経由 で 呼び出し 時)
+    if (clientOverride?.id && bookingTs) {
+      try { window._fpQuickClientOverride = { ts: bookingTs, ...clientOverride }; } catch (_) {}
+    }
     const R = window._fpRecorder;
     let stream;
     // ★ 2026-08-04 iOS Safari fix: caller (openQuickInpersonModal) が gesture context 保護 の ため
@@ -3727,6 +3732,8 @@
     await fetchLiveData();
     renderLeadHubInner();
   }
+  // 2026-08-20: app.js の 顧客カード対面button から cross-file 呼び出し 可能 に
+  try { window.startAudioOnlyRecording = startAudioOnlyRecording; } catch (_) {}
 
   // 画面録画 → 停止時に Drive の顧客フォルダへ自動アップロード
   async function startScreenRecording(bookingTs, zoomUrl, preOpened) {

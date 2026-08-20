@@ -8124,16 +8124,27 @@ ${ctxText}${surveyTxt}`;
     if (meetingStartBtn) {
       meetingStartBtn.addEventListener('click', () => openMeetingStartModal(c));
     }
-    // 2026-08-19: 対面 で 商談 shortcut (openMeetingStartModal を bypass、 直 startInPersonRecording)
+    // 2026-08-19 → 2026-08-20 owner「ワンボタンで完結」対応:
+    //   startInPersonRecording (Zoom stealth · popup · 参加button 手動) を 廃止 →
+    //   startAudioOnlyRecording (純 マイク · Zoom 不使用 · ワンボタン · whisper + Claude 議事録) に 切替
+    //   memory: feedback_prevent_ui_visible_equals_working_traps (Zoom Web Client host mode URL は 存在しない 実測 済)
     const inpersonBtn = document.getElementById('cd-inperson-start-btn');
     if (inpersonBtn) {
       inpersonBtn.addEventListener('click', async () => {
-        if (typeof startInPersonRecording === 'function') {
+        const inpersonTs = 'quick-' + Date.now();
+        // マイク permission を click gesture 内 で 先取り (iOS Safari 対策)
+        let earlyStream = null;
+        try {
+          earlyStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, sampleRate: 44100 } });
+        } catch (permErr) {
+          alert('🎤 マイク アクセス できません\n\niPhone/iPad: 設定 → Safari → マイク で 「許可」 を ON\nMac: システム設定 → プライバシーとセキュリティ → マイク で ブラウザ を ON');
+          return;
+        }
+        if (typeof window.startAudioOnlyRecording === 'function') {
+          await window.startAudioOnlyRecording(inpersonTs, earlyStream, { id: c._fsCustomerId || c.id, name: c.name });
+        } else if (typeof startInPersonRecording === 'function') {
+          // fallback: startAudioOnlyRecording 未 expose なら 旧 Zoom stealth flow
           startInPersonRecording(c);
-        } else {
-          // fallback: modal 経由 で 対面 mode に 誘導
-          openMeetingStartModal(c);
-          setTimeout(() => document.getElementById('fp-ms-inperson')?.click(), 100);
         }
       });
     }
