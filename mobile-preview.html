@@ -1,0 +1,1573 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#F7F7F5">
+<title>FP Compass · Mobile Preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #F7F7F5;
+  --surface: #FFFFFF;
+  --surface-2: #FAFAF8;
+  --surface-3: #F1F1EE;
+  --ink: #0F172A;
+  --ink-2: #475569;
+  --ink-3: #94A3B8;
+  --ink-4: #CBD5E1;
+  --brand: #5B5BF0;
+  --brand-2: #4747C7;
+  --brand-soft: #EEF0FF;
+  --brand-ink: #3B3BC7;
+  --accent: #F59E0B;
+  --accent-soft: #FEF3C7;
+  --success: #10B981;
+  --success-soft: #D1FAE5;
+  --danger: #EF4444;
+  --divider: rgba(15,23,42,0.06);
+  --divider-2: rgba(15,23,42,0.10);
+  --shadow-sm: 0 1px 2px rgba(15,23,42,0.04);
+  --shadow-md: 0 4px 14px rgba(15,23,42,0.06);
+  --shadow-lg: 0 12px 32px rgba(15,23,42,0.10);
+  --sheet-shadow: 0 -12px 40px rgba(15,23,42,0.14);
+  --tap: 44px;
+  --topbar-h: 52px;
+  --bottomnav-h: 60px;
+  --font: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", "Yu Gothic UI", "Helvetica Neue", sans-serif;
+  --font-num: "Inter", -apple-system, ui-sans-serif, system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body {
+  margin: 0; padding: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior-y: contain;
+}
+body { min-height: 100vh; min-height: 100dvh; }
+button { font-family: inherit; }
+a { color: inherit; text-decoration: none; }
+
+/* ============================================================
+   Top bar (52px, safe-area, blurs on scroll)
+   ============================================================ */
+.topbar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: calc(var(--topbar-h) + env(safe-area-inset-top, 0px));
+  padding-top: env(safe-area-inset-top, 0px);
+  background: rgba(247,247,245,0.72);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 0.5px solid var(--divider);
+  z-index: 100;
+  display: flex; align-items: center;
+  padding-left: 6px; padding-right: 12px;
+}
+.topbar-left, .topbar-right {
+  display: flex; align-items: center;
+  min-width: 88px;
+}
+.topbar-right { justify-content: flex-end; gap: 6px; }
+.topbar-center {
+  flex: 1;
+  text-align: center;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+.topbar-btn {
+  width: 40px; height: 40px;
+  background: transparent; border: none;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--ink);
+  cursor: pointer;
+  border-radius: 999px;
+}
+.topbar-btn:active { background: rgba(15,23,42,0.06); }
+.topbar-btn svg { width: 22px; height: 22px; stroke-width: 2; }
+
+/* Content shell */
+.screen {
+  padding-top: calc(var(--topbar-h) + env(safe-area-inset-top, 0px));
+  padding-bottom: calc(var(--bottomnav-h) + env(safe-area-inset-bottom, 0px) + 20px);
+  min-height: 100vh; min-height: 100dvh;
+}
+
+/* Large title (iOS Mail-style) */
+.large-title {
+  padding: 8px 20px 4px;
+  display: flex; align-items: flex-end; justify-content: space-between;
+  gap: 12px;
+}
+.large-title h1 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+.large-title .sub {
+  font-size: 12px;
+  color: var(--ink-3);
+  padding-bottom: 6px;
+  font-family: var(--font-num);
+  letter-spacing: 0.02em;
+}
+
+/* KPI compact row (4 tiles, horizontal scroll on 375px) */
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  padding: 12px 20px 4px;
+}
+.kpi {
+  background: var(--surface);
+  border-radius: 14px;
+  padding: 10px 10px 12px;
+  box-shadow: var(--shadow-sm);
+  display: flex; flex-direction: column;
+  align-items: flex-start;
+  min-height: 66px;
+}
+.kpi .n {
+  font-family: var(--font-num);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.kpi .lb {
+  font-size: 11px;
+  color: var(--ink-3);
+  margin-top: 6px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+.kpi.emph { background: linear-gradient(135deg, #5B5BF0 0%, #6D6DEF 100%); }
+.kpi.emph .n, .kpi.emph .lb { color: #fff; }
+.kpi.emph .lb { opacity: 0.85; }
+.kpi.warn .n { color: var(--accent); }
+.kpi.warn .lb { color: #B45309; }
+
+/* Section title */
+.section-title {
+  padding: 20px 20px 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-3);
+  letter-spacing: 0.05em;
+  text-transform: none;
+  display: flex; justify-content: space-between; align-items: baseline;
+}
+.section-title .more {
+  font-size: 12px; font-weight: 600; color: var(--brand);
+}
+
+/* Primary action row (急遽面談 + 新規顧客) */
+.primary-actions {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 10px;
+  padding: 8px 20px 4px;
+}
+.action-tile {
+  min-height: 56px;
+  border-radius: 14px;
+  border: none;
+  padding: 12px 14px;
+  cursor: pointer;
+  display: flex; align-items: center; gap: 10px;
+  font-family: inherit;
+  text-align: left;
+}
+.action-tile .icon {
+  width: 32px; height: 32px;
+  border-radius: 10px;
+  display: inline-flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.action-tile .icon svg { width: 18px; height: 18px; stroke-width: 2; }
+.action-tile .txt {
+  display: flex; flex-direction: column;
+  gap: 1px;
+}
+.action-tile .t1 { font-size: 14px; font-weight: 700; letter-spacing: -0.005em; }
+.action-tile .t2 { font-size: 10.5px; opacity: 0.7; letter-spacing: 0.02em; }
+.action-tile.primary {
+  background: linear-gradient(135deg, #5B5BF0 0%, #4747C7 100%);
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(91,91,240,0.28);
+}
+.action-tile.primary .icon { background: rgba(255,255,255,0.16); color: #fff; }
+.action-tile.secondary {
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--divider-2);
+}
+.action-tile.secondary .icon { background: var(--brand-soft); color: var(--brand); }
+
+/* Info banner (優先事項) */
+.info-banner {
+  margin: 12px 20px 0;
+  background: var(--accent-soft);
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: flex; align-items: flex-start; gap: 10px;
+}
+.info-banner .badge {
+  width: 24px; height: 24px;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #fff;
+  display: inline-flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.info-banner .badge svg { width: 14px; height: 14px; }
+.info-banner .txt .t1 { font-size: 13px; font-weight: 700; color: #78350F; }
+.info-banner .txt .t2 { font-size: 12px; color: #92400E; margin-top: 2px; line-height: 1.5; }
+
+/* Next meeting card (今日の面談) */
+.next-card {
+  margin: 8px 20px 0;
+  background: var(--surface);
+  border-radius: 14px;
+  padding: 14px 16px;
+  box-shadow: var(--shadow-sm);
+  display: flex; align-items: center; gap: 12px;
+}
+.next-card .time {
+  font-family: var(--font-num);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  min-width: 62px;
+}
+.next-card .time .ampm {
+  font-size: 10px;
+  color: var(--ink-3);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  margin-left: 3px;
+}
+.next-card .body { flex: 1; min-width: 0; }
+.next-card .body .name { font-size: 15px; font-weight: 700; }
+.next-card .body .meta {
+  font-size: 12px; color: var(--ink-2);
+  margin-top: 2px;
+  display: flex; align-items: center; gap: 6px;
+}
+.next-card .join {
+  background: var(--brand);
+  color: #fff;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.next-card .join:active { background: var(--brand-2); }
+
+/* Task list rows (LINE 要返信 etc.) */
+.task-list {
+  margin: 4px 20px 0;
+  background: var(--surface);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+.task-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px;
+  border-bottom: 0.5px solid var(--divider);
+  min-height: var(--tap);
+}
+.task-row:last-child { border-bottom: none; }
+.task-row .initial {
+  width: 32px; height: 32px;
+  border-radius: 10px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 13px;
+  flex-shrink: 0;
+}
+.task-row .body { flex: 1; min-width: 0; }
+.task-row .body .n { font-size: 14px; font-weight: 600; }
+.task-row .body .m {
+  font-size: 12px; color: var(--ink-2);
+  margin-top: 1px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.task-row .chev { color: var(--ink-4); flex-shrink: 0; }
+.task-row .chev svg { width: 18px; height: 18px; }
+.task-row .badge-r {
+  background: var(--danger);
+  color: #fff;
+  font-size: 10px; font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+/* Category color for initial (kana-row based) */
+.i-a { background: #FCE7F3; color: #9D174D; }  /* あ行: pink */
+.i-k { background: #FEF3C7; color: #92400E; }  /* か行: amber */
+.i-s { background: #DBEAFE; color: #1E40AF; }  /* さ行: blue */
+.i-t { background: #D1FAE5; color: #065F46; }  /* た行: green */
+.i-n { background: #E9D5FF; color: #6B21A8; }  /* な行: violet */
+.i-h { background: #FED7AA; color: #9A3412; }  /* は行: orange */
+.i-m { background: #CFFAFE; color: #155E75; }  /* ま行: cyan */
+.i-y { background: #FEE2E2; color: #991B1B; }  /* や行: red */
+.i-r { background: #E0E7FF; color: #3730A3; }  /* ら行: indigo */
+.i-w { background: #F1F5F9; color: #334155; }  /* わ行: slate */
+
+/* ============================================================
+   Customer list screen
+   ============================================================ */
+
+/* Sticky search + filter */
+.search-bar {
+  position: sticky;
+  top: calc(var(--topbar-h) + env(safe-area-inset-top, 0px));
+  z-index: 50;
+  background: rgba(247,247,245,0.92);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  padding: 10px 20px 8px;
+}
+.search-input-wrap {
+  position: relative;
+}
+.search-input-wrap svg {
+  position: absolute; left: 12px; top: 50%;
+  transform: translateY(-50%);
+  color: var(--ink-3);
+  width: 18px; height: 18px;
+}
+.search-input {
+  width: 100%;
+  height: 40px;
+  padding: 0 14px 0 40px;
+  border-radius: 12px;
+  border: none;
+  background: var(--surface-3);
+  font-size: 15px;
+  font-family: inherit;
+  color: var(--ink);
+  outline: none;
+}
+.search-input::placeholder { color: var(--ink-3); font-weight: 400; }
+.search-input:focus { background: var(--surface); box-shadow: 0 0 0 2px var(--brand); }
+
+/* Filter chips — horizontal scroll, 1 row */
+.filter-chips {
+  display: flex; gap: 8px;
+  padding: 10px 20px 4px;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.filter-chips::-webkit-scrollbar { display: none; }
+.chip {
+  flex-shrink: 0;
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--divider-2);
+  color: var(--ink-2);
+  font-size: 13px;
+  font-weight: 600;
+  display: inline-flex; align-items: center; gap: 6px;
+  cursor: pointer;
+  scroll-snap-align: start;
+  white-space: nowrap;
+}
+.chip .n {
+  font-size: 11px;
+  font-family: var(--font-num);
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+.chip.active {
+  background: var(--ink);
+  color: #fff;
+  border-color: var(--ink);
+}
+.chip.active .n { color: rgba(255,255,255,0.7); }
+
+/* Customer list row (60px, high density) */
+.list {
+  margin: 4px 12px 0;
+}
+.list-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 12px;
+  min-height: 60px;
+  border-bottom: 0.5px solid var(--divider);
+  background: transparent;
+}
+.list-row:active { background: var(--surface-2); }
+.list-row .initial {
+  width: 40px; height: 40px;
+  border-radius: 12px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 15px;
+  flex-shrink: 0;
+}
+.list-row .body { flex: 1; min-width: 0; }
+.list-row .name-row {
+  display: flex; align-items: center; gap: 6px;
+  min-width: 0;
+}
+.list-row .name {
+  font-size: 15px; font-weight: 600;
+  color: var(--ink);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.list-row .name-badges {
+  display: inline-flex; gap: 4px;
+  flex-shrink: 0;
+}
+.list-row .badge {
+  font-size: 10px; font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  line-height: 1.2;
+}
+.list-row .badge.line { background: var(--success-soft); color: #065F46; }
+.list-row .badge.warn { background: #FEE2E2; color: #991B1B; }
+.list-row .badge.new { background: var(--brand-soft); color: var(--brand-ink); }
+.list-row .meta {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px; color: var(--ink-3);
+  margin-top: 2px;
+  min-width: 0;
+}
+.list-row .meta .kana { color: var(--ink-3); }
+.list-row .meta .dot { width: 3px; height: 3px; border-radius: 50%; background: var(--ink-4); }
+.list-row .meta .last {
+  color: var(--ink-2);
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+}
+.list-row .meta .last.warn { color: #C2410C; }
+.list-row .meta .last.stale { color: var(--danger); }
+.list-row .chev {
+  color: var(--ink-4);
+  flex-shrink: 0;
+}
+.list-row .chev svg { width: 16px; height: 16px; }
+
+/* FAB */
+.fab {
+  position: fixed;
+  right: 16px;
+  bottom: calc(var(--bottomnav-h) + env(safe-area-inset-bottom, 0px) + 16px);
+  width: 52px; height: 52px;
+  border-radius: 999px;
+  background: var(--brand);
+  color: #fff;
+  border: none;
+  box-shadow: 0 10px 30px rgba(91,91,240,0.42);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 60;
+  cursor: pointer;
+}
+.fab:active { background: var(--brand-2); }
+.fab svg { width: 24px; height: 24px; stroke-width: 2.5; }
+
+/* ============================================================
+   Bottom navigation (60px, white, safe-area)
+   ============================================================ */
+.bottomnav {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  height: calc(var(--bottomnav-h) + env(safe-area-inset-bottom, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-top: 0.5px solid var(--divider);
+  z-index: 100;
+  display: flex;
+  justify-content: space-around;
+  align-items: stretch;
+}
+.nav-tab {
+  flex: 1;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 3px;
+  color: var(--ink-3);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  padding: 6px 4px;
+  min-height: var(--tap);
+  position: relative;
+}
+.nav-tab svg { width: 22px; height: 22px; stroke-width: 1.8; }
+.nav-tab .lb { line-height: 1; }
+.nav-tab.active { color: var(--brand); }
+.nav-tab.active svg { stroke-width: 2.2; }
+.nav-tab.active::before {
+  content: '';
+  position: absolute;
+  top: 6px; left: 50%;
+  transform: translateX(-50%);
+  width: 42px; height: 28px;
+  background: var(--brand-soft);
+  border-radius: 999px;
+  z-index: -1;
+}
+
+/* ============================================================
+   Bottom sheet (急遽面談 modal replacement)
+   ============================================================ */
+.sheet-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(15,23,42,0.32);
+  z-index: 200;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .22s ease;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+.sheet-backdrop.open { opacity: 1; pointer-events: auto; }
+.sheet {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  background: var(--surface);
+  border-radius: 20px 20px 0 0;
+  z-index: 201;
+  transform: translateY(100%);
+  transition: transform .28s cubic-bezier(.32,.72,0,1);
+  box-shadow: var(--sheet-shadow);
+  max-height: 88vh;
+  overflow-y: auto;
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 20px);
+  -webkit-overflow-scrolling: touch;
+}
+.sheet.open { transform: translateY(0); }
+.sheet-handle {
+  width: 40px; height: 4px;
+  background: var(--ink-4);
+  border-radius: 999px;
+  margin: 10px auto 0;
+}
+.sheet-header {
+  padding: 12px 20px 4px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.sheet-header h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.sheet-header .close {
+  width: 36px; height: 36px;
+  border-radius: 999px;
+  background: var(--surface-3);
+  border: none;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+.sheet-header .close svg { width: 18px; height: 18px; }
+.sheet-lead {
+  padding: 0 20px 8px;
+  font-size: 13px;
+  color: var(--ink-2);
+  line-height: 1.6;
+}
+
+/* Segmented action tiles (対面/Zoom/メモ) — 3 columns equal weight */
+.mode-tiles {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding: 12px 20px 0;
+}
+.mode-tile {
+  background: var(--surface-2);
+  border: 1.5px solid var(--divider-2);
+  border-radius: 14px;
+  padding: 14px 8px;
+  cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  min-height: 96px;
+  text-align: center;
+}
+.mode-tile .icon-lg {
+  width: 40px; height: 40px;
+  border-radius: 12px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--surface);
+  border: 1px solid var(--divider);
+  color: var(--ink-2);
+}
+.mode-tile .icon-lg svg { width: 22px; height: 22px; }
+.mode-tile .lb { font-size: 13px; font-weight: 700; color: var(--ink); }
+.mode-tile.selected {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+}
+.mode-tile.selected .icon-lg {
+  background: var(--brand);
+  color: #fff;
+  border-color: var(--brand);
+}
+.mode-tile.selected .lb { color: var(--brand-ink); }
+.mode-tile .rec {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--brand);
+  letter-spacing: 0.06em;
+}
+
+/* Client picker in sheet */
+.client-picker { padding: 12px 20px 0; }
+.picker-search {
+  position: relative;
+  margin-bottom: 10px;
+}
+.picker-search svg {
+  position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+  color: var(--ink-3); width: 18px; height: 18px;
+}
+.picker-search input {
+  width: 100%; height: 40px;
+  padding: 0 14px 0 40px;
+  background: var(--surface-3);
+  border: none;
+  border-radius: 12px;
+  font-family: inherit; font-size: 15px;
+  outline: none;
+}
+.picker-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 8px;
+  border-bottom: 0.5px solid var(--divider);
+}
+.picker-row .initial {
+  width: 32px; height: 32px;
+  border-radius: 10px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 12px;
+  flex-shrink: 0;
+}
+.picker-row .body { flex: 1; min-width: 0; }
+.picker-row .body .n { font-size: 14px; font-weight: 600; }
+.picker-row .body .m { font-size: 11.5px; color: var(--ink-3); margin-top: 1px; }
+.picker-row.new {
+  border: 1.5px dashed var(--brand);
+  border-radius: 12px;
+  background: var(--brand-soft);
+  border-bottom: 1.5px dashed var(--brand);
+}
+.picker-row.new .initial { background: var(--brand); color: #fff; }
+.picker-row.new .body .n { color: var(--brand-ink); }
+.picker-row.new .body .m { color: var(--brand); }
+
+/* Primary CTA in sheet */
+.sheet-cta {
+  padding: 16px 20px 0;
+}
+.cta-btn {
+  width: 100%;
+  height: 52px;
+  border-radius: 14px;
+  border: none;
+  background: var(--ink);
+  color: #fff;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.cta-btn:active { background: #1E293B; }
+.cta-btn:disabled { background: var(--ink-4); cursor: not-allowed; }
+
+/* ============================================================
+   Customer detail sheet
+   ============================================================ */
+.detail-hero {
+  padding: 16px 20px 12px;
+  display: flex; align-items: center; gap: 14px;
+  background: linear-gradient(180deg, var(--surface) 0%, var(--surface) 100%);
+}
+.detail-hero .initial {
+  width: 64px; height: 64px;
+  border-radius: 20px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 24px;
+}
+.detail-hero .body { flex: 1; min-width: 0; }
+.detail-hero .name {
+  font-size: 22px; font-weight: 700; letter-spacing: -0.01em;
+}
+.detail-hero .kana {
+  font-size: 12px; color: var(--ink-3);
+  margin-top: 2px;
+  letter-spacing: 0.06em;
+}
+.detail-hero .name-badges {
+  display: inline-flex; gap: 4px;
+  margin-left: 8px;
+}
+.detail-hero .badge {
+  font-size: 10px; font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  vertical-align: middle;
+}
+.detail-hero .badge.line { background: var(--success-soft); color: #065F46; }
+
+.detail-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--divider);
+  margin: 8px 20px 0;
+  border-radius: 14px;
+  overflow: hidden;
+}
+.detail-stat {
+  background: var(--surface);
+  padding: 12px 8px;
+  text-align: center;
+}
+.detail-stat .n {
+  font-family: var(--font-num);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+.detail-stat .lb {
+  font-size: 10.5px;
+  color: var(--ink-3);
+  margin-top: 2px;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+}
+
+.detail-actions {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  padding: 12px 20px 4px;
+}
+.detail-action {
+  background: var(--surface);
+  border: 1px solid var(--divider-2);
+  border-radius: 12px;
+  padding: 10px 4px;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  font-family: inherit;
+  cursor: pointer;
+  min-height: 60px;
+}
+.detail-action .icon {
+  width: 28px; height: 28px;
+  border-radius: 8px;
+  background: var(--brand-soft);
+  color: var(--brand);
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.detail-action .icon svg { width: 16px; height: 16px; }
+.detail-action .lb { font-size: 11px; font-weight: 600; color: var(--ink); }
+
+.detail-tabs {
+  display: flex; gap: 4px;
+  padding: 12px 20px 0;
+  border-bottom: 0.5px solid var(--divider);
+  margin-top: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.detail-tabs::-webkit-scrollbar { display: none; }
+.detail-tab {
+  flex-shrink: 0;
+  padding: 10px 12px 12px;
+  background: transparent;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-3);
+  cursor: pointer;
+  position: relative;
+  font-family: inherit;
+}
+.detail-tab.active { color: var(--ink); }
+.detail-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: -0.5px; left: 12px; right: 12px;
+  height: 2px;
+  background: var(--brand);
+  border-radius: 2px;
+}
+
+.detail-section {
+  padding: 16px 20px;
+}
+.detail-list-item {
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  box-shadow: var(--shadow-sm);
+}
+.detail-list-item .head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px;
+}
+.detail-list-item .head .title { font-size: 14px; font-weight: 700; }
+.detail-list-item .head .date {
+  font-size: 11px; color: var(--ink-3);
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+}
+.detail-list-item .desc {
+  font-size: 12.5px; color: var(--ink-2);
+  margin-top: 4px;
+  line-height: 1.5;
+}
+
+/* ============================================================
+   Preview mode: variant switcher chrome
+   ============================================================ */
+.preview-chrome {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 500;
+  background: rgba(15,23,42,0.94);
+  color: #fff;
+  padding: 8px 12px calc(8px + env(safe-area-inset-top, 0px));
+  padding-top: calc(8px + env(safe-area-inset-top, 0px));
+  display: flex; align-items: center; gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+}
+.preview-chrome::-webkit-scrollbar { display: none; }
+.preview-chrome .pc-lb {
+  color: rgba(255,255,255,0.5);
+  font-weight: 700;
+  flex-shrink: 0;
+  padding-right: 4px;
+}
+.preview-chrome .pc-btn {
+  background: rgba(255,255,255,0.10);
+  color: #fff;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.preview-chrome .pc-btn.active { background: var(--brand); }
+body.preview-mode .topbar { top: calc(38px + env(safe-area-inset-top, 0px)); padding-top: 0; height: var(--topbar-h); }
+body.preview-mode .screen { padding-top: calc(var(--topbar-h) + 38px + env(safe-area-inset-top, 0px)); }
+body.preview-mode .search-bar { top: calc(var(--topbar-h) + 38px + env(safe-area-inset-top, 0px)); }
+body.preview-mode .fab { bottom: calc(var(--bottomnav-h) + env(safe-area-inset-bottom, 0px) + 16px); }
+
+/* screen switcher (single-page) */
+.view { display: none; }
+.view.active { display: block; }
+</style>
+</head>
+<body class="preview-mode">
+
+<!-- ============================================================
+     Preview switcher (top of screen)
+     ============================================================ -->
+<div class="preview-chrome" role="tablist">
+  <span class="pc-lb">Preview</span>
+  <button class="pc-btn active" data-view="home">ホーム</button>
+  <button class="pc-btn" data-view="clients">顧客</button>
+  <button class="pc-btn" data-view="history">履歴</button>
+  <button class="pc-btn" data-view="detail">客詳細</button>
+  <button class="pc-btn" data-view="sheet-quick">急遽面談</button>
+</div>
+
+<!-- ============================================================
+     Top bar (shared)
+     ============================================================ -->
+<header class="topbar">
+  <div class="topbar-left">
+    <button class="topbar-btn" aria-label="メニュー">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+    </button>
+  </div>
+  <div class="topbar-center" id="top-title">FP Compass</div>
+  <div class="topbar-right">
+    <button class="topbar-btn" aria-label="通知">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+    </button>
+    <button class="topbar-btn" aria-label="アカウント" style="background:var(--brand-soft);color:var(--brand-ink);font-size:11px;font-weight:800;letter-spacing:0.04em;">FP</button>
+  </div>
+</header>
+
+<!-- ============================================================
+     VIEW: HOME
+     ============================================================ -->
+<main class="screen view active" id="view-home">
+
+  <div class="large-title">
+    <h1>ホーム</h1>
+    <div class="sub">8/20 (木)</div>
+  </div>
+
+  <!-- KPI 4 tiles compact row -->
+  <div class="kpi-row">
+    <div class="kpi"><div class="n">9</div><div class="lb">顧客 合計</div></div>
+    <div class="kpi warn"><div class="n">1</div><div class="lb">今週 フォロー</div></div>
+    <div class="kpi"><div class="n">0</div><div class="lb">LINE 受信</div></div>
+    <div class="kpi"><div class="n">0</div><div class="lb">完了 面談</div></div>
+  </div>
+
+  <!-- Primary actions -->
+  <div class="primary-actions">
+    <button class="action-tile primary" data-sheet="quick">
+      <div class="icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+      </div>
+      <div class="txt">
+        <div class="t1">急遽 面談</div>
+        <div class="t2">Zoom · 対面 · メモ</div>
+      </div>
+    </button>
+    <button class="action-tile secondary">
+      <div class="icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+      </div>
+      <div class="txt">
+        <div class="t1">新規 顧客</div>
+        <div class="t2">1タップ で 追加</div>
+      </div>
+    </button>
+  </div>
+
+  <!-- Next meeting (今日 の 予定) -->
+  <div class="section-title"><span>今日 の 面談</span><span class="more">全て →</span></div>
+  <div class="next-card">
+    <div class="time">14<span class="ampm">:00</span></div>
+    <div class="body">
+      <div class="name">遙野 真巳 様</div>
+      <div class="meta">
+        <span>Zoom · 60分</span>
+        <span class="dot" style="width:3px;height:3px;background:var(--ink-4);border-radius:50%"></span>
+        <span>前回 42日前</span>
+      </div>
+    </div>
+    <button class="join">開始</button>
+  </div>
+
+  <!-- LINE 要返信 tasks -->
+  <div class="section-title"><span>LINE 要返信</span><span class="more">履歴 →</span></div>
+  <div class="task-list">
+    <div class="task-row">
+      <div class="initial i-t">徳</div>
+      <div class="body">
+        <div class="n">徳佐 拓朗 <span style="font-size:10px;font-weight:700;background:#FEE2E2;color:#991B1B;padding:2px 6px;border-radius:4px;margin-left:4px;">アンケ未回答</span></div>
+        <div class="m">「見直し の 件、 来週 で 大丈夫 で しょ…」</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0;">
+        <div class="badge-r">3h</div>
+      </div>
+      <div class="chev">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+    </div>
+    <div class="task-row">
+      <div class="initial i-h">古</div>
+      <div class="body">
+        <div class="n">古来 さん</div>
+        <div class="m">「保険 の 見直し 相談 したい で す」</div>
+      </div>
+      <div style="font-size:11px;color:var(--ink-3);flex-shrink:0;font-family:var(--font-num);">昨日</div>
+      <div class="chev">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- 優先事項 banner -->
+  <div class="info-banner">
+    <div class="badge">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"><path d="M12 9v4M12 17h.01M10.29 3.86l-8.7 15.07a2 2 0 0 0 1.71 3.07h17.4a2 2 0 0 0 1.71-3.07L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+    </div>
+    <div class="txt">
+      <div class="t1">本日 の 優先 事項</div>
+      <div class="t2">6件 の 顧客 が 3ヶ月 以上 未接触。 タップ で 一覧 →</div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ============================================================
+     VIEW: CUSTOMER LIST
+     ============================================================ -->
+<main class="screen view" id="view-clients">
+  <div class="large-title">
+    <h1>顧客</h1>
+    <div class="sub">9 件</div>
+  </div>
+
+  <!-- Sticky search -->
+  <div class="search-bar">
+    <div class="search-input-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input class="search-input" type="search" placeholder="名前 · かな · 職業 で 検索">
+    </div>
+  </div>
+
+  <!-- Filter chips: 1 row, horizontal scroll -->
+  <div class="filter-chips">
+    <button class="chip active">全て <span class="n">9</span></button>
+    <button class="chip">〜30日 <span class="n">3</span></button>
+    <button class="chip">31〜90日 <span class="n">2</span></button>
+    <button class="chip">91〜180日 <span class="n">2</span></button>
+    <button class="chip">181〜365日 <span class="n">1</span></button>
+    <button class="chip">1年 以上 <span class="n">1</span></button>
+  </div>
+
+  <!-- High-density list rows -->
+  <div class="list">
+
+    <div class="list-row">
+      <div class="initial i-r">ラ</div>
+      <div class="body">
+        <div class="name-row">
+          <div class="name">ランタン さん</div>
+          <div class="name-badges">
+            <span class="badge new">NEW</span>
+          </div>
+        </div>
+        <div class="meta">
+          <span class="kana">ランタン</span>
+          <span class="dot"></span>
+          <span class="last">今日</span>
+        </div>
+      </div>
+      <div class="chev">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+    </div>
+
+    <div class="list-row">
+      <div class="initial i-h">遙</div>
+      <div class="body">
+        <div class="name-row">
+          <div class="name">遙野 真巳</div>
+          <div class="name-badges">
+            <span class="badge line">LINE</span>
+            <span class="badge warn">アンケ未</span>
+          </div>
+        </div>
+        <div class="meta">
+          <span class="kana">ハルノ マミ</span>
+          <span class="dot"></span>
+          <span class="last">3日前</span>
+        </div>
+      </div>
+      <div class="chev">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+    </div>
+
+    <div class="list-row">
+      <div class="initial i-t">徳</div>
+      <div class="body">
+        <div class="name-row">
+          <div class="name">徳佐 拓朗</div>
+          <div class="name-badges">
+            <span class="badge line">LINE</span>
+            <span class="badge warn">アンケ未</span>
+          </div>
+        </div>
+        <div class="meta">
+          <span class="kana">トクサ タクロウ</span>
+          <span class="dot"></span>
+          <span class="last">昨日</span>
+        </div>
+      </div>
+      <div class="chev">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+    </div>
+
+    <div class="list-row">
+      <div class="initial i-a">ア</div>
+      <div class="body">
+        <div class="name-row">
+          <div class="name">アワー ブリューイング</div>
+        </div>
+        <div class="meta">
+          <span class="kana">アワー ブリューイング</span>
+          <span class="dot"></span>
+          <span class="last">12日前</span>
+        </div>
+      </div>
+      <div class="chev">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+    </div>
+
+    <div class="list-row">
+      <div class="initial i-h">古</div>
+      <div class="body">
+        <div class="name-row">
+          <div class="name">古来 さん</div>
+          <div class="name-badges">
+            <span class="badge line">LINE</span>
+          </div>
+        </div>
+        <div class="meta">
+          <span class="kana">コライ</span>
+          <span class="dot"></span>
+          <span class="last">18日前</span>
+        </div>
+      </div>
+      <div class="chev">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+    </div>
+
+    <div class="list-row">
+      <div class="initial i-s">サ</div>
+      <div class="body">
+        <div class="name-row">
+          <div class="name">サロン ワークス</div>
+        </div>
+        <div class="meta">
+          <span class="kana">サロン ワークス</span>
+          <span class="dot"></span>
+          <span class="last warn">64日前</span>
+        </div>
+      </div>
+      <div class="chev">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+    </div>
+
+    <div class="list-row">
+      <div class="initial i-k">着</div>
+      <div class="body">
+        <div class="name-row">
+          <div class="name">着物 太郎</div>
+        </div>
+        <div class="meta">
+          <span class="kana">キモノ タロウ</span>
+          <span class="dot"></span>
+          <span class="last warn">128日前</span>
+        </div>
+      </div>
+      <div class="chev">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+    </div>
+
+    <div class="list-row">
+      <div class="initial i-a">ア</div>
+      <div class="body">
+        <div class="name-row">
+          <div class="name">アリス ミューゼ</div>
+        </div>
+        <div class="meta">
+          <span class="kana">アリス ミューゼ</span>
+          <span class="dot"></span>
+          <span class="last stale">302日前</span>
+        </div>
+      </div>
+      <div class="chev">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+    </div>
+
+    <div class="list-row">
+      <div class="initial i-y">吉</div>
+      <div class="body">
+        <div class="name-row">
+          <div class="name">吉田 恭聡</div>
+        </div>
+        <div class="meta">
+          <span class="kana">ヨシダ ヤスアキ</span>
+          <span class="dot"></span>
+          <span class="last stale">1年+</span>
+        </div>
+      </div>
+      <div class="chev">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- FAB -->
+  <button class="fab" aria-label="新規 顧客">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  </button>
+</main>
+
+<!-- ============================================================
+     VIEW: HISTORY (面談履歴)
+     ============================================================ -->
+<main class="screen view" id="view-history">
+  <div class="large-title">
+    <h1>面談 履歴</h1>
+    <div class="sub">27件</div>
+  </div>
+
+  <div class="search-bar">
+    <div class="search-input-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input class="search-input" type="search" placeholder="客名 · 議事録 で 検索">
+    </div>
+  </div>
+
+  <div class="filter-chips">
+    <button class="chip active">全て <span class="n">27</span></button>
+    <button class="chip">Zoom <span class="n">18</span></button>
+    <button class="chip">対面 <span class="n">6</span></button>
+    <button class="chip">メモ <span class="n">3</span></button>
+    <button class="chip">議事録 有 <span class="n">22</span></button>
+  </div>
+
+  <div class="list" style="margin: 4px 20px 0;">
+    <div class="detail-list-item">
+      <div class="head">
+        <div class="title">遙野 真巳 様</div>
+        <div class="date">08/17 14:00</div>
+      </div>
+      <div class="desc">保険 見直し (医療 · 終身) の 二回目 面談。 次回 提案 書 提出 予定。 相続 の 話 も 出た。</div>
+      <div style="margin-top:8px;display:flex;gap:6px;">
+        <span class="badge new" style="font-size:10px;padding:2px 6px;border-radius:4px;background:var(--brand-soft);color:var(--brand-ink);font-weight:700;">Zoom · 62分</span>
+        <span class="badge new" style="font-size:10px;padding:2px 6px;border-radius:4px;background:var(--success-soft);color:#065F46;font-weight:700;">議事録 有</span>
+      </div>
+    </div>
+    <div class="detail-list-item">
+      <div class="head">
+        <div class="title">古来 さん</div>
+        <div class="date">08/12 10:00</div>
+      </div>
+      <div class="desc">初回 ヒアリング。 家族 構成 · 現状 保険 3本 (X生命 · Y損保) · 気に なって いる 相続 対策。</div>
+      <div style="margin-top:8px;display:flex;gap:6px;">
+        <span class="badge new" style="font-size:10px;padding:2px 6px;border-radius:4px;background:var(--accent-soft);color:#78350F;font-weight:700;">対面 · 45分</span>
+        <span class="badge new" style="font-size:10px;padding:2px 6px;border-radius:4px;background:var(--success-soft);color:#065F46;font-weight:700;">議事録 有</span>
+      </div>
+    </div>
+    <div class="detail-list-item">
+      <div class="head">
+        <div class="title">徳佐 拓朗 様</div>
+        <div class="date">08/05 15:30</div>
+      </div>
+      <div class="desc">見直し 提案 の 承諾 面談。 X生命 医療 に 差替 で 月 -¥3,200。 手続き 書類 郵送 済。</div>
+      <div style="margin-top:8px;display:flex;gap:6px;">
+        <span class="badge new" style="font-size:10px;padding:2px 6px;border-radius:4px;background:var(--brand-soft);color:var(--brand-ink);font-weight:700;">Zoom · 38分</span>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ============================================================
+     VIEW: CUSTOMER DETAIL
+     ============================================================ -->
+<main class="screen view" id="view-detail">
+  <div class="detail-hero" style="padding-top: 20px;">
+    <div class="initial i-h" style="width:64px;height:64px;border-radius:20px;font-size:24px;">遙</div>
+    <div class="body">
+      <div class="name">遙野 真巳 <span class="name-badges"><span class="badge line">LINE</span></span></div>
+      <div class="kana">ハルノ マミ · 42歳 · 会社員</div>
+    </div>
+  </div>
+
+  <div class="detail-stats">
+    <div class="detail-stat">
+      <div class="n">3</div>
+      <div class="lb">面談 回数</div>
+    </div>
+    <div class="detail-stat">
+      <div class="n">2</div>
+      <div class="lb">提案 中</div>
+    </div>
+    <div class="detail-stat">
+      <div class="n">3日</div>
+      <div class="lb">最終 接触</div>
+    </div>
+  </div>
+
+  <div class="detail-actions">
+    <button class="detail-action">
+      <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
+      <div class="lb">面談 開始</div>
+    </button>
+    <button class="detail-action">
+      <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+      <div class="lb">LINE 送信</div>
+    </button>
+    <button class="detail-action">
+      <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+      <div class="lb">予約</div>
+    </button>
+    <button class="detail-action">
+      <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+      <div class="lb">提案 書</div>
+    </button>
+  </div>
+
+  <div class="detail-tabs">
+    <button class="detail-tab active">概要</button>
+    <button class="detail-tab">面談 (3)</button>
+    <button class="detail-tab">LINE</button>
+    <button class="detail-tab">提案 (2)</button>
+    <button class="detail-tab">タスク (1)</button>
+    <button class="detail-tab">メモ</button>
+  </div>
+
+  <div class="detail-section">
+    <div class="detail-list-item">
+      <div class="head">
+        <div class="title">保険 見直し 提案</div>
+        <div class="date">進行中</div>
+      </div>
+      <div class="desc">X生命 医療 の 差替 案 · 月 -¥3,200。 来週 承諾 面談 予定。</div>
+    </div>
+    <div class="detail-list-item">
+      <div class="head">
+        <div class="title">相続 対策 相談</div>
+        <div class="date">初期 段階</div>
+      </div>
+      <div class="desc">実家 の 相続 の 相談 が 出た。 生前 贈与 · 保険 活用 の 資料 送付 予定。</div>
+    </div>
+    <div class="detail-list-item">
+      <div class="head">
+        <div class="title">次回 面談</div>
+        <div class="date">08/24 (日) 14:00</div>
+      </div>
+      <div class="desc">承諾 面談 · Zoom · 60分。 リマインド LINE 予定 (前日)。</div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ============================================================
+     Bottom navigation
+     ============================================================ -->
+<nav class="bottomnav" role="tablist">
+  <button class="nav-tab active" data-view="home">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9 12 2 21 9v11a2 2 0 0 1-2 2h-4v-7H10v7H5a2 2 0 0 1-2-2z"/></svg>
+    <span class="lb">ホーム</span>
+  </button>
+  <button class="nav-tab" data-view="clients">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    <span class="lb">顧客</span>
+  </button>
+  <button class="nav-tab" data-view="history">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+    <span class="lb">履歴</span>
+  </button>
+  <button class="nav-tab">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+    <span class="lb">相談</span>
+  </button>
+  <button class="nav-tab">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+    <span class="lb">もっと</span>
+  </button>
+</nav>
+
+<!-- ============================================================
+     Bottom sheet: 急遽面談
+     ============================================================ -->
+<div class="sheet-backdrop" id="sheet-backdrop"></div>
+<div class="sheet" id="sheet-quick" role="dialog" aria-modal="true">
+  <div class="sheet-handle"></div>
+  <div class="sheet-header">
+    <h2>急遽 面談</h2>
+    <button class="close" aria-label="閉じる" id="sheet-close">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="sheet-lead">
+    予約 なし で 客 から 相談 が 入った 時 に。 3 種類 から 選んで 開始。
+  </div>
+
+  <!-- 3 mode tiles (equal weight, not "recommended" bias) -->
+  <div class="mode-tiles">
+    <button class="mode-tile selected">
+      <div class="icon-lg">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+      </div>
+      <div class="lb">Zoom</div>
+      <div class="rec">おすすめ</div>
+    </button>
+    <button class="mode-tile">
+      <div class="icon-lg">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+      </div>
+      <div class="lb">対面 録音</div>
+    </button>
+    <button class="mode-tile">
+      <div class="icon-lg">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      </div>
+      <div class="lb">メモ のみ</div>
+    </button>
+  </div>
+
+  <!-- Client picker -->
+  <div class="client-picker">
+    <div style="font-size:12px;font-weight:700;color:var(--ink-3);letter-spacing:0.05em;margin:16px 0 8px;">お客様 を 選択</div>
+    <div class="picker-search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="search" placeholder="お客様名 で 検索">
+    </div>
+
+    <div class="picker-row new">
+      <div class="initial">+</div>
+      <div class="body">
+        <div class="n">新規 お客様 として 記録</div>
+        <div class="m">後 で 顧客 登録 · この場 で 名前 だけ 入力</div>
+      </div>
+    </div>
+    <div class="picker-row">
+      <div class="initial i-r">ラ</div>
+      <div class="body">
+        <div class="n">ランタン さん</div>
+        <div class="m">未連携</div>
+      </div>
+    </div>
+    <div class="picker-row">
+      <div class="initial i-h">遙</div>
+      <div class="body">
+        <div class="n">遙野 真巳 様</div>
+        <div class="m">LINE 連携 · 3日前 面談</div>
+      </div>
+    </div>
+    <div class="picker-row">
+      <div class="initial i-h">恵</div>
+      <div class="body">
+        <div class="n">恵 さん</div>
+        <div class="m">LINE 連携</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sheet-cta">
+    <button class="cta-btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" width="18" height="18"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      <span>Zoom で 開始</span>
+    </button>
+  </div>
+
+</div>
+
+<script>
+// Preview switcher
+document.querySelectorAll('.preview-chrome .pc-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const view = btn.dataset.view;
+    if (view === 'sheet-quick') { openSheet('quick'); return; }
+    // switch view
+    document.querySelectorAll('.preview-chrome .pc-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById('view-' + view)?.classList.add('active');
+    const titles = { home: 'FP Compass', clients: '', history: '', detail: '', 'sheet-quick': 'FP Compass' };
+    document.getElementById('top-title').textContent = titles[view] ?? 'FP Compass';
+    // sync bottom nav
+    document.querySelectorAll('.nav-tab').forEach(n => n.classList.remove('active'));
+    const navMap = { home: 0, clients: 1, history: 2 };
+    if (view in navMap) document.querySelectorAll('.nav-tab')[navMap[view]]?.classList.add('active');
+    window.scrollTo(0, 0);
+  });
+});
+
+// Bottom nav → view
+document.querySelectorAll('.nav-tab').forEach((tab, i) => {
+  tab.addEventListener('click', () => {
+    const views = ['home', 'clients', 'history', null, null];
+    if (views[i]) {
+      const btn = document.querySelector(`.preview-chrome .pc-btn[data-view="${views[i]}"]`);
+      btn?.click();
+    }
+  });
+});
+
+// Home action → open sheet
+document.querySelectorAll('[data-sheet="quick"]').forEach(el => {
+  el.addEventListener('click', () => openSheet('quick'));
+});
+
+function openSheet(kind) {
+  const sh = document.getElementById('sheet-' + kind);
+  const bd = document.getElementById('sheet-backdrop');
+  if (!sh || !bd) return;
+  bd.classList.add('open');
+  requestAnimationFrame(() => sh.classList.add('open'));
+}
+function closeSheet() {
+  document.querySelectorAll('.sheet').forEach(sh => sh.classList.remove('open'));
+  document.getElementById('sheet-backdrop')?.classList.remove('open');
+}
+document.getElementById('sheet-close')?.addEventListener('click', closeSheet);
+document.getElementById('sheet-backdrop')?.addEventListener('click', closeSheet);
+
+// Mode tile selection
+document.querySelectorAll('.mode-tile').forEach(tile => {
+  tile.addEventListener('click', () => {
+    document.querySelectorAll('.mode-tile').forEach(t => t.classList.remove('selected'));
+    tile.classList.add('selected');
+    const lb = tile.querySelector('.lb')?.textContent || 'Zoom';
+    const ctaSpan = document.querySelector('.sheet-cta .cta-btn span');
+    if (ctaSpan) ctaSpan.textContent = lb + ' で 開始';
+  });
+});
+
+// Scroll shadow on topbar
+let ticking = false;
+window.addEventListener('scroll', () => {
+  if (!ticking) {
+    requestAnimationFrame(() => {
+      document.body.dataset.scrolled = window.scrollY > 8 ? '1' : '0';
+      ticking = false;
+    });
+    ticking = true;
+  }
+}, { passive: true });
+</script>
+</body>
+</html>
