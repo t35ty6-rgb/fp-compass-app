@@ -8177,15 +8177,9 @@ ${ctxText}${surveyTxt}`;
           const res = await fn({ customerId: fsCustomerId, lineFriendId: c.lineFriendId || null });
           const data = (res && res.data) || {};
           if (data.startUrl) {
-            // ★ 2026-08-20 qa FAIL#1 CRITICAL fix: wc/join → wc/start (host 認証 経路)
-            const forceWebUrl = (() => {
-              try {
-                const m = data.startUrl.match(/\/(j|s)\/(\d+)([?&].*)?/);
-                if (!m) return data.startUrl;
-                const u = new URL(data.startUrl);
-                return `https://${u.host}/wc/start/${m[2]}${m[3] || ''}`;
-              } catch (_) { return data.startUrl; }
-            })();
+            // 2026-08-20 実測: wc/start URL は Zoom に 存在 しない (marketing homepage に redirect)
+            //   → raw start_url (zoom.us/s/{id}?zak=xxx) を そのまま popup に 渡す = Zoom App 起動 で host join
+            const forceWebUrl = data.startUrl;
             // ★ 2026-07-18 bug fix: 拡張機能 に 客名 arm (前客 の 名前 が 残る バグ 対応)
             //   armAndOpenZoom の auto-open は disable 済 なので、 arm だけ 呼ぶ armTabRecorder を 使う
             try {
@@ -11650,17 +11644,13 @@ STEP C: 結果報告
       const res = await fn({ customerId: fsCustomerId, lineFriendId: null });
       const data = (res && res.data) || {};
       if (!data.startUrl) throw new Error('Zoom URL 取得 失敗');
-      // 2026-08-20 qa FAIL#1 CRITICAL fix: wc/join → wc/start (host 認証 · ZAK 経路)
-      //   旧: wc/join = 参加者 URL、 host 認証 なし → status="waiting" のまま で cloud recording 発火 しない
-      //   新: wc/start = host URL、 ZAK token で 認証 通り 実 meeting 開始 + 自動 record
-      const forceWebUrl = (() => {
-        try {
-          const m = data.startUrl.match(/\/(j|s)\/(\d+)([?&].*)?/);
-          if (!m) return data.startUrl;
-          const u = new URL(data.startUrl);
-          return `https://${u.host}/wc/start/${m[2]}${m[3] || ''}`;
-        } catch (_) { return data.startUrl; }
-      })();
+      // 2026-08-20 実測 判明: Zoom Web Client に host mode URL (wc/start) は 存在 しない (Playwright 実測 で
+      //   marketing homepage に redirect 検出)。 Zoom の host 認証 は Zoom App が start_url を 処理 する 設計。
+      //   → raw data.startUrl (zoom.us/s/{id}?zak=xxx) を そのまま popup に 渡す。
+      //   Desktop: Zoom App 起動 で host join (auto_recording:cloud が 発火)
+      //   Mobile: Zoom App 起動 (未 install なら install prompt)
+      //   memory: feedback_prevent_ui_visible_equals_working_traps (「wc/start が 動く」 の 神話 を 実測 で 崩した)
+      const forceWebUrl = data.startUrl;
       // ★ 2026-08-20 gesture 先行 open pattern: 既 open 済 popup の location.href を 差替
       try { stealthWin.location.href = forceWebUrl; } catch (e) {
         // 稀に COOP/COEP で block される case → 再 open trial
