@@ -12837,6 +12837,28 @@ body:not([data-home-view]) [data-view-target="cal"] { display: none !important; 
     overflow-wrap: normal !important;
   }
 
+  /* 5b. cd-tab (客詳細 内 tab: 概観/ライフ/議事録/Q&A/家族) の 右側 fade shadow
+        qa-reviewer P1-1: 5 tab 合計 472px で 393px viewport から 68px はみ出し、
+        overflow-x:auto は 効いて いる が scroll indicator が なく 「家族」 tab の 存在 に 気付か ない。
+        右側 に fade gradient を position:sticky で 貼り付けて 「もっと 右 に ある」 を 視覚化。 */
+  .cd-modal .cd-tabs {
+    position: relative;
+    scroll-snap-type: x proximity;
+  }
+  .cd-modal .cd-tabs > *:last-child::after {
+    /* dummy: 現状 では 対応 難 、 別 approach: wrapping div を JS で 追加 する 必要 あるが
+       まず は cd-tabs 自体 に fade を CSS masking で 付ける */
+  }
+  /* 疑似要素 は flex 子 で は 効か ないので mask-image で 右端 fade */
+  .cd-modal .cd-tabs {
+    -webkit-mask-image: linear-gradient(to right, #000 0%, #000 calc(100% - 24px), transparent 100%);
+    mask-image: linear-gradient(to right, #000 0%, #000 calc(100% - 24px), transparent 100%);
+  }
+  /* 全 tab が scroll 端 に 到達 したら mask を 解除 (scroll-shadow polyfill 相当) */
+  .cd-modal .cd-tabs:not([data-scroll-end="false"]) {
+    /* placeholder — scroll 判定 用 の JS を 別途 対応 */
+  }
+
   /* 6. 議事録 tab の 面談 card head: title + 右側 actions (TODO 候補 レビュー + 削除) が
      flex row space-between で mobile では 右側 button 群 が 縦圧迫。
      mobile で は head を 縦stack 化、 actions 行 は タイトル 下 全幅 */
@@ -12899,5 +12921,22 @@ body:not([data-home-view]) [data-view-target="cal"] { display: none !important; 
   .fp-filter-chips > *, .cl-filter-chips > *, [class*="filter-chips"] > * {
     flex-shrink: 0 !important;
     white-space: nowrap !important;
+  }
+
+  /* 7. qa-reviewer P2-2: 「⚠ 要返事 N」 fp-unread-badge が 9px で 実機 4.5pt 相当、 視認 不能 */
+  .fp-unread-badge {
+    font-size: 11px !important;
+    padding: 3px 9px !important;
+  }
+  /* 7b. qa-reviewer P2-1: .status-pill が 10px と 過小 (client-row 内) */
+  .client-row .status-pill,
+  .lch-item .status-pill,
+  .brief-compact-name .status-pill {
+    font-size: 11px !important;
+  }
+  /* 7c. qa-reviewer P2-4: 「AI」 バッジ 8px も 昇格 */
+  span[style*="font-size:8px"],
+  span[style*="font-size: 8px"] {
+    font-size: 10.5px !important;
   }
 }

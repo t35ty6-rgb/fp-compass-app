@@ -10397,6 +10397,10 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
     document.querySelectorAll('.lch-item').forEach(el => el.classList.toggle('active', el.dataset.cid === cid));
     const activeRow = document.querySelector(`.lch-item[data-cid="${(cid || '').replace(/"/g, '\\"')}"] .lch-unread`);
     if (activeRow) activeRow.remove();
+    // 2026-08-21 owner「LINE モバイル で 使え ない」対応 (qa-reviewer P1-2):
+    //   モバイル では list と chat の 2 pane が 340px 幅 で 393px viewport から は み出し。
+    //   list 側 に .chat-active class を 付けて CSS で pane 切替、 chat 側 の 戻るbutton で 解除。
+    try { document.querySelector('.lch-wrap')?.classList.add('chat-active'); } catch (_) {}
     _lchRenderChat(c);
     try {
       const eligible = _lchGetClients().filter(x => x.lineFriendId || (Array.isArray(x.lineHistory) && x.lineHistory.length > 0));
@@ -10446,6 +10450,8 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
 
     pane.innerHTML = `
       <header class="lch-chat-header">
+        <!-- 2026-08-21 owner「LINE モバイル 使えない」対応: モバイル 戻る button (list に 戻る) -->
+        <button class="lch-mobile-back" id="lch-mobile-back" title="トーク一覧 に 戻る" aria-label="戻る" style="display:none;background:transparent;border:none;padding:6px 4px 6px 0;margin-right:4px;color:#0F1729;cursor:pointer;font-size:16px;font-weight:700;">‹</button>
         <div class="lch-chat-avatar ${_lchAvatarClass(c.id)}">${_lchEscape(_lchAvatarChar(c.name))}</div>
         <div>
           <div class="lch-chat-name">${_lchEscape(c.name || '(名前 未設定)')}</div>
@@ -10499,6 +10505,14 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
     const openModalBtn = document.getElementById('lch-open-modal');
     if (openModalBtn && typeof window.openClientModal === 'function') {
       openModalBtn.addEventListener('click', () => window.openClientModal(c.id));
+    }
+    // 2026-08-21 mobile: 戻る button で chat pane を 閉じて list pane に 戻る
+    const backBtn = document.getElementById('lch-mobile-back');
+    if (backBtn) {
+      backBtn.addEventListener('click', () => {
+        document.querySelector('.lch-wrap')?.classList.remove('chat-active');
+        _lchState.selectedClientId = null;
+      });
     }
   }
 

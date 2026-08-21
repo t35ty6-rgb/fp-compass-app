@@ -885,6 +885,36 @@
 
 /* C1 stream filter chips: default gray, active = signature */
 .c1s-chip.active { background: var(--sig-violet) !important; color: #fff !important; border-color: var(--sig-violet) !important; }
+
+/* 2026-08-21 owner「LINE モバイル 使えない」対応 (qa-reviewer P1-2):
+   lch-wrap は PC 340px + 1fr の 2列 grid、 393px viewport で 340px サイドバー + チャット同居 で 各要素 +30〜38px はみ出し。
+   モバイル では 1列 化、 client tap で pane 切替 (WhatsApp / LINE 公式アプリ pattern)。 */
+@media (max-width: 768px) {
+  .lch-wrap {
+    grid-template-columns: 1fr !important;
+    height: calc(100vh - 56px - 64px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px)) !important;
+    min-height: 0 !important;
+    max-width: 100% !important;
+    border-left: none !important;
+    border-right: none !important;
+  }
+  /* 初期: list を表示 · chat 非表示 */
+  .lch-wrap .lch-chat-pane { display: none !important; }
+  .lch-wrap .lch-list-pane { display: flex !important; }
+  /* client tap 後 (chat-active class): list 非表示 · chat 表示 */
+  .lch-wrap.chat-active .lch-list-pane { display: none !important; }
+  .lch-wrap.chat-active .lch-chat-pane { display: flex !important; }
+  /* chat header の 戻るbutton (‹) を モバイル で のみ 表示 */
+  .lch-mobile-back { display: inline-block !important; min-width: 30px; min-height: 32px; }
+  .lch-mobile-back:active { background: rgba(15,23,42,0.06) !important; border-radius: 6px; }
+  /* chat 内 の 全 要素 が 100vw 内 に 収まる よう */
+  .lch-chat-pane, .lch-chat-header, .lch-chat-body, .lch-quick, .lch-input-bar {
+    max-width: 100% !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  .lch-quick { flex-wrap: wrap !important; overflow-x: auto !important; }
+}
 </style>
 
 </head>
