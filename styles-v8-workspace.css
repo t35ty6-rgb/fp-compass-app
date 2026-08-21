@@ -12939,4 +12939,39 @@ body:not([data-home-view]) [data-view-target="cal"] { display: none !important; 
   span[style*="font-size: 8px"] {
     font-size: 10.5px !important;
   }
+
+  /* 8. 議事録 modal (showTranscriptModal) mobile 対応
+     owner「議事録 も 途切れる」 fix。
+     - tr-tabs は 横スクロール (要約/タスク/全文 tab)
+     - tr-panel の max-height:560px cap を 解除 (modal-overlay の 自然 スクロール に 任せる)
+     - padding 22-28px は モバイル で 過剰 → 12-14px */
+  #tr-tabs {
+    display: flex !important;
+    overflow-x: auto !important;
+    flex-wrap: nowrap !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding: 0 12px !important;
+  }
+  #tr-tabs::-webkit-scrollbar { display: none; }
+  .tr-tab {
+    flex-shrink: 0 !important;
+    white-space: nowrap !important;
+    padding: 12px 12px 10px !important;
+    font-size: 12px !important;
+  }
+  [data-tr-panel] {
+    max-height: none !important;
+    padding: 16px 14px !important;
+  }
+  [data-tr-panel] > * {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  /* 議事録 modal の 全 element を viewport 幅 に 収める (h2, p, div 等) */
+  #modal-overlay .modal-body img,
+  #modal-overlay .modal-body iframe {
+    max-width: 100% !important;
+    height: auto !important;
+  }
 }
