@@ -890,13 +890,25 @@
    lch-wrap は PC 340px + 1fr の 2列 grid、 393px viewport で 340px サイドバー + チャット同居 で 各要素 +30〜38px はみ出し。
    モバイル では 1列 化、 client tap で pane 切替 (WhatsApp / LINE 公式アプリ pattern)。 */
 @media (max-width: 768px) {
+  /* 2026-08-21 owner「LINE で 返信 スクロール しても メッセージ 送れない」対応 (2回目):
+     旧 fix (height: calc) で は 親 container の 上下 padding (main:12 + container:12 = 24px 上下) で
+     wrap top が 98px、 wrap bottom = 638px と なり bnav top (596px) と 42px 被り = 入力欄 が 隠れる。
+     position:fixed で viewport 上下 に 直接 anchor し、 topbar/bnav の 内側 に 完全 収める。 */
   .lch-wrap {
-    grid-template-columns: 1fr !important;
-    height: calc(100vh - 56px - 64px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px)) !important;
+    position: fixed !important;
+    top: calc(56px + env(safe-area-inset-top, 0px)) !important;
+    bottom: calc(64px + env(safe-area-inset-bottom, 0px)) !important;
+    left: 0 !important;
+    right: 0 !important;
+    height: auto !important;
+    max-height: none !important;
     min-height: 0 !important;
     max-width: 100% !important;
     border-left: none !important;
     border-right: none !important;
+    grid-template-columns: 1fr !important;
+    z-index: 50 !important;
+    background: #fff !important;
   }
   /* 初期: list を表示 · chat 非表示 */
   .lch-wrap .lch-chat-pane { display: none !important; }
@@ -914,6 +926,23 @@
     box-sizing: border-box !important;
   }
   .lch-quick { flex-wrap: wrap !important; overflow-x: auto !important; }
+  /* quick 返信 button 群 は 高さ 圧縮 で chat body に 場所 譲る */
+  .lch-quick { padding: 8px 12px !important; gap: 6px !important; }
+  .lch-quick .lch-q {
+    font-size: 12px !important;
+    padding: 6px 10px !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+  }
+  /* input bar は chat pane の 底 に 固定 (flex column の 最終 子要素、 自然 に 下端 に 来る) */
+  .lch-input-bar {
+    padding: 8px 12px !important;
+    gap: 6px !important;
+  }
+  .lch-input-bar textarea, .lch-input-bar input {
+    min-height: 40px !important;
+    font-size: 16px !important; /* iOS zoom 防止 */
+  }
 }
 </style>
 
