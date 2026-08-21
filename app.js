@@ -11582,6 +11582,15 @@ STEP C: 結果報告
           background: linear-gradient(135deg,#0F172A 0%,#1E3A5F 100%) !important;
           display: block !important;
         }
+        /* 2026-08-21 owner「議事録 生成中 · mini widget 途切れる」対応:
+           モバイル で は bnav 高 (64px + safe-area) 分 上 に 引き上げて 「面談終了」 button が 押せる よう に */
+        @media (max-width: 768px) {
+          #fp-inperson-recording[data-mode="mini"] {
+            bottom: calc(20px + 64px + env(safe-area-inset-bottom, 0px)) !important;
+            width: calc(100vw - 32px) !important;
+            max-width: 320px !important;
+          }
+        }
         #fp-inperson-recording[data-mode="mini"] .fp-full-only { display: none !important; }
         #fp-inperson-recording[data-mode="mini"] #fp-inperson-debug,
         #fp-inperson-recording[data-mode="mini"] #fp-inperson-force-close { display: none !important; }
