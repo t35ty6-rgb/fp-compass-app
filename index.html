@@ -909,6 +909,19 @@
     grid-template-columns: 1fr !important;
     z-index: 50 !important;
     background: #fff !important;
+    /* 2026-08-21 fix 2回目: wrap の overflow:visible で 中身 が はみ出し input top=2084 に。
+       overflow: hidden で 明示 bound、 flex 子孫 が 内側 で scroll する よう に */
+    overflow: hidden !important;
+  }
+  .lch-wrap .lch-chat-pane,
+  .lch-wrap .lch-list-pane {
+    min-height: 0 !important;
+    overflow: hidden !important;
+  }
+  .lch-wrap .lch-chat-body {
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    flex: 1 1 0 !important;
   }
   /* 初期: list を表示 · chat 非表示 */
   .lch-wrap .lch-chat-pane { display: none !important; }
