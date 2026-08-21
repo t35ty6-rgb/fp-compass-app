@@ -11397,7 +11397,8 @@ STEP C: 結果報告
     if (!container) {
       container = document.createElement('div');
       container.id = 'fp-minutes-badges';
-      container.style.cssText = 'position:fixed;bottom:20px;right:20px;z-index:10240;display:flex;flex-direction:column;gap:8px;pointer-events:none;font-family:"Noto Sans JP",-apple-system,sans-serif;';
+      // 2026-08-21 owner「議事録 生成中 が 途切れる」 fix: bnav 高さ (64px + safe-area) + 12px gap で bnav 上 に retreat
+      container.style.cssText = 'position:fixed;bottom:calc(20px + var(--fp-mobile-bnav-offset, 0px));right:20px;z-index:10240;display:flex;flex-direction:column;gap:8px;pointer-events:none;font-family:"Noto Sans JP",-apple-system,sans-serif;';
       document.body.appendChild(container);
     }
     const startedAt = Date.now();
