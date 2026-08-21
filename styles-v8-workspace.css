@@ -10544,11 +10544,25 @@ body.modal-open {
 @media (max-width: 768px) {
   .cd-right table,
   table.clients,
-  main table {
+  main table,
+  .sched-table,
+  table[class] {
     display: block !important;
     overflow-x: auto !important;
     -webkit-overflow-scrolling: touch;
     max-width: 100% !important;
+    white-space: nowrap !important;
+  }
+  /* 2026-08-21 owner「送信ログ の header が 縦字 に なってる」 対応:
+     table 内 の th/td は narrow でも 1 セル 1 行 で 横スクロール、 縦字 化 禁止 */
+  .cd-right table th, .cd-right table td,
+  table.clients th, table.clients td,
+  main table th, main table td,
+  .sched-table th, .sched-table td,
+  table[class] th, table[class] td {
+    white-space: nowrap !important;
+    word-break: keep-all !important;
+    writing-mode: horizontal-tb !important;
   }
 }
 
