@@ -12976,8 +12976,10 @@ body:not([data-home-view]) [data-view-target="cal"] { display: none !important; 
     min-height: 100vh !important;
     border-radius: 0 !important;
   }
-  /* 2 pane grid: 「grid-template-columns:1fr 380px」 inline style で 直接 target */
+  /* 2 pane grid: 「grid-template-columns:1fr 380px」 inline style で 直接 target
+     display を !important で 明示的 に grid に 戻す (別 CSS が display:flex 上書き してる) */
   #fp-slots-modal div[style*="grid-template-columns:1fr 380px"] {
+    display: grid !important;
     grid-template-columns: 1fr !important;
   }
   #fp-slots-modal div[style*="grid-template-columns:1fr 380px"] > div:last-child {
@@ -12988,6 +12990,7 @@ body:not([data-home-view]) [data-view-target="cal"] { display: none !important; 
     /* 左 入力 pane の border-right / padding 調整 */
     border-right: none !important;
     padding: 16px 14px !important;
+    display: block !important; /* 誤 flex override を undo */
   }
   /* Footer: send button が 見え る よう に、 flex-wrap 許可 */
   #fp-slots-modal > div > div:last-child {
