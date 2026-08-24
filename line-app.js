@@ -970,14 +970,9 @@
           <h1 style="font-family:'Noto Sans JP',serif;font-size:28px;font-weight:700;letter-spacing:0.02em;margin:0 0 6px;color:#1f2a3f;">新規相談</h1>
           <p style="color:#6b7280;font-size:13px;margin:0;line-height:1.6;">LINE — アンケート — 候補日 — Zoom面談 — 完了 までの進行状況</p>
         </div>
-        <!-- ★ 2026-08-18 owner「Zoom 使う」明示 で 対面 録音 撤去 · Zoom 発行 一本 化 -->
-        <button id="fp-quick-inperson"
-          style="background:linear-gradient(135deg,#7C3AED,#5B21B6);color:#fff;border:none;padding:14px 22px;border-radius:10px;font-size:13.5px;font-weight:800;cursor:pointer;font-family:'Hiragino Sans',sans-serif;letter-spacing:0.04em;box-shadow:0 6px 20px rgba(124,58,237,0.35);display:flex;align-items:center;gap:10px;white-space:nowrap;"
-          title="急 に 面談 が 入った 時 → ボタン 1つ で Zoom 発行 (対面 でも Zoom 経由 で 録画)">
-          <span style="font-size:18px;line-height:1;">●</span>
-          <span>急遽 面談 開始 (Zoom)</span>
-          <span style="background:rgba(255,255,255,0.18);font-size:10px;padding:2px 7px;border-radius:10px;font-weight:700;letter-spacing:0.06em;">予約 不要</span>
-        </button>
+        <!-- ★ 2026-08-25 owner「急遽面談 スタート 全部 いらない (客カード の 音声 upload に 統一)」 で 撤去 -->
+        <!-- 旧 button 互換 のため hidden で 残置 (別 code path から click 発火 される 可能性) -->
+        <button id="fp-quick-inperson" style="display:none;" hidden></button>
       </div>
 
       ${isDemo ? '<div style="background:#fdfbf4;border:1px solid #e8d9a8;border-radius:6px;padding:11px 16px;margin-bottom:24px;font-size:12px;color:#5e4d1a;font-family:\'Noto Sans JP\',sans-serif;letter-spacing:0.02em;"><strong style="font-weight:700;">Note —</strong> 表示中の候補日待ち4件はサンプルです。本番では実際のLINEアンケート回答が並びます</div>' : ''}
@@ -3971,9 +3966,13 @@
     panel.id = 'fp-unified-progress';
     panel.style.cssText = 'position:fixed;top:18px;right:18px;background:#fff;border:1px solid #e8e2d4;border-radius:14px;box-shadow:0 18px 48px rgba(15,23,42,0.18);z-index:10010;font-family:inherit;width:380px;overflow:hidden;';
     panel.innerHTML = `
-      <div style="background:linear-gradient(135deg,#fdfbf4,#fafaf6);padding:14px 18px;border-bottom:1px solid #e8e2d4;">
-        <div style="font-size:10.5px;font-weight:700;color:#8b7d5d;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:3px;">Recording Stopped — Processing</div>
-        <strong style="font-size:14px;color:#1f2a3f;">${escapeHtml(customerName)}様 面談 (${(blob.size/1024/1024).toFixed(1)}MB)</strong>
+      <div style="background:linear-gradient(135deg,#fdfbf4,#fafaf6);padding:14px 18px;border-bottom:1px solid #e8e2d4;display:flex;align-items:flex-start;gap:10px;">
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:10.5px;font-weight:700;color:#8b7d5d;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:3px;">Recording Stopped — Processing</div>
+          <strong style="font-size:14px;color:#1f2a3f;">${escapeHtml(customerName)}様 面談 (${(blob.size/1024/1024).toFixed(1)}MB)</strong>
+        </div>
+        <!-- 2026-08-25 owner「消す button なし で 邪魔」対応: 閉じる × 追加 (処理 は 裏 で 継続) -->
+        <button id="fp-unified-progress-close" title="パネル を 閉じる (処理 は 裏 で 継続)" aria-label="閉じる" style="background:transparent;border:none;color:#8b7d5d;font-size:20px;cursor:pointer;padding:2px 8px;margin:-4px -6px 0 0;border-radius:6px;line-height:1;font-family:inherit;flex-shrink:0;transition:background .12s,color .12s;">×</button>
       </div>
       <div style="padding:14px 18px;">
         <div id="fp-progress-steps" style="display:grid;gap:10px;">
@@ -3983,10 +3982,25 @@
         </div>
         <div id="fp-progress-bottom" style="margin-top:14px;padding:11px 14px;background:#fdfbf4;border:1px dashed #c19a3a;border-radius:8px;font-size:11.5px;color:#5e4d1a;line-height:1.6;text-align:center;">
           ⏳ そのまま <strong>1〜2分</strong> お待ちください<br>
-          <span style="font-size:10.5px;opacity:0.85;">他の操作は普通にできます</span>
+          <span style="font-size:10.5px;opacity:0.85;">他の操作は普通にできます · 完了後 議事録 tab に 反映</span>
         </div>
       </div>`;
     document.body.appendChild(panel);
+    // 閉じる button (処理 は 裏 で 続く)
+    const closeBtn = document.getElementById('fp-unified-progress-close');
+    if (closeBtn) {
+      closeBtn.addEventListener('mouseenter', () => { closeBtn.style.background = 'rgba(15,23,42,0.06)'; closeBtn.style.color = '#1f2a3f'; });
+      closeBtn.addEventListener('mouseleave', () => { closeBtn.style.background = 'transparent'; closeBtn.style.color = '#8b7d5d'; });
+      closeBtn.addEventListener('click', () => {
+        panel.remove();
+        // 小 badge を bottom-right に 出して 「まだ 処理 中」 を 判る よう に
+        try {
+          if (typeof window.showMinutesGeneratingBadge === 'function') {
+            window.showMinutesGeneratingBadge({ id: 'processing-' + Date.now(), _fsCustomerId: 'processing', name: customerName });
+          }
+        } catch (_) {}
+      });
+    }
   }
 
   function renderStep(id, title, desc) {

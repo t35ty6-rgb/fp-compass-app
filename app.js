@@ -6760,17 +6760,15 @@
                 <span style="font-size:22px;line-height:1;">🎙</span>
                 <span style="text-align:left;line-height:1.35;">面談 を 開始<br><span style="font-size:12px;font-weight:600;letter-spacing:0.01em;">今すぐ / 予約 / 相手主催 URL / 電話 · 全部 ここから</span></span>
               </button>
-              <!-- ★ 2026-08-19 owner「顧客モーダルからも 対面で商談 button を 追加」対応 · 対面録音 shortcut -->
-              <button id="cd-inperson-start-btn" data-client-id="${escapeHtml(c.id)}" style="margin-top:8px;width:100%;background:#fff;color:#1E40AF;border:1.5px solid #1E40AF;padding:14px 18px;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer;font-family:'Noto Sans JP',sans-serif;box-shadow:0 3px 10px rgba(30,64,175,0.10);display:flex;align-items:center;justify-content:center;gap:10px;transition:background .15s,box-shadow .15s;">
-                <span style="font-size:18px;line-height:1;color:#1E40AF;">🎤</span>
-                <span style="text-align:left;line-height:1.3;">対面 で 商談 を 開始<span style="display:block;font-size:11px;font-weight:600;color:#475569;margin-top:2px;">Zoom 使わず 音声 だけ 録音 → AI 議事録</span></span>
+              <!-- ★ 2026-08-25 owner「対面 で 商談 を 開始 button いらない (音声 upload に 統一)」 で 撤去 -->
+              <!-- 旧 button 互換 のため hidden 残置 (別 code path から click 発火 される 可能性) -->
+              <button id="cd-inperson-start-btn" data-client-id="${escapeHtml(c.id)}" style="display:none;" hidden></button>
+              <!-- ★ 2026-08-22 owner「対面 の 音声 データ を アップロード → 文字起こし」対応 · 2026-08-25 主 flow に 昇格 -->
+              <button id="cd-audio-upload-btn" data-client-id="${escapeHtml(c.id)}" style="margin-top:8px;width:100%;background:linear-gradient(135deg,#5B5BF0,#4747C7);color:#fff;border:none;padding:14px 20px;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer;font-family:'Noto Sans JP',sans-serif;box-shadow:0 6px 18px rgba(91,91,240,0.28);display:flex;align-items:center;justify-content:center;gap:10px;transition:transform .12s,box-shadow .15s;">
+                <span style="font-size:18px;line-height:1;">📁</span>
+                <span style="text-align:left;line-height:1.3;">音声 を アップロード → 議事録 生成<span style="display:block;font-size:11px;font-weight:600;color:rgba(255,255,255,0.85);margin-top:2px;">対応: MP3 · M4A (iPhone ボイスメモ) · WAV · WEBM · MP4 (音声抽出)</span></span>
               </button>
-              <!-- ★ 2026-08-22 owner「対面 の 音声 データ を アップロード → 文字起こし」対応 -->
-              <button id="cd-audio-upload-btn" data-client-id="${escapeHtml(c.id)}" style="margin-top:6px;width:100%;background:#fff;color:#7C2D12;border:1.5px dashed #C19A3A;padding:12px 16px;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;font-family:'Noto Sans JP',sans-serif;display:flex;align-items:center;justify-content:center;gap:10px;transition:background .15s,border-style .15s;">
-                <span style="font-size:16px;line-height:1;">📁</span>
-                <span style="text-align:left;line-height:1.3;">録音 済 音声 を アップロード<span style="display:block;font-size:10.5px;font-weight:600;color:#78716C;margin-top:1px;">別 アプリ で 録音 した mp3/m4a/webm を Whisper で 文字起こし</span></span>
-              </button>
-              <input type="file" id="cd-audio-upload-input" data-client-id="${escapeHtml(c.id)}" accept="audio/*,video/mp4" style="display:none;">
+              <input type="file" id="cd-audio-upload-input" data-client-id="${escapeHtml(c.id)}" accept="audio/mpeg,audio/mp3,audio/wav,audio/x-wav,audio/m4a,audio/x-m4a,audio/mp4,audio/webm,audio/*,video/mp4,video/webm" style="display:none;">
               <!-- 旧 button 互換 (別 code path から click 発火 される ため hidden で 残置) -->
               <button id="cd-instant-zoom-btn" data-client-id="${escapeHtml(c.id)}" style="display:none;"></button>
               <button id="cd-schedule-zoom-btn" data-client-id="${escapeHtml(c.id)}" style="display:none;"></button>
