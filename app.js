@@ -8309,6 +8309,10 @@ ${ctxText}${surveyTxt}`;
             }
             if (typeof window.updateProgressStep === 'function') try { window.updateProgressStep('ai', 'done'); } catch (_) {}
             alert('✅ 文字起こし + AI 議事録 生成 完了\n\n議事録 tab を 開いて 確認 して ください。');
+          } else if (aiResult && aiResult.error === 'daily_quota_exhausted') {
+            // 2026-08-25: 日次 quota 超過 は 明日 まで リセット されない、 actionable message で 早期 fail
+            alert('⚠ 今日 の 音声 処理 上限 (3時間 分 = 10800秒) を 超過 しました\n\nWhisper 文字起こし の 日次 quota は 明日 の 深夜 に リセット されます。\n\n対応:\n・翌日 に 再 upload\n・quota 上限 を 上げる (owner action: Cloud Run endpoint config 修正)');
+            throw new Error('daily_quota_exhausted');
           } else {
             throw new Error(aiResult?.error || 'AI 処理 失敗');
           }
@@ -8316,7 +8320,9 @@ ${ctxText}${surveyTxt}`;
           if (typeof window.fetchLiveData === 'function') { try { await window.fetchLiveData(); } catch (_) {} }
         } catch (err) {
           console.error('[audio upload] fail:', err);
-          alert('❌ 文字起こし 失敗: ' + (err?.message || err));
+          if (String(err?.message || err) !== 'daily_quota_exhausted') {
+            alert('❌ 文字起こし 失敗: ' + (err?.message || err));
+          }
         } finally {
           uploadBtn.disabled = false;
           uploadBtn.innerHTML = origHtml;

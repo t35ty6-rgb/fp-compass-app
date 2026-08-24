@@ -4595,6 +4595,21 @@
           if (!navigator.onLine && window.RecordingPersist?.waitForOnline) await window.RecordingPersist.waitForOnline();
           try {
             r = await doFetch();
+            // 2026-08-25 owner「5分 以上 待ち」真因 判明: 429 の 中身 は 日次 audio_sec quota (3時間) 超過。
+            //   quota 系 は retry しても 明日 まで 回復 しない → 即 fail + actionable message
+            //   通常 rate limit (5xx / retryAfter 短) のみ retry 対象
+            const isQuotaError = r.status === 429 && await (async () => {
+              try {
+                const clone = r.clone(); const body = await clone.text();
+                if (/audio_sec|クォータ|quota/i.test(body)) return body;
+              } catch (_) {}
+              return null;
+            })();
+            if (isQuotaError) {
+              console.error('[aiProcessRecording] quota exhausted:', isQuotaError);
+              updateAiStep(`⚠ 今日 の 音声 処理 上限 (3時間 分) 超過`);
+              return { ok: false, error: 'daily_quota_exhausted', quotaError: isQuotaError, retryable: false };
+            }
             const retriable = (r.status === 429) || (r.status >= 500 && r.status < 600);
             if (retriable) {
               lastErr = new Error(`${r.status === 429 ? 'rate limit' : 'server'} ${r.status}`);
