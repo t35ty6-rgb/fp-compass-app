@@ -702,6 +702,25 @@
       audit("login", { tenantId: window.__fp.tenantId, clientCount: clients.length });
       // 既存 CRM 初期化フックがあれば呼ぶ
       if (typeof window.fpReadyAfterAuth === "function") window.fpReadyAfterAuth();
+      // 2026-08-22 owner「?customer=xxx URL から 開いても 客カード に 到達 しない」対応:
+      //   URL に ?view=xxx / ?customer=xxx が あれば 初回 ロード 時 も 反映 (deep link 復活)。
+      //   従来 は popstate のみ で 発火 して 初期 URL は 無視 だった。
+      //   critical scripts 全 load + FPRouter expose 後 に polling で 呼ぶ。
+      try {
+        const paramCheck = new URLSearchParams(window.location.search);
+        if (paramCheck.get('customer') || (paramCheck.get('view') && paramCheck.get('view') !== 'dashboard')) {
+          let deepTries = 0;
+          const applyDeep = () => {
+            if (window.FPRouter?.applyUrlState) {
+              try { window.FPRouter.applyUrlState({ fromPopstate: true }); }
+              catch (e) { console.warn('[deep-link] applyUrlState fail:', e); }
+            } else if (deepTries++ < 40) {
+              setTimeout(applyDeep, 250);
+            }
+          };
+          setTimeout(applyDeep, 600);
+        }
+      } catch (_) {}
       // top bar に user 情報表示 + ログアウトボタン挿入
       setTimeout(() => attachUserBar(), 200);
       // sidebar の user-name / avatar を Firestore tenant.name で更新
