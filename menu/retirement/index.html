@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="theme-color" content="#F7F7F5">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>老後 資金 目安 · FP Compass</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800;900&family=Noto+Sans+JP:wght@500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/menu/menu.css?v=20260822">
+</head>
+<body>
+
+<header class="mn-topbar">
+  <div class="mn-topbar-inner">
+    <div>
+      <div class="eyebrow">FP COMPASS</div>
+      <div class="title">🏖 老後 資金 の 目安</div>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <section class="mn-hero">
+    <span class="kicker">簡易 計算 · 60 秒</span>
+    <h1>老後 資金、<br>いくら 足り て ますか?</h1>
+    <p class="lead">現在 の 貯蓄 と 想定 支出 から、 リタイア 後 30年 の 不足額 を 概算 します。</p>
+  </section>
+
+  <div class="mn-card">
+    <div class="label">Step 1</div>
+    <h2>あなた の 情報</h2>
+    <div class="mn-field">
+      <label class="mn-field-label" for="fp-age">現在 の 年齢</label>
+      <input type="number" id="fp-age" class="mn-input" placeholder="例: 42" inputmode="numeric">
+    </div>
+    <div class="mn-field">
+      <label class="mn-field-label" for="fp-retire">リタイア 予定 年齢</label>
+      <input type="number" id="fp-retire" class="mn-input" placeholder="例: 65" inputmode="numeric" value="65">
+      <p class="mn-field-hint">一般的 に 60 · 65 · 70 歳 が 多い</p>
+    </div>
+    <div class="mn-field">
+      <label class="mn-field-label" for="fp-savings">現在 の 貯蓄 (万円)</label>
+      <input type="number" id="fp-savings" class="mn-input" placeholder="例: 500" inputmode="numeric">
+      <p class="mn-field-hint">預金 · 投信 · 株 · iDeCo · 保険 の 解約返戻 全て 合算</p>
+    </div>
+    <div class="mn-field">
+      <label class="mn-field-label" for="fp-save-monthly">今後 の 月 貯蓄 額 (万円)</label>
+      <input type="number" id="fp-save-monthly" class="mn-input" placeholder="例: 5" inputmode="numeric" value="0">
+    </div>
+  </div>
+
+  <div class="mn-card">
+    <div class="label">Step 2</div>
+    <h2>リタイア 後 の 想定 生活費</h2>
+    <div class="mn-field">
+      <div class="mn-radio-list">
+        <label class="mn-radio">
+          <input type="radio" name="fp-style" value="18">
+          <span class="m-body">
+            <div class="m-title">つつましく (月 18 万円)</div>
+            <div class="m-desc">最低 限度 · 賃貸 単身 想定</div>
+          </span>
+        </label>
+        <label class="mn-radio">
+          <input type="radio" name="fp-style" value="25" checked>
+          <span class="m-body">
+            <div class="m-title">ふつう に (月 25 万円)</div>
+            <div class="m-desc">総務省 家計調査 高齢無職 世帯 平均 相当</div>
+          </span>
+        </label>
+        <label class="mn-radio">
+          <input type="radio" name="fp-style" value="35">
+          <span class="m-body">
+            <div class="m-title">ゆとり (月 35 万円)</div>
+            <div class="m-desc">趣味 · 旅行 · 孫 へ の 出費 も 含める</div>
+          </span>
+        </label>
+      </div>
+    </div>
+    <div class="mn-field">
+      <label class="mn-field-label" for="fp-pension">想定 月 年金 (万円)</label>
+      <input type="number" id="fp-pension" class="mn-input" placeholder="例: 15" inputmode="numeric" value="15">
+      <p class="mn-field-hint">厚生 年金 込み で 会社員 平均 約 15 万円、 自営業 だけ なら 約 6.5 万円</p>
+    </div>
+  </div>
+
+  <button class="mn-compute" id="fp-run">🏖 老後 資金 を 計算</button>
+
+  <div class="mn-result" id="fp-result">
+    <div class="r-eyebrow">Result</div>
+    <h3 id="fp-r-title">診断 結果</h3>
+    <div class="r-metric">
+      <span class="r-num" id="fp-r-num">—</span>
+      <span class="r-unit">万円 不足</span>
+    </div>
+    <div class="r-verdict" id="fp-r-verdict">—</div>
+    <div class="r-breakdown">
+      <div class="r-row"><span class="rr-lb">リタイア 時 の 貯蓄 見込み</span><span class="rr-val" id="fp-r-savings">—</span></div>
+      <div class="r-row"><span class="rr-lb">老後 30年 の 支出 合計</span><span class="rr-val" id="fp-r-expense">—</span></div>
+      <div class="r-row"><span class="rr-lb">30年 の 年金 収入 合計</span><span class="rr-val" id="fp-r-pension">—</span></div>
+    </div>
+    <p class="r-note">※ 老後 30年 · 65 歳 以降 想定 で 計算 (人生 100 年 前提)。 インフレ · 医療 介護 費 · 住宅 の 修繕 · 相続 は 含まず 簡易 算出 の ため、 実際 は こ の 目安 より 多めに 見て おく の が 安心。</p>
+  </div>
+
+  <p class="mn-note">こ の 計算 は 目安 で す。 iDeCo · NISA · 保険 · 不動産 の 活用、 年金 の 繰下げ 受給、 副業 収入 等 で 大きく 変わり ます。 詳しく は FP と 一緒 に シミュレーション しましょう。</p>
+
+</main>
+
+<div class="mn-cta-bar">
+  <div class="mn-cta-inner">
+    <a class="mn-cta" id="fp-cta" href="#">
+      <span>👨‍💼 FP に 相談 する</span>
+      <span class="arrow">→</span>
+    </a>
+    <p class="mn-cta-sub">LINE で 予約 · 5 分 で 完了</p>
+  </div>
+</div>
+
+<script>
+(function(){
+  const q = new URLSearchParams(location.search);
+  const tenant = q.get('tenant') || '';
+  const cta = document.getElementById('fp-cta');
+  cta.href = tenant ? `https://app.skeleton-inc.jp/survey/?tenant=${encodeURIComponent(tenant)}` : 'https://app.skeleton-inc.jp/survey/';
+
+  const num = (id) => Math.max(0, parseInt(document.getElementById(id).value || '0', 10));
+
+  document.getElementById('fp-run').addEventListener('click', () => {
+    const age = num('fp-age');
+    const retire = num('fp-retire');
+    if (age <= 0 || age > 100) { alert('現在 年齢 を 入れて ください'); document.getElementById('fp-age').focus(); return; }
+    if (retire <= age) { alert('リタイア 年齢 は 現在 年齢 より 後 に 設定 して ください'); return; }
+    const savings = num('fp-savings'); // 万円
+    const saveMonthly = num('fp-save-monthly'); // 万円
+    const styleEl = document.querySelector('input[name="fp-style"]:checked');
+    const spendMonthly = styleEl ? parseInt(styleEl.value, 10) : 25; // 万円/月
+    const pensionMonthly = num('fp-pension'); // 万円/月
+
+    // リタイア 時点 の 貯蓄
+    const yearsToRetire = retire - age;
+    const savingsAtRetire = savings + saveMonthly * 12 * yearsToRetire;
+    // 老後 30年 の 支出 · 年金
+    const retireYears = 30;
+    const totalExpense = spendMonthly * 12 * retireYears;
+    const totalPension = pensionMonthly * 12 * retireYears;
+    // 不足
+    const shortage = Math.max(0, totalExpense - totalPension - savingsAtRetire);
+    const surplus = Math.max(0, (totalPension + savingsAtRetire) - totalExpense);
+
+    let title = '', verdict = '', verdictCls = 'ok';
+    if (shortage === 0) {
+      title = '安心 の 目安 を クリア';
+      verdict = 'リタイア 時 の 貯蓄 と 年金 で 30年 の 生活費 を 賄え る 見込み。 余裕 分 (¥' + (surplus * 10000).toLocaleString('ja-JP') + ') は 相続 · 医療 · 予備 に 回せ ます。';
+      verdictCls = 'ok';
+    } else if (shortage < 500) {
+      title = 'ほぼ 足り る 見込み';
+      verdict = '不足 ' + shortage + ' 万円。 iDeCo · NISA 併用 で 埋められ る 範囲。';
+      verdictCls = 'warn';
+    } else if (shortage < 2000) {
+      title = '準備 が 必要';
+      verdict = '不足 ' + shortage + ' 万円。 毎月 の 貯蓄 額 UP + 運用 (iDeCo · NISA) で 対応 可能。 今 から の 見直し で 十分 間に合う 範囲。';
+      verdictCls = 'warn';
+    } else {
+      title = '大幅 な 見直し 推奨';
+      verdict = '不足 ' + shortage + ' 万円。 現状 の まま だと 老後 の 生活 水準 を 下げる 必要 が 出ます。 iDeCo · NISA 活用、 リタイア 時期 の 見直し、 副業 · 資産 運用 等 の 総合 対策 が 必要。';
+      verdictCls = 'danger';
+    }
+
+    document.getElementById('fp-r-title').textContent = title;
+    document.getElementById('fp-r-num').textContent = shortage > 0 ? shortage.toLocaleString('ja-JP') : '0';
+    const v = document.getElementById('fp-r-verdict');
+    v.textContent = verdict;
+    v.className = 'r-verdict ' + verdictCls;
+    document.getElementById('fp-r-savings').textContent = '¥' + (savingsAtRetire * 10000).toLocaleString('ja-JP');
+    document.getElementById('fp-r-expense').textContent = '¥' + (totalExpense * 10000).toLocaleString('ja-JP');
+    document.getElementById('fp-r-pension').textContent = '¥' + (totalPension * 10000).toLocaleString('ja-JP');
+
+    const r = document.getElementById('fp-result');
+    r.classList.add('is-shown');
+    r.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+})();
+</script>
+</body>
+</html>

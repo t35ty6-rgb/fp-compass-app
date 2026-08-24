@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="theme-color" content="#F7F7F5">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>家計 診断 · FP Compass</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800;900&family=Noto+Sans+JP:wght@500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/menu/menu.css?v=20260822">
+</head>
+<body>
+
+<header class="mn-topbar">
+  <div class="mn-topbar-inner">
+    <div>
+      <div class="eyebrow">FP COMPASS</div>
+      <div class="title">🏠 家計 診断 シート</div>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <section class="mn-hero">
+    <span class="kicker">簡易 診断 · 60 秒</span>
+    <h1>あなた の 固定費、<br>多め かも しれません</h1>
+    <p class="lead">月収 と 固定費 を 入れる だけ。<br>「支出 の うち 固定費 何%」 で 家計 の 健全度 が わかります。</p>
+  </section>
+
+  <div class="mn-card">
+    <div class="label">Step 1</div>
+    <h2>月 の 手取り 収入</h2>
+    <div class="mn-field">
+      <label class="mn-field-label" for="fp-income">月収 (手取り · 円)</label>
+      <input type="number" id="fp-income" class="mn-input" placeholder="例: 350000" inputmode="numeric">
+      <p class="mn-field-hint">ボーナス 除く · ご夫婦 なら 世帯 合算</p>
+    </div>
+  </div>
+
+  <div class="mn-card">
+    <div class="label">Step 2</div>
+    <h2>今月 の 固定費 (円)</h2>
+    <div class="mn-field">
+      <label class="mn-field-label" for="fp-rent">家賃 / 住宅 ローン</label>
+      <input type="number" id="fp-rent" class="mn-input" placeholder="例: 90000" inputmode="numeric" value="0">
+    </div>
+    <div class="mn-field">
+      <label class="mn-field-label" for="fp-utility">水道 · 光熱 · 通信</label>
+      <input type="number" id="fp-utility" class="mn-input" placeholder="例: 25000" inputmode="numeric" value="0">
+    </div>
+    <div class="mn-field">
+      <label class="mn-field-label" for="fp-ins">保険 (生命 / 医療 / 車 等 合計)</label>
+      <input type="number" id="fp-ins" class="mn-input" placeholder="例: 20000" inputmode="numeric" value="0">
+    </div>
+    <div class="mn-field">
+      <label class="mn-field-label" for="fp-sub">サブスク · 会費 (Netflix · ジム 等)</label>
+      <input type="number" id="fp-sub" class="mn-input" placeholder="例: 8000" inputmode="numeric" value="0">
+    </div>
+    <div class="mn-field">
+      <label class="mn-field-label" for="fp-edu">教育 · 塾 · 習い事</label>
+      <input type="number" id="fp-edu" class="mn-input" placeholder="例: 30000" inputmode="numeric" value="0">
+    </div>
+    <div class="mn-field">
+      <label class="mn-field-label" for="fp-loan">その他 の ローン · 分割 返済</label>
+      <input type="number" id="fp-loan" class="mn-input" placeholder="例: 15000" inputmode="numeric" value="0">
+    </div>
+  </div>
+
+  <button class="mn-compute" id="fp-run">📊 家計 の 健全度 を 診断</button>
+
+  <div class="mn-result" id="fp-result">
+    <div class="r-eyebrow">Result</div>
+    <h3 id="fp-r-title">診断 結果</h3>
+    <div class="r-metric">
+      <span class="r-num" id="fp-r-num">—</span>
+      <span class="r-unit">%</span>
+    </div>
+    <div class="r-bar"><div class="r-bar-fill" id="fp-r-bar" style="width:0%"></div></div>
+    <div class="r-verdict" id="fp-r-verdict">—</div>
+    <div class="r-breakdown">
+      <div class="r-row"><span class="rr-lb">月 の 固定費 合計</span><span class="rr-val" id="fp-r-fixed">—</span></div>
+      <div class="r-row"><span class="rr-lb">残り (自由 に 使え る 額)</span><span class="rr-val" id="fp-r-free">—</span></div>
+    </div>
+    <p class="r-note">※ 一般的 に 固定費 は 収入 の 40% 以下 が 理想 と 言われて います (総務省 家計調査 · 2 人 以上 世帯 平均 参考)。 個別 の 適正 値 は 家族 構成 や ライフステージ で 大きく 変わり ます。</p>
+  </div>
+
+  <p class="mn-note">この診断 は 目安 で す。 実際 の 見直し ポイント は 家族 構成 · ライフイベント で 変わるため、 FP と 一緒 に 数字 を 精査 する のを おすすめ します。</p>
+
+</main>
+
+<div class="mn-cta-bar">
+  <div class="mn-cta-inner">
+    <a class="mn-cta" id="fp-cta" href="#">
+      <span>👨‍💼 FP に 相談 する</span>
+      <span class="arrow">→</span>
+    </a>
+    <p class="mn-cta-sub">LINE で 予約 · 5 分 で 完了</p>
+  </div>
+</div>
+
+<script>
+(function(){
+  // tenantId を URL から 拾って CTA URL 差替
+  const q = new URLSearchParams(location.search);
+  const tenant = q.get('tenant') || '';
+  const cta = document.getElementById('fp-cta');
+  // 客 tenant 別 の LIFF アンケート URL は 既存 rich menu 生成 と 同 pattern (SURVEY_BASE + ?tenant=)
+  // 現状 は Cloud Function 側 で 決まる surveyUrl と 同一 に する ため fallback URL:
+  const surveyUrl = tenant
+    ? `https://app.skeleton-inc.jp/survey/?tenant=${encodeURIComponent(tenant)}`
+    : 'https://app.skeleton-inc.jp/survey/';
+  cta.href = surveyUrl;
+
+  const num = (id) => Math.max(0, parseInt(document.getElementById(id).value || '0', 10));
+  const jpy = (n) => '¥' + n.toLocaleString('ja-JP');
+
+  document.getElementById('fp-run').addEventListener('click', () => {
+    const income = num('fp-income');
+    if (income <= 0) {
+      alert('月収 を 入れて ください (Step 1)');
+      document.getElementById('fp-income').focus();
+      return;
+    }
+    const fixed = num('fp-rent') + num('fp-utility') + num('fp-ins') + num('fp-sub') + num('fp-edu') + num('fp-loan');
+    const ratio = Math.min(999, Math.round((fixed / income) * 100));
+    const free = income - fixed;
+
+    let title = '', verdict = '', verdictCls = 'ok';
+    if (ratio <= 40) {
+      title = '健全 です';
+      verdict = '固定費 が 収入 の ' + ratio + '% 。 貯蓄 · 投資 に 回せ る 余裕 が ある 家計 です。';
+      verdictCls = 'ok';
+    } else if (ratio <= 55) {
+      title = '少し 多め かも';
+      verdict = '固定費 が ' + ratio + '% (理想 40% 以下)。 通信 · 保険 · サブスク あたり を 見直す と 数千 〜 数万 円 / 月 削減 の 余地 あり。';
+      verdictCls = 'warn';
+    } else if (ratio <= 75) {
+      title = '固定費 過多 の 傾向';
+      verdict = '固定費 が ' + ratio + '% 。 変動費 (食費 · レジャー 等) を 削れず に 苦しく なりがち。 保険 の 掛け過ぎ · 高い 通信費 · 車 の ローン 等 が 主 な 見直し 対象。';
+      verdictCls = 'danger';
+    } else {
+      title = '家計 の 大幅 見直し が 必要';
+      verdict = '固定費 が ' + ratio + '% で、 収入 の ほぼ 全て が 固定費 で 消えて いる 状態。 貯蓄 が 進まず 老後 · 教育 資金 で 詰まる リスク が 高い。 まず FP と 全体 を 洗い出し ましょう。';
+      verdictCls = 'danger';
+    }
+
+    document.getElementById('fp-r-title').textContent = title;
+    document.getElementById('fp-r-num').textContent = ratio;
+    document.getElementById('fp-r-bar').style.width = Math.min(100, ratio) + '%';
+    const v = document.getElementById('fp-r-verdict');
+    v.textContent = verdict;
+    v.className = 'r-verdict ' + verdictCls;
+    document.getElementById('fp-r-fixed').textContent = jpy(fixed);
+    document.getElementById('fp-r-free').textContent = jpy(free);
+
+    const r = document.getElementById('fp-result');
+    r.classList.add('is-shown');
+    r.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+})();
+</script>
+</body>
+</html>

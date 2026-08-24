@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="theme-color" content="#F7F7F5">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>NISA 配分 の 目安 · FP Compass</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800;900&family=Noto+Sans+JP:wght@500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/menu/menu.css?v=20260822">
+</head>
+<body>
+
+<header class="mn-topbar">
+  <div class="mn-topbar-inner">
+    <div>
+      <div class="eyebrow">FP COMPASS</div>
+      <div class="title">💹 NISA 配分 の 目安</div>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <section class="mn-hero">
+    <span class="kicker">簡易 判定 · 30 秒</span>
+    <h1>あなた に 合う<br>NISA 資産 配分</h1>
+    <p class="lead">年代 と リスク 許容度 で、 現代 ポートフォリオ 理論 に 沿った 資産 配分 の 目安 を 出します。</p>
+  </section>
+
+  <div class="mn-card">
+    <div class="label">Step 1</div>
+    <h2>年代</h2>
+    <div class="mn-field">
+      <div class="mn-radio-list">
+        <label class="mn-radio"><input type="radio" name="fp-age" value="20"><span class="m-body"><div class="m-title">20 代</div><div class="m-desc">運用 期間 が 長い ので リスク 取りやすい</div></span></label>
+        <label class="mn-radio"><input type="radio" name="fp-age" value="30" checked><span class="m-body"><div class="m-title">30 代</div><div class="m-desc">住宅 · 教育 と 並行 の 資産 形成 期</div></span></label>
+        <label class="mn-radio"><input type="radio" name="fp-age" value="40"><span class="m-body"><div class="m-title">40 代</div><div class="m-desc">教育 費 の ピーク · 老後 も 意識 開始</div></span></label>
+        <label class="mn-radio"><input type="radio" name="fp-age" value="50"><span class="m-body"><div class="m-title">50 代</div><div class="m-desc">リタイア 準備 · リスク 抑え 目 が 妥当</div></span></label>
+        <label class="mn-radio"><input type="radio" name="fp-age" value="60"><span class="m-body"><div class="m-title">60 代 以上</div><div class="m-desc">元本 保全 優先 · 取り崩し を 意識</div></span></label>
+      </div>
+    </div>
+  </div>
+
+  <div class="mn-card">
+    <div class="label">Step 2</div>
+    <h2>リスク 許容度</h2>
+    <div class="mn-field">
+      <div class="mn-radio-list">
+        <label class="mn-radio">
+          <input type="radio" name="fp-risk" value="low">
+          <span class="m-body">
+            <div class="m-title">🛡 安定 型</div>
+            <div class="m-desc">1 年 で -10% の 下落 が 気に なる · 資金 は 5 年 以内 に 使う 予定 も ある</div>
+          </span>
+        </label>
+        <label class="mn-radio">
+          <input type="radio" name="fp-risk" value="mid" checked>
+          <span class="m-body">
+            <div class="m-title">⚖ バランス 型</div>
+            <div class="m-desc">1 年 で -20% の 下落 まで 受け入れ 可 · 10-15 年 以上 の 長期 視点</div>
+          </span>
+        </label>
+        <label class="mn-radio">
+          <input type="radio" name="fp-risk" value="high">
+          <span class="m-body">
+            <div class="m-title">🚀 積極 型</div>
+            <div class="m-desc">1 年 で -30% の 下落 も 平気 · 20 年 以上 触ら ない で いい 資金</div>
+          </span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <button class="mn-compute" id="fp-run">💹 配分 を 診断</button>
+
+  <div class="mn-result" id="fp-result">
+    <div class="r-eyebrow">Suggested Portfolio</div>
+    <h3 id="fp-r-title">あなた への 推奨 配分</h3>
+    <div class="mn-pie-wrap">
+      <svg class="mn-pie" viewBox="-1 -1 2 2" id="fp-r-pie" aria-hidden="true"></svg>
+      <div class="mn-pie-legend" id="fp-r-legend"></div>
+    </div>
+    <div class="r-verdict" id="fp-r-verdict">—</div>
+    <p class="r-note">※ 一般的 に 年代 が 若く · リスク 許容度 が 高い ほど 株式 比率 を 上げ、 高齢 · 保守 的 な 場合 は 債券 比率 を 上げる の が セオリー です (現代 ポートフォリオ 理論 · GPIF 基本 ポートフォリオ 参考)。 実際 の 選択 は 家族 · 保有 資産 · 目的 で 変わり ます。</p>
+  </div>
+
+  <p class="mn-note">こ の 配分 は 目安 で す。 実際 に は 保有 商品、 為替、 税制 (旧 NISA · 新 NISA 成長 投資 枠 · つみたて 枠) を 考慮 する 必要 が あり、 FP と 一緒 に 個別 商品 の 選定 を おすすめ します。</p>
+
+</main>
+
+<div class="mn-cta-bar">
+  <div class="mn-cta-inner">
+    <a class="mn-cta" id="fp-cta" href="#">
+      <span>👨‍💼 FP に 相談 する</span>
+      <span class="arrow">→</span>
+    </a>
+    <p class="mn-cta-sub">LINE で 予約 · 5 分 で 完了</p>
+  </div>
+</div>
+
+<script>
+(function(){
+  const q = new URLSearchParams(location.search);
+  const tenant = q.get('tenant') || '';
+  const cta = document.getElementById('fp-cta');
+  cta.href = tenant ? `https://app.skeleton-inc.jp/survey/?tenant=${encodeURIComponent(tenant)}` : 'https://app.skeleton-inc.jp/survey/';
+
+  // GPIF 参考 + risk 調整 の allocation table (%)
+  // [国内債券, 国内株式, 先進国株式, 新興国株式, リート]
+  const alloc = {
+    '20-low':  [40, 15, 30, 5,  10],
+    '20-mid':  [15, 20, 45, 10, 10],
+    '20-high': [ 5, 15, 55, 20,  5],
+    '30-low':  [45, 15, 25, 5,  10],
+    '30-mid':  [20, 20, 40, 10, 10],
+    '30-high': [10, 15, 50, 20,  5],
+    '40-low':  [50, 15, 25, 0,  10],
+    '40-mid':  [30, 20, 35, 5,  10],
+    '40-high': [15, 15, 50, 15,  5],
+    '50-low':  [60, 10, 20, 0,  10],
+    '50-mid':  [40, 15, 30, 5,  10],
+    '50-high': [25, 15, 45, 10,  5],
+    '60-low':  [70,  5, 15, 0,  10],
+    '60-mid':  [55, 10, 25, 0,  10],
+    '60-high': [40, 10, 35, 5,  10],
+  };
+  const labels = ['国内 債券', '国内 株式', '先進国 株式', '新興国 株式', 'リート'];
+  const colors = ['#5B5BF0', '#C19A3A', '#10B981', '#F59E0B', '#EF4444'];
+
+  function polarToCartesian(pct) {
+    const rad = 2 * Math.PI * pct;
+    return { x: Math.cos(rad), y: Math.sin(rad) };
+  }
+  function arc(startPct, endPct) {
+    const s = polarToCartesian(startPct);
+    const e = polarToCartesian(endPct);
+    const large = (endPct - startPct) > 0.5 ? 1 : 0;
+    return `M 0 0 L ${s.x} ${s.y} A 1 1 0 ${large} 1 ${e.x} ${e.y} Z`;
+  }
+
+  document.getElementById('fp-run').addEventListener('click', () => {
+    const age = document.querySelector('input[name="fp-age"]:checked')?.value;
+    const risk = document.querySelector('input[name="fp-risk"]:checked')?.value;
+    if (!age || !risk) { alert('年代 と リスク を 選んで ください'); return; }
+    const key = age + '-' + risk;
+    const pcts = alloc[key] || alloc['30-mid'];
+
+    // SVG pie
+    const svg = document.getElementById('fp-r-pie');
+    svg.innerHTML = '';
+    let cum = 0;
+    pcts.forEach((p, i) => {
+      if (p === 0) return;
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', arc(cum / 100, (cum + p) / 100));
+      path.setAttribute('fill', colors[i]);
+      svg.appendChild(path);
+      cum += p;
+    });
+
+    // Legend
+    const leg = document.getElementById('fp-r-legend');
+    leg.innerHTML = pcts.map((p, i) => `
+      <div class="mn-pie-item">
+        <span class="dot" style="background:${colors[i]}"></span>
+        <span class="lb">${labels[i]}</span>
+        <span class="pct">${p}%</span>
+      </div>
+    `).join('');
+
+    // Verdict text
+    let verdict = '';
+    const equity = pcts[1] + pcts[2] + pcts[3];
+    if (risk === 'low') {
+      verdict = `安定 型 の ため 国内 債券 ${pcts[0]}% を 軸 に、 株式 は ${equity}% で 分散。 元本 の 大きな 目減り を 避け つつ、 インフレ 負け を 防ぐ 最低限 の 成長 を 狙う 配分 です。`;
+    } else if (risk === 'mid') {
+      verdict = `バランス 型 · 株式 ${equity}% + 債券 ${pcts[0]}% で GPIF 型 の 分散 投資。 長期 で 年 3〜5% 程度 の リターン を 期待 する 配分 です。`;
+    } else {
+      verdict = `積極 型 · 株式 比率 ${equity}% で 長期 成長 を 狙う 配分。 短期 下落 に 動じ ない 覚悟 と、 20 年 以上 触ら ない 資金 で ある こと が 前提 です。`;
+    }
+    document.getElementById('fp-r-title').textContent = age + '代 · ' + ({low:'安定型',mid:'バランス型',high:'積極型'}[risk]) + ' の 推奨 配分';
+    const v = document.getElementById('fp-r-verdict');
+    v.textContent = verdict;
+    v.className = 'r-verdict';
+
+    const r = document.getElementById('fp-result');
+    r.classList.add('is-shown');
+    r.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+})();
+</script>
+</body>
+</html>
