@@ -8132,29 +8132,95 @@ ${ctxText}${surveyTxt}`;
     if (inpersonBtn) {
       inpersonBtn.addEventListener('click', async () => {
         const inpersonTs = 'quick-' + Date.now();
-        // 2026-08-20 owner「PC で 勝手 に 携帯 マイク 繋がる」対応:
-        //   macOS Continuity で iPhone マイク が default input に なる ケース あり →
-        //   enumerateDevices で 「MacBook / Built-in / 内蔵」 系 label を 優先 選択、
-        //   iPhone (label に 「iPhone」 含む) を 明示的 に 避ける
-        async function pickPreferredAudioInput() {
+        // 2026-08-22 owner「PCのマイクでやりたいのに携帯のマイクに自動で繋がる · 一覧から選べるように」対応:
+        //   前 の auto pick (MacBook 優先) を 廃止 → 手動 picker dialog に 差替。
+        //   全 audioinput を list で 表示、 icon で type 分け、 前回 選択 を localStorage 記憶。
+        async function selectAudioInput() {
           try {
-            // 1回目 の getUserMedia (default) で permission 通し、 その後 device 列挙
+            // permission 取得 → label が 空 で ない enumerateDevices
             const tmpStream = await navigator.mediaDevices.getUserMedia({ audio: true });
             const devices = await navigator.mediaDevices.enumerateDevices();
             const inputs = devices.filter(d => d.kind === 'audioinput');
             tmpStream.getTracks().forEach(t => t.stop());
-            const isIphone = d => /iPhone|Continuity/i.test(d.label || '');
-            const isMacBuiltin = d => /MacBook|Built-?in|内蔵/i.test(d.label || '');
-            const preferred = inputs.find(isMacBuiltin) || inputs.find(d => !isIphone(d)) || inputs[0];
-            console.log('[fp-inperson] audio inputs:', inputs.map(d => d.label), '→ 選択:', preferred?.label);
-            return preferred;
-          } catch (_) { return null; }
+            if (inputs.length === 0) return null;
+            if (inputs.length === 1) return inputs[0];
+            const lastLabel = (function(){ try { return localStorage.getItem('fp-preferred-mic-label'); } catch (_) { return null; } })();
+            const preselect = inputs.find(d => d.label === lastLabel)
+              || inputs.find(d => /MacBook|Built-?in|内蔵/i.test(d.label))
+              || inputs.find(d => !/iPhone|Continuity/i.test(d.label))
+              || inputs[0];
+            return new Promise((resolve) => {
+              const ov = document.createElement('div');
+              ov.id = 'fp-mic-picker';
+              ov.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.55);backdrop-filter:blur(4px);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px;font-family:"Hiragino Sans","Noto Sans JP",sans-serif;';
+              const micHtml = inputs.map((d, i) => {
+                const label = d.label || ('マイク ' + (i+1));
+                const isIp = /iPhone|Continuity/i.test(label);
+                const isEar = /AirPods|イヤホン|ヘッドセット|EarPods|Bluetooth|Headphones/i.test(label);
+                const isBi = /MacBook|Built-?in|内蔵/i.test(label);
+                const icon = isIp ? '📱' : isEar ? '🎧' : isBi ? '💻' : '🎤';
+                const hint = isIp ? '携帯マイク (Continuity 経由)' : isEar ? 'イヤホン / ヘッドセット' : isBi ? 'PC 本体 マイク' : '外部 マイク';
+                const checked = d.deviceId === preselect.deviceId;
+                return `<label style="display:flex;align-items:center;gap:12px;padding:14px;border:2px solid ${checked ? '#5B5BF0' : '#E5E7EB'};background:${checked ? '#EEF0FF' : '#fff'};border-radius:12px;cursor:pointer;transition:border-color .12s,background .12s;">
+                  <input type="radio" name="fp-mic" value="${d.deviceId}" data-label="${label.replace(/"/g,'&quot;')}" ${checked ? 'checked' : ''} style="margin:0;flex-shrink:0;width:20px;height:20px;">
+                  <span style="font-size:22px;flex-shrink:0;">${icon}</span>
+                  <span style="flex:1;min-width:0;">
+                    <span style="display:block;font-size:14px;font-weight:800;color:#1F2A3F;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${label}</span>
+                    <span style="display:block;font-size:11px;color:#6B7280;margin-top:2px;">${hint}</span>
+                  </span>
+                </label>`;
+              }).join('');
+              ov.innerHTML = `
+                <div style="background:#fff;border-radius:18px;padding:22px 22px 18px;max-width:440px;width:100%;box-shadow:0 24px 60px rgba(0,0,0,0.32);max-height:88vh;overflow-y:auto;">
+                  <div style="font-size:11px;font-weight:800;color:#9A5A18;letter-spacing:0.14em;margin-bottom:6px;">SELECT MICROPHONE</div>
+                  <h2 style="font-size:19px;font-weight:800;color:#111827;margin:0 0 8px;font-family:'Noto Sans JP',sans-serif;">🎤 マイク を 選択</h2>
+                  <p style="font-size:12.5px;color:#6b7280;line-height:1.7;margin:0 0 16px;">面談 録音 に 使う マイク を 選んで ください。<br>${inputs.length} 台 検出 されて います。</p>
+                  <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;">${micHtml}</div>
+                  <label style="display:flex;align-items:center;gap:8px;margin-bottom:14px;font-size:12px;color:#6b7280;cursor:pointer;">
+                    <input type="checkbox" id="fp-mic-remember" checked style="width:16px;height:16px;">
+                    <span>次回 も この マイク を 使う (自動選択)</span>
+                  </label>
+                  <div style="display:flex;gap:10px;">
+                    <button id="fp-mic-cancel" style="flex:1;padding:12px;background:#fff;border:1.5px solid #E5E7EB;border-radius:11px;font-size:14px;font-weight:700;color:#475569;cursor:pointer;font-family:inherit;">キャンセル</button>
+                    <button id="fp-mic-ok" style="flex:2;padding:12px;background:linear-gradient(135deg,#5B5BF0,#4747C7);color:#fff;border:none;border-radius:11px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 6px 16px rgba(91,91,240,0.32);">🎤 この マイク で 開始 →</button>
+                  </div>
+                </div>`;
+              document.body.appendChild(ov);
+              // radio change で 見た目 更新
+              ov.addEventListener('change', (e) => {
+                if (e.target.name === 'fp-mic') {
+                  ov.querySelectorAll('label[style*="border:2px"]').forEach(l => {
+                    const inp = l.querySelector('input[type=radio]');
+                    if (!inp) return;
+                    l.style.borderColor = inp.checked ? '#5B5BF0' : '#E5E7EB';
+                    l.style.background = inp.checked ? '#EEF0FF' : '#fff';
+                  });
+                }
+              });
+              document.getElementById('fp-mic-cancel').addEventListener('click', () => { ov.remove(); resolve(null); });
+              document.getElementById('fp-mic-ok').addEventListener('click', () => {
+                const radio = ov.querySelector('input[name=fp-mic]:checked');
+                if (!radio) return;
+                const picked = inputs.find(d => d.deviceId === radio.value);
+                const remember = document.getElementById('fp-mic-remember').checked;
+                if (remember && picked) {
+                  try { localStorage.setItem('fp-preferred-mic-label', radio.dataset.label); } catch (_) {}
+                } else {
+                  try { localStorage.removeItem('fp-preferred-mic-label'); } catch (_) {}
+                }
+                console.log('[fp-inperson] mic 選択:', picked?.label);
+                ov.remove();
+                resolve(picked);
+              });
+            });
+          } catch (e) { console.warn('[mic-picker] fail:', e); return null; }
         }
         let earlyStream = null;
         try {
-          const pref = await pickPreferredAudioInput();
+          const pref = await selectAudioInput();
+          if (pref === null) return; // owner が キャンセル した
           const audioConstraint = pref?.deviceId
-            ? { deviceId: { ideal: pref.deviceId }, echoCancellation: true, noiseSuppression: true, sampleRate: 44100 }
+            ? { deviceId: { exact: pref.deviceId }, echoCancellation: true, noiseSuppression: true, sampleRate: 44100 }
             : { echoCancellation: true, noiseSuppression: true, sampleRate: 44100 };
           earlyStream = await navigator.mediaDevices.getUserMedia({ audio: audioConstraint });
         } catch (permErr) {
