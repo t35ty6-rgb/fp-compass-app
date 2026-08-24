@@ -12960,6 +12960,56 @@ body:not([data-home-view]) [data-view-target="cal"] { display: none !important; 
     max-width: calc(100vw - 24px - 60px - 16px) !important; /* FAB 60px + 余白 16 を 避ける */
   }
 
+  /* 8c. 候補日 3つ LINE 送信 modal (openSlotsSendModal, #fp-slots-modal)
+        owner「候補日 3つ LINE で 送る UI 崩れ」 対応 [2026-08-22]。
+        PC: 2 pane (左 入力 + 右 380px iPhone preview) だが 393px viewport に は 収まら ず 崩れる。
+        mobile では 1 pane 化、 preview 非表示、 padding 圧縮、 modal を 全画面 に。 */
+  #fp-slots-modal {
+    padding: 0 !important;
+    align-items: stretch !important;
+  }
+  #fp-slots-modal > div {
+    /* modal 本体 */
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: none !important;
+    min-height: 100vh !important;
+    border-radius: 0 !important;
+  }
+  #fp-slots-modal > div > div:nth-child(2) {
+    /* 2 pane grid */
+    grid-template-columns: 1fr !important;
+  }
+  #fp-slots-modal > div > div:nth-child(2) > div:last-child {
+    /* iPhone preview pane を モバイル で は 非表示 (実 客 で 見て れば preview 不要) */
+    display: none !important;
+  }
+  #fp-slots-modal > div > div:nth-child(2) > div:first-child {
+    /* 左 入力 pane の border-right / padding 調整 */
+    border-right: none !important;
+    padding: 16px 14px !important;
+  }
+  /* Footer: send button が 見え る よう に、 flex-wrap 許可 */
+  #fp-slots-modal > div > div:last-child {
+    flex-wrap: wrap !important;
+    padding: 12px 14px !important;
+    padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)) !important;
+    gap: 8px !important;
+  }
+  #fp-slots-modal > div > div:last-child button {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    font-size: 14px !important;
+    padding: 12px 14px !important;
+  }
+  /* header の 「📅 客 様 へ 候補日 3つ を 送る」 が 長い ので 縮小 */
+  #fp-slots-modal > div > div:first-child {
+    padding: 12px 14px !important;
+  }
+  #fp-slots-modal > div > div:first-child > div > div:last-child {
+    font-size: 15px !important;
+  }
+
   /* 8b. 誕生日 tab の 4 統計 カード が 4列 grid で モバイル で 3枚目 以降 が 右 に 見切れ。
         2 x 2 grid に 変える。 */
   [data-view="birthdayTab"] div[style*="grid-template-columns:repeat(4,1fr)"],

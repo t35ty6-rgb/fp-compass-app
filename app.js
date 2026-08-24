@@ -12170,6 +12170,7 @@ STEP C: 結果報告
       return;
     }
     const overlay = document.createElement('div');
+    overlay.id = 'fp-slots-modal';
     overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.55);backdrop-filter:blur(4px);z-index:10200;display:flex;align-items:center;justify-content:center;padding:20px;';
     // default: 翌日〜3日後 の 10:00 11:00 13:00
     const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
