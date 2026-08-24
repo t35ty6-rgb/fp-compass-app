@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>iOS 招待コード 発行 — FP Compass</title>
+<link rel="icon" type="image/svg+xml" href="./favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F7F6F2;
+    --surface: #FFFFFF;
+    --surface-2: #F1F0EA;
+    --ink: #0E1116;
+    --ink-2: #363B48;
+    --dim: #7C839A;
+    --muted: #A8ADBE;
+    --rule: #E4E1D8;
+    --primary: #10B981;
+    --primary-hi: #059669;
+    --primary-soft: #D1FAE5;
+    --danger: #DC2626;
+    --warn: #F59E0B;
+    --info: #1E3A5F;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Noto Sans JP", "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+    font-weight: 500;
+    letter-spacing: -0.005em;
+    -webkit-font-smoothing: antialiased;
+  }
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--surface);
+    border-bottom: 1px solid var(--rule);
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  header .crumb { color: var(--dim); font-size: 13px; text-decoration: none; }
+  header .crumb:hover { color: var(--ink); }
+  header .title { font-size: 15px; font-weight: 700; letter-spacing: -0.01em; }
+  header .spacer { flex: 1; }
+  header .signed-in { font-size: 12px; color: var(--dim); }
+
+  main { max-width: 1080px; margin: 0 auto; padding: 32px 24px 64px; }
+  .lead {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-bottom: 24px;
+  }
+  .lead h1 { margin: 0 0 6px; font-size: 20px; font-weight: 900; letter-spacing: -0.02em; }
+  .lead p { margin: 0; color: var(--ink-2); font-size: 13px; line-height: 1.7; }
+  .lead code {
+    background: var(--surface-2);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 12px;
+  }
+
+  .search {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .search input {
+    flex: 1;
+    padding: 10px 14px;
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    background: var(--surface);
+    color: var(--ink);
+  }
+  .search input:focus {
+    outline: 3px solid var(--primary-soft);
+    border-color: var(--primary);
+  }
+  .stat {
+    display: inline-block;
+    padding: 10px 14px;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    font-size: 13px;
+    color: var(--dim);
+  }
+  .stat b { color: var(--ink); font-weight: 700; }
+
+  .list {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .row {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    align-items: center;
+    padding: 14px 20px;
+    border-top: 1px solid var(--rule);
+    gap: 16px;
+  }
+  .row:first-child { border-top: 0; }
+  .row .name { font-size: 15px; font-weight: 700; letter-spacing: -0.005em; }
+  .row .meta { font-size: 12px; color: var(--dim); margin-top: 2px; }
+  .row .last-code {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 12px;
+    color: var(--dim);
+    text-align: right;
+  }
+  .row .last-code .code-val {
+    font-weight: 700;
+    color: var(--ink-2);
+  }
+  .btn {
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: none;
+    font-family: inherit;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    letter-spacing: -0.005em;
+    transition: background 150ms ease-out;
+  }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-primary:hover:not(:disabled) { background: var(--primary-hi); }
+  .btn-primary:disabled { background: var(--muted); cursor: not-allowed; }
+  .btn-ghost { background: var(--surface-2); color: var(--ink-2); }
+  .btn-ghost:hover { background: var(--rule); }
+
+  .empty {
+    padding: 60px 24px;
+    text-align: center;
+    color: var(--dim);
+    font-size: 14px;
+  }
+  .empty .icon { font-size: 24px; margin-bottom: 8px; }
+
+  .modal-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(14, 17, 22, 0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 24px;
+  }
+  .modal-backdrop.active { display: flex; }
+  .modal {
+    background: var(--surface);
+    border-radius: 16px;
+    padding: 32px;
+    max-width: 480px;
+    width: 100%;
+    text-align: center;
+  }
+  .modal h2 {
+    margin: 0 0 6px;
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    color: var(--dim);
+    text-transform: uppercase;
+  }
+  .modal .code-display {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 40px;
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: 0.15em;
+    margin: 12px 0 20px;
+    padding: 20px;
+    background: var(--surface-2);
+    border-radius: 12px;
+    user-select: all;
+  }
+  .modal .expiry {
+    font-size: 13px;
+    color: var(--dim);
+    margin-bottom: 24px;
+  }
+  .modal .expiry b { color: var(--ink-2); font-weight: 700; }
+  .modal .qr-wrap {
+    background: #fff;
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 12px;
+    display: inline-block;
+    margin-bottom: 24px;
+  }
+  .modal .qr-wrap canvas { display: block; }
+  .modal .actions { display: flex; gap: 12px; justify-content: center; }
+  .modal .instr {
+    font-size: 13px;
+    color: var(--ink-2);
+    line-height: 1.7;
+    margin: 0 0 24px;
+    padding: 16px;
+    background: var(--surface-2);
+    border-radius: 8px;
+    text-align: left;
+  }
+  .modal .instr ol { margin: 8px 0 0; padding-left: 22px; }
+  .modal .instr li { margin-bottom: 4px; }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--ink);
+    color: #fff;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 200ms, transform 200ms;
+    pointer-events: none;
+    z-index: 200;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  .loader {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid #fff;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 600ms linear infinite;
+    vertical-align: middle;
+    margin-left: 8px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (prefers-reduced-motion: reduce) {
+    .toast, .btn-primary { transition: none; }
+    .loader { animation: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <a class="crumb" href="./index.html">← 顧客管理 に戻る</a>
+  <span class="crumb">/</span>
+  <span class="title">iOS 招待コード 発行</span>
+  <span class="spacer"></span>
+  <span class="signed-in" id="signed-in">未 サインイン</span>
+</header>
+
+<main>
+  <div class="lead">
+    <h1>顧客 に iOS app 招待コード を 発行</h1>
+    <p>
+      顧客 が <code>FP コンパス</code> iOS app を install → Apple Sign-In → ここ で 発行 した コード を 入力 する と、あなた の tenant の 顧客 doc に 紐付き 事前 質問 · 面談 予約 · 議事録 閲覧 が 使える ように なります。 コード の 有効期限 は 発行 から 7 日 (168 時間) です。
+    </p>
+  </div>
+
+  <div class="search">
+    <input type="text" id="search" placeholder="顧客名 で 検索 …" autocomplete="off">
+    <span class="stat" id="stat">読み込み中 …</span>
+  </div>
+
+  <div class="list" id="list">
+    <div class="empty" id="loading">
+      <div class="icon">⏳</div>
+      顧客一覧 を 読み込み中 …
+    </div>
+  </div>
+</main>
+
+<div class="modal-backdrop" id="modal-backdrop" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <h2>発行 済 コード</h2>
+    <div class="code-display" id="code-display">------</div>
+    <div class="expiry"><b id="customer-name">-</b> さん / 有効期限 <b id="expiry-display">-</b></div>
+    <div class="qr-wrap"><canvas id="qr"></canvas></div>
+    <div class="instr">
+      <b>顧客 に お伝え ください:</b>
+      <ol>
+        <li>App Store で 「FP コンパス」 を install</li>
+        <li>Apple Sign-In で サインイン</li>
+        <li>この <b>6 桁 コード</b> を 入力</li>
+      </ol>
+    </div>
+    <div class="actions">
+      <button class="btn btn-ghost" onclick="copyCode()">コピー</button>
+      <button class="btn btn-primary" onclick="closeModal()">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js';
+import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js';
+import { getFirestore, collection, query, orderBy, onSnapshot, doc, getDoc } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js';
+import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-functions.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAmVAEe9l9e1Yo_dzzJdbTVU35wWKd2sH4",
+  authDomain: "skeleton-fp-compass-632026.firebaseapp.com",
+  projectId: "skeleton-fp-compass-632026",
+  storageBucket: "skeleton-fp-compass-632026.firebasestorage.app",
+  messagingSenderId: "833972948597",
+  appId: "1:833972948597:web:b7310cc22ce41d9738f23c",
+};
+const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const functions = getFunctions(app, 'asia-northeast1');
+const createIosInvite = httpsCallable(functions, 'createIosInvite');
+
+let tenantId = null;
+let allCustomers = [];
+let searchFilter = '';
+
+const $ = (id) => document.getElementById(id);
+const toast = (msg) => {
+  const t = $('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2400);
+};
+
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    $('signed-in').textContent = '未 サインイン → login';
+    location.href = '/account.html?redirect=' + encodeURIComponent(location.pathname);
+    return;
+  }
+  $('signed-in').textContent = user.email || user.uid;
+  const uDoc = await getDoc(doc(db, 'users', user.uid));
+  if (!uDoc.exists() || uDoc.data().role !== 'fp_owner') {
+    $('list').innerHTML = '<div class="empty"><div class="icon">🔒</div>この 画面 は FP owner 権限 が 必要 です</div>';
+    return;
+  }
+  tenantId = uDoc.data().tenantId;
+  loadCustomers();
+});
+
+function loadCustomers() {
+  const q = query(collection(db, 'tenants', tenantId, 'customers'), orderBy('createdAt', 'desc'));
+  onSnapshot(q, (snap) => {
+    allCustomers = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    render();
+  }, (err) => {
+    $('list').innerHTML = `<div class="empty">読み込み エラー: ${err.message}</div>`;
+  });
+}
+
+function render() {
+  const filtered = allCustomers.filter((c) => {
+    if (!searchFilter) return true;
+    const name = (c.name || c.displayName || '').toLowerCase();
+    return name.includes(searchFilter.toLowerCase());
+  });
+  $('stat').innerHTML = `<b>${filtered.length}</b> / ${allCustomers.length} 名`;
+
+  if (filtered.length === 0) {
+    $('list').innerHTML = `<div class="empty"><div class="icon">${allCustomers.length === 0 ? '🗒️' : '🔍'}</div>${allCustomers.length === 0 ? '顧客 が まだ 登録 されて いません' : '該当 する 顧客 が いません'}</div>`;
+    return;
+  }
+  const html = filtered.map((c) => {
+    const name = c.name || c.displayName || '(名前 未設定)';
+    const email = c.email || c.lineFriendId || c.id;
+    return `
+      <div class="row">
+        <div>
+          <div class="name">${escapeHtml(name)}</div>
+          <div class="meta">${escapeHtml(email)}</div>
+        </div>
+        <div class="last-code" data-cid="${escapeHtml(c.id)}-lastcode"></div>
+        <button class="btn btn-primary" data-cid="${escapeHtml(c.id)}" data-name="${escapeHtml(name)}">
+          コード 発行
+        </button>
+      </div>
+    `;
+  }).join('');
+  $('list').innerHTML = html;
+  $('list').querySelectorAll('button[data-cid]').forEach((b) => {
+    b.addEventListener('click', () => issueCode(b, b.dataset.cid, b.dataset.name));
+  });
+}
+
+async function issueCode(btn, customerId, customerName) {
+  const original = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '発行中<span class="loader"></span>';
+  try {
+    const res = await createIosInvite({ customerId, expiresInHours: 168 });
+    const { code, expiresAt, deepLink } = res.data;
+    openModal(code, customerName, expiresAt, deepLink);
+  } catch (e) {
+    toast('発行 失敗: ' + (e.message || e));
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = original;
+  }
+}
+
+function openModal(code, customerName, expiresAt, deepLink) {
+  $('code-display').textContent = code;
+  $('customer-name').textContent = customerName;
+  const d = new Date(expiresAt);
+  $('expiry-display').textContent = d.toLocaleDateString('ja-JP', {
+    year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit',
+  });
+  drawQR(deepLink || code);
+  $('modal-backdrop').classList.add('active');
+  window._currentCode = code;
+}
+
+window.closeModal = () => $('modal-backdrop').classList.remove('active');
+window.copyCode = async () => {
+  try {
+    await navigator.clipboard.writeText(window._currentCode);
+    toast('コピー しました');
+  } catch {
+    toast('コピー 失敗');
+  }
+};
+
+function drawQR(text) {
+  const canvas = $('qr');
+  canvas.width = 160;
+  canvas.height = 160;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0, 0, 160, 160);
+  if (!window.QRCode) {
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js';
+    s.onload = () => window.QRCode.toCanvas(canvas, text, { width: 160, margin: 1 });
+    document.head.appendChild(s);
+  } else {
+    window.QRCode.toCanvas(canvas, text, { width: 160, margin: 1 });
+  }
+}
+
+$('search').addEventListener('input', (e) => {
+  searchFilter = e.target.value;
+  render();
+});
+
+function escapeHtml(s) {
+  return String(s ?? '').replace(/[&<>"']/g, (c) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  }[c]));
+}
+</script>
+
+</body>
+</html>
