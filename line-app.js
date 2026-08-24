@@ -10535,14 +10535,17 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
     if (!c.lineFriendId) { _lchToast('LINE 未連携 客 に は 送信 できません', true); return; }
     btn.disabled = true;
     try {
-      const headers = window.getFpAuthHeaders ? await window.getFpAuthHeaders() : { 'Content-Type': 'application/json' };
-      const r = await fetch(CLOUD_RUN_BASE + '/api/send-line', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ userId: c.lineFriendId, text }),
-      });
-      const data = await r.json();
-      if (!data.ok) throw new Error(data.error || '送信 失敗');
+      // 2026-08-22 owner「他の人は送れるけど一人だけこのエラー」対応:
+      //   旧 fetch(CLOUD_RUN_BASE + '/api/send-line') は demo (Skeleton) GAS token 固定 で
+      //   別 tenant (Fラボ の 福田 等) に push すると LINE 側 が 「Failed to send messages」返し。
+      //   sendLineMessage callable に 切替 で 送信 元 の user tenant の token で auth。
+      //   (line-app.js:789 の 「一斉送信」 と 同 pattern を LINE chat hub にも 適用)
+      const { initializeApp: _ia, getApps: _ga } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js');
+      const { getFunctions: _gf, httpsCallable: _hc } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-functions.js');
+      const _app = _ga()[0] || _ia({ apiKey: 'AIzaSyAmVAEe9l9e1Yo_dzzJdbTVU35wWKd2sH4', authDomain: 'skeleton-fp-compass-632026.firebaseapp.com', projectId: 'skeleton-fp-compass-632026' });
+      const _fn = _hc(_gf(_app, 'asia-northeast1'), 'sendLineMessage');
+      const _payload = c.id ? { customerId: c.id, text } : { lineFriendId: c.lineFriendId, text };
+      await _fn(_payload);
       if (!Array.isArray(c.lineHistory)) c.lineHistory = [];
       c.lineHistory.push({ ts: new Date().toISOString(), direction: 'out', text, from: 'fp' });
       inp.value = '';
