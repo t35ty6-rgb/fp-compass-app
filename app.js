@@ -8140,8 +8140,23 @@ ${ctxText}${surveyTxt}`;
             // permission 取得 → label が 空 で ない enumerateDevices
             const tmpStream = await navigator.mediaDevices.getUserMedia({ audio: true });
             const devices = await navigator.mediaDevices.enumerateDevices();
-            const inputs = devices.filter(d => d.kind === 'audioinput');
+            const rawInputs = devices.filter(d => d.kind === 'audioinput');
             tmpStream.getTracks().forEach(t => t.stop());
+            // 2026-08-22 owner「EarPods が 2つ 出る」対応:
+            //   macOS の 「default」「communications」 は 実 device の alias で、 同じ device が 2重 列挙 される。
+            //   deviceId=='default'/'communications' の alias を 除外 して 物理 device だけ に する。
+            //   さらに 同じ label の 重複 も 除去 (最初 の 1件 だけ 残す)。
+            const aliasIds = new Set(['default', 'communications']);
+            const seenLabel = new Set();
+            const inputs = [];
+            for (const d of rawInputs) {
+              if (aliasIds.has(d.deviceId)) continue;
+              const cleanLabel = (d.label || '').replace(/^既定\s*-\s*|^通信\s*-\s*|^Default\s*-\s*|^Communications\s*-\s*/i, '').trim();
+              const finalLabel = cleanLabel || d.label || '';
+              if (seenLabel.has(finalLabel)) continue;
+              seenLabel.add(finalLabel);
+              inputs.push({ deviceId: d.deviceId, label: finalLabel, kind: d.kind });
+            }
             if (inputs.length === 0) return null;
             if (inputs.length === 1) return inputs[0];
             const lastLabel = (function(){ try { return localStorage.getItem('fp-preferred-mic-label'); } catch (_) { return null; } })();
