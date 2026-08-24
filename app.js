@@ -6765,6 +6765,12 @@
                 <span style="font-size:18px;line-height:1;color:#1E40AF;">🎤</span>
                 <span style="text-align:left;line-height:1.3;">対面 で 商談 を 開始<span style="display:block;font-size:11px;font-weight:600;color:#475569;margin-top:2px;">Zoom 使わず 音声 だけ 録音 → AI 議事録</span></span>
               </button>
+              <!-- ★ 2026-08-22 owner「対面 の 音声 データ を アップロード → 文字起こし」対応 -->
+              <button id="cd-audio-upload-btn" data-client-id="${escapeHtml(c.id)}" style="margin-top:6px;width:100%;background:#fff;color:#7C2D12;border:1.5px dashed #C19A3A;padding:12px 16px;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;font-family:'Noto Sans JP',sans-serif;display:flex;align-items:center;justify-content:center;gap:10px;transition:background .15s,border-style .15s;">
+                <span style="font-size:16px;line-height:1;">📁</span>
+                <span style="text-align:left;line-height:1.3;">録音 済 音声 を アップロード<span style="display:block;font-size:10.5px;font-weight:600;color:#78716C;margin-top:1px;">別 アプリ で 録音 した mp3/m4a/webm を Whisper で 文字起こし</span></span>
+              </button>
+              <input type="file" id="cd-audio-upload-input" data-client-id="${escapeHtml(c.id)}" accept="audio/*,video/mp4" style="display:none;">
               <!-- 旧 button 互換 (別 code path から click 発火 される ため hidden で 残置) -->
               <button id="cd-instant-zoom-btn" data-client-id="${escapeHtml(c.id)}" style="display:none;"></button>
               <button id="cd-schedule-zoom-btn" data-client-id="${escapeHtml(c.id)}" style="display:none;"></button>
@@ -8247,6 +8253,80 @@ ${ctxText}${surveyTxt}`;
         } else if (typeof startInPersonRecording === 'function') {
           // fallback: startAudioOnlyRecording 未 expose なら 旧 Zoom stealth flow
           startInPersonRecording(c);
+        }
+      });
+    }
+    // ★ 2026-08-22 owner「対面の音声データを アップロードできるように それを文字起こしするように」対応
+    //   別 アプリ で 録音 した 音声 file を picker で 選ぶ → aiProcessRecording pipeline に 直 投入
+    const uploadBtn = document.getElementById('cd-audio-upload-btn');
+    const uploadInput = document.getElementById('cd-audio-upload-input');
+    if (uploadBtn && uploadInput) {
+      uploadBtn.addEventListener('click', () => uploadInput.click());
+      uploadInput.addEventListener('change', async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        // 400MB 上限 (whisper 個別 chunk 化 で 対応 可 な サイズ)
+        const sizeMB = file.size / 1024 / 1024;
+        if (sizeMB > 400) {
+          alert('❌ ファイル が 大き すぎ ます (' + sizeMB.toFixed(1) + 'MB · 上限 400MB)。\n\n長時間 録音 は QuickTime 等 で 分割 して 個別 アップロード して ください。');
+          uploadInput.value = '';
+          return;
+        }
+        if (!/^audio\/|^video\/mp4/.test(file.type)) {
+          if (!confirm('⚠ 音声 file 以外 かも しれません (' + (file.type || '不明') + ')。\n\n強制的 に Whisper で 文字起こし 試みます か? (mp3/m4a/wav/webm/mp4 推奨)')) {
+            uploadInput.value = '';
+            return;
+          }
+        }
+        const inpersonTs = 'upload-' + Date.now();
+        const clientName = c.name || 'お客様';
+        const clientId = c._fsCustomerId || c.id;
+        const fallbackBooking = { ts: inpersonTs, name: clientName, userId: clientId, isInperson: true, uploaded: true };
+        try {
+          const meta = JSON.parse(localStorage.getItem('fp-quick-inperson-meta') || '[]');
+          meta.push({ ts: inpersonTs, clientId, clientName, startedAt: new Date().toISOString(), uploaded: true, filename: file.name });
+          localStorage.setItem('fp-quick-inperson-meta', JSON.stringify(meta));
+        } catch (_) {}
+        uploadBtn.disabled = true;
+        const origHtml = uploadBtn.innerHTML;
+        uploadBtn.innerHTML = '⏳ 処理 中… <span style="font-size:10.5px;font-weight:600;">(30秒-2分)</span>';
+        try {
+          // 進捗 パネル (line-app.js の onstop と 同 UX)
+          if (typeof window.showUnifiedProgressPanel === 'function') {
+            try { window.showUnifiedProgressPanel(clientName, file); } catch (_) {}
+          }
+          if (typeof window.updateProgressStep === 'function') {
+            try { window.updateProgressStep('save', 'done'); window.updateProgressStep('drive', 'active'); window.updateProgressStep('ai', 'active'); } catch (_) {}
+          }
+          // Drive: 並列 upload
+          const drivePromise = (typeof window.autoUploadRecording === 'function')
+            ? window.autoUploadRecording(file, inpersonTs, clientName, fallbackBooking).catch(() => null)
+            : Promise.resolve(null);
+          // AI: 同 音声 を Whisper + Claude 化
+          let aiResult = null;
+          if (typeof window.aiProcessRecording === 'function') {
+            aiResult = await window.aiProcessRecording(file, inpersonTs, clientName, fallbackBooking);
+          } else {
+            throw new Error('aiProcessRecording が 未 expose (line-app.js load 未完 の 可能性)');
+          }
+          if (aiResult && aiResult.ok) {
+            if (typeof window.autoSaveAIResult === 'function') {
+              try { window.autoSaveAIResult(aiResult, clientName, fallbackBooking); } catch (_) {}
+            }
+            if (typeof window.updateProgressStep === 'function') try { window.updateProgressStep('ai', 'done'); } catch (_) {}
+            alert('✅ 文字起こし + AI 議事録 生成 完了\n\n議事録 tab を 開いて 確認 して ください。');
+          } else {
+            throw new Error(aiResult?.error || 'AI 処理 失敗');
+          }
+          await drivePromise;
+          if (typeof window.fetchLiveData === 'function') { try { await window.fetchLiveData(); } catch (_) {} }
+        } catch (err) {
+          console.error('[audio upload] fail:', err);
+          alert('❌ 文字起こし 失敗: ' + (err?.message || err));
+        } finally {
+          uploadBtn.disabled = false;
+          uploadBtn.innerHTML = origHtml;
+          uploadInput.value = '';
         }
       });
     }

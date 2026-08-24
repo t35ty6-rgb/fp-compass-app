@@ -3745,6 +3745,15 @@
   }
   // 2026-08-20: app.js の 顧客カード対面button から cross-file 呼び出し 可能 に
   try { window.startAudioOnlyRecording = startAudioOnlyRecording; } catch (_) {}
+  // 2026-08-22: app.js の 「録音済 音声 アップロード」 button から 同 pipeline 呼ぶ
+  try {
+    window.aiProcessRecording = aiProcessRecording;
+    window.autoUploadRecording = autoUploadRecording;
+    window.autoSaveAIResult = autoSaveAIResult;
+    window.showUnifiedProgressPanel = showUnifiedProgressPanel;
+    window.updateProgressStep = updateProgressStep;
+    window.fetchLiveData = fetchLiveData;
+  } catch (_) {}
 
   // 画面録画 → 停止時に Drive の顧客フォルダへ自動アップロード
   async function startScreenRecording(bookingTs, zoomUrl, preOpened) {
