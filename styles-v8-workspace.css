@@ -12960,6 +12960,19 @@ body:not([data-home-view]) [data-view-target="cal"] { display: none !important; 
     max-width: calc(100vw - 24px - 60px - 16px) !important; /* FAB 60px + 余白 16 を 避ける */
   }
 
+  /* 8b. 誕生日 tab の 4 統計 カード が 4列 grid で モバイル で 3枚目 以降 が 右 に 見切れ。
+        2 x 2 grid に 変える。 */
+  [data-view="birthdayTab"] div[style*="grid-template-columns:repeat(4,1fr)"],
+  [data-line-view="birthdayTab"] div[style*="grid-template-columns:repeat(4,1fr)"] {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+  /* 中 の カード も 密度 圧縮 */
+  [data-view="birthdayTab"] div[style*="grid-template-columns:repeat(4,1fr)"] > div,
+  [data-line-view="birthdayTab"] div[style*="grid-template-columns:repeat(4,1fr)"] > div {
+    padding: 14px 12px 12px !important;
+  }
+
   /* 8. 議事録 modal (showTranscriptModal) mobile 対応
      owner「議事録 も 途切れる」 fix。
      - tr-tabs は 横スクロール (要約/タスク/全文 tab)
