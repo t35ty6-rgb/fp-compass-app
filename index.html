@@ -1047,13 +1047,9 @@
       <span class="kbd">⌘K</span>
     </div>
 
-    <!-- ★ 2026-08-18 owner「Zoom 使う」明示 で label 更新 (対面 でも Zoom 経由 で 録画) -->
-    <button id="sidebar-quick-inperson" class="sidebar-quick-rec"
-      title="急 に 面談 入った 時 → Zoom 即 発行 (対面 でも Zoom 経由 で 録画)">
-      <span class="sidebar-quick-rec-dot"></span>
-      <span class="sidebar-quick-rec-label">急遽 面談スタート</span>
-      <span class="sidebar-quick-rec-pill">予約不要</span>
-    </button>
+    <!-- ★ 2026-08-25 owner「急遽面談 全部 いらない (客カード の 音声 upload に 統一)」 で 撤去 -->
+    <!-- id は 残置 (別 code path 互換)、 display:none で 隠す -->
+    <button id="sidebar-quick-inperson" class="sidebar-quick-rec" style="display:none;" hidden></button>
 
     <!-- 2026-07-10 impeccable 再設計: 3-zone flex (header / scroll / foot) → foot が どんな viewport でも 切れない -->
     <div class="sidebar-scroll">
@@ -2009,16 +2005,13 @@ window.fpReadyAfterAuth = function() {
           `}
         </div>
 
-        <!-- 4. quick row -->
+        <!-- 4. quick row · 2026-08-25 owner「急遽面談 全部 いらない」 で 「急遽面談」 button 撤去、 新規顧客 だけ 残す -->
         <div class="m-quick-row">
-          <button class="m-qa2 is-primary" id="m-qa-meeting">
-            <span class="m-qa2-icon">⚡</span>
-            <span>急遽 面談</span>
-          </button>
-          <button class="m-qa2" id="m-qa-newcli">
+          <button class="m-qa2 is-primary" id="m-qa-newcli">
             <span class="m-qa2-icon">+</span>
             <span>新規 顧客</span>
           </button>
+          <button id="m-qa-meeting" style="display:none;" hidden></button>
         </div>
       `;
       dashView.insertBefore(root, dashView.firstChild);

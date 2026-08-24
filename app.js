@@ -6752,14 +6752,10 @@
             </div>
           </div>
 
-          <!-- ★ 2026-07-28: 顧客カルテ super button (owner「ボタン多すぎ、 1個 で全部なんとかなるボタン」 要望対応) -->
-          <!-- 旧 「今すぐ Zoom」 + 「予約 Zoom」 2 button → 1 button 「面談 を 開始」 + modal で 4 分岐 -->
-          <!-- 4 分岐: 今すぐ Instant Zoom / 予約 / 相手が送ってきた Zoom URL 貼付 / 電話のみ (録音なし) -->
+          <!-- ★ 2026-08-25 owner「面談 を 開始 (今すぐ/予約/URL/電話 全部 ここから) button も いらない」 で 撤去 -->
+          <!-- 音声 upload に 統一。 id 残置 (別 code path 互換) -->
           <div class="cd-zoom-super" style="margin-top:14px;">
-              <button id="cd-meeting-start-btn" data-client-id="${escapeHtml(c.id)}" style="width:100%;background:#059669;color:#fff;border:none;padding:18px 22px;border-radius:10px;font-size:16px;font-weight:900;cursor:pointer;font-family:'Noto Sans JP',sans-serif;letter-spacing:0.005em;box-shadow:0 6px 20px rgba(5,150,105,0.28);display:flex;align-items:center;justify-content:center;gap:12px;min-height:64px;transition:background .15s,box-shadow .15s;">
-                <span style="font-size:22px;line-height:1;">🎙</span>
-                <span style="text-align:left;line-height:1.35;">面談 を 開始<br><span style="font-size:12px;font-weight:600;letter-spacing:0.01em;">今すぐ / 予約 / 相手主催 URL / 電話 · 全部 ここから</span></span>
-              </button>
+              <button id="cd-meeting-start-btn" data-client-id="${escapeHtml(c.id)}" style="display:none;" hidden></button>
               <!-- ★ 2026-08-25 owner「対面 で 商談 を 開始 button いらない (音声 upload に 統一)」 で 撤去 -->
               <!-- 旧 button 互換 のため hidden 残置 (別 code path から click 発火 される 可能性) -->
               <button id="cd-inperson-start-btn" data-client-id="${escapeHtml(c.id)}" style="display:none;" hidden></button>
