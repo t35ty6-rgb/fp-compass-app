@@ -11584,11 +11584,15 @@ STEP C: 結果報告
         }
         /* 2026-08-21 owner「議事録 生成中 · mini widget 途切れる」対応:
            モバイル で は bnav 高 (64px + safe-area) 分 上 に 引き上げて 「面談終了」 button が 押せる よう に */
+        /* 2026-08-22 owner「+顧客追加 (FAB) と 被って る」対応:
+           FAB (右下、 顧客タブ 時 のみ) と 完全 に 重なって いた ので widget/badge は 左下 に 移動 */
         @media (max-width: 768px) {
           #fp-inperson-recording[data-mode="mini"] {
             bottom: calc(20px + 64px + env(safe-area-inset-bottom, 0px)) !important;
-            width: calc(100vw - 32px) !important;
-            max-width: 320px !important;
+            right: auto !important;
+            left: 12px !important;
+            width: 260px !important;
+            max-width: 260px !important;
           }
         }
         #fp-inperson-recording[data-mode="mini"] .fp-full-only { display: none !important; }

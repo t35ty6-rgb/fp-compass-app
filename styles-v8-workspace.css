@@ -12942,15 +12942,22 @@ body:not([data-home-view]) [data-view-target="cal"] { display: none !important; 
 
   /* 8a. 対面 録音 mini widget + 議事録 生成中 badge が bnav の 下 に 44px 突き刺さり fix
         widget CSS は `bottom: 20px` fixed → viewport bottom から の 距離 で bnav 64px + safe に は 到達 せず。
-        `--fp-mobile-bnav-offset` を bnav 分 に 設定 して inline style が calc で 参照。 */
+        `--fp-mobile-bnav-offset` を bnav 分 に 設定 して inline style が calc で 参照。
+     2026-08-22 owner「+顧客追加 と 被って る」対応:
+        widget/badge は 右下 (FAB と 完全 に 同じ 座標) → 左下 に 移動 で 分離。 */
   :root, body {
     --fp-mobile-bnav-offset: calc(64px + env(safe-area-inset-bottom, 0px));
   }
   #fp-inperson-recording[data-mode="mini"] {
     bottom: calc(20px + 64px + env(safe-area-inset-bottom, 0px)) !important;
+    right: auto !important;
+    left: 12px !important;
   }
   #fp-minutes-badges {
     bottom: calc(20px + 64px + env(safe-area-inset-bottom, 0px)) !important;
+    right: auto !important;
+    left: 12px !important;
+    max-width: calc(100vw - 24px - 60px - 16px) !important; /* FAB 60px + 余白 16 を 避ける */
   }
 
   /* 8. 議事録 modal (showTranscriptModal) mobile 対応
