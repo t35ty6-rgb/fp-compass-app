@@ -4554,22 +4554,28 @@
         } finally { clearTimeout(tid); }
       };
       let r = null;
-      if (window.RecordingPersist?.fetchWithRetry) {
-        let lastErr = null;
-        const maxRetries = 6;
-        for (let attempt = 0; attempt <= maxRetries; attempt++) {
-          if (!navigator.onLine) await window.RecordingPersist.waitForOnline();
-          try {
-            r = await doFetch();
-            if (r.status >= 500 && r.status < 600) { lastErr = new Error(`server ${r.status}`); r = null; }
-            else break;
-          } catch (e) { lastErr = e; }
-          if (attempt < maxRetries) await new Promise(res => setTimeout(res, Math.min(60000, 2000 * Math.pow(2, attempt))));
-        }
-        if (!r) return { ok: false, error: 'AI処理 例外: ' + (lastErr?.message || 'retry exhausted') };
-      } else {
-        r = await doFetch();
+      // 2026-08-25 owner「HTTP 429」対応: 429 (rate limit) も 500 系 と 同じく retry 対象、
+      //   Retry-After header あれば 尊重、 なけれ ば exponential backoff
+      let lastErr = null;
+      const maxRetries = window.RecordingPersist?.fetchWithRetry ? 6 : 3;
+      for (let attempt = 0; attempt <= maxRetries; attempt++) {
+        if (!navigator.onLine && window.RecordingPersist?.waitForOnline) await window.RecordingPersist.waitForOnline();
+        try {
+          r = await doFetch();
+          const retriable = (r.status === 429) || (r.status >= 500 && r.status < 600);
+          if (retriable) {
+            lastErr = new Error(`${r.status === 429 ? 'rate limit' : 'server'} ${r.status}`);
+            const retryAfter = parseInt(r.headers.get('Retry-After') || '0', 10);
+            r = null;
+            const waitMs = retryAfter > 0 ? Math.min(120000, retryAfter * 1000) : Math.min(60000, 3000 * Math.pow(2, attempt));
+            if (attempt < maxRetries) {
+              console.log(`[aiProcessRecording] retry attempt ${attempt+1}/${maxRetries} · wait ${waitMs}ms · reason ${lastErr.message}`);
+              await new Promise(res => setTimeout(res, waitMs));
+            }
+          } else break;
+        } catch (e) { lastErr = e; if (attempt < maxRetries) await new Promise(res => setTimeout(res, Math.min(60000, 2000 * Math.pow(2, attempt)))); }
       }
+      if (!r) return { ok: false, error: 'AI処理 例外: ' + (lastErr?.message || 'retry exhausted') };
       if (!r.ok) {
         const text = await r.text().catch(() => '');
         const err = `HTTP ${r.status}: ${text.slice(0, 200)}`;
@@ -4607,25 +4613,43 @@
           reader.onerror = rej;
           reader.readAsDataURL(c);
         });
-        const controller = new AbortController();
-        const tid = setTimeout(() => controller.abort(), 8 * 60 * 1000);
-        let r;
-        try {
-          r = await fetch(CLOUD_RUN_BASE + '/api/process-recording', {
-            method: 'POST',
-            headers: await (window.getFpAuthHeaders ? window.getFpAuthHeaders() : Promise.resolve({ 'Content-Type': 'application/json' })),
-            body: JSON.stringify({
-              base64, mimeType: blob.type || 'audio/webm',
-              customerName: customerName + ` (chunk ${i+1}/${chunks.length})`,
-              customerContext: '', bookingTs, userId: booking && booking.userId,
-              tenantId: (window.__fp && window.__fp.tenantId) || '',
-            }),
-            signal: controller.signal,
-          });
-        } catch (e) {
-          if (!firstErr) firstErr = `chunk ${i+1} fetch fail: ${e.message || e}`;
-          continue;
-        } finally { clearTimeout(tid); }
+        // 2026-08-25 owner「HTTP 429」対応: chunk 側 も 429/5xx で retry (Retry-After 尊重)
+        let r = null;
+        let chunkErr = null;
+        const chunkMaxRetries = 5;
+        for (let attempt = 0; attempt <= chunkMaxRetries; attempt++) {
+          const controller = new AbortController();
+          const tid = setTimeout(() => controller.abort(), 8 * 60 * 1000);
+          try {
+            r = await fetch(CLOUD_RUN_BASE + '/api/process-recording', {
+              method: 'POST',
+              headers: await (window.getFpAuthHeaders ? window.getFpAuthHeaders() : Promise.resolve({ 'Content-Type': 'application/json' })),
+              body: JSON.stringify({
+                base64, mimeType: blob.type || 'audio/webm',
+                customerName: customerName + ` (chunk ${i+1}/${chunks.length})`,
+                customerContext: '', bookingTs, userId: booking && booking.userId,
+                tenantId: (window.__fp && window.__fp.tenantId) || '',
+              }),
+              signal: controller.signal,
+            });
+          } catch (e) {
+            chunkErr = 'fetch fail: ' + (e.message || e);
+            r = null;
+          } finally { clearTimeout(tid); }
+          if (!r) {
+            if (attempt < chunkMaxRetries) await new Promise(res => setTimeout(res, Math.min(60000, 3000 * Math.pow(2, attempt))));
+            continue;
+          }
+          const retriable = (r.status === 429) || (r.status >= 500 && r.status < 600);
+          if (!retriable) break;
+          chunkErr = `HTTP ${r.status}`;
+          const retryAfter = parseInt(r.headers.get('Retry-After') || '0', 10);
+          const waitMs = retryAfter > 0 ? Math.min(180000, retryAfter * 1000) : Math.min(60000, 4000 * Math.pow(2, attempt));
+          console.log(`[aiChunked] chunk ${i+1} retry ${attempt+1}/${chunkMaxRetries} · wait ${waitMs}ms · ${chunkErr}`);
+          r = null;
+          if (attempt < chunkMaxRetries) await new Promise(res => setTimeout(res, waitMs));
+        }
+        if (!r) { if (!firstErr) firstErr = `chunk ${i+1} ${chunkErr || 'exhausted'}`; continue; }
         if (!r.ok) { if (!firstErr) firstErr = `chunk ${i+1}: HTTP ${r.status}`; continue; }
         const d = await r.json().catch(() => ({}));
         if (d.transcript || d.summary) allResults.push(d);
