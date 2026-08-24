@@ -4539,7 +4539,17 @@
       console.log('[aiProcessRecording] large file → chunked path', sizeMB);
       return await aiProcessRecordingChunked(blob, bookingTs, customerName, booking);
     }
+    // 2026-08-25 owner「3分 音声 で 5分 以上 待ち」対応: 進捗パネル に 経過秒 + 現 step を 表示 して 透明化
+    const t0 = Date.now();
+    const updateAiStep = (msg) => {
+      try {
+        const el = document.querySelector('#fp-step-ai .fp-step-desc');
+        if (el) el.textContent = msg;
+      } catch (_) {}
+    };
+    const elapsed = () => Math.round((Date.now() - t0) / 1000);
     try {
+      updateAiStep('base64 変換 中… (0秒)');
       const reader = new FileReader();
       const base64 = await new Promise((res, rej) => {
         reader.onload = () => res(reader.result.split(',')[1]);
@@ -4548,11 +4558,11 @@
       });
       const survey = ((liveData && liveData.survey_answers) || []).find(s => s.userId === (booking && booking.userId));
       const ctx = survey ? `テーマ: ${survey.q1_テーマ} / 年代: ${survey.q2_年代} / 家族: ${survey.q3_家族} / 年収: ${survey.q4_年収} / 悩み: ${survey.q5_悩み}` : '';
-      // ★ オーナーfb 2026-06-23: 長録画 Whisper timeout 防止: クライアント側 timeout 10分
-      // ★ 2026-08-12: Wi-Fi 断 → 復帰 で 自動 再送
+      // 2026-08-25 timeout 短縮 (旧 10 分 · 3 分 音声 で 隠れて 8-10 分 待ち の 事故):
+      //   単チャンク は 5 分 で fail-fast、 owner に 何 が 起き て いる か 見え る
       const doFetch = async () => {
         const controller = new AbortController();
-        const tid = setTimeout(() => controller.abort(), 10 * 60 * 1000);
+        const tid = setTimeout(() => controller.abort(), 5 * 60 * 1000);
         try {
           return await fetch(CLOUD_RUN_BASE + '/api/process-recording', {
             method: 'POST',
@@ -4568,28 +4578,45 @@
         } finally { clearTimeout(tid); }
       };
       let r = null;
-      // 2026-08-25 owner「HTTP 429」対応: 429 (rate limit) も 500 系 と 同じく retry 対象、
-      //   Retry-After header あれば 尊重、 なけれ ば exponential backoff
+      // 2026-08-25 retry を 6→3 に 削減、 backoff も 3s→2s 短縮 (owner「5分 以上 待ち」 対応)
+      //   従来: 最悪 60 分 隠れて 進捗 見え ず → 新: 最悪 ~15 分 で fail、 各 attempt の 状態 を owner に 見せる
       let lastErr = null;
-      const maxRetries = window.RecordingPersist?.fetchWithRetry ? 6 : 3;
-      for (let attempt = 0; attempt <= maxRetries; attempt++) {
-        if (!navigator.onLine && window.RecordingPersist?.waitForOnline) await window.RecordingPersist.waitForOnline();
-        try {
-          r = await doFetch();
-          const retriable = (r.status === 429) || (r.status >= 500 && r.status < 600);
-          if (retriable) {
-            lastErr = new Error(`${r.status === 429 ? 'rate limit' : 'server'} ${r.status}`);
-            const retryAfter = parseInt(r.headers.get('Retry-After') || '0', 10);
-            r = null;
-            const waitMs = retryAfter > 0 ? Math.min(120000, retryAfter * 1000) : Math.min(60000, 3000 * Math.pow(2, attempt));
+      const maxRetries = 3;
+      updateAiStep(`Whisper 送信 中… (${elapsed()}秒)`);
+      // 定期 更新 で 「動いて いる」 を 示す
+      const tick = setInterval(() => {
+        const s = elapsed();
+        if (s < 30) updateAiStep(`Whisper 文字起こし 中… (${s}秒 · 通常 30-60秒)`);
+        else if (s < 90) updateAiStep(`Whisper 文字起こし 中… (${s}秒 · 少し 時間 が かかって います)`);
+        else updateAiStep(`⚠ 通常 より 遅延 中 (${s}秒 · timeout=5分 で 自動 fail)`);
+      }, 3000);
+      try {
+        for (let attempt = 0; attempt <= maxRetries; attempt++) {
+          if (!navigator.onLine && window.RecordingPersist?.waitForOnline) await window.RecordingPersist.waitForOnline();
+          try {
+            r = await doFetch();
+            const retriable = (r.status === 429) || (r.status >= 500 && r.status < 600);
+            if (retriable) {
+              lastErr = new Error(`${r.status === 429 ? 'rate limit' : 'server'} ${r.status}`);
+              const retryAfter = parseInt(r.headers.get('Retry-After') || '0', 10);
+              r = null;
+              const waitMs = retryAfter > 0 ? Math.min(60000, retryAfter * 1000) : Math.min(30000, 2000 * Math.pow(2, attempt));
+              if (attempt < maxRetries) {
+                console.log(`[aiProcessRecording] retry ${attempt+1}/${maxRetries} · wait ${waitMs}ms · ${lastErr.message}`);
+                updateAiStep(`リトライ ${attempt+1}/${maxRetries} · ${Math.round(waitMs/1000)}秒後 再送 (${lastErr.message})`);
+                await new Promise(res => setTimeout(res, waitMs));
+              }
+            } else break;
+          } catch (e) {
+            lastErr = e;
             if (attempt < maxRetries) {
-              console.log(`[aiProcessRecording] retry attempt ${attempt+1}/${maxRetries} · wait ${waitMs}ms · reason ${lastErr.message}`);
-              await new Promise(res => setTimeout(res, waitMs));
+              updateAiStep(`リトライ ${attempt+1}/${maxRetries} · ${e.name === 'AbortError' ? 'timeout 5分' : e.message}`);
+              await new Promise(res => setTimeout(res, Math.min(30000, 2000 * Math.pow(2, attempt))));
             }
-          } else break;
-        } catch (e) { lastErr = e; if (attempt < maxRetries) await new Promise(res => setTimeout(res, Math.min(60000, 2000 * Math.pow(2, attempt)))); }
-      }
-      if (!r) return { ok: false, error: 'AI処理 例外: ' + (lastErr?.message || 'retry exhausted') };
+          }
+        }
+      } finally { clearInterval(tick); }
+      if (!r) return { ok: false, error: 'AI処理 例外: ' + (lastErr?.message || 'retry exhausted') + ` (経過 ${elapsed()}秒)` };
       if (!r.ok) {
         const text = await r.text().catch(() => '');
         const err = `HTTP ${r.status}: ${text.slice(0, 200)}`;
