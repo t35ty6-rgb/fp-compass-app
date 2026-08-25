@@ -7393,9 +7393,18 @@
             const cntEl2 = document.getElementById('cd-meetings-count');
             if (cntEl2) {
               const live = window.LineAppLiveData || {};
+              const _isEmptyStubForCount = (a) => {
+                if (a.no_audio === true) return true;
+                const sm = String(a.summary || '');
+                if (/⚠?\s*音声が\s*ほぼ取れませんでした/.test(sm)) return true;
+                const trLen = String(a.transcript || '').length;
+                if (trLen === 0 && sm.length === 0 && !a._hadTranscript && !(a.key_concerns || []).length) return true;
+                return false;
+              };
               const aiForC = (live.ai_results || []).filter(a =>
-                (a.userId && (a.userId === c.id || a.userId === c.lineFriendId)) ||
-                (a.customerName && a.customerName === c.name)
+                ((a.userId && (a.userId === c.id || a.userId === c.lineFriendId)) ||
+                 (a.customerName && a.customerName === c.name)) &&
+                !_isEmptyStubForCount(a)
               );
               const bkForC = (live.bookings || []).filter(b => b.userId === c.lineFriendId || b.name === c.name);
               const seen = new Set(); bkForC.forEach(b => seen.add(b.ts || ''));
