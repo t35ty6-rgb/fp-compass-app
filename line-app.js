@@ -4199,6 +4199,13 @@
   // (旧マルチキー localStorage 散らばりを廃止、データの真実は GAS シートに一本化)
   function autoSaveAIResult(result, customerName, booking) {
     if (!result || !result.ok) return;
+    // 2026-08-26 owner 明示「隠す・その場しのぎ の filter で 誤魔化す な、 root cause を 直せ」
+    //   root fix: 空音声 stub (no_audio=true or 「⚠ 音声が ほぼ取れませんでした」 fallback summary)
+    //   は そもそも 保存 しない。 client 側 filter で 隠す band-aid は 累犯 pattern。
+    if (result.no_audio === true || /⚠?\s*音声が\s*ほぼ取れませんでした/.test(String(result.summary || ''))) {
+      console.warn('[autoSaveAIResult] 空音声 stub は 保存 せず skip', { no_audio: result.no_audio, summary: String(result.summary || '').slice(0, 40) });
+      return;
+    }
     const bookingTs = (booking && booking.ts) || '';
     const userId   = (booking && booking.userId) || '';
     const nameKey  = customerName || (booking && booking.name) || '';
