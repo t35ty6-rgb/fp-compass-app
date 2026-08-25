@@ -7518,17 +7518,57 @@
         let tasks = [];
         if (match && Array.isArray(match.tasks)) tasks = match.tasks;
         if (tasks.length === 0) tasks = aiTasks.filter(t => (t.bookingTs || '') === bookingTs);
-        if (tasks.length === 0) { alert('この 議事録 に は 抽出 済 の TODO 候補 が ありません'); return; }
-        // candidates に 積む
-        const cands = tasks.map(t => ({
-          id: 'aic-past-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
-          task: t.task || t.title || '', due: t.dueDate || t.due || '', priority: t.priority || 'p2',
-          icon: t.icon || '📝',
-          recommendedAction: t.recommendedAction || t.actionTemplate || '',
-          createdAt: new Date().toISOString(),
-          customerName: clientName, clientId,
-          bookingTs, source: 'ai-meeting-past',
-        }));
+
+        // 2026-08-25 owner「候補 が ありません じゃ なく 何かしら 見つける」対応:
+        //   構造化 tasks が 空 なら、 summary / transcript_summary の 箇条書き 行 + 汎用 3 件 を fallback。
+        //   さらに 「もう少し 簡単で 分かりやすい TODO」 の ため、 task 文 を 短 動作 に 整形。
+        const shorten = (s) => {
+          if (!s) return '';
+          let t = String(s).trim().replace(/^[・•●◆▪️■□◇◎○▶️＊\*\-\s]+/, '').replace(/[。．]+$/, '');
+          // 長い 説明 は 先頭 40字 で 切る
+          if (t.length > 40) t = t.slice(0, 40).replace(/[、,\s][^、,\s]*$/, '') + '…';
+          return t;
+        };
+        let cands = tasks.map(t => {
+          const raw = t.task || t.title || '';
+          return {
+            id: 'aic-past-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
+            task: shorten(raw), taskFull: raw, due: t.dueDate || t.due || '', priority: t.priority || 'p2',
+            createdAt: new Date().toISOString(),
+            customerName: clientName, clientId,
+            bookingTs, source: 'ai-meeting-past',
+          };
+        });
+
+        if (cands.length === 0) {
+          // Fallback 1: summary / transcript_summary の 箇条書き 行 を 拾う
+          const summary = (match && (match.summary || match.transcript_summary)) || '';
+          const bullets = String(summary).split(/[\r\n]+/).map(l => l.trim())
+            .filter(l => l.length >= 8 && (/^[・•●◆▪️■□◇◎○▶️＊\*\-]/.test(l) || /(希望|検討|相談|質問|不安|確認|依頼|要望|お願い)/.test(l)))
+            .slice(0, 5);
+          cands = bullets.map(b => ({
+            id: 'aic-fb-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
+            task: shorten(b), taskFull: b, due: '', priority: 'p2',
+            createdAt: new Date().toISOString(),
+            customerName: clientName, clientId,
+            bookingTs, source: 'ai-meeting-fallback',
+          }));
+        }
+        if (cands.length === 0) {
+          // Fallback 2: 汎用 3 件 (どの 面談 でも 使える 基本 action)
+          const generics = [
+            '面談 の お礼 LINE を 送る',
+            '議事録 サマリー を 客 に 共有',
+            '次回 面談 の 候補 日 を 提案',
+          ];
+          cands = generics.map(g => ({
+            id: 'aic-gen-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
+            task: g, taskFull: g, due: '', priority: 'p2',
+            createdAt: new Date().toISOString(),
+            customerName: clientName, clientId,
+            bookingTs, source: 'ai-meeting-generic',
+          }));
+        }
         try {
           const stored = JSON.parse(localStorage.getItem('fp-ai-task-candidates') || '[]');
           localStorage.setItem('fp-ai-task-candidates', JSON.stringify([...stored, ...cands]));

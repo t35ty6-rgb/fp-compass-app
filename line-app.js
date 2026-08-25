@@ -10992,16 +10992,11 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
         </div>
         <div style="padding:16px 26px;overflow-y:auto;flex:1;" id="fp-ai-cand-list">
           ${cands.map(c => `
-            <label style="display:flex;align-items:flex-start;gap:12px;padding:11px 12px;border:1px solid #E2E8F0;border-radius:8px;margin-bottom:8px;cursor:pointer;background:#F8FAFC;">
-              <input type="checkbox" data-cand-id="${escapeHtml(c.id)}" checked style="width:18px;height:18px;accent-color:#5B5BF0;margin-top:2px;cursor:pointer;flex-shrink:0;">
+            <label style="display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid #E2E8F0;border-radius:8px;margin-bottom:6px;cursor:pointer;background:#F8FAFC;">
+              <input type="checkbox" data-cand-id="${escapeHtml(c.id)}" checked style="width:18px;height:18px;accent-color:#5B5BF0;cursor:pointer;flex-shrink:0;">
               <div style="flex:1;min-width:0;">
-                <div style="font-size:13.5px;font-weight:700;color:#0F172A;line-height:1.4;">${c.icon ? c.icon + ' ' : ''}${escapeHtml(c.task || '(内容 未 記載)')}</div>
-                <div style="font-size:11.5px;color:#64748B;margin-top:4px;display:flex;gap:12px;flex-wrap:wrap;">
-                  <span>${escapeHtml(c.customerName || '客 未 特定')} 様</span>
-                  <span>${priorityLabel[c.priority] || '🔵 いつか'}</span>
-                  ${c.due ? `<span>期限 ${escapeHtml(c.due)}</span>` : ''}
-                </div>
-                ${c.recommendedAction ? `<div style="font-size:11.5px;color:#64748B;margin-top:5px;background:#F1F5F9;padding:6px 10px;border-radius:6px;">推奨: ${escapeHtml(c.recommendedAction)}</div>` : ''}
+                <div style="font-size:14px;font-weight:700;color:#0F172A;line-height:1.4;">${escapeHtml(c.task || '(内容 未 記載)')}</div>
+                <div style="font-size:11px;color:#94A3B8;margin-top:2px;">${escapeHtml(c.customerName || '')} 様</div>
               </div>
             </label>
           `).join('')}
