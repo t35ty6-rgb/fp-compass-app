@@ -15726,17 +15726,13 @@ window.mergeFirestoreMeetingsIntoLiveData = async function (client) {
     if (!window.LineAppLiveData) window.LineAppLiveData = {};
     if (!Array.isArray(window.LineAppLiveData.ai_results)) window.LineAppLiveData.ai_results = [];
     const existing = window.LineAppLiveData.ai_results;
-    const existingKeys = new Set(existing.map(a => String(a.bookingTs || a.ts || a.zoomMeetingId || a.meetingId || '')));
-    let added = 0;
+    let added = 0, replaced = 0;
     for (const d of snap.docs) {
       const md = d.data();
       const zid = String(md.zoomMeetingId || '');
       const startIso = md.zoomStartTime || md.createdAt?.toDate?.().toISOString?.() || '';
       const bookingTs = startIso || ('fs-' + d.id);
-      // dedupe by zoomMeetingId (primary) or bookingTs
-      if (zid && existing.some(a => String(a.zoomMeetingId || a.meetingId || '') === zid)) continue;
-      if (existingKeys.has(bookingTs)) continue;
-      existing.push({
+      const fsRecord = {
         userId: client.lineFriendId || client.id || customerId,
         customerName: client.name || '',
         bookingTs,
@@ -15750,11 +15746,28 @@ window.mergeFirestoreMeetingsIntoLiveData = async function (client) {
         zoomDurationMin: md.zoomDurationMin || null,
         source: md.source || 'firestore-meetings',
         _fsMeetingDocId: d.id,
-      });
+      };
+      // 2026-08-25 owner「復旧 議事録 が UI に 出て ない」bug fix:
+      //   旧: zoomMeetingId 一致 で 既存 (空 stub の 可能性) を 優先 → Firestore の 実 内容 が 隠れる
+      //   新: 既存 が 空 transcript で Firestore に 有 内容 なら 置換
+      let dupIdx = -1;
+      if (zid) dupIdx = existing.findIndex(a => String(a.zoomMeetingId || a.meetingId || '') === zid);
+      if (dupIdx < 0) dupIdx = existing.findIndex(a => (a.bookingTs || '') === bookingTs);
+      if (dupIdx >= 0) {
+        const ex = existing[dupIdx];
+        const exLen = String(ex.transcript || ex.summary || '').length;
+        const fsLen = String(fsRecord.transcript || fsRecord.summary || '').length;
+        if (fsLen > exLen) {
+          existing[dupIdx] = { ...ex, ...fsRecord };
+          replaced++;
+        }
+        continue;
+      }
+      existing.push(fsRecord);
       added++;
     }
-    if (added > 0) console.log(`[fs-meetings] merged ${added} Zoom 議事録 into LiveData for ${client?.name || customerId}`);
-    return added;
+    if (added > 0 || replaced > 0) console.log(`[fs-meetings] merged +${added} / replaced ${replaced} Zoom 議事録 for ${client?.name || customerId}`);
+    return added + replaced;
   } catch (e) {
     console.warn('[fs-meetings] merge fail:', e?.message);
     return 0;
