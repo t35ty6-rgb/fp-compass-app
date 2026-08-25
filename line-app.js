@@ -4532,12 +4532,18 @@
   async function aiProcessRecording(blob, bookingTs, customerName, booking) {
     const sizeMB = blob.size / 1024 / 1024;
     console.log('[aiProcessRecording] start', { sizeMB: sizeMB.toFixed(2), bookingTs, customerName });
-    // ★ オーナーfb 2026-06-23: 長時間録画 (30分/1時間) で AI処理 が 走らない問題
-    //   旧: 18MB 超 → 黙って null return (議事録 0)
-    //   新: 25MB 超 → チャンク分割 (audio Blob を 時系列で 切って 各チャンク を 個別に Whisper → 結合)
-    if (sizeMB > 18) {
-      console.log('[aiProcessRecording] large file → chunked path', sizeMB);
-      return await aiProcessRecordingChunked(blob, bookingTs, customerName, booking);
+    // 2026-08-25 owner「3分 音声 で 30分 stuck」根本 治療:
+    //   旧 chunker は blob.slice(byte) の byte 切り = 中身 が 壊れた audio chunk
+    //   → Whisper が duration=6291sec の 幽霊 を 返し quota が 数倍 に 膨張。
+    //   新: >24MB は Web Audio で decode → 16kHz mono WAV に 再 encode → 時間 で 正しく 分割。
+    if (sizeMB > 24) {
+      console.log('[aiProcessRecording] >24MB → Web Audio re-encode path', sizeMB);
+      try {
+        return await aiProcessRecordingReencoded(blob, bookingTs, customerName, booking);
+      } catch (e) {
+        console.error('[aiProcessRecording] re-encode failed', e);
+        return { ok: false, error: `録音 が 大 きすぎます (${sizeMB.toFixed(0)}MB)。 変換 中 に error: ${e.message || e}。 90分 以下 · 音声 のみ の file を お 試し ください。` };
+      }
     }
     // 2026-08-25 owner「3分 音声 で 5分 以上 待ち」対応: 進捗パネル に 経過秒 + 現 step を 表示 して 透明化
     const t0 = Date.now();
@@ -4648,9 +4654,116 @@
     }
   }
 
-  // ★ オーナーfb 2026-06-23: 長録画 (>25MB) — Blob を 18MB チャンクに分割 → 各チャンク Whisper → transcript 結合
-  // 要約 endpoint がない場合は 「文字起こしのみ + Anthropic への直call 試行」 で fallback
+  // 2026-08-25 削除: 旧 byte-slice chunker は 中身 が 壊れた audio chunk を Whisper に 投げ、
+  //   duration=6291sec の 幽霊 で quota を 数倍 に 膨張 させた (owner 「3時間 使ってない のに 上限」 事件 の 真因)。
+  //   代わり に aiProcessRecordingReencoded を 使う (Web Audio API で decode → 16kHz mono → time-slice)。
+  async function aiProcessRecordingReencoded(blob, bookingTs, customerName, booking) {
+    const t0 = Date.now();
+    const elapsed = () => Math.round((Date.now() - t0) / 1000);
+    const updateAiStep = (msg) => { try { const el = document.querySelector('#fp-step-ai .fp-step-desc'); if (el) el.textContent = msg; } catch (_) {} };
+    try {
+      updateAiStep(`音声 を 変換 中… (0秒)`);
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) throw new Error('この browser は 大 file 対応 未搭載 (AudioContext なし)');
+      const arrayBuffer = await blob.arrayBuffer();
+      updateAiStep(`decode 中… (${elapsed()}秒)`);
+      const ctx = new AudioCtx();
+      const audio = await ctx.decodeAudioData(arrayBuffer.slice(0));
+      try { ctx.close?.(); } catch (_) {}
+      const totalDur = audio.duration;
+      console.log('[aiReencoded] decoded', { dur: totalDur.toFixed(1), rate: audio.sampleRate, ch: audio.numberOfChannels });
+      // 16kHz mono WAV = 32KB/sec → 12min = 23MB 目安。 10min chunk で 余裕
+      const CHUNK_SEC = 600;
+      const numChunks = Math.max(1, Math.ceil(totalDur / CHUNK_SEC));
+      const results = [];
+      let firstErr = null;
+      for (let i = 0; i < numChunks; i++) {
+        updateAiStep(`分割 ${i+1}/${numChunks} 送信 中… (${elapsed()}秒)`);
+        const startSec = i * CHUNK_SEC;
+        const endSec = Math.min(totalDur, (i+1) * CHUNK_SEC);
+        const wavBlob = await audioSliceToWav(audio, startSec, endSec, 16000);
+        console.log(`[aiReencoded] chunk ${i+1}/${numChunks} ${(endSec-startSec).toFixed(0)}s → ${(wavBlob.size/1024/1024).toFixed(2)}MB`);
+        const reader = new FileReader();
+        const base64 = await new Promise((res, rej) => { reader.onload = () => res(reader.result.split(',')[1]); reader.onerror = rej; reader.readAsDataURL(wavBlob); });
+        const controller = new AbortController();
+        const tid = setTimeout(() => controller.abort(), 8 * 60 * 1000);
+        let r = null;
+        try {
+          r = await fetch(CLOUD_RUN_BASE + '/api/process-recording', {
+            method: 'POST',
+            headers: await (window.getFpAuthHeaders ? window.getFpAuthHeaders() : Promise.resolve({ 'Content-Type': 'application/json' })),
+            body: JSON.stringify({
+              base64, mimeType: 'audio/wav',
+              customerName: numChunks > 1 ? customerName + ` (${i+1}/${numChunks})` : customerName,
+              customerContext: '', bookingTs, userId: booking && booking.userId,
+              tenantId: (window.__fp && window.__fp.tenantId) || '',
+            }),
+            signal: controller.signal,
+          });
+        } catch (e) {
+          if (!firstErr) firstErr = `分割 ${i+1}: ${e.name === 'AbortError' ? '8分 timeout' : e.message}`;
+          continue;
+        } finally { clearTimeout(tid); }
+        if (!r || !r.ok) { if (!firstErr) firstErr = `分割 ${i+1}: HTTP ${r?.status || 'n/a'}`; continue; }
+        const d = await r.json().catch(() => ({}));
+        if (d.transcript || d.summary) results.push(d);
+        else if (d.error && !firstErr) firstErr = `分割 ${i+1}: ${d.error}`;
+      }
+      if (results.length === 0) return { ok: false, error: firstErr || '全 分割 の 文字起こし に 失敗' };
+      const fullTranscript = results.map(r => r.transcript || '').filter(Boolean).join('\n---\n');
+      const mergedSummary = numChunks > 1 ? results.map((r, i) => `【パート${i+1}】\n` + (r.summary || '(要約なし)')).join('\n\n') : (results[0].summary || '');
+      const mergedConcerns = [...new Set(results.flatMap(r => r.key_concerns || []))].slice(0, 8);
+      const mergedTasks = results.flatMap(r => r.tasks || []).slice(0, 8);
+      return { ok: true, transcript: fullTranscript, summary: mergedSummary, key_concerns: mergedConcerns, tasks: mergedTasks, chunked: numChunks > 1, chunkCount: numChunks };
+    } catch (e) {
+      console.error('[aiReencoded] fatal', e);
+      return { ok: false, error: '音声 変換 例外: ' + (e.message || e) };
+    }
+  }
+
+  // AudioBuffer を [startSec, endSec) で slice して 16kHz mono WAV Blob に 変換
+  async function audioSliceToWav(audio, startSec, endSec, targetRate) {
+    const srcRate = audio.sampleRate;
+    const outLen = Math.ceil((endSec - startSec) * targetRate);
+    const offlineCtx = new OfflineAudioContext(1, outLen, targetRate);
+    const src = offlineCtx.createBufferSource();
+    // slice する ため 新規 AudioBuffer を 作って region だけ copy
+    const srcStart = Math.floor(startSec * srcRate);
+    const srcEnd = Math.min(audio.length, Math.floor(endSec * srcRate));
+    const region = offlineCtx.createBuffer(1, srcEnd - srcStart, srcRate);
+    const regionData = region.getChannelData(0);
+    if (audio.numberOfChannels >= 2) {
+      const L = audio.getChannelData(0), R = audio.getChannelData(1);
+      for (let i = 0; i < regionData.length; i++) regionData[i] = (L[srcStart + i] + R[srcStart + i]) * 0.5;
+    } else {
+      const L = audio.getChannelData(0);
+      for (let i = 0; i < regionData.length; i++) regionData[i] = L[srcStart + i] || 0;
+    }
+    src.buffer = region;
+    src.connect(offlineCtx.destination);
+    src.start(0);
+    const rendered = await offlineCtx.startRendering();
+    return audioBufferToWav(rendered);
+  }
+
+  function audioBufferToWav(buf) {
+    const samples = buf.getChannelData(0);
+    const sampleRate = buf.sampleRate;
+    const arr = new ArrayBuffer(44 + samples.length * 2);
+    const view = new DataView(arr);
+    const writeStr = (o, s) => { for (let i = 0; i < s.length; i++) view.setUint8(o + i, s.charCodeAt(i)); };
+    writeStr(0, 'RIFF'); view.setUint32(4, 36 + samples.length * 2, true); writeStr(8, 'WAVE');
+    writeStr(12, 'fmt '); view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, 1, true);
+    view.setUint32(24, sampleRate, true); view.setUint32(28, sampleRate * 2, true); view.setUint16(32, 2, true); view.setUint16(34, 16, true);
+    writeStr(36, 'data'); view.setUint32(40, samples.length * 2, true);
+    let o = 44;
+    for (let i = 0; i < samples.length; i++) { const s = Math.max(-1, Math.min(1, samples[i])); view.setInt16(o, s < 0 ? s * 0x8000 : s * 0x7FFF, true); o += 2; }
+    return new Blob([arr], { type: 'audio/wav' });
+  }
+
+  // 旧 byte-chunker (存置 · 呼び出さ ない、 削除 予定)
   async function aiProcessRecordingChunked(blob, bookingTs, customerName, booking) {
+    console.warn('[aiChunked] deprecated — should not be called');
     try {
       const chunkSize = 18 * 1024 * 1024;
       const chunks = [];
