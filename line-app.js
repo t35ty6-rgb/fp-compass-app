@@ -3747,6 +3747,7 @@
     window.autoSaveAIResult = autoSaveAIResult;
     window.showUnifiedProgressPanel = showUnifiedProgressPanel;
     window.updateProgressStep = updateProgressStep;
+    window.showProgressDoneAction = showProgressDoneAction;
     window.fetchLiveData = fetchLiveData;
   } catch (_) {}
 
@@ -3959,11 +3960,15 @@
   }
 
   // ===== 統一進行パネル (録画停止後の Drive + AI 進捗を1枚で集約) =====
-  function showUnifiedProgressPanel(customerName, blob) {
+  function showUnifiedProgressPanel(customerName, blob, opts) {
     const existing = document.getElementById('fp-unified-progress');
     if (existing) existing.remove();
     const panel = document.createElement('div');
     panel.id = 'fp-unified-progress';
+    // 2026-08-25 owner「議事録 完了 して も badge が 生成中 のまま」bug fix:
+    //   customerId を dataset に 保持 → 閉じる ✕ → badge に 正しい cid を 渡す
+    if (opts && opts.customerId) panel.dataset.customerId = String(opts.customerId);
+    if (opts && opts.bookingTs) panel.dataset.bookingTs = String(opts.bookingTs);
     panel.style.cssText = 'position:fixed;top:18px;right:18px;background:#fff;border:1px solid #e8e2d4;border-radius:14px;box-shadow:0 18px 48px rgba(15,23,42,0.18);z-index:10010;font-family:inherit;width:380px;overflow:hidden;';
     panel.innerHTML = `
       <div style="background:linear-gradient(135deg,#fdfbf4,#fafaf6);padding:14px 18px;border-bottom:1px solid #e8e2d4;display:flex;align-items:flex-start;gap:10px;">
@@ -3992,13 +3997,16 @@
       closeBtn.addEventListener('mouseenter', () => { closeBtn.style.background = 'rgba(15,23,42,0.06)'; closeBtn.style.color = '#1f2a3f'; });
       closeBtn.addEventListener('mouseleave', () => { closeBtn.style.background = 'transparent'; closeBtn.style.color = '#8b7d5d'; });
       closeBtn.addEventListener('click', () => {
+        // 2026-08-25 owner「議事録 完了 して も 生成中 の まま」bug fix:
+        //   真 customerId が 分か れば watcher が 完了 検知 で 自動 消える。
+        //   分から ない (Zoom 経由 等) 場合 は badge 出さず に panel だけ 消す。
+        const realCid = panel.dataset.customerId || '';
         panel.remove();
-        // 小 badge を bottom-right に 出して 「まだ 処理 中」 を 判る よう に
-        try {
-          if (typeof window.showMinutesGeneratingBadge === 'function') {
-            window.showMinutesGeneratingBadge({ id: 'processing-' + Date.now(), _fsCustomerId: 'processing', name: customerName });
-          }
-        } catch (_) {}
+        if (realCid && typeof window.showMinutesGeneratingBadge === 'function') {
+          try {
+            window.showMinutesGeneratingBadge({ id: realCid, _fsCustomerId: realCid, name: customerName });
+          } catch (_) {}
+        }
       });
     }
   }

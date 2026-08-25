@@ -8286,8 +8286,10 @@ ${ctxText}${surveyTxt}`;
         uploadBtn.innerHTML = '⏳ 処理 中… <span style="font-size:10.5px;font-weight:600;">(30秒-2分)</span>';
         try {
           // 進捗 パネル (line-app.js の onstop と 同 UX)
+          // 2026-08-25 owner「議事録 完了 して も 生成中 の まま」bug fix:
+          //   3rd 引数 で customerId + bookingTs 渡す → 閉じる ✕ で 出す badge が 正しい cid で watcher 立てる
           if (typeof window.showUnifiedProgressPanel === 'function') {
-            try { window.showUnifiedProgressPanel(clientName, file); } catch (_) {}
+            try { window.showUnifiedProgressPanel(clientName, file, { customerId: clientId, bookingTs: inpersonTs }); } catch (_) {}
           }
           if (typeof window.updateProgressStep === 'function') {
             try { window.updateProgressStep('save', 'done'); window.updateProgressStep('drive', 'active'); window.updateProgressStep('ai', 'active'); } catch (_) {}
@@ -8308,7 +8310,13 @@ ${ctxText}${surveyTxt}`;
               try { window.autoSaveAIResult(aiResult, clientName, fallbackBooking); } catch (_) {}
             }
             if (typeof window.updateProgressStep === 'function') try { window.updateProgressStep('ai', 'done'); } catch (_) {}
-            alert('✅ 文字起こし + AI 議事録 生成 完了\n\n議事録 tab を 開いて 確認 して ください。');
+            // 2026-08-25 owner「議事録 完了 して も 生成中 の まま」bug fix:
+            //   旧: alert() 一発 で 済ませ、 panel の bottom が 「1〜2分 お待ちください」 の まま 残置
+            //   新: line-app の showProgressDoneAction() を 呼び、 panel bottom を 「✨ 反映しました」 + 「議事録を見る」 button に 変換
+            window._fpAIResult = { result: aiResult, customerName: clientName, booking: fallbackBooking };
+            if (typeof window.showProgressDoneAction === 'function') {
+              try { window.showProgressDoneAction(); } catch (_) {}
+            }
           } else if (aiResult && aiResult.error === 'daily_quota_exhausted') {
             // 2026-08-25: 日次 quota 超過 は 明日 まで リセット されない、 actionable message で 早期 fail
             alert('⚠ 今日 の 音声 処理 上限 (3時間 分 = 10800秒) を 超過 しました\n\nWhisper 文字起こし の 日次 quota は 明日 の 深夜 に リセット されます。\n\n対応:\n・翌日 に 再 upload\n・quota 上限 を 上げる (owner action: Cloud Run endpoint config 修正)');
