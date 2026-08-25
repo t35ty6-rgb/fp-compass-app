@@ -10038,11 +10038,22 @@ ${ctxText}${surveyTxt}`;
             });
             // ★ オーナーfb 2026-06-24: 「議事録」 タブには 実際に録画/メモが ある booking だけ表示
             // (旧: 全 booking 表示 → 未来の予約だけの 空カード が 先頭に並ぶ「意味不明日付」 バグ)
+            // 2026-08-25 owner「12時 stub が 残る」bug fix: 空 stub だけ 紐付いた booking は 除外
+            const _isEmptyAi = (ai) => {
+              if (!ai) return true;
+              if (ai.no_audio === true) return true;
+              const trLen = String(ai.transcript || '').length;
+              const sm = String(ai.summary || '');
+              if (trLen === 0) return true;
+              if (trLen > 0 && trLen < 30) return true;
+              if (/音声が\s*ほぼ取れませんでした|マイク\s*許可.*音量\s*大きめ.*Zoom\s*スピーカー/.test(sm)) return true;
+              return false;
+            };
             const sortedBksFiltered = sortedBks.filter(b => {
-              const ai = aiResults.find(a => a.bookingTs === b.ts) || {};
-              const hasAi = !!(ai.transcript || ai.summary || (ai.key_concerns && ai.key_concerns.length > 0));
+              const ai = aiResults.find(a => a.bookingTs === b.ts) || null;
+              const hasRealAi = ai && !_isEmptyAi(ai) && !!(ai.transcript || ai.summary || (ai.key_concerns && ai.key_concerns.length > 0));
               const hasMemo = !!(b.memo && String(b.memo).trim());
-              return hasAi || hasMemo;
+              return hasRealAi || hasMemo;
             });
             if (sortedBksFiltered.length === 0) return '';
             return '<div style="display:grid;gap:14px;margin-bottom:18px;">' +
@@ -10158,14 +10169,21 @@ ${ctxText}${surveyTxt}`;
           });
           // 旧仕様 (bookingTs だけで「使用済」 マークしてた) を 置き換え
           // 2026-08-25 owner「直して 逆に ちゃんとした やつ が ない」bug fix:
-          //   音声 取れず の 空 stub (no_audio=true or transcript<30字) が UI に 出続けて
-          //   実 内容 の 議事録 が 埋もれる (12:27/12:33 のゴミ)。 空 stub は 隠す。
+          //   音声 取れず の 空 stub (no_audio=true or transcript<30字 or 「音声が ほぼ取れませんでした」
+          //   fallback summary) が UI に 出続けて 実 内容 の 議事録 が 埋もれる。 空 stub は 隠す。
+          const isEmptyStub = (a) => {
+            const trLen = String(a.transcript || '').length;
+            const sm = String(a.summary || '');
+            if (a.no_audio === true) return true;
+            if (trLen === 0) return true; // 実 transcript 無し = 実 音声 無し
+            if (trLen > 0 && trLen < 30) return true;
+            if (/音声が\s*ほぼ取れませんでした|マイク\s*許可.*音量\s*大きめ.*Zoom\s*スピーカー/.test(sm)) return true;
+            return false;
+          };
           const orphan = aiResults.filter(a => {
             const key = (a.bookingTs || '') + '|' + (a.ts || a.createdAt || '');
             if (usedKey.has(key)) return false;
-            const trLen = String(a.transcript || '').length;
-            if (a.no_audio === true) return false;
-            if (trLen > 0 && trLen < 30) return false;
+            if (isEmptyStub(a)) return false;
             return (a.summary || a.transcript || (a.key_concerns||[]).length);
           });
           if (orphan.length === 0) return '';
