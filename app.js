@@ -10157,9 +10157,15 @@ ${ctxText}${surveyTxt}`;
             if (hit) usedKey.add((hit.bookingTs || '') + '|' + (hit.ts || hit.createdAt || ''));
           });
           // 旧仕様 (bookingTs だけで「使用済」 マークしてた) を 置き換え
+          // 2026-08-25 owner「直して 逆に ちゃんとした やつ が ない」bug fix:
+          //   音声 取れず の 空 stub (no_audio=true or transcript<30字) が UI に 出続けて
+          //   実 内容 の 議事録 が 埋もれる (12:27/12:33 のゴミ)。 空 stub は 隠す。
           const orphan = aiResults.filter(a => {
             const key = (a.bookingTs || '') + '|' + (a.ts || a.createdAt || '');
             if (usedKey.has(key)) return false;
+            const trLen = String(a.transcript || '').length;
+            if (a.no_audio === true) return false;
+            if (trLen > 0 && trLen < 30) return false;
             return (a.summary || a.transcript || (a.key_concerns||[]).length);
           });
           if (orphan.length === 0) return '';
