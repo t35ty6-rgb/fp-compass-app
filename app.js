@@ -8072,39 +8072,59 @@ ${ctxText}${surveyTxt}`;
           const panel = document.querySelector(`[data-cdpanel="${key}"]`);
           if (panel && panel.dataset.lazyRender) {
             if (key === 'meetings' && typeof renderMeetingRecordsBlock === 'function') {
+              // 2026-08-26 owner「2件→3件→5件 と 段階的 に 出る、 一気 に 開いて」対応:
+              //   旧: cached data で 即 render → 後 追い で GAS hydrate / Firestore merge 完了 の 度に 再 render
+              //   → 数字 が ちらちら 増え る
+              //   新: loading spinner を 出して、 hydrate + merge を Promise.all で await → 完成 後 に 1回 だけ render
               const live = window.LineAppLiveData || {};
               const aiCount = (live.ai_results || []).filter(a =>
                 a.userId === c.id || a.userId === c.lineFriendId || a.customerName === c.name
               ).length;
               const cacheKey = `${c.id}|${aiCount}|${(c.lineHistory||[]).length}`;
-              if (panel.dataset.cacheKey !== cacheKey || panel.dataset.cacheHasContent !== '1') {
-                panel.innerHTML = renderMeetingRecordsBlock(c) || '<div class="cd-empty">面談録なし</div>';
-                panel.dataset.cacheKey = cacheKey;
-                panel.dataset.cacheHasContent = '1';
-              }
-              // 2026-07-31: Firestore /meetings subcol (Zoom webhook 保存分) を 遅延 fetch して merge → 再描画
-              // owner から 「Zoom 議事録 が UI に 出て こない」 fb で 発覚: webhook は Firestore に 書いてる のに UI は GAS ai_results のみ 読んで た gap を fix
-              if (typeof window.mergeFirestoreMeetingsIntoLiveData === 'function') {
+              const alreadyRendered = panel.dataset.cacheKey === cacheKey && panel.dataset.cacheHasContent === '1';
+              if (!alreadyRendered) {
+                // Loading spinner
+                panel.innerHTML = `<div style="padding:40px 20px;text-align:center;font-family:'Noto Sans JP',-apple-system,sans-serif;color:#64748B;">
+                  <div style="display:inline-block;width:28px;height:28px;border:3px solid #E2E8F0;border-top-color:#3B82F6;border-radius:50%;animation:fp-spin-cd 0.8s linear infinite;margin-bottom:12px;"></div>
+                  <div style="font-size:13px;font-weight:700;">議事録 を 読込 中…</div>
+                  <div style="font-size:11px;color:#94A3B8;margin-top:4px;">GAS + Firestore + 過去 データ を 統合 中</div>
+                </div>
+                <style>@keyframes fp-spin-cd { to { transform: rotate(360deg); } }</style>`;
+                panel.dataset.cacheHasContent = '0';
+                // 全 data source を 並列 で 待つ → 完成 後 に 1回 だけ render
                 (async () => {
+                  const promises = [];
+                  // ① customer-detail hydrate (openClientModal で 起動 済 なら _fullHydrating true)
+                  if (c._fullHydrating && !c._fullHydrated) {
+                    // hydrate 完了 待ち (5秒 tick で polling、 max 8秒)
+                    promises.push(new Promise(res => {
+                      const t0 = Date.now();
+                      const iv = setInterval(() => {
+                        if (c._fullHydrated || Date.now() - t0 > 8000) { clearInterval(iv); res(); }
+                      }, 100);
+                    }));
+                  }
+                  // ② Firestore /meetings subcol merge
+                  if (typeof window.mergeFirestoreMeetingsIntoLiveData === 'function') {
+                    promises.push(window.mergeFirestoreMeetingsIntoLiveData(c).catch(e => console.warn('[fs-meetings] fetch fail:', e?.message)));
+                  }
+                  await Promise.all(promises);
+                  // 全 data 揃った → 1回 だけ render
+                  panel.innerHTML = renderMeetingRecordsBlock(c) || '<div class="cd-empty">面談録なし</div>';
+                  panel.dataset.cacheKey = cacheKey;
+                  panel.dataset.cacheHasContent = '1';
                   try {
-                    const added = await window.mergeFirestoreMeetingsIntoLiveData(c);
-                    if (added > 0) {
-                      panel.dataset.cacheKey = ''; // invalidate
-                      panel.innerHTML = renderMeetingRecordsBlock(c) || '<div class="cd-empty">面談録なし</div>';
-                      panel.dataset.cacheHasContent = '1';
-                      try {
-                        const cntEl = document.getElementById('cd-meetings-count');
-                        if (cntEl) cntEl.textContent = panel.querySelectorAll('.fp-meeting-card').length;
-                      } catch (_) {}
-                    }
-                  } catch (e) { console.warn('[fs-meetings] fetch fail:', e?.message); }
+                    const cntEl = document.getElementById('cd-meetings-count');
+                    if (cntEl) cntEl.textContent = panel.querySelectorAll('.fp-meeting-card').length;
+                  } catch (_) {}
                 })();
+              } else {
+                // 既 render 済 (cache hit) → badge count sync のみ
+                try {
+                  const cntEl = document.getElementById('cd-meetings-count');
+                  if (cntEl) cntEl.textContent = panel.querySelectorAll('.fp-meeting-card').length;
+                } catch (_) {}
               }
-              // ★ 2026-07-02 fix: lazy-render 後に count badge 同期 (直接 meetings タブ 開いた時 0 表示バグ)
-              try {
-                const cntEl = document.getElementById('cd-meetings-count');
-                if (cntEl) cntEl.textContent = panel.querySelectorAll('.fp-meeting-card').length;
-              } catch (_) {}
             } else if (key === 'timeline' && panel.dataset.cacheHasContent !== '1') {
               panel.innerHTML = buildLifePlanPanel(c, events, lifeCtaCard);
               panel.dataset.cacheHasContent = '1';
