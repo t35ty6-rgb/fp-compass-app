@@ -10038,20 +10038,21 @@ ${ctxText}${surveyTxt}`;
             });
             // ★ オーナーfb 2026-06-24: 「議事録」 タブには 実際に録画/メモが ある booking だけ表示
             // (旧: 全 booking 表示 → 未来の予約だけの 空カード が 先頭に並ぶ「意味不明日付」 バグ)
-            // 2026-08-25 owner「12時 stub が 残る」bug fix: 空 stub だけ 紐付いた booking は 除外
+            // 2026-08-26 CRITICAL fix: lite mode の transcript strip で 本物 議事録 も 消えて た
+            //   判定 は summary pattern + no_audio flag のみ (transcript 長 は 使わない)
             const _isEmptyAi = (ai) => {
               if (!ai) return true;
               if (ai.no_audio === true) return true;
-              const trLen = String(ai.transcript || '').length;
               const sm = String(ai.summary || '');
-              if (trLen === 0) return true;
-              if (trLen > 0 && trLen < 30) return true;
-              if (/音声が\s*ほぼ取れませんでした|マイク\s*許可.*音量\s*大きめ.*Zoom\s*スピーカー/.test(sm)) return true;
+              if (/⚠?\s*音声が\s*ほぼ取れませんでした/.test(sm)) return true;
+              const trLen = String(ai.transcript || '').length;
+              const smLen = sm.length;
+              if (trLen === 0 && smLen === 0 && !ai._hadTranscript && !(ai.key_concerns || []).length) return true;
               return false;
             };
             const sortedBksFiltered = sortedBks.filter(b => {
               const ai = aiResults.find(a => a.bookingTs === b.ts) || null;
-              const hasRealAi = ai && !_isEmptyAi(ai) && !!(ai.transcript || ai.summary || (ai.key_concerns && ai.key_concerns.length > 0));
+              const hasRealAi = ai && !_isEmptyAi(ai) && !!(ai.transcript || ai.summary || ai._hadTranscript || (ai.key_concerns && ai.key_concerns.length > 0));
               const hasMemo = !!(b.memo && String(b.memo).trim());
               return hasRealAi || hasMemo;
             });
@@ -10168,23 +10169,27 @@ ${ctxText}${surveyTxt}`;
             if (hit) usedKey.add((hit.bookingTs || '') + '|' + (hit.ts || hit.createdAt || ''));
           });
           // 旧仕様 (bookingTs だけで「使用済」 マークしてた) を 置き換え
-          // 2026-08-25 owner「直して 逆に ちゃんとした やつ が ない」bug fix:
-          //   音声 取れず の 空 stub (no_audio=true or transcript<30字 or 「音声が ほぼ取れませんでした」
-          //   fallback summary) が UI に 出続けて 実 内容 の 議事録 が 埋もれる。 空 stub は 隠す。
+          // 2026-08-26 CRITICAL fix (owner「10→5→3→2 件 に 減る、 他 客 も 消えた」):
+          //   /api/bookings?lite=1 は transcript field を strip する (Cloud Run L749-753) ため、
+          //   全 GAS 由来 ai_results で transcript='' に なる。 前 filter (trLen===0 → hide) は
+          //   本物 議事録 も 全消し して た。 修正: 「音声取れず」定型 pattern と no_audio flag だけ で 判定、
+          //   transcript 長 での 判定 は 廃止 (_hadTranscript が true なら 元 は transcript 有り)。
           const isEmptyStub = (a) => {
-            const trLen = String(a.transcript || '').length;
-            const sm = String(a.summary || '');
             if (a.no_audio === true) return true;
-            if (trLen === 0) return true; // 実 transcript 無し = 実 音声 無し
-            if (trLen > 0 && trLen < 30) return true;
-            if (/音声が\s*ほぼ取れませんでした|マイク\s*許可.*音量\s*大きめ.*Zoom\s*スピーカー/.test(sm)) return true;
+            const sm = String(a.summary || '');
+            // server の 空音声 定型 summary pattern (proxy/index.js L1671)
+            if (/⚠?\s*音声が\s*ほぼ取れませんでした/.test(sm)) return true;
+            // transcript 実測 も 空 かつ summary も 空 かつ _hadTranscript も 無い → 完全空
+            const trLen = String(a.transcript || '').length;
+            const smLen = sm.length;
+            if (trLen === 0 && smLen === 0 && !a._hadTranscript && !(a.key_concerns || []).length) return true;
             return false;
           };
           const orphan = aiResults.filter(a => {
             const key = (a.bookingTs || '') + '|' + (a.ts || a.createdAt || '');
             if (usedKey.has(key)) return false;
             if (isEmptyStub(a)) return false;
-            return (a.summary || a.transcript || (a.key_concerns||[]).length);
+            return (a.summary || a.transcript || a._hadTranscript || (a.key_concerns||[]).length);
           });
           if (orphan.length === 0) return '';
           // ★ 全 ai_results (メイン紐付け済 + orphan) を 時系列 で 「Zoom N回目」 連番
