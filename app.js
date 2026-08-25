@@ -16,6 +16,8 @@
   // 対処: 起動 直後 + 5 min 毎 に /index.html?_nc=X を network-only fetch し、
   //  FP_VERSION 比較。 差分 あれば banner 通知 → 3 秒 で 自動 reload (caches 全掃除 付き)
   // ============================================================
+  // 2026-08-26 owner「なんで最新のプライベート食べてやらなきゃいけないの」対応:
+  //   初回 check を 5秒→1秒 に 短縮、 banner を 上部 に 大型 表示、 SW 系 unregister も 追加
   async function fpCheckForUpdate() {
     try {
       const res = await fetch('/index.html?_nc=' + Date.now(), { cache: 'no-store', credentials: 'omit' });
@@ -37,10 +39,11 @@
     if (document.getElementById('fp-update-banner')) return;
     const banner = document.createElement('div');
     banner.id = 'fp-update-banner';
-    banner.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:2147483000;background:linear-gradient(135deg,#0F172A 0%,#1E3A5F 100%);color:#fff;padding:14px 22px;border-radius:12px;font-family:"Noto Sans JP",-apple-system,sans-serif;font-size:13px;font-weight:800;box-shadow:0 12px 30px rgba(15,23,42,0.35);display:flex;align-items:center;gap:14px;letter-spacing:0.01em;';
+    // 2026-08-26 上部 に 大型 表示 (owner 見落とし 防止、 mobile safe-area 対応)
+    banner.style.cssText = 'position:fixed;top:calc(env(safe-area-inset-top, 0px) + 12px);left:12px;right:12px;z-index:2147483000;background:linear-gradient(135deg,#0F172A 0%,#1E3A5F 100%);color:#fff;padding:14px 18px;border-radius:12px;font-family:"Noto Sans JP",-apple-system,sans-serif;font-size:14px;font-weight:800;box-shadow:0 12px 30px rgba(15,23,42,0.45),0 0 0 2px rgba(255,215,0,0.6);display:flex;align-items:center;gap:12px;letter-spacing:0.01em;';
     banner.innerHTML = `
-      <span>🎉 新版 が あります · 3 秒 後 に 自動 更新</span>
-      <button id="fp-update-now" style="background:#3B82F6;color:#fff;border:0;padding:6px 14px;border-radius:6px;font-weight:800;cursor:pointer;font-family:inherit;font-size:12.5px;">今 すぐ 更新</button>
+      <span style="flex:1;line-height:1.4;">🎉 新版 が あります · <span id="fp-update-countdown">3</span> 秒 で 自動 更新</span>
+      <button id="fp-update-now" style="background:#3B82F6;color:#fff;border:0;padding:9px 18px;border-radius:8px;font-weight:900;cursor:pointer;font-family:inherit;font-size:14px;flex-shrink:0;box-shadow:0 3px 10px rgba(59,130,246,0.4);">今 すぐ</button>
     `;
     document.body.appendChild(banner);
     const doReload = async () => {
@@ -50,22 +53,36 @@
           await Promise.all(keys.map(k => caches.delete(k)));
         }
       } catch(_) {}
-      // ?_nc= 付けて 明示的 に fresh 取得
+      // Service Worker 系 も unregister (iOS Safari 稀に SW cache 頑固)
+      try {
+        if ('serviceWorker' in navigator) {
+          const regs = await navigator.serviceWorker.getRegistrations();
+          await Promise.all(regs.map(r => r.unregister()));
+        }
+      } catch(_) {}
+      // ?_v= 付けて 明示的 に fresh 取得
       const nc = 'nc_' + Date.now();
       const u = new URL(location.href);
       u.searchParams.set('_v', nc);
       location.replace(u.toString());
     };
     document.getElementById('fp-update-now').addEventListener('click', doReload);
-    setTimeout(doReload, 3000);
+    // countdown 表示
+    let sec = 3;
+    const cd = document.getElementById('fp-update-countdown');
+    const iv = setInterval(() => {
+      sec--;
+      if (cd) cd.textContent = String(sec);
+      if (sec <= 0) { clearInterval(iv); doReload(); }
+    }, 1000);
   }
-  // 起動 5 秒 後 に 初回 check (auth 落ち着く まで 待つ)
-  setTimeout(fpCheckForUpdate, 5000);
+  // 2026-08-26 起動 直後 1 秒 (旧 5 秒 · owner が 秒 単位 で 開閉 する 場合 に 検知 出来る よう 短縮)
+  setTimeout(fpCheckForUpdate, 1000);
   // 以降 5 min 毎
   setInterval(fpCheckForUpdate, 5 * 60 * 1000);
-  // tab 復帰 時 (owner が しばらく 離れて 戻ってきた 時) にも check
+  // tab 復帰 時 (owner が しばらく 離れて 戻ってきた 時) にも 即 check
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') setTimeout(fpCheckForUpdate, 500);
+    if (document.visibilityState === 'visible') setTimeout(fpCheckForUpdate, 300);
   });
 
   // ============================
