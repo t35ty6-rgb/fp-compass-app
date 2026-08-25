@@ -8094,15 +8094,46 @@ ${ctxText}${surveyTxt}`;
                 // 全 data source を 並列 で 待つ → 完成 後 に 1回 だけ render
                 (async () => {
                   const promises = [];
-                  // ① customer-detail hydrate (openClientModal で 起動 済 なら _fullHydrating true)
-                  if (c._fullHydrating && !c._fullHydrated) {
-                    // hydrate 完了 待ち (5秒 tick で polling、 max 8秒)
-                    promises.push(new Promise(res => {
-                      const t0 = Date.now();
-                      const iv = setInterval(() => {
-                        if (c._fullHydrated || Date.now() - t0 > 8000) { clearInterval(iv); res(); }
-                      }, 100);
-                    }));
+                  // ① customer-detail hydrate — 未 起動 なら 明示 起動、 起動 済 なら 完了 待ち
+                  if (!c._fullHydrated && typeof window.getCustomerDetailApi === 'function') {
+                    const detailUid = c._fsCustomerId || c.id;
+                    if (detailUid) {
+                      c._fullHydrating = true;
+                      promises.push((async () => {
+                        try {
+                          const h = window.getFpAuthHeaders ? await window.getFpAuthHeaders() : { 'Content-Type': 'application/json' };
+                          const r = await fetch(window.getCustomerDetailApi(detailUid), { headers: h });
+                          if (r.ok) {
+                            const detail = await r.json();
+                            const live = window.LineAppLiveData || (window.LineAppLiveData = {});
+                            if (Array.isArray(detail.ai_results)) {
+                              live.ai_results = live.ai_results || [];
+                              const existingByKey = new Map();
+                              live.ai_results.forEach((a, i) => existingByKey.set(a.bookingTs || a.ts || a.createdAt, i));
+                              detail.ai_results.forEach(a => {
+                                if (a.deleted === true) return;
+                                const key = a.bookingTs || a.ts || a.createdAt;
+                                const idx = existingByKey.get(key);
+                                if (idx !== undefined) {
+                                  const ex = live.ai_results[idx] || {};
+                                  const merged = { ...ex, ...a };
+                                  ['transcript','summary','transcript_summary','key_concerns','predicted_next_questions','next_meeting_suggestion'].forEach(f => {
+                                    const bExists = a[f] !== undefined && a[f] !== null && a[f] !== '' && !(Array.isArray(a[f]) && a[f].length === 0);
+                                    const eExists = ex[f] !== undefined && ex[f] !== null && ex[f] !== '' && !(Array.isArray(ex[f]) && ex[f].length === 0);
+                                    if (!bExists && eExists) merged[f] = ex[f];
+                                  });
+                                  live.ai_results[idx] = merged;
+                                } else {
+                                  live.ai_results.push(a);
+                                }
+                              });
+                            }
+                            c._fullHydrated = true;
+                          }
+                        } catch (e) { console.warn('[customer-detail hydrate] fail:', e?.message); }
+                        finally { c._fullHydrating = false; }
+                      })());
+                    }
                   }
                   // ② Firestore /meetings subcol merge
                   if (typeof window.mergeFirestoreMeetingsIntoLiveData === 'function') {
