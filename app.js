@@ -8395,21 +8395,46 @@ ${ctxText}${surveyTxt}`;
             } else {
               window.open(forceWebUrl, '_blank');
             }
+            // 2026-08-25 owner「LINE 送信 失敗 で も 客 に 伝える URL を 見せて」対応:
+            //   LINE 成功 / 失敗 / 未連携 の 全 case で joinUrl を copy 可能 な UI で 常に 表示。
+            //   これ が SSOT: owner が copy → 電話/SMS/メール で 客 に 伝えれば 面談 は 走る。
+            const joinUrl = data.joinUrl || '';
+            const urlBlock = joinUrl ? (`
+              <div style="margin-top:10px;padding:10px 12px;background:#F9FAFB;border:1px solid #E5E7EB;border-radius:8px;">
+                <div style="font-size:10.5px;font-weight:800;color:#6B7280;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:5px;">客 に 伝える URL</div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <input type="text" readonly value="${escapeHtml(joinUrl)}" id="fp-zoom-url-${Date.now()}" style="flex:1;min-width:0;font-size:12px;padding:6px 8px;border:1px solid #D1D5DB;border-radius:5px;background:#fff;font-family:'JetBrains Mono',monospace;color:#1F2937;" onclick="this.select()">
+                  <button type="button" data-copy-url="${escapeHtml(joinUrl)}" style="background:#1F2937;color:#fff;border:none;padding:6px 12px;border-radius:5px;font-size:11.5px;font-weight:800;cursor:pointer;font-family:inherit;flex-shrink:0;">コピー</button>
+                </div>
+                <div style="font-size:10.5px;color:#6B7280;margin-top:5px;">電話 / SMS / メール で 客 に 伝えて 開始 して ください</div>
+              </div>`) : '';
             if (data.lineSent) {
               status.style.color = '#059669';
-              status.textContent = '✅ LINE 送付完了 / FP の Zoom を 別タブ で 開きました (Meeting ID: ' + (data.meetingId || '?') + ')';
+              status.innerHTML = '✅ LINE 送付完了 / FP の Zoom を 別タブ で 開きました (Meeting ID: ' + (data.meetingId || '?') + ')' + urlBlock;
             } else {
               // 2026-07-28: LINE 失敗時 は 分類 error code に 応じて 具体 復旧案内 + アカウント設定 リンク を 出す
               status.style.color = '#B45309';
               const errCode = data.errorCode || 'LINE_UNKNOWN';
-              const errMsg = data.error || 'LINE 送信 失敗';
+              const errMsg = data.error || 'LINE 送信 失敗 (LINE 未連携 客 の 可能性)';
               const isTokenIssue = (errCode === 'LINE_TOKEN_EXPIRED' || errCode === 'LINE_CHANNEL_DELETED_OR_ERROR');
               status.innerHTML = '⚠ Zoom Meeting は 作成 OK / LINE 送信 のみ 失敗 ' +
                 '<div style="margin-top:6px;font-size:12.5px;font-weight:600;color:#7C2D12;">' + escapeHtml(errMsg) + '</div>' +
                 (isTokenIssue
                   ? '<div style="margin-top:8px;"><a href="/account.html" target="_blank" style="display:inline-block;background:#DC2626;color:#fff;padding:6px 14px;border-radius:6px;text-decoration:none;font-weight:800;font-size:12px;">🔧 マイページ で LINE 再連携</a></div>'
-                  : '');
+                  : '') + urlBlock;
             }
+            // copy button 実装 (delegation で 拾う)
+            try {
+              const copyBtn = status.querySelector('[data-copy-url]');
+              if (copyBtn) {
+                copyBtn.addEventListener('click', async (ev) => {
+                  ev.preventDefault();
+                  const url = copyBtn.dataset.copyUrl;
+                  try { await navigator.clipboard.writeText(url); copyBtn.textContent = '✓ コピー 済'; copyBtn.style.background = '#059669'; setTimeout(() => { copyBtn.textContent = 'コピー'; copyBtn.style.background = '#1F2937'; }, 2000); }
+                  catch (_) { const inp = status.querySelector('input'); if (inp) { inp.select(); document.execCommand('copy'); copyBtn.textContent = '✓ コピー 済'; setTimeout(() => copyBtn.textContent = 'コピー', 2000); } }
+                });
+              }
+            } catch (_) {}
             // ★ Firestore データ即refresh → leadHub/Zoom予定 リスト 即反映
             try {
               if (window.refreshFirestoreCustomers) await window.refreshFirestoreCustomers();
