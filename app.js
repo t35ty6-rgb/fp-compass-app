@@ -5759,7 +5759,8 @@
       const detailUid = c._fsCustomerId || c.id;
       if (detailUid && window.LineAppLiveData?._lite && typeof window.getCustomerDetailApi === 'function' && !c._fullHydrated && !c._fullHydrating) {
         c._fullHydrating = true;
-        (async () => {
+        // 2026-08-26 owner「読込 中… 時間 かかりすぎ」対応: promise 参照 を 保持 → tab click で 待つ
+        c._hydratePromise = (async () => {
           const h = window.getFpAuthHeaders ? await window.getFpAuthHeaders() : { 'Content-Type': 'application/json' };
           return fetch(window.getCustomerDetailApi(detailUid), { headers: h });
         })()
@@ -7403,7 +7404,8 @@
     //   (Zoom webhook 保存 の 議事録 が 「議事録 0」 と 表示 される bug 恒久 fix)
     try {
       if (typeof window.mergeFirestoreMeetingsIntoLiveData === 'function') {
-        (async () => {
+        // 2026-08-26 owner「読込 中… 時間 かかりすぎ」対応: promise 参照 を 保持 → tab click で 待つ
+        c._mergePromise = (async () => {
           const added = await window.mergeFirestoreMeetingsIntoLiveData(c);
           if (added > 0) {
             // count 再計算 + タブ badge 更新
@@ -8072,75 +8074,32 @@ ${ctxText}${surveyTxt}`;
           const panel = document.querySelector(`[data-cdpanel="${key}"]`);
           if (panel && panel.dataset.lazyRender) {
             if (key === 'meetings' && typeof renderMeetingRecordsBlock === 'function') {
-              // 2026-08-26 owner「2件→3件→5件 と 段階的 に 出る、 一気 に 開いて」対応:
-              //   旧: cached data で 即 render → 後 追い で GAS hydrate / Firestore merge 完了 の 度に 再 render
-              //   → 数字 が ちらちら 増え る
-              //   新: loading spinner を 出して、 hydrate + merge を Promise.all で await → 完成 後 に 1回 だけ render
+              // 2026-08-26 owner「読込 中… 時間 かかりすぎ」対応:
+              //   openClientModal で hydrate + merge を 起動 済 (c._hydratePromise/_mergePromise 保持)。
+              //   tab click 時 は 既存 promise を await する だけ (重複 fetch 撤廃)、
+              //   両方 完了 済 なら 即 render (spinner ゼロ 秒)。
               const live = window.LineAppLiveData || {};
               const aiCount = (live.ai_results || []).filter(a =>
                 a.userId === c.id || a.userId === c.lineFriendId || a.customerName === c.name
               ).length;
               const cacheKey = `${c.id}|${aiCount}|${(c.lineHistory||[]).length}`;
               const alreadyRendered = panel.dataset.cacheKey === cacheKey && panel.dataset.cacheHasContent === '1';
-              if (!alreadyRendered) {
-                // Loading spinner
-                panel.innerHTML = `<div style="padding:40px 20px;text-align:center;font-family:'Noto Sans JP',-apple-system,sans-serif;color:#64748B;">
-                  <div style="display:inline-block;width:28px;height:28px;border:3px solid #E2E8F0;border-top-color:#3B82F6;border-radius:50%;animation:fp-spin-cd 0.8s linear infinite;margin-bottom:12px;"></div>
-                  <div style="font-size:13px;font-weight:700;">議事録 を 読込 中…</div>
-                  <div style="font-size:11px;color:#94A3B8;margin-top:4px;">GAS + Firestore + 過去 データ を 統合 中</div>
-                </div>
-                <style>@keyframes fp-spin-cd { to { transform: rotate(360deg); } }</style>`;
-                panel.dataset.cacheHasContent = '0';
-                // 全 data source を 並列 で 待つ → 完成 後 に 1回 だけ render
-                (async () => {
-                  const promises = [];
-                  // ① customer-detail hydrate — 未 起動 なら 明示 起動、 起動 済 なら 完了 待ち
-                  if (!c._fullHydrated && typeof window.getCustomerDetailApi === 'function') {
-                    const detailUid = c._fsCustomerId || c.id;
-                    if (detailUid) {
-                      c._fullHydrating = true;
-                      promises.push((async () => {
-                        try {
-                          const h = window.getFpAuthHeaders ? await window.getFpAuthHeaders() : { 'Content-Type': 'application/json' };
-                          const r = await fetch(window.getCustomerDetailApi(detailUid), { headers: h });
-                          if (r.ok) {
-                            const detail = await r.json();
-                            const live = window.LineAppLiveData || (window.LineAppLiveData = {});
-                            if (Array.isArray(detail.ai_results)) {
-                              live.ai_results = live.ai_results || [];
-                              const existingByKey = new Map();
-                              live.ai_results.forEach((a, i) => existingByKey.set(a.bookingTs || a.ts || a.createdAt, i));
-                              detail.ai_results.forEach(a => {
-                                if (a.deleted === true) return;
-                                const key = a.bookingTs || a.ts || a.createdAt;
-                                const idx = existingByKey.get(key);
-                                if (idx !== undefined) {
-                                  const ex = live.ai_results[idx] || {};
-                                  const merged = { ...ex, ...a };
-                                  ['transcript','summary','transcript_summary','key_concerns','predicted_next_questions','next_meeting_suggestion'].forEach(f => {
-                                    const bExists = a[f] !== undefined && a[f] !== null && a[f] !== '' && !(Array.isArray(a[f]) && a[f].length === 0);
-                                    const eExists = ex[f] !== undefined && ex[f] !== null && ex[f] !== '' && !(Array.isArray(ex[f]) && ex[f].length === 0);
-                                    if (!bExists && eExists) merged[f] = ex[f];
-                                  });
-                                  live.ai_results[idx] = merged;
-                                } else {
-                                  live.ai_results.push(a);
-                                }
-                              });
-                            }
-                            c._fullHydrated = true;
-                          }
-                        } catch (e) { console.warn('[customer-detail hydrate] fail:', e?.message); }
-                        finally { c._fullHydrating = false; }
-                      })());
-                    }
-                  }
-                  // ② Firestore /meetings subcol merge
-                  if (typeof window.mergeFirestoreMeetingsIntoLiveData === 'function') {
-                    promises.push(window.mergeFirestoreMeetingsIntoLiveData(c).catch(e => console.warn('[fs-meetings] fetch fail:', e?.message)));
-                  }
-                  await Promise.all(promises);
-                  // 全 data 揃った → 1回 だけ render
+              const hydrateDone = !c._fullHydrating; // hydrate が 走って ない = 既 完了 or 起動 前 (前者 が 大半)
+              const mergePromise = c._mergePromise;
+              const bothReady = hydrateDone && (!mergePromise || (mergePromise && mergePromise._resolved));
+              if (alreadyRendered && bothReady) {
+                // fast path: 既 render + 全 data 揃って る → 何 も し ない
+                try {
+                  const cntEl = document.getElementById('cd-meetings-count');
+                  if (cntEl) cntEl.textContent = panel.querySelectorAll('.fp-meeting-card').length;
+                } catch (_) {}
+              } else {
+                // 既存 promise を await (未 起動 なら null で skip)
+                const promises = [];
+                if (c._hydratePromise) promises.push(c._hydratePromise.catch(() => {}));
+                if (c._mergePromise) promises.push(c._mergePromise.catch(() => {}));
+                if (promises.length === 0 && !alreadyRendered) {
+                  // promise 一切 無し = 過去 データ の みで OK → 即 render
                   panel.innerHTML = renderMeetingRecordsBlock(c) || '<div class="cd-empty">面談録なし</div>';
                   panel.dataset.cacheKey = cacheKey;
                   panel.dataset.cacheHasContent = '1';
@@ -8148,13 +8107,41 @@ ${ctxText}${surveyTxt}`;
                     const cntEl = document.getElementById('cd-meetings-count');
                     if (cntEl) cntEl.textContent = panel.querySelectorAll('.fp-meeting-card').length;
                   } catch (_) {}
-                })();
-              } else {
-                // 既 render 済 (cache hit) → badge count sync のみ
-                try {
-                  const cntEl = document.getElementById('cd-meetings-count');
-                  if (cntEl) cntEl.textContent = panel.querySelectorAll('.fp-meeting-card').length;
-                } catch (_) {}
+                } else {
+                  // 待つ 前 に 「既存 データ で 即 描画」 + 「更新 進行 中 の 薄い pill」 表示
+                  if (!alreadyRendered) {
+                    panel.innerHTML = renderMeetingRecordsBlock(c) || `<div style="padding:32px 20px;text-align:center;font-family:'Noto Sans JP',-apple-system,sans-serif;color:#64748B;">
+                      <div style="display:inline-block;width:22px;height:22px;border:3px solid #E2E8F0;border-top-color:#3B82F6;border-radius:50%;animation:fp-spin-cd 0.7s linear infinite;margin-bottom:10px;"></div>
+                      <div style="font-size:13px;font-weight:700;">議事録 を 取得 中…</div>
+                    </div>
+                    <style>@keyframes fp-spin-cd { to { transform: rotate(360deg); } }</style>`;
+                    panel.dataset.cacheKey = cacheKey;
+                    panel.dataset.cacheHasContent = '1';
+                  }
+                  Promise.all(promises).then(() => {
+                    // 完了 後 に 差分 が あれば 1回 だけ 再 render
+                    const live2 = window.LineAppLiveData || {};
+                    const aiCount2 = (live2.ai_results || []).filter(a =>
+                      a.userId === c.id || a.userId === c.lineFriendId || a.customerName === c.name
+                    ).length;
+                    const newKey = `${c.id}|${aiCount2}|${(c.lineHistory||[]).length}`;
+                    if (newKey !== cacheKey) {
+                      panel.innerHTML = renderMeetingRecordsBlock(c) || '<div class="cd-empty">面談録なし</div>';
+                      panel.dataset.cacheKey = newKey;
+                      panel.dataset.cacheHasContent = '1';
+                    }
+                    try {
+                      const cntEl = document.getElementById('cd-meetings-count');
+                      if (cntEl) cntEl.textContent = panel.querySelectorAll('.fp-meeting-card').length;
+                    } catch (_) {}
+                    if (c._mergePromise) c._mergePromise._resolved = true;
+                  });
+                  // badge count 現在 データ で 即 更新
+                  try {
+                    const cntEl = document.getElementById('cd-meetings-count');
+                    if (cntEl) cntEl.textContent = panel.querySelectorAll('.fp-meeting-card').length;
+                  } catch (_) {}
+                }
               }
             } else if (key === 'timeline' && panel.dataset.cacheHasContent !== '1') {
               panel.innerHTML = buildLifePlanPanel(c, events, lifeCtaCard);
