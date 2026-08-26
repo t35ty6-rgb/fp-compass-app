@@ -1341,19 +1341,37 @@
       let effectiveClientId = clientId;
       if (clientId.startsWith('quick-') && (mode === 'audio' || mode === 'memo')) {
         try {
-          const { addDoc, collection, serverTimestamp } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js');
+          const { addDoc, collection, serverTimestamp, query, where, getDocs, doc, updateDoc } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js');
           const tid = window.__fp?.tenantId;
           if (tid) {
-            const newRef = await addDoc(collection(window.__fp.db, `tenants/${tid}/customers`), {
-              name: clientName, status: 'new', source: 'quick-inperson',
-              createdAt: serverTimestamp(), firstContactAt: serverTimestamp(),
-              note: '急遽 ' + (mode === 'audio' ? '対面録音' : '対面メモ') + ' から 自動追加',
-            });
-            effectiveClientId = newRef.id;
+            // 2026-08-27 owner「重複 顧客 が 出来 る 構造」 root fix:
+            //   名前 で 既存 客 探す → 見つかったら 使い回す、 無ければ 新規 作成
+            const normName = String(clientName || '').replace(/[\s　]+/g, '').replace(/様$/, '').trim();
+            let reusedId = null;
+            if (normName && normName !== '急遽相談') {
+              const dupQ = await getDocs(query(collection(window.__fp.db, `tenants/${tid}/customers`), where('name', '==', clientName)));
+              for (const d of dupQ.docs) {
+                const dn = String(d.data().name || '').replace(/[\s　]+/g, '').replace(/様$/, '').trim();
+                if (dn === normName) { reusedId = d.id; break; }
+              }
+            }
+            if (reusedId) {
+              effectiveClientId = reusedId;
+              try { await updateDoc(doc(window.__fp.db, `tenants/${tid}/customers/${reusedId}`), { lastContactAt: serverTimestamp() }); } catch (_) {}
+              console.log('[quick-inperson] reused existing customer:', reusedId, 'for name:', clientName);
+            } else {
+              const newRef = await addDoc(collection(window.__fp.db, `tenants/${tid}/customers`), {
+                name: clientName, status: 'new', source: 'quick-inperson',
+                createdAt: serverTimestamp(), firstContactAt: serverTimestamp(),
+                note: '急遽 ' + (mode === 'audio' ? '対面録音' : '対面メモ') + ' から 自動追加',
+              });
+              effectiveClientId = newRef.id;
+              console.log('[quick-inperson] created new customer:', newRef.id, 'for name:', clientName);
+            }
             // refresh CRM 顧客台帳
             if (window.refreshFirestoreCustomers) await window.refreshFirestoreCustomers();
           }
-        } catch (e) { console.warn('quick customer firestore create failed:', e); }
+        } catch (e) { console.warn('quick customer firestore create/lookup failed:', e); }
       }
       try {
         const existing = JSON.parse(localStorage.getItem('fp-quick-inperson-meta') || '[]');
