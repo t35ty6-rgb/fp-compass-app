@@ -8074,74 +8074,73 @@ ${ctxText}${surveyTxt}`;
           const panel = document.querySelector(`[data-cdpanel="${key}"]`);
           if (panel && panel.dataset.lazyRender) {
             if (key === 'meetings' && typeof renderMeetingRecordsBlock === 'function') {
-              // 2026-08-26 owner「読込 中… 時間 かかりすぎ」対応:
-              //   openClientModal で hydrate + merge を 起動 済 (c._hydratePromise/_mergePromise 保持)。
-              //   tab click 時 は 既存 promise を await する だけ (重複 fetch 撤廃)、
-              //   両方 完了 済 なら 即 render (spinner ゼロ 秒)。
-              const live = window.LineAppLiveData || {};
-              const aiCount = (live.ai_results || []).filter(a =>
-                a.userId === c.id || a.userId === c.lineFriendId || a.customerName === c.name
-              ).length;
-              const cacheKey = `${c.id}|${aiCount}|${(c.lineHistory||[]).length}`;
-              const alreadyRendered = panel.dataset.cacheKey === cacheKey && panel.dataset.cacheHasContent === '1';
-              const hydrateDone = !c._fullHydrating; // hydrate が 走って ない = 既 完了 or 起動 前 (前者 が 大半)
-              const mergePromise = c._mergePromise;
-              const bothReady = hydrateDone && (!mergePromise || (mergePromise && mergePromise._resolved));
-              if (alreadyRendered && bothReady) {
-                // fast path: 既 render + 全 data 揃って る → 何 も し ない
+              // 2026-08-26 owner「パッと開いた時に出てこなくて『消えたのかな』と思う」対応:
+              //   問題: cache 空 で render → 「面談録なし」 empty state 出た → 数秒後 fetch 完了 で 出現 →
+              //         owner が 「消えた の かな」 と 誤認
+              //   fix: 「data 無い (確認済)」 と 「data 不明 (fetch 中)」 を skeleton screen で 分離
+              const doRender = () => {
+                const html = renderMeetingRecordsBlock(c);
+                const dataConfirmed = c._fullHydrated || !c._fullHydrating; // hydrate 完了 or もともと 走って ない
+                const fetchInFlight = (c._hydratePromise && !c._fullHydrated) || (c._mergePromise && !c._mergePromise._resolved);
+                if (html) {
+                  panel.innerHTML = html;
+                } else if (fetchInFlight) {
+                  // fetch 中 → skeleton (灰色 の shimmer カード 3 枚 で 「取得 中」 を 明示)
+                  panel.innerHTML = `<div style="padding:16px 20px;font-family:'Noto Sans JP',-apple-system,sans-serif;">
+                    <div style="display:flex;align-items:center;gap:10px;padding:11px 14px;background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px;font-size:12.5px;color:#1E40AF;font-weight:700;margin-bottom:14px;">
+                      <div style="display:inline-block;width:16px;height:16px;border:2.5px solid #BFDBFE;border-top-color:#3B82F6;border-radius:50%;animation:fp-spin-cd 0.7s linear infinite;flex-shrink:0;"></div>
+                      過去 の 議事録 を 取得 中…
+                    </div>
+                    ${[0,1,2].map(() => `<div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px;padding:14px;margin-bottom:10px;">
+                      <div style="height:14px;background:linear-gradient(90deg,#F1F5F9 0%,#E2E8F0 50%,#F1F5F9 100%);background-size:200% 100%;animation:fp-shim 1.5s infinite;border-radius:4px;width:70%;margin-bottom:8px;"></div>
+                      <div style="height:11px;background:linear-gradient(90deg,#F1F5F9 0%,#E2E8F0 50%,#F1F5F9 100%);background-size:200% 100%;animation:fp-shim 1.5s infinite;border-radius:4px;width:45%;"></div>
+                    </div>`).join('')}
+                    <button id="fp-meetings-retry" style="margin-top:6px;background:#fff;border:1px solid #CBD5E1;color:#475569;padding:9px 18px;border-radius:8px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit;width:100%;">↻ 手動 で 再取得</button>
+                  </div>
+                  <style>@keyframes fp-spin-cd { to { transform: rotate(360deg); } } @keyframes fp-shim { 0%{background-position:200% 0} 100%{background-position:-200% 0} }</style>`;
+                  const retryBtn = document.getElementById('fp-meetings-retry');
+                  if (retryBtn) {
+                    retryBtn.addEventListener('click', async () => {
+                      retryBtn.disabled = true; retryBtn.textContent = '取得 中…';
+                      try {
+                        if (typeof window.fetchLiveData === 'function') await window.fetchLiveData();
+                        if (typeof window.mergeFirestoreMeetingsIntoLiveData === 'function') await window.mergeFirestoreMeetingsIntoLiveData(c);
+                      } catch (_) {}
+                      doRender();
+                    });
+                  }
+                } else if (dataConfirmed) {
+                  // fetch 完了 & data 確実 に 無い → 明確 な empty state
+                  panel.innerHTML = `<div style="padding:36px 20px;text-align:center;font-family:'Noto Sans JP',-apple-system,sans-serif;color:#94A3B8;">
+                    <div style="font-size:32px;margin-bottom:8px;">📝</div>
+                    <div style="font-size:13px;font-weight:700;color:#64748B;">面談録 が まだ ありません</div>
+                    <div style="font-size:11px;margin-top:4px;color:#94A3B8;">面談 の 音声/動画 を upload すると ここ に 表示 されます</div>
+                  </div>`;
+                } else {
+                  // 判定 不明 → skeleton fallback
+                  panel.innerHTML = `<div style="padding:32px 20px;text-align:center;font-family:'Noto Sans JP',-apple-system,sans-serif;color:#64748B;">
+                    <div style="display:inline-block;width:22px;height:22px;border:3px solid #E2E8F0;border-top-color:#3B82F6;border-radius:50%;animation:fp-spin-cd 0.7s linear infinite;margin-bottom:10px;"></div>
+                    <div style="font-size:13px;font-weight:700;">議事録 を 準備 中…</div>
+                  </div>
+                  <style>@keyframes fp-spin-cd { to { transform: rotate(360deg); } }</style>`;
+                }
                 try {
                   const cntEl = document.getElementById('cd-meetings-count');
-                  if (cntEl) cntEl.textContent = panel.querySelectorAll('.fp-meeting-card').length;
+                  if (cntEl) cntEl.textContent = panel.querySelectorAll('.fp-meeting-card').length || '…';
                 } catch (_) {}
-              } else {
-                // 既存 promise を await (未 起動 なら null で skip)
-                const promises = [];
-                if (c._hydratePromise) promises.push(c._hydratePromise.catch(() => {}));
-                if (c._mergePromise) promises.push(c._mergePromise.catch(() => {}));
-                if (promises.length === 0 && !alreadyRendered) {
-                  // promise 一切 無し = 過去 データ の みで OK → 即 render
-                  panel.innerHTML = renderMeetingRecordsBlock(c) || '<div class="cd-empty">面談録なし</div>';
-                  panel.dataset.cacheKey = cacheKey;
-                  panel.dataset.cacheHasContent = '1';
-                  try {
-                    const cntEl = document.getElementById('cd-meetings-count');
-                    if (cntEl) cntEl.textContent = panel.querySelectorAll('.fp-meeting-card').length;
-                  } catch (_) {}
-                } else {
-                  // 待つ 前 に 「既存 データ で 即 描画」 + 「更新 進行 中 の 薄い pill」 表示
-                  if (!alreadyRendered) {
-                    panel.innerHTML = renderMeetingRecordsBlock(c) || `<div style="padding:32px 20px;text-align:center;font-family:'Noto Sans JP',-apple-system,sans-serif;color:#64748B;">
-                      <div style="display:inline-block;width:22px;height:22px;border:3px solid #E2E8F0;border-top-color:#3B82F6;border-radius:50%;animation:fp-spin-cd 0.7s linear infinite;margin-bottom:10px;"></div>
-                      <div style="font-size:13px;font-weight:700;">議事録 を 取得 中…</div>
-                    </div>
-                    <style>@keyframes fp-spin-cd { to { transform: rotate(360deg); } }</style>`;
-                    panel.dataset.cacheKey = cacheKey;
-                    panel.dataset.cacheHasContent = '1';
-                  }
-                  Promise.all(promises).then(() => {
-                    // 完了 後 に 差分 が あれば 1回 だけ 再 render
-                    const live2 = window.LineAppLiveData || {};
-                    const aiCount2 = (live2.ai_results || []).filter(a =>
-                      a.userId === c.id || a.userId === c.lineFriendId || a.customerName === c.name
-                    ).length;
-                    const newKey = `${c.id}|${aiCount2}|${(c.lineHistory||[]).length}`;
-                    if (newKey !== cacheKey) {
-                      panel.innerHTML = renderMeetingRecordsBlock(c) || '<div class="cd-empty">面談録なし</div>';
-                      panel.dataset.cacheKey = newKey;
-                      panel.dataset.cacheHasContent = '1';
-                    }
-                    try {
-                      const cntEl = document.getElementById('cd-meetings-count');
-                      if (cntEl) cntEl.textContent = panel.querySelectorAll('.fp-meeting-card').length;
-                    } catch (_) {}
-                    if (c._mergePromise) c._mergePromise._resolved = true;
-                  });
-                  // badge count 現在 データ で 即 更新
-                  try {
-                    const cntEl = document.getElementById('cd-meetings-count');
-                    if (cntEl) cntEl.textContent = panel.querySelectorAll('.fp-meeting-card').length;
-                  } catch (_) {}
-                }
+              };
+              // 即 render (data 有り なら 内容 / data 無く fetch 中 なら skeleton / 確定 で 無し なら empty)
+              doRender();
+              panel.dataset.cacheHasContent = '1';
+              // 進行 中 promise を await → 完了 後 に 再 render
+              const promises = [];
+              if (c._hydratePromise) promises.push(c._hydratePromise.catch(() => {}));
+              if (c._mergePromise) promises.push(c._mergePromise.catch(() => {}));
+              if (promises.length > 0) {
+                Promise.all(promises).then(() => {
+                  if (c._mergePromise) c._mergePromise._resolved = true;
+                  doRender();
+                });
               }
             } else if (key === 'timeline' && panel.dataset.cacheHasContent !== '1') {
               panel.innerHTML = buildLifePlanPanel(c, events, lifeCtaCard);
