@@ -8126,7 +8126,12 @@ ${ctxText}${surveyTxt}`;
                 }
                 try {
                   const cntEl = document.getElementById('cd-meetings-count');
-                  if (cntEl) cntEl.textContent = panel.querySelectorAll('.fp-meeting-card').length || '…';
+                  if (cntEl) {
+                    // 2026-08-26 qa WARN #1 fix: 0件 客 で badge が 「…」 のまま 残る bug
+                    //   dataConfirmed && !fetchInFlight なら 「0」 を 明示、 そう で なけれ ば 「…」
+                    const cnt = panel.querySelectorAll('.fp-meeting-card').length;
+                    cntEl.textContent = (dataConfirmed && !fetchInFlight) ? String(cnt) : (cnt || '…');
+                  }
                 } catch (_) {}
               };
               // 即 render (data 有り なら 内容 / data 無く fetch 中 なら skeleton / 確定 で 無し なら empty)
