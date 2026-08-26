@@ -8134,13 +8134,20 @@ ${ctxText}${surveyTxt}`;
                   }
                 } catch (_) {}
               };
-              // 即 render (data 有り なら 内容 / data 無く fetch 中 なら skeleton / 確定 で 無し なら empty)
+              // 2026-08-26 owner「また 議事録 出なくなった」bug fix:
+              //   fetchLiveData が 定期実行 で liveData 全体 上書き → mergeFirestore の 追加 分 が 消える。
+              //   対策: tab click で 必ず fresh に mergeFirestore 走らせる (前回 の _resolved 信用 しない)。
+              // 即 render (data 有り なら 内容 / 無く fetch 中 なら skeleton / 確定 で 無し なら empty)
               doRender();
               panel.dataset.cacheHasContent = '1';
-              // 進行 中 promise を await → 完了 後 に 再 render
+              // 常 に fresh mergeFirestore を 走らせる (fetchLiveData に よる 上書き 対策)
               const promises = [];
               if (c._hydratePromise) promises.push(c._hydratePromise.catch(() => {}));
-              if (c._mergePromise) promises.push(c._mergePromise.catch(() => {}));
+              // 新 promise で 上書き、 前回 の 「_resolved=true」 は 忘れる
+              if (typeof window.mergeFirestoreMeetingsIntoLiveData === 'function') {
+                c._mergePromise = window.mergeFirestoreMeetingsIntoLiveData(c).catch(e => console.warn('[fs-meetings] fail:', e?.message));
+                promises.push(c._mergePromise);
+              }
               if (promises.length > 0) {
                 Promise.all(promises).then(() => {
                   if (c._mergePromise) c._mergePromise._resolved = true;
