@@ -9004,7 +9004,33 @@ ${ctxText}${surveyTxt}`;
     if (root.dataset.loaded === '1' && !root.dataset.refresh) return; // 一度ロードしたら 再分析ボタン以外 再実行しない
     const lh = (client.lineHistory || []).filter(m => (m.from === 'user' || m.direction === 'in') && m.text);
     if (lh.length === 0) {
-      root.innerHTML = '<div style="padding:32px 24px;text-align:center;color:#94A3B8;font-size:13px;">LINE 履歴 が ないので Q&A 分析 できません</div>';
+      // 2026-08-26 owner「パッと開いた時 出て来ない」対応 Q&A tab 版:
+      //   LINE 履歴 が lazy-load 中 の 可能性 → empty state 出す 前 に 判定
+      if (client._lineHistoryLoading || client._lineHistoryPartial) {
+        root.innerHTML = `<div style="padding:32px 24px;text-align:center;color:#64748B;font-family:'Noto Sans JP',-apple-system,sans-serif;">
+          <div style="display:inline-block;width:22px;height:22px;border:3px solid #E2E8F0;border-top-color:#3B82F6;border-radius:50%;animation:fp-spin-qa 0.7s linear infinite;margin-bottom:10px;"></div>
+          <div style="font-size:13px;font-weight:700;">LINE 履歴 を 取得 中…</div>
+          <div style="font-size:11px;color:#94A3B8;margin-top:4px;">取得 完了 後 に AI 分析 を 開始 します</div>
+        </div>
+        <style>@keyframes fp-spin-qa { to { transform: rotate(360deg); } }</style>`;
+        const tabBadge = document.getElementById('cd-qa-count');
+        if (tabBadge) tabBadge.textContent = '…';
+        // 完了 待ち で 再 trigger
+        const iv = setInterval(() => {
+          if (!client._lineHistoryLoading && !client._lineHistoryPartial) {
+            clearInterval(iv);
+            delete root.dataset.loaded;
+            loadQATabForClient(client);
+          }
+        }, 500);
+        setTimeout(() => clearInterval(iv), 30000); // 30秒 で timeout
+        return;
+      }
+      root.innerHTML = `<div style="padding:36px 20px;text-align:center;color:#94A3B8;font-family:'Noto Sans JP',-apple-system,sans-serif;">
+        <div style="font-size:32px;margin-bottom:8px;">💬</div>
+        <div style="font-size:13px;font-weight:700;color:#64748B;">LINE 履歴 が ありません</div>
+        <div style="font-size:11px;margin-top:4px;color:#94A3B8;">客 が LINE 送って くる と 自動 分析 されます</div>
+      </div>`;
       const tabBadge = document.getElementById('cd-qa-count');
       if (tabBadge) tabBadge.textContent = '0';
       return;
