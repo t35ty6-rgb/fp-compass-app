@@ -8027,6 +8027,15 @@ ${ctxText}${surveyTxt}`;
               // 2026-08-26 owner「また 議事録 出なくなった」bug fix:
               //   fetchLiveData が 定期実行 で liveData 全体 上書き → mergeFirestore の 追加 分 が 消える。
               //   対策: tab click で 必ず fresh に mergeFirestore 走らせる (前回 の _resolved 信用 しない)。
+              // 2026-08-27 qa FAIL#A fix (再): 議事録 tab click 時 に 常 に ai_results reset
+              //   → 前 客 の 議事録 が 残る 現象 完全 防止 (cache/state 一切 信じない)
+              try {
+                (window.LineAppLiveData = window.LineAppLiveData || {}).ai_results = [];
+                c._fullHydrated = false;
+                c._fullHydrating = false;
+                c._mergePromise = null;
+                c._hydratePromise = null;
+              } catch (_) {}
               // 即 render (data 有り なら 内容 / 無く fetch 中 なら skeleton / 確定 で 無し なら empty)
               doRender();
               panel.dataset.cacheHasContent = '1';
