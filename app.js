@@ -5739,6 +5739,55 @@
       localStorage.setItem('fp-last-open-client', id);
       localStorage.setItem('fp-last-open-mode', 'client');
     } catch (_) {}
+    // 2026-08-28 owner「リロードしたら 全員 議事録 消えた」 fix:
+    //   旧: 議事録 tab click 時 に customer-detail hydrate → 概観 tab に 開いた 時点 で は
+    //        LineAppLiveData.ai_results が /api/bookings lite (tenant 全体 上位 60) の まま で
+    //        該当 客 の 議事録 は 大半 混じって おらず 「消えた」 に 見える。
+    //   新: openClientModal 直後 に **並列 で** customer-detail を hydrate 起動、
+    //        概観 tab の C1 stream / 議事録 badge が モーダル 開いた 直後 から 正しい 数字 を 出す。
+    //        議事録 tab click 時 の 再 hydrate は 引き続き 走らせる (fresh 保証)。
+    try {
+      if (typeof window.getCustomerDetailApi === 'function' && !c._fullHydrating && !c._fullHydrated) {
+        const detailUid = c._fsCustomerId || c.id;
+        if (detailUid) {
+          c._fullHydrating = true;
+          c._hydratePromise = (async () => {
+            try {
+              const h = window.getFpAuthHeaders ? await window.getFpAuthHeaders() : { 'Content-Type': 'application/json' };
+              const controller = new AbortController();
+              const tid = setTimeout(() => controller.abort(), 30000);
+              let r;
+              try { r = await fetch(window.getCustomerDetailApi(detailUid), { headers: h, signal: controller.signal }); }
+              finally { clearTimeout(tid); }
+              if (r && r.ok) {
+                const detail = await r.json();
+                const live = window.LineAppLiveData || (window.LineAppLiveData = {});
+                try { live._gasStatus = detail._gasStatus || 'ok'; } catch (_) {}
+                // 該当 客 用 に ai_results を fresh に 差替 (前 客 の 残り 完全 除去)
+                live.ai_results = Array.isArray(detail.ai_results)
+                  ? detail.ai_results.filter(a => a.deleted !== true)
+                  : [];
+                c._fullHydrated = true;
+                // 議事録 badge 即 更新 (概観 tab のまま でも 数字 出す)
+                try {
+                  const cntEl = document.getElementById('cd-meetings-count');
+                  if (cntEl) cntEl.textContent = String(live.ai_results.length);
+                } catch (_) {}
+                // 概観 の C1 stream 再描画 (もし 開いて たら)
+                try {
+                  const ovPanel = document.querySelector('.cd-tabpanel[data-cdpanel="overview"]');
+                  if (ovPanel && typeof _buildC1StreamPanel === 'function') {
+                    const streamHost = ovPanel.querySelector('[data-c1s-injected]');
+                    if (streamHost) streamHost.innerHTML = _buildC1StreamPanel(c);
+                  }
+                } catch (_) {}
+              }
+            } catch (e) { console.warn('[openModal-hydrate] fail:', e?.message); }
+            finally { c._fullHydrating = false; c._fullHydrated = true; }
+          })();
+        }
+      }
+    } catch (_) {}
     // ★ URL routing: ?view=clients&customer={id} に更新 (popstate由来でない時)
     if (!options.fromPopstate) {
       try { pushModalUrl(id, null); } catch (_) {}
