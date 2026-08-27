@@ -8049,6 +8049,8 @@ ${ctxText}${surveyTxt}`;
                         const detail = await r.json();
                         const live = window.LineAppLiveData || (window.LineAppLiveData = {});
                         live.ai_results = live.ai_results || [];
+                        // 2026-08-27 qa FAIL#1 fix: server の _gasStatus を LiveData に 保存 して client dedup 判定 に 使う
+                        try { (window.LineAppLiveData || (window.LineAppLiveData = {}))._gasStatus = detail._gasStatus || 'ok'; } catch (_) {}
                         if (Array.isArray(detail.ai_results)) {
                           const existingByKey = new Map();
                           live.ai_results.forEach((a, i) => existingByKey.set(a.bookingTs || a.ts || a.createdAt, i));
@@ -8082,9 +8084,16 @@ ${ctxText}${surveyTxt}`;
                   promises.push(c._hydratePromise);
                 }
               }
-              if (typeof window.mergeFirestoreMeetingsIntoLiveData === 'function') {
+              // 2026-08-27 qa FAIL#1 fix: server が既に Firestore merge 済 (_gasStatus='ok') なら
+              //   client-side merge skip (二重 fetch で dedup 破綻 防止)。
+              //   GAS 死んで た 時 (timeout_or_error / parse_fail) の 場合 は server merge も 空 データ 上 で 実行 されて るので client-side merge が 補完 として 必要
+              const gasStatus = window.LineAppLiveData?._gasStatus;
+              if (typeof window.mergeFirestoreMeetingsIntoLiveData === 'function' && gasStatus !== 'ok') {
                 c._mergePromise = window.mergeFirestoreMeetingsIntoLiveData(c).catch(e => console.warn('[fs-meetings] fail:', e?.message));
                 promises.push(c._mergePromise);
+              } else {
+                // server が merge 済 の 印
+                c._mergePromise = { _resolved: true };
               }
               if (promises.length > 0) {
                 Promise.all(promises).then(() => {
@@ -15787,13 +15796,16 @@ window.mergeFirestoreMeetingsIntoLiveData = async function (client) {
       const md = d.data();
       const zid = String(md.zoomMeetingId || '');
       const startIso = md.zoomStartTime || md.createdAt?.toDate?.().toISOString?.() || '';
-      const bookingTs = startIso || ('fs-' + d.id);
+      // 2026-08-27 qa FAIL#1 fix: server /api/customer-detail の bookingTs と 一致 させて dedup 効かせる
+      //   Firestore doc の bookingTs field (「quick-...」/「upload-...」) を 優先 、 無い 時 だけ startIso fallback
+      const bookingTs = md.bookingTs || startIso || ('fs-' + d.id);
+      const ts = md.ts || startIso;
       const fsRecord = {
         userId: client.lineFriendId || client.id || customerId,
         customerName: client.name || '',
         bookingTs,
-        ts: startIso,
-        createdAt: startIso,
+        ts,
+        createdAt: ts,
         transcript: md.transcript || '',
         summary: md.summary || '',
         zoomMeetingId: zid,
