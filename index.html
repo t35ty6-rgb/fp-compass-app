@@ -48,12 +48,12 @@
 <!-- ★ 2026-08-20 owner「認証中 で 5分 待たされる」fix:
      旧: 認証後 に fpReadyAfterAuth で critical scripts を 直列 fetch → mobile 4G で 5-8 秒
      新: login 画面 表示 中 に 平行 preload (browser cache に 入れる、 実行 は 認証後) → 認証後 は 実質 0秒 -->
-<link rel="preload" as="script" href="life-events.js?v=20260827I-ssot-firestore">
-<link rel="preload" as="script" href="recommender.js?v=20260827I-ssot-firestore">
-<link rel="preload" as="script" href="line-data.js?v=20260827I-ssot-firestore">
-<link rel="preload" as="script" href="recording-persist.js?v=20260827I-ssot-firestore">
-<link rel="preload" as="script" href="app.js?v=20260827I-ssot-firestore">
-<link rel="preload" as="script" href="line-app.js?v=20260827I-ssot-firestore">
+<link rel="preload" as="script" href="life-events.js?v=20260827J-reset-state">
+<link rel="preload" as="script" href="recommender.js?v=20260827J-reset-state">
+<link rel="preload" as="script" href="line-data.js?v=20260827J-reset-state">
+<link rel="preload" as="script" href="recording-persist.js?v=20260827J-reset-state">
+<link rel="preload" as="script" href="app.js?v=20260827J-reset-state">
+<link rel="preload" as="script" href="line-app.js?v=20260827J-reset-state">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -1658,7 +1658,7 @@ window.fpReadyAfterAuth = function() {
     });
   })();
 
-  const ver = "20260827I-ssot-firestore";
+  const ver = "20260827J-reset-state";
   // ★ 2026-06-26 perf: critical (画面初期表示に必須) と deferred (LINE/charts) を 分離
   // critical: 顧客台帳・ホーム描画に必須
   // deferred: LINE タブ (line-app.js 555KB) / dashboard charts (charts.js) → idle で 後ロード
@@ -2406,7 +2406,7 @@ window.fpReadyAfterAuth = function() {
 <script>
 (function(){
   // 最新の ver を 1 箇所に集約 (fpReadyAfterAuth 側と一致させる必要あり)
-    const FP_VERSION = "20260827I-ssot-firestore";
+    const FP_VERSION = "20260827J-reset-state";
   try { window.FP_VERSION = FP_VERSION; } catch(_) {}
 
   // 2026-07-13 v11: Chrome拡張 (Zoom タブ音声 レコーダー) 検知

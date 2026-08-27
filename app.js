@@ -5720,6 +5720,19 @@
     options = options || {};
     const c = clients.find(x => x.id === id);
     if (!c) return;
+    // 2026-08-27 qa FAIL#A fix: 別客 開く 時 に 前客 の ai_results が LineAppLiveData に 残り
+    //   別客 に 前客 の 議事録 が 表示 される bug 対策 → 開く 度 に reset
+    if (window._fpCurrentClient && window._fpCurrentClient.id !== id) {
+      if (window.LineAppLiveData) {
+        window.LineAppLiveData.ai_results = [];
+        window.LineAppLiveData._gasStatus = undefined;
+      }
+      // hydrate flag も reset (前 客 の flag が 残る と 新 客 の hydrate skip される)
+      if (c._fullHydrated) c._fullHydrated = false;
+      if (c._fullHydrating) c._fullHydrating = false;
+      if (c._hydratePromise) c._hydratePromise = null;
+      if (c._mergePromise) c._mergePromise = null;
+    }
     window._fpCurrentClient = c;  // AI議事録モーダルの LINE 送信 fallback 用
     // ★ オーナーfb「リロードでトップに戻る」: 最後に開いてた顧客IDを localStorage
     try {
@@ -8051,6 +8064,9 @@ ${ctxText}${surveyTxt}`;
                         live.ai_results = live.ai_results || [];
                         // 2026-08-27 qa FAIL#1 fix: server の _gasStatus を LiveData に 保存 して client dedup 判定 に 使う
                         try { (window.LineAppLiveData || (window.LineAppLiveData = {}))._gasStatus = detail._gasStatus || 'ok'; } catch (_) {}
+                        // 2026-08-27 qa FAIL#A fix: 別客 の ai_results が 残る 現象 対策 で 毎回 fresh start
+                        //   (customer-detail は 該当 客 だけ の data を 返す ので 上書き で 正しい)
+                        (window.LineAppLiveData = window.LineAppLiveData || {}).ai_results = [];
                         if (Array.isArray(detail.ai_results)) {
                           const existingByKey = new Map();
                           live.ai_results.forEach((a, i) => existingByKey.set(a.bookingTs || a.ts || a.createdAt, i));
