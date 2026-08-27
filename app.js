@@ -8147,10 +8147,52 @@ ${ctxText}${surveyTxt}`;
               // 即 render (data 有り なら 内容 / 無く fetch 中 なら skeleton / 確定 で 無し なら empty)
               doRender();
               panel.dataset.cacheHasContent = '1';
-              // 常 に fresh mergeFirestore を 走らせる (fetchLiveData に よる 上書き 対策)
+              // 2026-08-27 owner「議事録 出て こない」 fetchLiveData race 対策:
+              //   tab click 毎 に customer-detail hydrate + Firestore merge を **必ず fresh に 再走**
+              //   (fetchLiveData が 途中 で liveData 上書き して も 直後 に 再 merge で 復活)
               const promises = [];
-              if (c._hydratePromise) promises.push(c._hydratePromise.catch(() => {}));
-              // 新 promise で 上書き、 前回 の 「_resolved=true」 は 忘れる
+              if (typeof window.getCustomerDetailApi === 'function') {
+                const detailUid = c._fsCustomerId || c.id;
+                if (detailUid) {
+                  c._fullHydrating = true;
+                  c._fullHydrated = false;
+                  c._hydratePromise = (async () => {
+                    try {
+                      const h = window.getFpAuthHeaders ? await window.getFpAuthHeaders() : { 'Content-Type': 'application/json' };
+                      const r = await fetch(window.getCustomerDetailApi(detailUid), { headers: h });
+                      if (r.ok) {
+                        const detail = await r.json();
+                        const live = window.LineAppLiveData || (window.LineAppLiveData = {});
+                        live.ai_results = live.ai_results || [];
+                        if (Array.isArray(detail.ai_results)) {
+                          const existingByKey = new Map();
+                          live.ai_results.forEach((a, i) => existingByKey.set(a.bookingTs || a.ts || a.createdAt, i));
+                          detail.ai_results.forEach(a => {
+                            if (a.deleted === true) return;
+                            const key = a.bookingTs || a.ts || a.createdAt;
+                            const idx = existingByKey.get(key);
+                            if (idx !== undefined) {
+                              const ex = live.ai_results[idx] || {};
+                              const merged = { ...ex, ...a };
+                              ['transcript','summary','transcript_summary','key_concerns','predicted_next_questions','next_meeting_suggestion'].forEach(f => {
+                                const bExists = a[f] !== undefined && a[f] !== null && a[f] !== '' && !(Array.isArray(a[f]) && a[f].length === 0);
+                                const eExists = ex[f] !== undefined && ex[f] !== null && ex[f] !== '' && !(Array.isArray(ex[f]) && ex[f].length === 0);
+                                if (!bExists && eExists) merged[f] = ex[f];
+                              });
+                              live.ai_results[idx] = merged;
+                            } else {
+                              live.ai_results.push(a);
+                            }
+                          });
+                        }
+                        c._fullHydrated = true;
+                      }
+                    } catch (e) { console.warn('[customer-detail] fetch fail:', e?.message); }
+                    finally { c._fullHydrating = false; }
+                  })();
+                  promises.push(c._hydratePromise);
+                }
+              }
               if (typeof window.mergeFirestoreMeetingsIntoLiveData === 'function') {
                 c._mergePromise = window.mergeFirestoreMeetingsIntoLiveData(c).catch(e => console.warn('[fs-meetings] fail:', e?.message));
                 promises.push(c._mergePromise);
