@@ -8021,9 +8021,10 @@ ${ctxText}${surveyTxt}`;
                 //   まだ 完了 して ない (未起動 含む) 段階 で は 常 に skeleton (読み込み中) を 見せる。
                 const dataConfirmed = c._fullHydrated === true && (!c._mergePromise || c._mergePromise._resolved === true);
                 const fetchInFlight = !dataConfirmed;
-                if (html) {
-                  panel.innerHTML = html;
-                } else if (fetchInFlight) {
+                // 2026-08-28 owner「議事録 開いた 時 に 読み込み 中 が 出ない 『どこ行ったの?』 と なる」対応:
+                //   旧: html が 有れば 先 に 表示 (stale/incomplete でも) → skeleton 一切 出ない
+                //   新: fetchInFlight なら **必ず** skeleton を 先 に 見せる。 hydrate 完了 で 内容 に 差替。
+                if (fetchInFlight) {
                   // fetch 中 → skeleton (灰色 の shimmer カード 3 枚 で 「取得 中」 を 明示)
                   panel.innerHTML = `<div style="padding:16px 20px;font-family:'Noto Sans JP',-apple-system,sans-serif;">
                     <div style="display:flex;align-items:center;gap:10px;padding:11px 14px;background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px;font-size:12.5px;color:#1E40AF;font-weight:700;margin-bottom:14px;">
@@ -8048,20 +8049,16 @@ ${ctxText}${surveyTxt}`;
                       doRender();
                     });
                   }
-                } else if (dataConfirmed) {
-                  // fetch 完了 & data 確実 に 無い → 明確 な empty state
+                } else if (html) {
+                  // fetch 完了 + 内容 あり → 実 データ を 表示
+                  panel.innerHTML = html;
+                } else {
+                  // fetch 完了 + 内容 なし → 明確 な empty state
                   panel.innerHTML = `<div style="padding:36px 20px;text-align:center;font-family:'Noto Sans JP',-apple-system,sans-serif;color:#94A3B8;">
                     <div style="font-size:32px;margin-bottom:8px;">📝</div>
                     <div style="font-size:13px;font-weight:700;color:#64748B;">面談録 が まだ ありません</div>
                     <div style="font-size:11px;margin-top:4px;color:#94A3B8;">面談 の 音声/動画 を upload すると ここ に 表示 されます</div>
                   </div>`;
-                } else {
-                  // 判定 不明 → skeleton fallback
-                  panel.innerHTML = `<div style="padding:32px 20px;text-align:center;font-family:'Noto Sans JP',-apple-system,sans-serif;color:#64748B;">
-                    <div style="display:inline-block;width:22px;height:22px;border:3px solid #E2E8F0;border-top-color:#3B82F6;border-radius:50%;animation:fp-spin-cd 0.7s linear infinite;margin-bottom:10px;"></div>
-                    <div style="font-size:13px;font-weight:700;">議事録 を 準備 中…</div>
-                  </div>
-                  <style>@keyframes fp-spin-cd { to { transform: rotate(360deg); } }</style>`;
                 }
                 try {
                   const cntEl = document.getElementById('cd-meetings-count');
