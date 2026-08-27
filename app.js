@@ -8029,7 +8029,10 @@ ${ctxText}${surveyTxt}`;
                   c._hydratePromise = (async () => {
                     try {
                       const h = window.getFpAuthHeaders ? await window.getFpAuthHeaders() : { 'Content-Type': 'application/json' };
-                      const r = await fetch(window.getCustomerDetailApi(detailUid), { headers: h });
+                      // 2026-08-27 owner「読み込み中 の まま で 出て こない」対策: 8秒 timeout で hang 防止
+                      const controller = new AbortController();
+                      const tid = setTimeout(() => controller.abort(), 8000);
+                      const r = await fetch(window.getCustomerDetailApi(detailUid), { headers: h, signal: controller.signal }).finally(() => clearTimeout(tid));
                       if (r.ok) {
                         const detail = await r.json();
                         const live = window.LineAppLiveData || (window.LineAppLiveData = {});
@@ -8058,7 +8061,11 @@ ${ctxText}${surveyTxt}`;
                         c._fullHydrated = true;
                       }
                     } catch (e) { console.warn('[customer-detail] fetch fail:', e?.message); }
-                    finally { c._fullHydrating = false; }
+                    finally {
+                      c._fullHydrating = false;
+                      // 2026-08-27 fetch 失敗 or timeout でも 「試行 完了」 として render 進める (skeleton 永続 防止)
+                      c._fullHydrated = true;
+                    }
                   })();
                   promises.push(c._hydratePromise);
                 }
