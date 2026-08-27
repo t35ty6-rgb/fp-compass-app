@@ -10376,7 +10376,11 @@ body.modal-open {
     top: 0 !important;
     z-index: 50 !important;
     background: #FFFFFF !important;
-    padding: 0 12px !important;
+    /* 2026-08-27 qa R4 WARN#1 fix: 「‹ 戻る」 pill (fixed top:12px left:10px 幅~90px) が
+       最初 の 「概観」 tab を 覆って タップ 不能 だった。 左 padding を 100px 増やして
+       tab の 開始位置 を 戻るボタン の 右 に 退避。 tab list は 元々 横 scroll する ので
+       後ろ の tab は そのまま。 */
+    padding: 0 12px 0 100px !important;
     border-top: 1px solid #ECE6D6 !important;
     border-bottom: 1px solid #ECE6D6 !important;
     -webkit-overflow-scrolling: touch !important;
