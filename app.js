@@ -6774,7 +6774,11 @@
                 <span style="font-size:18px;line-height:1;">📁</span>
                 <span style="text-align:left;line-height:1.3;">音声 を アップロード → 議事録 生成<span style="display:block;font-size:11px;font-weight:600;color:rgba(255,255,255,0.85);margin-top:2px;">対応: MP3 · M4A (iPhone ボイスメモ) · WAV · WEBM · MP4 (音声抽出)</span></span>
               </button>
-              <input type="file" id="cd-audio-upload-input" data-client-id="${escapeHtml(c.id)}" accept="audio/mpeg,audio/mp3,audio/wav,audio/x-wav,audio/m4a,audio/x-m4a,audio/mp4,audio/webm,audio/*,video/mp4,video/webm" style="display:none;">
+              <!-- 2026-08-28 owner「iPhone で 押した ら 写真ライブラリ/ビデオ/ファイル の chooser が 出る、 ボイスメモ に すぐ アクセス できない」対応:
+                   iOS Safari 挙動: accept に video/* or audio/* 汎用 混ぜる と photo library chooser が 起動。
+                   .m4a / .mp3 / .wav の 拡張子 だけ で は 「ファイル (Files.app → ボイスメモ 直行)」 の みが 出る。
+                   → video 系 削除 + 拡張子 主軸 に。 汎用 audio/* も 残す と iOS が chooser 出す ので 削除。 -->
+              <input type="file" id="cd-audio-upload-input" data-client-id="${escapeHtml(c.id)}" accept=".m4a,.mp3,.wav,.webm,.mp4,.aac,.ogg" style="display:none;">
               <!-- 旧 button 互換 (別 code path から click 発火 される ため hidden で 残置) -->
               <button id="cd-instant-zoom-btn" data-client-id="${escapeHtml(c.id)}" style="display:none;"></button>
               <button id="cd-schedule-zoom-btn" data-client-id="${escapeHtml(c.id)}" style="display:none;"></button>
@@ -6909,6 +6913,16 @@
 
         <!-- ============= RIGHT: Activity column ============= -->
         <main class="cd-right">
+
+          <!-- 2026-08-28 owner「音声 upload を もっと 目立つ ところ に」対応:
+               cd-right の 一番 上 (モバイル で 開いた 瞬間 最初 に 見える 場所) に BIG CTA を 配置。
+               tabs より 上、 sticky で スクロール して も 追従。 押す と file picker (拡張子 のみ = ボイスメモ 直行)。 -->
+          <div id="cd-audio-upload-mega" style="position:sticky;top:0;z-index:10;background:linear-gradient(180deg,#FAFAFF 0%,#FFFFFF 100%);padding:14px 14px 12px;border-bottom:1px solid #E2E8F0;">
+            <button id="cd-audio-upload-btn-mega" data-client-id="${escapeHtml(c.id)}" style="width:100%;background:linear-gradient(135deg,#5B5BF0 0%,#4747C7 55%,#3A3AAB 100%);color:#fff;border:none;padding:18px 16px;border-radius:14px;font-size:15px;font-weight:900;cursor:pointer;font-family:'Noto Sans JP',sans-serif;box-shadow:0 10px 24px rgba(91,91,240,0.35),0 2px 6px rgba(91,91,240,0.20);display:flex;align-items:center;justify-content:center;gap:12px;letter-spacing:0.01em;">
+              <span style="font-size:24px;line-height:1;">🎙</span>
+              <span style="text-align:left;line-height:1.25;">音声 を アップロード → 議事録 生成<span style="display:block;font-size:11.5px;font-weight:700;color:rgba(255,255,255,0.9);margin-top:3px;">iPhone ボイスメモ · MP3 · M4A · WAV</span></span>
+            </button>
+          </div>
 
           <!-- AI Next Best Action — オーナーfb 2026-06-20: 2列バランス + Zoom/タグ クイック内包 -->
           ${topRec ? `
@@ -8014,32 +8028,11 @@ ${ctxText}${surveyTxt}`;
               //   問題: cache 空 で render → 「面談録なし」 empty state 出た → 数秒後 fetch 完了 で 出現 →
               //         owner が 「消えた の かな」 と 誤認
               //   fix: 「data 無い (確認済)」 と 「data 不明 (fetch 中)」 を skeleton screen で 分離
-              // 2026-08-28 owner「携帯 で 音声 アップロード ボタン が どこ か 分からない」対応:
-                //   旧: upload ボタン は cd-left (mobile order:2 で 最下部 y=1813px) にあり、
-                //        議事録 tab を 開いても そこ に は 無く、 owner が 到達 でき ない。
-                //   新: 議事録 tab の 最上部 に upload ボタン を prepend。 tab click 直後 = skeleton の 上、
-                //        cards 表示時 = cards の 上、 empty state 時 = empty の 上。 常 に 目立つ 位置。
-                //        本体 の handler (L8386-) は id が 元 button のみ 対応 なので、 alt button から
-                //        元 button.click() を trigger して 同 pipeline に 流す。
-                const audioUploadTopBar = `
-                  <div style="padding:14px 16px 8px;background:#FFFFFF;border-bottom:1px solid #F1F5F9;position:sticky;top:57px;z-index:5;">
-                    <button id="cd-audio-upload-btn-alt" data-client-id="${escapeHtml(c.id)}" style="width:100%;background:linear-gradient(135deg,#5B5BF0,#4747C7);color:#fff;border:none;padding:14px 16px;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer;font-family:'Noto Sans JP',sans-serif;box-shadow:0 4px 14px rgba(91,91,240,0.28);display:flex;align-items:center;justify-content:center;gap:10px;">
-                      <span style="font-size:18px;line-height:1;">📁</span>
-                      <span style="text-align:left;line-height:1.3;">音声 を アップロード → 議事録 生成<span style="display:block;font-size:11px;font-weight:600;color:rgba(255,255,255,0.85);margin-top:2px;">MP3 · M4A (iPhone ボイスメモ) · WAV · WEBM · MP4</span></span>
-                    </button>
-                  </div>
-                `;
-                // alt button の click → 本体 button の click を forward (input picker 起動)
-                const bindAltUploadBtn = () => {
-                  try {
-                    const alt = document.getElementById('cd-audio-upload-btn-alt');
-                    const orig = document.getElementById('cd-audio-upload-btn');
-                    if (alt && orig && !alt._bound) {
-                      alt._bound = true;
-                      alt.addEventListener('click', () => { try { orig.click(); } catch (_) {} });
-                    }
-                  } catch (_) {}
-                };
+              // 2026-08-28 R8 で 議事録 tab の 最上部 に alt button 置いた が、
+                //   R9 で cd-right の 最上部 に mega button を 設置 (常時 sticky 全 tab で 見える) の で
+                //   議事録 tab 内 の 追加 button は 冗長 → 撤去。 audioUploadTopBar は 空 に。
+                const audioUploadTopBar = '';
+                const bindAltUploadBtn = () => {};
               const doRender = () => {
                 const html = renderMeetingRecordsBlock(c);
                 // 2026-08-27 owner「議事録 反映 まで 時間 かかって bug 分かんない から 読み込み中 表示 に して」対応:
@@ -8412,6 +8405,12 @@ ${ctxText}${surveyTxt}`;
     //   別 アプリ で 録音 した 音声 file を picker で 選ぶ → aiProcessRecording pipeline に 直 投入
     const uploadBtn = document.getElementById('cd-audio-upload-btn');
     const uploadInput = document.getElementById('cd-audio-upload-input');
+    // 2026-08-28 owner「音声 upload 目立つ ところ に」対応: cd-right の 最上部 sticky mega button 追加、
+    //   同 input を forward する だけ (pipeline は 元 handler が 全部 面倒 見る)
+    const uploadBtnMega = document.getElementById('cd-audio-upload-btn-mega');
+    if (uploadBtnMega && uploadInput) {
+      uploadBtnMega.addEventListener('click', () => uploadInput.click());
+    }
     if (uploadBtn && uploadInput) {
       uploadBtn.addEventListener('click', () => uploadInput.click());
       uploadInput.addEventListener('change', async (e) => {
