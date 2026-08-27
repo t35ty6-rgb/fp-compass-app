@@ -1344,14 +1344,15 @@
           const { addDoc, collection, serverTimestamp, query, where, getDocs, doc, updateDoc } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js');
           const tid = window.__fp?.tenantId;
           if (tid) {
-            // 2026-08-27 owner「重複 顧客 が 出来 る 構造」 root fix:
-            //   名前 で 既存 客 探す → 見つかったら 使い回す、 無ければ 新規 作成
-            const normName = String(clientName || '').replace(/[\s　]+/g, '').replace(/様$/, '').trim();
+            // 2026-08-27 owner「重複 顧客 が 出来 る 構造」 root fix + qa-reviewer FAIL#1 対応:
+            //   正規化 前 の name で query すると 全角空白/様 付き が hit せず dedup 抜け る
+            //   → 全 doc scan (limit 500) → normalize 照合 で 統合
+            const normName = String(clientName || '').replace(/[\s　]+/g, '').replace(/様$/, '').normalize('NFKC').toLowerCase().trim();
             let reusedId = null;
             if (normName && normName !== '急遽相談') {
-              const dupQ = await getDocs(query(collection(window.__fp.db, `tenants/${tid}/customers`), where('name', '==', clientName)));
-              for (const d of dupQ.docs) {
-                const dn = String(d.data().name || '').replace(/[\s　]+/g, '').replace(/様$/, '').trim();
+              const allQ = await getDocs(collection(window.__fp.db, `tenants/${tid}/customers`));
+              for (const d of allQ.docs) {
+                const dn = String(d.data().name || '').replace(/[\s　]+/g, '').replace(/様$/, '').normalize('NFKC').toLowerCase().trim();
                 if (dn === normName) { reusedId = d.id; break; }
               }
             }
