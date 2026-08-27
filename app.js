@@ -8014,6 +8014,32 @@ ${ctxText}${surveyTxt}`;
               //   問題: cache 空 で render → 「面談録なし」 empty state 出た → 数秒後 fetch 完了 で 出現 →
               //         owner が 「消えた の かな」 と 誤認
               //   fix: 「data 無い (確認済)」 と 「data 不明 (fetch 中)」 を skeleton screen で 分離
+              // 2026-08-28 owner「携帯 で 音声 アップロード ボタン が どこ か 分からない」対応:
+                //   旧: upload ボタン は cd-left (mobile order:2 で 最下部 y=1813px) にあり、
+                //        議事録 tab を 開いても そこ に は 無く、 owner が 到達 でき ない。
+                //   新: 議事録 tab の 最上部 に upload ボタン を prepend。 tab click 直後 = skeleton の 上、
+                //        cards 表示時 = cards の 上、 empty state 時 = empty の 上。 常 に 目立つ 位置。
+                //        本体 の handler (L8386-) は id が 元 button のみ 対応 なので、 alt button から
+                //        元 button.click() を trigger して 同 pipeline に 流す。
+                const audioUploadTopBar = `
+                  <div style="padding:14px 16px 8px;background:#FFFFFF;border-bottom:1px solid #F1F5F9;position:sticky;top:57px;z-index:5;">
+                    <button id="cd-audio-upload-btn-alt" data-client-id="${escapeHtml(c.id)}" style="width:100%;background:linear-gradient(135deg,#5B5BF0,#4747C7);color:#fff;border:none;padding:14px 16px;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer;font-family:'Noto Sans JP',sans-serif;box-shadow:0 4px 14px rgba(91,91,240,0.28);display:flex;align-items:center;justify-content:center;gap:10px;">
+                      <span style="font-size:18px;line-height:1;">📁</span>
+                      <span style="text-align:left;line-height:1.3;">音声 を アップロード → 議事録 生成<span style="display:block;font-size:11px;font-weight:600;color:rgba(255,255,255,0.85);margin-top:2px;">MP3 · M4A (iPhone ボイスメモ) · WAV · WEBM · MP4</span></span>
+                    </button>
+                  </div>
+                `;
+                // alt button の click → 本体 button の click を forward (input picker 起動)
+                const bindAltUploadBtn = () => {
+                  try {
+                    const alt = document.getElementById('cd-audio-upload-btn-alt');
+                    const orig = document.getElementById('cd-audio-upload-btn');
+                    if (alt && orig && !alt._bound) {
+                      alt._bound = true;
+                      alt.addEventListener('click', () => { try { orig.click(); } catch (_) {} });
+                    }
+                  } catch (_) {}
+                };
               const doRender = () => {
                 const html = renderMeetingRecordsBlock(c);
                 // 2026-08-27 owner「議事録 反映 まで 時間 かかって bug 分かんない から 読み込み中 表示 に して」対応:
@@ -8026,7 +8052,7 @@ ${ctxText}${surveyTxt}`;
                 //   新: fetchInFlight なら **必ず** skeleton を 先 に 見せる。 hydrate 完了 で 内容 に 差替。
                 if (fetchInFlight) {
                   // fetch 中 → skeleton (灰色 の shimmer カード 3 枚 で 「取得 中」 を 明示)
-                  panel.innerHTML = `<div style="padding:16px 20px;font-family:'Noto Sans JP',-apple-system,sans-serif;">
+                  panel.innerHTML = audioUploadTopBar + `<div style="padding:16px 20px;font-family:'Noto Sans JP',-apple-system,sans-serif;">
                     <div style="display:flex;align-items:center;gap:10px;padding:11px 14px;background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px;font-size:12.5px;color:#1E40AF;font-weight:700;margin-bottom:14px;">
                       <div style="display:inline-block;width:16px;height:16px;border:2.5px solid #BFDBFE;border-top-color:#3B82F6;border-radius:50%;animation:fp-spin-cd 0.7s linear infinite;flex-shrink:0;"></div>
                       過去 の 議事録 を 取得 中…
@@ -8051,15 +8077,16 @@ ${ctxText}${surveyTxt}`;
                   }
                 } else if (html) {
                   // fetch 完了 + 内容 あり → 実 データ を 表示
-                  panel.innerHTML = html;
+                  panel.innerHTML = audioUploadTopBar + html;
                 } else {
                   // fetch 完了 + 内容 なし → 明確 な empty state
-                  panel.innerHTML = `<div style="padding:36px 20px;text-align:center;font-family:'Noto Sans JP',-apple-system,sans-serif;color:#94A3B8;">
+                  panel.innerHTML = audioUploadTopBar + `<div style="padding:36px 20px;text-align:center;font-family:'Noto Sans JP',-apple-system,sans-serif;color:#94A3B8;">
                     <div style="font-size:32px;margin-bottom:8px;">📝</div>
                     <div style="font-size:13px;font-weight:700;color:#64748B;">面談録 が まだ ありません</div>
                     <div style="font-size:11px;margin-top:4px;color:#94A3B8;">面談 の 音声/動画 を upload すると ここ に 表示 されます</div>
                   </div>`;
                 }
+                bindAltUploadBtn();
                 try {
                   const cntEl = document.getElementById('cd-meetings-count');
                   if (cntEl) {
