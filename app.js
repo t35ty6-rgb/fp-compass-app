@@ -5753,83 +5753,9 @@
     // ★ オーナーfb 2026-06-25 (重さ解消 Phase 4 lite mode):
     // 初期fetchは ai_results の transcript を strip + 最新60件のみ → ここで full data を hydrate
     // 同じ顧客を再度開いた時 は スキップ (cache)
-    try {
-      // ★ ai_result.userId は Firestore 顧客ID(=c.id) に揃ってる。 lineFriendId は LINE側 と Firestore側で別物。
-      // /api/customer-detail は backend で `x.userId === uid || x.lineFriendId === uid` で 両方マッチ
-      const detailUid = c._fsCustomerId || c.id;
-      // 2026-08-27 owner「議事録 5件 あるのに 2件 しか 出て こない」bug fix:
-      //   旧: window.LineAppLiveData?._lite が truthy の 時 だけ hydrate → _lite 未 set の session で
-      //       hydrate 走らず GAS 側 (対面/upload) の 議事録 が UI に 出て こない
-      //   新: _lite check を 廃止、 「まだ hydrate してない」 なら 常 に fetch
-      if (detailUid && typeof window.getCustomerDetailApi === 'function' && !c._fullHydrated && !c._fullHydrating) {
-        c._fullHydrating = true;
-        // 2026-08-26 owner「読込 中… 時間 かかりすぎ」対応: promise 参照 を 保持 → tab click で 待つ
-        c._hydratePromise = (async () => {
-          const h = window.getFpAuthHeaders ? await window.getFpAuthHeaders() : { 'Content-Type': 'application/json' };
-          return fetch(window.getCustomerDetailApi(detailUid), { headers: h });
-        })()
-          .then(r => r.ok ? r.json() : null)
-          .then(detail => {
-            if (!detail) return;
-            try {
-              const live = window.LineAppLiveData;
-              if (!live) return;
-              // ai_results を merge (同じbookingTsは backend版で上書き = transcript復元)
-              // ★ 2026-08-10 bug fix (owner「transcript が 5秒 で 消える」対応):
-              //   backend が 「transcript 省略」 で 返して きた 時、 単純 replace だと
-              //   localStorage/GAS 側 の transcript を 消して しまう → field-level merge に
-              if (Array.isArray(detail.ai_results)) {
-                const existingKeyset = new Set();
-                (live.ai_results || []).forEach(a => existingKeyset.add(a.bookingTs || a.ts || a.createdAt));
-                detail.ai_results.forEach(a => {
-                  const key = a.bookingTs || a.ts || a.createdAt;
-                  const idx = (live.ai_results || []).findIndex(x => (x.bookingTs || x.ts || x.createdAt) === key);
-                  if (idx >= 0) {
-                    const existing = live.ai_results[idx] || {};
-                    // spread order: existing → backend で 上書き、 その後 non-empty 温存
-                    const merged = Object.assign({}, existing, a);
-                    // backend が 空 or undefined な のに existing に あった 重要 field は 温存
-                    const preserveFields = ['transcript', 'summary', 'transcript_summary', 'key_concerns', 'predicted_next_questions', 'next_meeting_suggestion'];
-                    preserveFields.forEach(f => {
-                      const bExists = (a[f] !== undefined && a[f] !== null && a[f] !== '' && !(Array.isArray(a[f]) && a[f].length === 0));
-                      const eExists = (existing[f] !== undefined && existing[f] !== null && existing[f] !== '' && !(Array.isArray(existing[f]) && existing[f].length === 0));
-                      if (!bExists && eExists) merged[f] = existing[f];
-                    });
-                    live.ai_results[idx] = merged;
-                  } else {
-                    (live.ai_results = live.ai_results || []).push(a);   // 新規追加
-                  }
-                });
-              }
-              if (Array.isArray(detail.line_messages)) {
-                const seen = new Set((live.line_messages || []).map(m => (m.userId || '') + '|' + (m.ts || '') + '|' + (m.text || '').slice(0, 50)));
-                detail.line_messages.forEach(m => {
-                  const k = (m.userId || '') + '|' + (m.ts || '') + '|' + (m.text || '').slice(0, 50);
-                  if (!seen.has(k)) (live.line_messages = live.line_messages || []).push(m);
-                });
-              }
-              c._fullHydrated = true;
-              // ★ 2026-06-27 速度改善: 議事録タブ active時のみ 再描画。 他タブなら 全DOM rebuild スキップ (遅さの主因)
-              //   次に議事録タブ open した時 表示される (ai_results は live merge済)
-              const meetingsTab = document.querySelector('.cd-tab.cd-tab-active[data-cdtab="meetings"]');
-              const lineTabActive = document.querySelector('.cd-tab.cd-tab-active[data-cdtab="line"]');
-              if (meetingsTab && typeof openClientModal === 'function' && !lineTabActive) {
-                // 議事録panel のみ 差分更新 (全modal rebuild 回避)
-                try {
-                  const panel = document.querySelector('[data-cdpanel="meetings"]');
-                  if (panel && typeof renderMeetingRecordsBlock === 'function') {
-                    panel.innerHTML = renderMeetingRecordsBlock(c) || '<div class="cd-empty">面談録なし</div>';
-                  }
-                } catch (_) {
-                  openClientModal(c.id, { fromPopstate: true });
-                }
-              }
-            } catch (e) { console.warn('[customer-detail hydrate] merge fail', e); }
-            c._fullHydrating = false;
-          })
-          .catch(() => { c._fullHydrating = false; });
-      }
-    } catch (_) {}
+    // 2026-08-27 owner「段階的に 数字 が 変わる、 シンプル に して」対応:
+    //   openClientModal 内 の hydrate/merge 起動 を 撤廃。 議事録 tab click 時 に 1箇所 で
+    //   全 fetch → skeleton 表示 → 完了 後 に 1回 だけ render の 単一 flow に 統一。
     // ★ 議事録 → 自動タグ抽出 (NISA/iDeCo/保険/相続 等を 議事録本文から regex で キャッチ → c.autoTags)
     //   オーナーfb 2026-06-20: 重さ対策 → 議事録 数 が 同じなら 前回結果 再利用 (キャッシュ)
     try {
@@ -7401,67 +7327,11 @@
       });
     }
 
-    // ★ 議事録タブ count = 実際の カード数 (メイン + orphan) に同期
-    //   lazy-render 導入で panel が modal open 時 空 → count 0 バグ対策として、
-    //   panel が既に render 済 なら DOM カウント、 未render なら data から 推定 (ai_results + bookings 名寄せ)
-    // 2026-07-31 fix: modal open 時 に Firestore /meetings も 先読み merge して count に 反映
-    //   (Zoom webhook 保存 の 議事録 が 「議事録 0」 と 表示 される bug 恒久 fix)
+    // 2026-08-27 owner「段階的 に 数字 変わる、 シンプル に」対応: modal open で badge count 推定/更新 撤廃。
+    //   tab を click してから fetch → skeleton → 完了 で render + badge 同期 の 単一 flow のみ に する。
     try {
-      if (typeof window.mergeFirestoreMeetingsIntoLiveData === 'function') {
-        // 2026-08-26 owner「読込 中… 時間 かかりすぎ」対応: promise 参照 を 保持 → tab click で 待つ
-        c._mergePromise = (async () => {
-          const added = await window.mergeFirestoreMeetingsIntoLiveData(c);
-          if (added > 0) {
-            // count 再計算 + タブ badge 更新
-            const cntEl2 = document.getElementById('cd-meetings-count');
-            if (cntEl2) {
-              const live = window.LineAppLiveData || {};
-              // 2026-08-26 root fix 後 の legacy safety net (write side で 弾く root fix と 併用)
-              const _isLegacyStub = (a) => {
-                if (a.no_audio === true) return true;
-                if (/⚠?\s*音声が\s*ほぼ取れませんでした/.test(String(a.summary || ''))) return true;
-                return false;
-              };
-              const aiForC = (live.ai_results || []).filter(a =>
-                ((a.userId && (a.userId === c.id || a.userId === c.lineFriendId)) ||
-                 (a.customerName && a.customerName === c.name)) &&
-                !_isLegacyStub(a)
-              );
-              const bkForC = (live.bookings || []).filter(b => b.userId === c.lineFriendId || b.name === c.name);
-              const seen = new Set(); bkForC.forEach(b => seen.add(b.ts || ''));
-              let total = bkForC.length;
-              aiForC.forEach(a => { if (!seen.has(a.bookingTs || '')) total++; });
-              cntEl2.textContent = total;
-            }
-            // panel cache invalidate → 次 タブ 開閉 で 再 render
-            const mp = document.querySelector('[data-cdpanel="meetings"]');
-            if (mp) mp.dataset.cacheKey = '';
-          }
-        })();
-      }
       const cntEl = document.getElementById('cd-meetings-count');
-      if (cntEl) {
-        const meetingsPanel = document.querySelector('[data-cdpanel="meetings"]');
-        let count = meetingsPanel ? meetingsPanel.querySelectorAll('.fp-meeting-card').length : 0;
-        if (count === 0 && meetingsPanel && meetingsPanel.dataset.cacheHasContent !== '1') {
-          // 未render — data source から count 推定
-          const live = window.LineAppLiveData || {};
-          const aiForC = (live.ai_results || []).filter(a =>
-            (a.userId && (a.userId === c.id || a.userId === c.lineFriendId)) ||
-            (a.customerName && a.customerName === c.name)
-          );
-          const bkForC = (live.bookings || []).filter(b =>
-            b.userId === c.lineFriendId || b.name === c.name
-          );
-          // 名寄せ: ai_results と bookings の bookingTs で dedup
-          const seen = new Set();
-          bkForC.forEach(b => seen.add(b.ts || ''));
-          let total = bkForC.length;
-          aiForC.forEach(a => { if (!seen.has(a.bookingTs || '')) total++; });
-          count = total;
-        }
-        cntEl.textContent = count;
-      }
+      if (cntEl) cntEl.textContent = '…';
     } catch (_) {}
 
     // 2026-07-11 v7: 概観カード の 「議事録タブ で 見る」 リンク delegation
