@@ -5757,7 +5757,11 @@
       // ★ ai_result.userId は Firestore 顧客ID(=c.id) に揃ってる。 lineFriendId は LINE側 と Firestore側で別物。
       // /api/customer-detail は backend で `x.userId === uid || x.lineFriendId === uid` で 両方マッチ
       const detailUid = c._fsCustomerId || c.id;
-      if (detailUid && window.LineAppLiveData?._lite && typeof window.getCustomerDetailApi === 'function' && !c._fullHydrated && !c._fullHydrating) {
+      // 2026-08-27 owner「議事録 5件 あるのに 2件 しか 出て こない」bug fix:
+      //   旧: window.LineAppLiveData?._lite が truthy の 時 だけ hydrate → _lite 未 set の session で
+      //       hydrate 走らず GAS 側 (対面/upload) の 議事録 が UI に 出て こない
+      //   新: _lite check を 廃止、 「まだ hydrate してない」 なら 常 に fetch
+      if (detailUid && typeof window.getCustomerDetailApi === 'function' && !c._fullHydrated && !c._fullHydrating) {
         c._fullHydrating = true;
         // 2026-08-26 owner「読込 中… 時間 かかりすぎ」対応: promise 参照 を 保持 → tab click で 待つ
         c._hydratePromise = (async () => {
