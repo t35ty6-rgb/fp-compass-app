@@ -8084,8 +8084,11 @@ ${ctxText}${surveyTxt}`;
               //   fix: 「data 無い (確認済)」 と 「data 不明 (fetch 中)」 を skeleton screen で 分離
               const doRender = () => {
                 const html = renderMeetingRecordsBlock(c);
-                const dataConfirmed = c._fullHydrated || !c._fullHydrating; // hydrate 完了 or もともと 走って ない
-                const fetchInFlight = (c._hydratePromise && !c._fullHydrated) || (c._mergePromise && !c._mergePromise._resolved);
+                // 2026-08-27 owner「議事録 反映 まで 時間 かかって bug 分かんない から 読み込み中 表示 に して」対応:
+                //   dataConfirmed 判定 を 厳格化: hydrate + merge が **確実 に 完了** した 時 のみ 「data 無し」 empty を 見せる。
+                //   まだ 完了 して ない (未起動 含む) 段階 で は 常 に skeleton (読み込み中) を 見せる。
+                const dataConfirmed = c._fullHydrated === true && (!c._mergePromise || c._mergePromise._resolved === true);
+                const fetchInFlight = !dataConfirmed;
                 if (html) {
                   panel.innerHTML = html;
                 } else if (fetchInFlight) {
