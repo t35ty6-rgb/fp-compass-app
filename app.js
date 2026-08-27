@@ -8029,10 +8029,22 @@ ${ctxText}${surveyTxt}`;
                   c._hydratePromise = (async () => {
                     try {
                       const h = window.getFpAuthHeaders ? await window.getFpAuthHeaders() : { 'Content-Type': 'application/json' };
-                      // 2026-08-27 owner「読み込み中 の まま で 出て こない」対策: 8秒 timeout で hang 防止
-                      const controller = new AbortController();
-                      const tid = setTimeout(() => controller.abort(), 8000);
-                      const r = await fetch(window.getCustomerDetailApi(detailUid), { headers: h, signal: controller.signal }).finally(() => clearTimeout(tid));
+                      // 2026-08-27 GAS が 30秒 級 で 応答 遅い 事案 発覚 → 30秒 timeout + 1回 retry
+                      const fetchWithTimeout = async (attempt) => {
+                        const controller = new AbortController();
+                        const tid = setTimeout(() => controller.abort(), 30000);
+                        try {
+                          return await fetch(window.getCustomerDetailApi(detailUid), { headers: h, signal: controller.signal });
+                        } finally { clearTimeout(tid); }
+                      };
+                      let r;
+                      try {
+                        r = await fetchWithTimeout(1);
+                        if (!r.ok && r.status >= 500) throw new Error('server ' + r.status);
+                      } catch (firstErr) {
+                        console.warn('[customer-detail] retry after:', firstErr?.message);
+                        r = await fetchWithTimeout(2);
+                      }
                       if (r.ok) {
                         const detail = await r.json();
                         const live = window.LineAppLiveData || (window.LineAppLiveData = {});
