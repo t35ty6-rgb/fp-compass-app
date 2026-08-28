@@ -547,10 +547,25 @@
     <div class="substep">
       <span class="substep-tag">5.5</span><span class="substep-title">ヘッダ に API キー を 追加</span>
       <div class="action-grid">
-        <span class="action-label">タップ</span><span class="action-val"><span class="literal tap">ヘッダを追加</span> (「ヘッダ」 セクション の 下 の 「+」 or 追加 リンク)</span>
-        <span class="action-label">キー 入力</span><span class="action-val"><span class="literal type">X-FP-Mobile-Key</span> (「キー」 欄)</span>
-        <span class="action-label">タップ</span><span class="action-val"><span class="literal tap">値</span> (キー の 右 の 入力 欄)</span>
-        <span class="action-label">タップ</span><span class="action-val">変数 パネル の <span class="literal tap">API_KEY</span> (Chapter 3 で 作った 変数)</span>
+        <span class="action-label">Step 1</span><span class="action-val"><span class="literal tap">新規ヘッダを追加</span> (「ヘッダ」 セクション の 下 の 緑 の ＋ リンク) を タップ</span>
+      </div>
+      <p style="text-align:center;margin:14px 0 6px;font-weight:800;color:#4338CA;">Step 1 後 の 状態</p>
+      <img src="/shortcut-manual-images/55a-add-header.png" alt="Ch 5.5a add header" class="screenshot" style="max-width:280px;">
+
+      <div class="action-grid" style="margin-top:14px;">
+        <span class="action-label">Step 2</span><span class="action-val">左 の <span class="literal tap">キー</span> 欄 を タップ → <span class="literal type">X-FP-Mobile-Key</span> と 入力</span>
+      </div>
+      <p style="text-align:center;margin:14px 0 6px;font-weight:800;color:#4338CA;">Step 2 後 の 状態</p>
+      <img src="/shortcut-manual-images/55b-key-entered.png" alt="Ch 5.5b key entered" class="screenshot" style="max-width:280px;">
+
+      <div class="action-grid" style="margin-top:14px;">
+        <span class="action-label">Step 3</span><span class="action-val">右 の <span class="literal tap">テキスト</span> (値 の プレースホルダ) を タップ → 変数 パネル が 下 から 出る</span>
+      </div>
+      <p style="text-align:center;margin:14px 0 6px;font-weight:800;color:#4338CA;">Step 3 で 出る パネル</p>
+      <img src="/shortcut-manual-images/55c-select-api-key.png" alt="Ch 5.5c select API_KEY" class="screenshot" style="max-width:280px;">
+
+      <div class="action-grid" style="margin-top:14px;">
+        <span class="action-label">Step 4</span><span class="action-val">パネル 下 の 「変数」 セクション の <span class="literal tap">API_KEY</span> を タップ</span>
       </div>
       <div class="expected"><strong>期待:</strong> ヘッダ 欄 に <span class="literal">X-FP-Mobile-Key</span> = 青 の <span class="literal">API_KEY</span> の 1 行 が 表示。</div>
       <p style="text-align:center;margin:14px 0 6px;font-weight:800;color:#4338CA;">Ch 5.5 完了 状態</p>
@@ -648,6 +663,8 @@
         <span class="action-label">タップ</span><span class="action-val"><span class="literal tap">入力</span> (繰り返し の 入力 欄)</span>
         <span class="action-label">タップ</span><span class="action-val">変数 パネル の <span class="literal tap">辞書の値</span> (Chapter 6.1 で 抜いた customers)</span>
       </div>
+      <p style="text-align:center;margin:14px 0 6px;font-weight:800;color:#4338CA;">Ch 7.1 完了 状態</p>
+      <img src="/shortcut-manual-images/71-repeat-added.png" alt="Ch 7.1 repeat added" class="screenshot" style="max-width:280px;">
     </div>
 
     <div class="substep">
@@ -657,6 +674,8 @@
         <span class="action-label">タップ</span><span class="action-val"><span class="literal tap">もし</span> (青 の 分岐 マーク)</span>
       </div>
       <p style="margin-top:10px;font-size:13.5px;">3 行 が 追加 される: <span class="literal">もし</span> / <span class="literal">それ以外</span> / <span class="literal">もしの終了</span>。</p>
+      <p style="text-align:center;margin:14px 0 6px;font-weight:800;color:#4338CA;">Ch 7.2 完了 状態</p>
+      <img src="/shortcut-manual-images/72-if-added.png" alt="Ch 7.2 if added" class="screenshot" style="max-width:280px;">
     </div>
 
     <div class="substep">
@@ -672,6 +691,8 @@
         <span class="action-label">辞書</span><span class="action-val"><span class="literal tap">繰り返し項目</span> (変数 パネル で 選ぶ)</span>
       </div>
       <p style="margin-top:10px;font-size:13.5px;">これで if の 「入力」 は 自動 で 上 の <span class="literal">辞書の値</span> (= 現 客 の name) に なる。</p>
+      <p style="text-align:center;margin:14px 0 6px;font-weight:800;color:#4338CA;">Ch 7.3 完了 状態</p>
+      <img src="/shortcut-manual-images/73-dict-name-above-if.png" alt="Ch 7.3 dict name above if" class="screenshot" style="max-width:280px;">
     </div>
 
     <div class="substep">
@@ -682,6 +703,8 @@
         <span class="action-label">タップ</span><span class="action-val">右 の <span class="literal tap">値</span> 欄</span>
         <span class="action-label">タップ</span><span class="action-val">変数 パネル の <span class="literal tap">選択された項目</span> (Chapter 6.3 の 結果)</span>
       </div>
+      <p style="text-align:center;margin:14px 0 6px;font-weight:800;color:#4338CA;">Ch 7.4 完了 状態</p>
+      <img src="/shortcut-manual-images/74-condition-equal.png" alt="Ch 7.4 condition equal" class="screenshot" style="max-width:280px;">
     </div>
 
     <div class="substep">
@@ -697,6 +720,8 @@
         <span class="action-label">変数 名</span><span class="action-val"><span class="literal type">CUSTOMER_ID</span></span>
       </div>
       <div class="expected"><strong>期待:</strong> 「入力」 欄 は 自動 で <span class="literal">辞書の値</span> (= 現 客 の id) が 入る。</div>
+      <p style="text-align:center;margin:14px 0 6px;font-weight:800;color:#4338CA;">Ch 7.5 完了 状態 (Chapter 7 完了)</p>
+      <img src="/shortcut-manual-images/75-customer-id-set.png" alt="Ch 7.5 CUSTOMER_ID set" class="screenshot" style="max-width:280px;">
     </div>
   </div>
 
@@ -736,6 +761,8 @@
         <span class="action-label">タップ</span><span class="action-val"><span class="literal tap">方法</span> (現在 GET)</span>
         <span class="action-label">選択</span><span class="action-val"><span class="literal tap">POST</span></span>
       </div>
+      <p style="text-align:center;margin:14px 0 6px;font-weight:800;color:#4338CA;">Ch 8.3 完了 状態</p>
+      <img src="/shortcut-manual-images/83-post-selected.png" alt="Ch 8.3 POST" class="screenshot" style="max-width:280px;">
     </div>
 
     <div class="substep">
@@ -745,6 +772,8 @@
         <span class="action-label">選択</span><span class="action-val"><span class="literal tap">フォーム</span></span>
       </div>
       <div class="expected"><strong>期待:</strong> 下 に <span class="literal">フィールド を 追加</span> と いう リンク が 出て くる。</div>
+      <p style="text-align:center;margin:14px 0 6px;font-weight:800;color:#4338CA;">Ch 8.4 完了 状態</p>
+      <img src="/shortcut-manual-images/84-form-selected.png" alt="Ch 8.4 form" class="screenshot" style="max-width:280px;">
     </div>
 
     <div class="substep">
@@ -755,6 +784,8 @@
         <span class="action-label">タップ</span><span class="action-val"><span class="literal tap">テキスト</span> (種類 の default) → 選択 メニュー で <span class="literal tap">ファイル</span></span>
         <span class="action-label">タップ</span><span class="action-val">値 の 入力 欄 → 変数 パネル で <span class="literal tap">AUDIO</span> を 選択</span>
       </div>
+      <p style="text-align:center;margin:14px 0 6px;font-weight:800;color:#4338CA;">Ch 8.5 完了 状態</p>
+      <img src="/shortcut-manual-images/85a-audio-field.png" alt="Ch 8.5 audio field" class="screenshot" style="max-width:280px;">
     </div>
 
     <div class="substep">
@@ -769,8 +800,8 @@
         <strong>種類 を 間違え ない</strong>
         audio は <span class="literal">ファイル</span>、 customerId は <span class="literal">テキスト</span>。 逆 に する と 400 error に なる。
       </div>
-      <p style="text-align:center;margin:14px 0 6px;font-weight:800;color:#4338CA;">Ch 8.5-8.7 完了 状態 (POST + フォーム + 2 フィールド + ヘッダ)</p>
-      <img src="/shortcut-manual-images/85-form-complete.png" alt="Ch 8.5 form complete" class="screenshot" style="max-width:280px;">
+      <p style="text-align:center;margin:14px 0 6px;font-weight:800;color:#4338CA;">Ch 8.6 完了 状態</p>
+      <img src="/shortcut-manual-images/86-customerid-field.png" alt="Ch 8.6 customerId field" class="screenshot" style="max-width:280px;">
     </div>
 
     <div class="substep">
@@ -800,6 +831,8 @@
         <span class="action-label">キー</span><span class="action-val"><span class="literal type">note</span></span>
       </div>
       <div class="expected"><strong>期待:</strong> <span class="literal">辞書</span> 欄 は 自動 で 上 の POST の 結果 が 入る。</div>
+      <p style="text-align:center;margin:14px 0 6px;font-weight:800;color:#4338CA;">Ch 9.1 完了 状態</p>
+      <img src="/shortcut-manual-images/91-dict-note.png" alt="Ch 9.1 dict note" class="screenshot" style="max-width:280px;">
     </div>
 
     <div class="substep">
