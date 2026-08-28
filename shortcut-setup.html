@@ -429,40 +429,52 @@
       <span class="substep-tag" style="background:#F59E0B;color:#fff;">4.3 · 一番 詰まる</span><span class="substep-title">「API_KEY」 と 表示 されて いる 青バブル を 「ショートカットの入力」 に 差替</span>
 
       <div class="callout warn" style="margin: 10px 0 14px;">
-        <strong>今、 4.2 が 終わった 時点 で こう なって いる</strong>
-        「変数 <span class="literal type" style="display:inline-block;">AUDIO</span> を <span class="literal tap" style="display:inline-block;">API_KEY</span> に設定」<br>
-        (右 の 青バブル は 自動 で 「API_KEY」 が 入って いる。 これ を 「ショートカットの入力」 に 差替える)
+        <strong>今、 4.2 が 終わった 時点 で 4 番目 の ブロック が こう なって いる (下 の 画像 A)</strong>
       </div>
 
-      <p style="font-size: 14px; font-weight: 800; margin: 14px 0 8px; color: #78350F;">iOS 17+ の 手順 (2 段 タップ が 必要)</p>
+      <p style="text-align:center;margin:14px 0 6px;font-weight:800;color:#78350F;">画像 A · 現在 の 状態</p>
+      <img src="/shortcut-manual-images/43-A-initial.png" alt="Chapter 4.3 初期 状態" class="screenshot" style="max-width:280px;">
+
+      <p style="font-size: 14px; font-weight: 800; margin: 24px 0 8px; color: #78350F;">iOS 17+ の 手順 (2 段 タップ が 必要)</p>
 
       <div class="action-grid">
         <span class="action-label">Step 1</span><span class="action-val">青バブル <span class="literal tap">API_KEY</span> を タップ</span>
-        <span class="action-label">結果</span><span class="action-val">画面 下 に 「API_KEY」 の 情報 パネル が 出る (「変数を消去」 「アクションを表示」 「種類 テキスト ›」 等 が 見える)</span>
+        <span class="action-label">結果</span><span class="action-val">下 の <b>画像 B</b> の パネル が 出る (「変数を消去」 「アクションを表示」 「種類 テキスト ›」 等)</span>
       </div>
+
+      <p style="text-align:center;margin:14px 0 6px;font-weight:800;color:#78350F;">画像 B · API_KEY を タップ 後 の パネル (これ は 別 変数 を 選ぶ パネル じゃ ない)</p>
+      <img src="/shortcut-manual-images/43-B-wrong-panel.png" alt="Chapter 4.3 wrong panel" class="screenshot" style="max-width:280px;">
 
       <div class="callout warn" style="background:#FEE2E2;border-color:#F87171;color:#7F1D1D;margin: 10px 0;">
-        <strong>この パネル は 「別 変数 を 選ぶ」 パネル じゃ ない</strong>
-        「テキスト (チェック 付き) / ファイルサイズ / ファイル拡張子 / …」 の リスト が 出て いる の は 「API_KEY 変数 の どの プロパティ を 使う か」 の 選択。 「ショートカットの入力」 は ここ に は 無い。 別 変数 に 差替 える に は 一度 消してから やり直す。
+        <strong>間違い やすい ポイント</strong>
+        画像 B の パネル (「テキスト チェック 付き / ファイルサイズ / ファイル拡張子 / …」) は 「API_KEY 変数 の どの プロパティ を 使う か」 の 選択。 「ショートカットの入力」 は ここ に は 無い。 別 変数 に 差替 える に は 一度 消す。
       </div>
 
       <div class="action-grid">
-        <span class="action-label">Step 2</span><span class="action-val">パネル 左上 の <span class="literal tap">変数を消去</span> (X アイコン の ボタン) を タップ</span>
-        <span class="action-label">結果</span><span class="action-val">API_KEY が 消えて、 ブロック が 「変数 AUDIO を <strong>空の入力欄</strong> に設定」 に なる (「に設定」 の 左 が 灰色 プレースホルダ に)</span>
+        <span class="action-label">Step 2</span><span class="action-val">画像 B の 左上 の 赤 <span class="literal tap">変数を消去</span> (X アイコン) を タップ</span>
+        <span class="action-label">結果</span><span class="action-val">下 の <b>画像 C</b> の 状態 に なる。 青バブル が 消えて 「入力」 と いう 灰色 プレースホルダ に</span>
       </div>
+
+      <p style="text-align:center;margin:14px 0 6px;font-weight:800;color:#78350F;">画像 C · 「変数を消去」 後 の 状態</p>
+      <img src="/shortcut-manual-images/43-C-cleared.png" alt="Chapter 4.3 cleared" class="screenshot" style="max-width:280px;">
 
       <div class="action-grid">
-        <span class="action-label">Step 3</span><span class="action-val">その 空 の 入力欄 (「に設定」 の 左) を もう 一度 タップ</span>
-        <span class="action-label">結果</span><span class="action-val">今度 は 「変数 選択」 パネル が 出る (「マジック変数」 「ショートカットの入力」 「クリップボード」 等 の 選択肢)</span>
+        <span class="action-label">Step 3</span><span class="action-val">画像 C の 灰色 の <span class="literal tap">入力</span> プレースホルダ を もう 一度 タップ</span>
+        <span class="action-label">結果</span><span class="action-val">下 の <b>画像 D</b> の パネル (「変数 を 選択」 · 「ショートカットの入力」 が 見える)</span>
       </div>
+
+      <p style="text-align:center;margin:14px 0 6px;font-weight:800;color:#78350F;">画像 D · 変数 選択 パネル (今度 は 正しい パネル)</p>
+      <img src="/shortcut-manual-images/43-D-select-input.png" alt="Chapter 4.3 select input" class="screenshot" style="max-width:280px;">
 
       <div class="action-grid">
-        <span class="action-label">Step 4</span><span class="action-val">パネル で <span class="literal tap">ショートカットの入力</span> を タップ</span>
+        <span class="action-label">Step 4</span><span class="action-val">画像 D の 一番 上 の <span class="literal tap">ショートカットの入力</span> (青文字) を タップ</span>
+        <span class="action-label">結果</span><span class="action-val">下 の <b>画像 E</b> の 完成 状態 に なる</span>
       </div>
 
-      <div class="expected"><strong>成功 の 見た目:</strong> ブロック が こう 変わる:<br>
-      「変数 <span class="literal type" style="display:inline-block;">AUDIO</span> を <span class="literal tap" style="display:inline-block;">ショートカットの入力</span> に設定」<br>
-      青バブル が <span class="literal tap" style="display:inline-block;">API_KEY</span> から <span class="literal tap" style="display:inline-block;">ショートカットの入力</span> に 差替わって いれば OK。</div>
+      <p style="text-align:center;margin:14px 0 6px;font-weight:800;color:#065F46;">画像 E · Chapter 4.3 完了 状態</p>
+      <img src="/shortcut-manual-images/43-E-success.png" alt="Chapter 4.3 success" class="screenshot" style="max-width:280px;">
+
+      <div class="expected"><strong>成功 の 見た目:</strong> 4 番目 の ブロック が 「変数 AUDIO を <b>ショートカットの入力</b> に設定」 に なって いれば OK。</div>
 
       <div class="callout warn" style="margin: 12px 0 0;">
         <strong>NG パターン (owner が 実際 に 詰まった)</strong>
