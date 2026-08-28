@@ -429,15 +429,35 @@
       <span class="substep-tag" style="background:#F59E0B;color:#fff;">4.3 · 一番 詰まる</span><span class="substep-title">「API_KEY」 と 表示 されて いる 青バブル を 「ショートカットの入力」 に 差替</span>
 
       <div class="callout warn" style="margin: 10px 0 14px;">
-        <strong>今、 4.2 が 終わった 時点 で こう なって いる はず</strong>
+        <strong>今、 4.2 が 終わった 時点 で こう なって いる</strong>
         「変数 <span class="literal type" style="display:inline-block;">AUDIO</span> を <span class="literal tap" style="display:inline-block;">API_KEY</span> に設定」<br>
-        (右 の 青バブル は 自動 で 「API_KEY」 が 入って いる。 これ を 差替える 手順 が 下)
+        (右 の 青バブル は 自動 で 「API_KEY」 が 入って いる。 これ を 「ショートカットの入力」 に 差替える)
+      </div>
+
+      <p style="font-size: 14px; font-weight: 800; margin: 14px 0 8px; color: #78350F;">iOS 17+ の 手順 (2 段 タップ が 必要)</p>
+
+      <div class="action-grid">
+        <span class="action-label">Step 1</span><span class="action-val">青バブル <span class="literal tap">API_KEY</span> を タップ</span>
+        <span class="action-label">結果</span><span class="action-val">画面 下 に 「API_KEY」 の 情報 パネル が 出る (「変数を消去」 「アクションを表示」 「種類 テキスト ›」 等 が 見える)</span>
+      </div>
+
+      <div class="callout warn" style="background:#FEE2E2;border-color:#F87171;color:#7F1D1D;margin: 10px 0;">
+        <strong>この パネル は 「別 変数 を 選ぶ」 パネル じゃ ない</strong>
+        「テキスト ✓ / ファイルサイズ / ファイル拡張子 / …」 の リスト が 出て いる の は 「API_KEY 変数 の どの プロパティ を 使う か」 の 選択。 「ショートカットの入力」 は ここ に は 無い。 別 変数 に 差替 える に は 一度 消してから やり直す。
       </div>
 
       <div class="action-grid">
-        <span class="action-label">タップ</span><span class="action-val">青バブル <span class="literal tap">API_KEY</span> (自動 で 入って いる ヤツ、 「に設定」 の 左)</span>
-        <span class="action-label">期待</span><span class="action-val">画面 下 部 から 変数 選択 パネル が スライド アップ</span>
-        <span class="action-label">タップ</span><span class="action-val">パネル 一番 上 に ある <span class="literal tap">ショートカットの入力</span> (青の テキスト)</span>
+        <span class="action-label">Step 2</span><span class="action-val">パネル 左上 の <span class="literal tap">変数を消去</span> (X アイコン の ボタン) を タップ</span>
+        <span class="action-label">結果</span><span class="action-val">API_KEY が 消えて、 ブロック が 「変数 AUDIO を <strong>空の入力欄</strong> に設定」 に なる (「に設定」 の 左 が 灰色 プレースホルダ に)</span>
+      </div>
+
+      <div class="action-grid">
+        <span class="action-label">Step 3</span><span class="action-val">その 空 の 入力欄 (「に設定」 の 左) を もう 一度 タップ</span>
+        <span class="action-label">結果</span><span class="action-val">今度 は 「変数 選択」 パネル が 出る (「マジック変数」 「ショートカットの入力」 「クリップボード」 等 の 選択肢)</span>
+      </div>
+
+      <div class="action-grid">
+        <span class="action-label">Step 4</span><span class="action-val">パネル で <span class="literal tap">ショートカットの入力</span> を タップ</span>
       </div>
 
       <div class="expected"><strong>成功 の 見た目:</strong> ブロック が こう 変わる:<br>
