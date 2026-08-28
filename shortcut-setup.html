@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>iPhone ショートカット セットアップ · FP Compass</title>
+<meta name="description" content="iPhone Voice Memos → 共有 → ワンタップ で 議事録 生成 する ショートカット の 作り方">
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+    margin: 0; padding: 0;
+    background: #F8FAFC;
+    color: #0F172A;
+    line-height: 1.7;
+  }
+  .container { max-width: 720px; margin: 0 auto; padding: 24px 20px 80px; }
+  .hero {
+    background: linear-gradient(135deg, #5B5BF0 0%, #4747C7 55%, #3A3AAB 100%);
+    color: #fff; padding: 34px 26px; border-radius: 18px; margin-bottom: 28px;
+    box-shadow: 0 12px 28px rgba(91,91,240,0.28);
+  }
+  .hero-eyebrow { font-family: 'Manrope', sans-serif; font-size: 11px; letter-spacing: 0.18em; font-weight: 800; color: #C7D2FE; text-transform: uppercase; margin-bottom: 8px; }
+  .hero h1 { font-size: 26px; font-weight: 900; margin: 0 0 10px; line-height: 1.35; letter-spacing: -0.01em; }
+  .hero p { margin: 0; font-size: 14px; opacity: 0.94; line-height: 1.75; }
+  .back-link { display: inline-block; margin-bottom: 20px; color: #5B5BF0; text-decoration: none; font-size: 13px; font-weight: 700; }
+  .callout {
+    background: #FEF3C7; border: 1.5px solid #F59E0B; border-radius: 12px;
+    padding: 16px 18px; margin-bottom: 24px; font-size: 13.5px; color: #78350F;
+  }
+  .callout strong { color: #92400E; }
+  .step {
+    background: #fff; border: 1px solid #E2E8F0; border-radius: 14px;
+    padding: 22px 22px; margin-bottom: 16px;
+    box-shadow: 0 1px 3px rgba(15,23,42,0.04);
+  }
+  .step-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 34px; height: 34px; border-radius: 50%;
+    background: linear-gradient(135deg, #5B5BF0, #4747C7); color: #fff;
+    font-weight: 900; font-size: 15px; margin-right: 12px;
+    box-shadow: 0 4px 10px rgba(91,91,240,0.32);
+  }
+  .step-title { font-size: 17px; font-weight: 800; margin: 0 0 12px; display: flex; align-items: center; }
+  .step-body { font-size: 14px; color: #334155; }
+  .step-body p { margin: 0 0 10px; }
+  .step-body ul { margin: 6px 0 10px; padding-left: 22px; }
+  .step-body li { margin: 4px 0; }
+  .code {
+    display: block; background: #0F172A; color: #E2E8F0;
+    font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12.5px;
+    padding: 12px 14px; border-radius: 8px; margin: 10px 0;
+    word-break: break-all; line-height: 1.6;
+  }
+  .kbd {
+    display: inline-block; background: #F1F5F9; border: 1px solid #CBD5E1;
+    border-radius: 5px; padding: 1px 8px; font-family: -apple-system, sans-serif;
+    font-size: 12.5px; font-weight: 700; color: #334155;
+  }
+  .badge-action {
+    display: inline-block; background: #EDE9FE; color: #5B21B6;
+    border: 1px solid #C4B5FD; padding: 2px 9px; border-radius: 6px;
+    font-size: 12px; font-weight: 700; margin: 0 3px;
+  }
+  .badge-app {
+    display: inline-block; background: #DBEAFE; color: #1E3A8A;
+    border: 1px solid #93C5FD; padding: 2px 9px; border-radius: 6px;
+    font-size: 12px; font-weight: 700; margin: 0 3px;
+  }
+  .finish {
+    background: linear-gradient(135deg, #10B981 0%, #047857 100%);
+    color: #fff; padding: 26px 22px; border-radius: 14px; margin-top: 24px;
+    text-align: center;
+  }
+  .finish h3 { font-size: 20px; font-weight: 900; margin: 0 0 8px; }
+  .finish p { margin: 0; font-size: 14px; opacity: 0.94; }
+</style>
+</head>
+<body>
+<div class="container">
+  <a href="/account.html" class="back-link">← アカウント 設定 に 戻る</a>
+
+  <div class="hero">
+    <div class="hero-eyebrow">iOS SHORTCUTS SETUP</div>
+    <h1>Voice Memos → ワンタップ 議事録 化</h1>
+    <p>iPhone で 録音 した 音声 を、 共有 メニュー から 3タップ で FP Compass の 議事録 に 変換 する ショートカット を 作ります。 初回 のみ 5分 の セットアップ で、 以降 は ずっと 使えます。</p>
+  </div>
+
+  <div class="callout">
+    <strong>準備:</strong> アカウント 設定 の 「iPhone ショートカット 連携」 で <strong>API キー</strong> を 発行 して コピー して おいて ください。 下 の 手順 の 途中 で 貼付 する 場所 が あります。
+  </div>
+
+  <!-- Step 1 -->
+  <div class="step">
+    <div class="step-title"><span class="step-num">1</span>iPhone で「ショートカット」アプリ を 開く</div>
+    <div class="step-body">
+      <p>iOS 標準 アプリ の <span class="badge-app">ショートカット</span> を 開き、 右上 の <span class="kbd">+</span> を タップ して 新規 ショートカット を 作成。</p>
+    </div>
+  </div>
+
+  <!-- Step 2 -->
+  <div class="step">
+    <div class="step-title"><span class="step-num">2</span>共有 メニュー に 表示 する 設定</div>
+    <div class="step-body">
+      <p>右上 の 情報 (i) ボタン → <span class="badge-action">共有 シート に 表示</span> を ON。 「受信 する 種類」 で <strong>「メディア」</strong> だけ に チェック (他 は OFF)。</p>
+      <p>名前 を 「<strong>FP Compass アップロード</strong>」 に 設定。</p>
+    </div>
+  </div>
+
+  <!-- Step 3 -->
+  <div class="step">
+    <div class="step-title"><span class="step-num">3</span>APIキー を テキスト として 保存</div>
+    <div class="step-body">
+      <p>アクション 検索 で <span class="badge-action">テキスト</span> → 追加。 中身 に アカウント 設定 で コピー した API キー を 貼付。</p>
+      <p>下 の アクション <span class="badge-action">変数 を 設定</span> → 変数 名 「<strong>API_KEY</strong>」、 値 は 上 で 貼付 した テキスト。</p>
+    </div>
+  </div>
+
+  <!-- Step 4 -->
+  <div class="step">
+    <div class="step-title"><span class="step-num">4</span>共有 メニュー から 受け 取った 音声 を 変数 に 保存</div>
+    <div class="step-body">
+      <p>アクション <span class="badge-action">変数 を 設定</span> → 変数 名 「<strong>AUDIO</strong>」、 値 は <strong>「ショートカットの入力」</strong> (自動 で 候補 に 出る)。</p>
+    </div>
+  </div>
+
+  <!-- Step 5 -->
+  <div class="step">
+    <div class="step-title"><span class="step-num">5</span>客 リスト を 取得</div>
+    <div class="step-body">
+      <p>アクション <span class="badge-action">URL の 内容 を 取得</span> を 追加。</p>
+      <ul>
+        <li>URL: <span class="code">https://fp-compass-webhook-527726449426.asia-northeast1.run.app/api/mobile/customers</span></li>
+        <li>方法: <strong>GET</strong></li>
+        <li>ヘッダ: <span class="kbd">X-FP-Mobile-Key</span> → 値 は 上 で 作った 「API_KEY」 変数 を 選択</li>
+      </ul>
+      <p>次 に <span class="badge-action">辞書 の 値 を 取得</span> → キー 「<strong>customers</strong>」。</p>
+    </div>
+  </div>
+
+  <!-- Step 6 -->
+  <div class="step">
+    <div class="step-title"><span class="step-num">6</span>客 名前 の リスト を 作って メニュー 表示</div>
+    <div class="step-body">
+      <p>アクション <span class="badge-action">各 項目 を 繰り返す</span> (Repeat with Each) → 中 に <span class="badge-action">辞書 の 値 を 取得</span> (キー 「name」)。</p>
+      <p>ループ 後 の 結果 は 「繰り返し の 結果」 として 集計 される。</p>
+      <p>アクション <span class="badge-action">リスト から 選択</span> (Choose from List) → 入力 は 「繰り返し の 結果」、 プロンプト 「誰 の 面談 ですか?」。</p>
+    </div>
+  </div>
+
+  <!-- Step 7 -->
+  <div class="step">
+    <div class="step-title"><span class="step-num">7</span>選ばれた 名前 に 対応 する ID を 見つける</div>
+    <div class="step-body">
+      <p>もう 一度 <span class="badge-action">各 項目 を 繰り返す</span> で customers 全件 を 舐めながら、 <span class="badge-action">if</span> ブロック で 「辞書.name = 選択 した 項目」 なら 「辞書.id」 を 変数 <strong>CUSTOMER_ID</strong> に 保存。</p>
+      <p>※ Shortcuts app の 「辞書.name = 選択 名」 の 判定 は 「if」 アクション の 「値 が 次 と 一致 する」 を 使う。</p>
+    </div>
+  </div>
+
+  <!-- Step 8 -->
+  <div class="step">
+    <div class="step-title"><span class="step-num">8</span>音声 を FP Compass に 送信</div>
+    <div class="step-body">
+      <p>アクション <span class="badge-action">URL の 内容 を 取得</span> を 追加。</p>
+      <ul>
+        <li>URL: <span class="code">https://fp-compass-webhook-527726449426.asia-northeast1.run.app/api/mobile/upload</span></li>
+        <li>方法: <strong>POST</strong></li>
+        <li>要求 の 本文: <strong>フォーム</strong> (multipart/form-data)
+          <ul>
+            <li>キー <strong>audio</strong> = 値 「AUDIO」 変数 (種類: ファイル)</li>
+            <li>キー <strong>customerId</strong> = 値 「CUSTOMER_ID」 変数 (種類: テキスト)</li>
+          </ul>
+        </li>
+        <li>ヘッダ: <span class="kbd">X-FP-Mobile-Key</span> → 「API_KEY」 変数</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Step 9 -->
+  <div class="step">
+    <div class="step-title"><span class="step-num">9</span>結果 を 表示</div>
+    <div class="step-body">
+      <p>アクション <span class="badge-action">辞書 の 値 を 取得</span> → キー 「note」 (レスポンス の 中身 = 「◯◯ 様 の 議事録 が 生成 されました」)。</p>
+      <p>その 出力 を <span class="badge-action">結果 を 表示</span> (Show Result) で 表示 して 終了。</p>
+    </div>
+  </div>
+
+  <div class="finish">
+    <h3>🎉 セットアップ 完了</h3>
+    <p>Voice Memos で 録音 → 3 点 メニュー (⋯) → <strong>共有</strong> → <strong>FP Compass アップロード</strong> を タップ → 客 選択 → 数十秒 で 議事録 tab に 反映 されます。</p>
+  </div>
+
+  <div style="margin-top: 30px; padding: 20px; background: #fff; border: 1px solid #E2E8F0; border-radius: 12px; font-size: 13px; color: #64748B; line-height: 1.75;">
+    <strong style="color: #0F172A;">うまく いかない 時:</strong><br>
+    ・API キー を 再発行 して 貼付 し直す (アカウント 設定 の 「iPhone ショートカット 連携」)<br>
+    ・iPhone 設定 → ショートカット → 「信頼 されて いない ショートカット を 許可」 が OFF の 場合 は ON に<br>
+    ・音声 file が m4a / mp3 / wav 以外 の 場合 は 拒否 される<br>
+    ・500エラー が 返って くる 場合 は 客 側 の Firestore doc に 問題 の 可能性 → support@skeleton-inc.jp
+  </div>
+</div>
+</body>
+</html>
