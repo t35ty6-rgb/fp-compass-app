@@ -93,7 +93,30 @@
     padding: 1px 10px 1px 6px; border-radius: 12px;
     font-size: 12.5px; font-weight: 700;
   }
-  .tap::before { content: '👆'; font-size: 12px; }
+  .tap::before {
+    content: ''; width: 8px; height: 8px; border-radius: 50%;
+    background: #92400E; display: inline-block; margin-right: 5px;
+  }
+  /* iOS Shortcut UI 追加 mock 用: 詳細 panel · switch · form field 等 */
+  .ios-mock-detail { background: #fff; padding: 12px 14px; margin: 6px 0; border-radius: 10px; }
+  .ios-mock-detail-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #F1F5F9; }
+  .ios-mock-detail-row:last-child { border-bottom: none; }
+  .ios-mock-label { font-size: 13.5px; color: #000; }
+  .ios-mock-value { font-size: 13.5px; color: #007AFF; font-weight: 500; }
+  .ios-mock-switch { width: 40px; height: 24px; background: #34C759; border-radius: 12px; position: relative; }
+  .ios-mock-switch::after { content: ''; position: absolute; right: 2px; top: 2px; width: 20px; height: 20px; background: #fff; border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+  .ios-mock-switch.off { background: #E5E5EA; }
+  .ios-mock-switch.off::after { right: auto; left: 2px; }
+  .ios-mock-chevron { color: #C7C7CC; font-size: 18px; margin-left: 8px; }
+  .ios-mock-highlight { outline: 2.5px dashed #EF4444; outline-offset: 4px; border-radius: 12px; }
+  .ios-mock-callout { font-size: 11px; color: #EF4444; font-weight: 700; text-align: center; margin: 6px 0 0; letter-spacing: 0.02em; }
+  /* if文 用 ネスト 表現 */
+  .ios-mock-block { background: #F5F5F7; border-left: 3px solid #C7C7CC; padding: 8px 10px; margin: 6px 0; border-radius: 6px; }
+  .ios-mock-block-title { font-size: 12px; color: #5856D6; font-weight: 700; margin-bottom: 4px; }
+  .ios-mock-block-body { padding-left: 8px; }
+  .ios-mock-action-line { font-size: 12.5px; color: #000; padding: 4px 0; display: flex; gap: 6px; align-items: center; }
+  .ios-mock-var { background: #E0E7FF; color: #4338CA; padding: 1px 7px; border-radius: 5px; font-size: 12px; font-weight: 600; }
+  .ios-mock-string { color: #B45309; }
 
   .screenshot {
     display: block; max-width: 320px; width: 100%; height: auto;
@@ -170,14 +193,14 @@
     <h1>Voice Memos → ワンタップ 議事録 化</h1>
     <p>iPhone で 録音 した 音声 を、 共有 メニュー から 3 タップ で FP Compass の 議事録 に 変換 する ショートカット を 作ります。 初回 のみ、 下 の 32 サブ ステップ を 順番 に 進めて ください。</p>
     <div class="hero-stats">
-      <div class="hero-stat">📱 iPhone 側 30 分</div>
-      <div class="hero-stat">🖥 Mac ミラーリング 推奨</div>
-      <div class="hero-stat">🔁 1 回 だけ の 作業</div>
+      <div class="hero-stat">iPhone 側 30 分</div>
+      <div class="hero-stat">Mac ミラーリング 推奨</div>
+      <div class="hero-stat">1 回 だけ の 作業</div>
     </div>
   </div>
 
   <div class="callout info">
-    <strong>💡 Mac の 「iPhone ミラーリング」 で やる の が 楽</strong>
+    <strong>Mac の 「iPhone ミラーリング」 で やる の が 楽</strong>
     Mac の Dock or Launchpad から <span class="code-inline">iPhone ミラーリング</span> を 起動 → 大 画面 で iPhone を 触れる ので Shortcut 作り の 手数 が 減り ます。 スクショ も ⌘Shift4 で 楽 に 取れる。
   </div>
 
@@ -216,21 +239,21 @@
       <span class="substep-tag">0.2</span><h4>下 に スクロール して 「iPhone ショートカット 連携」 を 見つける</h4>
       <p>LINE 連携 · Zoom 連携 の 下 に あります。</p>
       <img src="/shortcut-manual-images/03-mobile-section.png" alt="iPhone ショートカット 連携 section" class="screenshot">
-      <div class="expected"><strong>期待:</strong> 紫 の 「🔑 API キー を 発行」 button が 見え る。</div>
+      <div class="expected"><strong>期待:</strong> 紫 の 「API キー を 発行」 button が 見え る。</div>
     </div>
 
     <div class="substep">
-      <span class="substep-tag">0.3</span><h4>紫 の <span class="tap">🔑 API キー を 発行</span> button を タップ</h4>
+      <span class="substep-tag">0.3</span><h4>紫 の <span class="tap">API キー を 発行</span> button を タップ</h4>
       <p>確認 dialog が 出る の で 「OK」 タップ。</p>
       <img src="/shortcut-manual-images/04-key-issued.png" alt="キー 発行 後 の 表示" class="screenshot">
       <div class="expected"><strong>期待:</strong> 黄色 枠 に 32 文字 の キー (例 <span class="code-inline">o-5_ayHoq4RCZjzAUgkjbff0_EB7UYJ_</span>) が 表示 される。</div>
     </div>
 
     <div class="substep">
-      <span class="substep-tag">0.4</span><h4>黄色 枠 内 の <span class="tap">📋 コピー</span> button を タップ</h4>
-      <p>「✅ コピー 済」 に 変わって、 クリップボード に キー が 入る。</p>
+      <span class="substep-tag">0.4</span><h4>黄色 枠 内 の <span class="tap">コピー</span> button を タップ</h4>
+      <p>「(コピー済) コピー 済」 に 変わって、 クリップボード に キー が 入る。</p>
       <div class="callout warn" style="margin-top: 12px;">
-        <strong>⚠ この 画面 を 閉じない で</strong>
+        <strong>この 画面 を 閉じない で</strong>
         キー は 再表示 でき ない。 iPhone Shortcut に 貼付 する まで タブ を 開いた まま に する。
       </div>
     </div>
@@ -265,11 +288,11 @@
         </div>
         <div class="ios-mock-body">
           <div class="ios-mock-row">
-            <span><span class="ios-mock-row-icon">🔴</span>録音 サンプル</span>
+            <span><span class="ios-mock-row-icon">R</span>録音 サンプル</span>
             <span style="color:#8E8E93;font-size:20px;">›</span>
           </div>
           <div class="ios-mock-row">
-            <span><span class="ios-mock-row-icon">📱</span>Wi-Fi ON</span>
+            <span><span class="ios-mock-row-icon">W</span>Wi-Fi ON</span>
             <span style="color:#8E8E93;font-size:20px;">›</span>
           </div>
         </div>
@@ -306,8 +329,32 @@
     <div class="substep">
       <span class="substep-tag">2.3</span><h4>同じ 詳細 パネル で 「共有 シート に 表示」 を <span class="tap">ON</span> に する</h4>
       <p>スイッチ を 緑 に。 これ を ON に しない と Voice Memos の 共有 メニュー に 出て こ ない。</p>
+      <div class="ios-mock">
+        <div class="ios-mock-nav">
+          <span class="ios-mock-nav-btn">＜</span>
+          <span class="ios-mock-nav-title">詳細</span>
+          <span class="ios-mock-nav-btn">完了</span>
+        </div>
+        <div class="ios-mock-body">
+          <div class="ios-mock-detail">
+            <div class="ios-mock-detail-row">
+              <span class="ios-mock-label">ホーム 画面 に 追加</span>
+              <span class="ios-mock-switch off"></span>
+            </div>
+            <div class="ios-mock-detail-row ios-mock-highlight">
+              <span class="ios-mock-label">共有 シート に 表示</span>
+              <span class="ios-mock-switch"></span>
+            </div>
+            <div class="ios-mock-detail-row">
+              <span class="ios-mock-label">受信 する 種類</span>
+              <span class="ios-mock-value">メディア <span class="ios-mock-chevron">›</span></span>
+            </div>
+          </div>
+          <div class="ios-mock-callout">↑ この スイッチ を 緑 に</div>
+        </div>
+      </div>
       <div class="callout warn" style="margin-top: 12px;">
-        <strong>⚠ ここ が 一番 重要</strong>
+        <strong>ここ が 一番 重要</strong>
         「共有 シート に 表示」 が OFF の まま だと、 全 手順 完了 して も Voice Memos から 呼び 出せ ない。
       </div>
     </div>
@@ -420,11 +467,39 @@
     </div>
 
     <div class="substep">
-      <span class="substep-tag">5.5</span><h4>「URL の 内容 を 取得」 の 下 の 「>」 (詳細 展開) を タップ</h4>
-      <p>展開 する と 「方法」 「本体」 「ヘッダ」 の 設定 が 出る。</p>
+      <span class="substep-tag">5.5</span><h4>「URL の 内容 を 取得」 カード 右端 の 「›」 (詳細 展開) を タップ</h4>
+      <p>「URL の 内容 を 取得」 と 書いた 白い カード の 右端 に 細い 「›」 が あって、 これ を タップ する と 下 に 詳細 が 展開 される。</p>
+      <div class="ios-mock">
+        <div class="ios-mock-nav">
+          <span class="ios-mock-nav-btn">キャンセル</span>
+          <span class="ios-mock-nav-title">新規 ショートカット</span>
+          <span class="ios-mock-nav-btn">完了</span>
+        </div>
+        <div class="ios-mock-body">
+          <div class="ios-mock-row ios-mock-highlight">
+            <span>URL の 内容 を <span class="ios-mock-var">URL</span> から 取得</span>
+            <span class="ios-mock-chevron">›</span>
+          </div>
+          <div class="ios-mock-callout">↑ この 「›」 を タップ で 展開</div>
+          <div class="ios-mock-detail" style="margin-top: 8px;">
+            <div class="ios-mock-detail-row">
+              <span class="ios-mock-label">方法</span>
+              <span class="ios-mock-value">GET <span class="ios-mock-chevron">›</span></span>
+            </div>
+            <div class="ios-mock-detail-row">
+              <span class="ios-mock-label">本文</span>
+              <span class="ios-mock-value">なし <span class="ios-mock-chevron">›</span></span>
+            </div>
+            <div class="ios-mock-detail-row">
+              <span class="ios-mock-label">ヘッダ</span>
+              <span class="ios-mock-value">1 個 <span class="ios-mock-chevron">›</span></span>
+            </div>
+          </div>
+        </div>
+      </div>
       <ul>
         <li>「方法」: <span class="code-inline">GET</span> の まま (default)</li>
-        <li>「ヘッダ」: 「ヘッダ を 追加」 を タップ → キー <span class="code-inline">X-FP-Mobile-Key</span> と 入力 → 値 欄 を タップ → 変数 パネル から 「API_KEY」 を 選択</li>
+        <li>「ヘッダ」 行 を タップ → 「ヘッダ を 追加」 → キー <span class="code-inline">X-FP-Mobile-Key</span> と 入力 → 値 欄 を タップ → 変数 パネル から 「API_KEY」 を 選択</li>
       </ul>
       <div class="expected"><strong>期待:</strong> ヘッダ 欄 に 「X-FP-Mobile-Key: [API_KEY 変数]」 の 1 行 が 追加 される。</div>
     </div>
@@ -478,6 +553,32 @@
     <div class="callout info">
       <strong>コツ</strong>
       「リスト から 選択」 で 得た の は <em>名前 の 文字列</em> だけ。 対応 する ID を 引く ため、 もう 一度 客 リスト を 繰り返して 名前 一致 で ID を 変数 に 保存 する。
+    </div>
+
+    <div class="callout info" style="margin-top: 12px;">
+      <strong>完成 形 の イメージ (ネスト 構造)</strong>
+      Chapter 7 で 作る の は 下 の 3 段 ネスト 構造。 これ を 見ながら 各 サブ ステップ を 進める と 迷わ ない。
+      <div class="ios-mock" style="margin: 14px auto 0; max-width: 320px;">
+        <div class="ios-mock-nav">
+          <span class="ios-mock-nav-title" style="font-size: 12px; color: #64748B;">Chapter 7 完成 イメージ</span>
+        </div>
+        <div class="ios-mock-body">
+          <div class="ios-mock-block">
+            <div class="ios-mock-block-title">繰り返し (customers)</div>
+            <div class="ios-mock-block-body">
+              <div class="ios-mock-action-line">→ 辞書 の 値 <span class="ios-mock-string">name</span> を 取得</div>
+              <div class="ios-mock-block" style="border-left-color: #FF9500;">
+                <div class="ios-mock-block-title" style="color: #C2410C;">もし <span class="ios-mock-var">name の 値</span> が <span class="ios-mock-var">選択 された 項目</span> と 一致 する</div>
+                <div class="ios-mock-block-body">
+                  <div class="ios-mock-action-line">→ 辞書 の 値 <span class="ios-mock-string">id</span> を 取得</div>
+                  <div class="ios-mock-action-line">→ 変数 <span class="ios-mock-var">CUSTOMER_ID</span> = 上 の id</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      3 段 の 入れ子。 「繰り返し」 の 中 に 「if」、 「if」 の 中 に 「変数 を 設定」。
     </div>
 
     <div class="substep">
@@ -534,6 +635,38 @@
     <div class="substep">
       <span class="substep-tag">8.4</span><h4>「要求 の 本文」 を <span class="code-inline">フォーム</span> に 変更</h4>
       <p>タップ して 「フォーム」 (multipart/form-data 相当) を 選択。 下 に フィールド 追加 UI が 出る。</p>
+      <div class="ios-mock">
+        <div class="ios-mock-nav">
+          <span class="ios-mock-nav-btn">＜</span>
+          <span class="ios-mock-nav-title">URL の 内容 を 取得</span>
+          <span class="ios-mock-nav-btn"></span>
+        </div>
+        <div class="ios-mock-body">
+          <div class="ios-mock-detail">
+            <div class="ios-mock-detail-row">
+              <span class="ios-mock-label">方法</span>
+              <span class="ios-mock-value">POST <span class="ios-mock-chevron">›</span></span>
+            </div>
+            <div class="ios-mock-detail-row ios-mock-highlight">
+              <span class="ios-mock-label">要求 の 本文</span>
+              <span class="ios-mock-value">フォーム <span class="ios-mock-chevron">›</span></span>
+            </div>
+            <div class="ios-mock-detail-row">
+              <span class="ios-mock-label" style="padding-left: 14px; color: #64748B;">audio</span>
+              <span class="ios-mock-value">ファイル · <span class="ios-mock-var">AUDIO</span></span>
+            </div>
+            <div class="ios-mock-detail-row">
+              <span class="ios-mock-label" style="padding-left: 14px; color: #64748B;">customerId</span>
+              <span class="ios-mock-value">テキスト · <span class="ios-mock-var">CUSTOMER_ID</span></span>
+            </div>
+            <div class="ios-mock-detail-row">
+              <span class="ios-mock-label">ヘッダ</span>
+              <span class="ios-mock-value">1 個 <span class="ios-mock-chevron">›</span></span>
+            </div>
+          </div>
+          <div class="ios-mock-callout">↑ この 3 行 (本文=フォーム · 2 フィールド) の 揃え 方 が 肝</div>
+        </div>
+      </div>
     </div>
 
     <div class="substep">
@@ -544,7 +677,7 @@
         <li>2 行 目: キー <span class="code-inline">customerId</span>, 種類 <span class="code-inline">テキスト</span>, 値 は 変数 パネル で 「CUSTOMER_ID」 変数 を 選択</li>
       </ul>
       <div class="callout warn" style="margin-top: 12px;">
-        <strong>⚠ 「種類」 を 間違えない</strong>
+        <strong>「種類」 を 間違えない</strong>
         audio は 必ず 「ファイル」、 customerId は 「テキスト」。 間違える と 400 error に なる。
       </div>
     </div>
@@ -578,7 +711,7 @@
   </div>
 
   <div class="final">
-    <h3>🎉 セットアップ 完了</h3>
+    <h3>セットアップ 完了</h3>
     <p>Voice Memos で 録音 → ⋯ → 共有 → 「FP Compass アップロード」 → 客 選択 → 数十秒 で 議事録 tab に 反映 されます。<br>詰まったら 該当 chapter の スクショ を 貼付 して 教えて ください。</p>
   </div>
 
