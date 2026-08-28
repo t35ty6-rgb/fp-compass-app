@@ -6917,18 +6917,18 @@
         <!-- ============= RIGHT: Activity column ============= -->
         <main class="cd-right">
 
-          <!-- 2026-08-28 R12 owner「Files.app から ボイスメモ に 辿り 着け ない」対応:
-               ブラウザ 内 直接 録音 の button を primary に。 Voice Memos ↔ Files 経由 を 完全 bypass。
-               mic permission 一回 の 後 は ワンタップ で 録音 開始 → 停止 で 自動 で Whisper + Claude に 流れる。
-               既存 upload button は secondary として 残置 (既に 別 device で 録音 済 の ケース 用)。 -->
-          <div id="cd-audio-upload-mega" style="position:sticky;top:0;z-index:10;background:linear-gradient(180deg,#FAFAFF 0%,#FFFFFF 100%);padding:14px 14px 12px;border-bottom:1px solid #E2E8F0;display:flex;flex-direction:column;gap:8px;">
-            <button id="cd-inperson-btn-mega" data-client-id="${escapeHtml(c.id)}" style="width:100%;background:linear-gradient(135deg,#DC2626 0%,#B91C1C 55%,#991B1B 100%);color:#fff;border:none;padding:18px 16px;border-radius:14px;font-size:15px;font-weight:900;cursor:pointer;font-family:'Noto Sans JP',sans-serif;box-shadow:0 10px 24px rgba(220,38,38,0.35),0 2px 6px rgba(220,38,38,0.20);display:flex;align-items:center;justify-content:center;gap:12px;letter-spacing:0.01em;">
-              <span style="font-size:24px;line-height:1;">🎤</span>
-              <span style="text-align:left;line-height:1.25;">その 場 で 録音 開始<span style="display:block;font-size:11.5px;font-weight:700;color:rgba(255,255,255,0.92);margin-top:3px;">ワンタップ で 議事録 生成 (ボイスメモ 経由 不要)</span></span>
+          <!-- 2026-08-28 R13 owner「その場で録音 button 頼んで ない」対応: R12 追加 撤去、 upload 一択 に 戻す。
+               + owner「Files.app 開いた が Voice Memos が 見つから ない」対応:
+                 iPhone Voice Memos は default で iCloud 同期 OFF → Files.app から 見え ない が 実態。
+                 owner の 1 回 の 設定 変更 が 必要 な ので、 button 下 に 見せる 短い 案内 を 追加。 -->
+          <div id="cd-audio-upload-mega" style="position:sticky;top:0;z-index:10;background:linear-gradient(180deg,#FAFAFF 0%,#FFFFFF 100%);padding:14px 14px 12px;border-bottom:1px solid #E2E8F0;">
+            <button id="cd-audio-upload-btn-mega" data-client-id="${escapeHtml(c.id)}" style="width:100%;background:linear-gradient(135deg,#5B5BF0 0%,#4747C7 55%,#3A3AAB 100%);color:#fff;border:none;padding:18px 16px;border-radius:14px;font-size:15px;font-weight:900;cursor:pointer;font-family:'Noto Sans JP',sans-serif;box-shadow:0 10px 24px rgba(91,91,240,0.35),0 2px 6px rgba(91,91,240,0.20);display:flex;align-items:center;justify-content:center;gap:12px;letter-spacing:0.01em;">
+              <span style="font-size:24px;line-height:1;">🎙</span>
+              <span style="text-align:left;line-height:1.25;">音声 を アップロード → 議事録 生成<span style="display:block;font-size:11.5px;font-weight:700;color:rgba(255,255,255,0.9);margin-top:3px;">iPhone ボイスメモ · MP3 · M4A · WAV</span></span>
             </button>
-            <button id="cd-audio-upload-btn-mega" data-client-id="${escapeHtml(c.id)}" style="width:100%;background:#FFFFFF;color:#4747C7;border:1.5px solid #C7CBFF;padding:12px 16px;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer;font-family:'Noto Sans JP',sans-serif;display:flex;align-items:center;justify-content:center;gap:10px;">
-              <span style="font-size:18px;line-height:1;">🎙</span>
-              <span style="text-align:left;line-height:1.25;">保存 済み 音声 を アップロード<span style="display:block;font-size:10.5px;font-weight:700;color:#6B7280;margin-top:1px;">Zoom / ボイスメモ 等 で 録画 済 の m4a · mp3 · wav</span></span>
+            <button id="cd-audio-upload-help" type="button" style="margin-top:8px;width:100%;background:#F1F5F9;color:#334155;border:1px solid #CBD5E1;padding:9px 12px;border-radius:8px;font-size:11.5px;font-weight:700;cursor:pointer;font-family:'Noto Sans JP',sans-serif;display:flex;align-items:center;justify-content:center;gap:6px;">
+              <span style="font-size:14px;line-height:1;">❓</span>
+              <span>iPhone Voice Memos が Files に 出て こない 時</span>
             </button>
           </div>
 
@@ -8419,13 +8419,51 @@ ${ctxText}${surveyTxt}`;
     if (uploadBtnMega && uploadInput) {
       uploadBtnMega.addEventListener('click', () => uploadInput.click());
     }
-    // 2026-08-28 R12 owner「Files.app → ボイスメモ の 辿り 方 が 分から ない」対応:
-    //   ブラウザ 内 直接 録音 の mega button (赤) → 隠し 元 button (cd-inperson-start-btn) に forward。
-    //   元 button の handler が mic picker + MediaRecorder + Whisper 全部 面倒 見る。
-    const inpersonBtnMega = document.getElementById('cd-inperson-btn-mega');
-    const inpersonBtnOrig = document.getElementById('cd-inperson-start-btn');
-    if (inpersonBtnMega && inpersonBtnOrig) {
-      inpersonBtnMega.addEventListener('click', () => { try { inpersonBtnOrig.click(); } catch (_) {} });
+    // 2026-08-28 R13: 赤 record button 撤去 済 (owner「頼んで ない」)。 バインド 対象 も 削除。
+    // 2026-08-28 R13 owner「iPhone Voice Memos が Files.app に 出て こ ない」対応:
+    //   Voice Memos は default で iCloud sync OFF → Files.app から 見え ない が 実態。
+    //   ヘルプ button で 「iPhone 側 の 設定 手順」 を owner に わかり やすく 見せる。
+    const helpBtn = document.getElementById('cd-audio-upload-help');
+    if (helpBtn && !helpBtn._bound) {
+      helpBtn._bound = true;
+      helpBtn.addEventListener('click', () => {
+        const ov = document.createElement('div');
+        ov.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.62);backdrop-filter:blur(4px);z-index:99999;display:flex;align-items:center;justify-content:center;padding:18px;font-family:"Noto Sans JP","Hiragino Sans",sans-serif;';
+        ov.innerHTML = `
+          <div style="background:#fff;border-radius:16px;padding:22px;max-width:440px;width:100%;max-height:88vh;overflow-y:auto;box-shadow:0 24px 60px rgba(15,23,42,0.35);">
+            <div style="font-size:11px;font-weight:800;color:#5B5BF0;letter-spacing:0.14em;margin-bottom:8px;">HELP · iPHONE VOICE MEMOS</div>
+            <h2 style="font-size:19px;font-weight:800;color:#0F172A;margin:0 0 14px;line-height:1.35;">Voice Memos が Files アプリ に<br>出て こ ない 時</h2>
+            <p style="font-size:13px;color:#334155;line-height:1.75;margin:0 0 16px;">iPhone の Voice Memos は default で iCloud 同期 が OFF に なって いる ため、 Files.app から は 見え ません。 <b>1回 だけ</b> 設定 する と、 以降 は Voice Memos で 録音 する だけ で ここ から アップロード でき ます。</p>
+
+            <div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:10px;padding:14px 16px;margin-bottom:14px;">
+              <div style="font-size:13px;font-weight:800;color:#1E40AF;margin-bottom:8px;">おすすめ: iCloud 同期 を ON にする</div>
+              <ol style="margin:0;padding-left:18px;font-size:12.5px;color:#0F172A;line-height:1.85;">
+                <li>iPhone の <b>設定</b> アプリ を 開く</li>
+                <li>一番 上 の <b>自分 の 名前</b> を タップ</li>
+                <li><b>iCloud</b> → <b>「App を使用中の App」</b> → 「<b>すべて を 表示</b>」</li>
+                <li>リスト から <b>「ボイスメモ」</b> を 探して <b>ON</b></li>
+                <li>戻って アップロード を もう 一度 押す → 「<b>iCloud Drive</b>」 → 「<b>Voice Memos</b>」 フォルダ に 過去 の 録音 が 出て 来る</li>
+              </ol>
+            </div>
+
+            <div style="background:#FFF7ED;border:1px solid #FED7AA;border-radius:10px;padding:14px 16px;margin-bottom:16px;">
+              <div style="font-size:13px;font-weight:800;color:#9A3412;margin-bottom:8px;">上 の 設定 が 面倒 な 場合: 1件 ずつ 移動</div>
+              <ol style="margin:0;padding-left:18px;font-size:12.5px;color:#0F172A;line-height:1.85;">
+                <li>Voice Memos アプリ を 開く</li>
+                <li>アップロード したい 録音 を タップ</li>
+                <li>「<b>⋯</b>」 (3点 メニュー) → <b>共有</b> → <b>「ファイル に 保存」</b></li>
+                <li>保存 先 を 選択 (例: 「iCloud Drive」 or 「この iPhone 内」)</li>
+                <li>FP Compass に 戻って アップロード → 同じ 保存 先 に 出て 来る</li>
+              </ol>
+            </div>
+
+            <button id="cd-audio-help-close" type="button" style="width:100%;padding:12px;background:#5B5BF0;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">閉じる</button>
+          </div>`;
+        document.body.appendChild(ov);
+        const close = () => { try { document.body.removeChild(ov); } catch (_) {} };
+        ov.querySelector('#cd-audio-help-close')?.addEventListener('click', close);
+        ov.addEventListener('click', (e) => { if (e.target === ov) close(); });
+      });
     }
     if (uploadBtn && uploadInput) {
       uploadBtn.addEventListener('click', () => uploadInput.click());
