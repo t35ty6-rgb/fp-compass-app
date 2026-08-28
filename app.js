@@ -6917,13 +6917,18 @@
         <!-- ============= RIGHT: Activity column ============= -->
         <main class="cd-right">
 
-          <!-- 2026-08-28 owner「音声 upload を もっと 目立つ ところ に」対応:
-               cd-right の 一番 上 (モバイル で 開いた 瞬間 最初 に 見える 場所) に BIG CTA を 配置。
-               tabs より 上、 sticky で スクロール して も 追従。 押す と file picker (拡張子 のみ = ボイスメモ 直行)。 -->
-          <div id="cd-audio-upload-mega" style="position:sticky;top:0;z-index:10;background:linear-gradient(180deg,#FAFAFF 0%,#FFFFFF 100%);padding:14px 14px 12px;border-bottom:1px solid #E2E8F0;">
-            <button id="cd-audio-upload-btn-mega" data-client-id="${escapeHtml(c.id)}" style="width:100%;background:linear-gradient(135deg,#5B5BF0 0%,#4747C7 55%,#3A3AAB 100%);color:#fff;border:none;padding:18px 16px;border-radius:14px;font-size:15px;font-weight:900;cursor:pointer;font-family:'Noto Sans JP',sans-serif;box-shadow:0 10px 24px rgba(91,91,240,0.35),0 2px 6px rgba(91,91,240,0.20);display:flex;align-items:center;justify-content:center;gap:12px;letter-spacing:0.01em;">
-              <span style="font-size:24px;line-height:1;">🎙</span>
-              <span style="text-align:left;line-height:1.25;">音声 を アップロード → 議事録 生成<span style="display:block;font-size:11.5px;font-weight:700;color:rgba(255,255,255,0.9);margin-top:3px;">iPhone ボイスメモ · MP3 · M4A · WAV</span></span>
+          <!-- 2026-08-28 R12 owner「Files.app から ボイスメモ に 辿り 着け ない」対応:
+               ブラウザ 内 直接 録音 の button を primary に。 Voice Memos ↔ Files 経由 を 完全 bypass。
+               mic permission 一回 の 後 は ワンタップ で 録音 開始 → 停止 で 自動 で Whisper + Claude に 流れる。
+               既存 upload button は secondary として 残置 (既に 別 device で 録音 済 の ケース 用)。 -->
+          <div id="cd-audio-upload-mega" style="position:sticky;top:0;z-index:10;background:linear-gradient(180deg,#FAFAFF 0%,#FFFFFF 100%);padding:14px 14px 12px;border-bottom:1px solid #E2E8F0;display:flex;flex-direction:column;gap:8px;">
+            <button id="cd-inperson-btn-mega" data-client-id="${escapeHtml(c.id)}" style="width:100%;background:linear-gradient(135deg,#DC2626 0%,#B91C1C 55%,#991B1B 100%);color:#fff;border:none;padding:18px 16px;border-radius:14px;font-size:15px;font-weight:900;cursor:pointer;font-family:'Noto Sans JP',sans-serif;box-shadow:0 10px 24px rgba(220,38,38,0.35),0 2px 6px rgba(220,38,38,0.20);display:flex;align-items:center;justify-content:center;gap:12px;letter-spacing:0.01em;">
+              <span style="font-size:24px;line-height:1;">🎤</span>
+              <span style="text-align:left;line-height:1.25;">その 場 で 録音 開始<span style="display:block;font-size:11.5px;font-weight:700;color:rgba(255,255,255,0.92);margin-top:3px;">ワンタップ で 議事録 生成 (ボイスメモ 経由 不要)</span></span>
+            </button>
+            <button id="cd-audio-upload-btn-mega" data-client-id="${escapeHtml(c.id)}" style="width:100%;background:#FFFFFF;color:#4747C7;border:1.5px solid #C7CBFF;padding:12px 16px;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer;font-family:'Noto Sans JP',sans-serif;display:flex;align-items:center;justify-content:center;gap:10px;">
+              <span style="font-size:18px;line-height:1;">🎙</span>
+              <span style="text-align:left;line-height:1.25;">保存 済み 音声 を アップロード<span style="display:block;font-size:10.5px;font-weight:700;color:#6B7280;margin-top:1px;">Zoom / ボイスメモ 等 で 録画 済 の m4a · mp3 · wav</span></span>
             </button>
           </div>
 
@@ -8413,6 +8418,14 @@ ${ctxText}${surveyTxt}`;
     const uploadBtnMega = document.getElementById('cd-audio-upload-btn-mega');
     if (uploadBtnMega && uploadInput) {
       uploadBtnMega.addEventListener('click', () => uploadInput.click());
+    }
+    // 2026-08-28 R12 owner「Files.app → ボイスメモ の 辿り 方 が 分から ない」対応:
+    //   ブラウザ 内 直接 録音 の mega button (赤) → 隠し 元 button (cd-inperson-start-btn) に forward。
+    //   元 button の handler が mic picker + MediaRecorder + Whisper 全部 面倒 見る。
+    const inpersonBtnMega = document.getElementById('cd-inperson-btn-mega');
+    const inpersonBtnOrig = document.getElementById('cd-inperson-start-btn');
+    if (inpersonBtnMega && inpersonBtnOrig) {
+      inpersonBtnMega.addEventListener('click', () => { try { inpersonBtnOrig.click(); } catch (_) {} });
     }
     if (uploadBtn && uploadInput) {
       uploadBtn.addEventListener('click', () => uploadInput.click());
