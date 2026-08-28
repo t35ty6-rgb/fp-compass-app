@@ -6774,11 +6774,13 @@
                 <span style="font-size:18px;line-height:1;">📁</span>
                 <span style="text-align:left;line-height:1.3;">音声 を アップロード → 議事録 生成<span style="display:block;font-size:11px;font-weight:600;color:rgba(255,255,255,0.85);margin-top:2px;">対応: MP3 · M4A (iPhone ボイスメモ) · WAV · WEBM · MP4 (音声抽出)</span></span>
               </button>
-              <!-- 2026-08-28 R10 owner「まだ Photos chooser 出る」対応:
-                   R9 で `.mp4` `.webm` 残して た が iOS Safari は 拡張子 単位 で video 判定 して Photos アイコン 表示。
+              <!-- 2026-08-28 R11 owner「まだ Photos chooser 出る」対応 + backtick 事故 修正:
+                   R9 で mp4/webm 残して た が iOS Safari は 拡張子 単位 で video 判定 して Photos アイコン 表示。
                    → 純 audio 拡張子 + audio/* MIME だけ に 絞る。 これ で iOS 14+ Safari は Files.app 直行、
                      ボイスメモ で 録った m4a に すぐ アクセス でき る (Photos / Video Capture の options 消失)。
-                   ※ MP4 動画 audio 抽出 は 別 flow (Zoom 録画 ダウンロード → 拡張子 変更) で 対応。 -->
+                   ※ MP4 動画 audio 抽出 は 別 flow (Zoom 録画 ダウンロード → 拡張子 変更) で 対応。
+                   ※ R10 で コメント 内 に backtick 混入 → 外側 template literal 中断 → JS syntax error で
+                      客モーダル 全体 開かなく なった (owner 「押せない」 報告)。 backtick 撤去 で 修復。 -->
               <input type="file" id="cd-audio-upload-input" data-client-id="${escapeHtml(c.id)}" accept="audio/*,.m4a,.mp3,.wav,.aac" style="display:none;">
               <!-- 旧 button 互換 (別 code path から click 発火 される ため hidden で 残置) -->
               <button id="cd-instant-zoom-btn" data-client-id="${escapeHtml(c.id)}" style="display:none;"></button>
