@@ -168,6 +168,24 @@
     <p style="margin-top: 12px;">iOS 版 で 文字 が 微妙 に 違う 時 (例: 「アクション を 追加」 が 「アクション 追加」 に なって いる 等) は、 <strong>先頭 3-4 文字 だけ で 検索 して も ヒット する</strong>。 例えば 「アクション」 と 打つ だけ で ほぼ 出る。</p>
   </div>
 
+  <!-- 一番 詰まる 「入力 欄 は 前 の 出力 が 自動 で 入って いる 」 の 基本 パターン -->
+  <div class="method-box" style="background:#FEF3C7;border-color:#F59E0B;">
+    <h2 style="color:#78350F;">重要: iOS Shortcut の 基本 パターン (これ を 先 に 理解)</h2>
+    <p style="color:#78350F;">アクション を 追加 する と、 「入力」 欄 に <strong>「1 個 上 の アクション の 出力」 が 自動 で 入る</strong>。 これ が iOS Shortcut の 最大 の 落とし穴。 例えば:</p>
+    <div class="literal-example" style="background:#FFFBEB;border-color:#FCD34D;">
+      <strong style="color:#78350F;">状態 (困る 例):</strong><br>
+      「変数 <span class="literal type" style="display:inline-block;">AUDIO</span> を <span class="literal tap" style="display:inline-block;">API_KEY</span> に設定」<br>
+      ← ここ の <span class="literal tap" style="display:inline-block;">API_KEY</span> は <strong>自動 で 入った 値</strong>。 これ を 「ショートカットの入力」 に 変え たい 場合:<br><br>
+      <strong style="color:#065F46;">動作:</strong><br>
+      1. 青バブル <span class="literal tap" style="display:inline-block;">API_KEY</span> を <strong>タップ</strong><br>
+      2. 下 から 変数 選択 パネル が 出て くる<br>
+      3. パネル の 一番 上 の 「<span class="literal tap" style="display:inline-block;">ショートカットの入力</span>」 を タップ<br><br>
+      <strong style="color:#065F46;">結果:</strong><br>
+      「変数 <span class="literal type" style="display:inline-block;">AUDIO</span> を <span class="literal tap" style="display:inline-block;">ショートカットの入力</span> に設定」
+    </div>
+    <p style="margin-top: 12px; color:#78350F;"><strong>マニュアル 中 で 「差替」 「変更」 「選択」 と 書いて ある 場所 は 全部 この パターン。</strong> 「タップ で 青バブル を 差 替える」 を 反復 する だけ。</p>
+  </div>
+
   <div class="toc">
     <div class="toc-title">目次</div>
     <ol>
@@ -407,13 +425,29 @@
       </div>
     </div>
 
-    <div class="substep">
-      <span class="substep-tag">4.3</span><span class="substep-title">入力 を 「ショートカットの入力」 に 差替</span>
-      <div class="action-grid">
-        <span class="action-label">タップ</span><span class="action-val"><span class="literal tap">入力</span> (現在 は 上 の 「変数 を 設定」 の 出力 が 入って いる)</span>
-        <span class="action-label">タップ</span><span class="action-val">下 に 出た 変数 パネル の <span class="literal tap">ショートカットの入力</span> (青 の テキスト、 上 の 方 に 出る)</span>
+    <div class="substep" style="border-color:#F59E0B;background:#FFFBEB;">
+      <span class="substep-tag" style="background:#F59E0B;color:#fff;">4.3 · 一番 詰まる</span><span class="substep-title">「API_KEY」 と 表示 されて いる 青バブル を 「ショートカットの入力」 に 差替</span>
+
+      <div class="callout warn" style="margin: 10px 0 14px;">
+        <strong>今、 4.2 が 終わった 時点 で こう なって いる はず</strong>
+        「変数 <span class="literal type" style="display:inline-block;">AUDIO</span> を <span class="literal tap" style="display:inline-block;">API_KEY</span> に設定」<br>
+        (右 の 青バブル は 自動 で 「API_KEY」 が 入って いる。 これ を 差替える 手順 が 下)
       </div>
-      <div class="expected"><strong>期待:</strong> 「入力」 欄 に 青 の <span class="literal">ショートカットの入力</span> バブル が 表示。 これ で 共有 から 渡された 音声 が AUDIO 変数 に 入る。</div>
+
+      <div class="action-grid">
+        <span class="action-label">タップ</span><span class="action-val">青バブル <span class="literal tap">API_KEY</span> (自動 で 入って いる ヤツ、 「に設定」 の 左)</span>
+        <span class="action-label">期待</span><span class="action-val">画面 下 部 から 変数 選択 パネル が スライド アップ</span>
+        <span class="action-label">タップ</span><span class="action-val">パネル 一番 上 に ある <span class="literal tap">ショートカットの入力</span> (青の テキスト)</span>
+      </div>
+
+      <div class="expected"><strong>成功 の 見た目:</strong> ブロック が こう 変わる:<br>
+      「変数 <span class="literal type" style="display:inline-block;">AUDIO</span> を <span class="literal tap" style="display:inline-block;">ショートカットの入力</span> に設定」<br>
+      青バブル が <span class="literal tap" style="display:inline-block;">API_KEY</span> から <span class="literal tap" style="display:inline-block;">ショートカットの入力</span> に 差替わって いれば OK。</div>
+
+      <div class="callout warn" style="margin: 12px 0 0;">
+        <strong>NG パターン (owner が 実際 に 詰まった)</strong>
+        「変数 AUDIO を <span class="literal tap" style="display:inline-block;">API_KEY</span> に設定」 の まま で 進める と、 音声 の 代わり に API キー が Voice Memos に 送信 されて 全 flow が 壊れる。 <strong>必ず 「ショートカットの入力」 に 差替える こと</strong>。
+      </div>
     </div>
   </div>
 
