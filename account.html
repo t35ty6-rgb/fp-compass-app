@@ -512,6 +512,13 @@
   $("logout-btn").addEventListener("click", async () => { await signOut(auth); location.reload(); });
 
   let currentTenantId = null;
+  // 2026-08-28 iOS Shortcut 連携 用: modular Firebase SDK → auth を window に expose (下部 script が 使う)
+  window.__fpAuth = auth;
+  window.__fpGetIdToken = async () => {
+    const u = auth.currentUser;
+    if (!u) throw new Error('未 ログイン');
+    return await u.getIdToken();
+  };
   onAuthStateChanged(auth, async (user) => {
     if (!user) { loginEl.style.display = "grid"; appEl.style.display = "none"; return; }
     const uDoc = await getDoc(doc(db, "users", user.uid));
@@ -929,9 +936,9 @@
   // ==== 2026-08-28 iOS Shortcut 連携: API key 発行 ====
   const CR_BASE = (window.__fp?.CR_BASE) || 'https://fp-compass-webhook-527726449426.asia-northeast1.run.app';
   async function getFpIdToken() {
-    const u = firebase.auth().currentUser;
-    if (!u) throw new Error('未 ログイン');
-    return await u.getIdToken();
+    // 上 の module block で window.__fpGetIdToken を expose した (modular Firebase v10)
+    if (typeof window.__fpGetIdToken !== 'function') throw new Error('auth 未 初期化 (page reload してください)');
+    return await window.__fpGetIdToken();
   }
   const mobileRotBtn = $("mobile-rotate-btn");
   const mobileKeyDisp = $("mobile-key-display");
