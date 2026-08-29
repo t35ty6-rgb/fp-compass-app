@@ -168,6 +168,21 @@
     <p style="margin-top: 12px;">iOS 版 で 文字 が 微妙 に 違う 時 (例: 「アクション を 追加」 が 「アクション 追加」 に なって いる 等) は、 <strong>先頭 3-4 文字 だけ で 検索 して も ヒット する</strong>。 例えば 「アクション」 と 打つ だけ で ほぼ 出る。</p>
   </div>
 
+  <!-- 2026-08-29 SIMPLIFIED PATH 追加 · Ch 6-7 skip 可能 -->
+  <div class="method-box" style="background:linear-gradient(135deg,#DBEAFE,#EFF6FF);border-color:#3B82F6;">
+    <h2 style="color:#1E3A8A;">[新] Chapter 6-7 を skip する 簡易 パス</h2>
+    <p style="color:#1E3A8A;">サーバー 側 で 「デフォルト 客」 の 概念 を 実装 した 結果、 iOS Shortcut 側 で 客 選択 の ロジック (Chapter 6.2 · 6.3 · 7 全部) が <strong>不要</strong> に なった。 Voice Memos の 音声 は 自動 で 「デフォルト 客」 (owner が FP Compass 設定 で 選ぶ) に 紐 付く。</p>
+    <div class="literal-example" style="background:#fff;border-color:#93C5FD;">
+      <strong style="color:#1E40AF;">簡易 パス で 必要 な chapter:</strong><br>
+      <strong>Chapter 1-5</strong>: そのまま (owner は 既に 通過 済) → API_KEY 変数 · AUDIO 変数 · 客 リスト 取得 まで<br>
+      <strong>Chapter 6.1</strong>: 「辞書 の 値 (customers)」 だけ 残す (owner 済)<br>
+      <strong>Chapter 6.2 · 6.3 · 7 の 全 sub-step</strong>: <span style="background:#FEE2E2;color:#7F1D1D;padding:2px 8px;border-radius:5px;font-weight:800;">skip</span> (削除 して OK)<br>
+      <strong>Chapter 8</strong>: <b>customerId フィールド の 追加 は skip</b> · audio フィールド と ヘッダ だけ 追加<br>
+      <strong>Chapter 9</strong>: そのまま (結果 表示)
+    </div>
+    <p style="margin-top: 12px; color:#1E3A8A;"><strong>owner の 追加 タップ 数: 15+ → 5 タップ に 短縮</strong>。 Ch 6.2/6.3/7 を 全 削除 して、 直接 Ch 8 の 音声 upload に 進む。 音声 は アカウント 設定 の 「モバイル 送信先」 で 選んだ 客 に 自動 で 入る。</p>
+  </div>
+
   <!-- 一番 詰まる 「入力 欄 は 前 の 出力 が 自動 で 入って いる 」 の 基本 パターン -->
   <div class="method-box" style="background:#FEF3C7;border-color:#F59E0B;">
     <h2 style="color:#78350F;">重要: iOS Shortcut の 基本 パターン (これ を 先 に 理解)</h2>

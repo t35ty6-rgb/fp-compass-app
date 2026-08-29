@@ -416,6 +416,17 @@
           <p style="font-size:11px;color:#92400E;margin-top:10px;line-height:1.6;">この キー は 二度 と 表示 され ません。 iPhone Shortcut に 貼付 する まで 画面 を 閉じ ない で。</p>
         </div>
 
+        <!-- 2026-08-29 モバイル 音声 の 送信先 客 (default customer) -->
+        <div style="margin-top:22px;padding-top:18px;border-top:1px solid var(--line);">
+          <div style="font-size:13px;font-weight:700;margin-bottom:6px;">モバイル 送信先 (デフォルト 客)</div>
+          <p style="font-size:12px;color:var(--ink-3);margin-bottom:10px;line-height:1.6;">iPhone Shortcut で 送信 した 音声 の 議事録 が 入る 客 を 選ぶ。 選択 しない 場合 は 一番 最初 の 客 に 入る。 iOS Shortcut 側 で 客 選択 の 手間 を 省ける。</p>
+          <select id="mobile-default-customer" style="width:100%;padding:11px 14px;font-size:13px;font-family:inherit;border:1.5px solid var(--line);border-radius:8px;background:#fff;color:var(--ink);">
+            <option value="">-- 未 選択 (最初 の 客 に 入る) --</option>
+          </select>
+          <button id="mobile-default-save-btn" style="margin-top:10px;padding:10px 20px;font-size:13px;font-weight:700;background:#4747C7;color:#fff;border:none;border-radius:8px;cursor:pointer;">この 客 を モバイル 送信先 に する</button>
+          <div id="mobile-default-status" style="margin-top:8px;font-size:12px;"></div>
+        </div>
+
         <div style="margin-top:22px;padding-top:18px;border-top:1px solid var(--line);">
           <div style="font-size:13px;font-weight:700;margin-bottom:10px;">iOS ショートカット</div>
           <a id="mobile-shortcut-link" href="/shortcut-setup.html" target="_blank" style="display:block;background:linear-gradient(135deg,#000000 0%,#1F2937 100%);color:#fff;padding:16px 20px;border-radius:10px;text-decoration:none;">
@@ -970,6 +981,64 @@
       }
     });
   }
+  // ==== 2026-08-29 モバイル 送信先 (default customer) ====
+  async function loadMobileDefaultCustomer() {
+    try {
+      const idTok = await getFpIdToken();
+      // 客 リスト (mobile-key 経由 で 取得、 tenant scoped)
+      const rKey = await fetch(`${CR_BASE}/api/mobile/rotate-key`, {
+        method: "POST", headers: { Authorization: "Bearer " + idTok, "Content-Type": "application/json" }, body: JSON.stringify({}),
+      });
+      const rKeyJ = await rKey.json();
+      if (!rKey.ok) return;
+      const tmpKey = rKeyJ.mobileApiKey;
+      const rCusts = await fetch(`${CR_BASE}/api/mobile/customers`, { headers: { "X-FP-Mobile-Key": tmpKey } });
+      const custs = (await rCusts.json()).customers || [];
+      // 現在 の default
+      const rDef = await fetch(`${CR_BASE}/api/mobile/get-default-customer`, { headers: { Authorization: "Bearer " + idTok } });
+      const defJ = await rDef.json();
+      const sel = document.getElementById("mobile-default-customer");
+      // clear existing (except placeholder)
+      while (sel.children.length > 1) sel.removeChild(sel.lastChild);
+      for (const c of custs) {
+        const opt = document.createElement("option");
+        opt.value = c.id;
+        opt.textContent = c.name;
+        if (c.id === defJ.customerId) opt.selected = true;
+        sel.appendChild(opt);
+      }
+      // display new key (from rotate) — replace with the fresh one
+      const keyDisp = document.getElementById("mobile-key-display");
+      const keyVal = document.getElementById("mobile-key-value");
+      if (keyDisp && keyVal && tmpKey) {
+        keyVal.textContent = tmpKey;
+        keyDisp.style.display = "block";
+      }
+    } catch (e) { console.warn("[mobile-default] load fail:", e.message); }
+  }
+  setTimeout(loadMobileDefaultCustomer, 800);
+  const mobileDefaultSaveBtn = $("mobile-default-save-btn");
+  if (mobileDefaultSaveBtn) {
+    mobileDefaultSaveBtn.addEventListener("click", async () => {
+      const sel = document.getElementById("mobile-default-customer");
+      const status = document.getElementById("mobile-default-status");
+      if (!sel.value) { status.innerHTML = `<span style="color:#DC2626;">客 を 選択 して ください</span>`; return; }
+      mobileDefaultSaveBtn.disabled = true;
+      try {
+        const idTok = await getFpIdToken();
+        const r = await fetch(`${CR_BASE}/api/mobile/set-default-customer`, {
+          method: "POST", headers: { Authorization: "Bearer " + idTok, "Content-Type": "application/json" },
+          body: JSON.stringify({ customerId: sel.value }),
+        });
+        const j = await r.json();
+        if (!r.ok || !j.ok) throw new Error(j.error || `HTTP ${r.status}`);
+        status.innerHTML = `<span style="color:#059669;font-weight:700;">保存 済: ${j.customerName || j.customerId}</span>`;
+      } catch (e) {
+        status.innerHTML = `<span style="color:#DC2626;">保存 失敗: ${e.message}</span>`;
+      } finally { mobileDefaultSaveBtn.disabled = false; }
+    });
+  }
+
   if (mobileKeyCopy) {
     mobileKeyCopy.addEventListener("click", async () => {
       try {
