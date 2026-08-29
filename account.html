@@ -983,8 +983,10 @@
   }
   // ==== 2026-08-29 モバイル 送信先 (default customer) ====
   async function loadMobileDefaultCustomer() {
+    console.log('[mobile-default] loadMobileDefaultCustomer start');
     try {
       const idTok = await getFpIdToken();
+      console.log('[mobile-default] got id token');
       // 客 リスト (mobile-key 経由 で 取得、 tenant scoped)
       const rKey = await fetch(`${CR_BASE}/api/mobile/rotate-key`, {
         method: "POST", headers: { Authorization: "Bearer " + idTok, "Content-Type": "application/json" }, body: JSON.stringify({}),
@@ -993,7 +995,9 @@
       if (!rKey.ok) return;
       const tmpKey = rKeyJ.mobileApiKey;
       const rCusts = await fetch(`${CR_BASE}/api/mobile/customers`, { headers: { "X-FP-Mobile-Key": tmpKey } });
-      const custs = (await rCusts.json()).customers || [];
+      const cJson = await rCusts.json();
+      const custs = cJson.customers || [];
+      console.log('[mobile-default] fetched customers:', custs.length);
       // 現在 の default
       const rDef = await fetch(`${CR_BASE}/api/mobile/get-default-customer`, { headers: { Authorization: "Bearer " + idTok } });
       const defJ = await rDef.json();
@@ -1014,7 +1018,8 @@
         keyVal.textContent = tmpKey;
         keyDisp.style.display = "block";
       }
-    } catch (e) { console.warn("[mobile-default] load fail:", e.message); }
+      console.log('[mobile-default] selector populated with', custs.length, 'customers');
+    } catch (e) { console.warn("[mobile-default] load fail:", e.message, e.stack?.slice(0, 200)); }
   }
   // 認証 完了 を 待って から load (最大 15秒)
   (async function waitAuthThenLoad() {
