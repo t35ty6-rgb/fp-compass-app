@@ -1016,7 +1016,16 @@
       }
     } catch (e) { console.warn("[mobile-default] load fail:", e.message); }
   }
-  setTimeout(loadMobileDefaultCustomer, 800);
+  // 認証 完了 を 待って から load (最大 15秒)
+  (async function waitAuthThenLoad() {
+    for (let i = 0; i < 30; i++) {
+      if (typeof window.__fpGetIdToken === 'function' && window.__fpAuth?.currentUser) {
+        await loadMobileDefaultCustomer();
+        return;
+      }
+      await new Promise(r => setTimeout(r, 500));
+    }
+  })();
   const mobileDefaultSaveBtn = $("mobile-default-save-btn");
   if (mobileDefaultSaveBtn) {
     mobileDefaultSaveBtn.addEventListener("click", async () => {
