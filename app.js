@@ -7553,8 +7553,10 @@
           const stored = JSON.parse(localStorage.getItem('fp-ai-task-candidates') || '[]');
           localStorage.setItem('fp-ai-task-candidates', JSON.stringify([...stored, ...cands]));
         } catch(_) {}
+        // 2026-09-01 owner 明示 fix: bookingTs を scope として 渡す
+        //   (bug: 過去 の 別 客 · 別 Zoom の 候補 が 全部 上がって くる 累犯 · 累犯 pattern)
         if (typeof window.openAiTaskCandidateReviewModal === 'function') {
-          window.openAiTaskCandidateReviewModal();
+          window.openAiTaskCandidateReviewModal(bookingTs);
         } else {
           alert('レビュー modal 関数 未 load');
         }

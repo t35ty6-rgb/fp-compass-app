@@ -4264,7 +4264,8 @@
         const stored = JSON.parse(localStorage.getItem('fp-ai-task-candidates') || '[]');
         localStorage.setItem('fp-ai-task-candidates', JSON.stringify([...stored, ...candidates]));
         // owner 通知: 「議事録 生成 完了 · TODO 候補 X 件 · レビュー する」 button
-        try { showAiTaskCandidateReviewToast(candidates.length, nameKey); } catch(_) {}
+        // 2026-09-01 fix: bookingTs を 渡して 「この 面談 だけ」 の scope で 開かせる
+        try { showAiTaskCandidateReviewToast(candidates.length, nameKey, bookingTs); } catch(_) {}
       } catch(_) {}
     }
     const newTasks = []; // ★ 旧 auto 追加 の 空 化 (下記 GAS 保存 は entry のみ · tasks は 別 経路)
@@ -11003,7 +11004,8 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
 
   // ★ 2026-08-16 owner「議事録 → TODO 候補 → 選別 → 追加」対応
   //   toast (通知): 議事録 生成 完了 · 候補 X 件 · 「レビュー」 button
-  function showAiTaskCandidateReviewToast(count, name) {
+  //   2026-09-01 owner 明示 fix: bookingTs を scope として 引き渡し · 「その 議事録」 だけ 見せる
+  function showAiTaskCandidateReviewToast(count, name, bookingTs) {
     // 既 存 toast 撤去
     document.getElementById('fp-ai-cand-toast')?.remove();
     const t = document.createElement('div');
@@ -11019,27 +11021,46 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
       <button id="fp-ai-cand-dismiss" style="background:transparent;color:#94A3B8;border:none;font-size:18px;cursor:pointer;padding:0 4px;">×</button>
     `;
     document.body.appendChild(t);
-    document.getElementById('fp-ai-cand-review').onclick = () => { t.remove(); openAiTaskCandidateReviewModal(); };
+    document.getElementById('fp-ai-cand-review').onclick = () => { t.remove(); openAiTaskCandidateReviewModal(bookingTs); };
     document.getElementById('fp-ai-cand-dismiss').onclick = () => t.remove();
     setTimeout(() => { if (document.body.contains(t)) t.remove(); }, 30000);
   }
   window.showAiTaskCandidateReviewToast = showAiTaskCandidateReviewToast;
 
-  // modal: 候補 全 表示 · チェック で 選別 · 「追加」 で kanban に 積む
-  function openAiTaskCandidateReviewModal() {
-    const cands = (function() { try { return JSON.parse(localStorage.getItem('fp-ai-task-candidates') || '[]'); } catch(_) { return []; } })();
-    if (cands.length === 0) { alert('レビュー する 候補 なし'); return; }
+  // modal: 候補 表示 · チェック で 選別 · 「追加」 で kanban に 積む
+  // 2026-09-01 owner 明示 fix: scopeBookingTs 引数 追加。 指定 されたら その 議事録 の 候補 のみ 表示 (bug: 過去 の 別 客・別 Zoom の 候補 が 全部 上がる 累犯)
+  function openAiTaskCandidateReviewModal(scopeBookingTs) {
+    const allCands = (function() { try { return JSON.parse(localStorage.getItem('fp-ai-task-candidates') || '[]'); } catch(_) { return []; } })();
+    const cands = scopeBookingTs
+      ? allCands.filter(c => (c.bookingTs || '') === scopeBookingTs)
+      : allCands;
+    if (cands.length === 0) {
+      alert(scopeBookingTs
+        ? 'この 議事録 の 候補 は ありません (すでに 追加 済 または 抽出 なし)'
+        : 'レビュー する 候補 なし');
+      return;
+    }
     document.getElementById('fp-ai-cand-modal')?.remove();
     const priorityLabel = { p1: '🔴 至急', p2: '🟠 今週', p3: '🔵 いつか' };
+    // scope 情報 を header に 出す
+    const scopeCustomerName = scopeBookingTs && cands[0] ? (cands[0].customerName || '') : '';
+    let scopeDateStr = '';
+    if (scopeBookingTs) {
+      try { scopeDateStr = new Date(scopeBookingTs).toLocaleDateString('ja-JP', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }); } catch (_) {}
+    }
+    const scopeLabelHtml = scopeBookingTs
+      ? `<h2 style="font-size:18px;font-weight:800;color:#0F172A;margin:0;">${escapeHtml(scopeCustomerName)} 様 の 議事録 ${scopeDateStr ? '(' + escapeHtml(scopeDateStr) + ')' : ''} から 抽出 した TODO</h2>
+         <p style="font-size:12.5px;color:#64748B;margin:6px 0 0;">この 面談 に 特化 した 候補 ${cands.length} 件。 追加 する もの に ☑ · チェック 外し は 破棄。</p>`
+      : `<h2 style="font-size:18px;font-weight:800;color:#0F172A;margin:0;">議事録 から 抽出 した TODO 候補 (全 面談 まとめて)</h2>
+         <p style="font-size:12.5px;color:#64748B;margin:6px 0 0;">追加 する もの に ☑ を 入れて 下 の 「追加」 を 押してください。 チェック 外し は 破棄。</p>`;
     const overlay = document.createElement('div');
     overlay.id = 'fp-ai-cand-modal';
     overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.55);z-index:99999;display:flex;align-items:center;justify-content:center;font-family:"Noto Sans JP",sans-serif;';
     overlay.innerHTML = `
       <div style="background:#fff;border-radius:12px;max-width:640px;width:92%;max-height:82vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 32px 80px rgba(0,0,0,0.4);">
         <div style="padding:22px 26px;border-bottom:1px solid #E2E8F0;">
-          <div style="font-size:11.5px;font-weight:800;color:#5B5BF0;letter-spacing:0.1em;margin-bottom:4px;">MEETING → TODO</div>
-          <h2 style="font-size:18px;font-weight:800;color:#0F172A;margin:0;">議事録 から 抽出 した TODO 候補</h2>
-          <p style="font-size:12.5px;color:#64748B;margin:6px 0 0;">追加 する もの に ☑ を 入れて 下 の 「追加」 を 押してください。 チェック 外し は 破棄。</p>
+          <div style="font-size:11.5px;font-weight:800;color:#5B5BF0;letter-spacing:0.1em;margin-bottom:4px;">MEETING → TODO${scopeBookingTs ? ' · SCOPED' : ''}</div>
+          ${scopeLabelHtml}
         </div>
         <div style="padding:16px 26px;overflow-y:auto;flex:1;" id="fp-ai-cand-list">
           ${cands.map(c => `
@@ -11047,7 +11068,7 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
               <input type="checkbox" data-cand-id="${escapeHtml(c.id)}" checked style="width:18px;height:18px;accent-color:#5B5BF0;cursor:pointer;flex-shrink:0;">
               <div style="flex:1;min-width:0;">
                 <div style="font-size:14px;font-weight:700;color:#0F172A;line-height:1.4;">${escapeHtml(c.task || '(内容 未 記載)')}</div>
-                <div style="font-size:11px;color:#94A3B8;margin-top:2px;">${escapeHtml(c.customerName || '')} 様</div>
+                <div style="font-size:11px;color:#94A3B8;margin-top:2px;">${escapeHtml(c.customerName || '')} 様${scopeBookingTs ? '' : (c.bookingTs ? ' · ' + escapeHtml(String(c.bookingTs).slice(5, 16)) : '')}</div>
               </div>
             </label>
           `).join('')}
@@ -11068,6 +11089,8 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
     };
     document.getElementById('fp-ai-cand-add').onclick = () => {
       const selected = [...overlay.querySelectorAll('input[data-cand-id]:checked')].map(b => b.dataset.candId);
+      // 「表示 された 候補 の id」 (scope に 応じて 変わる)
+      const shownIds = new Set([...overlay.querySelectorAll('input[data-cand-id]')].map(b => b.dataset.candId));
       const stored = (function() { try { return JSON.parse(localStorage.getItem('fp-ai-task-candidates') || '[]'); } catch(_) { return []; } })();
       const toAdd = stored.filter(c => selected.includes(c.id));
       // add via app.js addManualTodo (window.__fpAddManualTodo か 既存 helper 経由)
@@ -11087,8 +11110,10 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
           });
         }
       });
-      // 選ばれた 候補 を stored から 削除、 選ばれ なかった の は 継続 保持 (次 レビュー で 再表示)
-      const remaining = stored.filter(c => !selected.includes(c.id));
+      // 2026-09-01 fix: scope 内 の 候補 のみ 「追加 済 として 削除」 (別 scope の 候補 は 触ら ない)
+      //   - shownIds に 含まれ ない 候補 (= 他 議事録 の 候補) は そのまま stored に 残す
+      //   - shown で 選択 されなかった 候補 は 破棄 (owner の 「チェック 外し は 破棄」 rule 準拠)
+      const remaining = stored.filter(c => !shownIds.has(c.id));
       try { localStorage.setItem('fp-ai-task-candidates', JSON.stringify(remaining)); } catch(_) {}
       overlay.remove();
       // reload dashboard で 新規 追加 分 反映
