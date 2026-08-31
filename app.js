@@ -1657,7 +1657,11 @@
             try { document.querySelector('.cd-tab[data-cdtab="line"]')?.click(); } catch(_) {}
           }, 300);
         } else if (act === 'zoom-issue') {
-          if (typeof openScheduleZoomModal === 'function') openScheduleZoomModal(c);
+          // ★ 2026-08-31 owner GO: 客 が 選択 済 なら slot を preSelect で 渡す (modal 側 で プリフィル + banner)
+          const preSel = c.pendingCandidateSelection
+            ? (c.pendingCandidateSelection.chosen || c.pendingCandidateSelection.slotText || c.pendingCandidateSelection.dateLabel)
+            : null;
+          if (typeof openScheduleZoomModal === 'function') openScheduleZoomModal(c, preSel);
           else openClientModal(cid);
         } else if (act === 'slots-resend') {
           if (typeof openSlotsSendModal === 'function') openSlotsSendModal(c);
@@ -8290,7 +8294,12 @@ ${ctxText}${surveyTxt}`;
     // ★ オーナーfb 2026-06-20: 「📅 日時指定 Zoom 予約」 — 単一日時 指定 → scheduleZoomDirect Cloud Function
     const scheduleBtn = document.getElementById('cd-schedule-zoom-btn');
     if (scheduleBtn) {
-      scheduleBtn.addEventListener('click', () => openScheduleZoomModal(c));
+      scheduleBtn.addEventListener('click', () => {
+        const preSel = c.pendingCandidateSelection
+          ? (c.pendingCandidateSelection.chosen || c.pendingCandidateSelection.slotText || c.pendingCandidateSelection.dateLabel)
+          : null;
+        openScheduleZoomModal(c, preSel);
+      });
     }
     // ★ 2026-07-28: super button 「🎙 面談 を 開始」 — 4 分岐 (今すぐ / 予約 / 相手 URL / 電話) を 1 modal に 集約
     const meetingStartBtn = document.getElementById('cd-meeting-start-btn');
@@ -8565,7 +8574,12 @@ ${ctxText}${surveyTxt}`;
     }
     // ★ クイックアクション (AI推奨ブロック内 内包)
     document.querySelectorAll('[data-quick-instant]').forEach(b => b.addEventListener('click', () => document.getElementById('cd-instant-zoom-btn')?.click()));
-    document.querySelectorAll('[data-quick-schedule]').forEach(b => b.addEventListener('click', () => openScheduleZoomModal(c)));
+    document.querySelectorAll('[data-quick-schedule]').forEach(b => b.addEventListener('click', () => {
+      const preSel = c.pendingCandidateSelection
+        ? (c.pendingCandidateSelection.chosen || c.pendingCandidateSelection.slotText || c.pendingCandidateSelection.dateLabel)
+        : null;
+      openScheduleZoomModal(c, preSel);
+    }));
     document.querySelectorAll('[data-quick-slots]').forEach(b => b.addEventListener('click', () => openSlotsSendModal(c)));
     document.querySelectorAll('[data-quick-tag]').forEach(b => b.addEventListener('click', () => document.getElementById('cd-tags-edit')?.click()));
     // ★ オーナーfb 2026-06-20: 「⚡ 今すぐ Zoom 開始」 — Zoom Instant Meeting 作成 → LINE 自動送付 → host URL を 新タブで開く
@@ -12462,7 +12476,10 @@ STEP C: 結果報告
     // 経路 3: 予約
     overlay.querySelector('#fp-ms-schedule').addEventListener('click', () => {
       overlay.remove();
-      openScheduleZoomModal(client);
+      const preSel = client.pendingCandidateSelection
+        ? (client.pendingCandidateSelection.chosen || client.pendingCandidateSelection.slotText || client.pendingCandidateSelection.dateLabel)
+        : null;
+      openScheduleZoomModal(client, preSel);
     });
 
     // 経路 4: 対面 面談 (Zoom 客 に 見せない · 音声 だけ 拾う) — owner 2026-08-11
@@ -12514,7 +12531,7 @@ STEP C: 結果報告
     });
   }
 
-  function openScheduleZoomModal(client) {
+  function openScheduleZoomModal(client, preSelectedSlot) {
     if (!client.lineFriendId) {
       alert('このお客様は LINE 未連携 です');
       return;
@@ -12522,7 +12539,31 @@ STEP C: 結果報告
     const overlay = document.createElement('div');
     overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.55);backdrop-filter:blur(4px);z-index:10200;display:flex;align-items:center;justify-content:center;padding:20px;';
     const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
-    const defaultDate = tomorrow.toISOString().slice(0, 10);
+    let defaultDate = tomorrow.toISOString().slice(0, 10);
+    let defaultTime = '14:00';
+    // ★ 2026-08-31 owner GO: 客 が LINE Flex で 選択 した slot が ある なら 即 プリフィル + banner
+    //   flow: 客 タップ → 「内容 を 確認 して 再度 ご連絡」 ack (webhook 側) → admin で 「確定」 → この modal (preSelect 済) → 送信
+    let preSelectStr = '';
+    let preSelectDateJa = '';
+    if (preSelectedSlot) {
+      if (typeof preSelectedSlot === 'string') preSelectStr = preSelectedSlot;
+      else if (typeof preSelectedSlot === 'object') {
+        preSelectStr = preSelectedSlot.slot || preSelectedSlot.slotText || preSelectedSlot.dateLabel
+          || (preSelectedSlot.date ? (preSelectedSlot.date + (preSelectedSlot.time ? ' ' + preSelectedSlot.time : '')) : '');
+      }
+      const m = String(preSelectStr).match(/(\d{4})[-\/]?(\d{1,2})[-\/]?(\d{1,2})[^\d]+(\d{1,2}):(\d{2})/);
+      if (m) {
+        defaultDate = `${m[1]}-${String(m[2]).padStart(2,'0')}-${String(m[3]).padStart(2,'0')}`;
+        defaultTime = `${String(m[4]).padStart(2,'0')}:${m[5]}`;
+        try {
+          const wd = ['日','月','火','水','木','金','土'];
+          const d = new Date(`${defaultDate}T${defaultTime}:00`);
+          preSelectDateJa = `${d.getMonth()+1}/${d.getDate()} (${wd[d.getDay()]}) ${defaultTime}`;
+        } catch (_) { preSelectDateJa = preSelectStr; }
+      } else {
+        preSelectDateJa = preSelectStr;
+      }
+    }
     overlay.innerHTML = `
       <div style="background:#fff;width:min(540px,100%);max-height:92vh;border-radius:18px;box-shadow:0 30px 80px rgba(0,0,0,0.35);font-family:'Noto Sans JP',sans-serif;overflow:hidden;display:flex;flex-direction:column;">
         <div style="background:linear-gradient(135deg,#2D8CFF,#1E6FE0);color:#fff;padding:18px 24px;display:flex;justify-content:space-between;align-items:center;">
@@ -12539,6 +12580,15 @@ STEP C: 結果報告
           <button id="fp-sch-close" style="background:rgba(255,255,255,0.18);color:#fff;border:none;font-size:18px;cursor:pointer;width:36px;height:36px;border-radius:8px;font-family:inherit;">✕</button>
         </div>
         <div style="padding:24px 26px;overflow-y:auto;">
+          ${preSelectDateJa ? `
+          <div style="background:linear-gradient(135deg,#EFF6FF,#DBEAFE);border:2px solid #93C5FD;border-radius:12px;padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:12px;">
+            <div style="font-size:24px;">🎯</div>
+            <div style="flex:1;">
+              <div style="font-size:11px;font-weight:800;letter-spacing:0.08em;color:#1D4ED8;margin-bottom:3px;">お客様 が LINE で 選択 した 日時</div>
+              <div style="font-size:16.5px;font-weight:900;color:#0F172A;">${escapeHtml(preSelectDateJa)}</div>
+              <div style="font-size:11.5px;font-weight:600;color:#475569;margin-top:3px;">プリフィル 済 · そのまま 「予約 + LINE 送信」 で 確定 できます</div>
+            </div>
+          </div>` : ''}
           <div style="font-size:11.5px;font-weight:800;letter-spacing:0.06em;color:#5B5BF0;margin-bottom:10px;">STEP 1 — 日時 を 1つ 指定</div>
           <div style="background:#F8FAFC;border:2px solid #E2E8F0;border-radius:12px;padding:16px 18px;margin-bottom:16px;">
             <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:10px;">
@@ -12548,7 +12598,7 @@ STEP C: 結果報告
               </div>
               <div>
                 <div style="font-size:11px;font-weight:800;color:#64748B;letter-spacing:0.04em;margin-bottom:5px;">🕐 時刻</div>
-                <input type="time" id="fp-sch-time" value="14:00" style="width:100%;padding:13px 12px;border:2px solid #E2E8F0;border-radius:10px;font-size:15.5px;font-weight:700;font-family:inherit;background:#fff;min-height:52px;">
+                <input type="time" id="fp-sch-time" value="${defaultTime}" style="width:100%;padding:13px 12px;border:2px solid #E2E8F0;border-radius:10px;font-size:15.5px;font-weight:700;font-family:inherit;background:#fff;min-height:52px;">
               </div>
               <div>
                 <div style="font-size:11px;font-weight:800;color:#64748B;letter-spacing:0.04em;margin-bottom:5px;">⏱ 時間 (分)</div>
