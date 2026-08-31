@@ -7574,6 +7574,9 @@
         if (!confirm('この 議事録 を 削除しますか?\n\n削除する項目:\n・議事録 サマリー\n・文字起こし 全文\n・タスク / 提案\n\n元に戻せません。')) return;
         const bookingTs = btn.dataset.bookingTs || '';
         const aiTs = btn.dataset.aiTs || '';
+        // 2026-08-31 追加: server が Firestore doc 特定 に userId/customerName 必要 (delete 反映 の 為)
+        const clientIdData = btn.dataset.clientId || (window._fpCurrentClient?.id) || '';
+        const clientNameData = btn.dataset.clientName || (window._fpCurrentClient?.name) || '';
         btn.disabled = true;
         btn.textContent = '削除中…';
         try {
@@ -7600,17 +7603,36 @@
             }
           } catch (_) {}
           try {
+            // 2026-08-31 fix: server は body.entry を 期待 する ため wrap 必須 (前 は flat body で 400 → .catch(()=>{}) で 黙殺 → Firestore 未削除 → reload で 復活 の bug)
             const CLOUD_RUN = 'https://fp-compass-webhook-527726449426.asia-northeast1.run.app';
             const h = window.getFpAuthHeaders ? await window.getFpAuthHeaders() : { 'Content-Type': 'application/json' };
-            await fetch(CLOUD_RUN + '/api/save-ai-result', {
+            const delRes = await fetch(CLOUD_RUN + '/api/save-ai-result', {
               method: 'POST',
               headers: h,
               body: JSON.stringify({
-                bookingTs, ts: aiTs, deleted: true,
-                tenantId: (window.__fp && window.__fp.tenantId) || '',
+                entry: {
+                  bookingTs, ts: aiTs, deleted: true,
+                  userId: clientIdData,
+                  customerName: clientNameData,
+                  tenantId: (window.__fp && window.__fp.tenantId) || '',
+                },
+                tasks: [],
               }),
-            }).catch(() => {});
-          } catch (_) {}
+            });
+            if (!delRes.ok) {
+              const errText = await delRes.text().catch(() => '');
+              throw new Error(`削除 API 失敗 HTTP ${delRes.status}: ${errText.slice(0,120)}`);
+            }
+            const delData = await delRes.json().catch(() => ({}));
+            console.log('[meeting-delete] server response:', delData);
+          } catch (delErr) {
+            console.error('[meeting-delete] server delete failed:', delErr);
+            // ★ 削除 失敗 は 黙殺 じゃなく alert + state 復元
+            alert('議事録 削除 に 失敗 しました: ' + (delErr.message || delErr) + '\n\nreload で 復活 します。 network エラー なら 再試行 して ください。');
+            btn.disabled = false;
+            btn.textContent = '🗑 削除';
+            return; // 以降 の panel 再描画 は しない (server と 不整合 の まま UI 消す と 前 の bug 再現)
+          }
           // panel 直接 innerHTML 再描画 (openClientModal 全体再描画 だと URL 履歴 邪魔になる)
           const client = window._fpCurrentClient;
           const panel = document.querySelector('[data-cdpanel="meetings"]');
@@ -10276,7 +10298,7 @@ ${ctxText}${surveyTxt}`;
                 <div class="fp-meeting-card-actions" style="display:flex;gap:6px;flex-wrap:wrap;">
                   ${b.driveUrl ? `<a href="${escapeHtml(b.driveUrl)}" target="_blank" class="fp-btn fp-btn-sm fp-btn-gold">🎥 録画を見る</a>` : ''}
                   <button class="fp-meeting-todo-review" data-booking-ts="${escapeHtml(b.ts || '')}" data-ai-ts="${escapeHtml(aiData.ts || aiData.createdAt || '')}" data-client-id="${escapeHtml(client?.id || '')}" data-client-name="${escapeHtml(client?.name || '')}" style="background:#EEF0FF;border:1.5px solid #5B5BF0;color:#5B5BF0;font-size:11.5px;font-weight:700;padding:5px 11px;border-radius:5px;cursor:pointer;font-family:inherit;">📋 TODO 候補 レビュー</button>
-                  <button class="fp-meeting-delete" data-booking-ts="${escapeHtml(b.ts || '')}" data-ai-ts="${escapeHtml(aiData.ts || aiData.createdAt || '')}" style="background:#fff;border:1.5px solid #FCA5A5;color:#DC2626;font-size:11.5px;font-weight:700;padding:5px 11px;border-radius:5px;cursor:pointer;font-family:inherit;">🗑 削除</button>
+                  <button class="fp-meeting-delete" data-booking-ts="${escapeHtml(b.ts || '')}" data-ai-ts="${escapeHtml(aiData.ts || aiData.createdAt || '')}" data-client-id="${escapeHtml(client?.id || '')}" data-client-name="${escapeHtml(client?.name || '')}" style="background:#fff;border:1.5px solid #FCA5A5;color:#DC2626;font-size:11.5px;font-weight:700;padding:5px 11px;border-radius:5px;cursor:pointer;font-family:inherit;">🗑 削除</button>
                 </div>
               </div>
               <div class="fp-meeting-card-body" data-meeting-body hidden>
@@ -10412,7 +10434,7 @@ ${ctxText}${surveyTxt}`;
                   </div>
                   <div class="fp-meeting-card-actions" style="display:flex;gap:6px;flex-wrap:wrap;">
                     <button class="fp-meeting-todo-review" data-booking-ts="${escapeHtml(a.bookingTs || '')}" data-ai-ts="${escapeHtml(a.ts || a.createdAt || '')}" data-client-id="${escapeHtml(client?.id || '')}" data-client-name="${escapeHtml(client?.name || a.customerName || '')}" style="background:#EEF0FF;border:1.5px solid #5B5BF0;color:#5B5BF0;font-size:11.5px;font-weight:700;padding:5px 11px;border-radius:5px;cursor:pointer;font-family:inherit;">📋 TODO 候補 レビュー</button>
-                    <button class="fp-meeting-delete" data-booking-ts="${escapeHtml(a.bookingTs || '')}" data-ai-ts="${escapeHtml(a.ts || a.createdAt || '')}" style="background:#fff;border:1.5px solid #FCA5A5;color:#DC2626;font-size:11.5px;font-weight:700;padding:5px 11px;border-radius:5px;cursor:pointer;font-family:inherit;">🗑 削除</button>
+                    <button class="fp-meeting-delete" data-booking-ts="${escapeHtml(a.bookingTs || '')}" data-ai-ts="${escapeHtml(a.ts || a.createdAt || '')}" data-client-id="${escapeHtml(client?.id || '')}" data-client-name="${escapeHtml(client?.name || a.customerName || '')}" style="background:#fff;border:1.5px solid #FCA5A5;color:#DC2626;font-size:11.5px;font-weight:700;padding:5px 11px;border-radius:5px;cursor:pointer;font-family:inherit;">🗑 削除</button>
                   </div>
                 </div>
                 <div class="fp-meeting-card-body" data-meeting-body hidden>
