@@ -13129,4 +13129,119 @@ body:not([data-home-view]) [data-view-target="cal"] { display: none !important; 
   transform: none;
   top: 0;
 }
-.fp-btn-elevated svg { color: #fff8e6; }
+.fp-btn-elevated svg { color: rgba(255,255,255,0.92); }
+
+/* --- Color variants (semantic tone に合わせて 使い分け) --- */
+/* 🟢 Green — primary 確定 / Zoom 発行 / 完了 系 */
+.fp-btn-elevated--green {
+  border-color: #15803d;
+  background: linear-gradient(180deg, #22c55e 0%, #16a34a 50%, #15803d 100%);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.4) inset,
+    0 -1px 0 rgba(0,0,0,0.12) inset,
+    0 2px 0 #14532d,
+    0 4px 10px rgba(22,163,74,0.30),
+    0 1px 2px rgba(15,23,42,0.08);
+}
+.fp-btn-elevated--green:hover {
+  background: linear-gradient(180deg, #2fd371 0%, #17b053 50%, #16873c 100%);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.45) inset,
+    0 -1px 0 rgba(0,0,0,0.14) inset,
+    0 3px 0 #14532d,
+    0 6px 14px rgba(22,163,74,0.38),
+    0 2px 4px rgba(15,23,42,0.10);
+}
+.fp-btn-elevated--green:active {
+  background: linear-gradient(180deg, #16a34a 0%, #15803d 50%, #12673a 100%);
+}
+.fp-btn-elevated--green:focus-visible { outline-color: rgba(34,197,94,0.55); }
+
+/* 🔵 Blue — view / info / Google account 系 */
+.fp-btn-elevated--blue {
+  border-color: #1e40af;
+  background: linear-gradient(180deg, #3b82f6 0%, #2563eb 50%, #1e40af 100%);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.4) inset,
+    0 -1px 0 rgba(0,0,0,0.12) inset,
+    0 2px 0 #172554,
+    0 4px 10px rgba(37,99,235,0.30),
+    0 1px 2px rgba(15,23,42,0.08);
+}
+.fp-btn-elevated--blue:hover {
+  background: linear-gradient(180deg, #4c8ef7 0%, #2f6de8 50%, #2246b3 100%);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.45) inset,
+    0 -1px 0 rgba(0,0,0,0.14) inset,
+    0 3px 0 #172554,
+    0 6px 14px rgba(37,99,235,0.38),
+    0 2px 4px rgba(15,23,42,0.10);
+}
+.fp-btn-elevated--blue:active {
+  background: linear-gradient(180deg, #2563eb 0%, #1e40af 50%, #1c3690 100%);
+}
+.fp-btn-elevated--blue:focus-visible { outline-color: rgba(59,130,246,0.55); }
+
+/* 💚 LINE green — LINE 送信 / 追撃 系 */
+.fp-btn-elevated--line {
+  border-color: #04a045;
+  background: linear-gradient(180deg, #06c755 0%, #05b04a 50%, #04a045 100%);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.4) inset,
+    0 -1px 0 rgba(0,0,0,0.12) inset,
+    0 2px 0 #027a36,
+    0 4px 10px rgba(6,199,85,0.32),
+    0 1px 2px rgba(15,23,42,0.08);
+}
+.fp-btn-elevated--line:hover {
+  background: linear-gradient(180deg, #14d762 0%, #08b850 50%, #05a747 100%);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.45) inset,
+    0 -1px 0 rgba(0,0,0,0.14) inset,
+    0 3px 0 #027a36,
+    0 6px 14px rgba(6,199,85,0.40),
+    0 2px 4px rgba(15,23,42,0.10);
+}
+.fp-btn-elevated--line:active {
+  background: linear-gradient(180deg, #05b04a 0%, #04a045 50%, #039040 100%);
+}
+.fp-btn-elevated--line:focus-visible { outline-color: rgba(6,199,85,0.55); }
+
+/* 🔴 Red — 取消 / 別日再調整 / danger 系 */
+.fp-btn-elevated--red {
+  border-color: #b91c1c;
+  background: linear-gradient(180deg, #ef4444 0%, #dc2626 50%, #b91c1c 100%);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.4) inset,
+    0 -1px 0 rgba(0,0,0,0.12) inset,
+    0 2px 0 #7f1d1d,
+    0 4px 10px rgba(220,38,38,0.30),
+    0 1px 2px rgba(15,23,42,0.08);
+}
+.fp-btn-elevated--red:hover {
+  background: linear-gradient(180deg, #f25656 0%, #e13030 50%, #c02222 100%);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.45) inset,
+    0 -1px 0 rgba(0,0,0,0.14) inset,
+    0 3px 0 #7f1d1d,
+    0 6px 14px rgba(220,38,38,0.38),
+    0 2px 4px rgba(15,23,42,0.10);
+}
+.fp-btn-elevated--red:active {
+  background: linear-gradient(180deg, #dc2626 0%, #b91c1c 50%, #991b1b 100%);
+}
+.fp-btn-elevated--red:focus-visible { outline-color: rgba(239,68,68,0.55); }
+
+/* Size variants */
+.fp-btn-elevated--sm {
+  font-size: 11.5px;
+  padding: 7px 12px;
+  border-radius: 6px;
+  gap: 6px;
+}
+.fp-btn-elevated--lg {
+  font-size: 14px;
+  padding: 13px 22px;
+  border-radius: 10px;
+  gap: 10px;
+}

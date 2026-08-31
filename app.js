@@ -1485,15 +1485,15 @@
     const actionButtonsFor = (t) => {
       const btns = [];
       if (t.type === 'line-reply') {
-        btns.push(`<button class="fp-task-act fp-task-act-primary" data-act="line-reply" data-client-id="${escapeHtml(t.clientId)}" onclick="event.stopPropagation()" title="LINE 返信 画面 を 開く">💬 返信 する</button>`);
+        btns.push(`<button class="fp-task-act fp-btn-elevated fp-btn-elevated--line fp-btn-elevated--sm" data-act="line-reply" data-client-id="${escapeHtml(t.clientId)}" onclick="event.stopPropagation()" title="LINE 返信 画面 を 開く" type="button">💬 返信 する</button>`);
       } else if (t.type === 'schedule') {
         if ((t.timeLabel || '').includes('要 発行')) {
-          btns.push(`<button class="fp-task-act fp-task-act-primary" data-act="zoom-issue" data-client-id="${escapeHtml(t.clientId)}" onclick="event.stopPropagation()" title="Zoom URL 発行 モーダル を 開く">🎥 Zoom URL 発行</button>`);
+          btns.push(`<button class="fp-task-act fp-btn-elevated fp-btn-elevated--green fp-btn-elevated--sm" data-act="zoom-issue" data-client-id="${escapeHtml(t.clientId)}" onclick="event.stopPropagation()" title="Zoom URL 発行 モーダル を 開く" type="button">🎥 Zoom URL 発行</button>`);
         } else {
-          btns.push(`<button class="fp-task-act fp-task-act-secondary" data-act="slots-resend" data-client-id="${escapeHtml(t.clientId)}" onclick="event.stopPropagation()" title="候補日 を 再送 する">📅 候補日 再送</button>`);
+          btns.push(`<button class="fp-task-act fp-btn-elevated fp-btn-elevated--blue fp-btn-elevated--sm" data-act="slots-resend" data-client-id="${escapeHtml(t.clientId)}" onclick="event.stopPropagation()" title="候補日 を 再送 する" type="button">📅 候補日 再送</button>`);
         }
       } else if (t.type === 'booking') {
-        btns.push(`<button class="fp-task-act fp-task-act-secondary" data-act="open-client" data-client-id="${escapeHtml(t.clientId)}" onclick="event.stopPropagation()" title="客 カルテ 開く">📋 カルテ</button>`);
+        btns.push(`<button class="fp-task-act fp-btn-elevated fp-btn-elevated--blue fp-btn-elevated--sm" data-act="open-client" data-client-id="${escapeHtml(t.clientId)}" onclick="event.stopPropagation()" title="客 カルテ 開く" type="button">📋 カルテ</button>`);
       }
       return btns.join('');
     };

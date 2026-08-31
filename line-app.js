@@ -1090,7 +1090,7 @@
                   <div style="font-size:12px;color:var(--ink-2);margin-top:3px;">📍 ${escapeHtml(a.reason)}</div>
                   <div style="font-size:11px;color:var(--muted);margin-top:2px;">最終アクションから ${a.days}日経過</div>
                 </div>
-                <button data-aftercare-uid="${escapeHtml(a.user.userId)}" data-aftercare-name="${escapeHtml(a.customerName)}" data-aftercare-stage="${a.stage}" class="primary aftercare-btn"><i data-lucide="send"></i><span>LINE追撃</span></button>
+                <button data-aftercare-uid="${escapeHtml(a.user.userId)}" data-aftercare-name="${escapeHtml(a.customerName)}" data-aftercare-stage="${a.stage}" class="aftercare-btn fp-btn-elevated fp-btn-elevated--line fp-btn-elevated--sm" type="button"><i data-lucide="send"></i><span>LINE 追撃</span></button>
               </div>
             `).join('')
           }
@@ -1626,8 +1626,8 @@
               </div>
             </div>
             <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end;">
-              <button data-focus-cal="${escapeHtml(s.userId || '')}" data-name="${escapeHtml(displayName)}" style="font-size:11.5px;font-weight:700;padding:6px 12px;background:#eef2ff;color:#3730a3;border:1px solid #c7d2fe;border-radius:6px;cursor:pointer;font-family:inherit;">📅 この方を見る</button>
-              <button data-reschedule="${escapeHtml(s.userId || '')}" data-name="${escapeHtml(displayName)}" title="3つとも合わない時 → 改めて候補日を依頼" style="font-size:11.5px;font-weight:700;padding:6px 12px;background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;border-radius:6px;cursor:pointer;font-family:inherit;">✕ 別日再調整</button>
+              <button data-focus-cal="${escapeHtml(s.userId || '')}" data-name="${escapeHtml(displayName)}" class="fp-btn-elevated fp-btn-elevated--blue fp-btn-elevated--sm" type="button">📅 この方を見る</button>
+              <button data-reschedule="${escapeHtml(s.userId || '')}" data-name="${escapeHtml(displayName)}" title="3つとも合わない時 → 改めて候補日を依頼" class="fp-btn-elevated fp-btn-elevated--red fp-btn-elevated--sm" type="button">✕ 別日再調整</button>
               ${s._pendingSelection
                 ? `<span class="status-pill" style="background:#dcfce7;color:#166534;border:1px solid #86efac;font-weight:700;">🎯 お客様 選択 済 · 確定 待ち</span>`
                 : `<span class="status-pill" style="background:#e0e7ff;color:#3730a3;border:1px solid #a5b4fc;">📤 候補 送付 済 · お客様 タップ 待ち</span>`}
@@ -1663,12 +1663,12 @@
                   <span style="font-size:11px;color:#94a3b8;font-weight:700;background:#f1f5f9;padding:4px 10px;border-radius:6px;">${s._pendingSelection ? '未選択' : '選択 待ち'}</span>
                 </div>`;
               }
-              return `<button class="slot-confirm-btn" data-slot-confirm
+              return `<button class="slot-confirm-btn fp-btn-elevated fp-btn-elevated--green" data-slot-confirm
                 data-fs-customer="${escapeHtml(s._fsCustomerId || '')}"
                 data-uid="${escapeHtml(s.userId)}" data-date="${escapeHtml(parsed.dateStr)}" data-slot="${escapeHtml(parsed.slotStr)}"
-                style="text-align:left;padding:14px 16px;background:linear-gradient(135deg,#dcfce7,#f0fdf4);border:2px solid #22c55e;border-radius:8px;cursor:pointer;font-size:14px;display:flex;justify-content:space-between;align-items:center;font-family:inherit;transition:all 0.15s;box-shadow:0 4px 12px rgba(34,197,94,0.18);">
-                <span><strong style="color:#166534;margin-right:10px;">🎯 第${idx + 1}希望</strong><strong>${escapeHtml(parsed.display)}</strong></span>
-                <span style="font-size:12px;color:#fff;font-weight:800;background:#16a34a;padding:6px 14px;border-radius:6px;">この日で確定 →</span>
+                style="justify-content:space-between;width:100%;padding:14px 18px;font-size:14px;">
+                <span style="display:inline-flex;align-items:center;gap:10px;"><span style="background:rgba(255,255,255,0.22);border:1px solid rgba(255,255,255,0.35);padding:2px 8px;border-radius:6px;font-size:10.5px;font-weight:800;letter-spacing:0.06em;">🎯 第${idx + 1}希望</span><span style="font-weight:900;">${escapeHtml(parsed.display)}</span></span>
+                <span style="display:inline-flex;align-items:center;gap:6px;font-weight:900;">この日で確定 <span aria-hidden="true">→</span></span>
               </button>`;
             }).join('')}
           </div>
