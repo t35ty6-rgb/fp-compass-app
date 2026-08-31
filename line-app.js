@@ -1023,11 +1023,13 @@
           </a>
         `).join('')}
       </div>
-      <!-- フロー説明 (2026-08-12 owner GO で 「自動 確定 化」 反映) -->
+      <!-- フロー説明 (2026-08-31 owner GO で 「仮予約 → admin 確定」 に 差替) -->
       <div style="background:#fdfbf4;border:1px solid #e8d9a8;border-radius:8px;padding:14px 20px;margin-bottom:36px;font-size:11.5px;color:#5e4d1a;line-height:1.7;">
         <div style="font-size:10px;font-weight:700;color:#8b7d5d;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:6px;">How it works</div>
-        <strong style="color:#1f2a3f;font-weight:700;">01</strong> 客 が アンケート + 候補日 3つ を LINE で 送る → 「候補 送付 済 · 返信 待ち」 状態 で 01 に 表示 →
-        <strong style="color:#1f2a3f;font-weight:700;">02</strong> 客 が LINE で 候補X tap → <strong style="color:#166534;">自動 で Zoom URL + LINE 通知 + カレンダー まで 発火</strong> · 02 に 「🤖 客 選択 → 自動 確定」 badge 付き で 出現 → 当日 「録画ONで Zoom 開始」 で 録画 → 終了 後 面談 履歴 に アーカイブ
+        <strong style="color:#1f2a3f;font-weight:700;">01a</strong> 客 が アンケート + 候補日 3つ を LINE で 送る → 「📤 候補 送付 済 · お客様 タップ 待ち」 で 表示 (この段階 で は FP は 確定 できない) →
+        <strong style="color:#1f2a3f;font-weight:700;">01b</strong> 客 が LINE で 候補X tap → <strong style="color:#166534;">「内容 を 確認 して 再度 ご連絡 させて頂きます」</strong> ack が 客 に 届く → 「🎯 お客様 選択 済 · 確定 待ち」 に 切替 →
+        <strong style="color:#1f2a3f;font-weight:700;">01c</strong> FP が 内容 verify → 「この日で確定」 押す → <strong style="color:#166534;">Zoom URL + 確定 message + カレンダー まで 自動 発火</strong> →
+        <strong style="color:#1f2a3f;font-weight:700;">02</strong> 当日 「録画ONで Zoom 開始」 → 終了 後 面談 履歴 に アーカイブ
       </div>
 
       <section class="board-section" id="section-confirm">
@@ -1039,8 +1041,8 @@
           <button id="fp-toggle-cal" style="font-size:11.5px;padding:8px 14px;background:#fff;border:1px solid #c19a3a;border-radius:5px;cursor:pointer;font-family:inherit;color:#5e4d1a;font-weight:700;letter-spacing:0.04em;">自分の Google カレンダーを並べて表示</button>
         </div>
         <p style="color:#6b7280;font-size:12.5px;margin:0 0 18px;line-height:1.65;letter-spacing:0.02em;">
-          <strong style="color:#7a1530;">通常</strong>: 客 が LINE で 候補X を tap → 自動 で Zoom URL 発行 + LINE 通知 まで 動く · 下の Zoom 打ち合わせ 予定 に 表示 されます<br>
-          <strong style="color:#92400e;">⚠ 自動 確定 失敗 時 の み</strong>: このリストに 残り、 第1〜第3希望から 1つ タップ で FP が 手動 確定 する
+          <strong style="color:#3730a3;">📤 送付 直後</strong>: 「お客様 タップ 待ち」 表示、 確定 button は 押せない (客 が LINE で 選ぶ まで 待機)<br>
+          <strong style="color:#166534;">🎯 お客様 タップ 後</strong>: 選択 した slot だけ 緑 button で 目立ち、 「この日で確定」 押す と Zoom URL + 確定 message + カレンダー まで 自動 発火 → 下 の Zoom 打ち合わせ 予定 に 移動
         </p>
         <div id="confirm-list"></div>
       </section>
@@ -1624,14 +1626,20 @@
               <button data-focus-cal="${escapeHtml(s.userId || '')}" data-name="${escapeHtml(displayName)}" style="font-size:11.5px;font-weight:700;padding:6px 12px;background:#eef2ff;color:#3730a3;border:1px solid #c7d2fe;border-radius:6px;cursor:pointer;font-family:inherit;">📅 この方を見る</button>
               <button data-reschedule="${escapeHtml(s.userId || '')}" data-name="${escapeHtml(displayName)}" title="3つとも合わない時 → 改めて候補日を依頼" style="font-size:11.5px;font-weight:700;padding:6px 12px;background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;border-radius:6px;cursor:pointer;font-family:inherit;">✕ 別日再調整</button>
               ${s._pendingSelection
-                ? `<span class="status-pill" style="background:#fef3c7;color:#92400e;border:1px solid #fbbf24;">⚠ 客 選択 済 · 自動 確定 失敗</span>`
-                : `<span class="status-pill important">候補 送付 済 · 返信 待ち</span>`}
+                ? `<span class="status-pill" style="background:#dcfce7;color:#166534;border:1px solid #86efac;font-weight:700;">🎯 お客様 選択 済 · 確定 待ち</span>`
+                : `<span class="status-pill" style="background:#e0e7ff;color:#3730a3;border:1px solid #a5b4fc;">📤 候補 送付 済 · お客様 タップ 待ち</span>`}
             </div>
           </div>
           ${s._pendingSelection ? `
-          <div style="background:#fef3c7;border:1px solid #fbbf24;border-radius:8px;padding:10px 14px;margin-bottom:10px;font-size:12.5px;color:#78350f;line-height:1.55;">
-            <strong style="font-weight:700;">客 が 候補${escapeHtml(s._pendingSelection.index || '?')}</strong> (${escapeHtml(s._pendingSelection.slotText || s._pendingSelection.chosen || '?')}) を 選択 · 自動 確定 が 失敗 (LINE token or Zoom 認証 の 可能性)。 下 の 候補 タップ で 手動 確定 する か、 <a href="/account.html" style="color:#78350f;text-decoration:underline;font-weight:700;">連携 設定 を 確認</a>。
-          </div>` : ''}
+          <div style="background:linear-gradient(135deg,#dcfce7,#f0fdf4);border:2px solid #86efac;border-radius:10px;padding:12px 16px;margin-bottom:10px;font-size:13px;color:#14532d;line-height:1.6;">
+            <div style="font-size:11px;font-weight:800;letter-spacing:0.08em;color:#166534;margin-bottom:3px;">🎯 お客様 が LINE で 選択 した 日時</div>
+            <strong style="font-weight:800;font-size:15px;">候補${escapeHtml(s._pendingSelection.index || '?')} · ${escapeHtml(s._pendingSelection.slotText || s._pendingSelection.chosen || '?')}</strong><br>
+            <span style="font-size:12px;color:#166534;">内容 を 確認 して 下 の 「この日で確定」 を 押す と Zoom URL 発行 + 確定 message が 自動 送信 されます</span>
+          </div>` : `
+          <div style="background:#f1f5f9;border:1px dashed #94a3b8;border-radius:10px;padding:12px 16px;margin-bottom:10px;font-size:12.5px;color:#475569;line-height:1.6;">
+            <strong style="font-weight:700;color:#1e293b;">📤 候補日 3つ を お客様 に 送信 済</strong><br>
+            お客様 が LINE で 候補X を タップ する まで お待ち ください。 タップ 後 「🎯 お客様 選択 済」 に 切り替わり 確定 できる ように なります。
+          </div>`}
           <div style="font-size:12px;color:var(--muted);letter-spacing:0.02em;margin-bottom:10px;">
             ${escapeHtml(s.q2_年代 || '-')} / ${escapeHtml(s.q3_家族 || '-')} / ${escapeHtml(s.q4_年収 || '-')} / userId:${uidShort}…
           </div>
@@ -1639,16 +1647,25 @@
             <span style="font-size:11px;color:#a08537;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;display:block;margin-bottom:4px;">お客様からの一言</span>
             💭 ${escapeHtml(s.q5_悩み || '(未記入)')}
           </div>
-          <div style="font-size:11px;color:var(--muted);font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px;">候補日 (タップで即確定)</div>
+          <div style="font-size:11px;color:var(--muted);font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px;">候補日 ${s._pendingSelection ? '(お客様 が 選択 した 日 だけ 確定 できます)' : '(お客様 の 選択 待ち)'}</div>
           <div style="display:grid;gap:6px;">
             ${slots.map((slot, idx) => {
               const parsed = parseSlotString(slot);
+              const chosenIdx = s._pendingSelection ? parseInt(s._pendingSelection.index, 10) - 1 : -1;
+              const isChosen = idx === chosenIdx;
+              const isDisabled = !s._pendingSelection || !isChosen;
+              if (isDisabled) {
+                return `<div style="text-align:left;padding:12px 16px;background:#f8fafc;border:2px dashed #cbd5e1;border-radius:8px;font-size:14px;display:flex;justify-content:space-between;align-items:center;font-family:inherit;color:#94a3b8;">
+                  <span><strong style="color:#94a3b8;margin-right:10px;">第${idx + 1}希望</strong>${escapeHtml(parsed.display)}</span>
+                  <span style="font-size:11px;color:#94a3b8;font-weight:700;background:#f1f5f9;padding:4px 10px;border-radius:6px;">${s._pendingSelection ? '未選択' : '選択 待ち'}</span>
+                </div>`;
+              }
               return `<button class="slot-confirm-btn" data-slot-confirm
                 data-fs-customer="${escapeHtml(s._fsCustomerId || '')}"
                 data-uid="${escapeHtml(s.userId)}" data-date="${escapeHtml(parsed.dateStr)}" data-slot="${escapeHtml(parsed.slotStr)}"
-                style="text-align:left;padding:12px 16px;background:#fff;border:2px solid var(--line);border-radius:8px;cursor:pointer;font-size:14px;display:flex;justify-content:space-between;align-items:center;font-family:inherit;transition:all 0.15s;">
-                <span><strong style="color:var(--accent);margin-right:10px;">第${idx + 1}希望</strong>${escapeHtml(parsed.display)}</span>
-                <span style="font-size:12px;color:var(--green);font-weight:700;background:var(--line-green-soft);padding:4px 10px;border-radius:6px;">この日で確定 →</span>
+                style="text-align:left;padding:14px 16px;background:linear-gradient(135deg,#dcfce7,#f0fdf4);border:2px solid #22c55e;border-radius:8px;cursor:pointer;font-size:14px;display:flex;justify-content:space-between;align-items:center;font-family:inherit;transition:all 0.15s;box-shadow:0 4px 12px rgba(34,197,94,0.18);">
+                <span><strong style="color:#166534;margin-right:10px;">🎯 第${idx + 1}希望</strong><strong>${escapeHtml(parsed.display)}</strong></span>
+                <span style="font-size:12px;color:#fff;font-weight:800;background:#16a34a;padding:6px 14px;border-radius:6px;">この日で確定 →</span>
               </button>`;
             }).join('')}
           </div>
