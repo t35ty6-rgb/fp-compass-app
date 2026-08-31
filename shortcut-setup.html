@@ -3,889 +3,332 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>iPhone ショートカット セットアップ · 超 初心者 版 · FP Compass</title>
-<meta name="description" content="iOS の 画面 に 出て くる 文字 を そのまま 検索 して 進める 方式 の 完全 マニュアル">
+<title>iPhone ショートカット セットアップ · FP Compass</title>
+<meta name="description" content="iPhone ボイスメモ → 共有 → 1タップ で 議事録 自動 生成 の setup">
 <style>
-  * { box-sizing: border-box; }
+  :root {
+    --ink:      #0F172A;
+    --ink-2:    #334155;
+    --dim:      #64748B;
+    --rule:     #E4E7EE;
+    --bg:       #FFFFFF;
+    --primary:  #0071E3;
+    --primary-hi: #005CB8;
+    --accent:   #8B5CF6;
+    --accent-2: #EC4899;
+    --red:      #DC2626;
+    --red-hi:   #B91C1C;
+    --green:    #059669;
+    --yellow:   #F59E0B;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
-    font-family: -apple-system, 'Hiragino Sans', 'Noto Sans JP', sans-serif;
-    margin: 0; padding: 0;
-    background: #F8FAFC;
-    color: #0F172A;
-    line-height: 1.75;
+    font-family: "Noto Sans JP", "Inter", -apple-system, sans-serif;
+    font-weight: 500;
+    letter-spacing: -0.005em;
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 40px 24px 100px;
+    line-height: 1.85;
+    color: var(--ink);
+    background: var(--bg);
   }
-  .container { max-width: 760px; margin: 0 auto; padding: 24px 20px 100px; }
-  .hero {
-    background: linear-gradient(135deg, #5B5BF0 0%, #4747C7 55%, #3A3AAB 100%);
-    color: #fff; padding: 32px 26px; border-radius: 18px; margin-bottom: 24px;
-    box-shadow: 0 12px 28px rgba(91,91,240,0.28);
+  .back-link { display: inline-block; margin-bottom: 20px; color: var(--primary); text-decoration: none; font-size: 13px; font-weight: 700; }
+  h1 {
+    font-size: 32px;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    margin: 0 0 6px;
+    background: linear-gradient(120deg, var(--primary) 0%, var(--accent) 55%, var(--accent-2) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    line-height: 1.25;
   }
-  .hero-eyebrow { font-family: 'Manrope', sans-serif; font-size: 11px; letter-spacing: 0.18em; font-weight: 800; color: #C7D2FE; text-transform: uppercase; margin-bottom: 8px; }
-  .hero h1 { font-size: 24px; font-weight: 900; margin: 0 0 10px; line-height: 1.4; letter-spacing: -0.01em; }
-  .hero p { margin: 0; font-size: 14px; opacity: 0.94; line-height: 1.85; }
-
-  .back-link { display: inline-block; margin-bottom: 20px; color: #5B5BF0; text-decoration: none; font-size: 13px; font-weight: 700; }
-
-  .method-box {
-    background: #EFF6FF; border: 1.5px solid #93C5FD; border-radius: 14px;
-    padding: 20px 22px; margin-bottom: 24px;
+  .lead { font-size: 16px; color: var(--ink-2); margin-bottom: 32px; font-weight: 500; }
+  h2 {
+    font-size: 22px;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    margin: 48px 0 16px;
+    padding: 14px 0 12px 20px;
+    border-left: 8px solid var(--primary);
+    background: linear-gradient(90deg, rgba(0,113,227,0.08) 0%, transparent 100%);
+    color: var(--ink);
   }
-  .method-box h2 { font-size: 16px; font-weight: 900; margin: 0 0 12px; color: #1E3A8A; }
-  .method-box p { margin: 0 0 8px; font-size: 13.5px; color: #1E3A8A; line-height: 1.85; }
-  .method-box .literal-example {
-    background: #fff; border: 1px solid #BFDBFE; border-radius: 10px;
-    padding: 12px 14px; margin-top: 10px; font-size: 13px; line-height: 1.85;
-  }
-  .method-box .literal-example strong { color: #1E40AF; }
-
-  .callout {
-    background: #FEF3C7; border-left: 4px solid #F59E0B; border-radius: 8px;
-    padding: 14px 18px; margin: 14px 0 20px; font-size: 13.5px; color: #78350F; line-height: 1.85;
-  }
-  .callout.warn { background: #FEE2E2; border-left-color: #EF4444; color: #7F1D1D; }
-  .callout strong { display: block; margin-bottom: 4px; font-size: 14px; }
-
-  .chapter {
-    background: #fff; border: 1px solid #E2E8F0; border-radius: 14px;
-    padding: 24px 24px; margin-bottom: 20px;
-    box-shadow: 0 1px 3px rgba(15,23,42,0.04);
-  }
-  .chapter-head { display: flex; align-items: center; gap: 14px; margin-bottom: 6px; padding-bottom: 14px; border-bottom: 1px solid #F1F5F9; }
-  .chapter-num {
-    display: inline-flex; align-items: center; justify-content: center;
-    min-width: 42px; height: 42px; padding: 0 10px; border-radius: 22px;
-    background: linear-gradient(135deg, #5B5BF0, #4747C7); color: #fff;
-    font-weight: 900; font-size: 13px; letter-spacing: 0.05em;
-    box-shadow: 0 4px 12px rgba(91,91,240,0.32);
-  }
-  .chapter-title { font-size: 18px; font-weight: 900; margin: 0; letter-spacing: -0.01em; }
-
-  .substep {
-    margin: 18px 0; padding: 16px 18px;
-    background: #FAFBFF; border: 1px solid #E5E7FF; border-radius: 12px;
-  }
-  .substep-tag {
-    display: inline-block;
-    font-family: 'JetBrains Mono', ui-monospace, monospace;
-    font-size: 11px; font-weight: 800; color: #4338CA;
-    background: #E0E7FF; padding: 2px 8px; border-radius: 6px; margin-right: 8px;
-    letter-spacing: 0.03em;
-  }
-  .substep-title { font-size: 15px; font-weight: 800; display: inline; margin: 0; letter-spacing: -0.005em; }
-
-  /* 検索 → タップ の 4 段 構造 */
-  .action-grid {
-    display: grid; grid-template-columns: 90px 1fr; gap: 6px 14px;
-    margin-top: 12px; font-size: 13.5px; line-height: 1.7;
-  }
-  .action-label {
-    background: #F1F5F9; color: #475569; font-weight: 800; font-size: 11.5px;
-    padding: 3px 8px; border-radius: 5px; text-align: center;
-    align-self: start; letter-spacing: 0.04em;
-  }
-  .action-val { color: #0F172A; }
-  .literal {
-    font-family: -apple-system, 'Hiragino Sans', 'Noto Sans JP', sans-serif;
-    background: #FFFBEB; color: #78350F; border: 1.5px solid #FCD34D;
-    padding: 2px 9px; border-radius: 5px; font-weight: 700;
-    font-size: 13px; user-select: all;
-  }
-  .literal.tap { background: #DBEAFE; color: #1E40AF; border-color: #93C5FD; }
-  .literal.type { background: #DCFCE7; color: #14532D; border-color: #86EFAC; }
-  .code-inline {
-    font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px;
-    background: #F1F5F9; color: #0F172A; padding: 1px 7px; border-radius: 5px;
-    border: 1px solid #E2E8F0; user-select: all;
-  }
-  .code {
-    display: block; background: #0F172A; color: #E2E8F0;
-    font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12.5px;
-    padding: 12px 14px; border-radius: 8px; margin: 10px 0;
-    word-break: break-all; line-height: 1.7;
+  h3 { font-size: 17px; font-weight: 800; margin: 24px 0 10px; color: var(--ink); letter-spacing: -0.01em; }
+  ol, ul { padding-left: 26px; }
+  ol li, ul li { margin: 10px 0; font-weight: 500; }
+  ol li strong, ul li strong { font-weight: 800; color: var(--ink); }
+  code, .code {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    background: var(--ink);
+    color: #F1F5F9;
+    padding: 3px 8px;
+    border-radius: 5px;
+    font-size: 13px;
     user-select: all;
+    word-break: break-all;
+    font-weight: 600;
+  }
+  .callout-red {
+    background: #FEF2F2;
+    border: 3px solid var(--red);
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin: 18px 0;
+    font-weight: 700;
+    color: var(--red-hi);
+    font-size: 15px;
+  }
+  .callout-green {
+    background: #ECFDF5;
+    border: 3px solid var(--green);
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin: 18px 0;
+    color: #065F46;
+    font-weight: 600;
+  }
+  .callout-blue {
+    background: #EFF6FF;
+    border: 3px solid var(--primary);
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin: 18px 0;
+    color: #1E3A8A;
+    font-weight: 600;
+  }
+  .highlight-red { background: #FEE2E2; color: var(--red-hi); padding: 3px 10px; border-radius: 6px; font-weight: 800; border: 2px solid var(--red); }
+  .highlight-yellow { background: #FEF3C7; color: #78350F; padding: 3px 10px; border-radius: 6px; font-weight: 800; }
+  .step-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    color: #fff;
+    font-weight: 900;
+    font-size: 18px;
+    margin-right: 14px;
+    vertical-align: middle;
+    box-shadow: 0 4px 12px rgba(0,113,227,0.35);
   }
 
-  .expected {
-    margin-top: 12px; padding: 10px 14px; background: #F0FDF4; border-left: 3px solid #10B981;
-    border-radius: 4px; font-size: 12.5px; color: #065F46; line-height: 1.75;
+  .download-hero {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 55%, var(--accent-2) 100%);
+    color: #fff;
+    padding: 32px 26px;
+    border-radius: 18px;
+    margin: 24px 0 32px;
+    box-shadow: 0 12px 28px rgba(0,113,227,0.28);
   }
-  .expected strong { color: #047857; }
-
-  .screenshot {
-    display: block; max-width: 320px; width: 100%; height: auto;
-    border: 1px solid #E2E8F0; border-radius: 12px;
-    box-shadow: 0 6px 16px rgba(15,23,42,0.08);
-    margin: 12px auto;
+  .download-hero h2 { color: #fff; background: none; border: none; padding: 0; margin: 0 0 12px; font-size: 22px; }
+  .download-hero p { color: rgba(255,255,255,0.94); margin: 0 0 20px; font-size: 15px; line-height: 1.75; }
+  .download-btn {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: #fff;
+    color: var(--primary);
+    padding: 14px 28px;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 900;
+    text-decoration: none;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+    transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
   }
+  .download-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(0,0,0,0.2); }
+  .download-btn svg { width: 22px; height: 22px; }
+  .download-hint { color: rgba(255,255,255,0.88); font-size: 13px; margin-top: 14px; }
 
-  .tip {
-    margin-top: 10px; font-size: 12px; color: #64748B; line-height: 1.75;
-    padding-left: 14px; border-left: 2px solid #CBD5E1;
+  /* Screenshot with SVG overlay annotations */
+  .shot {
+    position: relative;
+    display: block;
+    max-width: 100%;
+    margin: 18px auto;
+    border: 3px solid var(--ink);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
   }
-
-  .toc {
-    background: #fff; border: 1px solid #E2E8F0; border-radius: 12px;
-    padding: 16px 20px; margin-bottom: 24px;
+  .shot img { display: block; width: 100%; height: auto; }
+  .shot svg {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
   }
-  .toc-title { font-size: 12px; font-weight: 800; letter-spacing: 0.14em; color: #64748B; text-transform: uppercase; margin-bottom: 10px; font-family: 'Manrope', sans-serif; }
-  .toc ol { margin: 0; padding-left: 22px; font-size: 13.5px; }
-  .toc li { margin: 4px 0; line-height: 1.65; }
-  .toc a { color: #4338CA; text-decoration: none; font-weight: 600; }
-  .toc a:hover { text-decoration: underline; }
-
-  .final {
-    background: linear-gradient(135deg, #10B981 0%, #047857 100%);
-    color: #fff; padding: 28px 24px; border-radius: 16px; margin-top: 30px;
+  .shot .marker-box {
+    fill: none;
+    stroke: var(--red);
+    stroke-width: 6;
+  }
+  .shot .marker-arrow {
+    stroke: var(--red);
+    stroke-width: 5;
+    fill: none;
+  }
+  .shot .marker-arrow-head { fill: var(--red); }
+  .shot .marker-label {
+    fill: var(--red);
+    font-family: "Noto Sans JP", sans-serif;
+    font-weight: 900;
+    font-size: 30px;
+  }
+  .shot .marker-label-bg { fill: #fff; stroke: var(--red); stroke-width: 5; }
+  .shot-caption {
     text-align: center;
-  }
-  .final h3 { font-size: 20px; font-weight: 900; margin: 0 0 10px; }
-  .final p { margin: 0; font-size: 14px; opacity: 0.94; line-height: 1.85; }
-  .divider-with-label {
-    text-align: center; margin: 32px 0 18px;
-    font-family: 'Manrope', sans-serif; font-size: 11px;
-    letter-spacing: 0.24em; font-weight: 800; color: #64748B; text-transform: uppercase;
+    font-size: 14px;
+    color: var(--ink-2);
+    margin-top: -8px;
+    margin-bottom: 24px;
+    font-weight: 600;
   }
 </style>
 </head>
 <body>
-<div class="container">
-  <a href="/account.html" class="back-link">← アカウント 設定 に 戻る</a>
 
-  <div class="hero">
-    <div class="hero-eyebrow">iOS SHORTCUTS · 超 初心者 版 v4</div>
-    <h1>Voice Memos → ワンタップ 議事録 化</h1>
-    <p>iOS ショートカット アプリ の <strong>画面 に そのまま 出て くる 文字</strong> だけ を 使って 進める マニュアル。 「その文字 を 検索 バー に コピペ する」 「その文字 を タップ する」 の 2 動作 だけ で 迷わず 進める 構造。</p>
-  </div>
-
-  <div class="method-box">
-    <h2>マニュアル の 読み 方</h2>
-    <p>各 サブ ステップ は 3 種類 の ラベル で 何 を すれば いい か を 示す:</p>
-    <div class="literal-example">
-      <strong>検索</strong> <span class="literal">アクション を 追加</span> — この 文字 を iOS の アクション 検索 バー に 入力 する<br>
-      <strong>タップ</strong> <span class="literal tap">共有 シート に 表示</span> — この 文字 が 画面 に 出る の で タップ or スイッチ ON<br>
-      <strong>入力</strong> <span class="literal type">API_KEY</span> — この 文字 を そのまま 入力 欄 に コピペ or 手入力
-    </div>
-    <p style="margin-top: 12px;">iOS 版 で 文字 が 微妙 に 違う 時 (例: 「アクション を 追加」 が 「アクション 追加」 に なって いる 等) は、 <strong>先頭 3-4 文字 だけ で 検索 して も ヒット する</strong>。 例えば 「アクション」 と 打つ だけ で ほぼ 出る。</p>
-  </div>
-
-  <!-- 一番 詰まる 「入力 欄 は 前 の 出力 が 自動 で 入って いる 」 の 基本 パターン -->
-  <div class="method-box" style="background:#FEF3C7;border-color:#F59E0B;">
-    <h2 style="color:#78350F;">重要: iOS Shortcut の 基本 パターン (これ を 先 に 理解)</h2>
-    <p style="color:#78350F;">アクション を 追加 する と、 「入力」 欄 に <strong>「1 個 上 の アクション の 出力」 が 自動 で 入る</strong>。 これ が iOS Shortcut の 最大 の 落とし穴。 例えば:</p>
-    <div class="literal-example" style="background:#FFFBEB;border-color:#FCD34D;">
-      <strong style="color:#78350F;">状態 (困る 例):</strong><br>
-      「変数 <span class="literal type" style="display:inline-block;">AUDIO</span> を <span class="literal tap" style="display:inline-block;">API_KEY</span> に設定」<br>
-      ← ここ の <span class="literal tap" style="display:inline-block;">API_KEY</span> は <strong>自動 で 入った 値</strong>。 これ を 「ショートカットの入力」 に 変え たい 場合:<br><br>
-      <strong style="color:#065F46;">動作:</strong><br>
-      1. 青バブル <span class="literal tap" style="display:inline-block;">API_KEY</span> を <strong>タップ</strong><br>
-      2. 下 から 変数 選択 パネル が 出て くる<br>
-      3. パネル の 一番 上 の 「<span class="literal tap" style="display:inline-block;">ショートカットの入力</span>」 を タップ<br><br>
-      <strong style="color:#065F46;">結果:</strong><br>
-      「変数 <span class="literal type" style="display:inline-block;">AUDIO</span> を <span class="literal tap" style="display:inline-block;">ショートカットの入力</span> に設定」
-    </div>
-    <p style="margin-top: 12px; color:#78350F;"><strong>マニュアル 中 で 「差替」 「変更」 「選択」 と 書いて ある 場所 は 全部 この パターン。</strong> 「タップ で 青バブル を 差 替える」 を 反復 する だけ。</p>
-  </div>
-
-  <div class="toc">
-    <div class="toc-title">目次</div>
-    <ol>
-      <li><a href="#chapter-0">準備: FP Compass 側 で API キー 発行</a></li>
-      <li><a href="#chapter-1">新規 ショートカット を 作る</a></li>
-      <li><a href="#chapter-2">名前 + 共有 シート の 設定</a></li>
-      <li><a href="#chapter-3">API キー を 変数 に 保存</a></li>
-      <li><a href="#chapter-4">共有 の 音声 を 変数 に 保存</a></li>
-      <li><a href="#chapter-5">客 リスト を FP Compass から 取得</a></li>
-      <li><a href="#chapter-6">客 名前 の リスト を メニュー 化</a></li>
-      <li><a href="#chapter-7">選ばれた 名前 に 対応 する ID を 探す</a></li>
-      <li><a href="#chapter-8">音声 を FP Compass に POST</a></li>
-      <li><a href="#chapter-9">結果 を 表示 して 保存</a></li>
-    </ol>
-  </div>
-
-  <!-- =========================================
-       CHAPTER 0
-       ========================================= -->
-  <div class="chapter" id="chapter-0">
-    <div class="chapter-head">
-      <span class="chapter-num">0 / 9</span>
-      <h2 class="chapter-title">準備: FP Compass 側 で API キー を 発行</h2>
-    </div>
-
-    <div class="substep">
-      <span class="substep-tag">0.1</span><span class="substep-title">iPhone Safari で アカウント 設定 を 開く</span>
-      <div class="action-grid">
-        <span class="action-label">URL</span><span class="action-val"><span class="code-inline">https://app.skeleton-inc.jp/account.html</span></span>
-      </div>
-      <div class="expected"><strong>期待:</strong> ログイン 画面 が 出たら メール + パスワード で ログイン → 「アカウント 設定」 画面。</div>
-    </div>
-
-    <div class="substep">
-      <span class="substep-tag">0.2</span><span class="substep-title">下 に スクロール して 目的 の セクション を 見つける</span>
-      <div class="action-grid">
-        <span class="action-label">探す</span><span class="action-val"><span class="literal">iPhone ショートカット 連携</span></span>
-      </div>
-      <img src="/shortcut-manual-images/03-mobile-section.png" alt="iPhone ショートカット 連携 セクション" class="screenshot">
-      <div class="expected"><strong>期待:</strong> 紫 の 「API キー を 発行」 ボタン が 見え る 場所。</div>
-    </div>
-
-    <div class="substep">
-      <span class="substep-tag">0.3</span><span class="substep-title">API キー を 発行 する</span>
-      <div class="action-grid">
-        <span class="action-label">タップ</span><span class="action-val"><span class="literal tap">API キー を 発行 (再発行 も 同じ ボタン)</span></span>
-        <span class="action-label">確認 dialog</span><span class="action-val"><span class="literal tap">OK</span></span>
-      </div>
-      <img src="/shortcut-manual-images/04-key-issued.png" alt="キー 発行 直後 の 表示" class="screenshot">
-      <div class="expected"><strong>期待:</strong> 黄色 枠 の 中 に 32 文字 の キー が 表示 される。</div>
-    </div>
-
-    <div class="substep">
-      <span class="substep-tag">0.4</span><span class="substep-title">キー を コピー する</span>
-      <div class="action-grid">
-        <span class="action-label">タップ</span><span class="action-val"><span class="literal tap">コピー</span></span>
-      </div>
-      <div class="callout warn">
-        <strong>この 画面 を 閉じない で!</strong>
-        キー は 再表示 でき ない。 iPhone Shortcut に 貼付 する まで タブ を 開いた まま に する。 iPhone ミラーリング なら Safari の タブ と ショートカット アプリ を 交互 に 切替。
-      </div>
-    </div>
-  </div>
-
-  <!-- =========================================
-       CHAPTER 1
-       ========================================= -->
-  <div class="chapter" id="chapter-1">
-    <div class="chapter-head">
-      <span class="chapter-num">1 / 9</span>
-      <h2 class="chapter-title">新規 ショートカット を 作る</h2>
-    </div>
-
-    <div class="substep">
-      <span class="substep-tag">1.1</span><span class="substep-title">ショートカット アプリ を 開く</span>
-      <div class="action-grid">
-        <span class="action-label">開く</span><span class="action-val">iOS 標準 アプリ 「<span class="literal">ショートカット</span>」 (青紫 の 2 つ の 四角 が 重なった アイコン)</span>
-      </div>
-      <div class="tip">見つから ない 時 は ホーム 画面 で 下 に スワイプ → 検索 バー に 「<span class="literal">ショートカット</span>」 と 入力。</div>
-    </div>
-
-    <div class="substep">
-      <span class="substep-tag">1.2</span><span class="substep-title">下 の タブ を 切替</span>
-      <div class="action-grid">
-        <span class="action-label">タップ</span><span class="action-val"><span class="literal tap">すべての ショートカット</span> (画面 下部 左端 の タブ)</span>
-      </div>
-      <div class="tip">「オートメーション」 「ギャラリー」 と いう 別 の タブ も ある が 今回 は 触ら ない。</div>
-    </div>
-
-    <div class="substep">
-      <span class="substep-tag">1.3</span><span class="substep-title">新規 ショートカット を 作成</span>
-      <div class="action-grid">
-        <span class="action-label">タップ</span><span class="action-val"><span class="literal tap">＋</span> (画面 右上、 青 の プラス マーク)</span>
-      </div>
-      <div class="expected"><strong>期待:</strong> 白 の 空 の 編集 画面 に なる。 上部 中央 に <span class="literal">新規 ショートカット</span> と 表示。</div>
-      <p style="text-align:center;margin:14px 0 6px;font-weight:800;color:#4338CA;">Ch 1.3 完了 状態</p>
-      <img src="/shortcut-manual-images/13-empty-editor.png" alt="Ch 1.3 empty editor" class="screenshot" style="max-width:280px;">
-    </div>
-  </div>
-
-  <!-- =========================================
-       CHAPTER 2
-       ========================================= -->
-  <div class="chapter" id="chapter-2">
-    <div class="chapter-head">
-      <span class="chapter-num">2 / 9</span>
-      <h2 class="chapter-title">名前 + 共有 シート の 設定</h2>
-    </div>
-
-    <div class="substep">
-      <span class="substep-tag">2.1</span><span class="substep-title">詳細 パネル を 開く</span>
-      <div class="action-grid">
-        <span class="action-label">タップ</span><span class="action-val"><span class="literal tap">新規 ショートカット</span> (画面 上部 中央 の 見出し 部分。 タップ で メニュー が 下 に 出る)</span>
-      </div>
-      <div class="tip">iOS 17 以降: 「新規 ショートカット」 の 右 の 下矢印 (∨) を タップ。 iOS 16 以前: 画面 下部 中央 の 「i」 or 3 点 メニュー。</div>
-      <div class="expected"><strong>期待:</strong> 詳細 メニュー が 出る (「ショートカットを名称変更」 「詳細」 等 の 選択 肢)。</div>
-    </div>
-
-    <div class="substep">
-      <span class="substep-tag">2.2</span><span class="substep-title">名前 を つける</span>
-      <div class="action-grid">
-        <span class="action-label">タップ</span><span class="action-val"><span class="literal tap">ショートカットを名称変更</span></span>
-        <span class="action-label">入力</span><span class="action-val"><span class="literal type">FP Compass アップロード</span></span>
-        <span class="action-label">確定</span><span class="action-val"><span class="literal tap">完了</span> (キーボード 右上)</span>
-      </div>
-    </div>
-
-    <div class="substep">
-      <span class="substep-tag">2.3</span><span class="substep-title">詳細 メニュー を もう 一度 開いて 詳細 画面 へ</span>
-      <div class="action-grid">
-        <span class="action-label">タップ</span><span class="action-val"><span class="literal tap">FP Compass アップロード</span> (今 つけた 名前 を もう 一度 タップ → メニュー を 出す)</span>
-        <span class="action-label">タップ</span><span class="action-val"><span class="literal tap">詳細</span></span>
-      </div>
-      <div class="expected"><strong>期待:</strong> 「詳細」 画面 に 遷移。 いろんな スイッチ が 並んで いる。</div>
-    </div>
-
-    <div class="substep">
-      <span class="substep-tag">2.4</span><span class="substep-title">共有 シート に 出す 設定 を ON</span>
-      <div class="action-grid">
-        <span class="action-label">探す</span><span class="action-val"><span class="literal">共有 シート に 表示</span> (スイッチ が 並んで いる 一覧 の 中)</span>
-        <span class="action-label">操作</span><span class="action-val">右 の スイッチ を タップ して <strong>緑</strong> に する</span>
-      </div>
-      <div class="callout warn">
-        <strong>これ が 一番 重要</strong>
-        「共有 シート に 表示」 が OFF の まま だと、 全 手順 完了 して も Voice Memos の 共有 メニュー に 出て こ ない。
-      </div>
-      <p style="text-align:center;margin:14px 0 6px;font-weight:800;color:#4338CA;">Ch 2.4 完了 状態</p>
-      <img src="/shortcut-manual-images/24-share-sheet-switch.png" alt="Ch 2.4 share sheet ON" class="screenshot" style="max-width:280px;">
-    </div>
-
-    <div class="substep">
-      <span class="substep-tag">2.5</span><span class="substep-title">受信 する 種類 を 「メディア」 だけ に</span>
-      <div class="action-grid">
-        <span class="action-label">タップ</span><span class="action-val"><span class="literal tap">受信</span> (2.4 の 下 に 出て くる、 現在 の 受信 種類 の リスト)</span>
-        <span class="action-label">操作</span><span class="action-val"><span class="literal tap">メディア</span> の チェック だけ 残して、 他 (テキスト / URL / ファイル 等) は <strong>全部 チェック を 外す</strong></span>
-      </div>
-      <div class="tip">「入力 が ない 場合」 は 「停止 して 応答」 の まま で OK。</div>
-      <p style="text-align:center;margin:14px 0 6px;font-weight:800;color:#4338CA;">Ch 2.5 完了 状態</p>
-      <img src="/shortcut-manual-images/25-media-only.png" alt="Ch 2.5 media only" class="screenshot" style="max-width:280px;">
-    </div>
-
-    <div class="substep">
-      <span class="substep-tag">2.6</span><span class="substep-title">詳細 画面 を 閉じて 編集 に 戻る</span>
-      <div class="action-grid">
-        <span class="action-label">タップ</span><span class="action-val"><span class="literal tap">完了</span> (画面 右上)</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- =========================================
-       CHAPTER 3
-       ========================================= -->
-  <div class="chapter" id="chapter-3">
-    <div class="chapter-head">
-      <span class="chapter-num">3 / 9</span>
-      <h2 class="chapter-title">API キー を 変数 に 保存</h2>
-    </div>
-
-    <div class="callout">
-      <strong>Chapter 3 で やる こと (概要)</strong>
-      「テキスト」 アクション で キー 文字列 を 書く → 「変数 を 設定」 で 「<span class="literal type">API_KEY</span>」 と いう 名前 で 保存。 後 の URL リクエスト の ヘッダ で 使う。
-    </div>
-
-    <div class="substep">
-      <span class="substep-tag">3.1</span><span class="substep-title">「テキスト」 アクション を 追加</span>
-      <div class="action-grid">
-        <span class="action-label">タップ</span><span class="action-val"><span class="literal tap">アクション を 追加</span> (画面 中央 の 青い ボタン、 初回 だけ 大きく 出る)</span>
-        <span class="action-label">検索</span><span class="action-val">上部 の 検索 バー に <span class="literal type">テキスト</span> と 入力</span>
-        <span class="action-label">タップ</span><span class="action-val">検索 結果 の <span class="literal tap">テキスト</span> (T の アイコン、 「書類 · スクリプティング」 カテゴリ)</span>
-      </div>
-      <div class="expected"><strong>期待:</strong> 編集 画面 に <span class="literal">テキスト</span> と いう ブロック が 追加 される。 中 に <span class="literal">テキスト</span> と いう プレースホルダ の 入力 欄。</div>
-    </div>
-
-    <div class="substep">
-      <span class="substep-tag">3.2</span><span class="substep-title">API キー を 貼付</span>
-      <div class="action-grid">
-        <span class="action-label">タップ</span><span class="action-val">「テキスト」 ブロック 内 の 入力 欄 (プレースホルダ 「テキスト」)</span>
-        <span class="action-label">操作</span><span class="action-val">長 押し → <span class="literal tap">ペースト</span> で 0.4 で コピー した キー を 貼付</span>
-      </div>
-      <div class="expected"><strong>期待:</strong> 入力 欄 に 32 文字 の キー (例: <span class="code-inline">o-5_ayHoq4RCZjzAUgkjbff0_EB7UYJ_</span>) が 表示 される。</div>
-      <p style="text-align:center;margin:14px 0 6px;font-weight:800;color:#4338CA;">Ch 3.2 完了 状態</p>
-      <img src="/shortcut-manual-images/32-text-with-key.png" alt="Ch 3.2 text with API key" class="screenshot" style="max-width:280px;">
-    </div>
-
-    <div class="substep">
-      <span class="substep-tag">3.3</span><span class="substep-title">「変数 を 設定」 アクション を 追加</span>
-      <div class="action-grid">
-        <span class="action-label">検索</span><span class="action-val">画面 下部 の 検索 バー に <span class="literal type">変数 を 設定</span> と 入力</span>
-        <span class="action-label">タップ</span><span class="action-val">検索 結果 の <span class="literal tap">変数 を 設定</span></span>
-      </div>
-    </div>
-
-    <div class="substep">
-      <span class="substep-tag">3.4</span><span class="substep-title">変数 名 を 「API_KEY」 に</span>
-      <div class="action-grid">
-        <span class="action-label">タップ</span><span class="action-val"><span class="literal tap">変数 名</span> (「変数 を 設定」 の 中 の 入力 欄。 プレースホルダ 「変数 名」)</span>
-        <span class="action-label">入力</span><span class="action-val"><span class="literal type">API_KEY</span> (半角 大文字 + アンダー スコア)</span>
-      </div>
-      <div class="expected"><strong>期待:</strong> <span class="literal">入力</span> 欄 は 自動 で 上 の 「テキスト」 が 選択 済 (青 の 「テキスト」 バブル が 表示 されて いる)。</div>
-      <p style="text-align:center;margin:14px 0 6px;font-weight:800;color:#4338CA;">Ch 3.4 完了 状態 (Chapter 3 完了)</p>
-      <img src="/shortcut-manual-images/34-set-api-key-var.png" alt="Ch 3.4 API_KEY variable set" class="screenshot" style="max-width:280px;">
-    </div>
-  </div>
-
-  <!-- =========================================
-       CHAPTER 4
-       ========================================= -->
-  <div class="chapter" id="chapter-4">
-    <div class="chapter-head">
-      <span class="chapter-num">4 / 9</span>
-      <h2 class="chapter-title">共有 の 音声 を 変数 に 保存</h2>
-    </div>
-
-    <div class="substep">
-      <span class="substep-tag">4.1</span><span class="substep-title">2 個 目 の 「変数 を 設定」 を 追加</span>
-      <div class="action-grid">
-        <span class="action-label">検索</span><span class="action-val"><span class="literal type">変数 を 設定</span></span>
-        <span class="action-label">タップ</span><span class="action-val"><span class="literal tap">変数 を 設定</span></span>
-      </div>
-    </div>
-
-    <div class="substep">
-      <span class="substep-tag">4.2</span><span class="substep-title">変数 名 を 「AUDIO」 に</span>
-      <div class="action-grid">
-        <span class="action-label">タップ</span><span class="action-val"><span class="literal tap">変数 名</span></span>
-        <span class="action-label">入力</span><span class="action-val"><span class="literal type">AUDIO</span></span>
-      </div>
-      <p style="text-align:center;margin:14px 0 6px;font-weight:800;color:#4338CA;">Ch 4.2 完了 状態 (右 の 入力 は まだ 直す 必要)</p>
-      <img src="/shortcut-manual-images/42-audio-name-set.png" alt="Ch 4.2 audio name set" class="screenshot" style="max-width:280px;">
-    </div>
-
-    <div class="substep" style="border-color:#F59E0B;background:#FFFBEB;">
-      <span class="substep-tag" style="background:#F59E0B;color:#fff;">4.3 · 一番 詰まる</span><span class="substep-title">「API_KEY」 と 表示 されて いる 青バブル を 「ショートカットの入力」 に 差替</span>
-
-      <div class="callout warn" style="margin: 10px 0 14px;">
-        <strong>今、 4.2 が 終わった 時点 で 4 番目 の ブロック が こう なって いる (下 の 画像 A)</strong>
-      </div>
-
-      <p style="text-align:center;margin:14px 0 6px;font-weight:800;color:#78350F;">画像 A · 現在 の 状態</p>
-      <img src="/shortcut-manual-images/43-A-initial.png" alt="Chapter 4.3 初期 状態" class="screenshot" style="max-width:280px;">
-
-      <p style="font-size: 14px; font-weight: 800; margin: 24px 0 8px; color: #78350F;">iOS 17+ の 手順 (2 段 タップ が 必要)</p>
-
-      <div class="action-grid">
-        <span class="action-label">Step 1</span><span class="action-val">青バブル <span class="literal tap">API_KEY</span> を タップ</span>
-        <span class="action-label">結果</span><span class="action-val">下 の <b>画像 B</b> の パネル が 出る (「変数を消去」 「アクションを表示」 「種類 テキスト ›」 等)</span>
-      </div>
-
-      <p style="text-align:center;margin:14px 0 6px;font-weight:800;color:#78350F;">画像 B · API_KEY を タップ 後 の パネル (これ は 別 変数 を 選ぶ パネル じゃ ない)</p>
-      <img src="/shortcut-manual-images/43-B-wrong-panel.png" alt="Chapter 4.3 wrong panel" class="screenshot" style="max-width:280px;">
-
-      <div class="callout warn" style="background:#FEE2E2;border-color:#F87171;color:#7F1D1D;margin: 10px 0;">
-        <strong>間違い やすい ポイント</strong>
-        画像 B の パネル (「テキスト チェック 付き / ファイルサイズ / ファイル拡張子 / …」) は 「API_KEY 変数 の どの プロパティ を 使う か」 の 選択。 「ショートカットの入力」 は ここ に は 無い。 別 変数 に 差替 える に は 一度 消す。
-      </div>
-
-      <div class="action-grid">
-        <span class="action-label">Step 2</span><span class="action-val">画像 B の 左上 の 赤 <span class="literal tap">変数を消去</span> (X アイコン) を タップ</span>
-        <span class="action-label">結果</span><span class="action-val">下 の <b>画像 C</b> の 状態 に なる。 青バブル が 消えて 「入力」 と いう 灰色 プレースホルダ に</span>
-      </div>
-
-      <p style="text-align:center;margin:14px 0 6px;font-weight:800;color:#78350F;">画像 C · 「変数を消去」 後 の 状態</p>
-      <img src="/shortcut-manual-images/43-C-cleared.png" alt="Chapter 4.3 cleared" class="screenshot" style="max-width:280px;">
-
-      <div class="action-grid">
-        <span class="action-label">Step 3</span><span class="action-val">画像 C の 灰色 の <span class="literal tap">入力</span> プレースホルダ を もう 一度 タップ</span>
-        <span class="action-label">結果</span><span class="action-val">下 の <b>画像 D</b> の パネル (「変数 を 選択」 · 「ショートカットの入力」 が 見える)</span>
-      </div>
-
-      <p style="text-align:center;margin:14px 0 6px;font-weight:800;color:#78350F;">画像 D · 変数 選択 パネル (今度 は 正しい パネル)</p>
-      <img src="/shortcut-manual-images/43-D-select-input.png" alt="Chapter 4.3 select input" class="screenshot" style="max-width:280px;">
-
-      <div class="action-grid">
-        <span class="action-label">Step 4</span><span class="action-val">画像 D の 一番 上 の <span class="literal tap">ショートカットの入力</span> (青文字) を タップ</span>
-        <span class="action-label">結果</span><span class="action-val">下 の <b>画像 E</b> の 完成 状態 に なる</span>
-      </div>
-
-      <p style="text-align:center;margin:14px 0 6px;font-weight:800;color:#065F46;">画像 E · Chapter 4.3 完了 状態</p>
-      <img src="/shortcut-manual-images/43-E-success.png" alt="Chapter 4.3 success" class="screenshot" style="max-width:280px;">
-
-      <div class="expected"><strong>成功 の 見た目:</strong> 4 番目 の ブロック が 「変数 AUDIO を <b>ショートカットの入力</b> に設定」 に なって いれば OK。</div>
-
-      <div class="callout warn" style="margin: 12px 0 0;">
-        <strong>NG パターン (owner が 実際 に 詰まった)</strong>
-        「変数 AUDIO を <span class="literal tap" style="display:inline-block;">API_KEY</span> に設定」 の まま で 進める と、 音声 の 代わり に API キー が Voice Memos に 送信 されて 全 flow が 壊れる。 <strong>必ず 「ショートカットの入力」 に 差替える こと</strong>。
-      </div>
-    </div>
-  </div>
-
-  <!-- =========================================
-       CHAPTER 5
-       ========================================= -->
-  <div class="chapter" id="chapter-5">
-    <div class="chapter-head">
-      <span class="chapter-num">5 / 9</span>
-      <h2 class="chapter-title">客 リスト を FP Compass から 取得</h2>
-    </div>
-
-    <div class="substep">
-      <span class="substep-tag">5.1</span><span class="substep-title">「URL」 アクション を 追加 (単純 な URL 文字列 保存 用)</span>
-      <div class="action-grid">
-        <span class="action-label">検索</span><span class="action-val"><span class="literal type">URL</span> (2 文字 だけ)</span>
-        <span class="action-label">タップ</span><span class="action-val"><span class="literal tap">URL</span> (地球 マーク の アイコン、 「Web」 カテゴリ の 最上位)</span>
-      </div>
-      <div class="tip">「URL の 内容 を 取得」 と 名前 が 似て いる の で 間違え ない。 5.1 で 追加 する の は <strong>「URL」 だけ</strong>。</div>
-    </div>
-
-    <div class="substep">
-      <span class="substep-tag">5.2</span><span class="substep-title">客 リスト の URL を 貼付</span>
-      <div class="action-grid">
-        <span class="action-label">タップ</span><span class="action-val">「URL」 ブロック 内 の <span class="literal tap">apple.com</span> の 部分</span>
-        <span class="action-label">入力</span><span class="action-val">全 選択 → 削除 → 下 を コピペ:</span>
-      </div>
-      <span class="code">https://fp-compass-webhook-527726449426.asia-northeast1.run.app/api/mobile/customers</span>
-      <p style="text-align:center;margin:14px 0 6px;font-weight:800;color:#4338CA;">Ch 5.2 完了 状態</p>
-      <img src="/shortcut-manual-images/52-url-pasted.png" alt="Ch 5.2 URL pasted" class="screenshot" style="max-width:280px;">
-    </div>
-
-    <div class="substep">
-      <span class="substep-tag">5.3</span><span class="substep-title">「URLの内容を取得」 アクション を 追加</span>
-      <div class="action-grid">
-        <span class="action-label">検索</span><span class="action-val"><span class="literal type">URLの内容を取得</span></span>
-        <span class="action-label">タップ</span><span class="action-val"><span class="literal tap">URLの内容を取得</span> (「Web」 カテゴリ)</span>
-      </div>
-      <div class="expected"><strong>期待:</strong> ブロック が 追加 される。 「URL の 内容 を <span class="literal">URL</span> から 取得」 と 表示 (上 の 5.1-5.2 の URL が 自動 で 入って いる)。</div>
-    </div>
-
-    <div class="substep">
-      <span class="substep-tag">5.4</span><span class="substep-title">詳細 を 展開 して 「方法」 と 「ヘッダ」 を 設定</span>
-      <div class="action-grid">
-        <span class="action-label">タップ</span><span class="action-val">「URLの内容を取得」 ブロック の 下端 の <span class="literal tap">＞</span> or <span class="literal tap">詳細を表示</span> (詳細 を 開く)</span>
-      </div>
-      <p style="margin-top:12px;font-size:13.5px;">展開 する と 「方法」 「本文」 「ヘッダ」 等 が 出て くる。</p>
-      <div class="action-grid" style="margin-top: 8px;">
-        <span class="action-label">確認</span><span class="action-val"><span class="literal">方法</span> = <span class="literal">GET</span> (default の まま)</span>
-      </div>
-    </div>
-
-    <div class="substep">
-      <span class="substep-tag">5.5</span><span class="substep-title">ヘッダ に API キー を 追加</span>
-      <div class="action-grid">
-        <span class="action-label">Step 1</span><span class="action-val"><span class="literal tap">新規ヘッダを追加</span> (「ヘッダ」 セクション の 下 の 緑 の ＋ リンク) を タップ</span>
-      </div>
-      <p style="text-align:center;margin:14px 0 6px;font-weight:800;color:#4338CA;">Step 1 後 の 状態</p>
-      <img src="/shortcut-manual-images/55a-add-header.png" alt="Ch 5.5a add header" class="screenshot" style="max-width:280px;">
-
-      <div class="action-grid" style="margin-top:14px;">
-        <span class="action-label">Step 2</span><span class="action-val">左 の <span class="literal tap">キー</span> 欄 を タップ → <span class="literal type">X-FP-Mobile-Key</span> と 入力</span>
-      </div>
-      <p style="text-align:center;margin:14px 0 6px;font-weight:800;color:#4338CA;">Step 2 後 の 状態</p>
-      <img src="/shortcut-manual-images/55b-key-entered.png" alt="Ch 5.5b key entered" class="screenshot" style="max-width:280px;">
-
-      <div class="action-grid" style="margin-top:14px;">
-        <span class="action-label">Step 3</span><span class="action-val">右 の <span class="literal tap">テキスト</span> (値 の プレースホルダ) を タップ → 変数 パネル が 下 から 出る</span>
-      </div>
-      <p style="text-align:center;margin:14px 0 6px;font-weight:800;color:#4338CA;">Step 3 で 出る パネル</p>
-      <img src="/shortcut-manual-images/55c-select-api-key.png" alt="Ch 5.5c select API_KEY" class="screenshot" style="max-width:280px;">
-
-      <div class="action-grid" style="margin-top:14px;">
-        <span class="action-label">Step 4</span><span class="action-val">パネル 下 の 「変数」 セクション の <span class="literal tap">API_KEY</span> を タップ</span>
-      </div>
-      <div class="expected"><strong>期待:</strong> ヘッダ 欄 に <span class="literal">X-FP-Mobile-Key</span> = 青 の <span class="literal">API_KEY</span> の 1 行 が 表示。</div>
-      <p style="text-align:center;margin:14px 0 6px;font-weight:800;color:#4338CA;">Ch 5.5 完了 状態</p>
-      <img src="/shortcut-manual-images/55-header-set.png" alt="Ch 5.5 header" class="screenshot" style="max-width:280px;">
-    </div>
-  </div>
-
-  <!-- =========================================
-       CHAPTER 6
-       ========================================= -->
-  <div class="chapter" id="chapter-6">
-    <div class="chapter-head">
-      <span class="chapter-num">6 / 9</span>
-      <h2 class="chapter-title">客 名前 の リスト を メニュー 化</h2>
-    </div>
-
-    <div class="callout">
-      <strong>Chapter 6 で やる こと</strong>
-      レスポンス は <span class="code-inline">{customers: [{id,name}, ...]}</span> の 形。 「辞書 の 値 を 取得」 で customers を 抜き、 「各 項目 を 繰り返す」 で 各 客 の name を 集め、 「リスト から 選択」 で 客 を 選ぶ。
-    </div>
-
-    <div class="substep">
-      <span class="substep-tag">6.1</span><span class="substep-title">「辞書の値を取得」 で customers を 抜く</span>
-      <div class="action-grid">
-        <span class="action-label">検索</span><span class="action-val"><span class="literal type">辞書の値を取得</span></span>
-        <span class="action-label">タップ</span><span class="action-val"><span class="literal tap">辞書の値を取得</span></span>
-        <span class="action-label">タップ</span><span class="action-val"><span class="literal tap">キー</span> (「辞書の値を取得」 内 の 入力 欄)</span>
-        <span class="action-label">入力</span><span class="action-val"><span class="literal type">customers</span></span>
-      </div>
-      <div class="expected"><strong>期待:</strong> <span class="literal">辞書</span> 欄 は 自動 で 上 の <span class="literal">URLの内容を取得</span> の 結果 が 入る。</div>
-      <p style="text-align:center;margin:14px 0 6px;font-weight:800;color:#4338CA;">Ch 6.1 完了 状態</p>
-      <img src="/shortcut-manual-images/61-dict-customers.png" alt="Ch 6.1 dict customers" class="screenshot" style="max-width:280px;">
-    </div>
-
-    <div class="substep">
-      <span class="substep-tag">6.2</span><span class="substep-title">「各項目を繰り返す」 で 客 の name を 集める</span>
-      <div class="action-grid">
-        <span class="action-label">検索</span><span class="action-val"><span class="literal type">各項目を繰り返す</span></span>
-        <span class="action-label">タップ</span><span class="action-val"><span class="literal tap">各項目を繰り返す</span></span>
-      </div>
-      <p style="margin-top:10px;font-size:13.5px;">繰り返し ブロック が 追加 され、 <span class="literal">繰り返し</span> と <span class="literal">繰り返しの終了</span> の 2 行 が 出る。 <strong>この 間 に アクション を 挟む</strong>。</p>
-      <div class="action-grid" style="margin-top: 12px;">
-        <span class="action-label">確認</span><span class="action-val">繰り返し の 入力 は 自動 で <span class="literal">辞書の値</span> (customers) が 入る</span>
-        <span class="action-label">検索</span><span class="action-val"><span class="literal type">辞書の値を取得</span> (繰り返し の 中 に 入れる 2 個 目)</span>
-        <span class="action-label">タップ</span><span class="action-val"><span class="literal tap">辞書の値を取得</span></span>
-        <span class="action-label">タップ</span><span class="action-val"><span class="literal tap">キー</span></span>
-        <span class="action-label">入力</span><span class="action-val"><span class="literal type">name</span></span>
-      </div>
-      <div class="expected"><strong>期待:</strong> 内側 の <span class="literal">辞書の値を取得</span> の <span class="literal">辞書</span> 欄 は 自動 で <span class="literal">繰り返し項目</span> に なる。</div>
-      <p style="text-align:center;margin:14px 0 6px;font-weight:800;color:#4338CA;">Ch 6.2 完了 状態</p>
-      <img src="/shortcut-manual-images/62-repeat-name.png" alt="Ch 6.2 repeat name" class="screenshot" style="max-width:280px;">
-    </div>
-
-    <div class="substep">
-      <span class="substep-tag">6.3</span><span class="substep-title">「リストから選択」 で 客 を 選ぶ メニュー</span>
-      <div class="action-grid">
-        <span class="action-label">位置</span><span class="action-val"><strong>繰り返しの終了 の 「下」</strong> に 追加 する (繰り返し の 外)</span>
-        <span class="action-label">検索</span><span class="action-val"><span class="literal type">リストから選択</span></span>
-        <span class="action-label">タップ</span><span class="action-val"><span class="literal tap">リストから選択</span></span>
-      </div>
-      <p style="margin-top:10px;font-size:13.5px;">「リスト」 欄 は 自動 で <span class="literal">繰り返しの結果</span> (客名 の 配列) が 入る。</p>
-      <div class="action-grid" style="margin-top: 8px;">
-        <span class="action-label">タップ</span><span class="action-val"><span class="literal tap">＞</span> (詳細 展開)</span>
-        <span class="action-label">タップ</span><span class="action-val"><span class="literal tap">プロンプト</span></span>
-        <span class="action-label">入力</span><span class="action-val"><span class="literal type">誰の面談ですか?</span></span>
-      </div>
-      <p style="text-align:center;margin:14px 0 6px;font-weight:800;color:#4338CA;">Ch 6.3 完了 状態</p>
-      <img src="/shortcut-manual-images/63-choose-list.png" alt="Ch 6.3 choose list" class="screenshot" style="max-width:280px;">
-    </div>
-  </div>
-
-  <!-- =========================================
-       CHAPTER 7
-       ========================================= -->
-  <div class="chapter" id="chapter-7">
-    <div class="chapter-head">
-      <span class="chapter-num">7 / 9</span>
-      <h2 class="chapter-title">選ばれた 名前 に 対応 する ID を 探す</h2>
-    </div>
-
-    <div class="callout">
-      <strong>Chapter 7 で やる こと</strong>
-      Chapter 6 で 選ばれた の は <em>名前 の 文字 列</em> だけ。 対応 する ID を 引く ため、 客 リスト を <strong>もう 一度 繰り返し</strong>、 「もし name が 選択 と 一致 なら CUSTOMER_ID に id を 保存」 と いう if 文 を 書く。
-    </div>
-
-    <p style="text-align:center;margin:14px 0 6px;font-weight:800;color:#4338CA;">Chapter 7 の 完成 形 (先 に 全体像 を 見る)</p>
-    <img src="/shortcut-manual-images/7-nested-if.png" alt="Ch 7 nested if" class="screenshot" style="max-width:280px;">
-    <p style="font-size:12.5px;color:#64748B;text-align:center;margin-bottom:12px;">3 段 ネスト (繰り返し > もし > 変数を設定)。 各 サブ ステップ で 1 段 ずつ 積み上げる。</p>
-
-    <div class="substep">
-      <span class="substep-tag">7.1</span><span class="substep-title">2 つ 目 の 「各項目を繰り返す」 を 追加</span>
-      <div class="action-grid">
-        <span class="action-label">検索</span><span class="action-val"><span class="literal type">各項目を繰り返す</span></span>
-        <span class="action-label">タップ</span><span class="action-val"><span class="literal tap">各項目を繰り返す</span></span>
-        <span class="action-label">タップ</span><span class="action-val"><span class="literal tap">入力</span> (繰り返し の 入力 欄)</span>
-        <span class="action-label">タップ</span><span class="action-val">変数 パネル の <span class="literal tap">辞書の値</span> (Chapter 6.1 で 抜いた customers)</span>
-      </div>
-      <p style="text-align:center;margin:14px 0 6px;font-weight:800;color:#4338CA;">Ch 7.1 完了 状態</p>
-      <img src="/shortcut-manual-images/71-repeat-added.png" alt="Ch 7.1 repeat added" class="screenshot" style="max-width:280px;">
-    </div>
-
-    <div class="substep">
-      <span class="substep-tag">7.2</span><span class="substep-title">繰り返し の 中 に 「もし」 (if) を 追加</span>
-      <div class="action-grid">
-        <span class="action-label">検索</span><span class="action-val"><span class="literal type">もし</span></span>
-        <span class="action-label">タップ</span><span class="action-val"><span class="literal tap">もし</span> (青 の 分岐 マーク)</span>
-      </div>
-      <p style="margin-top:10px;font-size:13.5px;">3 行 が 追加 される: <span class="literal">もし</span> / <span class="literal">それ以外</span> / <span class="literal">もしの終了</span>。</p>
-      <p style="text-align:center;margin:14px 0 6px;font-weight:800;color:#4338CA;">Ch 7.2 完了 状態</p>
-      <img src="/shortcut-manual-images/72-if-added.png" alt="Ch 7.2 if added" class="screenshot" style="max-width:280px;">
-    </div>
-
-    <div class="substep">
-      <span class="substep-tag">7.3</span><span class="substep-title">if の 「入力」 を 客 の name に 変える</span>
-      <div class="action-grid">
-        <span class="action-label">タップ</span><span class="action-val">「もし」 の <span class="literal tap">入力</span> 欄 (今 は <span class="literal">繰り返し項目</span> が 入って いる)</span>
-        <span class="action-label">操作</span><span class="action-val">×印 で 一度 消して 空 に する</span>
-        <span class="action-label">検索</span><span class="action-val">アクション 検索 バー で <span class="literal type">辞書の値を取得</span> を 探し、 <strong>この if の 上 に</strong> 挟む</span>
-      </div>
-      <p style="margin-top:10px;font-size:13.5px;">今 挟んだ 「辞書の値を取得」 に:</p>
-      <div class="action-grid" style="margin-top: 4px;">
-        <span class="action-label">キー</span><span class="action-val"><span class="literal type">name</span></span>
-        <span class="action-label">辞書</span><span class="action-val"><span class="literal tap">繰り返し項目</span> (変数 パネル で 選ぶ)</span>
-      </div>
-      <p style="margin-top:10px;font-size:13.5px;">これで if の 「入力」 は 自動 で 上 の <span class="literal">辞書の値</span> (= 現 客 の name) に なる。</p>
-      <p style="text-align:center;margin:14px 0 6px;font-weight:800;color:#4338CA;">Ch 7.3 完了 状態</p>
-      <img src="/shortcut-manual-images/73-dict-name-above-if.png" alt="Ch 7.3 dict name above if" class="screenshot" style="max-width:280px;">
-    </div>
-
-    <div class="substep">
-      <span class="substep-tag">7.4</span><span class="substep-title">if の 条件 を 「次と等しい」 に</span>
-      <div class="action-grid">
-        <span class="action-label">タップ</span><span class="action-val">if の 条件 部分 (default は <span class="literal">が次のとおり</span> or 類似)</span>
-        <span class="action-label">選択</span><span class="action-val"><span class="literal tap">次と等しい</span></span>
-        <span class="action-label">タップ</span><span class="action-val">右 の <span class="literal tap">値</span> 欄</span>
-        <span class="action-label">タップ</span><span class="action-val">変数 パネル の <span class="literal tap">選択された項目</span> (Chapter 6.3 の 結果)</span>
-      </div>
-      <p style="text-align:center;margin:14px 0 6px;font-weight:800;color:#4338CA;">Ch 7.4 完了 状態</p>
-      <img src="/shortcut-manual-images/74-condition-equal.png" alt="Ch 7.4 condition equal" class="screenshot" style="max-width:280px;">
-    </div>
-
-    <div class="substep">
-      <span class="substep-tag">7.5</span><span class="substep-title">if 内 で id を 「CUSTOMER_ID」 変数 に 保存</span>
-      <p style="font-size:13.5px;">「もし」 と 「それ以外」 の <strong>間</strong> に 以下 を 挟む:</p>
-      <div class="action-grid">
-        <span class="action-label">検索</span><span class="action-val"><span class="literal type">辞書の値を取得</span></span>
-        <span class="action-label">タップ</span><span class="action-val"><span class="literal tap">辞書の値を取得</span></span>
-        <span class="action-label">キー</span><span class="action-val"><span class="literal type">id</span></span>
-        <span class="action-label">辞書</span><span class="action-val"><span class="literal tap">繰り返し項目</span></span>
-        <span class="action-label">検索</span><span class="action-val"><span class="literal type">変数を設定</span> (「辞書の値を取得」 の すぐ 下 に 追加)</span>
-        <span class="action-label">タップ</span><span class="action-val"><span class="literal tap">変数を設定</span></span>
-        <span class="action-label">変数 名</span><span class="action-val"><span class="literal type">CUSTOMER_ID</span></span>
-      </div>
-      <div class="expected"><strong>期待:</strong> 「入力」 欄 は 自動 で <span class="literal">辞書の値</span> (= 現 客 の id) が 入る。</div>
-      <p style="text-align:center;margin:14px 0 6px;font-weight:800;color:#4338CA;">Ch 7.5 完了 状態 (Chapter 7 完了)</p>
-      <img src="/shortcut-manual-images/75-customer-id-set.png" alt="Ch 7.5 CUSTOMER_ID set" class="screenshot" style="max-width:280px;">
-    </div>
-  </div>
-
-  <!-- =========================================
-       CHAPTER 8
-       ========================================= -->
-  <div class="chapter" id="chapter-8">
-    <div class="chapter-head">
-      <span class="chapter-num">8 / 9</span>
-      <h2 class="chapter-title">音声 を FP Compass に POST</h2>
-    </div>
-
-    <div class="substep">
-      <span class="substep-tag">8.1</span><span class="substep-title">2 つ 目 の 「URL」 アクション を 追加 (アップロード 用)</span>
-      <div class="action-grid">
-        <span class="action-label">位置</span><span class="action-val"><strong>Chapter 7 の 「もしの終了」 の 下</strong> (繰り返しの終了 の さらに 下)</span>
-        <span class="action-label">検索</span><span class="action-val"><span class="literal type">URL</span></span>
-        <span class="action-label">タップ</span><span class="action-val"><span class="literal tap">URL</span></span>
-        <span class="action-label">タップ</span><span class="action-val"><span class="literal tap">apple.com</span></span>
-        <span class="action-label">入力</span><span class="action-val">下 を コピペ:</span>
-      </div>
-      <span class="code">https://fp-compass-webhook-527726449426.asia-northeast1.run.app/api/mobile/upload</span>
-    </div>
-
-    <div class="substep">
-      <span class="substep-tag">8.2</span><span class="substep-title">2 つ 目 の 「URLの内容を取得」 を 追加</span>
-      <div class="action-grid">
-        <span class="action-label">検索</span><span class="action-val"><span class="literal type">URLの内容を取得</span></span>
-        <span class="action-label">タップ</span><span class="action-val"><span class="literal tap">URLの内容を取得</span></span>
-        <span class="action-label">タップ</span><span class="action-val"><span class="literal tap">＞</span> (詳細 展開)</span>
-      </div>
-    </div>
-
-    <div class="substep">
-      <span class="substep-tag">8.3</span><span class="substep-title">「方法」 を 「POST」 に 変更</span>
-      <div class="action-grid">
-        <span class="action-label">タップ</span><span class="action-val"><span class="literal tap">方法</span> (現在 GET)</span>
-        <span class="action-label">選択</span><span class="action-val"><span class="literal tap">POST</span></span>
-      </div>
-      <p style="text-align:center;margin:14px 0 6px;font-weight:800;color:#4338CA;">Ch 8.3 完了 状態</p>
-      <img src="/shortcut-manual-images/83-post-selected.png" alt="Ch 8.3 POST" class="screenshot" style="max-width:280px;">
-    </div>
-
-    <div class="substep">
-      <span class="substep-tag">8.4</span><span class="substep-title">「本文」 (要求 の 本文) を 「フォーム」 に</span>
-      <div class="action-grid">
-        <span class="action-label">タップ</span><span class="action-val"><span class="literal tap">要求の本文</span> (現在 「なし」 or 「JSON」)</span>
-        <span class="action-label">選択</span><span class="action-val"><span class="literal tap">フォーム</span></span>
-      </div>
-      <div class="expected"><strong>期待:</strong> 下 に <span class="literal">フィールド を 追加</span> と いう リンク が 出て くる。</div>
-      <p style="text-align:center;margin:14px 0 6px;font-weight:800;color:#4338CA;">Ch 8.4 完了 状態</p>
-      <img src="/shortcut-manual-images/84-form-selected.png" alt="Ch 8.4 form" class="screenshot" style="max-width:280px;">
-    </div>
-
-    <div class="substep">
-      <span class="substep-tag">8.5</span><span class="substep-title">1 つ 目 の フィールド: audio (ファイル)</span>
-      <div class="action-grid">
-        <span class="action-label">タップ</span><span class="action-val"><span class="literal tap">フィールドを追加</span></span>
-        <span class="action-label">キー</span><span class="action-val"><span class="literal type">audio</span></span>
-        <span class="action-label">タップ</span><span class="action-val"><span class="literal tap">テキスト</span> (種類 の default) → 選択 メニュー で <span class="literal tap">ファイル</span></span>
-        <span class="action-label">タップ</span><span class="action-val">値 の 入力 欄 → 変数 パネル で <span class="literal tap">AUDIO</span> を 選択</span>
-      </div>
-      <p style="text-align:center;margin:14px 0 6px;font-weight:800;color:#4338CA;">Ch 8.5 完了 状態</p>
-      <img src="/shortcut-manual-images/85a-audio-field.png" alt="Ch 8.5 audio field" class="screenshot" style="max-width:280px;">
-    </div>
-
-    <div class="substep">
-      <span class="substep-tag">8.6</span><span class="substep-title">2 つ 目 の フィールド: customerId (テキスト)</span>
-      <div class="action-grid">
-        <span class="action-label">タップ</span><span class="action-val"><span class="literal tap">フィールドを追加</span> (もう 一度)</span>
-        <span class="action-label">キー</span><span class="action-val"><span class="literal type">customerId</span> (小文字 の d、 大文字 の I の 位置 に 注意)</span>
-        <span class="action-label">種類</span><span class="action-val"><span class="literal tap">テキスト</span> (default の まま)</span>
-        <span class="action-label">タップ</span><span class="action-val">値 → 変数 パネル で <span class="literal tap">CUSTOMER_ID</span></span>
-      </div>
-      <div class="callout warn">
-        <strong>種類 を 間違え ない</strong>
-        audio は <span class="literal">ファイル</span>、 customerId は <span class="literal">テキスト</span>。 逆 に する と 400 error に なる。
-      </div>
-      <p style="text-align:center;margin:14px 0 6px;font-weight:800;color:#4338CA;">Ch 8.6 完了 状態</p>
-      <img src="/shortcut-manual-images/86-customerid-field.png" alt="Ch 8.6 customerId field" class="screenshot" style="max-width:280px;">
-    </div>
-
-    <div class="substep">
-      <span class="substep-tag">8.7</span><span class="substep-title">ヘッダ に API キー を 追加 (Chapter 5.5 と 同じ 手順)</span>
-      <div class="action-grid">
-        <span class="action-label">タップ</span><span class="action-val"><span class="literal tap">ヘッダを追加</span></span>
-        <span class="action-label">キー</span><span class="action-val"><span class="literal type">X-FP-Mobile-Key</span></span>
-        <span class="action-label">値</span><span class="action-val">変数 パネル で <span class="literal tap">API_KEY</span></span>
-      </div>
-    </div>
-  </div>
-
-  <!-- =========================================
-       CHAPTER 9
-       ========================================= -->
-  <div class="chapter" id="chapter-9">
-    <div class="chapter-head">
-      <span class="chapter-num">9 / 9</span>
-      <h2 class="chapter-title">結果 を 表示 して 保存</h2>
-    </div>
-
-    <div class="substep">
-      <span class="substep-tag">9.1</span><span class="substep-title">レスポンス の note を 抜く</span>
-      <div class="action-grid">
-        <span class="action-label">検索</span><span class="action-val"><span class="literal type">辞書の値を取得</span></span>
-        <span class="action-label">タップ</span><span class="action-val"><span class="literal tap">辞書の値を取得</span></span>
-        <span class="action-label">キー</span><span class="action-val"><span class="literal type">note</span></span>
-      </div>
-      <div class="expected"><strong>期待:</strong> <span class="literal">辞書</span> 欄 は 自動 で 上 の POST の 結果 が 入る。</div>
-      <p style="text-align:center;margin:14px 0 6px;font-weight:800;color:#4338CA;">Ch 9.1 完了 状態</p>
-      <img src="/shortcut-manual-images/91-dict-note.png" alt="Ch 9.1 dict note" class="screenshot" style="max-width:280px;">
-    </div>
-
-    <div class="substep">
-      <span class="substep-tag">9.2</span><span class="substep-title">「結果を表示」 で アラート 化</span>
-      <div class="action-grid">
-        <span class="action-label">検索</span><span class="action-val"><span class="literal type">結果を表示</span></span>
-        <span class="action-label">タップ</span><span class="action-val"><span class="literal tap">結果を表示</span></span>
-      </div>
-      <div class="expected"><strong>期待:</strong> 「入力」 欄 は 自動 で <span class="literal">辞書の値</span> (= note の 文字 列) が 入る。 完了 メッセージ が iPhone の アラート で 表示 される 挙動。</div>
-      <p style="text-align:center;margin:14px 0 6px;font-weight:800;color:#4338CA;">Ch 9.1-9.2 完了 状態</p>
-      <img src="/shortcut-manual-images/92-show-result.png" alt="Ch 9.2 show result" class="screenshot" style="max-width:280px;">
-    </div>
-
-    <div class="substep">
-      <span class="substep-tag">9.3</span><span class="substep-title">ショートカット を 保存</span>
-      <div class="action-grid">
-        <span class="action-label">タップ</span><span class="action-val"><span class="literal tap">完了</span> (画面 右上)</span>
-      </div>
-      <div class="expected"><strong>期待:</strong> 「すべての ショートカット」 の 一覧 に 「FP Compass アップロード」 が 追加 されて いる。</div>
-    </div>
-  </div>
-
-  <div class="final">
-    <h3>セットアップ 完了</h3>
-    <p>Voice Memos で 録音 → 3 点 メニュー <span class="literal" style="color:#fff;background:rgba(255,255,255,0.2);border-color:rgba(255,255,255,0.5)">⋯</span> → <span class="literal" style="color:#fff;background:rgba(255,255,255,0.2);border-color:rgba(255,255,255,0.5)">共有</span> → <span class="literal" style="color:#fff;background:rgba(255,255,255,0.2);border-color:rgba(255,255,255,0.5)">FP Compass アップロード</span> → 客 選択 → 数十秒 で 議事録 tab に 反映 されます。</p>
-  </div>
-
-  <div class="divider-with-label">Troubleshooting</div>
-
-  <div class="callout warn">
-    <strong>「共有 メニュー に 出て こない」</strong>
-    Chapter 2.4 の 「共有 シート に 表示」 の スイッチ が OFF の 可能性。 詳細 画面 で 確認 して 緑 に する。
-  </div>
-
-  <div class="callout warn">
-    <strong>「呼び出せません でした」 の エラー</strong>
-    API キー が 間違って いる 可能性。 FP Compass の アカウント 設定 で 再発行 → 「テキスト」 アクション に 貼付 し 直し。
-  </div>
-
-  <div class="callout warn">
-    <strong>「400 エラー」 が 返って くる</strong>
-    Chapter 8.5-8.6 で 種類 を 間違え て いる 可能性 が 高い。 audio = 「ファイル」、 customerId = 「テキスト」 を 再確認。
-  </div>
-
-  <div class="callout warn">
-    <strong>「500 エラー」 が 返って くる</strong>
-    音声 サイズ が 30MB 超 の 可能性。 短めの 録音 (30 秒 〜 数分) で 再 test。
-  </div>
-
-  <div class="callout warn">
-    <strong>「信頼 されて いない ショートカット」 で 弾かれる</strong>
-    iPhone 設定 → ショートカット → 「信頼 されて いない ショートカット を 許可」 を ON。
-  </div>
+<a href="/account.html" class="back-link">← アカウント 設定 に 戻る</a>
+
+<h1>iPhone ショートカット セットアップ<br>ガイド</h1>
+<p class="lead">iPhone ボイスメモ → 共有 → 1タップ で 議事録 自動 生成。 setup 5 分。</p>
+
+<div class="download-hero">
+  <h2>Shortcut file を ダウンロード</h2>
+  <p>まず iPhone Safari で 下 の button を タップ → 「Shortcuts で 開く」 → 「ショートカット を 追加」 で install。 その後 STEP 2-3 で 自分 の API キー を 1 箇所 貼付。</p>
+  <a class="download-btn" href="/FP-Compass-Upload.shortcut" download="FP-Compass-Upload.shortcut">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+      <polyline points="7 10 12 15 17 10"></polyline>
+      <line x1="12" y1="15" x2="12" y2="3"></line>
+    </svg>
+    Shortcut を ダウンロード
+  </a>
+  <div class="download-hint">対応: iOS 15 以上 / macOS Monterey 以上</div>
 </div>
+
+<div class="callout-green">
+  <strong style="font-size: 17px;">セットアップ の 全 flow (4 step で 完結):</strong><br>
+  STEP 1. 上 の button で Shortcut file を ダウンロード + install<br>
+  STEP 2. 「API キー を 発行」 で 自分 の キー を コピー<br>
+  STEP 3. Shortcut 内 の 「テキスト」 1箇所 に 自分 の キー を 貼付<br>
+  STEP 4. ボイスメモ の 共有 メニュー から 起動 → 議事録 自動 生成
+</div>
+
+<h2><span class="step-num">1</span>Shortcut を install</h2>
+<ol>
+  <li>iPhone Safari で この ページ を 開き、 上 の 「Shortcut を ダウンロード」 button を タップ</li>
+  <li>「Shortcuts で 開く」 → 青 の <span class="highlight-red">「ショートカット を 追加」</span> button を タップ</li>
+  <li>iPhone Shortcuts app に <strong>「FP-Compass-Upload-v18」</strong> が 追加 された こと を 確認</li>
+</ol>
+
+<div class="callout-blue">
+  💡 AirDrop でも OK: 別 の 人 の iPhone に は Mac Finder から AirDrop で 同じ .shortcut file を 送 る と 上 と 同じ flow で install できる。
+</div>
+
+<h2><span class="step-num">2</span>自分 の API キー を 発行</h2>
+<ol>
+  <li>iPhone Safari で <code>https://app.skeleton-inc.jp/account.html</code> を 開く</li>
+  <li>自分 の アカウント で ログイン</li>
+  <li>下 に スクロール → 「iPhone ショートカット 連携」 セクション</li>
+  <li>紫 の <span class="highlight-red">「API キー を 発行」</span> button を タップ → OK</li>
+  <li>黄色 枠 に API キー が 表示 → 「コピー」 button で コピー</li>
+</ol>
+
+<div class="shot">
+  <img src="/shortcut-manual-images/v18-01-api-key-issue.png" alt="account.html API キー 発行" width="900" height="1200">
+  <svg viewBox="0 0 900 1200" preserveAspectRatio="none">
+    <rect x="90" y="320" width="405" height="62" rx="12" class="marker-box"/>
+    <rect x="510" y="330" width="330" height="50" rx="10" class="marker-label-bg"/>
+    <text x="675" y="362" text-anchor="middle" class="marker-label">① ここ を タップ</text>
+    <path d="M 505 355 L 494 355" class="marker-arrow"/>
+    <polygon points="489,355 504,348 504,362" class="marker-arrow-head"/>
+
+    <rect x="100" y="450" width="395" height="45" rx="6" class="marker-box"/>
+    <rect x="510" y="452" width="330" height="45" rx="10" class="marker-label-bg"/>
+    <text x="675" y="482" text-anchor="middle" class="marker-label">② キー を 確認</text>
+    <path d="M 505 475 L 494 475" class="marker-arrow"/>
+    <polygon points="489,475 504,468 504,482" class="marker-arrow-head"/>
+
+    <rect x="100" y="498" width="395" height="50" rx="10" class="marker-box"/>
+    <rect x="510" y="502" width="330" height="45" rx="10" class="marker-label-bg"/>
+    <text x="675" y="532" text-anchor="middle" class="marker-label">③ コピー タップ</text>
+    <path d="M 505 525 L 494 525" class="marker-arrow"/>
+    <polygon points="489,525 504,518 504,532" class="marker-arrow-head"/>
+  </svg>
+</div>
+<p class="shot-caption">① 紫 button で 発行 → ② 黄色 枠 の キー を確認 → ③ コピー button で コピー</p>
+
+<div class="callout-red">
+  ⚠ 重要: API キー は <strong>二度と 表示 され ない</strong> (安全 の ため)。 忘れたら 「再発行」 で 新しい キー を 作る。 Shortcut に 貼付 済 の キー も 一緒 に 更新 が 必要。
+</div>
+
+<h2><span class="step-num">3</span>Shortcut 内 の API キー を 書き換え</h2>
+<ol>
+  <li>iPhone Shortcuts app で 「<strong>FP-Compass-Upload-v18</strong>」 を 探す</li>
+  <li>タイル 右上 の 「⋯」 → <strong>「編集」</strong></li>
+  <li>上 から <strong>2番目 の 「テキスト」 action</strong> (オレンジ の アイコン) を 探す</li>
+  <li>中 の 長い 文字列 を <strong>全選択 → 削除</strong></li>
+  <li>STEP 2 で コピー した 自分 の API キー を <strong>貼付</strong></li>
+  <li>右上 「完了」 で 保存</li>
+</ol>
+
+<div class="shot">
+  <img src="/shortcut-manual-images/v18-02-shortcut-editor-text-action.png" alt="Shortcut editor テキスト action" width="1800" height="1000">
+  <svg viewBox="0 0 1800 1000" preserveAspectRatio="none">
+    <rect x="285" y="356" width="1345" height="179" rx="20" class="marker-box"/>
+    <rect x="335" y="432" width="1215" height="52" rx="8" class="marker-box" style="stroke-dasharray:16,10;stroke-width:6;"/>
+
+    <rect x="15" y="380" width="255" height="180" rx="12" class="marker-label-bg"/>
+    <text x="142" y="425" text-anchor="middle" class="marker-label" style="font-size:32px;">この</text>
+    <text x="142" y="465" text-anchor="middle" class="marker-label" style="font-size:32px;">文字 を</text>
+    <text x="142" y="505" text-anchor="middle" class="marker-label" style="font-size:32px;">全 選択</text>
+    <text x="142" y="545" text-anchor="middle" class="marker-label" style="font-size:32px;">→ 削除</text>
+    <path d="M 275 458 L 325 458" class="marker-arrow" style="stroke-width:8;"/>
+    <polygon points="320,458 340,448 340,468" class="marker-arrow-head"/>
+  </svg>
+</div>
+<p class="shot-caption">「テキスト」 action の 中 の 文字列 (6fc1... 等) を 全選択 → 削除 → 自分 の キー を 貼付</p>
+
+<div class="callout-red">
+  ⚠ 触っては いけない ところ:<br>
+  · 「変数 API_KEY を 入力 に設定」 の 部分 → そのまま<br>
+  · URL (<code>https://fp-compass-webhook-…</code>) → そのまま<br>
+  · 他 の action → 全部 そのまま<br>
+  <strong>直す の は 「テキスト」 の 中 の 文字列 だけ</strong>
+</div>
+
+<h2><span class="step-num">4</span>使い方 (日常運用)</h2>
+<ol>
+  <li>iPhone 「ボイスメモ」 で 面談 を 録音<br>
+    <span style="color:var(--dim);font-size:13px;">💡 事前 準備: 「設定 → ボイスメモ → オーディオ 品質」 を 「圧縮」 に (1時間=約15MB に 収まる)</span></li>
+  <li>録音 タップ → 下 の 共有 button (□↑) → <strong>「FP-Compass-Upload-v18」</strong> タップ</li>
+  <li>初回 のみ 「Web に データ を 送信 を 許可 しますか?」 → 「<strong>1度だけ許可</strong>」 タップ</li>
+  <li>客 リスト メニュー → 対象 の 客 を タップ</li>
+  <li>数秒 で <span class="highlight-yellow">✅ 音声 受信 完了 · 議事録 生成 中…</span> popup 表示 (これ で 「受け付け 完了」)</li>
+  <li>1〜5 分 後、 <code>app.skeleton-inc.jp</code> → 議事録 tab → 客 カード に 議事録 出現</li>
+</ol>
+
+<div class="callout-blue">
+  💡 補足 機能:<br>
+  · <strong>1時間 以上</strong> の 録音 → server 側 で 自動 圧縮 + Whisper 処理 (upload 制限 なし)<br>
+  · <strong>transcript + summary + 次回質問予測</strong> が 自動 生成<br>
+  · 面談 対象 客 を 事前 に 固定 したい 場合 → account.html の 「モバイル 送信先 (デフォルト 客)」 で 選択 → 保存 (以降 は 客 選択 メニュー 不要)
+</div>
+
+<h2>トラブル シューティング</h2>
+<ul>
+  <li><span class="highlight-red">認証 エラー</span> → API キー 貼付 ミス。 STEP 2-3 やり直し</li>
+  <li><span class="highlight-red">「客 が 見つかり ません」</span> → FP Compass admin に 客 が 未登録。 admin panel で 客 を 追加</li>
+  <li><span class="highlight-red">popup が 空</span> → 音声 が 25MB 超 で server 側 で 詰まった 可能性。 「設定 → ボイスメモ → 圧縮」 に 変更 して 再録音</li>
+  <li><span class="highlight-red">議事録 が 生成 されない</span> → 音声 が 短い or 無音 の 可能性。 30秒 以上 の 実 会話 で 再送信</li>
+</ul>
+
+<p style="text-align: center; color: var(--dim); font-size: 12px; margin-top: 80px; letter-spacing: 0.02em;">
+  スケルトン株式会社 · FP Compass · 2026-08-31 版
+</p>
+
 </body>
 </html>
