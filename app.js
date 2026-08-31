@@ -6764,16 +6764,12 @@
 
           <!-- ★ 2026-08-25 owner「面談 を 開始 (今すぐ/予約/URL/電話 全部 ここから) button も いらない」 で 撤去 -->
           <!-- 音声 upload に 統一。 id 残置 (別 code path 互換) -->
+          <!-- 2026-08-31 owner「ここ いらない (shortcut で 統一)」 で 音声 upload button も 撤去、 hidden で id 残置 -->
           <div class="cd-zoom-super" style="margin-top:14px;">
               <button id="cd-meeting-start-btn" data-client-id="${escapeHtml(c.id)}" style="display:none;" hidden></button>
-              <!-- ★ 2026-08-25 owner「対面 で 商談 を 開始 button いらない (音声 upload に 統一)」 で 撤去 -->
-              <!-- 旧 button 互換 のため hidden 残置 (別 code path から click 発火 される 可能性) -->
               <button id="cd-inperson-start-btn" data-client-id="${escapeHtml(c.id)}" style="display:none;" hidden></button>
-              <!-- ★ 2026-08-22 owner「対面 の 音声 データ を アップロード → 文字起こし」対応 · 2026-08-25 主 flow に 昇格 -->
-              <button id="cd-audio-upload-btn" data-client-id="${escapeHtml(c.id)}" style="margin-top:8px;width:100%;background:linear-gradient(135deg,#5B5BF0,#4747C7);color:#fff;border:none;padding:14px 20px;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer;font-family:'Noto Sans JP',sans-serif;box-shadow:0 6px 18px rgba(91,91,240,0.28);display:flex;align-items:center;justify-content:center;gap:10px;transition:transform .12s,box-shadow .15s;">
-                <span style="font-size:18px;line-height:1;">📁</span>
-                <span style="text-align:left;line-height:1.3;">音声 を アップロード → 議事録 生成<span style="display:block;font-size:11px;font-weight:600;color:rgba(255,255,255,0.85);margin-top:2px;">対応: MP3 · M4A (iPhone ボイスメモ) · WAV · WEBM · MP4 (音声抽出)</span></span>
-              </button>
+              <!-- 音声 upload button も hidden 化 (shortcut 経由 に 統一、 手動 upload 不要) -->
+              <button id="cd-audio-upload-btn" data-client-id="${escapeHtml(c.id)}" style="display:none;" hidden></button>
               <!-- 2026-08-28 R11 owner「まだ Photos chooser 出る」対応 + backtick 事故 修正:
                    R9 で mp4/webm 残して た が iOS Safari は 拡張子 単位 で video 判定 して Photos アイコン 表示。
                    → 純 audio 拡張子 + audio/* MIME だけ に 絞る。 これ で iOS 14+ Safari は Files.app 直行、
@@ -6917,19 +6913,11 @@
         <!-- ============= RIGHT: Activity column ============= -->
         <main class="cd-right">
 
-          <!-- 2026-08-28 R13 owner「その場で録音 button 頼んで ない」対応: R12 追加 撤去、 upload 一択 に 戻す。
-               + owner「Files.app 開いた が Voice Memos が 見つから ない」対応:
-                 iPhone Voice Memos は default で iCloud 同期 OFF → Files.app から 見え ない が 実態。
-                 owner の 1 回 の 設定 変更 が 必要 な ので、 button 下 に 見せる 短い 案内 を 追加。 -->
-          <div id="cd-audio-upload-mega" style="position:sticky;top:0;z-index:10;background:linear-gradient(180deg,#FAFAFF 0%,#FFFFFF 100%);padding:14px 14px 12px;border-bottom:1px solid #E2E8F0;">
-            <button id="cd-audio-upload-btn-mega" data-client-id="${escapeHtml(c.id)}" style="width:100%;background:linear-gradient(135deg,#5B5BF0 0%,#4747C7 55%,#3A3AAB 100%);color:#fff;border:none;padding:18px 16px;border-radius:14px;font-size:15px;font-weight:900;cursor:pointer;font-family:'Noto Sans JP',sans-serif;box-shadow:0 10px 24px rgba(91,91,240,0.35),0 2px 6px rgba(91,91,240,0.20);display:flex;align-items:center;justify-content:center;gap:12px;letter-spacing:0.01em;">
-              <span style="font-size:24px;line-height:1;">🎙</span>
-              <span style="text-align:left;line-height:1.25;">音声 を アップロード → 議事録 生成<span style="display:block;font-size:11.5px;font-weight:700;color:rgba(255,255,255,0.9);margin-top:3px;">iPhone ボイスメモ · MP3 · M4A · WAV</span></span>
-            </button>
-            <button id="cd-audio-upload-help" type="button" style="margin-top:8px;width:100%;background:#F1F5F9;color:#334155;border:1px solid #CBD5E1;padding:9px 12px;border-radius:8px;font-size:11.5px;font-weight:700;cursor:pointer;font-family:'Noto Sans JP',sans-serif;display:flex;align-items:center;justify-content:center;gap:6px;">
-              <span style="font-size:14px;line-height:1;">❓</span>
-              <span>iPhone Voice Memos が Files に 出て こない 時</span>
-            </button>
+          <!-- 2026-08-31 owner「ここ いらない (shortcut で 統一)」 で mega button + help 全撤去。
+               id は 別 code path (upload handler) 互換 の ため hidden で 残置。 -->
+          <div id="cd-audio-upload-mega" style="display:none;">
+            <button id="cd-audio-upload-btn-mega" data-client-id="${escapeHtml(c.id)}" style="display:none;" hidden></button>
+            <button id="cd-audio-upload-help" type="button" style="display:none;" hidden></button>
           </div>
 
           <!-- AI Next Best Action — オーナーfb 2026-06-20: 2列バランス + Zoom/タグ クイック内包 -->
