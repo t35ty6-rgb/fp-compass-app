@@ -6764,12 +6764,16 @@
 
           <!-- ★ 2026-08-25 owner「面談 を 開始 (今すぐ/予約/URL/電話 全部 ここから) button も いらない」 で 撤去 -->
           <!-- 音声 upload に 統一。 id 残置 (別 code path 互換) -->
-          <!-- 2026-08-31 owner「ここ いらない (shortcut で 統一)」 で 音声 upload button も 撤去、 hidden で id 残置 -->
+          <!-- 2026-08-31 owner「mega + help いらない、 一箇所 残したい」 対応: 小さい 標準 button だけ 残す -->
           <div class="cd-zoom-super" style="margin-top:14px;">
               <button id="cd-meeting-start-btn" data-client-id="${escapeHtml(c.id)}" style="display:none;" hidden></button>
               <button id="cd-inperson-start-btn" data-client-id="${escapeHtml(c.id)}" style="display:none;" hidden></button>
-              <!-- 音声 upload button も hidden 化 (shortcut 経由 に 統一、 手動 upload 不要) -->
-              <button id="cd-audio-upload-btn" data-client-id="${escapeHtml(c.id)}" style="display:none;" hidden></button>
+              <!-- 標準 音声 upload button (fallback: shortcut 未 setup の 客用) -->
+              <button id="cd-audio-upload-btn" data-client-id="${escapeHtml(c.id)}" style="margin-top:8px;width:100%;background:linear-gradient(135deg,#5B5BF0,#4747C7);color:#fff;border:none;padding:14px 20px;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer;font-family:'Noto Sans JP',sans-serif;box-shadow:0 6px 18px rgba(91,91,240,0.28);display:flex;align-items:center;justify-content:center;gap:10px;transition:transform .12s,box-shadow .15s;">
+                <span style="font-size:18px;line-height:1;">📁</span>
+                <span style="text-align:left;line-height:1.3;">音声 を アップロード → 議事録 生成<span style="display:block;font-size:11px;font-weight:600;color:rgba(255,255,255,0.85);margin-top:2px;">対応: MP3 · M4A (iPhone ボイスメモ) · WAV · WEBM · MP4 (音声抽出)</span></span>
+              </button>
+              <input type="file" id="cd-audio-upload-input" data-client-id="${escapeHtml(c.id)}" accept="audio/*,.m4a,.mp3,.wav,.aac" style="display:none;">
               <!-- 2026-08-28 R11 owner「まだ Photos chooser 出る」対応 + backtick 事故 修正:
                    R9 で mp4/webm 残して た が iOS Safari は 拡張子 単位 で video 判定 して Photos アイコン 表示。
                    → 純 audio 拡張子 + audio/* MIME だけ に 絞る。 これ で iOS 14+ Safari は Files.app 直行、
