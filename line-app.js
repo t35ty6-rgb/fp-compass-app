@@ -1038,7 +1038,10 @@
             <div style="font-size:10.5px;font-weight:700;color:#8b7d5d;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:3px;">Action Required</div>
             <h2 style="font-family:'Noto Sans JP',serif;font-size:18px;margin:0;font-weight:600;color:#1f2a3f;">候補日確定 待ち ${pendingConfirm > 0 ? `<span style="font-size:11px;background:#7a1530;color:#fff;padding:2px 8px;border-radius:10px;margin-left:8px;font-family:'Inter',sans-serif;font-weight:700;letter-spacing:0.04em;">${pendingConfirm} 名</span>` : ''}</h2>
           </div>
-          <button id="fp-toggle-cal" style="font-size:11.5px;padding:8px 14px;background:#fff;border:1px solid #c19a3a;border-radius:5px;cursor:pointer;font-family:inherit;color:#5e4d1a;font-weight:700;letter-spacing:0.04em;">自分の Google カレンダーを並べて表示</button>
+          <button id="fp-toggle-cal" class="fp-btn-elevated" type="button">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+            <span>自分の Google カレンダーを並べて表示</span>
+          </button>
         </div>
         <p style="color:#6b7280;font-size:12.5px;margin:0 0 18px;line-height:1.65;letter-spacing:0.02em;">
           <strong style="color:#3730a3;">📤 送付 直後</strong>: 「お客様 タップ 待ち」 表示、 確定 button は 押せない (客 が LINE で 選ぶ まで 待機)<br>
