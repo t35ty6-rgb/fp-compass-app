@@ -7660,15 +7660,19 @@ body.mobile-nav-open #mobile-hamburger .mh-bar:nth-child(3) { transform: transla
   #mobile-bottomnav {
     position: fixed;
     bottom: 0; left: 0; right: 0;
-    height: calc(64px + env(safe-area-inset-bottom, 0px));
+    height: calc(68px + env(safe-area-inset-bottom, 0px));  /* 2026-08-31 owner「サイズ 調整 して 収まり 良く」で 64→68px */
     padding-bottom: env(safe-area-inset-bottom, 0px);
     background: #fff;
     border-top: 1px solid #E8E2D4;
-    z-index: 10100;
-    display: flex;
+    z-index: 10300 !important;  /* 2026-08-31 owner「常時 ここ に あるように」対応: modal-overlay (10200) より 上 に する */
+    display: flex !important;    /* 全 画面 で 必ず 表示 */
     justify-content: space-around;
     align-items: stretch;
-    box-shadow: 0 -8px 24px rgba(15, 23, 42, 0.08);
+    box-shadow: 0 -8px 24px rgba(15, 23, 42, 0.12);
+  }
+  /* 2026-08-31 : modal 開いても bottom nav の 上 に 被らない よう modal-overlay の bottom padding を 増やす */
+  .modal-overlay {
+    padding-bottom: calc(68px + env(safe-area-inset-bottom, 0px)) !important;
   }
   .m-tab {
     flex: 1;
@@ -7682,13 +7686,14 @@ body.mobile-nav-open #mobile-hamburger .mh-bar:nth-child(3) { transform: transla
     gap: 3px;
     color: #94A3B8;
     font-family: 'Hiragino Sans',sans-serif;
-    font-size: 10px;
+    font-size: 11px;   /* 2026-08-31 owner「収まり 良く」: 10 → 11px (可読性 up) */
     font-weight: 700;
     letter-spacing: 0.03em;
-    padding: 8px 4px;
+    padding: 9px 4px;
     transition: color .15s;
     position: relative;
-    min-height: 56px;
+    min-height: 60px;  /* 2026-08-31: 56 → 60px (finger tap 快適 化) */
+    -webkit-tap-highlight-color: transparent;
   }
   .m-tab svg {
     transition: stroke .15s, transform .25s cubic-bezier(.2,.7,.3,1.3);
@@ -7732,7 +7737,7 @@ body.mobile-nav-open #mobile-hamburger .mh-bar:nth-child(3) { transform: transla
   /* ===== content area: topbar 下から bottomnav 上まで ===== */
   body {
     padding-top: calc(56px + env(safe-area-inset-top, 0px)) !important;
-    padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px)) !important;
+    padding-bottom: calc(68px + env(safe-area-inset-bottom, 0px)) !important;  /* 2026-08-31 nav 高さ 統一 (64→68) */
   }
 
   /* 既存 ハンバーガー drawer (サイドバー) は そのまま slide-in 機構 を 流用 */
