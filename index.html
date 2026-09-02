@@ -37,10 +37,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20260901A">
-<link rel="stylesheet" href="styles-v2.css?v=20260901A">
-<link rel="stylesheet" href="styles-v3.css?v=20260901A">
-<link rel="stylesheet" href="styles-v8-workspace.css?v=20260901A">
+<link rel="stylesheet" href="styles.css?v=20260902A">
+<link rel="stylesheet" href="styles-v2.css?v=20260902A">
+<link rel="stylesheet" href="styles-v3.css?v=20260902A">
+<link rel="stylesheet" href="styles-v8-workspace.css?v=20260902A">
 <!-- ★ 2026-06-26 perf: lucide(350KB) と chart.js(201KB) を defer 化 -->
 <!--   どちらも DOMContentLoaded 後ハイドレートで OK (lucide: setInterval scan / chart: tryRender polling) -->
 <script defer src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
@@ -48,12 +48,12 @@
 <!-- ★ 2026-08-20 owner「認証中 で 5分 待たされる」fix:
      旧: 認証後 に fpReadyAfterAuth で critical scripts を 直列 fetch → mobile 4G で 5-8 秒
      新: login 画面 表示 中 に 平行 preload (browser cache に 入れる、 実行 は 認証後) → 認証後 は 実質 0秒 -->
-<link rel="preload" as="script" href="life-events.js?v=20260901A">
-<link rel="preload" as="script" href="recommender.js?v=20260901A">
-<link rel="preload" as="script" href="line-data.js?v=20260901A">
-<link rel="preload" as="script" href="recording-persist.js?v=20260901A">
-<link rel="preload" as="script" href="app.js?v=20260901A">
-<link rel="preload" as="script" href="line-app.js?v=20260901A">
+<link rel="preload" as="script" href="life-events.js?v=20260902A">
+<link rel="preload" as="script" href="recommender.js?v=20260902A">
+<link rel="preload" as="script" href="line-data.js?v=20260902A">
+<link rel="preload" as="script" href="recording-persist.js?v=20260902A">
+<link rel="preload" as="script" href="app.js?v=20260902A">
+<link rel="preload" as="script" href="line-app.js?v=20260902A">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -127,6 +127,23 @@
     </div>
 
     <button id="fp-gate-btn">ログイン</button>
+
+    <!-- ★ 2026-09-02 owner GO: Google ID ログイン (メール + PW 入力 省略) -->
+    <div id="fp-gate-google-divider" style="display:flex;align-items:center;gap:12px;margin:16px 0 12px;color:#94A3B8;font-size:11.5px;font-weight:700;letter-spacing:0.06em;">
+      <span style="flex:1;height:1px;background:#E2E8F0;"></span>
+      <span>または</span>
+      <span style="flex:1;height:1px;background:#E2E8F0;"></span>
+    </div>
+    <button id="fp-gate-google" type="button" style="width:100%;background:#fff;color:#1F1F1F;border:1px solid #DADCE0;border-radius:8px;padding:12px 14px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Noto Sans JP','Roboto',sans-serif;transition:box-shadow .15s,background .15s;display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:44px;box-shadow:0 1px 2px rgba(0,0,0,0.08),0 1px 3px rgba(0,0,0,0.06);">
+      <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true" style="flex-shrink:0;">
+        <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/>
+        <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/>
+        <path fill="#FBBC05" d="M3.964 10.707A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.707V4.961H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.039l3.007-2.332z"/>
+        <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z"/>
+      </svg>
+      <span id="fp-gate-google-label">Google で ログイン</span>
+    </button>
+
     <!-- ★ オーナーfb: 0円 デモ申込ボタン (URL に ?demo=1 で signup タブが押されたら表示) -->
     <div id="fp-row-demo" style="display:none;margin-top:14px;padding:14px 16px;background:linear-gradient(135deg,rgba(16,185,129,0.18),rgba(5,150,105,0.14));border:1px solid rgba(16,185,129,0.55);border-radius:10px;text-align:center;">
       <div style="font-size:11px;font-weight:800;letter-spacing:0.12em;color:#86EFAC;margin-bottom:4px;">✨ DEMO MODE</div>
@@ -355,6 +372,9 @@
     $("fp-gate-btn").textContent = m === "signup" ? "アカウント作成" : "ログイン";
     $("fp-pw-input").setAttribute("autocomplete", m === "signup" ? "new-password" : "current-password");
     $("fp-gate-sub").textContent = $("fp-gate-sub").dataset[m];
+    // ★ 2026-09-02 Google button label も mode 追従
+    const gLabel = $("fp-gate-google-label");
+    if (gLabel) gLabel.textContent = m === "signup" ? "Google で アカウント作成" : "Google で ログイン";
     msg("", "");
   }
   $("fp-tab-login").addEventListener("click", () => setMode("login"));
@@ -513,6 +533,105 @@
   $("fp-gate-btn").addEventListener("click", submit);
   $("fp-pw-input").addEventListener("keydown", e => { if (e.key === "Enter") submit(); });
   $("fp-pwconfirm-input").addEventListener("keydown", e => { if (e.key === "Enter") submit(); });
+
+  // ★ 2026-09-02 owner GO: Google ID で ログイン / signup
+  //   login mode: signInWithPopup → 既存 UID または 同 email の 既存 users doc から tenantId 引き継ぎ
+  //   signup mode: signInWithPopup → 未 登録 なら users + tenants doc を 新規 作成 (email/pw signup と 同 flow)
+  //   同 email が すでに password で 登録 済 の 場合 は 「auth/account-exists-with-different-credential」 で
+  //   owner に 手順 案内 (パスワード ログイン → account 画面 で Google リンク)
+  async function submitWithGoogle() {
+    const gBtn = $("fp-gate-google");
+    gBtn.disabled = true;
+    const origHtml = gBtn.innerHTML;
+    gBtn.innerHTML = '<span style="font-size:13px;font-weight:700;">Google 認証 中…</span>';
+    try {
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: 'select_account' });
+      const cred = await signInWithPopup(auth, provider);
+      const user = cred.user;
+      // 既存 users doc 確認 (uid 一致 が 第一 優先)
+      let uDoc = await getDoc(doc(db, "users", user.uid));
+      if (!uDoc.exists()) {
+        // uid では 見つから ない → 同 email の 別 UID を 探す (email/pw 登録 済 の owner が Google 追加 する ケース)
+        try {
+          const q = query(collection(db, "users"), where("email", "==", user.email), limit(1));
+          const snap = await getDocs(q);
+          if (!snap.empty) {
+            const existing = snap.docs[0].data();
+            await setDoc(doc(db, "users", user.uid), {
+              email: user.email,
+              role: existing.role || "fp_owner",
+              tenantId: existing.tenantId,
+              linkedGoogleAt: serverTimestamp(),
+              createdAt: existing.createdAt || serverTimestamp(),
+            });
+            console.log("[fp google] 既存 tenant に link:", existing.tenantId);
+            uDoc = { exists: () => true, data: () => ({ tenantId: existing.tenantId, role: existing.role || "fp_owner" }) };
+          }
+        } catch (lookupErr) {
+          console.warn("[fp google] email lookup fail:", lookupErr.message);
+        }
+      }
+      // まだ 未 登録: signup mode なら 新規 tenant 作成 · login mode なら 拒否
+      if (!uDoc || !uDoc.exists()) {
+        if (mode === "signup") {
+          // 利用 規約 同意 チェック 必須
+          if (!$("fp-terms-check").checked) {
+            await signOut(auth);
+            throw { code: "_", message: "特商法表記・プライバシーポリシー・利用規約 への同意 が必要です" };
+          }
+          const fpName = ($("fp-fpname-input").value || user.displayName || "").trim() || (user.email.split("@")[0] + " 事務所");
+          const slug = user.email.split("@")[0].toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "").slice(0,24) || "tenant";
+          const tenantId = `${slug}-${user.uid.slice(-6)}`;
+          const { ref, agent } = readReferral();
+          const termsAcceptedAt = new Date().toISOString();
+          await setDoc(doc(db, "tenants", tenantId), {
+            name: fpName, plan: "starter", status: "active",
+            isDemo: false, isSelfSignup: true,
+            contractStartedAt: serverTimestamp(), createdAt: serverTimestamp(),
+            ownerEmail: user.email,
+            referralSource: agent ? "agent" : (ref ? "fp_referral" : "direct"),
+            referredByAgent: agent || null,
+            referredByFp: agent ? null : (ref || null),
+            termsAcceptedAt: termsAcceptedAt,
+            billing: {
+              baseMonthly: 19800, discountPerReferral: 3500,
+              currentDiscount: 0, nextMonthAmount: 19800,
+              stripeCustomerId: null, stripeSubscriptionId: null,
+              status: "trial", trialEndsAt: null,
+            },
+            signupProvider: "google",
+          });
+          await setDoc(doc(db, "users", user.uid), {
+            email: user.email, role: "fp_owner", tenantId,
+            createdAt: serverTimestamp(), linkedGoogleAt: serverTimestamp(),
+          });
+          clearReferral();
+          msg("ok", "アカウント作成完了。 起動 中…");
+        } else {
+          // login mode で 未 登録 = 誤操作 の 可能性 (owner が signup し忘れ、 別 email 選択 等)
+          await signOut(auth);
+          throw { code: "_", message: `${user.email} は 未 登録 です。 サインアップ タブ で アカウント作成 して ください` };
+        }
+      }
+      // 成功 → onAuthStateChanged が tenant data load を 継続
+    } catch (e) {
+      console.error("[fp google login]", e);
+      const map = {
+        "auth/popup-closed-by-user": "認証 が キャンセル されました",
+        "auth/popup-blocked": "popup が ブロック されました。 ブラウザ の popup ブロック 設定 を 確認",
+        "auth/cancelled-popup-request": "popup が キャンセル されました",
+        "auth/account-exists-with-different-credential": `この email は 既に パスワード で 登録 済 です。 一度 email + パスワード で ログイン → account 画面 で 「Google 連携」 を 実行 してください`,
+        "auth/operation-not-allowed": "Google 認証 が Firebase 側 で 未 有効。 Firebase Console → Authentication → Sign-in method → Google を 有効 化 して ください",
+        "auth/network-request-failed": "ネットワーク接続を確認してください",
+        "auth/unauthorized-domain": "この ドメイン は Firebase の 認可 済 domain に 未 追加。 Firebase Console → Authentication → Settings → Authorized domains に 追加 して ください",
+      };
+      msg("err", map[e.code] || (e.message || e.code || "Google 認証 失敗"));
+      gBtn.disabled = false;
+      gBtn.innerHTML = origHtml;
+    }
+  }
+  $("fp-gate-google").addEventListener("click", submitWithGoogle);
 
   // ===== 認証状態の監視 + Firestore からデータ読み込み =====
   let signupInProgress = false;
@@ -1658,7 +1777,7 @@ window.fpReadyAfterAuth = function() {
     });
   })();
 
-  const ver = "20260901A";
+  const ver = "20260902A";
   // ★ 2026-06-26 perf: critical (画面初期表示に必須) と deferred (LINE/charts) を 分離
   // critical: 顧客台帳・ホーム描画に必須
   // deferred: LINE タブ (line-app.js 555KB) / dashboard charts (charts.js) → idle で 後ロード
@@ -2406,7 +2525,7 @@ window.fpReadyAfterAuth = function() {
 <script>
 (function(){
   // 最新の ver を 1 箇所に集約 (fpReadyAfterAuth 側と一致させる必要あり)
-    const FP_VERSION = "20260901A";
+    const FP_VERSION = "20260902A";
   try { window.FP_VERSION = FP_VERSION; } catch(_) {}
 
   // 2026-07-13 v11: Chrome拡張 (Zoom タブ音声 レコーダー) 検知
