@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <!-- ★ 2026-08-10 cache 撲滅: GitHub Pages が max-age=600 送ってくる ので meta で backup 上書き。
      実効性 は browser 依存 だが、 主 防御 は app.js の 起動時 & 5min 毎 の version check + 自動 reload。 -->
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -37,10 +37,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20260902A">
-<link rel="stylesheet" href="styles-v2.css?v=20260902A">
-<link rel="stylesheet" href="styles-v3.css?v=20260902A">
-<link rel="stylesheet" href="styles-v8-workspace.css?v=20260902A">
+<link rel="stylesheet" href="styles.css?v=20260902B">
+<link rel="stylesheet" href="styles-v2.css?v=20260902B">
+<link rel="stylesheet" href="styles-v3.css?v=20260902B">
+<link rel="stylesheet" href="styles-v8-workspace.css?v=20260902B">
 <!-- ★ 2026-06-26 perf: lucide(350KB) と chart.js(201KB) を defer 化 -->
 <!--   どちらも DOMContentLoaded 後ハイドレートで OK (lucide: setInterval scan / chart: tryRender polling) -->
 <script defer src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
@@ -48,25 +48,21 @@
 <!-- ★ 2026-08-20 owner「認証中 で 5分 待たされる」fix:
      旧: 認証後 に fpReadyAfterAuth で critical scripts を 直列 fetch → mobile 4G で 5-8 秒
      新: login 画面 表示 中 に 平行 preload (browser cache に 入れる、 実行 は 認証後) → 認証後 は 実質 0秒 -->
-<link rel="preload" as="script" href="life-events.js?v=20260902A">
-<link rel="preload" as="script" href="recommender.js?v=20260902A">
-<link rel="preload" as="script" href="line-data.js?v=20260902A">
-<link rel="preload" as="script" href="recording-persist.js?v=20260902A">
-<link rel="preload" as="script" href="app.js?v=20260902A">
-<link rel="preload" as="script" href="line-app.js?v=20260902A">
+<link rel="preload" as="script" href="life-events.js?v=20260902B">
+<link rel="preload" as="script" href="recommender.js?v=20260902B">
+<link rel="preload" as="script" href="line-data.js?v=20260902B">
+<link rel="preload" as="script" href="recording-persist.js?v=20260902B">
+<link rel="preload" as="script" href="app.js?v=20260902B">
+<link rel="preload" as="script" href="line-app.js?v=20260902B">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<script>
-  // Force cache-bust: if URL has no nocache param, redirect with timestamp
-  (function(){
-    var u = new URL(window.location.href);
-    if (!u.searchParams.has('nocache')) {
-      u.searchParams.set('nocache', Date.now().toString(36));
-      window.location.replace(u.toString());
-    }
-  })();
-</script>
+<!-- ★ 2026-09-02 P0 fix: nocache redirect 削除
+     - 全 初回 load で JS redirect → +46ms (国内) / +400ms (4G) 追加 RTT
+     - bfcache 破壊 + URL param 汚染 (Analytics session 分断)
+     - JS/CSS は 個別 ?v=20260902B で bust 済 · nocache は 完全 に 無意味
+     判定書_FP-Compass_多視点10_Performance_2026-09-02.md P0 fix
+-->
 
 <style id="fp-gate-css">
 /* 2026-07-13 v11 elite critic 修正: dark navy → 業務ツール 白 base + 紺 accent (信頼感) */
@@ -82,7 +78,9 @@
 .fp-gate-label{display:block;font-size:12px;font-weight:700;margin:14px 0 6px;letter-spacing:0.02em;color:#3F4868}
 .fp-gate-input{width:100%;background:#fff;border:1.5px solid #E8E3D8;border-radius:8px;padding:12px 14px;font-size:16px;color:#1A2138;font-family:inherit;outline:none;transition:border-color .15s,box-shadow .15s}
 .fp-gate-input::placeholder{color:#94A3B8}
-.fp-gate-input:focus{border-color:#1E3A5F;box-shadow:0 0 0 3px rgba(30,58,95,0.10)}
+/* ★ 2026-09-02 P0 A11y fix: 元 box-shadow は 実効 1.20:1 で WCAG 2.2 SC 2.4.11 (3:1) 未達 + Windows High Contrast で 消失 → focus-visible + 実 outline に 差替 */
+.fp-gate-input:focus{border-color:#1E3A5F}
+.fp-gate-input:focus-visible{outline:2px solid #1E3A5F;outline-offset:2px}
 #fp-gate-btn{width:100%;background:#1E3A5F;color:#fff;border:none;border-radius:8px;padding:14px;margin-top:18px;font-size:14px;font-weight:800;letter-spacing:0.06em;cursor:pointer;font-family:'Noto Sans JP',sans-serif;transition:background .15s,transform .15s;min-height:44px}
 #fp-gate-btn:hover:not(:disabled){background:#152B48;transform:translateY(-1px)}
 #fp-gate-btn:disabled{opacity:0.55;cursor:not-allowed}
@@ -1777,7 +1775,7 @@ window.fpReadyAfterAuth = function() {
     });
   })();
 
-  const ver = "20260902A";
+  const ver = "20260902B";
   // ★ 2026-06-26 perf: critical (画面初期表示に必須) と deferred (LINE/charts) を 分離
   // critical: 顧客台帳・ホーム描画に必須
   // deferred: LINE タブ (line-app.js 555KB) / dashboard charts (charts.js) → idle で 後ロード
@@ -2465,6 +2463,10 @@ window.fpReadyAfterAuth = function() {
 
       const daysFromContact = Math.max(0, Math.floor((today - new Date(c.lastContact)) / 86400000));
 
+      // ★ 2026-09-02 P0 Security fix: featured-card innerHTML に escapeHtml 未 適用 で
+      //   c.name / c.occupation / reason / nextEvent.title に <img onerror=...> 系 stored XSS 可能
+      //   → 全 user data を escapeHtml で 通す (escapeHtml は L2792 定義)
+      const _esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, ch => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[ch]));
       const _featuredEl = document.getElementById('featured-card');
       if (_featuredEl) _featuredEl.innerHTML = `
         <div class="featured-rank">
@@ -2472,28 +2474,28 @@ window.fpReadyAfterAuth = function() {
           <span>NEXT BEST ACTION</span>
         </div>
         <div class="featured-head">
-          <div class="featured-avatar">${initial}</div>
+          <div class="featured-avatar">${_esc(initial)}</div>
           <div class="featured-meta">
-            <div class="featured-name">${c.name} 様</div>
-            <div class="featured-sub">${age}歳 / ${c.occupation || '—'} / ${family}</div>
+            <div class="featured-name">${_esc(c.name)} 様</div>
+            <div class="featured-sub">${_esc(age)}歳 / ${_esc(c.occupation || '—')} / ${_esc(family)}</div>
           </div>
           <div class="featured-aum">
             <div class="featured-aum-label">管理資産</div>
-            <div class="featured-aum-value">${aumDisp}</div>
+            <div class="featured-aum-value">${_esc(aumDisp)}</div>
           </div>
         </div>
         <div class="featured-reason">
           <i data-lucide="sparkles"></i>
-          <span>${reason}</span>
+          <span>${_esc(reason)}</span>
         </div>
         <div class="featured-metrics">
           <div class="featured-metric">
             <span class="featured-metric-label">最終接触</span>
-            <span class="featured-metric-value">${daysFromContact}<span class="featured-metric-unit">日前</span></span>
+            <span class="featured-metric-value">${_esc(daysFromContact)}<span class="featured-metric-unit">日前</span></span>
           </div>
           <div class="featured-metric">
             <span class="featured-metric-label">次のイベント</span>
-            <span class="featured-metric-value featured-metric-text">${nextEvent ? nextEvent.title : 'なし'}</span>
+            <span class="featured-metric-value featured-metric-text">${_esc(nextEvent ? nextEvent.title : 'なし')}</span>
             ${nextEvent ? `<span class="featured-metric-sub">${nextEvent.rel}</span>` : ''}
           </div>
         </div>
@@ -2525,7 +2527,7 @@ window.fpReadyAfterAuth = function() {
 <script>
 (function(){
   // 最新の ver を 1 箇所に集約 (fpReadyAfterAuth 側と一致させる必要あり)
-    const FP_VERSION = "20260902A";
+    const FP_VERSION = "20260902B";
   try { window.FP_VERSION = FP_VERSION; } catch(_) {}
 
   // 2026-07-13 v11: Chrome拡張 (Zoom タブ音声 レコーダー) 検知

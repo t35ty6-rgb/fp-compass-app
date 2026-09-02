@@ -6486,7 +6486,9 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
     let list = [];
     try {
       const r = await fetch(CLOUD_RUN_BASE + '/api/fp-list');
-      list = await r.json();
+      const parsed = await r.json();
+      // ★ 2026-09-02 P0 fix: 401/500 で {error:"..."} が 返る と Array じゃなく object で list.map crash してた
+      list = Array.isArray(parsed) ? parsed : [];
     } catch (e) { list = []; }
     v.innerHTML = `
       <div style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;padding:20px 24px;">

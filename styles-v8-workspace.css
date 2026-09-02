@@ -8667,7 +8667,7 @@ body.mobile-nav-open #mobile-hamburger .mh-bar:nth-child(3) { transform: transla
     inset: 0 !important;
     top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
     background: rgba(15, 23, 42, 0.75) !important;  /* 半透明黒で 完全に 後ろを覆う */
-    z-index: 10200 !important;  /* ボトムナビ (10100) の上 */
+    z-index: 10400 !important;  /* ★ 2026-09-02 P0 fix: nav (10300) の 上 · 前 10200 は nav 貫通 crash bug */
     width: 100vw !important;
     height: 100vh !important;
     margin: 0 !important;
@@ -13084,7 +13084,9 @@ body:not([data-home-view]) [data-view-target="cal"] { display: none !important; 
   font-size: 12.5px;
   font-weight: 800;
   letter-spacing: 0.04em;
-  color: #ffffff;
+  /* ★ 2026-09-02 P0 A11y fix: 白 text WCAG AA 未達 (gold 2.19-3.30:1 / green 3.30 / line 2.87)
+     → charcoal #1A2138 (対 gold-mid 5.03:1 PASS) に 統一。 全 variant で contrast 通す */
+  color: #1A2138;
   padding: 10px 18px;
   border-radius: 8px;
   border: 1px solid #a8842c;
@@ -13129,7 +13131,11 @@ body:not([data-home-view]) [data-view-target="cal"] { display: none !important; 
   transform: none;
   top: 0;
 }
-.fp-btn-elevated svg { color: rgba(255,255,255,0.92); }
+.fp-btn-elevated svg { color: rgba(26,33,56,0.92); }
+/* ★ 2026-09-02 P0 A11y fix: --blue と --red variant は 元々 白 text OK (5.17/4.83:1 PASS)
+   → charcoal text だと 逆 に コントラスト 落ちる の で 白 に 戻す */
+.fp-btn-elevated--blue, .fp-btn-elevated--red { color: #ffffff; }
+.fp-btn-elevated--blue svg, .fp-btn-elevated--red svg { color: rgba(255,255,255,0.92); }
 
 /* --- Color variants (semantic tone に合わせて 使い分け) --- */
 /* 🟢 Green — primary 確定 / Zoom 発行 / 完了 系 */
