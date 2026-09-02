@@ -5445,7 +5445,7 @@
         }
       });
 
-    // 5) AI 議事録
+    // 5) 面談記録
     (liveData.ai_results || [])
       .filter(r => (r.userId && r.userId === myUid) || (r.customerName && r.customerName === myName))
       .forEach(r => out.push({
@@ -5737,7 +5737,7 @@
       if (c._hydratePromise) c._hydratePromise = null;
       if (c._mergePromise) c._mergePromise = null;
     }
-    window._fpCurrentClient = c;  // AI議事録モーダルの LINE 送信 fallback 用
+    window._fpCurrentClient = c;  // 面談記録モーダルの LINE 送信 fallback 用
     // ★ オーナーfb「リロードでトップに戻る」: 最後に開いてた顧客IDを localStorage
     try {
       localStorage.setItem('fp-last-open-client', id);
@@ -5919,7 +5919,7 @@
     console.log('[client modal]', c.id, c.name, 'lineHistory:', (c.lineHistory || []).length, 'DUMMY_CLIENTS_VERSION:', window.DUMMY_CLIENTS_VERSION || '(missing)');
     let events = window.LifeEvents.generate(c);
     const pureLifeEventCount = events.length; // ★ CTA条件 用: 議事録 events 追加前 の 純粋ライフイベント数
-    // 面談AI議事録をタイムラインに追加 (localStorage + GAS 両方)
+    // 面談面談記録をタイムラインに追加 (localStorage + GAS 両方)
     try {
       const liveBks = (window.LineAppLiveData && window.LineAppLiveData.bookings) || [];
       const myBks = liveBks.filter(b => b.userId === c.lineFriendId || b.name === c.name);
@@ -5987,7 +5987,7 @@
         }
         if (strictMatch || rescued) collectFromEntry(r);
       });
-      // ④ タイムライン細分化: AI議事録から抽出したタスク (due日) を中間イベント化
+      // ④ タイムライン細分化: 面談記録から抽出したタスク (due日) を中間イベント化
       //    ★ 品質改善 (オーナーfb「ただ書いてるだけで実用的でない」):
       //      - ヒアリング内容 (「〜したい」「歳」「子供が」等) は除外
       //      - 動詞 (作成・送付・確認・面談・連絡・提案) が無いものは除外
@@ -6100,7 +6100,7 @@
       events = sortedMeetings.concat(events).sort((a, b) => new Date(a.date) - new Date(b.date));
     } catch (e) { console.warn('meeting events skipped:', e); }
 
-    // ③ 「次の一手」ブロック用データ抽出 (最新 AI 議事録 + 未完了タスク 上位3件)
+    // ③ 「次の一手」ブロック用データ抽出 (最新 面談記録 + 未完了タスク 上位3件)
     // ★ latestAi は try ブロック外でも使う (line 1950 等) → block scope 罠回避のため 外に宣言
     let latestAi = null;
     let nextActionHtml = '';
@@ -6176,7 +6176,7 @@
       }
     } catch (e) { console.warn('next-action block skipped:', e); }
     // ★ オーナーfb「返信なかったら追撃ラインを見える化」
-    // localStorage の fp-draft-tracking から「この客で送信済 + 返信待ち」を判定
+    // localStorage の fp-draft-tracking から「この お客様で送信済 + 返信待ち」を判定
     try {
       const tracking = JSON.parse(localStorage.getItem('fp-draft-tracking') || '{}');
       const t = tracking[c.id];
@@ -6188,7 +6188,7 @@
           return isUser && m.ts && new Date(m.ts).getTime() > new Date(t.lastSentAt).getTime();
         });
         if (replied) {
-          // ★ オーナーfb「客返信あり FP未返信 → 赤い目立つバナー + 自動で Jobs が返信案生成」
+          // ★ オーナーfb「お客様 返信 あり FP未返信 → 赤い目立つバナー + 自動で Jobs が返信案生成」
           tracking[c.id].awaitingReply = false;
           tracking[c.id].repliedAt = new Date().toISOString();
           try { localStorage.setItem('fp-draft-tracking', JSON.stringify(tracking)); } catch (_) {}
@@ -6200,7 +6200,7 @@
               <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
                 <div style="font-size:28px;">⚠️</div>
                 <div style="flex:1;">
-                  <div style="font-size:11px;font-weight:800;letter-spacing:0.18em;opacity:0.9;text-transform:uppercase;">客返信あり / FP 未返信</div>
+                  <div style="font-size:11px;font-weight:800;letter-spacing:0.18em;opacity:0.9;text-transform:uppercase;">お客様 返信 あり / FP 未返信</div>
                   <div style="font-size:15px;font-weight:900;margin-top:2px;letter-spacing:0.02em;">この方への返事がまだです</div>
                 </div>
               </div>
@@ -6231,7 +6231,7 @@
     } catch (e) { console.warn('tracking banner skipped:', e); }
     // ★ オーナーfb「Jobs 候補のワークフロー + 今動いてるワークフローも表示」
     try {
-      // 同日複数 AI議事録 を 1 meeting に dedup (KPI ステージと整合)
+      // 同日複数 面談記録 を 1 meeting に dedup (KPI ステージと整合)
       const _wfDedup = (arr) => {
         const seen = new Set(); const out = [];
         arr.forEach(e => { const k = new Date(e.date).toISOString().slice(0, 10); if (!seen.has(k)) { seen.add(k); out.push(e); } });
@@ -6253,7 +6253,7 @@
       const recentMs = _lineMsgs.slice(-3).reverse();
       const activeActions = [];
       if (futureMs > 0) activeActions.push({ icon: '📅', label: '次回 Zoom 確定済', tone: 'done' });
-      if (latestAi && latestAi.summary) activeActions.push({ icon: '🤖', label: 'AI議事録 生成済', tone: 'done' });
+      if (latestAi && latestAi.summary) activeActions.push({ icon: '🤖', label: '面談記録 生成済', tone: 'done' });
       const ongoingAiPills = document.querySelectorAll('[id^="fp-ai-pill-"]');
       if (ongoingAiPills.length > 0) activeActions.push({ icon: '⚡', label: 'Jobs が資料生成中 (' + ongoingAiPills.length + '件)', tone: 'active' });
       if (recentMs.length > 0) {
@@ -6424,7 +6424,7 @@
     const timelineHtml2 = (function () {
       const TODAY = new Date(); TODAY.setHours(0,0,0,0);
       // ★ オーナーfb「1回目Zoomしかしてないのに 2回目議事録 KPI 出る」バグ修正:
-      //    同じ日に AI議事録 が 複数 (label違い) あると別 meeting として cnt されてた
+      //    同じ日に 面談記録 が 複数 (label違い) あると別 meeting として cnt されてた
       //    → 「同じ日 = 1回の面談」として dedup
       const _futM = events.filter(e => e.kind === 'meeting' && new Date(e.date) > TODAY);
       const _pastM = events.filter(e => e.kind === 'meeting' && new Date(e.date) <= TODAY)
@@ -6484,14 +6484,14 @@
           { name: '事前リマインド', status: hasFutureBooking && fpMsgsAfterLast.length > 0 ? 'done' : 'todo', howTo: '前日に LINE で「明日XX時 Zoom です」自動送信' },
         ],
         '1->2': [
-          { name: '初回 議事録 生成', status: hasAiResult ? 'done' : 'todo', howTo: 'Zoom録画 → ■停止 → AI議事録自動生成' },
+          { name: '初回 議事録 生成', status: hasAiResult ? 'done' : 'todo', howTo: 'Zoom録画 → ■停止 → 面談記録自動生成' },
           { name: 'お礼/感想ヒアリング LINE', status: fpMsgsAfterLast.some(m => /ありがとう|お礼|感想|いかが/.test(m.text||'')) ? 'done' : 'todo', howTo: '面談終了2-3h以内に「本日はありがとうございました」+感想質問' },
           { name: 'お客様からの返信あり', status: userReplyAfterLast ? 'done' : (fpMsgsAfterLast.length > 0 ? 'progress' : 'todo'), howTo: '返信なければ3日後にもう一度短文 LINE で繋ぐ' },
           { name: '2回目 候補日 提示', status: hasFutureBooking ? 'done' : 'todo', howTo: 'LINE で候補日3つ → お客様タップで自動確定' },
-          { name: 'ヒアリング深掘り (3項目以上)', status: hearingDepth >= 3 ? 'done' : (hearingDepth >= 1 ? 'progress' : 'todo'), howTo: 'AI議事録の key_concerns が 3個以上抽出されてればOK' },
+          { name: 'ヒアリング深掘り (3項目以上)', status: hearingDepth >= 3 ? 'done' : (hearingDepth >= 1 ? 'progress' : 'todo'), howTo: '面談記録の key_concerns が 3個以上抽出されてればOK' },
         ],
         '2->3': [
-          { name: '2回目 議事録 生成', status: aiResultsForC.length >= 2 ? 'done' : 'todo', howTo: 'Zoom録画 → ■停止 → AI議事録自動生成' },
+          { name: '2回目 議事録 生成', status: aiResultsForC.length >= 2 ? 'done' : 'todo', howTo: 'Zoom録画 → ■停止 → 面談記録自動生成' },
           { name: 'ライフプラン作成', status: (c.deliverables || []).some(d => /ライフプラン/.test(d.title||'')) ? 'done' : 'todo', howTo: '成果物タブ → ライフプラン テンプレ → AI下書き → 送付' },
           { name: 'シミュレーション 3パターン', status: (c.deliverables || []).filter(d => /シミュ|試算/.test(d.title||'')).length >= 1 ? 'progress' : 'todo', howTo: '保守的/標準/積極の3パターン → 提案プレゼンの主役' },
           { name: '提案商品 候補絞り込み', status: hasRecentProposal ? 'done' : 'todo', howTo: 'NISA/iDeCo/保険 から お客様に最適な 1-3商品を選定' },
@@ -6907,14 +6907,14 @@
             <div class="cd-note">${escapeHtml(c.note)}</div>
           </div>` : ''}
 
-          <!-- 2026-07-11 v4 owner FB: 削除ボタン は 顧客モーダル 左タブ 一番下 (この画面 = この客 の 削除 と 文脈 明瞭) -->
+          <!-- 2026-07-11 v4 owner FB: 削除ボタン は 顧客モーダル 左タブ 一番下 (この画面 = この お客様 の 削除 と 文脈 明瞭) -->
           <div class="cd-left-delete-zone" style="margin-top:auto;padding-top:24px;border-top:1px solid rgba(148,163,184,0.22);">
             <div style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;">danger zone</div>
             <button id="cd-left-delete-btn" data-cid="${escapeHtml(c.id)}" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;background:#fff;color:#DC2626;border:1.5px solid #FCA5A5;padding:11px 14px;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:0.02em;transition:background .15s,border-color .15s,box-shadow .15s;">
               <span style="font-size:15px;">🗑</span>
               <span>${escapeHtml(c.name)} さん を 削除</span>
             </button>
-            <div style="font-size:11px;color:#94A3B8;margin-top:6px;line-height:1.5;">この客 の LINE / 議事録 / 予約 / 資料 が すべて 消えます。 元 に 戻せません。</div>
+            <div style="font-size:11px;color:#94A3B8;margin-top:6px;line-height:1.5;">この お客様 の LINE / 議事録 / 予約 / 資料 が すべて 消えます。 元 に 戻せません。</div>
           </div>
         </aside>
 
@@ -7194,7 +7194,7 @@
     // ★ 顧客削除ボタン
     const delBtn = document.getElementById('modal-delete-btn');
     if (delBtn) delBtn.addEventListener('click', async () => {
-      if (!confirm('⚠ ' + c.name + ' さんを削除します。\n\nこの顧客に関連するすべてのデータ:\n・LINE 履歴 / 客返信\n・Zoom 予約\n・AI 議事録 / タスク\n・成果物 編集中\n・アンケート回答\n\nを削除します。元に戻せません。\n\n本当に削除しますか?')) return;
+      if (!confirm('⚠ ' + c.name + ' さんを削除します。\n\nこの顧客に関連するすべてのデータ:\n・LINE 履歴 / 客返信\n・Zoom 予約\n・面談記録 / タスク\n・成果物 編集中\n・アンケート回答\n\nを削除します。元に戻せません。\n\n本当に削除しますか?')) return;
       delBtn.disabled = true; delBtn.innerHTML = '削除中…';
       // ★ 削除統一 (2026-06-25): Cloud Function callable + GAS + localStorage の3点同時実行
       //   どれか欠けると Firestore / GAS / ブラウザ で 状態がズレ「消したのに残る」事故。
@@ -9065,7 +9065,7 @@ ${ctxText}${surveyTxt}`;
           const msg = `${target.name}様\n\nご相談ありがとうございます。\n\n初回 Zoom 面談の候補日3つです:\n\n📅 候補1: ●月●日 (●) 14:00-15:00\n📅 候補2: ●月●日 (●) 19:00-20:00\n📅 候補3: ●月●日 (●) 10:00-11:00\n\nご都合の良い日時を1つお選びください。タップ確定で Zoom URL が自動発行されます。`;
           openLineSendModal(target, msg, kpiName);
         } else if (action === 'open-recording-tab') {
-          alert('「面談記録・AI議事録」タブで該当 Zoom予約の[● 録画ONでZoom開始]ボタンから開始してください。');
+          alert('「面談記録・面談記録」タブで該当 Zoom予約の[● 録画ONでZoom開始]ボタンから開始してください。');
           // タブ自動切替
           const tlTab = document.querySelector('[data-cdtab="aimeeting"]') || document.querySelector('[data-cdtab="meeting"]');
           if (tlTab) tlTab.click();
@@ -10073,7 +10073,7 @@ ${ctxText}${surveyTxt}`;
     });
     if (bookingsWithMemo.length === 0 && tasks.length === 0 && !hasAnyAi) return ''; // 全部ゼロの時のみ skip
 
-    // AI 議事録データ (localStorage + GAS 永続化シートの両方から集約)
+    // 面談記録データ (localStorage + GAS 永続化シートの両方から集約)
     const aiCandidateKeys = new Set();
     if (client.lineFriendId) aiCandidateKeys.add('fp-ai-' + client.lineFriendId);
     if (client.id)           aiCandidateKeys.add('fp-ai-' + client.id);
@@ -10225,10 +10225,10 @@ ${ctxText}${surveyTxt}`;
 
     return `
       <div class="detail-section">
-        <h3>面談記録・AI議事録 <span class="count-badge">${bookingsWithMemo.length} 回</span></h3>
+        <h3>面談記録・面談記録 <span class="count-badge">${bookingsWithMemo.length} 回</span></h3>
         ${window.FP_DEBUG ? `
         <details style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-family:Menlo,monospace;font-size:11px;">
-          <summary style="cursor:pointer;color:#475569;font-weight:700;font-family:inherit;">🔧 デバッグ (AI議事録 lookup)</summary>
+          <summary style="cursor:pointer;color:#475569;font-weight:700;font-family:inherit;">🔧 デバッグ (面談記録 lookup)</summary>
           <div style="margin-top:10px;line-height:1.7;color:#334155;">
             <div><strong>client.lineFriendId:</strong> ${escapeHtml(client.lineFriendId || '(空)')}</div>
             <div><strong>client.name:</strong> ${escapeHtml(client.name || '')}</div>
@@ -10333,7 +10333,7 @@ ${ctxText}${surveyTxt}`;
                 </div>` : ''}
               <div class="fp-meeting-block" data-minutes-editor data-booking-ts="${escapeHtml(b.ts || '')}" data-client-id="${escapeHtml(client.id)}">
                 <div class="fp-meeting-block-label" style="display:flex;justify-content:space-between;align-items:center;">
-                  <span>AI 議事録 (Claude) <span style="font-size:10px;color:#9CA3AF;font-weight:600;margin-left:6px;">編集・追記可</span></span>
+                  <span>面談記録 (Claude) <span style="font-size:10px;color:#9CA3AF;font-weight:600;margin-left:6px;">編集・追記可</span></span>
                   <button class="fp-minutes-edit" style="background:#fff;border:1px solid #E2E8F0;color:#475569;font-size:11px;font-weight:700;padding:4px 10px;border-radius:5px;cursor:pointer;font-family:inherit;">✏ 編集</button>
                 </div>
                 <div class="fp-meeting-body fp-minutes-view fp-summary-structured" data-raw-summary="${escapeHtml(aiData.summary || '')}">${window.renderStructuredSummary ? window.renderStructuredSummary(aiData.summary) : (aiData.summary ? escapeHtml(aiData.summary) : '議事録 未生成 — 「✏ 編集」 から手動追記 可')}</div>
@@ -10456,7 +10456,7 @@ ${ctxText}${surveyTxt}`;
                   </div>` : ''}
                 ${a.summary ? `
                   <div class="fp-meeting-block">
-                    <div class="fp-meeting-block-label">AI 議事録 (Claude)</div>
+                    <div class="fp-meeting-block-label">面談記録 (Claude)</div>
                     <div class="fp-meeting-body fp-minutes-view fp-summary-structured" data-raw-summary="${escapeHtml(a.summary)}">${window.renderStructuredSummary ? window.renderStructuredSummary(a.summary) : escapeHtml(a.summary)}</div>
                   </div>` : ''}
                 ${a.key_concerns && a.key_concerns.length > 0 ? `
@@ -11852,7 +11852,7 @@ STEP C: 結果報告
   // ★ オーナーfb 2026-06-20: 「日時指定 Zoom 予約」 — 1スロット 指定 → scheduleZoomDirect → Zoom予約 + LINE 送付
   // ★ 2026-07-28: 顧客カルテ 「🎙 面談 を 開始」 super button の modal
   //   owner 要望: 「ボタン多すぎ、 1個 で全部なんとかなるボタンがあるといい」
-  //   + 「他人主催 Zoom (相手 が 送ってきた URL) でも 両側 声 認識 + AI 議事録 作りたい」
+  //   + 「他人主催 Zoom (相手 が 送ってきた URL) でも 両側 声 認識 + 面談記録 作りたい」
   //   4 経路 (今すぐ / 相手主催 URL 貼付 / 予約 / 電話のみ) を 1 modal に 集約
 
   // ★ 2026-08-11 owner「対面 でも Zoom を 客 に 見せず 音声 だけ 拾いたい」
@@ -12423,7 +12423,7 @@ STEP C: 結果報告
               <div style="width:38px;height:38px;background:#ECFDF5;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#059669;font-size:19px;">🔗</div>
               <div style="flex:1;line-height:1.5;">
                 <div style="font-size:14.5px;font-weight:900;color:#0F172A;">相手 が 送ってきた Zoom URL を 使う</div>
-                <div style="font-size:12px;font-weight:600;color:#475569;margin-top:2px;">お客様 or 別会社 が host の Zoom も、 両者 の 音声 を 録音 + AI 議事録 化</div>
+                <div style="font-size:12px;font-weight:600;color:#475569;margin-top:2px;">お客様 or 別会社 が host の Zoom も、 両者 の 音声 を 録音 + 面談記録 化</div>
               </div>
             </div>
             <input id="fp-ms-external-url" type="url" placeholder="https://zoom.us/j/..." style="width:100%;padding:11px 13px;border:2px solid #E2E8F0;border-radius:8px;font-size:13.5px;font-family:'JetBrains Mono',ui-monospace,Menlo,monospace;box-sizing:border-box;background:#F8FAFC;margin-bottom:10px;">
@@ -13159,7 +13159,7 @@ ${refineSection}
 - proposalStatus.lastCancel が 30日以内 なら キャンセル理由 を 暗黙に 配慮 (「お忙しい中」 等)
 - recentMeetings.key_concerns の 1個 を 自然に 拾う (議事録の キーワード 引用)
 - 議事録の predicted_next_questions が ある なら 客が 次に 聞きたい事に 先回りで 軽く触れる
-- manualTags / autoTags は FP が この客に 持ってる 属性 (「教育資金AI」 等) → 該当テーマに 寄せる
+- manualTags / autoTags は FP が この お客様に 持ってる 属性 (「教育資金AI」 等) → 該当テーマに 寄せる
 
 【NG】
 - 「お疲れ様でした」 「ありがとうございます」 だけの 定型挨拶 で 始めない
@@ -13362,7 +13362,7 @@ ${JSON.stringify(jsonPayload, null, 2)}
         const msgEl = after.querySelector('#fp-brief-msg');
         const text = after.querySelector('#fp-brief-result').value.trim();
         if (!text) { msgEl.style.color = '#B91C1C'; msgEl.textContent = '⚠ 本文が空です'; return; }
-        if (!client.lineFriendId) { msgEl.style.color = '#B91C1C'; msgEl.textContent = '⚠ この客は LINE 未連携'; return; }
+        if (!client.lineFriendId) { msgEl.style.color = '#B91C1C'; msgEl.textContent = '⚠ この お客様は LINE 未連携'; return; }
         if (!confirm(`${client.name || 'お客様'} 様 に この文面で LINE を送信します。 よろしいですか?\n\n${text.slice(0, 120)}${text.length > 120 ? '…' : ''}`)) return;
         sendBtn.disabled = true; sendBtn.textContent = '送信中…';
         msgEl.style.color = '#9A5A18'; msgEl.textContent = '⏳ LINE 送信中…';
@@ -13647,7 +13647,7 @@ ${JSON.stringify(jsonPayload, null, 2)}
         body.innerHTML = `
           <div style="background:#FEF2F2;border:1px solid #FCA5A5;border-radius:8px;padding:10px 12px;color:#7F1D1D;font-size:11.5px;line-height:1.6;">
             <strong>議事録 見つかりません</strong><br>
-            この顧客 (${escapeHtml(client.name)}) の lineFriendId = "${escapeHtml(client.lineFriendId || '空')}" でマッチする AI議事録が無いです。<br><br>
+            この顧客 (${escapeHtml(client.name)}) の lineFriendId = "${escapeHtml(client.lineFriendId || '空')}" でマッチする 面談記録が無いです。<br><br>
             <strong>localStorage 全 fp-ai-* キー:</strong><br>
             ${Object.keys(localStorage).filter(k => k.startsWith('fp-ai-')).map(k => `<code style="font-size:10px;background:#fff;padding:1px 4px;border-radius:3px;display:inline-block;margin:1px;">${escapeHtml(k)}</code>`).join('') || '<em>(なし)</em>'}
           </div>
@@ -13872,7 +13872,7 @@ ${JSON.stringify(jsonPayload, null, 2)}
       } catch (_) {}
 
       // ★ 会話ループ履歴 (送信済 + 返信受信) を時系列で merge
-      // - FP 送信: window._fpDraftConversation (この客分のみ)
+      // - FP 送信: window._fpDraftConversation (この お客様分のみ)
       // - 客返信: c.lineHistory の from='user' / direction='in'
       const fpSent = (window._fpDraftConversation || [])
         .filter(m => !m.clientId || m.clientId === client.id)
@@ -13990,7 +13990,7 @@ ${client.name}さん、ちょっとだけ聞かせてください!
 それに絞った資料 作って 次の Zoom でお見せしますね 😊
 
 ═══════════════════════════════════════════
-【フェーズ2 = 客返信あり後の LINE】 ${isLoop ? '※今はこのフェーズ' : '※今は該当しない'}
+【フェーズ2 = お客様 返信 あり後の LINE】 ${isLoop ? '※今はこのフェーズ' : '※今は該当しない'}
 ═══════════════════════════════════════════
 
 目的: **成果物は既に作って添付した前提** + Zoom 日程は別添カードで送る。

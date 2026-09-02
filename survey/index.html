@@ -350,6 +350,15 @@
   
     </div>
 
+      <!-- ★ 2026-09-02 P0 fix: 個人情報 取扱 同意 UI (個情法 21条) 追加
+           要配慮個人情報 相当 (年収 · 資産 · 家族構成) を 取得 する 前 の 明示 同意 -->
+      <div id="fp-privacy-consent-wrap" style="background:#F5F7FF;border:1px solid #C8CEF5;border-radius:10px;padding:14px 16px;margin:12px 0;font-size:13px;line-height:1.7;color:#1A2138;">
+        <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;">
+          <input type="checkbox" id="fp-privacy-consent" style="margin-top:3px;width:18px;height:18px;accent-color:#5B5BF0;flex-shrink:0;cursor:pointer;">
+          <span>ご入力 いただいた 個人情報 (氏名 · 家族構成 · 収入 · 資産 等) は、 FP 相談 業務 の 目的 のみ で 利用 し、 <a href="/legal/privacy.html" target="_blank" style="color:#5B5BF0;text-decoration:underline;font-weight:700;">プライバシー ポリシー</a> に 基づき 適切 に 管理 します。 内容 を 確認 の 上、 取扱 に 同意 します。</span>
+        </label>
+      </div>
+
       <div class="wizard-nav">
         <button type="button" class="btn-ghost" id="prevBtn" disabled>← 戻る</button>
         <button type="button" class="btn" id="nextBtn" disabled>次へ →</button>
@@ -366,6 +375,24 @@
     </div>
 
     <script>
+    // ★ 2026-09-02 P0 fix: LIFF liff.state 2 段 parse (memory: reference_liff_url_pitfalls 罠 1)
+    //   LIFF が query を ?liff.state=%3F...&hoge=... に wrap する ため、 tenant param が
+    //   URLSearchParams で 取れず tenant null → alert or 別 tenant 接続 の 事故 が 起きて た
+    //   → 最初 に liff.state を unwrap して 通常 の query に merge (以降 の tenant lookup 全 成立)
+    (function unwrapLiffState() {
+      try {
+        const p = new URLSearchParams(location.search);
+        const liffState = p.get('liff.state');
+        if (!liffState) return;
+        const inner = new URLSearchParams(liffState.startsWith('?') ? liffState.slice(1) : liffState);
+        let merged = false;
+        for (const [k, v] of inner) {
+          if (!p.has(k)) { p.append(k, v); merged = true; }
+        }
+        if (merged) history.replaceState(null, '', location.pathname + '?' + p.toString() + location.hash);
+      } catch (_) {}
+    })();
+
     // 2026-08-19 Bug 1 fix: 日付 select を 動的 生成 (旧 は 6/18-7/1 hardcode で 過去 日付 しか 選べ ない bug)
     //   翌日 から 60日 先 まで の 日付 を 3つ の select に 埋め込む
     // 2026-08-19 生年月日 max も 動的化 (旧 は 2026-06-09 hardcode で 2ヶ月 遅れ)
@@ -556,6 +583,14 @@
           alert('お名前 を 入力 してください (画面 上部 の 「お名前」 欄)');
           nameInput?.scrollIntoView({behavior:'smooth',block:'center'});
           nameInput?.focus();
+          return;
+        }
+        // ★ 2026-09-02 P0 fix: 個人情報 取扱 同意 (個情法 21条 対応)
+        //   要配慮個人情報 相当 (年収 · 資産 · 家族構成) を 取得 する 前 の 明示 同意
+        const consentBox = document.getElementById('fp-privacy-consent');
+        if (consentBox && !consentBox.checked) {
+          alert('個人情報 の 取扱 に 同意 を お願い します (プライバシー ポリシー を ご確認 の 上、 チェック を 入れて ください)');
+          consentBox.scrollIntoView({behavior:'smooth',block:'center'});
           return;
         }
         nextBtn.disabled = true;

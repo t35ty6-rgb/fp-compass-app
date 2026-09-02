@@ -1090,7 +1090,7 @@
                   <div style="font-size:12px;color:var(--ink-2);margin-top:3px;">📍 ${escapeHtml(a.reason)}</div>
                   <div style="font-size:11px;color:var(--muted);margin-top:2px;">最終アクションから ${a.days}日経過</div>
                 </div>
-                <button data-aftercare-uid="${escapeHtml(a.user.userId)}" data-aftercare-name="${escapeHtml(a.customerName)}" data-aftercare-stage="${a.stage}" class="aftercare-btn fp-btn-elevated fp-btn-elevated--line fp-btn-elevated--sm" type="button"><i data-lucide="send"></i><span>LINE 追撃</span></button>
+                <button data-aftercare-uid="${escapeHtml(a.user.userId)}" data-aftercare-name="${escapeHtml(a.customerName)}" data-aftercare-stage="${a.stage}" class="aftercare-btn fp-btn-elevated fp-btn-elevated--line fp-btn-elevated--sm" type="button"><i data-lucide="send"></i><span>フォロー LINE</span></button>
               </div>
             `).join('')
           }
@@ -1130,11 +1130,11 @@
             renderLeadHubInner();
           } else {
             console.error('送信 失敗 (server):', data.error); alert('❌ 送信 できませんでした。 通信 状態 と LINE 連携 設定 を 確認 して 再度 お試し ください。');
-            btn.disabled = false; btn.innerHTML = '<i data-lucide="send"></i><span>LINE追撃</span>'; if (window.lucide) lucide.createIcons();
+            btn.disabled = false; btn.innerHTML = '<i data-lucide="send"></i><span>フォローLINE</span>'; if (window.lucide) lucide.createIcons();
           }
         } catch (e) {
           console.error('送信 例外:', e); alert('❌ 送信 できませんでした。 通信 状態 を 確認 して 再度 お試し ください。');
-          btn.disabled = false; btn.innerHTML = '<i data-lucide="send"></i><span>LINE追撃</span>'; if (window.lucide) lucide.createIcons();
+          btn.disabled = false; btn.innerHTML = '<i data-lucide="send"></i><span>フォローLINE</span>'; if (window.lucide) lucide.createIcons();
         }
       });
     });
@@ -1234,7 +1234,7 @@
             <div style="flex:1;">
               <div style="font-size:11px;font-weight:800;color:#1E40AF;letter-spacing:0.12em;margin-bottom:3px;">IN-PERSON</div>
               <div style="font-size:15px;font-weight:800;color:#1F2A3F;line-height:1.4;">🎙 対面 で 音声 だけ 録音</div>
-              <div style="font-size:12px;color:#6b7280;margin-top:4px;line-height:1.6;">Zoom を 客 に 見せず、 端末 マイク で 音声 のみ 録音 → whisper で 文字起こし → AI 議事録 化。 対面 商談 で 客 が Zoom アレルギー の 時 用。</div>
+              <div style="font-size:12px;color:#6b7280;margin-top:4px;line-height:1.6;">Zoom を 客 に 見せず、 端末 マイク で 音声 のみ 録音 → whisper で 文字起こし → 面談記録 化。 対面 商談 で 客 が Zoom アレルギー の 時 用。</div>
             </div>
           </label>
           <label class="fp-qi-mode" data-mode="memo" style="display:flex;gap:12px;padding:14px 18px;border:1.5px solid #E5E7EB;border-radius:10px;cursor:pointer;background:#fff;transition:border-color .12s,background .12s;">
@@ -2722,7 +2722,7 @@
     } catch (_) {}
   }
 
-  // 対面モード録画: webcam + マイクで録画 → 同じ AI議事録パイプラインへ
+  // 対面モード録画: webcam + マイクで録画 → 同じ 面談記録パイプラインへ
   async function startWebcamRecording(bookingTs) {
     const R = window._fpRecorder;
     let stream;
@@ -2734,7 +2734,7 @@
       });
     } catch (e) {
       // ★ オーナーfb 2026-06-22 (roundG): カメラ/マイク 失敗時に 進める fallback を 3 つ提示
-      //   1) マイクのみ録音 (音声 → AI議事録 まで同じパイプライン)
+      //   1) マイクのみ録音 (音声 → 面談記録 まで同じパイプライン)
       //   2) メモのみ (録画なしで メモモーダル 開く)
       //   3) 設定見直してリロード
       const errName = e?.name || '';
@@ -2759,7 +2759,7 @@
               <div>
                 <div style="font-size:11px;font-weight:800;letter-spacing:0.14em;opacity:0.85;margin-bottom:4px;">RECOMMENDED</div>
                 <div style="font-size:15.5px;font-weight:800;letter-spacing:0.03em;line-height:1.4;">🎤 マイクだけで 録音する</div>
-                <div style="font-size:11.5px;opacity:0.9;margin-top:4px;line-height:1.55;">カメラ無しで OK。 音声から AI議事録 まで 同じ流れで 作れます。</div>
+                <div style="font-size:11.5px;opacity:0.9;margin-top:4px;line-height:1.55;">カメラ無しで OK。 音声から 面談記録 まで 同じ流れで 作れます。</div>
               </div>
               <span style="font-size:22px;flex-shrink:0;">→</span>
             </div>
@@ -3630,7 +3630,7 @@
   window._fpNotifyMeetingReady = function() {};
 
   // ★ 2026-06-22 roundG: マイクのみ録音 fallback (カメラ NotFound / 不要 時)
-  //   音声 → 同じパイプライン (upload → AI議事録)
+  //   音声 → 同じパイプライン (upload → 面談記録)
   // 2026-08-20: app.js の 顧客カード の 対面 button から も 呼べる よう window に expose
   async function startAudioOnlyRecording(bookingTs, prefetchedStream, clientOverride) {
     // 2026-08-20: 3番目 引数 clientOverride で 客名 と id を 上書き 可 (app.js 経由 で 呼び出し 時)
@@ -3706,7 +3706,7 @@
       R.mediaRecorder = null;
       try { await fetch(CLOUD_RUN_BASE + '/api/recording/stop?ts=' + encodeURIComponent(bookingTs), { method: 'POST' }); } catch (_) {}
       // ★ 2026-06-22 roundJ: 録画停止後のフル AI パイプラインを startScreenRecording と同じく実装
-      //   旧: 単純 upload のみ で AI議事録 生成されず → 面談履歴に出ない
+      //   旧: 単純 upload のみ で 面談記録 生成されず → 面談履歴に出ない
       //   新: Drive 保存 + Whisper 文字起こし + Claude 解析 + 顧客カード自動保存 + 進捗パネル
       const customerName = (function () {
         try {
@@ -3764,7 +3764,7 @@
     };
     indicator.addEventListener('click', () => {
       if (mr.state !== 'inactive') {
-        if (confirm('録音を 停止しますか?\n\n停止後、 音声から 自動で AI議事録 が生成されます。')) mr.stop();
+        if (confirm('録音を 停止しますか?\n\n停止後、 音声から 自動で 面談記録 が生成されます。')) mr.stop();
       }
     });
     mr.start(3000);
@@ -4189,12 +4189,12 @@
         </div>
       </div>
       <div style="display:grid;gap:6px;margin-top:10px;">
-        <button id="fp-show-result" style="font-size:13px;padding:11px;background:linear-gradient(135deg,#06c755,#04a045);color:#fff;border:none;border-radius:7px;cursor:pointer;font-weight:800;font-family:inherit;letter-spacing:0.04em;">📋 AI議事録を見る</button>
+        <button id="fp-show-result" style="font-size:13px;padding:11px;background:linear-gradient(135deg,#06c755,#04a045);color:#fff;border:none;border-radius:7px;cursor:pointer;font-weight:800;font-family:inherit;letter-spacing:0.04em;">📋 面談記録を見る</button>
         <button id="fp-progress-close" style="font-size:12px;padding:9px;background:#1b2845;color:#fff;border:none;border-radius:7px;cursor:pointer;font-weight:800;font-family:inherit;letter-spacing:0.08em;text-transform:uppercase;">閉じる</button>
       </div>`;
     // ★ 反映完了 toast は autoSaveAIResult の GAS保存完了 .then で 出す (showProgressDoneAction は ここでは 出さない、 二重表示防止)
     document.getElementById('fp-show-result').addEventListener('click', () => {
-      // ★ オーナーfb 2026-06-24: 「AI議事録を見る」 → 顧客モーダルの 議事録タブ に 飛ぶ (旧: 別モーダル)
+      // ★ オーナーfb 2026-06-24: 「面談記録を見る」 → 顧客モーダルの 議事録タブ に 飛ぶ (旧: 別モーダル)
       const r = window._fpAIResult;
       const p = document.getElementById('fp-unified-progress'); if (p) p.remove();
       if (!r) return;
@@ -4458,7 +4458,7 @@
             (c.lineFriendId && c.lineFriendId === userId) ||
             (c.name && (c.name === nameKey || c.name === customerName))
           );
-          // ★ fallback: 名前/userId match 失敗時、 現在モーダル開いてる客 を 対象に (録画フローは「この客の議事録」 が 自明)
+          // ★ fallback: 名前/userId match 失敗時、 現在モーダル開いてる客 を 対象に (録画フローは「この お客様の議事録」 が 自明)
           if (!targetClient && window._fpCurrentClient) {
             targetClient = window._fpCurrentClient;
           }
@@ -4583,7 +4583,7 @@
     } catch (_) {}
   }
 
-  // AI 議事録生成 (Drive アップロードと並行)
+  // 面談記録生成 (Drive アップロードと並行)
   async function aiProcessRecording(blob, bookingTs, customerName, booking) {
     const sizeMB = blob.size / 1024 / 1024;
     console.log('[aiProcessRecording] start', { sizeMB: sizeMB.toFixed(2), bookingTs, customerName });
@@ -4928,7 +4928,7 @@
         <div style="padding:20px 26px;border-bottom:1px solid #e8e2d4;display:flex;justify-content:space-between;align-items:baseline;">
           <div>
             <div style="font-size:10.5px;font-weight:700;color:#8b7d5d;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:3px;">AI Meeting Summary${result.mock ? ' <span style="background:#fef2f2;color:#b91c3c;padding:1px 6px;border-radius:4px;font-size:9.5px;margin-left:4px;letter-spacing:0.02em;">DEMO MODE</span>' : ''}</div>
-            <h2 style="font-family:'Noto Sans JP',serif;font-size:20px;margin:0;font-weight:600;color:#1f2a3f;">${escapeHtml(customerName)}様 面談 AI 議事録</h2>
+            <h2 style="font-family:'Noto Sans JP',serif;font-size:20px;margin:0;font-weight:600;color:#1f2a3f;">${escapeHtml(customerName)}様 面談 面談記録</h2>
           </div>
           <button id="fp-ai-close-modal" title="保存済み・閉じる" style="background:#dcfce7;border:1px solid #86efac;color:#166534;width:auto;height:32px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:700;padding:0 12px;font-family:inherit;">✓ 保存済 ✕</button>
         </div>
@@ -5107,7 +5107,7 @@
         handleFinishWithoutRecording();
         return;
       }
-      if (!confirm('録画を停止して AI 議事録を生成しますか?\n(Zoom と メモも一緒に閉じます)')) return;
+      if (!confirm('録画を停止して 面談記録を生成しますか?\n(Zoom と メモも一緒に閉じます)')) return;
       stopScreenRecording();
     });
   }
@@ -5133,7 +5133,7 @@
       <div style="background:#fff;max-width:480px;width:100%;border-radius:14px;box-shadow:0 24px 60px rgba(0,0,0,0.35);overflow:hidden;">
         <div style="background:linear-gradient(135deg,#FEF3C7,#FDE68A);padding:18px 24px;border-bottom:1px solid #F59E0B;">
           <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:10.5px;letter-spacing:0.22em;color:#92400E;text-transform:uppercase;margin-bottom:4px;">録画なし</div>
-          <h3 style="font-family:'Noto Sans JP',sans-serif;font-weight:900;font-size:18px;margin:0;color:#0E1116;letter-spacing:-0.012em;">AI 議事録 は生成できませんでした</h3>
+          <h3 style="font-family:'Noto Sans JP',sans-serif;font-weight:900;font-size:18px;margin:0;color:#0E1116;letter-spacing:-0.012em;">面談記録 は生成できませんでした</h3>
         </div>
         <div style="padding:20px 24px;font-size:13.5px;color:#353D4F;line-height:1.85;">
           画面録画 が 開始されていない 状態 で 「終了」 が押されたため、 <b style="color:#0E1116;">AI 音声議事録 の 生成 を スキップ</b> しました。<br><br>
@@ -6065,7 +6065,7 @@
     overlay.innerHTML = `
       <div style="background:#fff;width:min(780px,100%);max-height:92vh;overflow-y:auto;border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,0.35);">
         <div style="padding:28px 32px 0;">
-          <h2 style="margin:0 0 4px;font-family:'Noto Sans JP',serif;font-size:22px;font-weight:700;">✨ AI議事録生成</h2>
+          <h2 style="margin:0 0 4px;font-family:'Noto Sans JP',serif;font-size:22px;font-weight:700;">✨ 面談記録生成</h2>
           <p style="margin:0;color:#6b7280;font-size:12.5px;">録画ファイルをWhisperで文字起こし → Claudeで要約 → 顧客データへ自動書込</p>
         </div>
         <div id="fp-ai-body" style="padding:24px 32px 32px;"></div>
@@ -7211,7 +7211,7 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
           <div class="howto-step"><div class="howto-step-no">2</div><div>下の<strong>「公式LINEからの最新アンケート回答」</strong>に「確定待ち」のお客様が並ぶ</div></div>
           <div class="howto-step"><div class="howto-step-no">3</div><div>候補日3つから1つ <span class="btn-hint">この日で確定 →</span> ボタンを押す</div></div>
           <div class="howto-step"><div class="howto-step-no">4</div><div>瞬時に: Zoom URL自動発行 / お客様にLINE通知 / Googleカレンダー登録 が全部起きる</div></div>
-          <div class="howto-step"><div class="howto-step-no">5</div><div>面談当日は予約カードの <span class="btn-hint">● 録画ONでZoom開始</span> から入室 → 終了時 <span class="btn-hint">■ 録画停止</span> → <span class="btn-hint">✨ AI議事録を生成</span></div></div>
+          <div class="howto-step"><div class="howto-step-no">5</div><div>面談当日は予約カードの <span class="btn-hint">● 録画ONでZoom開始</span> から入室 → 終了時 <span class="btn-hint">■ 録画停止</span> → <span class="btn-hint">✨ 面談記録を生成</span></div></div>
         </div>
       </div>
 
@@ -7292,7 +7292,7 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
               <a class="btn-mini" href="${escapeHtml(b.zoomUrl)}" target="_blank" data-hint="同じZoom URLを再度開く (フォロー面談用)">Zoomを開く</a>
               ${b.transcript
                 ? `<button class="btn-mini-action" data-view-transcript="${escapeHtml(b.ts)}" data-hint="AIが作った議事録を表示・コピー"><span class="icon">📝</span>議事録を見る</button>`
-                : `<button class="btn-mini" data-gen-transcript="${escapeHtml(b.ts)}" data-hint="アンケート回答と顧客情報から議事録テンプレを自動生成。面談後に押す" style="background:linear-gradient(135deg,#b8893d,#d4a017);border:none;color:#fff;font-weight:700;">✨ AI議事録を生成</button>`}
+                : `<button class="btn-mini" data-gen-transcript="${escapeHtml(b.ts)}" data-hint="アンケート回答と顧客情報から議事録テンプレを自動生成。面談後に押す" style="background:linear-gradient(135deg,#b8893d,#d4a017);border:none;color:#fff;font-weight:700;">✨ 面談記録を生成</button>`}
             ` : `
               <button class="btn-rec-start" data-rec-start="${escapeHtml(b.ts)}" data-zoom="${escapeHtml(b.zoomUrl)}" data-hint="面談直前に押す。Zoomが別タブで開き、録画状態が「録画中」に">● 録画ONでZoom開始</button>
               <a class="btn-mini" href="${escapeHtml(b.zoomUrl)}" target="_blank" data-hint="録画せずにZoomだけ開く (簡易確認用)">録画なしで開く</a>
@@ -7474,7 +7474,7 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
         }
       });
     });
-    // AI議事録 生成
+    // 面談記録 生成
     document.querySelectorAll('[data-gen-transcript]').forEach(btn => {
       btn.addEventListener('click', async () => {
         const ts = btn.dataset.genTranscript;
@@ -7486,11 +7486,11 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
           if (data.ok && data.transcript) {
             await fetchLiveData();
             renderLeadFunnelInner();
-            showTranscriptModal(data.transcript, '✨ AI議事録 (自動生成)');
+            showTranscriptModal(data.transcript, '✨ 面談記録 (自動生成)');
           } else {
             alert('議事録生成失敗: ' + (data.error || ''));
             btn.disabled = false;
-            btn.textContent = '✨ AI議事録を生成';
+            btn.textContent = '✨ 面談記録を生成';
           }
         } catch (e) {
           alert('議事録生成失敗: ' + e.message);

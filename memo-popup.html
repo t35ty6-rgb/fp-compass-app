@@ -95,7 +95,7 @@ document.getElementById('close-btn').addEventListener('click', () => {
 
 // 「面談を完了」 ボタン → CRM(opener) に postMessage で停止指示
 document.getElementById('finish-meeting-btn').addEventListener('click', () => {
-  if (!confirm('録画を停止して AI 議事録を生成しますか?\n(Zoom も自動で閉じます)')) return;
+  if (!confirm('録画を停止して 面談記録を生成しますか?\n(Zoom も自動で閉じます)')) return;
   // メモ最終保存
   try { localStorage.setItem(memoKey, document.getElementById('memo').value); } catch (e) {}
   // CRM ウィンドウに通知 + ボタンを処理中表示に
