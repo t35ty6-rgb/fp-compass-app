@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>iPhone ショートカット セットアップ · FP Compass</title>
-<meta name="description" content="iPhone ボイスメモ → 共有 → 1タップ で 議事録 自動 生成 の setup">
+<title>iPhone 音声 upload セットアップ · FP Compass</title>
+<meta name="description" content="iPhone ボイスメモ から 議事録 自動 生成 の 2 step セットアップ">
 <style>
   :root {
     --ink:      #0F172A;
@@ -26,41 +26,75 @@
     font-family: "Noto Sans JP", "Inter", -apple-system, sans-serif;
     font-weight: 500;
     letter-spacing: -0.005em;
-    max-width: 820px;
+    max-width: 720px;
     margin: 0 auto;
-    padding: 40px 24px 100px;
-    line-height: 1.85;
+    padding: 32px 22px 100px;
+    line-height: 1.8;
     color: var(--ink);
     background: var(--bg);
   }
   .back-link { display: inline-block; margin-bottom: 20px; color: var(--primary); text-decoration: none; font-size: 13px; font-weight: 700; }
   h1 {
-    font-size: 32px;
+    font-size: 28px;
     font-weight: 900;
     letter-spacing: -0.02em;
-    margin: 0 0 6px;
+    margin: 0 0 8px;
     background: linear-gradient(120deg, var(--primary) 0%, var(--accent) 55%, var(--accent-2) 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
-    line-height: 1.25;
+    line-height: 1.3;
   }
-  .lead { font-size: 16px; color: var(--ink-2); margin-bottom: 32px; font-weight: 500; }
-  h2 {
-    font-size: 22px;
+  .lead { font-size: 15px; color: var(--ink-2); margin-bottom: 32px; font-weight: 500; }
+  .step {
+    background: #F8FAFC;
+    border: 1px solid var(--rule);
+    border-radius: 14px;
+    padding: 24px 22px;
+    margin: 18px 0;
+  }
+  .step-header { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+  .step-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    color: #fff;
     font-weight: 900;
-    letter-spacing: -0.02em;
-    margin: 48px 0 16px;
-    padding: 14px 0 12px 20px;
-    border-left: 8px solid var(--primary);
-    background: linear-gradient(90deg, rgba(0,113,227,0.08) 0%, transparent 100%);
-    color: var(--ink);
+    font-size: 20px;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(0,113,227,0.30);
   }
-  h3 { font-size: 17px; font-weight: 800; margin: 24px 0 10px; color: var(--ink); letter-spacing: -0.01em; }
-  ol, ul { padding-left: 26px; }
-  ol li, ul li { margin: 10px 0; font-weight: 500; }
-  ol li strong, ul li strong { font-weight: 800; color: var(--ink); }
-  code, .code {
+  .step-title {
+    font-size: 18px;
+    font-weight: 900;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    line-height: 1.4;
+  }
+  .step ol { padding-left: 22px; margin-top: 8px; }
+  .step ol li { margin: 8px 0; font-weight: 500; font-size: 15px; }
+  .step ol li strong { font-weight: 800; color: var(--ink); }
+
+  .btn-primary {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+    color: #fff;
+    padding: 14px 26px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 900;
+    text-decoration: none;
+    box-shadow: 0 6px 16px rgba(0,113,227,0.28);
+    transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
+    margin: 12px 0;
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 22px rgba(0,113,227,0.36); }
+  .btn-primary svg { width: 18px; height: 18px; }
+
+  code {
     font-family: "JetBrains Mono", ui-monospace, monospace;
     background: var(--ink);
     color: #F1F5F9;
@@ -71,263 +105,156 @@
     word-break: break-all;
     font-weight: 600;
   }
-  .callout-red {
-    background: #FEF2F2;
-    border: 3px solid var(--red);
-    border-radius: 10px;
-    padding: 16px 20px;
-    margin: 18px 0;
-    font-weight: 700;
-    color: var(--red-hi);
-    font-size: 15px;
-  }
-  .callout-green {
+  .callout {
     background: #ECFDF5;
-    border: 3px solid var(--green);
+    border: 2px solid var(--green);
     border-radius: 10px;
-    padding: 16px 20px;
-    margin: 18px 0;
+    padding: 16px 18px;
+    margin: 22px 0;
     color: #065F46;
     font-weight: 600;
+    font-size: 14px;
   }
   .callout-blue {
     background: #EFF6FF;
-    border: 3px solid var(--primary);
+    border: 2px solid var(--primary);
     border-radius: 10px;
-    padding: 16px 20px;
+    padding: 16px 18px;
     margin: 18px 0;
     color: #1E3A8A;
     font-weight: 600;
-  }
-  .highlight-red { background: #FEE2E2; color: var(--red-hi); padding: 3px 10px; border-radius: 6px; font-weight: 800; border: 2px solid var(--red); }
-  .highlight-yellow { background: #FEF3C7; color: #78350F; padding: 3px 10px; border-radius: 6px; font-weight: 800; }
-  .step-num {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px; height: 40px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--primary), var(--accent));
-    color: #fff;
-    font-weight: 900;
-    font-size: 18px;
-    margin-right: 14px;
-    vertical-align: middle;
-    box-shadow: 0 4px 12px rgba(0,113,227,0.35);
-  }
-
-  .download-hero {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 55%, var(--accent-2) 100%);
-    color: #fff;
-    padding: 32px 26px;
-    border-radius: 18px;
-    margin: 24px 0 32px;
-    box-shadow: 0 12px 28px rgba(0,113,227,0.28);
-  }
-  .download-hero h2 { color: #fff; background: none; border: none; padding: 0; margin: 0 0 12px; font-size: 22px; }
-  .download-hero p { color: rgba(255,255,255,0.94); margin: 0 0 20px; font-size: 15px; line-height: 1.75; }
-  .download-btn {
-    display: inline-flex; align-items: center; gap: 10px;
-    background: #fff;
-    color: var(--primary);
-    padding: 14px 28px;
-    border-radius: 12px;
-    font-size: 16px;
-    font-weight: 900;
-    text-decoration: none;
-    box-shadow: 0 6px 18px rgba(0,0,0,0.15);
-    transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
-  }
-  .download-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(0,0,0,0.2); }
-  .download-btn svg { width: 22px; height: 22px; }
-  .download-hint { color: rgba(255,255,255,0.88); font-size: 13px; margin-top: 14px; }
-
-  /* Screenshot with SVG overlay annotations */
-  .shot {
-    position: relative;
-    display: block;
-    max-width: 100%;
-    margin: 18px auto;
-    border: 3px solid var(--ink);
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-  }
-  .shot img { display: block; width: 100%; height: auto; }
-  .shot svg {
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    pointer-events: none;
-  }
-  .shot .marker-box {
-    fill: none;
-    stroke: var(--red);
-    stroke-width: 6;
-  }
-  .shot .marker-arrow {
-    stroke: var(--red);
-    stroke-width: 5;
-    fill: none;
-  }
-  .shot .marker-arrow-head { fill: var(--red); }
-  .shot .marker-label {
-    fill: var(--red);
-    font-family: "Noto Sans JP", sans-serif;
-    font-weight: 900;
-    font-size: 30px;
-  }
-  .shot .marker-label-bg { fill: #fff; stroke: var(--red); stroke-width: 5; }
-  .shot-caption {
-    text-align: center;
     font-size: 14px;
-    color: var(--ink-2);
-    margin-top: -8px;
-    margin-bottom: 24px;
-    font-weight: 600;
   }
+  .callout-warn {
+    background: #FEF3C7;
+    border: 2px solid var(--yellow);
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin: 18px 0;
+    color: #78350F;
+    font-weight: 600;
+    font-size: 14px;
+  }
+
+  .flow-summary {
+    background: linear-gradient(135deg, #EFF6FF 0%, #F5F3FF 100%);
+    border: 2px solid var(--primary);
+    border-radius: 14px;
+    padding: 22px 20px;
+    margin: 24px 0 32px;
+  }
+  .flow-summary h2 { font-size: 16px; font-weight: 900; color: var(--ink); margin-bottom: 12px; letter-spacing: 0.01em; }
+  .flow-summary .flow-item { display: flex; gap: 12px; align-items: flex-start; padding: 8px 0; font-size: 14px; font-weight: 600; color: var(--ink-2); }
+  .flow-summary .flow-item .num { color: var(--primary); font-weight: 900; font-size: 15px; flex-shrink: 0; }
 </style>
 </head>
 <body>
 
 <a href="/account.html" class="back-link">← アカウント 設定 に 戻る</a>
 
-<h1>iPhone ショートカット セットアップ<br>ガイド</h1>
-<p class="lead">iPhone ボイスメモ → 共有 → 1タップ で 議事録 自動 生成。 setup 5 分。</p>
+<h1>iPhone 音声 upload<br>セットアップ</h1>
+<p class="lead">ボイスメモ の 録音 → 議事録 自動 生成 まで。 準備 3 分、 使用 1 タップ。</p>
 
-<div class="download-hero">
-  <h2>Shortcut file を ダウンロード</h2>
-  <p>まず iPhone Safari で 下 の button を タップ → 「Shortcuts で 開く」 → 「ショートカット を 追加」 で install。 その後 STEP 2-3 で 自分 の API キー を 1 箇所 貼付。</p>
-  <a class="download-btn" href="/FP-Compass-Upload.shortcut" download="FP-Compass-Upload.shortcut">
+<div class="flow-summary">
+  <h2>使う 時 の 流れ (準備 完了 後)</h2>
+  <div class="flow-item"><span class="num">1.</span><span>ボイスメモ で 録音 → 共有 → 「<strong>FPコンパス保存</strong>」 タップ (音声 が iCloud に 保存)</span></div>
+  <div class="flow-item"><span class="num">2.</span><span>ホーム 画面 の 「<strong>FPコンパス upload</strong>」 アイコン タップ (Safari で 開く)</span></div>
+  <div class="flow-item"><span class="num">3.</span><span>客 を 選ぶ → 「音声 を upload」 → 完了 メッセージ を 待つ</span></div>
+</div>
+
+<div class="step">
+  <div class="step-header">
+    <span class="step-num">1</span>
+    <span class="step-title">共有 用 ショートカット を install (30 秒)</span>
+  </div>
+  <p style="font-size:14px;color:var(--ink-2);margin-bottom:10px;">
+    ボイスメモ の 共有 メニュー に 「<strong>FPコンパス保存</strong>」 を 追加。 タップ 1 回 で 音声 を iCloud に 保存 して くれる。
+  </p>
+  <a class="btn-primary" href="/FPコンパス保存.shortcut" download="FPコンパス保存.shortcut">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
       <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
       <polyline points="7 10 12 15 17 10"></polyline>
       <line x1="12" y1="15" x2="12" y2="3"></line>
     </svg>
-    Shortcut を ダウンロード
+    ショートカット を install
   </a>
-  <div class="download-hint">対応: iOS 15 以上 / macOS Monterey 以上</div>
+  <ol>
+    <li>iPhone Safari で 上 の button を タップ</li>
+    <li>「Shortcuts で 開く」 → 青 の 「<strong>ショートカット を 追加</strong>」 を タップ</li>
+    <li>Shortcuts app に 「<strong>FPコンパス保存</strong>」 が 出れば OK</li>
+  </ol>
 </div>
 
-<div class="callout-green">
-  <strong style="font-size: 17px;">セットアップ の 全 flow (4 step で 完結):</strong><br>
-  STEP 1. 上 の button で Shortcut file を ダウンロード + install<br>
-  STEP 2. 「API キー を 発行」 で 自分 の キー を コピー<br>
-  STEP 3. Shortcut 内 の 「テキスト」 1箇所 に 自分 の キー を 貼付<br>
-  STEP 4. ボイスメモ の 共有 メニュー から 起動 → 議事録 自動 生成
+<div class="step">
+  <div class="step-header">
+    <span class="step-num">2</span>
+    <span class="step-title">upload ページ を ホーム 画面 に 追加 (30 秒)</span>
+  </div>
+  <p style="font-size:14px;color:var(--ink-2);margin-bottom:10px;">
+    Safari 内 の 客 選択 & upload ページ を、 ホーム 画面 の アイコン から 1 タップ で 開ける ように する。
+  </p>
+  <a class="btn-primary" href="/upload.html" target="_blank">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+      <polyline points="15 3 21 3 21 9"></polyline>
+      <line x1="10" y1="14" x2="21" y2="3"></line>
+    </svg>
+    upload ページ を 開く
+  </a>
+  <ol>
+    <li>上 の button で <code>app.skeleton-inc.jp/upload.html</code> を 開く</li>
+    <li>Safari の 下 の 共有 button (□↑) を タップ</li>
+    <li>「<strong>ホーム 画面 に 追加</strong>」 を タップ → 「追加」</li>
+    <li>ホーム 画面 に 「<strong>FPコンパス upload</strong>」 アイコン が 出れば OK</li>
+  </ol>
 </div>
 
-<h2><span class="step-num">1</span>Shortcut を install</h2>
-<ol>
-  <li>iPhone Safari で この ページ を 開き、 上 の 「Shortcut を ダウンロード」 button を タップ</li>
-  <li>「Shortcuts で 開く」 → 青 の <span class="highlight-red">「ショートカット を 追加」</span> button を タップ</li>
-  <li>iPhone Shortcuts app に <strong>「FPコンパス」</strong> が 追加 された こと を 確認</li>
-</ol>
+<div class="callout">
+  ✅ ここ まで 完了 で 準備 終わり。 以降 は 上 の 「使う 時 の 流れ」 3 step だけ で 使える。
+</div>
+
+<h2 style="font-size:22px;font-weight:900;margin:48px 0 12px;padding:12px 0 10px 18px;border-left:6px solid var(--primary);background:linear-gradient(90deg,rgba(0,113,227,0.08) 0%,transparent 100%);">初回 使用 時 の 詳細 手順</h2>
+
+<div class="step" style="background:#fff;">
+  <div class="step-title" style="margin-bottom:14px;">A. ボイスメモ で 録音 → 保存</div>
+  <ol>
+    <li>iPhone 「ボイスメモ」 で 面談 を 録音 → 停止</li>
+    <li>録音 タイル を タップ → 下 の 共有 button (□↑)</li>
+    <li>共有 メニュー から 「<strong>FPコンパス保存</strong>」 を タップ<br>
+      <span style="font-size:13px;color:var(--dim);">※ 出て こない 場合 → 共有 メニュー の 一番 下 「アクション を 編集」 で 「FPコンパス保存」 を ON</span></li>
+    <li>「<strong>✅ 音声 を 保存 しました</strong>」 alert が 出たら OK (音声 は iCloud Drive の Shortcuts / FPコンパス / latest.m4a に 保存)</li>
+  </ol>
+</div>
+
+<div class="step" style="background:#fff;">
+  <div class="step-title" style="margin-bottom:14px;">B. upload ページ で 客 を 選んで upload</div>
+  <ol>
+    <li>ホーム 画面 の 「<strong>FPコンパス upload</strong>」 アイコン タップ</li>
+    <li>初回 のみ FP Compass に login (Google または メール)</li>
+    <li>「客 を 選ぶ」 で 対象 の 客 を 選択</li>
+    <li>「音声 ファイル」 の 枠 を タップ → <strong>「ブラウズ」 → iCloud Drive → Shortcuts → FPコンパス → latest.m4a</strong> を 選択</li>
+    <li>「<strong>音声 を upload</strong>」 を タップ → progress bar が 進 む → <span style="color:var(--green);font-weight:800;">✅ upload 成功</span> が 出れば OK</li>
+    <li>3-5 分 後、 admin の 客 ページ → 議事録 tab に 議事録 出現</li>
+  </ol>
+</div>
 
 <div class="callout-blue">
-  💡 AirDrop でも OK: 別 の 人 の iPhone に は Mac Finder から AirDrop で 同じ .shortcut file を 送 る と 上 と 同じ flow で install できる。
+  💡 補足<br>
+  · <strong>録音 品質</strong>: 「設定 → ボイスメモ → オーディオ 品質」 を 「圧縮」 に (1時間=約15MB)<br>
+  · <strong>同じ ファイル 名</strong>: 毎回 「latest.m4a」 で 上書き 保存 される (問題 なし、 upload 済 の 音声 は server 側 に 別途 保存)<br>
+  · <strong>Wi-Fi 必須 じゃない</strong>: 4G/5G でも upload 可能 (1時間 音声 で 約 15MB)
 </div>
 
-<h2><span class="step-num">2</span>自分 の API キー を 発行</h2>
-<ol>
-  <li>iPhone Safari で <code>https://app.skeleton-inc.jp/account.html</code> を 開く</li>
-  <li>自分 の アカウント で ログイン</li>
-  <li>下 に スクロール → 「iPhone ショートカット 連携」 セクション</li>
-  <li>紫 の <span class="highlight-red">「API キー を 発行」</span> button を タップ → OK</li>
-  <li>黄色 枠 に API キー が 表示 → 「コピー」 button で コピー</li>
-</ol>
-
-<div class="shot">
-  <img src="/shortcut-manual-images/v18-01-api-key-issue.png" alt="account.html API キー 発行" width="900" height="1200">
-  <svg viewBox="0 0 900 1200" preserveAspectRatio="none">
-    <rect x="90" y="320" width="405" height="62" rx="12" class="marker-box"/>
-    <rect x="510" y="330" width="330" height="50" rx="10" class="marker-label-bg"/>
-    <text x="675" y="362" text-anchor="middle" class="marker-label">① ここ を タップ</text>
-    <path d="M 505 355 L 494 355" class="marker-arrow"/>
-    <polygon points="489,355 504,348 504,362" class="marker-arrow-head"/>
-
-    <rect x="100" y="450" width="395" height="45" rx="6" class="marker-box"/>
-    <rect x="510" y="452" width="330" height="45" rx="10" class="marker-label-bg"/>
-    <text x="675" y="482" text-anchor="middle" class="marker-label">② キー を 確認</text>
-    <path d="M 505 475 L 494 475" class="marker-arrow"/>
-    <polygon points="489,475 504,468 504,482" class="marker-arrow-head"/>
-
-    <rect x="100" y="498" width="395" height="50" rx="10" class="marker-box"/>
-    <rect x="510" y="502" width="330" height="45" rx="10" class="marker-label-bg"/>
-    <text x="675" y="532" text-anchor="middle" class="marker-label">③ コピー タップ</text>
-    <path d="M 505 525 L 494 525" class="marker-arrow"/>
-    <polygon points="489,525 504,518 504,532" class="marker-arrow-head"/>
-  </svg>
+<div class="callout-warn">
+  ⚠ よく ある トラブル<br>
+  · <strong>共有 メニュー に 「FPコンパス保存」 が 出ない</strong> → 共有 メニュー 一番下 「アクション を 編集」 → 「FPコンパス保存」 を ON<br>
+  · <strong>upload ページ で 「login が 必要」</strong> → メール & パスワード or Google で login (FP Compass admin と 同じ アカウント)<br>
+  · <strong>「客 リスト 取得 失敗」</strong> → account.html で 「API キー を 発行」 が 未完了 の 可能性。 発行 して 再試行<br>
+  · <strong>upload 失敗</strong> → 「音声 を upload」 を もう 一度 タップ で 再試行 可
 </div>
-<p class="shot-caption">① 紫 button で 発行 → ② 黄色 枠 の キー を確認 → ③ コピー button で コピー</p>
-
-<div class="callout-red">
-  ⚠ 重要: API キー は <strong>二度と 表示 され ない</strong> (安全 の ため)。 忘れたら 「再発行」 で 新しい キー を 作る。 Shortcut に 貼付 済 の キー も 一緒 に 更新 が 必要。
-</div>
-
-<h2><span class="step-num">3</span>Shortcut 内 の API キー を 書き換え</h2>
-<ol>
-  <li>iPhone Shortcuts app で 「<strong>FPコンパス</strong>」 を 探す</li>
-  <li>タイル 右上 の 「⋯」 → <strong>「編集」</strong></li>
-  <li>上 から <strong>2番目 の 「テキスト」 action</strong> (オレンジ の アイコン) を 探す</li>
-  <li>中 の 長い 文字列 を <strong>全選択 → 削除</strong></li>
-  <li>STEP 2 で コピー した 自分 の API キー を <strong>貼付</strong></li>
-  <li>右上 「完了」 で 保存</li>
-</ol>
-
-<div class="shot">
-  <img src="/shortcut-manual-images/v18-02-shortcut-editor-text-action.png" alt="Shortcut editor テキスト action" width="1800" height="1000">
-  <svg viewBox="0 0 1800 1000" preserveAspectRatio="none">
-    <rect x="285" y="356" width="1345" height="179" rx="20" class="marker-box"/>
-    <rect x="335" y="432" width="1215" height="52" rx="8" class="marker-box" style="stroke-dasharray:16,10;stroke-width:6;"/>
-
-    <rect x="15" y="380" width="255" height="180" rx="12" class="marker-label-bg"/>
-    <text x="142" y="425" text-anchor="middle" class="marker-label" style="font-size:32px;">この</text>
-    <text x="142" y="465" text-anchor="middle" class="marker-label" style="font-size:32px;">文字 を</text>
-    <text x="142" y="505" text-anchor="middle" class="marker-label" style="font-size:32px;">全 選択</text>
-    <text x="142" y="545" text-anchor="middle" class="marker-label" style="font-size:32px;">→ 削除</text>
-    <path d="M 275 458 L 325 458" class="marker-arrow" style="stroke-width:8;"/>
-    <polygon points="320,458 340,448 340,468" class="marker-arrow-head"/>
-  </svg>
-</div>
-<p class="shot-caption">「テキスト」 action の 中 の 文字列 (6fc1... 等) を 全選択 → 削除 → 自分 の キー を 貼付</p>
-
-<div class="callout-red">
-  ⚠ 触っては いけない ところ:<br>
-  · 「変数 API_KEY を 入力 に設定」 の 部分 → そのまま<br>
-  · URL (<code>https://fp-compass-webhook-…</code>) → そのまま<br>
-  · 他 の action → 全部 そのまま<br>
-  <strong>直す の は 「テキスト」 の 中 の 文字列 だけ</strong>
-</div>
-
-<h2><span class="step-num">4</span>使い方 (日常運用)</h2>
-<ol>
-  <li>iPhone 「ボイスメモ」 で 面談 を 録音<br>
-    <span style="color:var(--dim);font-size:13px;">💡 事前 準備: 「設定 → ボイスメモ → オーディオ 品質」 を 「圧縮」 に (1時間=約15MB に 収まる)</span></li>
-  <li>録音 タップ → 下 の 共有 button (□↑) → <strong>「FPコンパス」</strong> タップ</li>
-  <li>初回 のみ 「Web に データ を 送信 を 許可 しますか?」 → 「<strong>1度だけ許可</strong>」 タップ</li>
-  <li>客 リスト メニュー → 対象 の 客 を タップ</li>
-  <li>数秒 で <span class="highlight-yellow">✅ 音声 受信 完了 · 議事録 生成 中…</span> popup 表示 (これ で 「受け付け 完了」)</li>
-  <li>1〜5 分 後、 <code>app.skeleton-inc.jp</code> → 議事録 tab → 客 カード に 議事録 出現</li>
-</ol>
-
-<div class="callout-blue">
-  💡 補足 機能:<br>
-  · <strong>1時間 以上</strong> の 録音 → server 側 で 自動 圧縮 + Whisper 処理 (upload 制限 なし)<br>
-  · <strong>transcript + summary + 次回質問予測</strong> が 自動 生成<br>
-  · 面談 対象 客 を 事前 に 固定 したい 場合 → account.html の 「モバイル 送信先 (デフォルト 客)」 で 選択 → 保存 (以降 は 客 選択 メニュー 不要)
-</div>
-
-<h2>トラブル シューティング</h2>
-<ul>
-  <li><span class="highlight-red">認証 エラー</span> → API キー 貼付 ミス。 STEP 2-3 やり直し</li>
-  <li><span class="highlight-red">「客 が 見つかり ません」</span> → FP Compass admin に 客 が 未登録。 admin panel で 客 を 追加</li>
-  <li><span class="highlight-red">popup が 空</span> → 音声 が 25MB 超 で server 側 で 詰まった 可能性。 「設定 → ボイスメモ → 圧縮」 に 変更 して 再録音</li>
-  <li><span class="highlight-red">議事録 が 生成 されない</span> → 音声 が 短い or 無音 の 可能性。 30秒 以上 の 実 会話 で 再送信</li>
-</ul>
 
 <p style="text-align: center; color: var(--dim); font-size: 12px; margin-top: 80px; letter-spacing: 0.02em;">
-  スケルトン株式会社 · FP Compass · 2026-08-31 版
+  スケルトン株式会社 · FP Compass · 2026-09-03 版
 </p>
 
 </body>
