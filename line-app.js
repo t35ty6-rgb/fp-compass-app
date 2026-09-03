@@ -2878,7 +2878,7 @@
 
       try { showUnifiedProgressPanel(customerName, blob); } catch (_) {}
       try { updateProgressStep('save', 'done'); updateProgressStep('drive', 'active'); updateProgressStep('ai', 'active'); } catch (_) {}
-      try { showCenterToast('議事録 を 生成中…', `${customerName} 様 の 対面録画 → AI で 文字起こし + 議事録 作成 中。 30-60秒 ほど お待ちください`, { tone: 'progress', duration: 0 }); } catch (_) {}
+      // 2026-09-03 owner fb: 中央 toast は 統一 popup と 重複 → 削除
 
       const drivePromise = autoUploadRecording(blob, bookingTs, customerName, fallbackBooking)
         .then(() => { try { updateProgressStep('drive', 'done'); } catch(_){} try { window.RecordingPersist?.markUploadedDrive(bookingTs); } catch(_) {} })
@@ -3315,7 +3315,7 @@
         };
         try { showUnifiedProgressPanel(clientName, blob); } catch (_) {}
         try { updateProgressStep('save', 'done'); updateProgressStep('drive', 'active'); updateProgressStep('ai', 'active'); } catch (_) {}
-        try { showCenterToast('議事録 を 生成中…', clientName + ' 様 の Zoom 録音 → AI で 文字起こし + 議事録 作成 中。 30-60秒 ほど お待ちください', { tone: 'progress', duration: 0 }); } catch (_) {}
+        // 2026-09-03 owner fb: 中央 toast は 統一 popup と 重複 → 削除
 
         const drivePromise = autoUploadRecording(blob, bookingTs, clientName, fallbackBooking)
           .then(() => { try { updateProgressStep('drive', 'done'); } catch(_){} })
@@ -3729,7 +3729,7 @@
       // 進捗パネル
       try { showUnifiedProgressPanel(customerName, blob); } catch (_) {}
       try { updateProgressStep('save', 'done'); updateProgressStep('drive', 'active'); updateProgressStep('ai', 'active'); } catch (_) {}
-      try { showCenterToast('議事録 を 生成中…', `${customerName} 様 の 対面録音 → AI で 文字起こし + 議事録 作成 中。 30-60秒 ほど お待ちください`, { tone: 'progress', duration: 0 }); } catch (_) {}
+      // 2026-09-03 owner fb: 中央 toast は 統一 popup と 重複 → 削除
 
       // Drive: 音声ファイル upload (並列)
       const drivePromise = autoUploadRecording(blob, bookingTs, customerName, fallbackBooking)
@@ -3841,11 +3841,25 @@
         zoomWin = window.open(zoomBrowserUrl, 'fp-zoom-win', zoomFeatures);
         if (!zoomWin) window.open(zoomBrowserUrl, '_blank');
       }
-      // Zoom が閉じられたら自動で録画停止 (切り忘れ防止)
-      // ただし最低30秒経過してから (誤検知防止)
       window._fpZoomWin = zoomWin;
-      // ※ Zoom popup が閉じても自動停止しない (誤検知防止のため監視機能を撤廃)
-      // 停止は「Chrome 共有を停止」 or 「メモの完了ボタン」 でのみ実行
+      // 2026-09-03 owner fb: 「Zoom 閉じても 赤枠 残る」 → Zoom close 監視 復活、 30秒 threshold で auto 面談終了
+      //   録画開始 から 30秒 未満 の close は 誤検知 扱い で 無視。 それ 以降 は 自動 stopScreenRecording (Zoom close + 録画停止 + AI 一気通貫)
+      if (window._fpZoomCloseWatcher) { clearInterval(window._fpZoomCloseWatcher); }
+      const _recStartMs = Date.now();
+      window._fpZoomCloseWatcher = setInterval(() => {
+        try {
+          if (!window._fpZoomWin || window._fpZoomWin.closed) {
+            if (Date.now() - _recStartMs < 30000) return; // 誤検知 gate (30秒 未満)
+            clearInterval(window._fpZoomCloseWatcher);
+            window._fpZoomCloseWatcher = null;
+            const R = window._fpRecorder;
+            if (R && R.mediaRecorder && R.mediaRecorder.state !== 'inactive') {
+              console.log('[zoom-close-watcher] Zoom 手動 close 検知 → auto stopScreenRecording');
+              stopScreenRecording();
+            }
+          }
+        } catch (_) {}
+      }, 2000);
       // ★ legacy proxy bookings + Firestore 多テナント confirmed customer の 両方 から lookup
       //   (multi-tenant 顧客で booking が legacy にない時 議事録 が customerName='お客様' で保存され 顧客カードと紐付かないバグ 修正)
       const bookingTsKey = String(bookingTs).slice(0,19);
@@ -3921,7 +3935,7 @@
         updateProgressStep('drive', 'active');
         updateProgressStep('ai', 'active');
         // ★ 中央 ポップアップ「議事録 生成中」 (完了 ポップアップ で 自動 上書き される)
-        showCenterToast('議事録 を 生成中…', `${R.customerName} 様 の Zoom 録画 → AI で 文字起こし + 議事録 作成 中。 30-60秒 ほど お待ちください`, { tone: 'progress', duration: 0 });
+        // 2026-09-03 owner fb: 中央 toast は 統一 popup と 重複 → 削除
         // booking が見つからなかった時の fallback (R.booking で保持済)
         const effectiveBooking = booking || R.booking || null;
         // ★ 2026-08-12: meta 保存 (復帰 用)
@@ -3998,53 +4012,54 @@
     }
   }
 
-  // ===== 統一進行パネル (録画停止後の Drive + AI 進捗を1枚で集約) =====
+  // ===== 統一進行 popup (2026-09-03 owner fb: 「3-step panel は 意味ない」 → 単一 persistent popup に 差替) =====
+  //   処理中: 青系 + spinner + 「Zoom を 文字起こし しています…」 (消えない)
+  //   完了: 緑系 + ✓ + 「議事録 完成 · タップで 議事録 を 開く」 (全体 click で 遷移)
   function showUnifiedProgressPanel(customerName, blob, opts) {
     const existing = document.getElementById('fp-unified-progress');
     if (existing) existing.remove();
     const panel = document.createElement('div');
     panel.id = 'fp-unified-progress';
-    // 2026-08-25 owner「議事録 完了 して も badge が 生成中 のまま」bug fix:
-    //   customerId を dataset に 保持 → 閉じる ✕ → badge に 正しい cid を 渡す
     if (opts && opts.customerId) panel.dataset.customerId = String(opts.customerId);
     if (opts && opts.bookingTs) panel.dataset.bookingTs = String(opts.bookingTs);
-    panel.style.cssText = 'position:fixed;top:18px;right:18px;background:#fff;border:1px solid #e8e2d4;border-radius:14px;box-shadow:0 18px 48px rgba(15,23,42,0.18);z-index:10010;font-family:inherit;width:380px;overflow:hidden;';
+    panel.dataset.state = 'progress';
+    panel.dataset.customerName = customerName || '';
+    const sizeText = blob ? `(${(blob.size/1024/1024).toFixed(1)}MB)` : '';
+    panel.style.cssText = 'position:fixed;top:18px;right:18px;background:linear-gradient(135deg,#EFF6FF,#DBEAFE);border:2px solid #3B82F6;border-radius:14px;box-shadow:0 18px 48px rgba(59,130,246,0.28);z-index:10010;font-family:inherit;width:340px;overflow:hidden;transition:background 0.4s, border-color 0.4s;';
+    // spin keyframe 未定義 なら 追加
+    if (!document.getElementById('fp-unified-spin-style')) {
+      const s = document.createElement('style');
+      s.id = 'fp-unified-spin-style';
+      s.textContent = '@keyframes fp-unified-spin{to{transform:rotate(360deg)}}';
+      document.head.appendChild(s);
+    }
     panel.innerHTML = `
-      <div style="background:linear-gradient(135deg,#fdfbf4,#fafaf6);padding:14px 18px;border-bottom:1px solid #e8e2d4;display:flex;align-items:flex-start;gap:10px;">
+      <div style="padding:16px 18px;display:flex;align-items:flex-start;gap:12px;">
+        <div id="fp-unified-icon" style="width:36px;height:36px;border:3px solid rgba(59,130,246,0.3);border-top-color:#3B82F6;border-radius:50%;animation:fp-unified-spin 0.9s linear infinite;flex-shrink:0;margin-top:2px;"></div>
         <div style="flex:1;min-width:0;">
-          <div style="font-size:10.5px;font-weight:700;color:#8b7d5d;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:3px;">Recording Stopped — Processing</div>
-          <strong style="font-size:14px;color:#1f2a3f;">${escapeHtml(customerName)}様 面談 (${(blob.size/1024/1024).toFixed(1)}MB)</strong>
+          <div id="fp-unified-title" style="font-size:13.5px;font-weight:800;color:#1E40AF;letter-spacing:-0.005em;line-height:1.45;margin-bottom:4px;">ただ今 Zoom を 文字起こし しています…</div>
+          <div id="fp-unified-sub" style="font-size:11.5px;color:#475569;line-height:1.55;">${escapeHtml(customerName || 'お客様')}様 · 30〜60 秒 ほど お待ちください ${sizeText}</div>
         </div>
-        <!-- 2026-08-25 owner「消す button なし で 邪魔」対応: 閉じる × 追加 (処理 は 裏 で 継続) -->
-        <button id="fp-unified-progress-close" title="パネル を 閉じる (処理 は 裏 で 継続)" aria-label="閉じる" style="background:transparent;border:none;color:#8b7d5d;font-size:20px;cursor:pointer;padding:2px 8px;margin:-4px -6px 0 0;border-radius:6px;line-height:1;font-family:inherit;flex-shrink:0;transition:background .12s,color .12s;">×</button>
+        <button id="fp-unified-close" title="裏 で 処理 継続 (popup だけ 閉じる)" aria-label="閉じる" style="background:transparent;border:none;color:#64748B;font-size:16px;cursor:pointer;padding:2px 6px;line-height:1;font-family:inherit;flex-shrink:0;">✕</button>
       </div>
-      <div style="padding:14px 18px;">
-        <div id="fp-progress-steps" style="display:grid;gap:10px;">
-          ${renderStep('save', '録画ファイル保存', '完了 / ローカルメモリに保持')}
-          ${renderStep('drive', 'Google Drive へアップロード', '顧客フォルダに自動振り分け')}
-          ${renderStep('ai', 'AI で議事録 + タスク生成', 'Whisper 文字起こし → Claude 解析')}
+      <!-- 3-step は details に 隠す (デバッグ用、 default 非表示) -->
+      <details style="border-top:1px solid rgba(59,130,246,0.2);background:rgba(255,255,255,0.5);">
+        <summary style="cursor:pointer;padding:6px 18px;font-size:10.5px;color:#64748B;letter-spacing:0.06em;list-style:none;user-select:none;">詳細 ▾</summary>
+        <div id="fp-progress-steps" style="padding:10px 18px 12px;display:grid;gap:6px;">
+          ${renderStep('save', '録画ファイル保存', 'ローカル 保持')}
+          ${renderStep('drive', 'Google Drive アップロード', '顧客フォルダ 振り分け')}
+          ${renderStep('ai', 'AI 議事録 + タスク生成', 'Whisper → Claude')}
         </div>
-        <div id="fp-progress-bottom" style="margin-top:14px;padding:11px 14px;background:#fdfbf4;border:1px dashed #c19a3a;border-radius:8px;font-size:11.5px;color:#5e4d1a;line-height:1.6;text-align:center;">
-          ⏳ そのまま <strong>1〜2分</strong> お待ちください<br>
-          <span style="font-size:10.5px;opacity:0.85;">他の操作は普通にできます · 完了後 議事録 tab に 反映</span>
-        </div>
-      </div>`;
+      </details>`;
     document.body.appendChild(panel);
-    // 閉じる button (処理 は 裏 で 続く)
-    const closeBtn = document.getElementById('fp-unified-progress-close');
+    const closeBtn = document.getElementById('fp-unified-close');
     if (closeBtn) {
-      closeBtn.addEventListener('mouseenter', () => { closeBtn.style.background = 'rgba(15,23,42,0.06)'; closeBtn.style.color = '#1f2a3f'; });
-      closeBtn.addEventListener('mouseleave', () => { closeBtn.style.background = 'transparent'; closeBtn.style.color = '#8b7d5d'; });
-      closeBtn.addEventListener('click', () => {
-        // 2026-08-25 owner「議事録 完了 して も 生成中 の まま」bug fix:
-        //   真 customerId が 分か れば watcher が 完了 検知 で 自動 消える。
-        //   分から ない (Zoom 経由 等) 場合 は badge 出さず に panel だけ 消す。
+      closeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
         const realCid = panel.dataset.customerId || '';
         panel.remove();
         if (realCid && typeof window.showMinutesGeneratingBadge === 'function') {
-          try {
-            window.showMinutesGeneratingBadge({ id: realCid, _fsCustomerId: realCid, name: customerName });
-          } catch (_) {}
+          try { window.showMinutesGeneratingBadge({ id: realCid, _fsCustomerId: realCid, name: customerName }); } catch (_) {}
         }
       });
     }
@@ -4171,65 +4186,55 @@
     }
     return t;
   }
+  // 2026-09-03 owner fb: 「完了 したら 色 変えて わかりやすく popup、 押す と 議事録 に 飛ぶ」
+  //   3-step panel の bottom 差替 じゃ なく、 popup 全体 を 緑 に 変色 + click 領域 化
   function showProgressDoneAction() {
-    const bottom = document.getElementById('fp-progress-bottom');
-    if (!bottom) return;
+    const panel = document.getElementById('fp-unified-progress');
+    if (!panel) return;
+    panel.dataset.state = 'done';
     const r = (window._fpAIResult && window._fpAIResult.result) || {};
     const taskCount = (r.tasks || []).length;
-    bottom.style.background = 'linear-gradient(135deg,#dcfce7,#f0fdf4)';
-    bottom.style.borderColor = '#86efac';
-    bottom.style.borderStyle = 'solid';
-    const customerName = (window._fpAIResult && window._fpAIResult.customerName) || 'お客様';
-    bottom.innerHTML = `
-      <div style="display:flex;align-items:center;gap:10px;text-align:left;">
-        <div style="font-size:26px;">✨</div>
-        <div style="flex:1;">
-          <strong style="font-size:13px;color:#166534;display:block;">議事録を ${escapeHtml(customerName)} 様 の 顧客カード に 反映 しました</strong>
-          <span style="font-size:11px;color:#365314;">タスク${taskCount}件 + LINE下書き 生成済み</span>
+    const customerName = (window._fpAIResult && window._fpAIResult.customerName) || panel.dataset.customerName || 'お客様';
+    // 全体 色 変更 (青 → 緑)
+    panel.style.background = 'linear-gradient(135deg,#ECFDF5,#D1FAE5)';
+    panel.style.borderColor = '#059669';
+    panel.style.boxShadow = '0 18px 48px rgba(5,150,105,0.32)';
+    panel.style.cursor = 'pointer';
+    panel.innerHTML = `
+      <div style="padding:16px 18px;display:flex;align-items:center;gap:12px;">
+        <div style="font-size:32px;line-height:1;flex-shrink:0;">✅</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:14px;font-weight:800;color:#065F46;letter-spacing:-0.005em;line-height:1.4;margin-bottom:4px;">議事録 が 完成 しました</div>
+          <div style="font-size:11.5px;color:#047857;line-height:1.55;">${escapeHtml(customerName)}様 · タスク${taskCount}件 生成済 · <strong style="font-weight:800;">タップ で 議事録 を 開く</strong> →</div>
         </div>
-      </div>
-      <div style="display:grid;gap:6px;margin-top:10px;">
-        <button id="fp-show-result" style="font-size:13px;padding:11px;background:linear-gradient(135deg,#06c755,#04a045);color:#fff;border:none;border-radius:7px;cursor:pointer;font-weight:800;font-family:inherit;letter-spacing:0.04em;">📋 面談記録を見る</button>
-        <button id="fp-progress-close" style="font-size:12px;padding:9px;background:#1b2845;color:#fff;border:none;border-radius:7px;cursor:pointer;font-weight:800;font-family:inherit;letter-spacing:0.08em;text-transform:uppercase;">閉じる</button>
+        <button id="fp-unified-close" title="閉じる" aria-label="閉じる" style="background:transparent;border:none;color:#059669;font-size:16px;cursor:pointer;padding:2px 6px;line-height:1;font-family:inherit;flex-shrink:0;">✕</button>
       </div>`;
-    // ★ 反映完了 toast は autoSaveAIResult の GAS保存完了 .then で 出す (showProgressDoneAction は ここでは 出さない、 二重表示防止)
-    document.getElementById('fp-show-result').addEventListener('click', () => {
-      // ★ オーナーfb 2026-06-24: 「面談記録を見る」 → 顧客モーダルの 議事録タブ に 飛ぶ (旧: 別モーダル)
+    // 全体 click → 議事録 tab へ
+    const goToMinutes = (evt) => {
+      // 閉じる button の click は 除外
+      if (evt && evt.target && evt.target.closest && evt.target.closest('#fp-unified-close')) return;
       const r = window._fpAIResult;
-      const p = document.getElementById('fp-unified-progress'); if (p) p.remove();
+      panel.remove();
       if (!r) return;
-      // 該当客を特定: booking.userId or customerName 一致
       const clients = (window.DUMMY_CLIENTS || window.FpApp?.getClients?.() || []);
       const targetUid = (r.booking && r.booking.userId) || '';
       let match = clients.find(c => targetUid && (c.lineFriendId === targetUid || c.id === targetUid));
-      if (!match && r.customerName) {
-        match = clients.find(c => c.name === r.customerName);
-      }
-      if (match && typeof window.openClientModal === 'function') {
-        window.openClientModal(match.id);
-        // モーダル開いた後 議事録タブ に切替
-        setTimeout(() => {
-          const t = [...document.querySelectorAll('.cd-tab')].find(t => /議事録/.test(t.textContent));
-          if (t) t.click();
-        }, 600);
-      } else if (typeof window.FpApp?.openClientModal === 'function' && match) {
-        window.FpApp.openClientModal(match.id);
+      if (!match && r.customerName) match = clients.find(c => c.name === r.customerName);
+      const openClient = window.openClientModal || window.FpApp?.openClientModal;
+      if (match && typeof openClient === 'function') {
+        openClient(match.id);
         setTimeout(() => {
           const t = [...document.querySelectorAll('.cd-tab')].find(t => /議事録/.test(t.textContent));
           if (t) t.click();
         }, 600);
       } else {
-        // 旧フォールバック: 該当客が 特定できない場合は 旧 AI結果モーダル
         showAIResultModal(r.result, r.customerName, r.booking);
       }
-    });
-    document.getElementById('fp-progress-close').addEventListener('click', () => {
-      const p = document.getElementById('fp-unified-progress'); if (p) p.remove();
-      // Zoom popup + メモ popup も一緒に閉じる + 完了マーク
-      try { if (window._fpZoomWin && !window._fpZoomWin.closed) window._fpZoomWin.close(); } catch (_) {}
-      try { if (window._fpMemoWin && !window._fpMemoWin.closed) window._fpMemoWin.close(); } catch (_) {}
-      const panel = document.getElementById('fp-memo-panel'); if (panel) panel.remove();
-    });
+    };
+    panel.addEventListener('click', goToMinutes);
+    // 閉じる × は event 伝播 stop
+    const closeBtn = document.getElementById('fp-unified-close');
+    if (closeBtn) closeBtn.addEventListener('click', (e) => { e.stopPropagation(); panel.remove(); });
   }
 
   // (旧トースト系は unified progress panel に統合済み)
@@ -5198,6 +5203,8 @@
       el = document.createElement('div');
       el.id = 'fp-rec-pill';
       // 大型化 + メイン CTA を「録画を停止」 に絞る + 自動停止案内付き
+      // ★ 2026-09-03 owner fb: 「Zoom 終了 button 押しても 赤枠 残る」 → 「× Zoom を閉じる」 と 「■ 録画停止」 の 分離 を 廃止
+      //   → 単一 「■ 面談 を 終了」 button で Zoom close + 録画停止 + AI 一気通貫 (stopScreenRecording が Zoom 閉じる logic 内蔵 済)
       el.innerHTML = `
         <div style="display:flex;align-items:center;gap:14px;">
           <div style="display:flex;align-items:center;gap:10px;padding-right:14px;border-right:1px solid rgba(255,255,255,0.3);">
@@ -5207,12 +5214,9 @@
               <span id="fp-rec-time" style="font-weight:900;font-family:'Inter',sans-serif;letter-spacing:0.04em;font-size:18px;font-variant-numeric:tabular-nums;">00:00</span>
             </div>
           </div>
-          <div style="display:flex;flex-direction:column;gap:6px;">
-            <button id="fp-rec-stop-btn" style="background:#fff;color:#b91c3c;border:none;padding:11px 22px;border-radius:6px;font-weight:900;cursor:pointer;font-family:'Inter','Noto Sans JP',sans-serif;font-size:13px;letter-spacing:0.1em;text-transform:uppercase;box-shadow:0 4px 12px rgba(0,0,0,0.15);">■ 録画を停止</button>
-            <button id="fp-zoom-close-btn" style="background:rgba(255,255,255,0.18);color:#fff;border:1.5px solid rgba(255,255,255,0.7);padding:7px 14px;border-radius:6px;font-weight:700;cursor:pointer;font-family:'Inter','Noto Sans JP',sans-serif;font-size:11.5px;letter-spacing:0.06em;">× Zoom を閉じる</button>
-          </div>
+          <button id="fp-rec-stop-btn" style="background:#fff;color:#b91c3c;border:none;padding:13px 24px;border-radius:8px;font-weight:900;cursor:pointer;font-family:'Inter','Noto Sans JP',sans-serif;font-size:13.5px;letter-spacing:0.08em;box-shadow:0 4px 12px rgba(0,0,0,0.15);white-space:nowrap;">■ 面談を終了</button>
         </div>
-        <div style="margin-top:8px;font-size:10.5px;color:rgba(255,255,255,0.92);text-align:center;letter-spacing:0.04em;">面談終わったら ■ を押す / Zoom 閉じても自動停止</div>
+        <div style="margin-top:8px;font-size:10.5px;color:rgba(255,255,255,0.92);text-align:center;letter-spacing:0.04em;">Zoom も 一緒 に 閉じて 議事録 生成</div>
       `;
       // ★ Zoom ウィンドウは右側に並ぶ → 右上配置だと Zoom に被る → 左上に固定 (4回目修正)
       el.style.cssText = 'position:fixed;top:18px;left:18px;background:linear-gradient(135deg,#d9264c,#b91c3c);color:#fff;padding:14px 18px 12px;border-radius:14px;box-shadow:0 16px 40px rgba(217,38,76,0.45),0 0 0 4px rgba(255,255,255,0.6);z-index:10201;font-size:13.5px;min-width:280px;';
@@ -5221,17 +5225,8 @@
       document.head.appendChild(style);
       document.body.appendChild(el);
       document.getElementById('fp-rec-stop-btn').addEventListener('click', () => {
-        if (!confirm('録画を停止しますか?\n\n停止後、自動で:\n・Drive に録画アップロード\n・AI で議事録 + タスク生成')) return;
+        if (!confirm('面談 を 終了 しますか?\n\n・Zoom を 閉じる\n・録画 を 停止\n・AI で 議事録 + タスク 生成')) return;
         stopScreenRecording();
-      });
-      document.getElementById('fp-zoom-close-btn').addEventListener('click', () => {
-        try { if (window._fpZoomWin && !window._fpZoomWin.closed) window._fpZoomWin.close(); } catch (_) {}
-        window._fpZoomWin = null;
-        const t = document.createElement('div');
-        t.style.cssText = 'position:fixed;top:120px;right:18px;background:#0f1729;color:#fff;padding:10px 16px;border-radius:8px;z-index:10005;font-size:12px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,0.3);';
-        t.textContent = '✓ Zoom を閉じました (録画は継続中)';
-        document.body.appendChild(t);
-        setTimeout(() => t.remove(), 3000);
       });
     }
     R.timerId = setInterval(() => {
