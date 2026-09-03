@@ -98,6 +98,7 @@
 </div>
 
 <script type="module">
+(async () => {
   const $ = (id) => document.getElementById(id);
   const CLOUD_RUN = 'https://fp-compass-webhook-527726449426.asia-northeast1.run.app';
 
@@ -295,6 +296,7 @@
   }
 
   function escapeHtml(s) { return String(s || '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
+})();
 </script>
 </body>
 </html>
