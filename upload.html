@@ -62,7 +62,9 @@
   </div>
 
   <div id="auth-warn" class="auth-warn" style="display:none;">
-    ⚠ login が 必要 です。 <a href="/">FP Compass に login</a> して から この ページ を 再度 開いて ください
+    ⚠ FP Compass に login が 必要 です<br>
+    <button id="btn-google-login" style="margin-top:14px;background:#fff;color:#78350F;border:2px solid #92400E;padding:12px 20px;border-radius:8px;font-weight:800;font-size:14px;cursor:pointer;">Google で login</button>
+    <div style="margin-top:10px;font-size:12px;color:#92400E;">または <a href="/" style="color:#92400E;font-weight:800;">FP Compass に login</a> して から この ページ を 再度 開く</div>
   </div>
 
   <div id="app" style="display:none;">
@@ -101,7 +103,7 @@
 
   // Firebase auth (reuse index.html config)
   const { initializeApp, getApps } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js');
-  const { getAuth, onAuthStateChanged } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js');
+  const { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js');
   const app = getApps()[0] || initializeApp({
     apiKey: 'AIzaSyAmVAEe9l9e1Yo_dzzJdbTVU35wWKd2sH4',
     authDomain: 'skeleton-fp-compass-632026.firebaseapp.com',
@@ -123,29 +125,38 @@
 
   if (!currentUser) {
     $('auth-warn').style.display = 'block';
+    $('btn-google-login').addEventListener('click', async () => {
+      try {
+        const provider = new GoogleAuthProvider();
+        const cred = await signInWithPopup(auth, provider);
+        currentUser = cred.user;
+        location.reload();
+      } catch (e) {
+        alert('Google login 失敗: ' + e.message);
+      }
+    });
     return;
   }
   $('app').style.display = 'block';
 
-  // Get mobile API key from Firestore /tenants/{tid}/private/settings.mobileApiKeyLast
-  //   (owner's admin session, not the shortcut path)
+  // Get mobile API key from Cloud Run /api/mobile/my-key (Firebase ID token auth).
+  //   既存 key が あれば 返す、 無ければ 自動 発行。 client-side Firestore read は 使わない
+  //   (private subcollection は client rules で 弾かれる 想定)。
   try {
-    const { getFirestore, doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js');
-    const db = getFirestore(app);
-    // Get tenantId from users/{uid}
-    const uDoc = await getDoc(doc(db, 'users', currentUser.uid));
-    if (!uDoc.exists()) throw new Error('users/{uid} not found');
-    const tenantId = uDoc.data().tenantId;
-    const sDoc = await getDoc(doc(db, 'tenants', tenantId, 'private', 'settings'));
-    mobileApiKey = sDoc.exists() ? sDoc.data().mobileApiKeyLast : null;
-    if (!mobileApiKey) {
-      $('result').className = 'result error active';
-      $('result').innerHTML = '<div class="result-title">❌ 準備 失敗</div><div class="result-body">Mobile API key が 未 発行 です。 <a href="/account.html">account 画面</a> で 「API キー を 発行」 して ください。</div>';
-      return;
+    const idToken = await currentUser.getIdToken();
+    const keyRes = await fetch(CLOUD_RUN + '/api/mobile/my-key', {
+      headers: { 'Authorization': 'Bearer ' + idToken },
+    });
+    if (!keyRes.ok) {
+      const errBody = await keyRes.text();
+      throw new Error(`my-key HTTP ${keyRes.status}: ${errBody.slice(0, 200)}`);
     }
+    const keyData = await keyRes.json();
+    if (!keyData.ok || !keyData.mobileApiKey) throw new Error('my-key returned no key');
+    mobileApiKey = keyData.mobileApiKey;
   } catch (e) {
     $('result').className = 'result error active';
-    $('result').innerHTML = `<div class="result-title">❌ 初期化 失敗</div><div class="result-body">${escapeHtml(e.message)}</div>`;
+    $('result').innerHTML = `<div class="result-title">❌ 準備 失敗</div><div class="result-body">${escapeHtml(e.message)}</div><div class="result-hint">FP Compass admin と 同じ アカウント で login 済 か 確認 して ください。</div>`;
     return;
   }
 
