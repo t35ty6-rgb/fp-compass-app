@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>音声 upload — FPコンパス</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body { margin: 0; font-family: 'Noto Sans JP', -apple-system, sans-serif; background: #F7F7F5; color: #0F172A;
+    line-height: 1.6; -webkit-font-smoothing: antialiased; letter-spacing: 0.005em;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+  .wrap { max-width: 520px; margin: 0 auto; padding: 20px 18px 60px; }
+  .head { padding: 8px 0 22px; border-bottom: 1px solid #E5E7EB; margin-bottom: 24px; }
+  .brand { font-size: 11px; font-weight: 700; letter-spacing: 0.18em; color: #64748B; margin-bottom: 6px; text-transform: uppercase; }
+  h1 { margin: 0; font-size: 22px; font-weight: 900; letter-spacing: -0.01em; color: #0F172A; }
+  .sub { font-size: 13px; color: #64748B; margin-top: 6px; }
+  .card { background: #fff; border: 1px solid #E5E7EB; border-radius: 12px; padding: 22px 20px; margin-bottom: 16px;
+    box-shadow: 0 1px 3px rgba(15,23,42,0.04); }
+  .label { display: block; font-size: 12.5px; font-weight: 700; color: #475569; margin-bottom: 8px; letter-spacing: 0.02em; }
+  select, input[type=file] { width: 100%; padding: 13px 14px; border: 1.5px solid #CBD5E1; border-radius: 8px;
+    font-size: 16px; font-family: inherit; background: #fff; color: #0F172A; }
+  select:focus, input[type=file]:focus { outline: 2px solid #1E3A5F; outline-offset: 2px; border-color: #1E3A5F; }
+  .filepicker { position: relative; display: flex; align-items: center; justify-content: center; min-height: 96px;
+    border: 2px dashed #94A3B8; border-radius: 12px; background: #F8FAFC; padding: 20px; cursor: pointer;
+    font-size: 14px; color: #475569; text-align: center; transition: border-color .15s, background .15s; }
+  .filepicker:hover { border-color: #1E3A5F; background: #EEF2F7; }
+  .filepicker input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .file-info { font-size: 13px; color: #059669; margin-top: 10px; font-weight: 700; }
+  .file-info.large { color: #B45309; }
+  .btn { width: 100%; background: #1E3A5F; color: #fff; border: none; border-radius: 10px;
+    padding: 16px; font-size: 15px; font-weight: 900; letter-spacing: 0.04em; cursor: pointer;
+    font-family: inherit; min-height: 52px; margin-top: 8px;
+    box-shadow: 0 4px 12px rgba(30,58,95,0.24); transition: transform .12s, box-shadow .15s, background .15s; }
+  .btn:hover:not(:disabled) { background: #152B48; box-shadow: 0 6px 16px rgba(30,58,95,0.32); transform: translateY(-1px); }
+  .btn:active:not(:disabled) { transform: translateY(1px); box-shadow: 0 2px 6px rgba(30,58,95,0.20); }
+  .btn:disabled { opacity: 0.55; cursor: not-allowed; }
+  .progress { margin-top: 20px; padding: 16px; background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 10px; display: none; }
+  .progress.active { display: block; }
+  .progress-label { font-size: 13px; font-weight: 700; color: #1E40AF; margin-bottom: 8px; }
+  .progress-bar { height: 10px; background: #DBEAFE; border-radius: 5px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, #3B82F6, #1D4ED8); width: 0%; transition: width .25s; }
+  .progress-pct { font-size: 11px; color: #64748B; text-align: right; margin-top: 4px; }
+  .result { padding: 20px; border-radius: 12px; margin-top: 20px; display: none; font-size: 15px; line-height: 1.7; }
+  .result.active { display: block; }
+  .result.success { background: #ECFDF5; border: 2px solid #059669; color: #065F46; }
+  .result.error { background: #FEF2F2; border: 2px solid #DC2626; color: #7F1D1D; }
+  .result-title { font-size: 20px; font-weight: 900; margin-bottom: 10px; letter-spacing: 0.01em; }
+  .result-body { font-size: 14px; }
+  .result-hint { margin-top: 12px; padding-top: 12px; border-top: 1px dashed currentColor; font-size: 13px; opacity: 0.85; }
+  .helper { font-size: 12px; color: #64748B; margin-top: 6px; line-height: 1.6; }
+  .auth-warn { padding: 20px; background: #FEF3C7; border: 2px solid #F59E0B; border-radius: 12px; color: #78350F; font-size: 14px; text-align: center; margin-bottom: 20px; }
+  .auth-warn a { color: #92400E; font-weight: 800; text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <div class="brand">FP Compass · Voice Upload</div>
+    <h1>音声 を upload</h1>
+    <div class="sub">音声 ファイル を 選んで 客 を 指定 · 議事録 が 自動 生成 されます</div>
+  </div>
+
+  <div id="auth-warn" class="auth-warn" style="display:none;">
+    ⚠ login が 必要 です。 <a href="/">FP Compass に login</a> して から この ページ を 再度 開いて ください
+  </div>
+
+  <div id="app" style="display:none;">
+    <div class="card">
+      <label class="label" for="customer">📇 客 を 選ぶ</label>
+      <select id="customer">
+        <option value="">-- 客 を 選択 --</option>
+      </select>
+      <div class="helper" id="cust-count"></div>
+    </div>
+
+    <div class="card">
+      <label class="label">🎤 音声 ファイル</label>
+      <label class="filepicker">
+        <input type="file" id="file" accept="audio/*,video/*,.m4a,.mp3,.wav,.mp4">
+        <span id="filepicker-label">タップ して 音声 ファイル を 選ぶ<br><small style="color:#94A3B8;">(音声メモ の 「共有 → ファイル に 保存」 で 事前 に 出しておく)</small></span>
+      </label>
+      <div class="file-info" id="file-info"></div>
+    </div>
+
+    <button id="btn-upload" class="btn" disabled>音声 を upload</button>
+
+    <div class="progress" id="progress">
+      <div class="progress-label" id="progress-label">準備 中...</div>
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+      <div class="progress-pct" id="progress-pct">0%</div>
+    </div>
+
+    <div id="result" class="result"></div>
+  </div>
+</div>
+
+<script type="module">
+  const $ = (id) => document.getElementById(id);
+  const CLOUD_RUN = 'https://fp-compass-webhook-527726449426.asia-northeast1.run.app';
+
+  // Firebase auth (reuse index.html config)
+  const { initializeApp, getApps } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js');
+  const { getAuth, onAuthStateChanged } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js');
+  const app = getApps()[0] || initializeApp({
+    apiKey: 'AIzaSyAmVAEe9l9e1Yo_dzzJdbTVU35wWKd2sH4',
+    authDomain: 'skeleton-fp-compass-632026.firebaseapp.com',
+    projectId: 'skeleton-fp-compass-632026',
+  });
+  const auth = getAuth(app);
+
+  let currentUser = null;
+  let mobileApiKey = null;  // fetched from admin session or manually pasted
+
+  // Wait for auth state
+  await new Promise(resolve => {
+    const unsub = onAuthStateChanged(auth, (user) => {
+      currentUser = user;
+      unsub();
+      resolve();
+    });
+  });
+
+  if (!currentUser) {
+    $('auth-warn').style.display = 'block';
+    return;
+  }
+  $('app').style.display = 'block';
+
+  // Get mobile API key from Firestore /tenants/{tid}/private/settings.mobileApiKeyLast
+  //   (owner's admin session, not the shortcut path)
+  try {
+    const { getFirestore, doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js');
+    const db = getFirestore(app);
+    // Get tenantId from users/{uid}
+    const uDoc = await getDoc(doc(db, 'users', currentUser.uid));
+    if (!uDoc.exists()) throw new Error('users/{uid} not found');
+    const tenantId = uDoc.data().tenantId;
+    const sDoc = await getDoc(doc(db, 'tenants', tenantId, 'private', 'settings'));
+    mobileApiKey = sDoc.exists() ? sDoc.data().mobileApiKeyLast : null;
+    if (!mobileApiKey) {
+      $('result').className = 'result error active';
+      $('result').innerHTML = '<div class="result-title">❌ 準備 失敗</div><div class="result-body">Mobile API key が 未 発行 です。 <a href="/account.html">account 画面</a> で 「API キー を 発行」 して ください。</div>';
+      return;
+    }
+  } catch (e) {
+    $('result').className = 'result error active';
+    $('result').innerHTML = `<div class="result-title">❌ 初期化 失敗</div><div class="result-body">${escapeHtml(e.message)}</div>`;
+    return;
+  }
+
+  // Load customers
+  try {
+    const r = await fetch(CLOUD_RUN + '/api/mobile/customers', {
+      headers: { 'X-FP-Mobile-Key': mobileApiKey },
+    });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const data = await r.json();
+    const sel = $('customer');
+    const cs = (data.customers || []).sort((a,b) => (a.kana || a.name || '').localeCompare(b.kana || b.name || '', 'ja'));
+    cs.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.id;
+      opt.textContent = c.name;
+      sel.appendChild(opt);
+    });
+    $('cust-count').textContent = `${cs.length} 名 の 客 が 登録 済`;
+  } catch (e) {
+    $('result').className = 'result error active';
+    $('result').innerHTML = `<div class="result-title">❌ 客 リスト 取得 失敗</div><div class="result-body">${escapeHtml(e.message)}</div>`;
+    return;
+  }
+
+  // File selection
+  let selectedFile = null;
+  $('file').addEventListener('change', (e) => {
+    selectedFile = e.target.files[0];
+    if (!selectedFile) return;
+    const sizeMB = (selectedFile.size / 1024 / 1024).toFixed(1);
+    const info = $('file-info');
+    info.className = 'file-info' + (selectedFile.size > 50 * 1024 * 1024 ? ' large' : '');
+    info.textContent = `✓ ${selectedFile.name} (${sizeMB} MB)`;
+    $('filepicker-label').innerHTML = `✓ ${escapeHtml(selectedFile.name)}<br><small>タップ して 選び 直し</small>`;
+    updateBtn();
+  });
+
+  $('customer').addEventListener('change', updateBtn);
+
+  function updateBtn() {
+    $('btn-upload').disabled = !(selectedFile && $('customer').value);
+  }
+
+  // Upload
+  $('btn-upload').addEventListener('click', async () => {
+    const customerId = $('customer').value;
+    const customerName = $('customer').selectedOptions[0].textContent;
+    if (!selectedFile || !customerId) return;
+
+    $('btn-upload').disabled = true;
+    $('result').className = 'result';
+    $('result').textContent = '';
+    $('progress').className = 'progress active';
+    setProgress(0, 'Storage 予約 中...');
+
+    try {
+      // Step 1: init → get signed upload URL
+      const initRes = await fetch(CLOUD_RUN + '/api/mobile/upload-init', {
+        method: 'POST',
+        headers: { 'X-FP-Mobile-Key': mobileApiKey, 'X-FP-Customer-Id': customerId, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filename: selectedFile.name, contentType: selectedFile.type || 'audio/m4a', sizeBytes: selectedFile.size }),
+      });
+      if (!initRes.ok) throw new Error(`init HTTP ${initRes.status}`);
+      const initData = await initRes.json();
+      if (!initData.ok) throw new Error(initData.message || 'init failed');
+      const { uploadUrl, storagePath, bookingTs } = initData;
+
+      setProgress(5, `音声 を 送信 中 (0% / ${(selectedFile.size/1024/1024).toFixed(1)}MB)...`);
+
+      // Step 2: PUT to signed URL with progress tracking via XHR
+      await new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.upload.addEventListener('progress', (e) => {
+          if (e.lengthComputable) {
+            const pct = Math.round((e.loaded / e.total) * 85) + 5;  // 5-90%
+            setProgress(pct, `音声 を 送信 中 (${Math.round((e.loaded/e.total)*100)}% / ${(selectedFile.size/1024/1024).toFixed(1)}MB)...`);
+          }
+        });
+        xhr.addEventListener('load', () => {
+          if (xhr.status >= 200 && xhr.status < 300) resolve();
+          else reject(new Error(`PUT HTTP ${xhr.status}: ${xhr.responseText.slice(0, 200)}`));
+        });
+        xhr.addEventListener('error', () => reject(new Error('PUT network error')));
+        xhr.open('PUT', uploadUrl);
+        xhr.setRequestHeader('Content-Type', selectedFile.type || 'audio/m4a');
+        xhr.send(selectedFile);
+      });
+
+      setProgress(92, '議事録 生成 依頼 中...');
+
+      // Step 3: upload-process (async — server returns 202 quickly)
+      const procRes = await fetch(CLOUD_RUN + '/api/mobile/upload-process?async=true', {
+        method: 'POST',
+        headers: { 'X-FP-Mobile-Key': mobileApiKey, 'X-FP-Customer-Id': customerId, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ storagePath, bookingTs }),
+      });
+      const procData = await procRes.json();
+      if (!procRes.ok || !procData.ok) throw new Error(procData.message || `process HTTP ${procRes.status}`);
+
+      setProgress(100, '完了');
+      $('progress').className = 'progress';
+
+      $('result').className = 'result success active';
+      $('result').innerHTML = `
+        <div class="result-title">✅ upload 成功</div>
+        <div class="result-body">
+          <strong>${escapeHtml(customerName)} 様</strong> の 音声 (${(selectedFile.size/1024/1024).toFixed(1)}MB) を 受信 しました。<br>
+          議事録 が 3-5 分 で 生成 されます。
+        </div>
+        <div class="result-hint">
+          FP Compass admin の 客 ページ → 議事録 tab で 完成 を 確認 して ください。<br>
+          <a href="/" style="color:#065F46;font-weight:800;text-decoration:underline;">→ admin を 開く</a>
+        </div>
+      `;
+    } catch (e) {
+      console.error('[upload]', e);
+      $('progress').className = 'progress';
+      $('result').className = 'result error active';
+      $('result').innerHTML = `
+        <div class="result-title">❌ upload 失敗</div>
+        <div class="result-body"><strong>${escapeHtml(e.message)}</strong></div>
+        <div class="result-hint">
+          もう 一度 「音声 を upload」 を 押して 再試行 して ください。<br>
+          何度 も 失敗 する 場合 は support@skeleton-inc.jp まで
+        </div>
+      `;
+      $('btn-upload').disabled = false;
+    }
+  });
+
+  function setProgress(pct, label) {
+    $('progress-fill').style.width = pct + '%';
+    $('progress-pct').textContent = pct + '%';
+    $('progress-label').textContent = label;
+  }
+
+  function escapeHtml(s) { return String(s || '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
+</script>
+</body>
+</html>
