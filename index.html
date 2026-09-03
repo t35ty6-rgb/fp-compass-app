@@ -112,6 +112,15 @@
       <label class="fp-gate-label" for="fp-pwconfirm-input">パスワード (確認)</label>
       <input id="fp-pwconfirm-input" type="password" class="fp-gate-input" placeholder="もう一度入力" autocomplete="new-password">
     </div>
+    <!-- ★ 2026-09-03 owner fb: signup 画面 で クーポンコード 事前 適用 (Stripe checkout 内蔵 promo 欄 は 見過ごされ る) -->
+    <div id="fp-row-coupon" style="display:none;margin-top:14px;">
+      <label class="fp-gate-label" for="fp-coupon-input">クーポンコード <span style="font-weight:400;opacity:0.6;font-size:11px;">(任意)</span></label>
+      <div style="display:flex;gap:8px;">
+        <input id="fp-coupon-input" type="text" class="fp-gate-input" placeholder="例: SKEL-FREE" autocomplete="off" style="flex:1;text-transform:uppercase;letter-spacing:0.06em;margin:0;">
+        <button id="fp-coupon-apply" type="button" style="background:rgba(255,255,255,0.14);color:#fff;border:1px solid rgba(255,255,255,0.26);padding:0 18px;border-radius:6px;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit;min-height:44px;">確認</button>
+      </div>
+      <div id="fp-coupon-msg" style="font-size:12px;margin-top:6px;min-height:16px;line-height:1.5;"></div>
+    </div>
     <div id="fp-row-terms" style="display:none;margin-top:14px;padding:12px 14px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:8px;">
       <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:12px;line-height:1.65;opacity:0.95;">
         <input id="fp-terms-check" type="checkbox" style="margin-top:3px;width:16px;height:16px;flex-shrink:0;accent-color:#E63946;cursor:pointer;">
@@ -204,6 +213,18 @@
   // ★ オーナーfb: 「勝手にログインまでしなくていい」 → タブ閉じると自動でログアウト (session 限定)
   setPersistence(auth, browserSessionPersistence).catch(console.error);
   window.__fp = { auth, db, functions, httpsCallable, signOut, GoogleAuthProvider, linkWithPopup, reauthenticateWithPopup, signInWithPopup };
+
+  // ★ 2026-09-02 P0 fix: beforeunload 離脱 警告 (30人監査 #15 Error UX P0)
+  //   window.__fp.isDirty = true に set した flow (議事録 編集 · 顧客 form 入力 中 等) で
+  //   閉じる or リロード しよう と したら 確認 dialog 表示 · 保存 前 データ 消失 防止
+  window.__fp.isDirty = false;
+  window.addEventListener('beforeunload', (e) => {
+    if (window.__fp && window.__fp.isDirty) {
+      e.preventDefault();
+      e.returnValue = '';  // Chrome/Safari で dialog 表示 の 必須 呪文
+      return '';
+    }
+  });
   // ★ 2026-06-26: Cloud Run AI endpoint Bearer auth helper (5箇所 fetch で 使用)
   window.getFpAuthHeaders = async function (extra) {
     const u = auth.currentUser;
@@ -362,6 +383,7 @@
     $("fp-tab-signup").classList.toggle("on", m === "signup");
     $("fp-row-fpname").style.display = m === "signup" ? "" : "none";
     $("fp-row-pwconfirm").style.display = m === "signup" ? "" : "none";
+    $("fp-row-coupon").style.display = m === "signup" ? "" : "none";
     $("fp-row-terms").style.display = m === "signup" ? "" : "none";
     $("fp-row-forgot").style.display = m === "signup" ? "none" : "";
     // ★ 本番では ¥0デモボタン 完全非表示 (オーナーfb: 本番=¥19,800一律、デモはクーポンコード DEMOFREE/DEMO9800 で対応)
@@ -381,6 +403,42 @@
   $("fp-demo-signup-btn").addEventListener("click", () => {
     sessionStorage.setItem('fpDemoSignup', '1');
     $("fp-gate-btn").click();
+  });
+
+  // ★ 2026-09-03 owner fb: クーポン 事前 検証 → preview 表示 (submit 時 に window.__fpValidatedPromo を pickup)
+  window.__fpValidatedPromo = null;
+  const couponMsg = (kind, text) => {
+    const el = $("fp-coupon-msg");
+    el.textContent = text || "";
+    el.style.color = kind === "ok" ? "#86EFAC" : kind === "err" ? "#FCA5A5" : "#94A3B8";
+  };
+  $("fp-coupon-input").addEventListener("input", () => {
+    // 入力 変わったら 前回 検証 結果 を 破棄
+    window.__fpValidatedPromo = null;
+    couponMsg("", "");
+  });
+  $("fp-coupon-apply").addEventListener("click", async () => {
+    const code = $("fp-coupon-input").value.trim().toUpperCase();
+    if (!code) { couponMsg("err", "コードを入力してください"); return; }
+    couponMsg("", "確認中…");
+    try {
+      const validate = httpsCallable(functions, "validatePromotionCode");
+      const r = await validate({ code });
+      if (r.data?.valid) {
+        window.__fpValidatedPromo = r.data.code;
+        couponMsg("ok", `✓ 適用可: ${r.data.previewText}`);
+      } else {
+        window.__fpValidatedPromo = null;
+        couponMsg("err", r.data?.message || "無効なコードです");
+      }
+    } catch (e) {
+      window.__fpValidatedPromo = null;
+      couponMsg("err", e.message || "検証に失敗しました");
+    }
+  });
+  // Enter で 「確認」 発火
+  $("fp-coupon-input").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") { e.preventDefault(); $("fp-coupon-apply").click(); }
   });
   // ?demo=1 で来たら自動で signup タブを開く
   if (new URL(location.href).searchParams.get('demo') === '1') {
@@ -485,7 +543,8 @@
           const isDemoSignup = new URL(window.location.href).searchParams.get('demo') === '1'
                             || sessionStorage.getItem('fpDemoSignup') === '1';
           const createSession = httpsCallable(functions, "createCheckoutSession");
-          const result = await createSession({ demo: isDemoSignup });
+          const promoCode = window.__fpValidatedPromo || null;
+          const result = await createSession({ demo: isDemoSignup, promotionCode: promoCode });
           sessionStorage.removeItem('fpDemoSignup');
           if (result.data?.url) {
             window.location.href = result.data.url;
@@ -741,7 +800,18 @@
   }
 
   onAuthStateChanged(auth, async (user) => {
-    if (!user) { return; }
+    if (!user) {
+      // ★ 2026-09-02 P0 fix: session 切れ 時 に gate を 再表示 (30人監査 #15 Error UX P0)
+      //   前 は return する だけ で 画面 は 壊れた state の まま → owner 手動 reload 必要
+      //   後 は 認証 済 UI 描画 済 なら reload で 初回 gate に 戻す
+      try {
+        if (!document.getElementById('fp-gate-overlay') && document.body.innerHTML.length > 500) {
+          console.log('[fp auth] session 切れ 検知 → gate 再表示 の ため page reload');
+          location.reload();
+        }
+      } catch (_) {}
+      return;
+    }
     // ★ テナント分離: uid または tenantId が変わったら localStorage を全消去 (前テナントの顧客/タスク/GASキャッシュ残骸防止)
     try {
       const lastUid = localStorage.getItem("fp-last-uid");
