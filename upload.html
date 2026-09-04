@@ -62,9 +62,9 @@
   </div>
 
   <div id="auth-warn" class="auth-warn" style="display:none;">
-    ⚠ FP Compass に login が 必要 です<br>
+    FP Compass に login が 必要 です<br>
     <button id="btn-google-login" style="margin-top:14px;background:#fff;color:#78350F;border:2px solid #92400E;padding:12px 20px;border-radius:8px;font-weight:800;font-size:14px;cursor:pointer;">Google で login</button>
-    <div style="margin-top:10px;font-size:12px;color:#92400E;">または <a href="/" style="color:#92400E;font-weight:800;">FP Compass に login</a> して から この ページ を 再度 開く</div>
+    <div style="margin-top:10px;font-size:12px;color:#92400E;">FP Compass admin と 同じ Google アカウント を 使って ください</div>
   </div>
 
   <div id="app" style="display:none;">
@@ -104,7 +104,7 @@
 
   // Firebase auth (reuse index.html config)
   const { initializeApp, getApps } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js');
-  const { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js');
+  const { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js');
   const app = getApps()[0] || initializeApp({
     apiKey: 'AIzaSyAmVAEe9l9e1Yo_dzzJdbTVU35wWKd2sH4',
     authDomain: 'skeleton-fp-compass-632026.firebaseapp.com',
@@ -115,25 +115,48 @@
   let currentUser = null;
   let mobileApiKey = null;  // fetched from admin session or manually pasted
 
-  // Wait for auth state
-  await new Promise(resolve => {
-    const unsub = onAuthStateChanged(auth, (user) => {
-      currentUser = user;
-      unsub();
-      resolve();
+  // iOS Safari standalone (「ホーム画面 に 追加」 で 起動) の 検知。
+  //   standalone では signInWithPopup が WKWebView に ブロック されるので redirect flow 必須。
+  const isStandalone = window.navigator.standalone === true ||
+    window.matchMedia('(display-mode: standalone)').matches;
+
+  // redirect flow で 戻ってきた 場合 の 結果 を 先 に 取る
+  try {
+    const redirectResult = await getRedirectResult(auth);
+    if (redirectResult && redirectResult.user) {
+      currentUser = redirectResult.user;
+    }
+  } catch (e) {
+    console.warn('[getRedirectResult]', e.message);
+  }
+
+  // Wait for auth state (redirect result 反映 後)
+  if (!currentUser) {
+    await new Promise(resolve => {
+      const unsub = onAuthStateChanged(auth, (user) => {
+        currentUser = user;
+        unsub();
+        resolve();
+      });
     });
-  });
+  }
 
   if (!currentUser) {
     $('auth-warn').style.display = 'block';
     $('btn-google-login').addEventListener('click', async () => {
+      const provider = new GoogleAuthProvider();
+      if (isStandalone) {
+        // ホーム画面 追加 で 起動 → popup は 100% ブロック される、 redirect 一択
+        try { await signInWithRedirect(auth, provider); } catch (e) { alert('Google login 失敗: ' + e.message); }
+        return;
+      }
       try {
-        const provider = new GoogleAuthProvider();
         const cred = await signInWithPopup(auth, provider);
         currentUser = cred.user;
         location.reload();
       } catch (e) {
-        alert('Google login 失敗: ' + e.message);
+        // popup fail 時 も redirect fallback で 救う
+        try { await signInWithRedirect(auth, provider); } catch (e2) { alert('Google login 失敗: ' + (e2.message || e.message)); }
       }
     });
     return;
