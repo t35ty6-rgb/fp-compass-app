@@ -6924,7 +6924,7 @@
           <!-- 2026-09-05 owner「upload 上に + 失敗 わかるように」 対応:
                (1) sticky top mega button 復活、 (2) 直前 failure job あれば 直上 に 赤 alert、
                (3) 直前 processing job あれば 直上 に 青 progress badge。 全 clone 系 は showAllJobsInline() から write。 -->
-          <div id="cd-jobs-status-anchor" style="position:sticky;top:0;z-index:60;background:linear-gradient(180deg,#F7F8FA 88%,rgba(247,248,250,0.0));padding:12px 0 8px;">
+          <div id="cd-jobs-status-anchor" style="position:relative;padding:12px 0 8px;">
             <!-- 失敗 alert が 挿入 される (JS 側) -->
             <div id="cd-job-fail-alert" data-client-id="${escapeHtml(c.id)}"></div>
             <!-- 処理中 badge が 挿入 される (JS 側) -->
@@ -7549,21 +7549,10 @@
             bookingTs, source: 'ai-meeting-fallback',
           }));
         }
-        if (cands.length === 0) {
-          // Fallback 2: 汎用 3 件 (どの 面談 でも 使える 基本 action)
-          const generics = [
-            '面談 の お礼 LINE を 送る',
-            '議事録 サマリー を 客 に 共有',
-            '次回 面談 の 候補 日 を 提案',
-          ];
-          cands = generics.map(g => ({
-            id: 'aic-gen-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
-            task: g, taskFull: g, due: '', priority: 'p2',
-            createdAt: new Date().toISOString(),
-            customerName: clientName, clientId,
-            bookingTs, source: 'ai-meeting-generic',
-          }));
-        }
+        // 2026-09-05 owner「TODO が 全 議事録 で 同じ 3 件、 おかしい」対応:
+        //   Fallback 2 の hardcoded generic 3 件 は 完全 廃止。 実 議事録 から 抽出
+        //   出来 なかった 場合 は cands 空 の まま で 呼出 元 modal で 「候補 なし」 案内。
+        //   generic を 出す と 客 個別 特有 の 議事録 分析 の 意味 が 消える (累犯 pattern)。
         try {
           const stored = JSON.parse(localStorage.getItem('fp-ai-task-candidates') || '[]');
           localStorage.setItem('fp-ai-task-candidates', JSON.stringify([...stored, ...cands]));
