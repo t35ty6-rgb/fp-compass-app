@@ -37,10 +37,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20260905A">
-<link rel="stylesheet" href="styles-v2.css?v=20260905A">
-<link rel="stylesheet" href="styles-v3.css?v=20260905A">
-<link rel="stylesheet" href="styles-v8-workspace.css?v=20260905A">
+<link rel="stylesheet" href="styles.css?v=20260905B">
+<link rel="stylesheet" href="styles-v2.css?v=20260905B">
+<link rel="stylesheet" href="styles-v3.css?v=20260905B">
+<link rel="stylesheet" href="styles-v8-workspace.css?v=20260905B">
 <!-- ★ 2026-06-26 perf: lucide(350KB) と chart.js(201KB) を defer 化 -->
 <!--   どちらも DOMContentLoaded 後ハイドレートで OK (lucide: setInterval scan / chart: tryRender polling) -->
 <script defer src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
@@ -48,19 +48,19 @@
 <!-- ★ 2026-08-20 owner「認証中 で 5分 待たされる」fix:
      旧: 認証後 に fpReadyAfterAuth で critical scripts を 直列 fetch → mobile 4G で 5-8 秒
      新: login 画面 表示 中 に 平行 preload (browser cache に 入れる、 実行 は 認証後) → 認証後 は 実質 0秒 -->
-<link rel="preload" as="script" href="life-events.js?v=20260905A">
-<link rel="preload" as="script" href="recommender.js?v=20260905A">
-<link rel="preload" as="script" href="line-data.js?v=20260905A">
-<link rel="preload" as="script" href="recording-persist.js?v=20260905A">
-<link rel="preload" as="script" href="app.js?v=20260905A">
-<link rel="preload" as="script" href="line-app.js?v=20260905A">
+<link rel="preload" as="script" href="life-events.js?v=20260905B">
+<link rel="preload" as="script" href="recommender.js?v=20260905B">
+<link rel="preload" as="script" href="line-data.js?v=20260905B">
+<link rel="preload" as="script" href="recording-persist.js?v=20260905B">
+<link rel="preload" as="script" href="app.js?v=20260905B">
+<link rel="preload" as="script" href="line-app.js?v=20260905B">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- ★ 2026-09-02 P0 fix: nocache redirect 削除
      - 全 初回 load で JS redirect → +46ms (国内) / +400ms (4G) 追加 RTT
      - bfcache 破壊 + URL param 汚染 (Analytics session 分断)
-     - JS/CSS は 個別 ?v=20260905A で bust 済 · nocache は 完全 に 無意味
+     - JS/CSS は 個別 ?v=20260905B で bust 済 · nocache は 完全 に 無意味
      判定書_FP-Compass_多視点10_Performance_2026-09-02.md P0 fix
 -->
 
@@ -172,7 +172,7 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
   import {
     getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword,
-    onAuthStateChanged, signOut, setPersistence, browserSessionPersistence,
+    onAuthStateChanged, signOut, setPersistence, browserSessionPersistence, browserLocalPersistence,
     GoogleAuthProvider, linkWithPopup, reauthenticateWithPopup, signInWithPopup,
   } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
   import {
@@ -210,8 +210,13 @@
   try { db = initializeFirestore(app, { experimentalAutoDetectLongPolling: true }); }
   catch (_) { db = getFirestore(app); }
   const functions = getFunctions(app, "asia-northeast1");
-  // ★ オーナーfb: 「勝手にログインまでしなくていい」 → タブ閉じると自動でログアウト (session 限定)
-  setPersistence(auth, browserSessionPersistence).catch(console.error);
+  // 2026-09-05 owner「upload したら 一回 ログアウト される」bug fix:
+  //   iOS Safari は 低メモリ 時 (file picker 開いた 直後 等) sessionStorage を 消す →
+  //   browserSessionPersistence だと auth null → 自動 reload → login 循環 → Safari の
+  //   「問題 が 繰り返し 起きて います」 error に なる。 mobile は browserLocalPersistence で
+  //   localStorage に 保存 (tab 閉じても 継承)、 desktop は 従来 通り session 限定。
+  const _persistenceIsMobile = /iPhone|iPad|iPod|Android/.test(navigator.userAgent) || window.innerWidth < 640;
+  setPersistence(auth, _persistenceIsMobile ? browserLocalPersistence : browserSessionPersistence).catch(console.error);
   window.__fp = { auth, db, functions, httpsCallable, signOut, GoogleAuthProvider, linkWithPopup, reauthenticateWithPopup, signInWithPopup };
 
   // ★ 2026-09-02 P0 fix: beforeunload 離脱 警告 (30人監査 #15 Error UX P0)
@@ -802,9 +807,17 @@
   onAuthStateChanged(auth, async (user) => {
     if (!user) {
       // ★ 2026-09-02 P0 fix: session 切れ 時 に gate を 再表示 (30人監査 #15 Error UX P0)
-      //   前 は return する だけ で 画面 は 壊れた state の まま → owner 手動 reload 必要
-      //   後 は 認証 済 UI 描画 済 なら reload で 初回 gate に 戻す
+      // 2026-09-05 追加 fix: upload / recording 中 は reload しない (owner「upload したら
+      //   ログアウト されて 繰り返し 起きる」 対応)。 進捗 panel or minutes badge 存在 中 は skip、
+      //   auth token 再取得 を Firebase SDK 内 部 の 自動 refresh に 任せる。
       try {
+        const uploadActive = !!document.getElementById('fp-unified-progress')
+          || !!document.getElementById('fp-minutes-badges')
+          || !!document.getElementById('fp-inperson-recording');
+        if (uploadActive) {
+          console.log('[fp auth] session null 検知 が upload/recording 進行中 → reload skip');
+          return;
+        }
         if (!document.getElementById('fp-gate-overlay') && document.body.innerHTML.length > 500) {
           console.log('[fp auth] session 切れ 検知 → gate 再表示 の ため page reload');
           location.reload();
@@ -1848,7 +1861,7 @@ window.fpReadyAfterAuth = function() {
     });
   })();
 
-  const ver = "20260905A";
+  const ver = "20260905B";
   // ★ 2026-06-26 perf: critical (画面初期表示に必須) と deferred (LINE/charts) を 分離
   // critical: 顧客台帳・ホーム描画に必須
   // deferred: LINE タブ (line-app.js 555KB) / dashboard charts (charts.js) → idle で 後ロード
@@ -2600,7 +2613,7 @@ window.fpReadyAfterAuth = function() {
 <script>
 (function(){
   // 最新の ver を 1 箇所に集約 (fpReadyAfterAuth 側と一致させる必要あり)
-    const FP_VERSION = "20260905A";
+    const FP_VERSION = "20260905B";
   try { window.FP_VERSION = FP_VERSION; } catch(_) {}
 
   // 2026-07-13 v11: Chrome拡張 (Zoom タブ音声 レコーダー) 検知
