@@ -9931,7 +9931,8 @@ body.modal-open {
   }
   .cd-modal .cd-tab {
     flex: 0 0 auto !important;
-    padding: 12px 16px !important;
+    /* 2026-09-08 owner「Q&A 切れる」対応: mobile で padding 12px 16px → 10px 10px に 縮小 で 4 tab 全 default 表示 */
+    padding: 10px 10px !important;
     font-size: 13px !important;
     color: #6B7280 !important;
     background: transparent !important;
@@ -10382,10 +10383,11 @@ body.modal-open {
     z-index: 50 !important;
     background: #FFFFFF !important;
     /* 2026-08-27 qa R4 WARN#1 fix: 「‹ 戻る」 pill (fixed top:12px left:10px 幅~90px) が
-       最初 の 「概観」 tab を 覆って タップ 不能 だった。 左 padding を 100px 増やして
-       tab の 開始位置 を 戻るボタン の 右 に 退避。 tab list は 元々 横 scroll する ので
-       後ろ の tab は そのまま。 */
-    padding: 0 12px 0 100px !important;
+       最初 の 「概観」 tab を 覆って タップ 不能 だった。 左 padding で 退避。
+       2026-09-08 owner「Q&A タブ が 切れる」対応: 100px → 78px に 縮小 (戻る button の
+       実効 幅 62px + safe margin 16px)。 tab list は 元 々 横 scroll する ので 後ろ の
+       tab は そのまま だ が、 縮小 で Q&A まで default 表示 可能 に。 */
+    padding: 0 8px 0 78px !important;
     border-top: 1px solid #ECE6D6 !important;
     border-bottom: 1px solid #ECE6D6 !important;
     -webkit-overflow-scrolling: touch !important;
