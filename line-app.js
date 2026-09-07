@@ -4220,13 +4220,41 @@
   function showProgressDoneAction() {
     const panel = document.getElementById('fp-unified-progress');
     if (!panel) return;
-    panel.dataset.state = 'done';
     const r = (window._fpAIResult && window._fpAIResult.result) || {};
     const taskCount = (r.tasks || []).length;
     const customerName = (window._fpAIResult && window._fpAIResult.customerName) || panel.dataset.customerName || 'お客様';
+    const isMobile2 = window.innerWidth < 640;
+    // 2026-09-05 owner「一瞬 で 議事録 完成 出る が 実際 見る と 何 も ない」bug fix:
+    //   空 audio / stub 結果 に 「完成 しました」 は 出さ ない、 warn 表示 に 差替
+    const transcriptChars = String(r.transcript || '').trim().length;
+    const summaryChars = String(r.summary || '').trim().length;
+    const isEmpty = r.no_audio === true || transcriptChars < 30
+      || /⚠?\s*音声が\s*ほぼ取れませんでした/.test(String(r.summary || ''))
+      || /音声 が 短い|無音/.test(String(r.summary || ''));
+    if (isEmpty) {
+      panel.dataset.state = 'empty-warn';
+      panel.style.background = 'linear-gradient(135deg,#FFFBEB,#FEF3C7)';
+      if (isMobile2) panel.style.borderBottomColor = '#D97706'; else panel.style.borderColor = '#D97706';
+      panel.style.boxShadow = isMobile2 ? '0 8px 24px rgba(217,119,6,0.35)' : '0 18px 48px rgba(217,119,6,0.32)';
+      panel.style.cursor = 'default';
+      panel.innerHTML = `
+        <div style="padding:16px 18px;display:flex;align-items:center;gap:12px;">
+          <div style="font-size:32px;line-height:1;flex-shrink:0;">⚠</div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:14px;font-weight:800;color:#78350F;letter-spacing:-0.005em;line-height:1.4;margin-bottom:4px;">議事録 生成 出来 ませ ん でした (音声 が 短い or 無音)</div>
+            <div style="font-size:11.5px;color:#92400E;line-height:1.55;">${escapeHtml(customerName)}様 · transcript ${transcriptChars} 字 · <strong>30秒 以上 の 実 会話 音声 で 再 upload</strong> して ください</div>
+          </div>
+          <button id="fp-unified-close" title="閉じる" aria-label="閉じる" style="background:transparent;border:none;color:#D97706;font-size:16px;cursor:pointer;padding:2px 6px;line-height:1;font-family:inherit;flex-shrink:0;">✕</button>
+        </div>`;
+      const closeBtn = panel.querySelector('#fp-unified-close');
+      if (closeBtn) closeBtn.addEventListener('click', (e) => { e.stopPropagation(); panel.remove(); });
+      // 90秒 で auto dismiss
+      setTimeout(() => { try { panel.remove(); } catch(_){} }, 90000);
+      return;
+    }
+    panel.dataset.state = 'done';
     // 全体 色 変更 (青 → 緑)。 mobile は border-bottom のみ で 上端 全幅、 desktop は 全周 border
     panel.style.background = 'linear-gradient(135deg,#ECFDF5,#D1FAE5)';
-    const isMobile2 = window.innerWidth < 640;
     if (isMobile2) panel.style.borderBottomColor = '#059669';
     else panel.style.borderColor = '#059669';
     panel.style.boxShadow = isMobile2 ? '0 8px 24px rgba(5,150,105,0.35)' : '0 18px 48px rgba(5,150,105,0.32)';
@@ -4236,7 +4264,7 @@
         <div style="font-size:32px;line-height:1;flex-shrink:0;">✅</div>
         <div style="flex:1;min-width:0;">
           <div style="font-size:14px;font-weight:800;color:#065F46;letter-spacing:-0.005em;line-height:1.4;margin-bottom:4px;">議事録 が 完成 しました</div>
-          <div style="font-size:11.5px;color:#047857;line-height:1.55;">${escapeHtml(customerName)}様 · タスク${taskCount}件 生成済 · <strong style="font-weight:800;">タップ で 議事録 を 開く</strong> →</div>
+          <div style="font-size:11.5px;color:#047857;line-height:1.55;">${escapeHtml(customerName)}様 · transcript ${transcriptChars} 字 · summary ${summaryChars} 字 · タスク ${taskCount} 件 · <strong style="font-weight:800;">タップ で 議事録 を 開く</strong> →</div>
         </div>
         <button id="fp-unified-close" title="閉じる" aria-label="閉じる" style="background:transparent;border:none;color:#059669;font-size:16px;cursor:pointer;padding:2px 6px;line-height:1;font-family:inherit;flex-shrink:0;">✕</button>
       </div>`;
