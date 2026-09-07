@@ -4034,23 +4034,24 @@
       document.head.appendChild(s);
     }
     panel.innerHTML = `
-      <div style="padding:16px 18px;display:flex;align-items:flex-start;gap:12px;">
+      <div style="padding:16px 18px 12px;display:flex;align-items:flex-start;gap:12px;">
         <div id="fp-unified-icon" style="width:36px;height:36px;border:3px solid rgba(59,130,246,0.3);border-top-color:#3B82F6;border-radius:50%;animation:fp-unified-spin 0.9s linear infinite;flex-shrink:0;margin-top:2px;"></div>
         <div style="flex:1;min-width:0;">
-          <div id="fp-unified-title" style="font-size:13.5px;font-weight:800;color:#1E40AF;letter-spacing:-0.005em;line-height:1.45;margin-bottom:4px;">ただ今 Zoom を 文字起こし しています…</div>
-          <div id="fp-unified-sub" style="font-size:11.5px;color:#475569;line-height:1.55;">${escapeHtml(customerName || 'お客様')}様 · 30〜60 秒 ほど お待ちください ${sizeText}</div>
+          <div id="fp-unified-title" style="font-size:13.5px;font-weight:800;color:#1E40AF;letter-spacing:-0.005em;line-height:1.45;margin-bottom:4px;">議事録 生成 中</div>
+          <div id="fp-unified-sub" style="font-size:11.5px;color:#475569;line-height:1.55;">${escapeHtml(customerName || 'お客様')}様 ${sizeText} · 30秒〜5分</div>
         </div>
         <button id="fp-unified-close" title="裏 で 処理 継続 (popup だけ 閉じる)" aria-label="閉じる" style="background:transparent;border:none;color:#64748B;font-size:16px;cursor:pointer;padding:2px 6px;line-height:1;font-family:inherit;flex-shrink:0;">✕</button>
       </div>
-      <!-- 3-step は details に 隠す (デバッグ用、 default 非表示) -->
-      <details style="border-top:1px solid rgba(59,130,246,0.2);background:rgba(255,255,255,0.5);">
-        <summary style="cursor:pointer;padding:6px 18px;font-size:10.5px;color:#64748B;letter-spacing:0.06em;list-style:none;user-select:none;">詳細 ▾</summary>
-        <div id="fp-progress-steps" style="padding:10px 18px 12px;display:grid;gap:6px;">
-          ${renderStep('save', '録画ファイル保存', 'ローカル 保持')}
-          ${renderStep('drive', 'Google Drive アップロード', '顧客フォルダ 振り分け')}
-          ${renderStep('ai', 'AI 議事録 + タスク生成', 'Whisper → Claude')}
+      <!-- 2026-09-05 owner「進捗 わかる ように」対応: default 展開 5-step、 details 廃止 -->
+      <div style="border-top:1px solid rgba(59,130,246,0.2);background:rgba(255,255,255,0.5);">
+        <div id="fp-progress-steps" style="padding:12px 18px 14px;display:grid;gap:6px;">
+          ${renderStep('save', '① 音声 保存', 'ブラウザ に 一時 保持')}
+          ${renderStep('drive', '② Google Drive UP', '顧客 フォルダ に 保存 (並列)')}
+          ${renderStep('ai-whisper', '③ Whisper 文字 起こし', '音声 → text 変換')}
+          ${renderStep('ai-claude', '④ Claude 議事録 生成', 'transcript → 要約 + TODO')}
+          ${renderStep('ai', '⑤ 反映', '顧客 カード に 表示')}
         </div>
-      </details>`;
+      </div>`;
     document.body.appendChild(panel);
     const closeBtn = document.getElementById('fp-unified-close');
     if (closeBtn) {
@@ -4077,15 +4078,37 @@
   }
 
   function updateProgressStep(id, status, errorMsg) {
+    // 2026-09-05: 'ai' step は 3 sub-step (ai-whisper / ai-claude / ai) の 集合体 として 扱う。
+    //   'ai' active → whisper active + claude pending + ai pending (視覚 的 に 「開始 した」 を 見せる)
+    //   'ai' done   → whisper done + claude done + ai done (最終)
+    //   'ai' error  → 現在 active の sub-step を error、 他 は pending
+    if (id === 'ai') {
+      if (status === 'active') {
+        _applyStep('ai-whisper', 'active');
+      } else if (status === 'done') {
+        _applyStep('ai-whisper', 'done');
+        _applyStep('ai-claude', 'done');
+        _applyStep('ai', 'done');
+      } else if (status === 'error') {
+        // 現在 active な sub を error に (fallback ai-claude)
+        const whisperActive = document.getElementById('fp-step-ai-whisper')?.dataset?.status === 'active';
+        if (whisperActive) _applyStep('ai-whisper', 'error', errorMsg);
+        else _applyStep('ai-claude', 'error', errorMsg);
+      }
+      return;
+    }
+    _applyStep(id, status, errorMsg);
+  }
+  function _applyStep(id, status, errorMsg) {
     const el = document.getElementById('fp-step-' + id);
     if (!el) return;
     el.dataset.status = status;
     const ic = el.querySelector('.fp-step-ic');
     const desc = el.querySelector('.fp-step-desc');
     if (status === 'active') {
-      el.style.opacity = '1'; el.style.background = '#fff'; el.style.borderColor = '#c19a3a';
-      ic.textContent = '⏳'; ic.style.color = '#c19a3a';
-      if (desc) desc.textContent = '処理中...';
+      el.style.opacity = '1'; el.style.background = '#fff'; el.style.borderColor = '#3B82F6';
+      ic.textContent = '⏳'; ic.style.color = '#3B82F6';
+      if (desc) desc.textContent = '処理 中...';
     } else if (status === 'done') {
       el.style.opacity = '1'; el.style.background = '#f0fdf4'; el.style.borderColor = '#86efac';
       ic.textContent = '✓'; ic.style.color = '#16a34a'; ic.style.fontWeight = '700';
@@ -4238,6 +4261,216 @@
   }
 
   // (旧トースト系は unified progress panel に統合済み)
+
+  // ============================================================
+  // 2026-09-05 owner「upload 失敗 が わからない、 進捗 見えて、 履歴 見えて」対応:
+  //   window.__fpJobs = mobileJobs 状態 監視 + failure alert + processing badge + 履歴 render。
+  //   客 modal 開いた 時 に startWatch(customerId, customerName) → 10 秒 poll、
+  //   modal 閉じたら stopWatch()。 別 客 modal 開いても 引き継ぐ (Map で 全 job cache)。
+  // ============================================================
+  (function initJobsWatcher() {
+    if (window.__fpJobs) return;
+    const CLOUD_RUN = 'https://fp-compass-webhook-527726449426.asia-northeast1.run.app';
+    let pollTimer = null;
+    let currentCid = null;
+    let currentName = '';
+    const jobsCache = new Map(); // key: cid, val: array of jobs
+    let lastFetchAt = 0;
+    let inFlight = false;
+
+    async function getIdToken() {
+      const auth = window.__fp?.auth;
+      if (!auth || !auth.currentUser) return null;
+      try { return await auth.currentUser.getIdToken(); } catch (e) { return null; }
+    }
+
+    async function fetchAllJobs() {
+      if (inFlight) return null;
+      inFlight = true;
+      try {
+        const idToken = await getIdToken();
+        if (!idToken) { inFlight = false; return null; }
+        const res = await fetch(`${CLOUD_RUN}/api/mobile/jobs?limit=50`, {
+          headers: { Authorization: 'Bearer ' + idToken },
+        });
+        const data = await res.json();
+        if (!res.ok || !data.ok) { inFlight = false; return null; }
+        // group by customerId
+        jobsCache.clear();
+        for (const j of (data.jobs || [])) {
+          if (!jobsCache.has(j.customerId)) jobsCache.set(j.customerId, []);
+          jobsCache.get(j.customerId).push(j);
+        }
+        for (const arr of jobsCache.values()) arr.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+        lastFetchAt = Date.now();
+        return data;
+      } catch (e) {
+        console.warn('[fpJobs.fetch]', e.message);
+        return null;
+      } finally {
+        inFlight = false;
+      }
+    }
+
+    function stageJa(stage) {
+      const m = { queued: 'キュー 待機 中', downloading: '音声 ダウンロード 中', compressing: '音声 圧縮 中', transcribing: 'Whisper 文字起こし 中', summarizing: 'Claude 議事録 生成 中', done: '完了' };
+      return m[stage] || stage || '準備 中';
+    }
+
+    function stageJaShort(stage) {
+      const m = { queued: '待機', downloading: 'DL', compressing: '圧縮', transcribing: '文字起こし', summarizing: '議事録', done: '完了' };
+      return m[stage] || (stage || '');
+    }
+
+    function timeAgo(tsMs) {
+      if (!tsMs) return '';
+      const diff = Date.now() - tsMs;
+      const m = Math.floor(diff / 60000);
+      if (m < 1) return '今';
+      if (m < 60) return `${m} 分前`;
+      const h = Math.floor(m / 60);
+      if (h < 24) return `${h} 時間前`;
+      return `${Math.floor(h / 24)} 日前`;
+    }
+
+    function renderForCurrentCustomer() {
+      if (!currentCid) return;
+      const alertBox = document.getElementById('cd-job-fail-alert');
+      const badgeBox = document.getElementById('cd-job-processing-badge');
+      if (!alertBox && !badgeBox) return;
+
+      const jobs = jobsCache.get(currentCid) || [];
+      // 直近 の processing job (未 done かつ failed じゃない)
+      const active = jobs.find(j => j.status === 'processing');
+      // 直近 の failed job (かつ その後 done job で 上書き されて ない = 単純 に 最新 が failed か)
+      const latest = jobs[0];
+      const showFailAlert = latest && latest.status === 'processing-failed' && (!active || active.updatedAt < latest.updatedAt);
+
+      // Processing badge
+      if (badgeBox) {
+        if (active) {
+          const pct = Math.max(5, Math.min(100, active.progressPercent || 5));
+          const ageSec = Math.round((Date.now() - (active.updatedAt || active.receivedAt || Date.now())) / 1000);
+          const stale = ageSec > 600; // 10 分以上 更新 なし = stuck 疑い
+          badgeBox.innerHTML = `
+            <div style="background:linear-gradient(135deg,#EFF6FF,#DBEAFE);border:2px solid ${stale ? '#F59E0B' : '#3B82F6'};border-radius:12px;padding:12px 14px;margin-bottom:10px;box-shadow:0 4px 12px rgba(59,130,246,0.15);">
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+                <div style="width:22px;height:22px;border:3px solid rgba(59,130,246,0.28);border-top-color:${stale ? '#F59E0B' : '#3B82F6'};border-radius:50%;animation:fp-unified-spin 0.9s linear infinite;flex-shrink:0;"></div>
+                <div style="flex:1;min-width:0;">
+                  <div style="font-size:12.5px;font-weight:800;color:${stale ? '#78350F' : '#1E40AF'};line-height:1.35;">${stale ? '⚠ 処理 が 止まって いる 可能性 (' + ageSec + '秒 更新 なし)' : '議事録 生成 中 · ' + stageJa(active.progressStage)}</div>
+                  <div style="font-size:11px;color:#475569;line-height:1.5;margin-top:2px;">${active.audioSizeMB || 0}MB · ${timeAgo(active.receivedAt)} 開始</div>
+                </div>
+              </div>
+              <div style="height:8px;background:rgba(255,255,255,0.65);border-radius:4px;overflow:hidden;">
+                <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,#3B82F6,#1D4ED8);transition:width .4s;"></div>
+              </div>
+              <div style="font-size:10.5px;color:#64748B;text-align:right;margin-top:3px;letter-spacing:0.04em;">${pct}%</div>
+            </div>`;
+          if (!document.getElementById('fp-unified-spin-style')) {
+            const s = document.createElement('style'); s.id = 'fp-unified-spin-style';
+            s.textContent = '@keyframes fp-unified-spin{to{transform:rotate(360deg)}}';
+            document.head.appendChild(s);
+          }
+        } else {
+          badgeBox.innerHTML = '';
+        }
+      }
+
+      // Failure alert
+      if (alertBox) {
+        if (showFailAlert) {
+          const err = String(latest.error || '不明 な エラー').slice(0, 200);
+          const stage = latest.errorStage ? stageJa(latest.errorStage) : '';
+          const retriableTag = latest.retriable ? '再試行 で 直る 可能性 あり' : '設定 確認 が 必要 (retriable=false)';
+          alertBox.innerHTML = `
+            <div style="background:linear-gradient(135deg,#FEF2F2,#FEE2E2);border:2px solid #DC2626;border-radius:12px;padding:12px 14px;margin-bottom:10px;box-shadow:0 6px 18px rgba(220,38,38,0.20);">
+              <div style="display:flex;align-items:flex-start;gap:10px;">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px;">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="8" x2="12" y2="12"></line>
+                  <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+                <div style="flex:1;min-width:0;">
+                  <div style="font-size:13px;font-weight:900;color:#7F1D1D;line-height:1.35;letter-spacing:-0.005em;">前回 の upload が 失敗 しました</div>
+                  <div style="font-size:11.5px;color:#991B1B;line-height:1.55;margin-top:4px;">
+                    ${stage ? `${stage} で 失敗 · ` : ''}${escapeHtml(err)}<br>
+                    <span style="color:#B91C1C;font-weight:700;">${retriableTag}</span> · ${timeAgo(latest.errorAt || latest.updatedAt)}
+                  </div>
+                  <button type="button" data-fpjobs-dismiss="${latest.bookingTs}" style="margin-top:10px;background:#7F1D1D;color:#fff;border:none;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;">閉じる (再 upload は 上 の button)</button>
+                </div>
+              </div>
+            </div>`;
+          const dismissBtn = alertBox.querySelector('[data-fpjobs-dismiss]');
+          if (dismissBtn) dismissBtn.addEventListener('click', () => {
+            const bts = dismissBtn.getAttribute('data-fpjobs-dismiss');
+            try { const dismissed = JSON.parse(localStorage.getItem('fp-jobs-dismissed') || '[]'); dismissed.push(bts); localStorage.setItem('fp-jobs-dismissed', JSON.stringify(dismissed.slice(-100))); } catch(_) {}
+            alertBox.innerHTML = '';
+          });
+          // dismissed?
+          try {
+            const dismissed = JSON.parse(localStorage.getItem('fp-jobs-dismissed') || '[]');
+            if (dismissed.includes(latest.bookingTs)) alertBox.innerHTML = '';
+          } catch(_) {}
+        } else {
+          alertBox.innerHTML = '';
+        }
+      }
+
+      // History section (in 議事録 tab 下 に 挿入 or 既存 の cd-jobs-history slot)
+      const historyBox = document.getElementById('cd-jobs-history');
+      if (historyBox) renderHistoryBox(historyBox, jobs);
+    }
+
+    function renderHistoryBox(box, jobs) {
+      if (!jobs.length) { box.innerHTML = '<div style="font-size:12px;color:#94A3B8;padding:8px 0;">upload 履歴 なし</div>'; return; }
+      const rows = jobs.slice(0, 15).map(j => {
+        const st = j.status;
+        const color = st === 'done' ? '#059669' : st === 'processing-failed' ? '#DC2626' : '#3B82F6';
+        const label = st === 'done' ? '完了' : st === 'processing-failed' ? '失敗' : `処理 中 · ${stageJaShort(j.progressStage)}`;
+        const meta = st === 'done'
+          ? `${j.transcriptChars || 0}字 · ${j.elapsedSec || '?'}秒`
+          : st === 'processing-failed'
+            ? `${j.errorStage || '?'} · ${String(j.error || '').slice(0, 60)}`
+            : `${j.progressPercent || 0}%`;
+        return `<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px solid #E4E7EE;border-radius:8px;background:#fff;margin-bottom:6px;">
+          <span style="width:8px;height:8px;border-radius:50%;background:${color};flex-shrink:0;"></span>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:12.5px;font-weight:800;color:#0F172A;line-height:1.4;">${escapeHtml(label)} · <span style="color:#64748B;font-weight:600;font-size:11px;">${escapeHtml(String(j.audioSizeMB || 0))}MB</span></div>
+            <div style="font-size:11px;color:#64748B;line-height:1.5;margin-top:2px;">${escapeHtml(meta)}</div>
+          </div>
+          <div style="font-size:10.5px;color:#94A3B8;flex-shrink:0;">${timeAgo(j.updatedAt || j.receivedAt)}</div>
+        </div>`;
+      }).join('');
+      box.innerHTML = rows;
+    }
+
+    async function tick() {
+      await fetchAllJobs();
+      renderForCurrentCustomer();
+      // 直近 に done に なった job が あれば toast (もし client が modal 開き 直せば toast、 なけれ ば silent update)
+    }
+
+    function startWatch(cid, name) {
+      if (!cid) return;
+      currentCid = String(cid);
+      currentName = name || '';
+      // 即 初回 fetch + render
+      tick();
+      if (pollTimer) clearInterval(pollTimer);
+      pollTimer = setInterval(tick, 10000); // 10 秒 poll
+    }
+
+    function stopWatch() {
+      if (pollTimer) clearInterval(pollTimer);
+      pollTimer = null;
+      currentCid = null;
+    }
+
+    // helper (escapeHtml が この scope に 存在 する と 仮定)
+    function escapeHtml(s) { return String(s || '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
+
+    window.__fpJobs = { startWatch, stopWatch, fetchAllJobs, render: renderForCurrentCustomer, jobsCache };
+  })();
 
   // AI 結果保存: GAS を一次ソース、localStorage は network失敗時のbackupのみ
   // (旧マルチキー localStorage 散らばりを廃止、データの真実は GAS シートに一本化)

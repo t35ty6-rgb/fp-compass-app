@@ -6921,11 +6921,26 @@
         <!-- ============= RIGHT: Activity column ============= -->
         <main class="cd-right">
 
-          <!-- 2026-08-31 owner「ここ いらない (shortcut で 統一)」 で mega button + help 全撤去。
-               id は 別 code path (upload handler) 互換 の ため hidden で 残置。 -->
-          <div id="cd-audio-upload-mega" style="display:none;">
-            <button id="cd-audio-upload-btn-mega" data-client-id="${escapeHtml(c.id)}" style="display:none;" hidden></button>
-            <button id="cd-audio-upload-help" type="button" style="display:none;" hidden></button>
+          <!-- 2026-09-05 owner「upload 上に + 失敗 わかるように」 対応:
+               (1) sticky top mega button 復活、 (2) 直前 failure job あれば 直上 に 赤 alert、
+               (3) 直前 processing job あれば 直上 に 青 progress badge。 全 clone 系 は showAllJobsInline() から write。 -->
+          <div id="cd-jobs-status-anchor" style="position:sticky;top:0;z-index:60;background:linear-gradient(180deg,#F7F8FA 88%,rgba(247,248,250,0.0));padding:12px 0 8px;">
+            <!-- 失敗 alert が 挿入 される (JS 側) -->
+            <div id="cd-job-fail-alert" data-client-id="${escapeHtml(c.id)}"></div>
+            <!-- 処理中 badge が 挿入 される (JS 側) -->
+            <div id="cd-job-processing-badge" data-client-id="${escapeHtml(c.id)}"></div>
+            <!-- 常時 表示 の mega upload button -->
+            <div id="cd-audio-upload-mega" style="margin-top:2px;">
+              <button id="cd-audio-upload-btn-mega" data-client-id="${escapeHtml(c.id)}" style="width:100%;background:linear-gradient(135deg,#5B5BF0,#4747C7);color:#fff;border:none;padding:16px 20px;border-radius:12px;font-size:15px;font-weight:900;cursor:pointer;font-family:'Noto Sans JP',sans-serif;box-shadow:0 8px 22px rgba(91,91,240,0.32);display:flex;align-items:center;justify-content:center;gap:12px;transition:transform .12s,box-shadow .15s;letter-spacing:0.01em;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="17 8 12 3 7 8"></polyline>
+                  <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                <span style="text-align:left;line-height:1.35;">音声 を アップロード → 議事録<br><span style="font-size:11px;font-weight:600;color:rgba(255,255,255,0.85);">MP3 · M4A · WAV · WEBM · MP4</span></span>
+              </button>
+              <button id="cd-audio-upload-help" type="button" style="display:none;" hidden></button>
+            </div>
           </div>
 
           <!-- AI Next Best Action — オーナーfb 2026-06-20: 2列バランス + Zoom/タグ クイック内包 -->
@@ -8059,8 +8074,13 @@ ${ctxText}${surveyTxt}`;
               // 2026-08-28 R8 で 議事録 tab の 最上部 に alt button 置いた が、
                 //   R9 で cd-right の 最上部 に mega button を 設置 (常時 sticky 全 tab で 見える) の で
                 //   議事録 tab 内 の 追加 button は 冗長 → 撤去。 audioUploadTopBar は 空 に。
-                const audioUploadTopBar = '';
-                const bindAltUploadBtn = () => {};
+                // 2026-09-05 owner「upload 履歴 見えて」対応: 議事録 tab の 最上部 に upload 履歴 slot 挿入。
+                //   fpJobs.render() が cd-jobs-history 内 の HTML を 書く。 mobileJobs cache 空 なら 「なし」 表示。
+                const audioUploadTopBar = `<div style="padding:14px 18px 4px;font-family:'Noto Sans JP',-apple-system,sans-serif;">
+                  <div style="font-size:11px;font-weight:800;color:#64748B;letter-spacing:0.14em;text-transform:uppercase;margin-bottom:8px;">▾ upload 履歴 (直近 15件)</div>
+                  <div id="cd-jobs-history"></div>
+                </div>`;
+                const bindAltUploadBtn = () => { try { if (typeof window.__fpJobs?.render === 'function') window.__fpJobs.render(); } catch (_) {} };
               const doRender = () => {
                 const html = renderMeetingRecordsBlock(c);
                 // 2026-08-27 owner「議事録 反映 まで 時間 かかって bug 分かんない から 読み込み中 表示 に して」対応:
@@ -8573,6 +8593,13 @@ ${ctxText}${surveyTxt}`;
           uploadInput.value = '';
         }
       });
+    }
+    // ★ 2026-09-05 owner「upload 失敗 が わからない、 履歴 と 進捗 見えて」対応:
+    //   客 modal を 開いた 時 に mobileJobs を fetch → sticky top に 状態 render + 10 秒 poll。
+    //   すべて window.__fpJobs module に 集約 (別 客 modal 開いても 継承 可)。
+    if (typeof window.__fpJobs?.startWatch === 'function') {
+      const scopedCid = c._fsCustomerId || c.id;
+      try { window.__fpJobs.startWatch(scopedCid, c.name || 'お客様'); } catch (e) { console.warn('[fpJobs.startWatch]', e.message); }
     }
     // ★ クイックアクション (AI推奨ブロック内 内包)
     document.querySelectorAll('[data-quick-instant]').forEach(b => b.addEventListener('click', () => document.getElementById('cd-instant-zoom-btn')?.click()));
@@ -14797,6 +14824,8 @@ ${client.name}さん、ありがとうございます。
       localStorage.removeItem('fp-last-open-mode');
     } catch (_) {}
     window._fpCurrentClient = null;
+    // 2026-09-05: mobileJobs polling を 停止 (客 modal 閉じた ため)
+    try { if (typeof window.__fpJobs?.stopWatch === 'function') window.__fpJobs.stopWatch(); } catch (_) {}
     // ★ URL routing: customer / tab パラメータ を 除去 (popstate由来でない時)
     if (!options.fromPopstate) {
       try { pushModalUrl(null, null); } catch (_) {}
