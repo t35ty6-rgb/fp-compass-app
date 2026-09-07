@@ -4381,7 +4381,7 @@
         if (showFailAlert) {
           const err = String(latest.error || '不明 な エラー').slice(0, 200);
           const stage = latest.errorStage ? stageJa(latest.errorStage) : '';
-          const retriableTag = latest.retriable ? '再試行 で 直る 可能性 あり' : '設定 確認 が 必要 (retriable=false)';
+          const retriableTag = latest.retriable ? '再試行 で 直る 可能性 あり (もう 一度 upload)' : '同じ 音声 で 再試行 しても 失敗 する 可能性 · 音声 形式 (MP3 / M4A / WAV) を 変えて 再 upload、 or 短く 分割 して 再 upload';
           alertBox.innerHTML = `
             <div style="background:linear-gradient(135deg,#FEF2F2,#FEE2E2);border:2px solid #DC2626;border-radius:12px;padding:12px 14px;margin-bottom:10px;box-shadow:0 6px 18px rgba(220,38,38,0.20);">
               <div style="display:flex;align-items:flex-start;gap:10px;">
