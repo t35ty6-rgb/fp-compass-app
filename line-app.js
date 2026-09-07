@@ -4025,7 +4025,13 @@
     panel.dataset.state = 'progress';
     panel.dataset.customerName = customerName || '';
     const sizeText = blob ? `(${(blob.size/1024/1024).toFixed(1)}MB)` : '';
-    panel.style.cssText = 'position:fixed;top:18px;right:18px;background:linear-gradient(135deg,#EFF6FF,#DBEAFE);border:2px solid #3B82F6;border-radius:14px;box-shadow:0 18px 48px rgba(59,130,246,0.28);z-index:10010;font-family:inherit;width:340px;overflow:hidden;transition:background 0.4s, border-color 0.4s;';
+    // 2026-09-05 owner「iPhone で 上 に 途切れて 少し の 文字 しか 見え ない」対応:
+    //   mobile (< 640px) は 全幅 + safe-area-inset-top で notch/URL バー を 避ける、
+    //   desktop は 従来 の 右上 fixed 340px。
+    const isMobile = window.innerWidth < 640;
+    const mobileCSS = 'position:fixed;top:0;left:0;right:0;padding-top:calc(env(safe-area-inset-top,0px) + 8px);background:linear-gradient(135deg,#EFF6FF,#DBEAFE);border:none;border-bottom:3px solid #3B82F6;border-radius:0;box-shadow:0 8px 24px rgba(59,130,246,0.35);z-index:99999;font-family:inherit;width:auto;overflow:hidden;transition:background 0.4s, border-color 0.4s;';
+    const desktopCSS = 'position:fixed;top:18px;right:18px;background:linear-gradient(135deg,#EFF6FF,#DBEAFE);border:2px solid #3B82F6;border-radius:14px;box-shadow:0 18px 48px rgba(59,130,246,0.28);z-index:99999;font-family:inherit;width:340px;overflow:hidden;transition:background 0.4s, border-color 0.4s;';
+    panel.style.cssText = isMobile ? mobileCSS : desktopCSS;
     // spin keyframe 未定義 なら 追加
     if (!document.getElementById('fp-unified-spin-style')) {
       const s = document.createElement('style');
@@ -4218,10 +4224,12 @@
     const r = (window._fpAIResult && window._fpAIResult.result) || {};
     const taskCount = (r.tasks || []).length;
     const customerName = (window._fpAIResult && window._fpAIResult.customerName) || panel.dataset.customerName || 'お客様';
-    // 全体 色 変更 (青 → 緑)
+    // 全体 色 変更 (青 → 緑)。 mobile は border-bottom のみ で 上端 全幅、 desktop は 全周 border
     panel.style.background = 'linear-gradient(135deg,#ECFDF5,#D1FAE5)';
-    panel.style.borderColor = '#059669';
-    panel.style.boxShadow = '0 18px 48px rgba(5,150,105,0.32)';
+    const isMobile2 = window.innerWidth < 640;
+    if (isMobile2) panel.style.borderBottomColor = '#059669';
+    else panel.style.borderColor = '#059669';
+    panel.style.boxShadow = isMobile2 ? '0 8px 24px rgba(5,150,105,0.35)' : '0 18px 48px rgba(5,150,105,0.32)';
     panel.style.cursor = 'pointer';
     panel.innerHTML = `
       <div style="padding:16px 18px;display:flex;align-items:center;gap:12px;">
