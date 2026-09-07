@@ -4069,6 +4069,27 @@
         if (realCid && typeof window.showMinutesGeneratingBadge === 'function') {
           try { window.showMinutesGeneratingBadge({ id: realCid, _fsCustomerId: realCid, name: customerName }); } catch (_) {}
         }
+        // 2026-09-08 owner「隠す タップ 後 どこ に 行った か 分から ない」対応:
+        //   右下 縮小 badge を owner に 認知 させる 大 ヒント を 3 秒 表示
+        try {
+          const hint = document.createElement('div');
+          hint.id = 'fp-hide-hint';
+          hint.style.cssText = 'position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 12px);transform:translateX(-50%);background:#0F172A;color:#fff;padding:12px 18px;border-radius:12px;font-family:"Noto Sans JP",sans-serif;font-size:13px;font-weight:800;box-shadow:0 12px 32px rgba(15,23,42,0.35);z-index:99998;white-space:nowrap;letter-spacing:0.02em;';
+          hint.innerHTML = '↘ 右下 の badge で 進捗 見れます';
+          document.body.appendChild(hint);
+          // 3秒 で fade out
+          setTimeout(() => { hint.style.transition = 'opacity .4s'; hint.style.opacity = '0'; setTimeout(() => hint.remove(), 400); }, 3000);
+          // 右下 badge の 位置 で pulse ring animation (owner の 視線 を 誘導)
+          const pulse = document.createElement('div');
+          pulse.style.cssText = 'position:fixed;right:24px;bottom:calc(24px + var(--fp-mobile-bnav-offset,0px));width:80px;height:80px;border-radius:50%;border:3px solid #F59E0B;pointer-events:none;z-index:99997;animation:fp-hide-pulse 1s ease-out 3;';
+          if (!document.getElementById('fp-hide-pulse-style')) {
+            const st = document.createElement('style'); st.id = 'fp-hide-pulse-style';
+            st.textContent = '@keyframes fp-hide-pulse{0%{transform:scale(0.5);opacity:0}50%{opacity:0.8}100%{transform:scale(1.4);opacity:0}}';
+            document.head.appendChild(st);
+          }
+          document.body.appendChild(pulse);
+          setTimeout(() => pulse.remove(), 3200);
+        } catch (_) {}
       });
     }
   }
