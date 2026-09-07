@@ -4560,11 +4560,25 @@
         // 2. mobile key 取得
         const mobileApiKey = await _getMobileKey();
         // 3. upload-init → uploadUrl + storagePath + bookingTs
-        const initRes = await fetch(CLOUD_RUN + '/api/mobile/upload-init', {
-          method: 'POST',
-          headers: { 'X-FP-Mobile-Key': mobileApiKey, 'X-FP-Customer-Id': customerId, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ filename: file.name, contentType: file.type || 'audio/m4a', sizeBytes: file.size }),
-        }).catch(e => { throw new Error('upload-init network 失敗: ' + e.message); });
+        //    iOS Safari の 短時間 network hiccup 対策 で 最大 3 回 retry (backoff 800ms, 2s, 4s)
+        let initRes = null; let lastInitErr = null;
+        for (let attempt = 0; attempt < 3; attempt++) {
+          try {
+            initRes = await fetch(CLOUD_RUN + '/api/mobile/upload-init', {
+              method: 'POST',
+              headers: { 'X-FP-Mobile-Key': mobileApiKey, 'X-FP-Customer-Id': customerId, 'Content-Type': 'application/json' },
+              body: JSON.stringify({ filename: file.name, contentType: file.type || 'audio/m4a', sizeBytes: file.size }),
+            });
+            break;
+          } catch (e) {
+            lastInitErr = e;
+            if (attempt < 2) {
+              try { const el = document.querySelector('#fp-step-drive .fp-step-desc'); if (el) el.textContent = `再試行 中 (${attempt+1}/3、 ${e.message.slice(0,40)})`; } catch (_) {}
+              await new Promise(r => setTimeout(r, 800 * Math.pow(2, attempt)));
+            }
+          }
+        }
+        if (!initRes) throw new Error(`upload-init network 失敗 (3 回 retry): ${lastInitErr?.message || 'Load failed'}`);
         const initData = await initRes.json().catch(() => ({}));
         if (!initRes.ok || !initData.ok || !initData.uploadUrl) throw new Error('upload-init 失敗: ' + (initData.message || 'HTTP ' + initRes.status));
         const { uploadUrl, storagePath, bookingTs } = initData;
