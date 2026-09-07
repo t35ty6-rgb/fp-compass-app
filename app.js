@@ -8515,83 +8515,35 @@ ${ctxText}${surveyTxt}`;
       uploadInput.addEventListener('change', async (e) => {
         const file = e.target.files?.[0];
         if (!file) return;
-        // 400MB 上限 (whisper 個別 chunk 化 で 対応 可 な サイズ)
+        // 400MB 上限
         const sizeMB = file.size / 1024 / 1024;
         if (sizeMB > 400) {
-          alert('❌ ファイル が 大き すぎ ます (' + sizeMB.toFixed(1) + 'MB · 上限 400MB)。\n\n長時間 録音 は QuickTime 等 で 分割 して 個別 アップロード して ください。');
+          alert('❌ ファイル が 大き すぎ ます (' + sizeMB.toFixed(1) + 'MB · 上限 400MB)。');
           uploadInput.value = '';
           return;
         }
         if (!/^audio\/|^video\/mp4/.test(file.type)) {
-          if (!confirm('⚠ 音声 file 以外 かも しれません (' + (file.type || '不明') + ')。\n\n強制的 に Whisper で 文字起こし 試みます か? (mp3/m4a/wav/webm/mp4 推奨)')) {
+          if (!confirm('⚠ 音声 file 以外 かも しれません (' + (file.type || '不明') + ')。\n\n強制的 に Whisper で 文字起こし 試みます か?')) {
             uploadInput.value = '';
             return;
           }
         }
-        const inpersonTs = 'upload-' + Date.now();
         const clientName = c.name || 'お客様';
         const clientId = c._fsCustomerId || c.id;
-        const fallbackBooking = { ts: inpersonTs, name: clientName, userId: clientId, isInperson: true, uploaded: true };
-        try {
-          const meta = JSON.parse(localStorage.getItem('fp-quick-inperson-meta') || '[]');
-          meta.push({ ts: inpersonTs, clientId, clientName, startedAt: new Date().toISOString(), uploaded: true, filename: file.name });
-          localStorage.setItem('fp-quick-inperson-meta', JSON.stringify(meta));
-        } catch (_) {}
-        uploadBtn.disabled = true;
-        const origHtml = uploadBtn.innerHTML;
-        uploadBtn.innerHTML = '⏳ 処理 中… <span style="font-size:10.5px;font-weight:600;">(30秒-2分)</span>';
-        try {
-          // 進捗 パネル (line-app.js の onstop と 同 UX)
-          // 2026-08-25 owner「議事録 完了 して も 生成中 の まま」bug fix:
-          //   3rd 引数 で customerId + bookingTs 渡す → 閉じる ✕ で 出す badge が 正しい cid で watcher 立てる
-          if (typeof window.showUnifiedProgressPanel === 'function') {
-            try { window.showUnifiedProgressPanel(clientName, file, { customerId: clientId, bookingTs: inpersonTs }); } catch (_) {}
-          }
-          if (typeof window.updateProgressStep === 'function') {
-            try { window.updateProgressStep('save', 'done'); window.updateProgressStep('drive', 'active'); window.updateProgressStep('ai', 'active'); } catch (_) {}
-          }
-          // Drive: 並列 upload
-          const drivePromise = (typeof window.autoUploadRecording === 'function')
-            ? window.autoUploadRecording(file, inpersonTs, clientName, fallbackBooking).catch(() => null)
-            : Promise.resolve(null);
-          // AI: 同 音声 を Whisper + Claude 化
-          let aiResult = null;
-          if (typeof window.aiProcessRecording === 'function') {
-            aiResult = await window.aiProcessRecording(file, inpersonTs, clientName, fallbackBooking);
-          } else {
-            throw new Error('aiProcessRecording が 未 expose (line-app.js load 未完 の 可能性)');
-          }
-          if (aiResult && aiResult.ok) {
-            if (typeof window.autoSaveAIResult === 'function') {
-              try { window.autoSaveAIResult(aiResult, clientName, fallbackBooking); } catch (_) {}
-            }
-            if (typeof window.updateProgressStep === 'function') try { window.updateProgressStep('ai', 'done'); } catch (_) {}
-            // 2026-08-25 owner「議事録 完了 して も 生成中 の まま」bug fix:
-            //   旧: alert() 一発 で 済ませ、 panel の bottom が 「1〜2分 お待ちください」 の まま 残置
-            //   新: line-app の showProgressDoneAction() を 呼び、 panel bottom を 「✨ 反映しました」 + 「議事録を見る」 button に 変換
-            window._fpAIResult = { result: aiResult, customerName: clientName, booking: fallbackBooking };
-            if (typeof window.showProgressDoneAction === 'function') {
-              try { window.showProgressDoneAction(); } catch (_) {}
-            }
-          } else if (aiResult && aiResult.error === 'daily_quota_exhausted') {
-            // 2026-08-25: 日次 quota 超過 は 明日 まで リセット されない、 actionable message で 早期 fail
-            alert('⚠ 今日 の 音声 処理 上限 (3時間 分 = 10800秒) を 超過 しました\n\nWhisper 文字起こし の 日次 quota は 明日 の 深夜 に リセット されます。\n\n対応:\n・翌日 に 再 upload\n・quota 上限 を 上げる (owner action: Cloud Run endpoint config 修正)');
-            throw new Error('daily_quota_exhausted');
-          } else {
-            throw new Error(aiResult?.error || 'AI 処理 失敗');
-          }
-          await drivePromise;
-          if (typeof window.fetchLiveData === 'function') { try { await window.fetchLiveData(); } catch (_) {} }
-        } catch (err) {
-          console.error('[audio upload] fail:', err);
-          if (String(err?.message || err) !== 'daily_quota_exhausted') {
-            alert('❌ 文字起こし 失敗: ' + (err?.message || err));
-          }
-        } finally {
-          uploadBtn.disabled = false;
-          uploadBtn.innerHTML = origHtml;
+        // 2026-09-05 owner「upload したら 一回 ログアウト されて 画面 に 戻って 何も 表示 されない」対応:
+        //   iOS Safari は 大 file の base64 変換 中 に メモリ 圧迫 で page reload → 進捗 消失。
+        //   対策: 同期 aiProcessRecording (memory 重い) の 代わり に 非同期 Storage flow に 切替。
+        //   file は 直接 Cloud Storage に PUT (server 経由 せず、 client の base64 化 も 不要)、
+        //   server 側 は async で Whisper/Claude → mobileJobs doc 更新、
+        //   client は fpJobs 10 秒 poll or reload 後 の 再 fetch で 状態 復帰。
+        if (typeof window.startAsyncStorageUpload === 'function') {
           uploadInput.value = '';
+          try { await window.startAsyncStorageUpload(file, clientId, clientName); } catch (err) { alert('❌ upload 失敗: ' + (err?.message || err)); }
+          return;
         }
+        // fallback: startAsyncStorageUpload 未定義 なら 旧 sync path (line-app.js load 待ち race)
+        alert('⚠ upload module 読込 中… 数秒 後 に もう 一度 タップ して ください');
+        uploadInput.value = '';
       });
     }
     // ★ 2026-09-05 owner「upload 失敗 が わからない、 履歴 と 進捗 見えて」対応:

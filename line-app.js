@@ -4506,6 +4506,129 @@
     function escapeHtml(s) { return String(s || '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
 
     window.__fpJobs = { startWatch, stopWatch, fetchAllJobs, render: renderForCurrentCustomer, jobsCache };
+
+    // ============================================================
+    // 2026-09-05 owner「upload したら ログアウト されて 画面 戻って 何も 表示 されない」対応:
+    //   admin の 客カード 音声 upload を 非同期 Storage flow に 切替。
+    //   file → 直接 Cloud Storage PUT (server 経由 せず memory pressure 回避) →
+    //   server async 処理 (mobileJobs doc 更新) → fpJobs watcher で 進捗 表示。
+    //   iOS Safari の page reload で も 処理 継続、 reload 後 は fpJobs cache から 状態 復帰。
+    // ============================================================
+    let _cachedMobileKey = null;
+    async function _getMobileKey() {
+      if (_cachedMobileKey) return _cachedMobileKey;
+      const idToken = await getIdToken();
+      if (!idToken) throw new Error('未 login');
+      const res = await fetch(CLOUD_RUN + '/api/mobile/my-key', { headers: { Authorization: 'Bearer ' + idToken } });
+      const data = await res.json();
+      if (!res.ok || !data.mobileApiKey) throw new Error('mobile key 取得 失敗');
+      _cachedMobileKey = data.mobileApiKey;
+      return _cachedMobileKey;
+    }
+
+    async function startAsyncStorageUpload(file, customerId, customerName) {
+      const sizeMB = file.size / 1024 / 1024;
+      // 1. 進捗 panel を 即 出す (fpJobs watcher が 後 で 引継ぐ)
+      if (typeof window.showUnifiedProgressPanel === 'function') {
+        try { window.showUnifiedProgressPanel(customerName, file, { customerId, bookingTs: null }); } catch (_) {}
+      }
+      if (typeof window.updateProgressStep === 'function') {
+        try { window.updateProgressStep('save', 'done'); window.updateProgressStep('drive', 'active'); } catch (_) {}
+      }
+      // 2. mobile key 取得
+      const mobileApiKey = await _getMobileKey();
+      // 3. upload-init → uploadUrl + storagePath + bookingTs
+      const initRes = await fetch(CLOUD_RUN + '/api/mobile/upload-init', {
+        method: 'POST',
+        headers: { 'X-FP-Mobile-Key': mobileApiKey, 'X-FP-Customer-Id': customerId, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filename: file.name, contentType: file.type || 'audio/m4a', sizeBytes: file.size }),
+      });
+      const initData = await initRes.json();
+      if (!initRes.ok || !initData.ok || !initData.uploadUrl) throw new Error('upload-init 失敗: ' + (initData.message || initRes.status));
+      const { uploadUrl, storagePath, bookingTs } = initData;
+      // 進捗 panel の dataset を 更新 (fpJobs watcher が bookingTs で job 追跡 可能 に)
+      try {
+        const panel = document.getElementById('fp-unified-progress');
+        if (panel) { panel.dataset.customerId = customerId; panel.dataset.bookingTs = bookingTs; }
+      } catch (_) {}
+      // 4. PUT to signed URL (browser direct → Cloud Storage、 server memory pressure 回避)
+      await new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.upload.addEventListener('progress', (evt) => {
+          if (evt.lengthComputable) {
+            const pct = Math.round((evt.loaded / evt.total) * 100);
+            try {
+              const el = document.querySelector('#fp-step-drive .fp-step-desc');
+              if (el) el.textContent = `Cloud Storage に 送信 中 (${pct}%)`;
+            } catch (_) {}
+          }
+        });
+        xhr.addEventListener('load', () => {
+          if (xhr.status >= 200 && xhr.status < 300) resolve();
+          else reject(new Error('Storage PUT HTTP ' + xhr.status));
+        });
+        xhr.addEventListener('error', () => reject(new Error('Storage PUT network error')));
+        xhr.open('PUT', uploadUrl);
+        xhr.setRequestHeader('Content-Type', file.type || 'audio/m4a');
+        xhr.send(file);
+      });
+      if (typeof window.updateProgressStep === 'function') { try { window.updateProgressStep('drive', 'done'); window.updateProgressStep('ai', 'active'); } catch (_) {} }
+      // 5. upload-process (async=true) → 202 で 即 return、 server 側 は background で Whisper + Claude
+      const procRes = await fetch(CLOUD_RUN + '/api/mobile/upload-process?async=true', {
+        method: 'POST',
+        headers: { 'X-FP-Mobile-Key': mobileApiKey, 'X-FP-Customer-Id': customerId, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ storagePath, bookingTs }),
+      });
+      const procData = await procRes.json();
+      if (!procRes.ok || !procData.ok) throw new Error('upload-process 失敗: ' + (procData.message || procRes.status));
+      // 6. fpJobs watcher (10s poll) が 状態 追跡 → done で 完了 popup、 failed で 警告 popup
+      //    別途、 admin 内 で bookingTs を polling して aiResult を 復元 → showProgressDoneAction 呼ぶ
+      const pollJob = async () => {
+        for (let attempt = 0; attempt < 120; attempt++) { // 最大 10 分 (5s × 120)
+          await new Promise(r => setTimeout(r, 5000));
+          try {
+            const idToken = await getIdToken();
+            if (!idToken) continue;
+            const r = await fetch(CLOUD_RUN + `/api/mobile/job/${customerId}/${bookingTs}`, { headers: { Authorization: 'Bearer ' + idToken } });
+            const d = await r.json();
+            if (!r.ok || !d.ok) continue;
+            // 進捗 stage 反映
+            if (d.progressStage === 'transcribing') { try { window.updateProgressStep('ai-whisper', 'active'); } catch (_) {} }
+            if (d.progressStage === 'summarizing') { try { window.updateProgressStep('ai-whisper', 'done'); window.updateProgressStep('ai-claude', 'active'); } catch (_) {} }
+            if (d.status === 'done') {
+              try { window.updateProgressStep('ai', 'done'); } catch (_) {}
+              // meeting doc の 実 中身 を 取り fetch → showProgressDoneAction に 渡す
+              try {
+                const tid = window.__fp?.tenantId;
+                if (tid && window.__fp?.db && d.meetingDocId) {
+                  const { doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js');
+                  const snap = await getDoc(doc(window.__fp.db, `tenants/${tid}/customers/${customerId}/meetings/${d.meetingDocId}`));
+                  if (snap.exists()) {
+                    const md = snap.data();
+                    window._fpAIResult = { result: { ok: true, transcript: md.transcript || '', summary: md.summary || '', tasks: [], transcript_summary: md.transcript_summary || '' }, customerName, booking: { ts: bookingTs, userId: customerId, name: customerName } };
+                  }
+                }
+              } catch (_) {}
+              if (typeof window.showProgressDoneAction === 'function') try { window.showProgressDoneAction(); } catch (_) {}
+              return;
+            }
+            if (d.status === 'processing-failed') {
+              const panel = document.getElementById('fp-unified-progress');
+              if (panel) {
+                panel.style.background = 'linear-gradient(135deg,#FEF2F2,#FEE2E2)';
+                if (window.innerWidth < 640) panel.style.borderBottomColor = '#DC2626'; else panel.style.borderColor = '#DC2626';
+                panel.innerHTML = `<div style="padding:16px 18px;display:flex;align-items:center;gap:12px;"><div style="font-size:32px;flex-shrink:0;">❌</div><div style="flex:1;min-width:0;"><div style="font-size:14px;font-weight:800;color:#7F1D1D;line-height:1.4;">議事録 生成 失敗</div><div style="font-size:11.5px;color:#991B1B;line-height:1.55;">${escapeHtml(customerName)}様 · ${escapeHtml(d.errorStage||'?')} · ${escapeHtml(String(d.error||'').slice(0,120))}</div></div><button id="fp-unified-close" style="background:transparent;border:none;color:#DC2626;font-size:16px;cursor:pointer;padding:2px 6px;">✕</button></div>`;
+                panel.querySelector('#fp-unified-close')?.addEventListener('click', () => panel.remove());
+              }
+              return;
+            }
+          } catch (_) {}
+        }
+      };
+      pollJob(); // fire-and-forget
+    }
+
+    window.startAsyncStorageUpload = startAsyncStorageUpload;
   })();
 
   // AI 結果保存: GAS を一次ソース、localStorage は network失敗時のbackupのみ
