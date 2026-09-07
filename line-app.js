@@ -4046,7 +4046,7 @@
           <div id="fp-unified-title" style="font-size:13.5px;font-weight:800;color:#1E40AF;letter-spacing:-0.005em;line-height:1.45;margin-bottom:4px;">議事録 生成 中</div>
           <div id="fp-unified-sub" style="font-size:11.5px;color:#475569;line-height:1.55;">${escapeHtml(customerName || 'お客様')}様 ${sizeText} · 30秒〜5分</div>
         </div>
-        <button id="fp-unified-close" title="裏 で 処理 継続 (popup だけ 閉じる)" aria-label="閉じる" style="background:transparent;border:none;color:#64748B;font-size:16px;cursor:pointer;padding:2px 6px;line-height:1;font-family:inherit;flex-shrink:0;">✕</button>
+        <button id="fp-unified-close" title="隠す (処理 継続、 議事録 は 消えない)" aria-label="隠す" style="background:#fff;border:1.5px solid #3B82F6;color:#1E40AF;font-size:11px;font-weight:800;cursor:pointer;padding:6px 10px;line-height:1.2;font-family:inherit;flex-shrink:0;border-radius:6px;white-space:nowrap;">▽ 隠す<br><span style="font-size:9.5px;font-weight:600;color:#64748B;">処理 継続</span></button>
       </div>
       <!-- 2026-09-05 owner「進捗 わかる ように」対応: default 展開 5-step、 details 廃止 -->
       <div style="border-top:1px solid rgba(59,130,246,0.2);background:rgba(255,255,255,0.5);">
@@ -4057,6 +4057,7 @@
           ${renderStep('ai-claude', '④ Claude 議事録 生成', 'transcript → 要約 + TODO')}
           ${renderStep('ai', '⑤ 反映', '顧客 カード に 表示')}
         </div>
+        <div style="padding:8px 18px 12px;font-size:10.5px;color:#64748B;background:#F8FAFC;border-top:1px dashed #CBD5E1;text-align:center;">閉じても 処理 は 裏 で 継続。 議事録 は なくならない。</div>
       </div>`;
     document.body.appendChild(panel);
     const closeBtn = document.getElementById('fp-unified-close');
