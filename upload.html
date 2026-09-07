@@ -189,9 +189,7 @@
 
   // Load customers
   try {
-    const r = await fetch(CLOUD_RUN + '/api/mobile/customers', {
-      headers: { 'X-FP-Mobile-Key': mobileApiKey },
-    });
+    const r = await fetch(CLOUD_RUN + '/api/mobile/customers?key=' + encodeURIComponent(mobileApiKey));
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     const data = await r.json();
     const sel = $('customer');
@@ -274,9 +272,10 @@
 
     try {
       // Step 1: init → get signed upload URL
-      const initRes = await fetch(CLOUD_RUN + '/api/mobile/upload-init', {
+      // 2026-09-05 iOS Safari 「Load failed」 対策: simple request 化 (preflight なし)
+      const initRes = await fetch(CLOUD_RUN + '/api/mobile/upload-init?key=' + encodeURIComponent(mobileApiKey) + '&cid=' + encodeURIComponent(customerId), {
         method: 'POST',
-        headers: { 'X-FP-Mobile-Key': mobileApiKey, 'X-FP-Customer-Id': customerId, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'text/plain' },
         body: JSON.stringify({ filename: selectedFile.name, contentType: selectedFile.type || 'audio/m4a', sizeBytes: selectedFile.size }),
       });
       if (!initRes.ok) throw new Error(`init HTTP ${initRes.status}`);
@@ -308,9 +307,9 @@
       setProgress(92, '議事録 生成 依頼 中...');
 
       // Step 3: upload-process (async — server returns 202 quickly)
-      const procRes = await fetch(CLOUD_RUN + '/api/mobile/upload-process?async=true', {
+      const procRes = await fetch(CLOUD_RUN + '/api/mobile/upload-process?async=true&key=' + encodeURIComponent(mobileApiKey) + '&cid=' + encodeURIComponent(customerId), {
         method: 'POST',
-        headers: { 'X-FP-Mobile-Key': mobileApiKey, 'X-FP-Customer-Id': customerId, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'text/plain' },
         body: JSON.stringify({ storagePath, bookingTs }),
       });
       const procData = await procRes.json();

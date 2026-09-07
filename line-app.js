@@ -4560,13 +4560,17 @@
         // 2. mobile key 取得
         const mobileApiKey = await _getMobileKey();
         // 3. upload-init → uploadUrl + storagePath + bookingTs
-        //    iOS Safari の 短時間 network hiccup 対策 で 最大 3 回 retry (backoff 800ms, 2s, 4s)
+        //    2026-09-05 iOS Safari 「Load failed」 の 根本 fix:
+        //    CORS preflight を 完全 廃止 する ため simple request 化 (Content-Type: text/plain +
+        //    query string に auth)。 preflight 不要 で 100% 通る。
+        //    それでも 一時 network hiccup で 失敗 する 場合 に 備えて 3 回 retry も 継続。
+        const initUrl = CLOUD_RUN + '/api/mobile/upload-init?key=' + encodeURIComponent(mobileApiKey) + '&cid=' + encodeURIComponent(customerId);
         let initRes = null; let lastInitErr = null;
         for (let attempt = 0; attempt < 3; attempt++) {
           try {
-            initRes = await fetch(CLOUD_RUN + '/api/mobile/upload-init', {
+            initRes = await fetch(initUrl, {
               method: 'POST',
-              headers: { 'X-FP-Mobile-Key': mobileApiKey, 'X-FP-Customer-Id': customerId, 'Content-Type': 'application/json' },
+              headers: { 'Content-Type': 'text/plain' },  // simple request (preflight なし)
               body: JSON.stringify({ filename: file.name, contentType: file.type || 'audio/m4a', sizeBytes: file.size }),
             });
             break;
@@ -4615,9 +4619,11 @@
         });
         if (typeof window.updateProgressStep === 'function') { try { window.updateProgressStep('drive', 'done'); window.updateProgressStep('ai', 'active'); } catch (_) {} }
         // 5. upload-process (async=true) → 202 で 即 return、 server 側 は background で Whisper + Claude
-        const procRes = await fetch(CLOUD_RUN + '/api/mobile/upload-process?async=true', {
+        //    simple request 化 (query string auth + text/plain body、 preflight なし)
+        const procUrl = CLOUD_RUN + '/api/mobile/upload-process?async=true&key=' + encodeURIComponent(mobileApiKey) + '&cid=' + encodeURIComponent(customerId);
+        const procRes = await fetch(procUrl, {
           method: 'POST',
-          headers: { 'X-FP-Mobile-Key': mobileApiKey, 'X-FP-Customer-Id': customerId, 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'text/plain' },
           body: JSON.stringify({ storagePath, bookingTs }),
         }).catch(e => { throw new Error('upload-process network 失敗: ' + e.message); });
         const procData = await procRes.json().catch(() => ({}));
