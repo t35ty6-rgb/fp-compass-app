@@ -4526,6 +4526,27 @@
       return _cachedMobileKey;
     }
 
+    // 単 progress panel を 失敗 state に 遷移 させる (二重 popup 防止)
+    function _paintPanelAsFailure(stage, message) {
+      const panel = document.getElementById('fp-unified-progress');
+      if (!panel) return;
+      panel.dataset.state = 'failed';
+      panel.style.background = 'linear-gradient(135deg,#FEF2F2,#FEE2E2)';
+      if (window.innerWidth < 640) panel.style.borderBottomColor = '#DC2626'; else panel.style.borderColor = '#DC2626';
+      panel.style.boxShadow = window.innerWidth < 640 ? '0 8px 24px rgba(220,38,38,0.35)' : '0 18px 48px rgba(220,38,38,0.32)';
+      panel.style.cursor = 'default';
+      panel.innerHTML = `
+        <div style="padding:16px 18px;display:flex;align-items:flex-start;gap:12px;">
+          <div style="font-size:28px;line-height:1;flex-shrink:0;">❌</div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:14px;font-weight:800;color:#7F1D1D;line-height:1.4;">upload 失敗 (${escapeHtml(stage)})</div>
+            <div style="font-size:11.5px;color:#991B1B;line-height:1.55;margin-top:4px;">${escapeHtml(String(message).slice(0, 160))}<br>もう 一度 upload button を タップ して 再試行 して ください</div>
+          </div>
+          <button id="fp-unified-close" style="background:transparent;border:none;color:#DC2626;font-size:16px;cursor:pointer;padding:2px 6px;">✕</button>
+        </div>`;
+      panel.querySelector('#fp-unified-close')?.addEventListener('click', () => panel.remove());
+    }
+
     async function startAsyncStorageUpload(file, customerId, customerName) {
       const sizeMB = file.size / 1024 / 1024;
       // 1. 進捗 panel を 即 出す (fpJobs watcher が 後 で 引継ぐ)
@@ -4535,55 +4556,73 @@
       if (typeof window.updateProgressStep === 'function') {
         try { window.updateProgressStep('save', 'done'); window.updateProgressStep('drive', 'active'); } catch (_) {}
       }
-      // 2. mobile key 取得
-      const mobileApiKey = await _getMobileKey();
-      // 3. upload-init → uploadUrl + storagePath + bookingTs
-      const initRes = await fetch(CLOUD_RUN + '/api/mobile/upload-init', {
-        method: 'POST',
-        headers: { 'X-FP-Mobile-Key': mobileApiKey, 'X-FP-Customer-Id': customerId, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ filename: file.name, contentType: file.type || 'audio/m4a', sizeBytes: file.size }),
-      });
-      const initData = await initRes.json();
-      if (!initRes.ok || !initData.ok || !initData.uploadUrl) throw new Error('upload-init 失敗: ' + (initData.message || initRes.status));
-      const { uploadUrl, storagePath, bookingTs } = initData;
-      // 進捗 panel の dataset を 更新 (fpJobs watcher が bookingTs で job 追跡 可能 に)
       try {
-        const panel = document.getElementById('fp-unified-progress');
-        if (panel) { panel.dataset.customerId = customerId; panel.dataset.bookingTs = bookingTs; }
-      } catch (_) {}
-      // 4. PUT to signed URL (browser direct → Cloud Storage、 server memory pressure 回避)
-      await new Promise((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.upload.addEventListener('progress', (evt) => {
-          if (evt.lengthComputable) {
-            const pct = Math.round((evt.loaded / evt.total) * 100);
-            try {
-              const el = document.querySelector('#fp-step-drive .fp-step-desc');
-              if (el) el.textContent = `Cloud Storage に 送信 中 (${pct}%)`;
-            } catch (_) {}
-          }
+        // 2. mobile key 取得
+        const mobileApiKey = await _getMobileKey();
+        // 3. upload-init → uploadUrl + storagePath + bookingTs
+        const initRes = await fetch(CLOUD_RUN + '/api/mobile/upload-init', {
+          method: 'POST',
+          headers: { 'X-FP-Mobile-Key': mobileApiKey, 'X-FP-Customer-Id': customerId, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ filename: file.name, contentType: file.type || 'audio/m4a', sizeBytes: file.size }),
+        }).catch(e => { throw new Error('upload-init network 失敗: ' + e.message); });
+        const initData = await initRes.json().catch(() => ({}));
+        if (!initRes.ok || !initData.ok || !initData.uploadUrl) throw new Error('upload-init 失敗: ' + (initData.message || 'HTTP ' + initRes.status));
+        const { uploadUrl, storagePath, bookingTs } = initData;
+        // 進捗 panel の dataset を 更新 (fpJobs watcher が bookingTs で job 追跡 可能 に)
+        try {
+          const panel = document.getElementById('fp-unified-progress');
+          if (panel) { panel.dataset.customerId = customerId; panel.dataset.bookingTs = bookingTs; }
+        } catch (_) {}
+        // 4. PUT to signed URL (browser direct → Cloud Storage、 server memory pressure 回避)
+        await new Promise((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          let lastPct = 0;
+          xhr.upload.addEventListener('progress', (evt) => {
+            if (evt.lengthComputable) {
+              const pct = Math.round((evt.loaded / evt.total) * 100);
+              lastPct = pct;
+              try {
+                const el = document.querySelector('#fp-step-drive .fp-step-desc');
+                if (el) el.textContent = `Cloud Storage に 送信 中 (${pct}%)`;
+              } catch (_) {}
+            }
+          });
+          xhr.addEventListener('load', () => {
+            if (xhr.status >= 200 && xhr.status < 300) resolve();
+            else reject(new Error('Storage PUT HTTP ' + xhr.status + ': ' + String(xhr.responseText || '').slice(0, 120)));
+          });
+          xhr.addEventListener('error', () => reject(new Error(`Storage PUT network error (アップロード 途中 で 通信 断、 ${lastPct}% で 停止)`)));
+          xhr.addEventListener('timeout', () => reject(new Error('Storage PUT timeout (通信 遅延)')));
+          xhr.addEventListener('abort', () => reject(new Error('Storage PUT abort')));
+          xhr.open('PUT', uploadUrl);
+          xhr.timeout = 15 * 60 * 1000; // 15 分
+          xhr.setRequestHeader('Content-Type', file.type || 'audio/m4a');
+          xhr.send(file);
         });
-        xhr.addEventListener('load', () => {
-          if (xhr.status >= 200 && xhr.status < 300) resolve();
-          else reject(new Error('Storage PUT HTTP ' + xhr.status));
-        });
-        xhr.addEventListener('error', () => reject(new Error('Storage PUT network error')));
-        xhr.open('PUT', uploadUrl);
-        xhr.setRequestHeader('Content-Type', file.type || 'audio/m4a');
-        xhr.send(file);
-      });
-      if (typeof window.updateProgressStep === 'function') { try { window.updateProgressStep('drive', 'done'); window.updateProgressStep('ai', 'active'); } catch (_) {} }
-      // 5. upload-process (async=true) → 202 で 即 return、 server 側 は background で Whisper + Claude
-      const procRes = await fetch(CLOUD_RUN + '/api/mobile/upload-process?async=true', {
-        method: 'POST',
-        headers: { 'X-FP-Mobile-Key': mobileApiKey, 'X-FP-Customer-Id': customerId, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ storagePath, bookingTs }),
-      });
-      const procData = await procRes.json();
-      if (!procRes.ok || !procData.ok) throw new Error('upload-process 失敗: ' + (procData.message || procRes.status));
-      // 6. fpJobs watcher (10s poll) が 状態 追跡 → done で 完了 popup、 failed で 警告 popup
-      //    別途、 admin 内 で bookingTs を polling して aiResult を 復元 → showProgressDoneAction 呼ぶ
-      const pollJob = async () => {
+        if (typeof window.updateProgressStep === 'function') { try { window.updateProgressStep('drive', 'done'); window.updateProgressStep('ai', 'active'); } catch (_) {} }
+        // 5. upload-process (async=true) → 202 で 即 return、 server 側 は background で Whisper + Claude
+        const procRes = await fetch(CLOUD_RUN + '/api/mobile/upload-process?async=true', {
+          method: 'POST',
+          headers: { 'X-FP-Mobile-Key': mobileApiKey, 'X-FP-Customer-Id': customerId, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ storagePath, bookingTs }),
+        }).catch(e => { throw new Error('upload-process network 失敗: ' + e.message); });
+        const procData = await procRes.json().catch(() => ({}));
+        if (!procRes.ok || !procData.ok) throw new Error('upload-process 失敗: ' + (procData.message || 'HTTP ' + procRes.status));
+        // 6. fpJobs watcher (10s poll) が 状態 追跡 → done で 完了 popup、 failed で 警告 popup
+        //    別途、 admin 内 で bookingTs を polling して aiResult を 復元 → showProgressDoneAction 呼ぶ
+        pollJob(customerId, bookingTs, customerName); // fire-and-forget
+      } catch (err) {
+        // 二重 popup 防止: 進捗 panel を そのまま 失敗 state に 遷移 (別 alert 出さない)
+        const stage = err.message.includes('upload-init') ? '準備 中' : err.message.includes('Storage PUT') ? '音声 送信 中' : err.message.includes('upload-process') ? '議事録 依頼 中' : '不明';
+        _paintPanelAsFailure(stage, err.message);
+        // 上位 (app.js) が alert を 出さ ない よう swallow で 返す (throw しない)
+        console.error('[startAsyncStorageUpload]', err.message);
+        return { ok: false, error: err.message };
+      }
+      return { ok: true };
+    }
+
+    async function pollJob(customerId, bookingTs, customerName) {
         for (let attempt = 0; attempt < 120; attempt++) { // 最大 10 分 (5s × 120)
           await new Promise(r => setTimeout(r, 5000));
           try {
@@ -4624,8 +4663,6 @@
             }
           } catch (_) {}
         }
-      };
-      pollJob(); // fire-and-forget
     }
 
     window.startAsyncStorageUpload = startAsyncStorageUpload;
