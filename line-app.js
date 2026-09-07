@@ -4708,6 +4708,42 @@
     }
 
     window.startAsyncStorageUpload = startAsyncStorageUpload;
+
+    // 2026-09-08 owner「Voice Memos の 文字起こし の 方が Whisper より 精度 高い」対応:
+    //   text 貼付 経路 (Whisper skip、 Claude だけ で 議事録 化)。
+    async function startTranscriptOnlyUpload(transcript, customerId, customerName) {
+      // 進捗 panel 出す (5 step の うち Whisper は skip 表示)
+      if (typeof window.showUnifiedProgressPanel === 'function') {
+        try { window.showUnifiedProgressPanel(customerName, { size: transcript.length }, { customerId, bookingTs: null }); } catch (_) {}
+      }
+      if (typeof window.updateProgressStep === 'function') {
+        try { window.updateProgressStep('save', 'done'); window.updateProgressStep('drive', 'done'); window.updateProgressStep('ai-whisper', 'done'); window.updateProgressStep('ai-claude', 'active'); } catch (_) {}
+      }
+      try {
+        const mobileApiKey = await _getMobileKey();
+        const bookingTs = 'mobile-txt-' + Date.now();
+        try {
+          const panel = document.getElementById('fp-unified-progress');
+          if (panel) { panel.dataset.customerId = customerId; panel.dataset.bookingTs = bookingTs; }
+        } catch (_) {}
+        const url = CLOUD_RUN + '/api/mobile/upload-transcript?key=' + encodeURIComponent(mobileApiKey) + '&cid=' + encodeURIComponent(customerId);
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify({ transcript, bookingTs }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.ok) throw new Error(data.message || ('HTTP ' + res.status));
+        // fpJobs で job 状態 polling 継続 (10秒 poll で done を 検出)
+        pollJob(customerId, bookingTs, customerName); // fire-and-forget
+        return { ok: true };
+      } catch (err) {
+        _paintPanelAsFailure('文字起こし 送信 中', err.message);
+        console.error('[startTranscriptOnlyUpload]', err.message);
+        return { ok: false, error: err.message };
+      }
+    }
+    window.startTranscriptOnlyUpload = startTranscriptOnlyUpload;
   })();
 
   // AI 結果保存: GAS を一次ソース、localStorage は network失敗時のbackupのみ

@@ -6939,6 +6939,11 @@
                 </svg>
                 <span style="text-align:left;line-height:1.35;">音声 を アップロード → 議事録<br><span style="font-size:11px;font-weight:600;color:rgba(255,255,255,0.85);">MP3 · M4A · WAV · WEBM · MP4</span></span>
               </button>
+              <!-- 2026-09-08 owner「Voice Memos の 文字起こし の 方が 精度 高い」対応: text 貼付 button -->
+              <button id="cd-transcript-paste-btn" data-client-id="${escapeHtml(c.id)}" style="width:100%;background:#fff;color:#5B5BF0;border:2px solid #5B5BF0;padding:12px 20px;border-radius:12px;font-size:13px;font-weight:900;cursor:pointer;font-family:'Noto Sans JP',sans-serif;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:8px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                <span style="text-align:left;line-height:1.3;">文字起こし text を 貼付 → 議事録<span style="display:block;font-size:10.5px;font-weight:600;color:#94A3B8;margin-top:1px;">iOS Voice Memos の コピー を そのまま (Whisper より 高精度)</span></span>
+              </button>
               <button id="cd-audio-upload-help" type="button" style="display:none;" hidden></button>
             </div>
           </div>
@@ -8541,6 +8546,52 @@ ${ctxText}${surveyTxt}`;
     if (typeof window.__fpJobs?.startWatch === 'function') {
       const scopedCid = c._fsCustomerId || c.id;
       try { window.__fpJobs.startWatch(scopedCid, c.name || 'お客様'); } catch (e) { console.warn('[fpJobs.startWatch]', e.message); }
+    }
+    // ★ 2026-09-08 owner「Voice Memos の 文字起こし の 方が 精度 高い」対応:
+    //   text 貼付 button → modal で textarea 表示 → startTranscriptOnlyUpload
+    const transcriptBtn = document.getElementById('cd-transcript-paste-btn');
+    if (transcriptBtn && !transcriptBtn._bound) {
+      transcriptBtn._bound = true;
+      transcriptBtn.addEventListener('click', () => {
+        const scopedCid = c._fsCustomerId || c.id;
+        const scopedName = c.name || 'お客様';
+        const ov = document.createElement('div');
+        ov.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.62);backdrop-filter:blur(4px);z-index:99999;display:flex;align-items:center;justify-content:center;padding:18px;font-family:"Noto Sans JP","Hiragino Sans",sans-serif;';
+        ov.innerHTML = `
+          <div style="background:#fff;border-radius:16px;padding:22px;max-width:520px;width:100%;max-height:88vh;overflow-y:auto;box-shadow:0 24px 60px rgba(15,23,42,0.35);">
+            <div style="font-size:11px;font-weight:800;color:#5B5BF0;letter-spacing:0.14em;margin-bottom:6px;">TRANSCRIPT PASTE · ${escapeHtml(scopedName)} 様</div>
+            <h2 style="font-size:18px;font-weight:900;color:#0F172A;margin:0 0 12px;">文字起こし text を 貼付</h2>
+            <p style="font-size:12.5px;color:#334155;line-height:1.7;margin:0 0 14px;">Voice Memos で 録音 → 「文字起こし を 表示」 → 全選択 コピー → 下 に 貼付 → 「議事録 を 生成」 タップ。</p>
+            <textarea id="cd-transcript-textarea" placeholder="ここに 文字起こし を 貼付…" style="width:100%;min-height:220px;padding:12px 14px;border:1.5px solid #CBD5E1;border-radius:10px;font-family:inherit;font-size:13.5px;line-height:1.7;resize:vertical;box-sizing:border-box;color:#0F172A;"></textarea>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;">
+              <div id="cd-transcript-charcount" style="font-size:11.5px;color:#64748B;font-weight:700;">0 字</div>
+              <div style="font-size:11px;color:#94A3B8;">30 字 以上 · 100,000 字 以下</div>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:16px;">
+              <button id="cd-transcript-cancel" style="flex:1;padding:12px;background:#F1F5F9;color:#334155;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;">キャンセル</button>
+              <button id="cd-transcript-submit" style="flex:2;padding:12px;background:linear-gradient(135deg,#5B5BF0,#4747C7);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:900;cursor:pointer;font-family:inherit;box-shadow:0 6px 18px rgba(91,91,240,0.32);">議事録 を 生成 →</button>
+            </div>
+          </div>`;
+        document.body.appendChild(ov);
+        const close = () => { try { document.body.removeChild(ov); } catch (_) {} };
+        const ta = ov.querySelector('#cd-transcript-textarea');
+        const cc = ov.querySelector('#cd-transcript-charcount');
+        ta.addEventListener('input', () => { cc.textContent = ta.value.length + ' 字'; });
+        ta.focus();
+        ov.querySelector('#cd-transcript-cancel').addEventListener('click', close);
+        ov.addEventListener('click', (e) => { if (e.target === ov) close(); });
+        ov.querySelector('#cd-transcript-submit').addEventListener('click', async () => {
+          const text = ta.value.trim();
+          if (text.length < 30) { alert('⚠ 文字起こし が 短すぎ ます (30字 以上 必要 · 現在 ' + text.length + '字)'); return; }
+          if (text.length > 100000) { alert('⚠ 文字起こし が 長すぎ ます (100,000字 上限 · 現在 ' + text.length + '字)'); return; }
+          close();
+          if (typeof window.startTranscriptOnlyUpload === 'function') {
+            try { await window.startTranscriptOnlyUpload(text, scopedCid, scopedName); } catch (e) { alert('❌ 送信 失敗: ' + (e?.message || e)); }
+          } else {
+            alert('⚠ transcript upload module 未 load、 数秒 後 再試行');
+          }
+        });
+      });
     }
     // ★ クイックアクション (AI推奨ブロック内 内包)
     document.querySelectorAll('[data-quick-instant]').forEach(b => b.addEventListener('click', () => document.getElementById('cd-instant-zoom-btn')?.click()));
