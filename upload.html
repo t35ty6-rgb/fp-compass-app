@@ -120,9 +120,12 @@
   const isStandalone = window.navigator.standalone === true ||
     window.matchMedia('(display-mode: standalone)').matches;
 
-  // redirect flow で 戻ってきた 場合 の 結果 を 先 に 取る
+  // redirect flow で 戻ってきた 場合 の 結果 を 先 に 取る (3秒 timeout: iOS で hang する 対策)
   try {
-    const redirectResult = await getRedirectResult(auth);
+    const redirectResult = await Promise.race([
+      getRedirectResult(auth),
+      new Promise((resolve) => setTimeout(() => resolve(null), 3000)),
+    ]);
     if (redirectResult && redirectResult.user) {
       currentUser = redirectResult.user;
     }
@@ -206,6 +209,22 @@
     return;
   }
 
+  // 2026-09-05 owner「file 選んで も 何も 起き ない」対応:
+  //   file change → 即 大型 center banner + 自動 upload 開始 (button タップ 待ち を 廃止)。
+  //   iOS で 「button 押した か 判断 難しい」 問題 を 根絶。
+  function showBigBanner(text, tone) {
+    const old = document.getElementById('big-banner');
+    if (old) old.remove();
+    const bg = tone === 'success' ? '#059669' : tone === 'error' ? '#DC2626' : '#3B82F6';
+    const b = document.createElement('div');
+    b.id = 'big-banner';
+    b.style.cssText = `position:fixed;top:0;left:0;right:0;padding:22px 18px;background:${bg};color:#fff;font-size:16px;font-weight:900;text-align:center;z-index:99999;box-shadow:0 8px 24px rgba(0,0,0,0.3);font-family:'Noto Sans JP',-apple-system,sans-serif;line-height:1.5;letter-spacing:0.02em;`;
+    b.innerHTML = text;
+    document.body.appendChild(b);
+    // scroll to top so owner sees banner
+    try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (_) {}
+  }
+
   // File selection
   let selectedFile = null;
   $('file').addEventListener('change', (e) => {
@@ -216,10 +235,24 @@
     info.className = 'file-info' + (selectedFile.size > 50 * 1024 * 1024 ? ' large' : '');
     info.textContent = `✓ ${selectedFile.name} (${sizeMB} MB)`;
     $('filepicker-label').innerHTML = `✓ ${escapeHtml(selectedFile.name)}<br><small>タップ して 選び 直し</small>`;
+    // ★ 即 大 banner で 「選 択 された」 を owner に 明示 (button 押し 忘れ 対策)
+    showBigBanner(`✓ 音声 選 択 完了 (${sizeMB} MB)<br><span style="font-size:13px;font-weight:600;">${$('customer').value ? '3 秒 後 に 自動 で upload 開始' : '客 を 選んで ください'}</span>`, 'info');
     updateBtn();
+    // ★ 客 も 選択 済 なら 3 秒 後 に 自動 upload (owner が キャンセル する 時間 を 3秒 確保)
+    if ($('customer').value) {
+      clearTimeout(window._autoUploadTimer);
+      window._autoUploadTimer = setTimeout(() => {
+        showBigBanner('⏳ upload 開始 中…', 'info');
+        $('btn-upload').click();
+      }, 3000);
+    }
   });
 
-  $('customer').addEventListener('change', updateBtn);
+  $('customer').addEventListener('change', () => {
+    updateBtn();
+    // 客 変更 → 自動 upload 予定 が あれば cancel
+    clearTimeout(window._autoUploadTimer);
+  });
 
   function updateBtn() {
     $('btn-upload').disabled = !(selectedFile && $('customer').value);
@@ -236,6 +269,8 @@
     $('result').textContent = '';
     $('progress').className = 'progress active';
     setProgress(0, 'Storage 予約 中...');
+    // ★ 大 banner で 「upload 開始」 を owner に 明示
+    showBigBanner(`⏳ upload 中 · ${customerName} 様 (${(selectedFile.size/1024/1024).toFixed(1)}MB)`, 'info');
 
     try {
       // Step 1: init → get signed upload URL
@@ -283,6 +318,8 @@
 
       setProgress(100, '完了');
       $('progress').className = 'progress';
+      showBigBanner(`✅ upload 完 了 · 議事録 生 成 中 (3-5 分)`, 'success');
+      setTimeout(() => { const b = document.getElementById('big-banner'); if (b) b.remove(); }, 12000);
 
       $('result').className = 'result success active';
       $('result').innerHTML = `
@@ -299,6 +336,7 @@
     } catch (e) {
       console.error('[upload]', e);
       $('progress').className = 'progress';
+      showBigBanner(`❌ upload 失 敗 · ${escapeHtml(String(e.message || e).slice(0, 60))}`, 'error');
       $('result').className = 'result error active';
       $('result').innerHTML = `
         <div class="result-title">❌ upload 失敗</div>
