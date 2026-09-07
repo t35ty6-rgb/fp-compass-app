@@ -13071,6 +13071,56 @@ body:not([data-home-view]) [data-view-target="cal"] { display: none !important; 
     max-width: 100% !important;
     height: auto !important;
   }
+
+  /* 2026-09-08 owner「本日の決定事項/お客様の関心事/AI文字起こし が 携帯 縦 で 途切れる」対応:
+     iOS Safari は 長い 数字 span (¥3000万 等) や 商品名 で 改行 出来ず 横 overflow する。
+     全 議事録 中身 に 強制 word-wrap を 適用。 */
+  .fp-meeting-card,
+  .fp-meeting-card *,
+  .fp-meeting-body,
+  .fp-meeting-body *,
+  .fp-summary-structured,
+  .fp-summary-structured *,
+  .fp-transcript-chat,
+  .fp-transcript-chat *,
+  .fp-transcript-raw,
+  .fp-concern-chip {
+    max-width: 100% !important;
+    word-wrap: break-word !important;
+    overflow-wrap: anywhere !important;
+    word-break: break-word !important;
+  }
+  /* fp-sum-num / fp-sum-strong の inline 強調 も 単体 で は 横 溢れ 阻止 の ため line-break 許可 */
+  .fp-summary-structured .fp-sum-num,
+  .fp-summary-structured .fp-sum-strong,
+  .fp-summary-structured strong,
+  .fp-summary-structured code {
+    display: inline !important;
+    white-space: normal !important;
+    word-break: keep-all !important;
+    overflow-wrap: anywhere !important;
+  }
+  /* fp-meeting-body の pre-wrap は 保持 (改行 尊重) しつつ、 長 word で は 折る */
+  .fp-meeting-body {
+    white-space: pre-wrap !important;
+    overflow-wrap: anywhere !important;
+    padding: 12px 14px !important; /* 元 16/20 → 縮小 で 有効幅 増加 */
+  }
+  /* fp-concern-chip も 長 label で wrap 可能 に (inline-flex → inline-block) */
+  .fp-concern-chip {
+    display: inline-block !important;
+    white-space: normal !important;
+  }
+  /* meeting card 全体 の box-sizing 強制 + 内側 padding 縮小 で 有効幅 増加 */
+  .fp-meeting-card {
+    box-sizing: border-box !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
+  /* transcript chat bubble も max-width 78% を 85% に 拡張 (mobile で 詰まり 対策) */
+  .fp-transcript-chat > div > div {
+    max-width: 85% !important;
+  }
 }
 
 /* ============================================================
