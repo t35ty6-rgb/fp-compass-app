@@ -2119,6 +2119,58 @@
     }
   }
 
+  // 2026-09-09: 「候補日 確定 → Zoom 欄 に 即 移動」 の 楽観的 UI 更新
+  //   server 応答 直後 (alert 前) に:
+  //   1) 該当 pending card を DOM から 消す (data-uid で 検索)
+  //   2) Zoom 打ち合わせ 欄 (#bookings-list) の 先頭 に placeholder card 挿入 (数秒 後 refreshFirestoreCustomers で 本物 に 差替)
+  //   3) Zoom 欄 に smooth scroll (owner が すぐ 「動いた」 と 見える)
+  function _instantConfirmTransition(uid, dateStr, slotStr, zoomUrl, displayName) {
+    try {
+      // 1) pending card 消去
+      const card = document.querySelector(`[data-pending-card][data-uid="${CSS.escape(uid || '')}"]`);
+      if (card) {
+        card.style.transition = 'opacity 0.25s, transform 0.25s';
+        card.style.opacity = '0';
+        card.style.transform = 'translateX(20px)';
+        setTimeout(() => { try { card.remove(); } catch(_){} }, 260);
+      }
+      // 2) Zoom 欄 に placeholder 挿入
+      const bookingsList = document.getElementById('bookings-list');
+      if (bookingsList) {
+        const ph = document.createElement('div');
+        ph.id = 'fp-confirm-placeholder-' + Date.now();
+        ph.dataset.confirmPlaceholder = '1';
+        ph.style.cssText = 'background:linear-gradient(135deg,#dcfce7,#f0fdf4);border:2px solid #86efac;border-left:4px solid #16a34a;border-radius:10px;padding:18px 22px;margin-bottom:10px;box-shadow:0 2px 12px rgba(22,163,74,0.15);';
+        ph.innerHTML = `
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px;">
+            <div>
+              <span style="font-size:11px;font-weight:800;letter-spacing:0.08em;color:#166534;background:#bbf7d0;padding:3px 8px;border-radius:6px;">✅ 確定 完了</span>
+              <strong style="font-size:15px;margin-left:8px;color:#14532d;">${(displayName||'お客').replace(/[<>&"]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]))} 様</strong>
+            </div>
+            <span style="font-size:11px;color:#166534;font-weight:600;">📅 ${dateStr} ${slotStr}</span>
+          </div>
+          <div style="font-size:12.5px;color:#166534;line-height:1.6;">
+            Zoom URL 発行 + LINE 通知 + Google Cal 登録 が 完了 しました。<br>
+            <span style="font-size:11.5px;color:#4b5563;">最新 データ を 取得 中... (数秒 で 通常 表示 に 切り替わります)</span>
+          </div>
+        `;
+        bookingsList.prepend(ph);
+        // 30 秒 後 に placeholder が 残ってたら 保険 で 消す (refreshFirestoreCustomers が 何らかで 失敗 した case)
+        setTimeout(() => { try { document.getElementById(ph.id)?.remove(); } catch(_){} }, 30000);
+      }
+      // 3) Zoom 欄 に scroll
+      const zoomSection = document.getElementById('section-recording');
+      if (zoomSection) {
+        // alert が 閉じた 直後 に scroll する ため 少し 遅延
+        setTimeout(() => {
+          try { zoomSection.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch(_){}
+        }, 100);
+      }
+    } catch (e) {
+      console.warn('[instant-confirm-transition] fail:', e);
+    }
+  }
+
   function bindConfirmButtons() {
     document.querySelectorAll('[data-slot-confirm]').forEach(btn => {
       btn.addEventListener('click', async () => {
@@ -2167,10 +2219,15 @@
             //   既に「FP面談」専用 calendar へ events.insert 完結 済 (primary 汚染 なし)。
             //   ここ で client-side autoSyncBookingToGcal を 呼ぶ と primary にも 追加 されて 二重 化 する。
             //   → client-side gcal 呼び出し は 廃止、 server の返り値 で 登録 状態 判定
+            // ★ 2026-09-09 owner:「確定 押しても Zoom 欄 に すぐ 行かなくて 動作 したか わからない」
+            //   → alert 前 に (a) pending card DOM 即消去 (b) Zoom 欄 に placeholder 挿入
+            //      (c) Zoom 欄 に smooth scroll、 refreshFirestoreCustomers は 裏で 走らせる
+            const displayName = btn.closest('[data-pending-card]')?.querySelector('strong')?.textContent?.replace(/\s*様\s*$/, '') || 'お客';
+            _instantConfirmTransition(uid, dateStr, slotStr, res.data?.zoomUrl || '', displayName);
             const gcalMsg = res.data?.gcalCalendarId ? '\nGoogle Cal 登録済 (FP面談 専用)' : '';
             alert('✅ 確定\n\nZoom URL: ' + res.data.zoomUrl + '\nお客様 に LINE カード 自動送信済' + gcalMsg);
             if (window.refreshFirestoreCustomers) window.refreshFirestoreCustomers();
-            renderLeadHubInner();
+            // renderLeadHubInner は refreshFirestoreCustomers 完了後 に 自動 で 走る (fetch → cache 更新 → 再描画)
           } catch (e) {
             alert('失敗: ' + (e.message || e.code || '不明'));
             btn.disabled = false;
@@ -2190,6 +2247,9 @@
             // ★ 2026-08-12 qa-reviewer FAIL fix: Cloud Run 経路 (legacy tenant) では 現状 server-side
             //   gcal insert 未対応 だが、 primary への 二重書き は 混乱 元 な の で 撤去。
             //   Cloud Run 側 に server-side gcal insert を 移植 する か 検討 · owner GO 待ち で 別 turn
+            // ★ 2026-09-09: legacy branch も instant transition 適用
+            const displayName = btn.closest('[data-pending-card]')?.querySelector('strong')?.textContent?.replace(/\s*様\s*$/, '') || 'お客';
+            _instantConfirmTransition(uid, dateStr, slotStr, data.zoomUrl || '', displayName);
             alert('✅ 確定\n\nZoom URL: ' + data.zoomUrl + '\nお客様にLINE通知済\n(Cloud Run 経路 · gcal 手動 反映 が 必要 な 可能性)');
             await fetchLiveData();
             renderLeadHubInner();

@@ -13133,6 +13133,13 @@ body:not([data-home-view]) [data-view-target="cal"] { display: none !important; 
   .fp-transcript-chat > div > div {
     max-width: 85% !important;
   }
+  /* 2026-09-09 owner: 「相談 tab の 自分の Google カレンダー 並べて表示 button、 携帯 で 押すと 開くけど 動かない、 閉じ られない」
+     → 携帯 では 表示 しない。 iframe 側 の resize handle と 45% 固定幅 が iPhone Safari で 動作 しない ため。
+     PC / iPad では 従来 通り 使える。 */
+  #fp-toggle-cal,
+  #fp-cal-side-v3 {
+    display: none !important;
+  }
 }
 
 /* ============================================================
