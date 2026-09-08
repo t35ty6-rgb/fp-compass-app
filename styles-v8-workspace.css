@@ -13072,6 +13072,18 @@ body:not([data-home-view]) [data-view-target="cal"] { display: none !important; 
     height: auto !important;
   }
 
+  /* 2026-09-09 owner「議事録 タブ 開いても 上部 4段 で 押し下げ」対応:
+     議事録 タブ active 中 は 客カード 上部 の (失敗 alert / 音声 upload / 文字起こし 貼付 /
+     AI 推奨 セクション / ZOOM/LINE カード / タグ・情報編集 button 群) を 全部 hide、
+     議事録 に 100% 集中。 概観 タブ で は 従来 通り 表示。
+     判定: body.cd-tab-active-meetings クラス (JS で 議事録 タブ アクティブ 時 に body に 付与) */
+  body.cd-active-tab-meetings .cd-modal #cd-jobs-status-anchor,
+  body.cd-active-tab-meetings .cd-modal .cd-zoom-super,
+  body.cd-active-tab-meetings .cd-modal .cd-flow,
+  body.cd-active-tab-meetings .cd-modal #cd-tags-section,
+  body.cd-active-tab-meetings .cd-modal .cd-profile-section {
+    display: none !important;
+  }
   /* 2026-09-08 owner「本日の決定事項/お客様の関心事/AI文字起こし が 携帯 縦 で 途切れる」対応:
      iOS Safari は 長い 数字 span (¥3000万 等) や 商品名 で 改行 出来ず 横 overflow する。
      全 議事録 中身 に 強制 word-wrap を 適用。 */

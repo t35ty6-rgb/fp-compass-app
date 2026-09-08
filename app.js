@@ -8056,6 +8056,10 @@ ${ctxText}${surveyTxt}`;
           if (p.dataset.cdpanel === key) p.removeAttribute('hidden');
           else p.setAttribute('hidden', '');
         });
+        // 2026-09-09 owner「議事録 タブ で 上部 4段 邪魔」対応: body class で mobile CSS 制御
+        try {
+          document.body.classList.toggle('cd-active-tab-meetings', key === 'meetings');
+        } catch (_) {}
         // ★ 2026-06-29: lazy render — タブclick時 初めて panel 中身 build
         try {
           const panel = document.querySelector(`[data-cdpanel="${key}"]`);
@@ -10244,7 +10248,7 @@ ${ctxText}${surveyTxt}`;
 
     return `
       <div class="detail-section">
-        <h3>面談記録・面談記録 <span class="count-badge">${bookingsWithMemo.length} 回</span></h3>
+        <h3>面談記録 <span class="count-badge">${bookingsWithMemo.length} 回</span></h3>
         ${window.FP_DEBUG ? `
         <details style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-family:Menlo,monospace;font-size:11px;">
           <summary style="cursor:pointer;color:#475569;font-weight:700;font-family:inherit;">🔧 デバッグ (面談記録 lookup)</summary>
@@ -14818,6 +14822,8 @@ ${client.name}さん、ありがとうございます。
     window._fpCurrentClient = null;
     // 2026-09-05: mobileJobs polling を 停止 (客 modal 閉じた ため)
     try { if (typeof window.__fpJobs?.stopWatch === 'function') window.__fpJobs.stopWatch(); } catch (_) {}
+    // 2026-09-09: 議事録 タブ mobile 上部 hide 用 body class を clear
+    try { document.body.classList.remove('cd-active-tab-meetings'); } catch (_) {}
     // ★ URL routing: customer / tab パラメータ を 除去 (popstate由来でない時)
     if (!options.fromPopstate) {
       try { pushModalUrl(null, null); } catch (_) {}
@@ -15413,8 +15419,14 @@ ${client.name}さん、ありがとうございます。
   //   ⚠ warnings は 冒頭 alert、 ①②③④ / 1. **xxx**：yyy は 番号 bubble + 見出し、
   //   数値 (¥/万/％/月/年) は mono chip、 label：value は row。 5秒 で スキャン できる 密度に。
   window.renderStructuredSummary = function renderStructuredSummary(text) {
-    const raw = String(text || '').trim();
+    let raw = String(text || '').trim();
     if (!raw) return '<div class="fp-sum-empty">議事録 未生成 — 「編集」 から手動追記 可</div>';
+    // 2026-09-09 owner「(該当なし) セクション 邪魔」対応:
+    //   ## 見出し + (該当なし) だけ の セクション を 完全 除去 (空 内容 で 場所 だけ 取る の を 防ぐ)。
+    raw = raw
+      .replace(/^##\s+[^\n]+\n\s*[\(（]?\s*該当なし\s*[\)）]?\s*(?=\n##|\n*$)/gim, '')
+      .replace(/\n\s*[\(（]\s*該当なし\s*[\)）]\s*\n/g, '\n')
+      .trim();
 
     // 構造 検出 (## / **/ 番号)
     const hasStructure = /(?:^#{1,3}\s|【.+?】|\*\*.+?\*\*|^[-・•\*]\s|^\d+[.\)]\s|^⚠)/m.test(raw);
