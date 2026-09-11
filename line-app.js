@@ -1067,7 +1067,7 @@
             </select>
           </div>
         </div>
-        <p style="color:#6b7280;font-size:12.5px;margin:0 0 18px;line-height:1.65;letter-spacing:0.02em;">確定済みの予約 / 当日になったら「録画ONでZoom開始」 → 終了時「録画停止」 → 終わったら「完了」 で顧客台帳に自動反映</p>
+        <p style="color:#6b7280;font-size:12.5px;margin:0 0 18px;line-height:1.65;letter-spacing:0.02em;">確定済みの予約 / 当日になったら「Zoomを開始」 → あとは Zoom を 終了 する だけ。 録画 と 議事録 は 自動 で 顧客台帳 に 反映</p>
         <div id="bookings-list"></div>
       </section>
 
@@ -1773,7 +1773,7 @@
         <strong style="color:#1f2a3f;font-weight:700;font-size:13.5px;display:block;margin-bottom:8px;">進行中の予約はありません</strong>
         ここには <strong style="color:#1f2a3f;">確定済の Zoom 打ち合わせ</strong> が並びます:<br>
         ・上の「候補日確定 待ち」 でお客様の希望日を確定すると、ここに追加されます<br>
-        ・面談当日: <strong style="color:#1f2a3f;">「録画ONでZoom開始」</strong> ボタンで Zoom 起動 + 自動録画開始<br>
+        ・面談当日: <strong style="color:#1f2a3f;">「Zoomを開始」</strong> ボタンで Zoom 起動。 録画 は Zoom Cloud 側 で 自動<br>
         ・面談後: <strong style="color:#1f2a3f;">「完了 (台帳へ)」</strong> ボタンで顧客台帳に反映
         ${archivedCount > 0 ? `<br><br><a href="#" id="fp-show-archived" style="color:#1e3a5f;font-weight:700;">完了済み ${archivedCount}件 を見る →</a>` : ''}
       </div>`;
@@ -1848,7 +1848,7 @@
         cta = `<button class="btn-mini-action" data-open-memo="${tsEnc}"><span class="icon">📝</span>メモ・タスク化${savedTasksCount > 0 ? ' ('+savedTasksCount+')' : ''}</button>`;
       } else if (zUrl) {
         // ★ 「完了」 ボタン 廃止 — 録画停止で 自動完了 (Zoom待ち から自動消去)
-        cta = `<button class="btn-rec-start" data-rec-start="${tsEnc}" data-zoom="${zUrl}">● 録画ONでZoom開始</button>
+        cta = `<button class="btn-rec-start" data-rec-start="${tsEnc}" data-zoom="${zUrl}" title="Zoom を 開きます。 録画 と 議事録 は Zoom Cloud 側 で 自動 (2026-09-11)">● Zoomを開始 (自動録画)</button>
                <button class="btn-mini-action" data-open-memo="${tsEnc}"><span class="icon">📝</span>メモ${savedTasksCount > 0 ? ' ('+savedTasksCount+'件)' : ''}</button>
                ${cancelBtnHtml}`;
       } else {
@@ -5710,7 +5710,7 @@
         <div style="padding:20px 24px;font-size:13.5px;color:#353D4F;line-height:1.85;">
           画面録画 が 開始されていない 状態 で 「終了」 が押されたため、 <b style="color:#0E1116;">AI 音声議事録 の 生成 を スキップ</b> しました。<br><br>
           メモ 入力 がある場合 は ローカル に 保存済み です。<br><br>
-          <span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#6B7385;">▼ 議事録生成 を 実行 する 場合 は:<br>① 顧客カード → 予約 → 「● 録画ONでZoom開始」<br>② Zoom 終了時 「■ 録画停止」 → 自動で AI 解析 + 議事録生成</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#6B7385;">▼ 議事録生成 を 実行 する 場合 は:<br>① 顧客カード → 予約 → 「● Zoomを開始 (自動録画)」<br>② Zoom を 終了 する だけ。 録画 が Zoom Cloud に 上がり 次第 自動 で AI 解析 + 議事録生成</span>
         </div>
         <div style="padding:14px 24px 20px;display:flex;gap:10px;justify-content:flex-end;">
           <button id="fp-no-rec-close" style="background:#0E1116;color:#fff;border:none;padding:10px 24px;border-radius:6px;font-family:'Manrope',sans-serif;font-weight:800;font-size:13px;letter-spacing:0.04em;cursor:pointer;">了解</button>
@@ -6777,38 +6777,46 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
 
   function bindBookingsButtons() {
     document.querySelectorAll('[data-rec-start]').forEach(btn => {
+      // fillBookingsList は 複数 箇所 から 呼ばれる。 同 node に handler が 積まれ ない よう guard。
+      if (btn._fpRecBound) return;
+      btn._fpRecBound = true;
       btn.addEventListener('click', async () => {
         const ts = btn.dataset.recStart;
         const zoomUrl = btn.dataset.zoom;
         if (btn.dataset.recMode === 'inperson') {
-            await startWebcamRecording(ts);
-            await fetchLiveData();
-            renderLeadHubInner();
-            return;
-          }
-        // ★ オーナーfb (v AH): Zoom pre-open popup が画面共有ダイアログを覆ってた。
-        // 修正: pre-open は 画面外/極小 で 開いて 即 blur + CRM focus 戻し。 ユーザには見えないように。
-        const sw = window.screen.availWidth || screen.width;
-        const sh = window.screen.availHeight || screen.height;
-        // 極小+画面外: 200x100 を screen の右下 さらに先 (見えない位置)
-        const preZoomFeatures = `popup=yes,width=200,height=100,left=${sw - 1},top=${sh - 1},toolbar=no,location=no,menubar=no,status=no,scrollbars=no,resizable=yes`;
-        const preZoomWin = window.open('about:blank', 'fp-zoom-win', preZoomFeatures);
-        if (preZoomWin) {
-          try {
-            preZoomWin.document.title = 'Zoom 準備中...';
-            preZoomWin.document.body.innerHTML = '<div style="font-family:sans-serif;padding:10px;background:#0F172A;color:#fff;font-size:11px;text-align:center;">⏳ 準備中</div>';
-            // 即 blur → CRM focus 戻し
-            preZoomWin.blur();
-          } catch (_) {}
+          // 対面 は Zoom が 無い ので ローカル 録音 が 唯一 の 経路。 ここ は 残す。
+          await startWebcamRecording(ts);
+          await fetchLiveData();
+          renderLeadHubInner();
+          return;
         }
-        try { window.focus(); window.opener?.focus?.(); document.body.click(); } catch (_) {}
-        // 確実に CRM が前面に来てから getDisplayMedia 走らせる (microtask 一発噛ます)
-        await new Promise(r => setTimeout(r, 50));
-        try { window.focus(); } catch (_) {}
-        console.log('[layout] pre-open zoom (極小+画面外) + CRM focus 戻し済');
-        await startScreenRecording(ts, zoomUrl, { preZoomWin });
-        await fetchLiveData();
-        renderLeadHubInner();
+        // ============================================================
+        // 2026-09-11: 2026-07-30 の 移行 の やり残し を 解消
+        //
+        //   旧: startScreenRecording (getUserMedia + MediaRecorder) で ブラウザ 側 でも 録音 し、
+        //       停止 時 に aiProcessRecording へ 音声 を 投げて 議事録 を 生成 して いた。
+        //       一方 Zoom は auto_recording='cloud' で サーバー 側 でも 録画 して おり、
+        //       zoomRecordingWebhook が 同 面談 の 議事録 を もう 1 本 作る。
+        //       webhook の dedupe は where('zoomMeetingId','==',...) で 判定 する が、
+        //       browser 経路 は zoomMeetingId を 書か ない ため dedupe を すり抜ける。
+        //       → 1 面談 で 議事録 が 2 本 出来る。
+        //
+        //   新: quickZoom (fp-qz-join-record) と 同じ く URL を 開く だけ。
+        //       録画 も 議事録 も サーバー 側 に 一本化 する。
+        // ============================================================
+        if (!zoomUrl) { alert('Zoom URL が 空 です。 予約 データ を 確認 して ください'); return; }
+        const w = window.open(zoomUrl, '_blank', 'noopener,noreferrer');
+        if (!w || w.closed || typeof w.closed === 'undefined') {
+          alert('ブラウザ が pop-up を ブロック しました。\n\nアドレスバー 右 の pop-up アイコン → 「許可」 → もう一度 押して ください。');
+          return;
+        }
+        btn.disabled = true;
+        btn.textContent = '✓ Zoom を 開きました';
+        btn.style.background = '#ECFDF5';
+        btn.style.color = '#059669';
+        btn.style.cursor = 'default';
+        // 面談 後、 Zoom から transcript が 届いた 時点 で webhook が 議事録 を 作る。
+        // ここ で 即 re-render する と button 表示 が 戻る だけ な ので 触ら ない。
       });
     });
     document.querySelectorAll('[data-rec-stop]').forEach(btn => {
