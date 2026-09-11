@@ -10007,6 +10007,92 @@ ${ctxText}${surveyTxt}`;
     });
   }
 
+  // ============================================================
+  // 2026-09-11: 面談終了 → 議事録 反映 まで の 「空白」 を 見える 化
+  //   Zoom の transcript は 面談後 5〜15分 かかる。 その 間 一覧 に 何も
+  //   出ない ので、 録れて いるのか 失敗 したのか わから ない、 という 声。
+  //   Zoom を 開いた 時点 で pending を 立て、 終了 検知 で 「文字起こし中」 に 変える。
+  //   実 議事録 (ai_results) が 届いたら 自動 で 消える。 24h で 期限切れ。
+  //   保存先 は localStorage のみ — Firestore は 触ら ない。
+  // ============================================================
+  const FP_PENDING_KEY = 'fp-pending-meeting-v1';
+  const fpNorm = (v) => String(v || '').replace(/様$/, '').trim();
+
+  function fpLoadPending() {
+    try {
+      const a = JSON.parse(localStorage.getItem(FP_PENDING_KEY) || '[]');
+      const cutoff = Date.now() - 24 * 3600 * 1000;
+      return Array.isArray(a) ? a.filter(x => x && x.startedAt > cutoff) : [];
+    } catch (_) { return []; }
+  }
+  function fpSavePending(list) {
+    try { localStorage.setItem(FP_PENDING_KEY, JSON.stringify(list)); } catch (_) {}
+  }
+
+  window.fpPendingStart = function (key, name) {
+    if (!key) return;
+    const list = fpLoadPending().filter(x => x.key !== key);
+    list.push({ key, name: name || '', startedAt: Date.now(), endedAt: null });
+    fpSavePending(list);
+  };
+  window.fpPendingEnd = function (key) {
+    const list = fpLoadPending();
+    const p = (key && list.find(x => x.key === key)) || list[list.length - 1];
+    if (p && !p.endedAt) { p.endedAt = Date.now(); fpSavePending(list); }
+  };
+  window.fpPendingClear = function (key) {
+    fpSavePending(fpLoadPending().filter(x => x.key !== key));
+  };
+
+  // 実 議事録 が 届いた pending を 落として、 生き残り を 返す
+  window.fpPendingActive = function (filterName) {
+    const ai = (window.LineAppLiveData && window.LineAppLiveData.ai_results) || [];
+    const list = fpLoadPending();
+    const alive = list.filter(p => !ai.some(r => {
+      const t = Date.parse(r.ts || r.bookingTs || '') || 0;
+      return fpNorm(r.customerName) && fpNorm(r.customerName) === fpNorm(p.name)
+             && t >= p.startedAt - 3600 * 1000;
+    }));
+    if (alive.length !== list.length) fpSavePending(alive);
+    return filterName ? alive.filter(p => fpNorm(p.name) === fpNorm(filterName)) : alive;
+  };
+
+  // 一覧 の 先頭 に 差す バナー。 該当 なし なら 空文字。
+  window.fpPendingBanner = function (filterName) {
+    const list = (window.fpPendingActive ? window.fpPendingActive(filterName) : []);
+    if (!list.length) return '';
+    const two = (n) => ('0' + n).slice(-2);
+    const hhmm = (ms) => { const d = new Date(ms); return two(d.getHours()) + ':' + two(d.getMinutes()); };
+    const md   = (ms) => { const d = new Date(ms); return (d.getMonth() + 1) + '/' + d.getDate(); };
+    return list.map(p => {
+      const live = !p.endedAt;
+      const accent = live ? '#DC2626' : '#5B5BF0';
+      const bg     = live ? '#FEF2F2' : '#EEF2FF';
+      const label  = live ? '面談中' : '文字起こし中';
+      const dot    = live
+        ? '<span style="width:9px;height:9px;border-radius:50%;background:#DC2626;display:inline-block;animation:fp-pend-pulse 1.2s infinite;"></span>'
+        : '<span style="width:9px;height:9px;border-radius:50%;border:2px solid #5B5BF0;border-top-color:transparent;display:inline-block;animation:fp-pend-spin 0.9s linear infinite;"></span>';
+      const line = live
+        ? `${md(p.startedAt)} ${hhmm(p.startedAt)} に開始`
+        : `${md(p.endedAt)} <b>${hhmm(p.endedAt)}</b> に面談終了 — Zoom 側の文字起こし待ち（目安 5〜15分）`;
+      const note = live
+        ? 'Zoom を終了すると、文字起こしの完了待ちに変わります。'
+        : '完了すると、この一覧に議事録が自動で入ります。画面を閉じても処理は進みます。';
+      return `
+        <div class="fp-pending-row" style="display:flex;align-items:flex-start;gap:11px;background:${bg};border:1px solid ${accent}33;border-left:4px solid ${accent};border-radius:11px;padding:12px 14px;margin-bottom:10px;">
+          <div style="padding-top:3px;">${dot}</div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:11px;font-weight:800;color:${accent};letter-spacing:0.1em;margin-bottom:3px;">${label}${p.name ? ' · ' + escapeHtml(p.name) : ''}</div>
+            <div style="font-size:13px;font-weight:700;color:#0F172A;line-height:1.55;">${line}</div>
+            <div style="font-size:11.5px;color:#64748B;line-height:1.6;margin-top:3px;">${note}</div>
+          </div>
+        </div>`;
+    }).join('') + `<style>
+      @keyframes fp-pend-pulse{0%,100%{opacity:1}50%{opacity:.25}}
+      @keyframes fp-pend-spin{to{transform:rotate(360deg)}}
+    </style>`;
+  };
+
   function renderMeetingRecordsBlock(client) {
     // この顧客に関連する bookings を liveData から探す
     const liveBookings = (window.LineAppLiveData && window.LineAppLiveData.bookings) || [];
@@ -10249,6 +10335,7 @@ ${ctxText}${surveyTxt}`;
     return `
       <div class="detail-section">
         <h3>面談記録 <span class="count-badge">${bookingsWithMemo.length} 回</span></h3>
+        ${window.fpPendingBanner ? window.fpPendingBanner(client.name) : ''}
         ${window.FP_DEBUG ? `
         <details style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-family:Menlo,monospace;font-size:11px;">
           <summary style="cursor:pointer;color:#475569;font-weight:700;font-family:inherit;">🔧 デバッグ (面談記録 lookup)</summary>

@@ -1848,7 +1848,7 @@
         cta = `<button class="btn-mini-action" data-open-memo="${tsEnc}"><span class="icon">📝</span>メモ・タスク化${savedTasksCount > 0 ? ' ('+savedTasksCount+')' : ''}</button>`;
       } else if (zUrl) {
         // ★ 「完了」 ボタン 廃止 — 録画停止で 自動完了 (Zoom待ち から自動消去)
-        cta = `<button class="btn-rec-start" data-rec-start="${tsEnc}" data-zoom="${zUrl}" title="Zoom を 開きます。 録画 と 議事録 は Zoom Cloud 側 で 自動 (2026-09-11)">● Zoomを開始 (自動録画)</button>
+        cta = `<button class="btn-rec-start" data-rec-start="${tsEnc}" data-zoom="${zUrl}" data-cust-name="${escapeHtml(displayName)}" title="Zoom を 開きます。 録画 と 議事録 は Zoom Cloud 側 で 自動 (2026-09-11)">● Zoomを開始 (自動録画)</button>
                <button class="btn-mini-action" data-open-memo="${tsEnc}"><span class="icon">📝</span>メモ${savedTasksCount > 0 ? ' ('+savedTasksCount+'件)' : ''}</button>
                ${cancelBtnHtml}`;
       } else {
@@ -5799,11 +5799,11 @@
 
   // 待ち 案内 を 出す きっかけ は 2 つ。 どちら か 早い 方。
   //   (a) Zoom の tab/window が 閉じられた
-  //   (b) Zoom を 開いて から 3 分 以上 経って、 CRM 画面 に 戻って きた
+  //   (b) Zoom を 開いて から 90 秒 以上 経って、 CRM 画面 に 戻って きた
   // (b) が 要る 理由: Zoom link は desktop app を 起動 して tab が 残る こと が 多く、
   //   その 場合 (a) は 永久 に 発火 し ない。
   // × で 閉じたら 二度と 出さ ない (owner 指定: 自動 で 消え ない / 押した 時 だけ 消える)。
-  function watchZoomWindowThenNotice(w) {
+  function watchZoomWindowThenNotice(w, pendingKey) {
     window._fpZoomOpenedAt = Date.now();
     window._fpZoomNoticeDone = false;
 
@@ -5811,7 +5811,10 @@
       if (window._fpZoomNoticeDone) return;
       window._fpZoomNoticeDone = true;
       cleanup();
+      try { window.fpPendingEnd && window.fpPendingEnd(pendingKey); } catch (_) {}
       showZoomWaitNotice();
+      // 開いて いる 一覧 を 即 更新 (「文字起こし中」 に 変える)
+      try { if (typeof renderLeadHubInner === 'function') renderLeadHubInner(); } catch (_) {}
     };
     const cleanup = () => {
       if (window._fpZoomWaitWatch) { clearInterval(window._fpZoomWaitWatch); window._fpZoomWaitWatch = null; }
@@ -5820,7 +5823,7 @@
     };
     const onFocus = () => {
       if (document.hidden) return;
-      if (Date.now() - window._fpZoomOpenedAt >= 3 * 60 * 1000) fire();
+      if (Date.now() - window._fpZoomOpenedAt >= 90 * 1000) fire();
     };
 
     if (window._fpZoomWaitWatch) clearInterval(window._fpZoomWaitWatch);
@@ -6884,7 +6887,9 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
           alert('ブラウザ が pop-up を ブロック しました。\n\nアドレスバー 右 の pop-up アイコン → 「許可」 → もう一度 押して ください。');
           return;
         }
-        watchZoomWindowThenNotice(w);
+        // 面談履歴 / 顧客カード に 「面談中 → 文字起こし中」 を 出す ため の 目印
+        try { window.fpPendingStart && window.fpPendingStart(ts, btn.dataset.custName || ''); } catch (_) {}
+        watchZoomWindowThenNotice(w, ts);
         btn.disabled = true;
         btn.textContent = '✓ Zoom を 開きました';
         btn.style.background = '#ECFDF5';
