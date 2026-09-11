@@ -9107,7 +9107,7 @@ ${ctxText}${surveyTxt}`;
     const refCopy = document.getElementById('ref-copy-url');
     if (refCopy) {
       refCopy.addEventListener('click', () => {
-        const url = `https://line.me/R/ti/p/@511thleq?ref=${c.id}`;
+        const url = window.fpReferralUrl(c.id);
         navigator.clipboard.writeText(url);
         refCopy.textContent = '✓ コピーしました';
         setTimeout(() => { refCopy.textContent = '📋 URLをコピー'; }, 2200);
@@ -10015,6 +10015,32 @@ ${ctxText}${surveyTxt}`;
   //   実 議事録 (ai_results) が 届いたら 自動 で 消える。 24h で 期限切れ。
   //   保存先 は localStorage のみ — Firestore は 触ら ない。
   // ============================================================
+  // ============================================================
+  // 2026-09-11: 紹介 QR の URL を 作る
+  //   旧: https://line.me/R/ti/p/@511thleq?ref=<顧客ID>
+  //       → LINE は 友だち追加 URL の query を bot に 渡さ ない ので、
+  //         紹介者 は 一度 も 記録 されて いなかった。 加えて @511thleq が 直書き で
+  //         他 テナント に 導入 する と 全員 この アカウント に 飛んで いた。
+  //   新: oaMessage 方式。 LINE が 「紹介コード: xxx」 を 入力欄 に 入れた 状態 で 開く。
+  //       相手 が 送信 する と webhook が 拾って 紹介者 を 記録 する。
+  // ============================================================
+  window.FP_LINE_BASIC_ID = window.FP_LINE_BASIC_ID || '';
+  (async function loadLineBasicId() {
+    try {
+      if (!window.__fp?.db || !window.__fp?.tenantId) return;
+      const { doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js');
+      const snap = await getDoc(doc(window.__fp.db, 'tenants', window.__fp.tenantId));
+      const bid = snap.data()?.line?.basicId || '';
+      if (bid) window.FP_LINE_BASIC_ID = bid.startsWith('@') ? bid : '@' + bid;
+    } catch (e) { console.warn('[referral] basicId load fail:', e.message || e); }
+  })();
+
+  window.fpReferralUrl = function (customerId) {
+    const bid = window.FP_LINE_BASIC_ID || '@511thleq';  // 読み込み前 は 従来値 に fallback
+    const text = '紹介コード: ' + customerId;
+    return `https://line.me/R/oaMessage/${encodeURIComponent(bid)}/?${encodeURIComponent(text)}`;
+  };
+
   const FP_PENDING_KEY = 'fp-pending-meeting-v1';
   const fpNorm = (v) => String(v || '').replace(/様$/, '').trim();
 
@@ -10674,7 +10700,7 @@ ${ctxText}${surveyTxt}`;
     const referredByMe = clients.filter(c =>
       c.id !== client.id && (c.source || '').includes(lastName + '様')
     );
-    const referralUrl = `https://line.me/R/ti/p/@511thleq?ref=${client.id}`;
+    const referralUrl = window.fpReferralUrl(client.id);
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=8&data=${encodeURIComponent(referralUrl)}`;
 
     const referredList = referredByMe.length === 0
