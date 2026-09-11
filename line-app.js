@@ -7429,6 +7429,33 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
   //   collection を 読む が、 現行 lineWebhook は `tenants/{tid}/customers/{cid}/line_messages` の
   //   sub-collection に 保存。 → backend response で line_messages 常 に 空。
   //   client 側 で Firestore 直接 pull で bypass。
+  // 2026-09-11: Zoom webhook が 立てる 「文字起こし 待ち」 を 読む。
+  //   録画 は Zoom に 届いた が transcript が まだ、 の 状態。 議事録 が 出来ると webhook 側 で 消える。
+  async function pullZoomPendingFromFirestore() {
+    try {
+      const tenantId = (window.__fp && window.__fp.tenantId) || localStorage.getItem('fp-tenantId');
+      if (!tenantId) return [];
+      const { getFirestore, collection, getDocs } =
+        await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js');
+      const db = window.__fp?.db || getFirestore();
+      const snap = await getDocs(collection(db, `tenants/${tenantId}/pending_meetings`));
+      return snap.docs.map(d => {
+        const x = d.data() || {};
+        return {
+          zoomMeetingId: d.id,
+          name: x.customerName || '',
+          customerId: x.customerId || '',
+          startTime: x.startTime || null,
+          durationMin: x.durationMin || null,
+          updatedAt: x.updatedAt?.toMillis?.() || null,
+        };
+      });
+    } catch (e) {
+      console.warn('[pullZoomPending] fail:', e.message || e);
+      return [];
+    }
+  }
+
   async function pullLineMessagesFromFirestore() {
     try {
       const tenantId = (window.__fp && window.__fp.tenantId) || localStorage.getItem('fp-tenantId');
@@ -7517,6 +7544,7 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
       // ★ 2026-08-17 backend line_messages が Cloud Run 旧 schema で 空 → Firestore 直 pull で 補完
       try {
         const fsMsgs = await pullLineMessagesFromFirestore();
+        try { window.FP_ZOOM_PENDING = await pullZoomPendingFromFirestore(); } catch (_) {}
         if (fsMsgs.length > 0) {
           // ts 完全 一致 で dedupe
           const seen = new Set((liveData.line_messages || []).map(m => `${m.userId}|${String(m.ts||'').slice(0,19)}`));

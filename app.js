@@ -10059,7 +10059,20 @@ ${ctxText}${surveyTxt}`;
 
   // 一覧 の 先頭 に 差す バナー。 該当 なし なら 空文字。
   window.fpPendingBanner = function (filterName) {
-    const list = (window.fpPendingActive ? window.fpPendingActive(filterName) : []);
+    const local = (window.fpPendingActive ? window.fpPendingActive(filterName) : []);
+    // Zoom webhook 由来 の 「文字起こし 待ち」 (= 実際 に 録画 が Zoom に 届いて いる 確証)。
+    // localStorage の 推測 より 強い ので、 同 顧客 なら server 側 を 優先 する。
+    const server = ((window.FP_ZOOM_PENDING || [])
+      .filter(p => !filterName || fpNorm(p.name) === fpNorm(filterName))
+      .map(p => ({
+        key: 'zoom:' + p.zoomMeetingId,
+        name: p.name,
+        startedAt: Date.parse(p.startTime || '') || p.updatedAt || Date.now(),
+        endedAt: p.updatedAt || Date.now(),
+        fromZoom: true,
+      })));
+    const serverNames = new Set(server.map(p => fpNorm(p.name)));
+    const list = server.concat(local.filter(p => !serverNames.has(fpNorm(p.name))));
     if (!list.length) return '';
     const two = (n) => ('0' + n).slice(-2);
     const hhmm = (ms) => { const d = new Date(ms); return two(d.getHours()) + ':' + two(d.getMinutes()); };
@@ -10077,7 +10090,9 @@ ${ctxText}${surveyTxt}`;
         : `${md(p.endedAt)} <b>${hhmm(p.endedAt)}</b> に面談終了 — Zoom 側の文字起こし待ち（目安 5〜15分）`;
       const note = live
         ? 'Zoom を終了すると、文字起こしの完了待ちに変わります。'
-        : '完了すると、この一覧に議事録が自動で入ります。画面を閉じても処理は進みます。';
+        : (p.fromZoom
+            ? '録画は Zoom に届いています。文字起こしが出来次第、議事録がこの一覧に自動で入ります。'
+            : '完了すると、この一覧に議事録が自動で入ります。画面を閉じても処理は進みます。');
       return `
         <div class="fp-pending-row" style="display:flex;align-items:flex-start;gap:11px;background:${bg};border:1px solid ${accent}33;border-left:4px solid ${accent};border-radius:11px;padding:12px 14px;margin-bottom:10px;">
           <div style="padding-top:3px;">${dot}</div>
