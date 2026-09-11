@@ -3206,11 +3206,15 @@
       try {
         const url = result.hostZoomUrl || result.zoomUrl;
         if (!url) { alert('Zoom URL が 空 です。 quickZoomMeeting 応答 を 再確認 してください'); return; }
-        const w = window.open(url, '_blank', 'noopener,noreferrer');
-        if (!w || w.closed || typeof w.closed === 'undefined') {
+        // 2026-09-11 fix: noopener を 付ける と window.open は 仕様上 必ず null を 返す。
+        //   旧 コード は それ を pop-up ブロック と 誤判定 し、 成功 時 も 毎回 alert して いた。
+        //   参照 が 取れる と Zoom の close を 見張れる ので、 待ち 案内 も ここ から 出す。
+        const w = window.open(url, '_blank');
+        if (!w) {
           alert('ブラウザ が pop-up を ブロック しました。 アドレスバー 右 の pop-up アイコン を 押して 許可 → もう一度 button 押して ください。');
           return;
         }
+        watchZoomWindowThenNotice(w);
         joinRecBtn.disabled = true;
         joinRecBtn.style.background = '#ECFDF5';
         joinRecBtn.style.color = '#059669';
@@ -5763,6 +5767,74 @@
     hideFixedCompleteButton();
   }
 
+  // ============================================================
+  // 2026-09-11: Zoom 終了後 の 待ち 案内
+  //   Zoom は 面談 終了 → cloud 録画 の 処理 → transcript 生成 まで 5-15 分 かかる。
+  //   その 間 「議事録 が 出て こない」 と 不安 に なる ので、 明示 的 に 出す。
+  //   owner 指定: 自動 で 消さ ない。 × を 押した 時 だけ 消える。
+  // ============================================================
+  function showZoomWaitNotice() {
+    if (document.getElementById('fp-zoom-wait')) return;
+    const el = document.createElement('div');
+    el.id = 'fp-zoom-wait';
+    el.style.cssText = 'position:fixed;top:18px;right:18px;max-width:340px;background:#fff;'
+      + 'border:1px solid #C7D2FE;border-left:5px solid #5B5BF0;border-radius:14px;'
+      + 'box-shadow:0 18px 44px rgba(15,23,42,0.22);z-index:10300;padding:16px 16px 14px;'
+      + "font-family:'Noto Sans JP','Hiragino Sans',sans-serif;";
+    el.innerHTML = `
+      <div style="display:flex;align-items:flex-start;gap:10px;">
+        <div style="flex:1;">
+          <div style="font-size:11px;font-weight:800;color:#5B5BF0;letter-spacing:0.12em;margin-bottom:6px;">議事録 を 準備 中</div>
+          <div style="font-size:13.5px;font-weight:800;color:#0F172A;line-height:1.5;margin-bottom:8px;">Zoom の 文字起こし が 終わり 次第、<br>議事録 の 生成 を 開始 します</div>
+          <div style="font-size:12px;color:#475569;line-height:1.7;">Zoom 側 の 処理 に <b>5〜15分</b> ほど かかり ます。<br>この 画面 を 閉じて も 大丈夫 です。 完了 すると 顧客 カード の 面談履歴 に 自動 で 入り ます。</div>
+        </div>
+        <button id="fp-zoom-wait-x" aria-label="閉じる" style="background:none;border:none;font-size:19px;line-height:1;color:#94A3B8;cursor:pointer;padding:0 2px;flex-shrink:0;">×</button>
+      </div>`;
+    document.body.appendChild(el);
+    el.querySelector('#fp-zoom-wait-x').addEventListener('click', () => {
+      el.remove();
+      window._fpZoomNoticeDone = true;  // 閉じたら 再表示 し ない
+    });
+  }
+
+  // 待ち 案内 を 出す きっかけ は 2 つ。 どちら か 早い 方。
+  //   (a) Zoom の tab/window が 閉じられた
+  //   (b) Zoom を 開いて から 3 分 以上 経って、 CRM 画面 に 戻って きた
+  // (b) が 要る 理由: Zoom link は desktop app を 起動 して tab が 残る こと が 多く、
+  //   その 場合 (a) は 永久 に 発火 し ない。
+  // × で 閉じたら 二度と 出さ ない (owner 指定: 自動 で 消え ない / 押した 時 だけ 消える)。
+  function watchZoomWindowThenNotice(w) {
+    window._fpZoomOpenedAt = Date.now();
+    window._fpZoomNoticeDone = false;
+
+    const fire = () => {
+      if (window._fpZoomNoticeDone) return;
+      window._fpZoomNoticeDone = true;
+      cleanup();
+      showZoomWaitNotice();
+    };
+    const cleanup = () => {
+      if (window._fpZoomWaitWatch) { clearInterval(window._fpZoomWaitWatch); window._fpZoomWaitWatch = null; }
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onFocus);
+    };
+    const onFocus = () => {
+      if (document.hidden) return;
+      if (Date.now() - window._fpZoomOpenedAt >= 3 * 60 * 1000) fire();
+    };
+
+    if (window._fpZoomWaitWatch) clearInterval(window._fpZoomWaitWatch);
+    if (w) {
+      window._fpZoomWaitWatch = setInterval(() => {
+        let closed = false;
+        try { closed = w.closed; } catch (_) { closed = true; }
+        if (closed) fire();
+      }, 2000);
+    }
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onFocus);
+  }
+
   function showRecordingPill() {
     const R = window._fpRecorder;
     let el = document.getElementById('fp-rec-pill');
@@ -6805,11 +6877,14 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
         //       録画 も 議事録 も サーバー 側 に 一本化 する。
         // ============================================================
         if (!zoomUrl) { alert('Zoom URL が 空 です。 予約 データ を 確認 して ください'); return; }
-        const w = window.open(zoomUrl, '_blank', 'noopener,noreferrer');
-        if (!w || w.closed || typeof w.closed === 'undefined') {
+        // 2026-09-11 fix: noopener 付き の window.open は 必ず null を 返す (仕様)。
+        //   旧 判定 だと 成功 時 も pop-up ブロック 扱い に なる。
+        const w = window.open(zoomUrl, '_blank');
+        if (!w) {
           alert('ブラウザ が pop-up を ブロック しました。\n\nアドレスバー 右 の pop-up アイコン → 「許可」 → もう一度 押して ください。');
           return;
         }
+        watchZoomWindowThenNotice(w);
         btn.disabled = true;
         btn.textContent = '✓ Zoom を 開きました';
         btn.style.background = '#ECFDF5';
