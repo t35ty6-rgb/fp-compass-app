@@ -94,7 +94,7 @@
       <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:12px;line-height:1.65;opacity:0.95;">
         <input id="fp-terms-check" type="checkbox" style="margin-top:3px;width:16px;height:16px;flex-shrink:0;accent-color:#E63946;cursor:pointer;">
         <span>
-          <a href="./legal/specified-commercial.html" target="_blank" style="color:#FFE9A8;text-decoration:underline;">特商法表記</a>・<a href="./legal/privacy.html" target="_blank" style="color:#FFE9A8;text-decoration:underline;">プライバシーポリシー</a>・<a href="./legal/index.html" target="_blank" style="color:#FFE9A8;text-decoration:underline;">利用規約</a>を確認し、 同意します
+          <a href="./legal/specified-commercial.html" target="_blank" style="color:#FFE9A8;text-decoration:underline;">特商法表記</a>・<a href="./legal/privacy.html" target="_blank" style="color:#FFE9A8;text-decoration:underline;">プライバシーポリシー</a>・<a href="./legal/terms.html" target="_blank" style="color:#FFE9A8;text-decoration:underline;">利用規約</a>を確認し、 同意します
         </span>
       </label>
     </div>
@@ -115,7 +115,7 @@
       申込前に必ずご確認ください:<br>
       <a href="./legal/specified-commercial.html" style="color:#1E3A5F;text-decoration:underline;display:inline-block;padding:10px 8px;min-height:44px;line-height:24px;font-weight:700;">特商法表記</a>
       <a href="./legal/privacy.html" style="color:#1E3A5F;text-decoration:underline;display:inline-block;padding:10px 8px;min-height:44px;line-height:24px;font-weight:700;">プライバシー</a>
-      <a href="./legal/index.html" style="color:#1E3A5F;text-decoration:underline;display:inline-block;padding:10px 8px;min-height:44px;line-height:24px;font-weight:700;">利用規約</a>
+      <a href="./legal/terms.html" style="color:#1E3A5F;text-decoration:underline;display:inline-block;padding:10px 8px;min-height:44px;line-height:24px;font-weight:700;">利用規約</a>
     </div>
   </div>
 </div>
@@ -1129,6 +1129,9 @@
               <button id="export-csv-btn" data-hint="現在の顧客台帳をCSVで書き出し (Excelで開ける)" style="background:#fff;border:1px solid #C19A3A;color:#8B6F26;padding:9px 14px;border-radius:8px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:0.02em;display:inline-flex;align-items:center;gap:6px;">
                 <i data-lucide="download" style="width:14px;height:14px;"></i><span>CSV</span>
               </button>
+              <button id="export-all-btn" data-hint="顧客・面談・議事録・LINE履歴を含む全データをJSONで書き出し (解約時のデータ持ち出し用)" style="background:#fff;border:1px solid #C19A3A;color:#8B6F26;padding:9px 14px;border-radius:8px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:0.02em;display:inline-flex;align-items:center;gap:6px;">
+                <i data-lucide="database" style="width:14px;height:14px;"></i><span>全データ</span>
+              </button>
               <button class="primary" id="add-client-btn" data-hint="新しい顧客をCRMに追加。家族の生年月日も入れるとライフイベントが30年自動展開">
                 <i data-lucide="plus"></i><span>新規顧客を登録</span>
               </button>
@@ -1372,7 +1375,7 @@ window.fpReadyAfterAuth = function() {
     });
   })();
 
-  const ver = "20260714C";
+  const ver = "20260914A";
   // ★ 2026-06-26 perf: critical (画面初期表示に必須) と deferred (LINE/charts) を 分離
   // critical: 顧客台帳・ホーム描画に必須
   // deferred: LINE タブ (line-app.js 555KB) / dashboard charts (charts.js) → idle で 後ロード

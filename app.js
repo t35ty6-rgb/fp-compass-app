@@ -15806,6 +15806,105 @@ ${client.name}さん、ありがとうございます。
       setTimeout(() => URL.revokeObjectURL(url), 1000);
     });
 
+    // ============================================================
+    // 2026-09-13 L-4: 全データ書き出し (JSON)
+    //   プライバシーポリシー 第6条 の 「解約時 全データ を CSV/JSON で DL 可能」 を
+    //   実際 に 満たす ため の 導線。 CSV は 顧客台帳 だけ で、 面談 / 議事録 /
+    //   LINE 履歴 / アンケート 回答 が 含まれて いなかった。
+    //   読み取り は Firestore ルール 経由 = 課金 停止中 でも read は 許可 (書込み のみ 遮断)。
+    // ============================================================
+    const exportAllBtn = document.getElementById('export-all-btn');
+    if (exportAllBtn) exportAllBtn.addEventListener('click', async () => {
+      const origHtml = exportAllBtn.innerHTML;
+      exportAllBtn.disabled = true;
+      exportAllBtn.innerHTML = '<span>書き出し中…</span>';
+      try {
+        const { collection, getDocs, doc, getDoc } =
+          await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js');
+        const db = window.__fp?.db;
+        const tid = window.__fp?.tenantId;
+        if (!db || !tid) throw new Error('ログイン情報が取得できませんでした');
+
+        const plain = (v) => {
+          if (v == null) return v;
+          if (typeof v.toDate === 'function') { try { return v.toDate().toISOString(); } catch (_) { return String(v); } }
+          if (Array.isArray(v)) return v.map(plain);
+          if (typeof v === 'object') {
+            const o = {};
+            for (const k of Object.keys(v)) o[k] = plain(v[k]);
+            return o;
+          }
+          return v;
+        };
+        const dump = async (path) => {
+          try {
+            const snap = await getDocs(collection(db, path));
+            return snap.docs.map(d => ({ id: d.id, ...plain(d.data()) }));
+          } catch (e) {
+            console.warn('[export] skip', path, e.message);
+            return { _error: e.message };
+          }
+        };
+
+        const out = {
+          _meta: {
+            サービス名: 'FP Compass',
+            書き出し日時: new Date().toISOString(),
+            テナントID: tid,
+            事務所名: window.__fp?.tenantName || '',
+            説明: 'このファイルには本サービスに保存されている貴事務所の全データが含まれます。 顧客ごとに 面談記録 / 議事録 / LINE履歴 / アンケート回答 を格納しています。',
+          },
+          tenant: null,
+          customers: [],
+        };
+
+        try {
+          const tSnap = await getDoc(doc(db, 'tenants', tid));
+          if (tSnap.exists()) {
+            const td = plain(tSnap.data()) || {};
+            // 秘密鍵 は tenants/{tid}/private に 分離済 だが、 旧 doc 残骸 の 保険
+            delete td.line; delete td.zoom; delete td.secrets;
+            out.tenant = td;
+          }
+        } catch (e) { out.tenant = { _error: e.message }; }
+
+        const custSnap = await getDocs(collection(db, `tenants/${tid}/customers`));
+        for (const c of custSnap.docs) {
+          const rec = { id: c.id, ...plain(c.data()) };
+          rec.meetings      = await dump(`tenants/${tid}/customers/${c.id}/meetings`);
+          rec.line_messages = await dump(`tenants/${tid}/customers/${c.id}/line_messages`);
+          rec.answers       = await dump(`tenants/${tid}/customers/${c.id}/answers`);
+          rec.notes         = await dump(`tenants/${tid}/customers/${c.id}/notes`);
+          if (Array.isArray(rec.meetings)) {
+            for (const m of rec.meetings) {
+              m.qa_history = await dump(`tenants/${tid}/customers/${c.id}/meetings/${m.id}/qa_history`);
+            }
+          }
+          out.customers.push(rec);
+        }
+
+        const today = new Date().toISOString().slice(0, 10);
+        const fpName = (window.__fp?.tenantName || '').replace(/\s/g, '').replace(/—DEMOビュー/, '') || 'FP事務所';
+        const blob = new Blob([JSON.stringify(out, null, 2)], { type: 'application/json;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a2 = document.createElement('a');
+        a2.href = url;
+        a2.download = `FPCompass全データ_${fpName}_${today}.json`;
+        document.body.appendChild(a2);
+        a2.click();
+        document.body.removeChild(a2);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        console.log(`[export] 完了 顧客 ${out.customers.length} 件`);
+      } catch (e) {
+        console.error('[export] failed:', e);
+        alert('書き出しに失敗しました: ' + (e.message || e));
+      } finally {
+        exportAllBtn.disabled = false;
+        exportAllBtn.innerHTML = origHtml;
+        if (window.lucide) window.lucide.createIcons();
+      }
+    });
+
     // モーダル外クリックで閉じる
     document.getElementById('modal-overlay').addEventListener('click', e => {
       if (e.target.id === 'modal-overlay') closeModal();
