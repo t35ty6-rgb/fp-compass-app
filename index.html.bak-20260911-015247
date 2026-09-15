@@ -37,10 +37,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20260915A">
-<link rel="stylesheet" href="styles-v2.css?v=20260915A">
-<link rel="stylesheet" href="styles-v3.css?v=20260915A">
-<link rel="stylesheet" href="styles-v8-workspace.css?v=20260915A">
+<link rel="stylesheet" href="styles.css?v=20260909B">
+<link rel="stylesheet" href="styles-v2.css?v=20260909B">
+<link rel="stylesheet" href="styles-v3.css?v=20260909B">
+<link rel="stylesheet" href="styles-v8-workspace.css?v=20260909B">
 <!-- ★ 2026-06-26 perf: lucide(350KB) と chart.js(201KB) を defer 化 -->
 <!--   どちらも DOMContentLoaded 後ハイドレートで OK (lucide: setInterval scan / chart: tryRender polling) -->
 <script defer src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
@@ -48,19 +48,19 @@
 <!-- ★ 2026-08-20 owner「認証中 で 5分 待たされる」fix:
      旧: 認証後 に fpReadyAfterAuth で critical scripts を 直列 fetch → mobile 4G で 5-8 秒
      新: login 画面 表示 中 に 平行 preload (browser cache に 入れる、 実行 は 認証後) → 認証後 は 実質 0秒 -->
-<link rel="preload" as="script" href="life-events.js?v=20260915A">
-<link rel="preload" as="script" href="recommender.js?v=20260915A">
-<link rel="preload" as="script" href="line-data.js?v=20260915A">
-<link rel="preload" as="script" href="recording-persist.js?v=20260915A">
-<link rel="preload" as="script" href="app.js?v=20260915A">
-<link rel="preload" as="script" href="line-app.js?v=20260915A">
+<link rel="preload" as="script" href="life-events.js?v=20260909B">
+<link rel="preload" as="script" href="recommender.js?v=20260909B">
+<link rel="preload" as="script" href="line-data.js?v=20260909B">
+<link rel="preload" as="script" href="recording-persist.js?v=20260909B">
+<link rel="preload" as="script" href="app.js?v=20260909B">
+<link rel="preload" as="script" href="line-app.js?v=20260909B">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- ★ 2026-09-02 P0 fix: nocache redirect 削除
      - 全 初回 load で JS redirect → +46ms (国内) / +400ms (4G) 追加 RTT
      - bfcache 破壊 + URL param 汚染 (Analytics session 分断)
-     - JS/CSS は 個別 ?v=20260915A で bust 済 · nocache は 完全 に 無意味
+     - JS/CSS は 個別 ?v=20260909B で bust 済 · nocache は 完全 に 無意味
      判定書_FP-Compass_多視点10_Performance_2026-09-02.md P0 fix
 -->
 
@@ -125,7 +125,7 @@
       <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:12px;line-height:1.65;opacity:0.95;">
         <input id="fp-terms-check" type="checkbox" style="margin-top:3px;width:16px;height:16px;flex-shrink:0;accent-color:#E63946;cursor:pointer;">
         <span>
-          <a href="./legal/specified-commercial.html" target="_blank" style="color:#FFE9A8;text-decoration:underline;">特商法表記</a>・<a href="./legal/privacy.html" target="_blank" style="color:#FFE9A8;text-decoration:underline;">プライバシーポリシー</a>・<a href="./legal/terms.html" target="_blank" style="color:#FFE9A8;text-decoration:underline;">利用規約</a>を確認し、 同意します
+          <a href="./legal/specified-commercial.html" target="_blank" style="color:#FFE9A8;text-decoration:underline;">特商法表記</a>・<a href="./legal/privacy.html" target="_blank" style="color:#FFE9A8;text-decoration:underline;">プライバシーポリシー</a>・<a href="./legal/index.html" target="_blank" style="color:#FFE9A8;text-decoration:underline;">利用規約</a>を確認し、 同意します
         </span>
       </label>
     </div>
@@ -163,7 +163,7 @@
       申込前に必ずご確認ください:<br>
       <a href="./legal/specified-commercial.html" style="color:#1E3A5F;text-decoration:underline;display:inline-block;padding:10px 8px;min-height:44px;line-height:24px;font-weight:700;">特商法表記</a>
       <a href="./legal/privacy.html" style="color:#1E3A5F;text-decoration:underline;display:inline-block;padding:10px 8px;min-height:44px;line-height:24px;font-weight:700;">プライバシー</a>
-      <a href="./legal/terms.html" style="color:#1E3A5F;text-decoration:underline;display:inline-block;padding:10px 8px;min-height:44px;line-height:24px;font-weight:700;">利用規約</a>
+      <a href="./legal/index.html" style="color:#1E3A5F;text-decoration:underline;display:inline-block;padding:10px 8px;min-height:44px;line-height:24px;font-weight:700;">利用規約</a>
     </div>
   </div>
 </div>
@@ -763,9 +763,6 @@
         <h2 style="font-family:'Noto Sans JP',sans-serif;font-weight:900;font-size:22px;line-height:1.35;margin:0 0 12px;letter-spacing:-0.01em;">${label.title}</h2>
         <p style="font-size:13.5px;line-height:1.85;opacity:0.92;margin:0 0 24px;">${label.sub}</p>
         <button id="fp-bgate-pay" style="width:100%;background:#E63946;color:#fff;border:none;border-radius:8px;padding:14px;font-size:14px;font-weight:800;letter-spacing:0.06em;cursor:pointer;font-family:'Manrope',sans-serif;text-transform:uppercase;transition:all 0.15s;">${["canceled","suspended"].includes(status) ? "サブスク再加入する" : "決済画面に進む"}</button>
-        ${["canceled","suspended"].includes(status) ? `
-        <button id="fp-bgate-export" style="width:100%;background:transparent;color:#FFE9A8;border:1px solid #FFE9A8;border-radius:8px;padding:12px;font-size:13px;font-weight:800;cursor:pointer;font-family:'Noto Sans JP',sans-serif;margin-top:10px;">解約前のデータを書き出す (JSON)</button>
-        <div style="margin-top:8px;font-size:11px;opacity:0.7;line-height:1.7;text-align:center;">解約後 30 日間、 顧客・面談・議事録・LINE履歴 を書き出せます。</div>` : ""}
         <button id="fp-bgate-logout" style="width:100%;background:transparent;color:rgba(255,255,255,0.7);border:1px solid rgba(255,255,255,0.22);border-radius:8px;padding:11px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:'Manrope',sans-serif;margin-top:10px;">別のアカウントで ログイン</button>
         <div id="fp-bgate-msg" style="margin-top:14px;font-size:11.5px;text-align:center;min-height:16px;line-height:1.6;"></div>
         <div style="margin-top:18px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.12);font-size:11px;opacity:0.65;text-align:center;line-height:1.7;">
@@ -792,70 +789,6 @@
         payBtn.textContent = ["canceled","suspended"].includes(status) ? "サブスク再加入する" : "決済画面に進む";
       }
     });
-    // ★ 2026-09-14: 解約後 30 日 の データ 書き出し (特商法表記 と 利用規約 第7条4項 の 約束)
-    //   従来 は 課金 ゲート で 画面 ごと 閉じて いた ため、 「解約後 30 日 は DL 可能」 と
-    //   書いて ある のに 実際 に は 到達 できなかった。 ゲート 上 に 直接 出口 を 置く。
-    //   Firestore ルール 側 は 課金 停止中 で も read を 許可 して ある。
-    const exportBtn = document.getElementById("fp-bgate-export");
-    if (exportBtn) exportBtn.addEventListener("click", async () => {
-      const orig = exportBtn.textContent;
-      exportBtn.disabled = true; exportBtn.textContent = "書き出し中…";
-      msgEl.style.color = "rgba(255,255,255,0.8)";
-      msgEl.textContent = "顧客データを読み込んでいます…";
-      try {
-        const plain = (v) => {
-          if (v == null) return v;
-          if (typeof v.toDate === "function") { try { return v.toDate().toISOString(); } catch (_) { return String(v); } }
-          if (Array.isArray(v)) return v.map(plain);
-          if (typeof v === "object") { const o = {}; for (const k of Object.keys(v)) o[k] = plain(v[k]); return o; }
-          return v;
-        };
-        const dump = async (path) => {
-          try { const sn = await getDocs(collection(db, path)); return sn.docs.map(d => ({ id: d.id, ...plain(d.data()) })); }
-          catch (e) { return { _error: e.message }; }
-        };
-        const out = {
-          _meta: {
-            サービス名: "FP Compass",
-            書き出し日時: new Date().toISOString(),
-            テナントID: tenantId,
-            説明: "解約後のデータ書き出し。 顧客ごとに 面談記録 / 議事録 / LINE履歴 / アンケート回答 を格納しています。",
-          },
-          customers: [],
-        };
-        const cs = await getDocs(collection(db, `tenants/${tenantId}/customers`));
-        let i = 0;
-        for (const c of cs.docs) {
-          i++;
-          msgEl.textContent = `読み込み中… ${i} / ${cs.docs.length} 件`;
-          const rec = { id: c.id, ...plain(c.data()) };
-          rec.meetings      = await dump(`tenants/${tenantId}/customers/${c.id}/meetings`);
-          rec.line_messages = await dump(`tenants/${tenantId}/customers/${c.id}/line_messages`);
-          rec.answers       = await dump(`tenants/${tenantId}/customers/${c.id}/answers`);
-          if (Array.isArray(rec.meetings)) {
-            for (const m of rec.meetings) {
-              m.qa_history = await dump(`tenants/${tenantId}/customers/${c.id}/meetings/${m.id}/qa_history`);
-            }
-          }
-          out.customers.push(rec);
-        }
-        const blob = new Blob([JSON.stringify(out, null, 2)], { type: "application/json;charset=utf-8" });
-        const url = URL.createObjectURL(blob);
-        const a3 = document.createElement("a");
-        a3.href = url;
-        a3.download = `FPCompass全データ_${new Date().toISOString().slice(0,10)}.json`;
-        document.body.appendChild(a3); a3.click(); document.body.removeChild(a3);
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
-        msgEl.style.color = "#A7F3D0";
-        msgEl.textContent = `書き出しました (顧客 ${out.customers.length} 件)`;
-      } catch (e) {
-        msgEl.style.color = "#FFB5B5";
-        msgEl.textContent = "書き出しに失敗しました: " + (e.message || e);
-      } finally {
-        exportBtn.disabled = false; exportBtn.textContent = orig;
-      }
-    });
-
     logoutBtn.addEventListener("click", async () => {
       await signOut(auth);
       location.reload();
@@ -1680,9 +1613,6 @@
               <button id="export-csv-btn" data-hint="現在の顧客台帳をCSVで書き出し (Excelで開ける)" style="background:#fff;border:1px solid #C19A3A;color:#8B6F26;padding:9px 14px;border-radius:8px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:0.02em;display:inline-flex;align-items:center;gap:6px;">
                 <i data-lucide="download" style="width:14px;height:14px;"></i><span>CSV</span>
               </button>
-              <button id="export-all-btn" data-hint="顧客・面談・議事録・LINE履歴を含む全データをJSONで書き出し (解約時のデータ持ち出し用)" style="background:#fff;border:1px solid #C19A3A;color:#8B6F26;padding:9px 14px;border-radius:8px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:0.02em;display:inline-flex;align-items:center;gap:6px;">
-                <i data-lucide="database" style="width:14px;height:14px;"></i><span>全データ</span>
-              </button>
               <button class="primary" id="add-client-btn" data-hint="新しい顧客をCRMに追加。家族の生年月日も入れるとライフイベントが30年自動展開">
                 <i data-lucide="plus"></i><span>新規顧客を登録</span>
               </button>
@@ -1931,7 +1861,7 @@ window.fpReadyAfterAuth = function() {
     });
   })();
 
-  const ver = "20260915A";
+  const ver = "20260909B";
   // ★ 2026-06-26 perf: critical (画面初期表示に必須) と deferred (LINE/charts) を 分離
   // critical: 顧客台帳・ホーム描画に必須
   // deferred: LINE タブ (line-app.js 555KB) / dashboard charts (charts.js) → idle で 後ロード
@@ -2683,7 +2613,7 @@ window.fpReadyAfterAuth = function() {
 <script>
 (function(){
   // 最新の ver を 1 箇所に集約 (fpReadyAfterAuth 側と一致させる必要あり)
-    const FP_VERSION = "20260915A";
+    const FP_VERSION = "20260909B";
   try { window.FP_VERSION = FP_VERSION; } catch(_) {}
 
   // 2026-07-13 v11: Chrome拡張 (Zoom タブ音声 レコーダー) 検知

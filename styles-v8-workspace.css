@@ -9983,6 +9983,10 @@ body.modal-open {
     border-radius: 0 !important;
     box-shadow: none !important;
     min-height: 64px !important;
+    /* 2026-09-15: 旧 roundV (L9118) の max-height:90px + overflow:hidden が残っていて、
+       タグが3つ以上ある顧客 (例: 古来さん) で下段が切れていた。行は中身なりに伸ばす。 */
+    max-height: none !important;
+    overflow: visible !important;
     position: relative !important;
     cursor: pointer !important;
   }
@@ -10025,10 +10029,12 @@ body.modal-open {
     grid-column: 1 / 3 !important;
     grid-row: 1 / 2 !important;
     display: flex !important;
-    align-items: center !important;
+    /* 2026-09-15: center だと タグが増えた行で アバターだけ下にずれて見えた → 上揃え */
+    align-items: flex-start !important;
     gap: 12px !important;
     min-width: 0 !important;
-    overflow: hidden !important;
+    /* 2026-09-15: hidden だと タグ行が切れる。 名前の省略記号は strong 側で効いている */
+    overflow: visible !important;
   }
   /* 名前 strong は full幅で大きく */
   table.clients tbody td:nth-child(1) strong {
@@ -10036,13 +10042,24 @@ body.modal-open {
   }
   table.clients tbody td:nth-child(1) .client-row-name {
     display: flex !important;
-    align-items: center !important;
+    /* 2026-09-15: 上揃え。 タグ行があっても アバターは名前の横に並ぶ */
+    align-items: flex-start !important;
     justify-content: flex-start !important;
     gap: 10px !important;
     min-width: 0 !important;
     width: 100% !important;
     flex: 1 1 100% !important;
     margin: 0 !important;
+  }
+  /* アバターは 名前の 行の高さに合わせて 少しだけ下げる (上揃えの見た目調整) */
+  table.clients tbody td:nth-child(1) .client-row-name > .avatar {
+    margin-top: 1px !important;
+  }
+  /* タグ行: 折り返して 全部見せる (切らない) */
+  table.clients tbody td:nth-child(1) .client-row-name div > div[style*="flex-wrap"] {
+    flex-wrap: wrap !important;
+    overflow: visible !important;
+    max-height: none !important;
   }
   table.clients tbody td:nth-child(1) .avatar {
     width: 38px !important;
