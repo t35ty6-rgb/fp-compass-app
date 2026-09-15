@@ -13514,3 +13514,125 @@ body:not([data-home-view]) [data-view-target="cal"] { display: none !important; 
     display: none !important;
   }
 }
+
+/* ============================================================
+   2026-09-16: 顧客モーダル (スマホ) — 「Zoom で 面談 する」 を 一番上 に
+   owner fb:「今すぐ Zoom で面談する が、 一番下 まで スクロール しないと 出てこない」
+   原因: 上 の 並び替え で cd-right の 中身 を
+         tabs(0) → pane(1) → その他(2) に して いた ため、
+         action card を 持つ .cd-flow が 面談記録 の 後ろ に 回って いた。
+   .cd-flow だけ 先頭 (-1) に 引き上げる。 tabs は sticky な ので
+   スクロール すれば そのまま 上 に 貼り付く。
+============================================================ */
+@media (max-width: 768px) {
+  /* 詳細度メモ: L10393 の `> *:not(.cd-tabs):not(.cd-pane)` は (0,4,0)。
+     単なる `> .cd-flow` は (0,3,0) で負けて order:2 のままだった (実測で判明)。 */
+  .cd-modal .cd-right > .cd-flow.cd-flow:not(.cd-tabs) {
+    order: -1 !important;
+    margin: 0 0 4px !important;
+  }
+  /* 縦 を 詰める (action card を 開いて すぐ 押せる 高さ に) */
+  .cd-modal .cd-right > .cd-flow.cd-flow .cd-flow-reason {
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+  }
+}
+
+/* ============================================================
+   2026-09-16: 顧客モーダル (スマホ) — 誰のカードか を 最上部 に
+   実測: モーダルを開いた直後の画面に 顧客名 が 無く、
+         名前 (.cd-profile-head) は y=639px = 2画面目 に あった。
+   cd-left を display:contents で 中身を .cd-modal 直下に 昇格させ、
+   名前だけ 先頭 に 引き上げる (cd-left は モバイルで padding:0 のため副作用なし)。
+============================================================ */
+@media (max-width: 768px) {
+  .cd-modal > .cd-left { display: contents !important; }
+  .cd-modal > .cd-left > .cd-profile-head { order: -2 !important; }
+  .cd-modal > .cd-left > *:not(.cd-profile-head) { order: 3 !important; }
+}
+
+/* ============================================================
+   2026-09-16: スマホの操作性 3点 (実測して直したもの)
+   ① やることリストの操作ボタンが スマホで消えていた
+      実測: .fp-task-actions の display が none
+      「LINEで返信」「Zoom発行」「候補日 再送」が 押せず、
+      顧客を開いてから探し直す必要があった
+   ② タスクの完了チェックが 20×20px (目安 44px)
+      見た目は変えず、判定範囲だけ広げる
+   ③ 顧客モーダルの閉じるボタンが 74×40px → 44px に
+============================================================ */
+@media (max-width: 720px) {
+  /* ── ① 操作ボタンを 2段目に フル幅で 出す ──
+     .fp-task-meta を display:contents で 溶かして、
+     中の actions と deadline を 直接 grid に 配置する */
+  .fp-task-row {
+    grid-template-rows: auto auto !important;
+    row-gap: 8px !important;
+  }
+  .fp-task-row .fp-task-meta {
+    display: contents !important;
+  }
+  .fp-task-row .fp-task-deadline {
+    grid-column: 4 !important;
+    grid-row: 1 !important;
+    align-self: center !important;
+  }
+  .fp-task-row .fp-task-actions {
+    display: flex !important;
+    grid-column: 3 / span 2 !important;
+    grid-row: 2 !important;
+    gap: 8px !important;
+  }
+  .fp-task-row .fp-task-actions .fp-task-act {
+    /* 本当の原因: この button は opacity:0 で、 行に マウスを乗せた時だけ
+       見えるようになる 作り だった。 スマホには hover が無いので 永久に 見えない。
+       display:none で隠していたのは その場しのぎ。 常時表示に する。 */
+    opacity: 1 !important;
+    transform: none !important;
+    flex: 1 1 auto !important;
+    min-height: 44px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 13px !important;
+    font-weight: 800 !important;
+    padding: 0 14px !important;
+  }
+  /* 操作ボタンが無いタスクでは 2段目を作らない */
+  .fp-task-row:not(:has(.fp-task-act)) {
+    grid-template-rows: auto !important;
+    row-gap: 0 !important;
+  }
+
+  /* ── ② チェックの判定範囲を 44px に (見た目は 20px のまま) ── */
+  .fp-task-check {
+    position: relative !important;
+  }
+  .fp-task-check::after {
+    content: '' !important;
+    position: absolute !important;
+    top: -12px !important; right: -12px !important;
+    bottom: -12px !important; left: -12px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  /* ── ③ 閉じるボタン 40px → 44px ── */
+  .cd-modal .cd-close {
+    min-height: 44px !important;
+    height: 44px !important;
+  }
+}
+
+@media (hover: none) {
+  /* hover が無い端末 (スマホ・タブレット) では、
+     hover で初めて見える作りの ものを 常時表示にする。
+     カンバンの削除ボタンも 同様に 触れなかった。 */
+  .fp-task-actions .fp-task-act,
+  .fp-kanban-card-del {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
