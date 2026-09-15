@@ -13339,3 +13339,178 @@ body:not([data-home-view]) [data-view-target="cal"] { display: none !important; 
   border-radius: 10px;
   gap: 10px;
 }
+
+/* ============================================================
+   2026-09-16: 顧客台帳 (スマホ) を カード型 に — owner が 案C を選択
+   ・のっぺりした白一色 の 連続リスト → ベージュ地 に 白カード
+   ・タグ (手動 + AI自動) は スマホ では 非表示 (owner fb: 名前だけでいい)
+   ・最終接触 を カード内 に 出す (今まで mobile では 隠れていた)
+   ファイル末尾 に 置く のは、 上 の 「防御」 ブロック (L10151 付近) が
+   tr の 背景・影・border を 強制 で 潰して いる ため。 source 順 で 後勝ち。
+============================================================ */
+@media (max-width: 768px) {
+
+  /* 地色 を ベージュ に して カード を 浮かせる */
+  table.clients,
+  table.clients tbody {
+    background: #F7F5EF !important;
+  }
+  table.clients tbody {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+    padding: 14px !important;
+    box-sizing: border-box !important;
+  }
+
+  /* 1顧客 = 1枚 の 白カード */
+  table.clients tbody tr {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-rows: auto !important;
+    align-items: stretch !important;
+    gap: 5px !important;
+    padding: 12px 34px 12px 12px !important;
+    margin: 0 !important;
+    background-color: #FFFFFF !important;
+    border: 1px solid #EDE7D8 !important;
+    border-bottom: 1px solid #EDE7D8 !important;
+    border-radius: 14px !important;
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05) !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+  table.clients tbody tr:last-child {
+    border-bottom: 1px solid #EDE7D8 !important;
+  }
+  table.clients tbody tr:hover,
+  table.clients tbody tr:active {
+    background-color: #FFFDF7 !important;
+  }
+
+  /* chevron は カード の 縦中央 に */
+  table.clients tbody tr::after {
+    right: 14px !important;
+    color: #C19A3A !important;
+    font-size: 20px !important;
+  }
+
+  /* 名前ブロック: アバター 42px + 名前 */
+  table.clients tbody td:nth-child(1) {
+    grid-column: 1 !important;
+    grid-row: auto !important;
+    align-items: center !important;
+    gap: 12px !important;
+  }
+  table.clients tbody td:nth-child(1) .client-row-name {
+    align-items: center !important;
+    gap: 12px !important;
+  }
+  table.clients tbody td:nth-child(1) .avatar {
+    width: 40px !important;
+    height: 40px !important;
+    font-size: 14.5px !important;
+  }
+  table.clients tbody td:nth-child(1) .client-row-name > .avatar {
+    margin-top: 0 !important;
+  }
+  table.clients tbody td:nth-child(1) strong {
+    font-size: 15.5px !important;
+    font-weight: 700 !important;
+  }
+  /* 旧 roundV が 名前ブロック の 下 に 引いて いた 区切り線 を 消す
+     (カード の 中 に 線 が 入って 二重 に 見える) */
+  table.clients tbody td:nth-child(1) {
+    border-bottom: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    min-height: 0 !important;
+    line-height: 1.35 !important;
+    /* td と div の 間 の 改行 が 無名 flex item に なり、 gap ぶん (12px)
+       カード が 高く なって いた。 内側 の gap は .client-row-name 側 で 持つ。 */
+    gap: 0 !important;
+    font-size: 0 !important;
+  }
+  table.clients tbody td:nth-child(1) .client-row-name {
+    margin: 0 !important;
+    padding: 0 !important;
+    min-height: 0 !important;
+  }
+
+  /* 名前 と バッジ (LINE / アンケ未回答) を 同じ行 に 流す。
+     strong が display:block の ため バッジ が 必ず 改行 して いて、
+     カード が 1枚 20px ほど 無駄 に 高く なって いた。 */
+  table.clients tbody td:nth-child(1) .client-row-name > div {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    gap: 5px !important;
+    min-width: 0 !important;
+  }
+  table.clients tbody td:nth-child(1) strong {
+    display: inline-block !important;
+    max-width: 100% !important;
+    margin-right: 0 !important;
+  }
+  /* バッジ の 既存 margin-left:5px は gap と 二重 に なる ので 打ち消す */
+  table.clients tbody td:nth-child(1) .client-row-name > div > span {
+    margin-left: 0 !important;
+    flex-shrink: 0 !important;
+  }
+
+  /* スマホ では タグ と かな を 出さない (詳細は タップ先 で) */
+  table.clients tbody td:nth-child(1) .client-row-name div > div[style*="flex-wrap"],
+  table.clients tbody td:nth-child(1) .client-row-name div > div:not([style*="flex-wrap"]) {
+    display: none !important;
+  }
+
+  /* 最終接触 を カード内 に 表示 (アバター幅 ぶん 字下げ) */
+  table.clients tbody td:nth-child(11) {
+    display: block !important;
+    grid-column: 1 !important;
+    grid-row: auto !important;
+    padding: 0 0 0 52px !important;
+    margin: 0 !important;
+    min-height: 0 !important;
+    line-height: 1.25 !important;
+    font-size: 0 !important;
+  }
+  table.clients tbody td:nth-child(11) > div {
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: flex-start !important;
+    align-items: center !important;
+    gap: 8px !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  /* 状態バッジ に 小さい ドット を 足す (案C の 見た目) */
+  table.clients tbody td:nth-child(11) > div > span:first-child {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    font-size: 10.5px !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.03em !important;
+    padding: 2px 9px !important;
+    border-radius: 999px !important;
+  }
+  table.clients tbody td:nth-child(11) > div > span:first-child::before {
+    content: '' !important;
+    width: 5px !important;
+    height: 5px !important;
+    border-radius: 50% !important;
+    background: currentColor !important;
+    flex-shrink: 0 !important;
+  }
+  table.clients tbody td:nth-child(11) > div > span:nth-child(2) {
+    font-size: 11px !important;
+    color: #A09A8A !important;
+  }
+  /* LINE の 最終アクション 行 は カード を 詰まらせる ので スマホ では 出さない */
+  table.clients tbody td:nth-child(11) > div > span:nth-child(3) {
+    display: none !important;
+  }
+}
