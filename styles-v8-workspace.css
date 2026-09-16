@@ -13636,3 +13636,214 @@ body:not([data-home-view]) [data-view-target="cal"] { display: none !important; 
     transform: none !important;
   }
 }
+
+/* ============================================================
+   2026-09-16: やることリストの操作ボタンの色が壊れていた
+   `.fp-task-actions .fp-task-act` (0,2,0) の background:#fff が
+   `.fp-btn-elevated--*` (0,1,0) のグラデーションに勝っていて、
+   「白いボタンに緑の縁と光だけ付く」状態になっていた。
+   opacity:0 で見えなかったので 今まで誰も気づけなかった。
+   variant ごとに 詳細度を上げて 本来の色に戻す。
+   文字色 #1A2138 のコントラスト実測:
+     ゴールド 5.07:1 / LINE緑 5.55:1 / 緑 4.83:1 … いずれも AA (4.5) 通過
+     青 3.08:1 のみ不足 → 青だけ白文字 (5.17:1) にする
+============================================================ */
+.fp-task-actions .fp-task-act.fp-btn-elevated {
+  color: #1A2138;
+  border: 1px solid #a8842c;
+  background: linear-gradient(180deg, #d4a94a 0%, #b8893d 50%, #a8842c 100%);
+}
+.fp-task-actions .fp-task-act.fp-btn-elevated--line {
+  border-color: #04a045;
+  background: linear-gradient(180deg, #06c755 0%, #05b04a 50%, #04a045 100%);
+}
+.fp-task-actions .fp-task-act.fp-btn-elevated--green {
+  border-color: #15803d;
+  background: linear-gradient(180deg, #22c55e 0%, #16a34a 50%, #15803d 100%);
+}
+.fp-task-actions .fp-task-act.fp-btn-elevated--blue {
+  border-color: #1e40af;
+  background: linear-gradient(180deg, #3b82f6 0%, #2563eb 50%, #1e40af 100%);
+  /* 青は濃いので 濃色文字だと 3.08:1 で読みにくい。 白文字なら 5.17:1 */
+  color: #FFFFFF;
+}
+.fp-task-actions .fp-task-act.fp-btn-elevated:hover,
+.fp-task-actions .fp-task-act.fp-btn-elevated:active {
+  background: linear-gradient(180deg, #d4a94a 0%, #b8893d 50%, #a8842c 100%);
+  color: #1A2138;
+}
+.fp-task-actions .fp-task-act.fp-btn-elevated--line:hover,
+.fp-task-actions .fp-task-act.fp-btn-elevated--line:active {
+  background: linear-gradient(180deg, #06c755 0%, #05b04a 50%, #04a045 100%);
+  color: #1A2138;
+}
+.fp-task-actions .fp-task-act.fp-btn-elevated--green:hover,
+.fp-task-actions .fp-task-act.fp-btn-elevated--green:active {
+  background: linear-gradient(180deg, #22c55e 0%, #16a34a 50%, #15803d 100%);
+  color: #1A2138;
+}
+.fp-task-actions .fp-task-act.fp-btn-elevated--blue:hover,
+.fp-task-actions .fp-task-act.fp-btn-elevated--blue:active {
+  background: linear-gradient(180deg, #3b82f6 0%, #2563eb 50%, #1e40af 100%);
+  color: #FFFFFF;
+}
+
+@media (max-width: 720px) {
+  /* 全幅の帯ボタンは重いので、 内容なりの幅で 左寄せ に */
+  .fp-task-row .fp-task-actions .fp-task-act {
+    flex: 0 0 auto !important;
+  }
+  .fp-task-row .fp-task-actions {
+    justify-content: flex-start !important;
+  }
+}
+
+/* ============================================================
+   2026-09-16: 相談タブ「予約待ち」カード — E 案 (一覧 + 押すと開く)
+   旧カードの問題 (実測):
+     ・1枚 760〜820px。1件で画面が埋まる
+     ・名前が縦書きに潰れる (青と赤のボタンに幅を取られていた)
+     ・青「この方を見る」赤「別日再調整」が 緑の確定ボタンより目立つ
+     ・userId と長い説明文が並び、何を押すか分からない
+   色は実測でコントラストを通したものだけ:
+     本文 #14171C (18.0:1) / 補助 #565B66 (6.8:1) / 緑 #15803d に白文字 (5.0:1)
+============================================================ */
+.fp-pend {
+  background: #FFFFFF;
+  border: 1px solid #DFE1E5;
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+.fp-pend-go-state { border: 2px solid #15803d; }
+
+.fp-pend-head {
+  width: 100%;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: none;
+  border: 0;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.fp-pend-head:hover { background: #FAFAFB; }
+.fp-pend-head img,
+.fp-pend-head > div:first-child { flex-shrink: 0; }
+
+.fp-pend-id { min-width: 0; flex: 1 1 auto; display: block; }
+.fp-pend-name {
+  display: block;
+  font-size: 15px;
+  font-weight: 800;
+  color: #14171C;
+  letter-spacing: -0.005em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.fp-pend-sub {
+  display: block;
+  font-size: 12px;
+  color: #565B66;
+  margin-top: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.fp-pend-badge {
+  font-size: 11.5px;
+  font-weight: 800;
+  border-radius: 999px;
+  padding: 3px 10px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.fp-pend-badge-go   { color: #FFFFFF; background: #15803d; }
+.fp-pend-badge-wait { color: #565B66; background: #EFF0F2; }
+.fp-pend-chev { color: #A7ACB5; font-size: 18px; line-height: 1; flex-shrink: 0; transition: transform .15s ease; }
+.fp-pend-open .fp-pend-chev,
+.fp-pend-go-state .fp-pend-chev { transform: rotate(90deg); }
+
+.fp-pend-body {
+  padding: 0 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+/* display:flex が hidden 属性に勝ってしまい、閉じているはずの行が
+   開いたままになっていた (実測で判明)。明示的に打ち消す。 */
+.fp-pend-body[hidden] { display: none !important; }
+.fp-pend-when { background: #F5F6F7; border-radius: 10px; padding: 14px 16px; }
+.fp-pend-when-label { font-size: 12px; font-weight: 700; color: #565B66; margin-bottom: 6px; }
+.fp-pend-when-value { font-size: 20px; font-weight: 800; color: #14171C; letter-spacing: -0.01em; }
+
+.fp-pend-slots { background: #F5F6F7; border-radius: 10px; padding: 14px 16px; }
+.fp-pend-slot {
+  display: flex; align-items: baseline; gap: 10px;
+  font-size: 14px; color: #14171C; font-weight: 700;
+  padding: 6px 0;
+}
+.fp-pend-slot + .fp-pend-slot { border-top: 1px solid #E6E8EB; }
+.fp-pend-slot-no { font-size: 11.5px; font-weight: 800; color: #565B66; flex-shrink: 0; }
+
+.fp-pend-voice { font-size: 13.5px; color: #14171C; line-height: 1.8; }
+.fp-pend-hint  { font-size: 12.5px; color: #565B66; line-height: 1.7; }
+
+.fp-pend-go {
+  width: 100%;
+  min-height: 54px;
+  background: #15803d;
+  border: 0;
+  border-radius: 10px;
+  color: #FFFFFF;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: 0 2px 0 #116534;
+}
+.fp-pend-go:hover  { background: #14713a; }
+.fp-pend-go:active { background: #116534; box-shadow: none; transform: translateY(2px); }
+
+.fp-pend-subrow { display: flex; gap: 10px; }
+.fp-pend-sub-btn {
+  flex: 1;
+  min-height: 46px;
+  background: #FFFFFF;
+  border: 1px solid #DFE1E5;
+  border-radius: 9px;
+  color: #565B66;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.fp-pend-sub-btn:hover { background: #F5F6F7; color: #14171C; }
+
+/* 旧層 (L6161 / L6355) が [data-pending-card] に !important で
+   オレンジの左枠・padding 20px 24px・「⏳ 確定待ち」の ::before・
+   オレンジのグラデ背景 を付けていた。E案のカードでは全部いらないので打ち消す。
+   属性は JS が使っているので残し、クラス側で詳細度を上げて上書きする。 */
+.fp-pend[data-pending-card] {
+  border-left: 1px solid #DFE1E5 !important;
+  border-radius: 14px !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  background: #FFFFFF !important;
+}
+.fp-pend-go-state[data-pending-card] {
+  border: 2px solid #15803d !important;
+}
+.fp-pend[data-pending-card]::before {
+  content: none !important;
+  display: none !important;
+}

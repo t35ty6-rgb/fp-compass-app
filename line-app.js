@@ -1615,65 +1615,86 @@
       const avatarHtml = picUrl
         ? `<img src="${escapeHtml(picUrl)}" alt="" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,0.12);">`
         : `<div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#4f46e5);color:#fff;font-weight:700;font-size:18px;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,0.12);">${escapeHtml(initial)}</div>`;
+      // ============================================================
+      // 2026-09-16: 予約待ちカードを E 案 (一覧 + 押すと開く) に作り替え
+      //   旧: 1枚 760〜820px。名前が縦書きに潰れ、青「この方を見る」赤「別日再調整」が
+      //       確定ボタンより目立ち、userId や長い説明文が並んで何を押すか分からなかった。
+      //   新: 全員1行。お客様が日時を選んだ人だけ最初から開いて緑の確定ボタンを出す。
+      //   handler 互換のため data-focus-cal / data-reschedule / data-slot-confirm は据え置き。
+      // ============================================================
+      const canConfirm = !!s._pendingSelection;
+      const chosenIdx  = canConfirm ? parseInt(s._pendingSelection.index, 10) - 1 : -1;
+      const chosenText = canConfirm
+        ? (s._pendingSelection.slotText || s._pendingSelection.chosen || (slots[chosenIdx] || ''))
+        : '';
+      const parsedChosen = canConfirm ? parseSlotString(slots[chosenIdx] || chosenText) : null;
+      const badge = canConfirm
+        ? '<span class="fp-pend-badge fp-pend-badge-go">確定できます</span>'
+        : '<span class="fp-pend-badge fp-pend-badge-wait">返事待ち</span>';
+      const headSub = canConfirm
+        ? escapeHtml((parsedChosen && parsedChosen.display) || chosenText) + ' を希望'
+        : escapeHtml(tsJst) + ' に候補日を送信';
+
+      const detail = canConfirm
+        ? `
+            <div class="fp-pend-when">
+              <div class="fp-pend-when-label">お客様が選んだ日時</div>
+              <div class="fp-pend-when-value">${escapeHtml((parsedChosen && parsedChosen.display) || chosenText)}</div>
+            </div>
+            ${s.q5_悩み ? `<div class="fp-pend-voice">${escapeHtml(s.q5_悩み)}</div>` : ''}
+            <button class="slot-confirm-btn fp-pend-go" data-slot-confirm
+              data-fs-customer="${escapeHtml(s._fsCustomerId || '')}"
+              data-uid="${escapeHtml(s.userId || '')}"
+              data-date="${escapeHtml((parsedChosen && parsedChosen.dateStr) || '')}"
+              data-slot="${escapeHtml((parsedChosen && parsedChosen.slotStr) || '')}"
+              type="button">この日で確定する
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </button>
+            <div class="fp-pend-hint">押すと Zoom の URL を発行して、お客様に送ります。</div>`
+        : `
+            <div class="fp-pend-slots">
+              <div class="fp-pend-when-label">送った候補日</div>
+              ${slots.map((slot, i) => {
+                const ps = parseSlotString(slot);
+                return `<div class="fp-pend-slot"><span class="fp-pend-slot-no">第${i + 1}希望</span>${escapeHtml(ps.display)}</div>`;
+              }).join('')}
+            </div>
+            ${s.q5_悩み ? `<div class="fp-pend-voice">${escapeHtml(s.q5_悩み)}</div>` : ''}
+            <div class="fp-pend-hint">お客様が LINE で日時を選ぶまで待ちます。</div>`;
+
       return `
-        <div data-pending-card data-uid="${escapeHtml(s.userId || '')}" style="background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--gold);border-radius:10px;padding:18px 22px;margin-bottom:10px;box-shadow:var(--shadow-xs);">
-          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;">
-            <div style="display:flex;align-items:center;gap:12px;min-width:0;">
-              ${avatarHtml}
-              <div style="min-width:0;">
-                <div><strong style="font-size:16px;">${escapeHtml(displayName)} 様</strong></div>
-                <div style="font-size:11.5px;color:var(--gold);font-weight:700;margin-top:2px;">📅 ${escapeHtml(tsJst)} 回答</div>
-              </div>
+        <div data-pending-card data-uid="${escapeHtml(s.userId || '')}" class="fp-pend${canConfirm ? ' fp-pend-go-state' : ''}">
+          <button type="button" class="fp-pend-head" data-pend-toggle aria-expanded="${canConfirm ? 'true' : 'false'}">
+            ${avatarHtml}
+            <span class="fp-pend-id">
+              <span class="fp-pend-name">${escapeHtml(displayName)} 様</span>
+              <span class="fp-pend-sub">${headSub}</span>
+            </span>
+            ${badge}
+            <span class="fp-pend-chev" aria-hidden="true">›</span>
+          </button>
+          <div class="fp-pend-body"${canConfirm ? '' : ' hidden'}>
+            ${detail}
+            <div class="fp-pend-subrow">
+              <button data-focus-cal="${escapeHtml(s.userId || '')}" data-name="${escapeHtml(displayName)}" class="fp-pend-sub-btn" type="button">予定表で見る</button>
+              <button data-reschedule="${escapeHtml(s.userId || '')}" data-name="${escapeHtml(displayName)}" class="fp-pend-sub-btn" type="button">日程を取り直す</button>
             </div>
-            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end;">
-              <button data-focus-cal="${escapeHtml(s.userId || '')}" data-name="${escapeHtml(displayName)}" class="fp-btn-elevated fp-btn-elevated--blue fp-btn-elevated--sm" type="button">📅 この方を見る</button>
-              <button data-reschedule="${escapeHtml(s.userId || '')}" data-name="${escapeHtml(displayName)}" title="3つとも合わない時 → 改めて候補日を依頼" class="fp-btn-elevated fp-btn-elevated--red fp-btn-elevated--sm" type="button">✕ 別日再調整</button>
-              ${s._pendingSelection
-                ? `<span class="status-pill" style="background:#dcfce7;color:#166534;border:1px solid #86efac;font-weight:700;">🎯 お客様 選択 済 · 確定 待ち</span>`
-                : `<span class="status-pill" style="background:#e0e7ff;color:#3730a3;border:1px solid #a5b4fc;">📤 候補 送付 済 · お客様 タップ 待ち</span>`}
-            </div>
-          </div>
-          ${s._pendingSelection ? `
-          <div style="background:linear-gradient(135deg,#dcfce7,#f0fdf4);border:2px solid #86efac;border-radius:10px;padding:12px 16px;margin-bottom:10px;font-size:13px;color:#14532d;line-height:1.6;">
-            <div style="font-size:11px;font-weight:800;letter-spacing:0.08em;color:#166534;margin-bottom:3px;">🎯 お客様 が LINE で 選択 した 日時</div>
-            <strong style="font-weight:800;font-size:15px;">候補${escapeHtml(s._pendingSelection.index || '?')} · ${escapeHtml(s._pendingSelection.slotText || s._pendingSelection.chosen || '?')}</strong><br>
-            <span style="font-size:12px;color:#166534;">内容 を 確認 して 下 の 「この日で確定」 を 押す と Zoom URL 発行 + 確定 message が 自動 送信 されます</span>
-          </div>` : `
-          <div style="background:#f1f5f9;border:1px dashed #94a3b8;border-radius:10px;padding:12px 16px;margin-bottom:10px;font-size:12.5px;color:#475569;line-height:1.6;">
-            <strong style="font-weight:700;color:#1e293b;">📤 候補日 3つ を お客様 に 送信 済</strong><br>
-            お客様 が LINE で 候補X を タップ する まで お待ち ください。 タップ 後 「🎯 お客様 選択 済」 に 切り替わり 確定 できる ように なります。
-          </div>`}
-          <div style="font-size:12px;color:var(--muted);letter-spacing:0.02em;margin-bottom:10px;">
-            ${escapeHtml(s.q2_年代 || '-')} / ${escapeHtml(s.q3_家族 || '-')} / ${escapeHtml(s.q4_年収 || '-')} / userId:${uidShort}…
-          </div>
-          <div style="background:#fffbf2;border:1px solid #f0d36b;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:13.5px;color:#5e4d1a;line-height:1.6;">
-            <span style="font-size:11px;color:#a08537;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;display:block;margin-bottom:4px;">お客様からの一言</span>
-            💭 ${escapeHtml(s.q5_悩み || '(未記入)')}
-          </div>
-          <div style="font-size:11px;color:var(--muted);font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px;">候補日 ${s._pendingSelection ? '(お客様 が 選択 した 日 だけ 確定 できます)' : '(お客様 の 選択 待ち)'}</div>
-          <div style="display:grid;gap:6px;">
-            ${slots.map((slot, idx) => {
-              const parsed = parseSlotString(slot);
-              const chosenIdx = s._pendingSelection ? parseInt(s._pendingSelection.index, 10) - 1 : -1;
-              const isChosen = idx === chosenIdx;
-              const isDisabled = !s._pendingSelection || !isChosen;
-              if (isDisabled) {
-                return `<div style="text-align:left;padding:12px 16px;background:#f8fafc;border:2px dashed #cbd5e1;border-radius:8px;font-size:14px;display:flex;justify-content:space-between;align-items:center;font-family:inherit;color:#94a3b8;">
-                  <span><strong style="color:#94a3b8;margin-right:10px;">第${idx + 1}希望</strong>${escapeHtml(parsed.display)}</span>
-                  <span style="font-size:11px;color:#94a3b8;font-weight:700;background:#f1f5f9;padding:4px 10px;border-radius:6px;">${s._pendingSelection ? '未選択' : '選択 待ち'}</span>
-                </div>`;
-              }
-              return `<button class="slot-confirm-btn fp-btn-elevated fp-btn-elevated--green" data-slot-confirm
-                data-fs-customer="${escapeHtml(s._fsCustomerId || '')}"
-                data-uid="${escapeHtml(s.userId)}" data-date="${escapeHtml(parsed.dateStr)}" data-slot="${escapeHtml(parsed.slotStr)}"
-                style="justify-content:space-between;width:100%;padding:14px 18px;font-size:14px;">
-                <span style="display:inline-flex;align-items:center;gap:10px;"><span style="background:rgba(255,255,255,0.22);border:1px solid rgba(255,255,255,0.35);padding:2px 8px;border-radius:6px;font-size:10.5px;font-weight:800;letter-spacing:0.06em;">🎯 第${idx + 1}希望</span><span style="font-weight:900;">${escapeHtml(parsed.display)}</span></span>
-                <span style="display:inline-flex;align-items:center;gap:6px;font-weight:900;">この日で確定 <span aria-hidden="true">→</span></span>
-              </button>`;
-            }).join('')}
           </div>
         </div>`;
     }).join('');
+    // 行をタップで開閉 (E 案)。中のボタンを押した時は開閉しない。
+    target.querySelectorAll('[data-pend-toggle]').forEach(head => {
+      head.addEventListener('click', () => {
+        const card = head.closest('[data-pending-card]');
+        if (!card) return;
+        const body = card.querySelector('.fp-pend-body');
+        if (!body) return;
+        const open = body.hidden;
+        body.hidden = !open;
+        head.setAttribute('aria-expanded', open ? 'true' : 'false');
+        card.classList.toggle('fp-pend-open', open);
+      });
+    });
     bindConfirmButtons();
     // 「📅 この方を見る」ボタン → カレンダーパネルを開いて該当顧客にフォーカス
     target.querySelectorAll('[data-focus-cal]').forEach(btn => {
