@@ -77,7 +77,7 @@ body {
 }
 .app-title .sub {
   font-family: 'Inter', sans-serif;
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.15em;
   text-transform: uppercase;
   color: var(--muted);
@@ -88,7 +88,7 @@ body {
 }
 .app-meta {
   font-family: 'Inter', sans-serif;
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.06em;
   color: var(--muted);
 }
@@ -142,7 +142,7 @@ body {
   content: attr(data-eyebrow);
   display: block;
   font-family: 'Inter', sans-serif;
-  font-size: 10.5px;
+  font-size: 12px;
   font-weight: 700;
   color: #8b7d5d;
   letter-spacing: 0.18em;
@@ -190,7 +190,7 @@ body {
 }
 .kpi:hover::after { opacity: 1; }
 .kpi-label {
-  font-size: 10.5px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--muted);
   text-transform: uppercase;
@@ -213,7 +213,7 @@ body {
   margin-left: 4px;
 }
 .kpi-sub {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
   margin-top: 6px;
   letter-spacing: 0.02em;
@@ -239,7 +239,7 @@ body {
 .action-item:last-child { border-bottom: none; }
 .action-priority {
   font-family: 'Inter', sans-serif;
-  font-size: 9.5px;
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.1em;
@@ -272,7 +272,7 @@ table.clients {
 table.clients th {
   background: var(--surface-2);
   font-weight: 700;
-  font-size: 10.5px;
+  font-size: 12px;
   color: var(--muted);
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -291,7 +291,7 @@ table.clients tbody tr:hover { background: var(--accent-soft); }
 /* ───────── Status pills ───────── */
 .status-pill {
   font-family: 'Inter', sans-serif;
-  font-size: 9.5px;
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -478,7 +478,7 @@ input:focus, select:focus, textarea:focus {
   padding: 3px 11px;
   border-radius: 12px;
   font-family: 'Inter', sans-serif;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.02em;
 }
@@ -492,7 +492,7 @@ input:focus, select:focus, textarea:focus {
 }
 .sched-table th {
   background: var(--surface-2);
-  font-size: 10.5px;
+  font-size: 12px;
   letter-spacing: 0.08em;
 }
 .sched-row {
@@ -527,14 +527,14 @@ input:focus, select:focus, textarea:focus {
 }
 .funnel-label {
   font-family: 'Inter', sans-serif;
-  font-size: 10.5px;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 .funnel-conv {
   font-family: 'Inter', sans-serif;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   color: var(--line-green-deep);
   letter-spacing: 0.02em;
@@ -583,7 +583,7 @@ input:focus, select:focus, textarea:focus {
 }
 .booking-meta {
   display: inline-block;
-  font-size: 11.5px;
+  font-size: 12.5px;
   background: var(--accent-soft);
   color: var(--accent);
   padding: 3px 10px;
@@ -633,7 +633,7 @@ input:focus, select:focus, textarea:focus {
 /* ───────── Recording status ───────── */
 .rec-pill {
   font-family: 'Inter', sans-serif;
-  font-size: 10px;
+  font-size: 11.5px;
   font-weight: 700;
   letter-spacing: 0.08em;
   padding: 3px 9px;
@@ -689,7 +689,7 @@ input:focus, select:focus, textarea:focus {
   background: var(--surface-2);
 }
 .detail-block h3 {
-  font-size: 10.5px;
+  font-size: 12px;
   letter-spacing: 0.1em;
   font-weight: 700;
 }
@@ -712,7 +712,7 @@ input:focus, select:focus, textarea:focus {
 }
 .admin-toolbar .count {
   font-family: 'Inter', sans-serif;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.06em;
   color: var(--muted);
@@ -728,7 +728,7 @@ input:focus, select:focus, textarea:focus {
   margin-top: 8px;
 }
 .booking-rec-row .btn-mini {
-  font-size: 11.5px;
+  font-size: 12.5px;
   padding: 5px 11px;
   background: var(--surface);
   border: 1px solid var(--line);
@@ -814,7 +814,7 @@ input:focus, select:focus, textarea:focus {
   flex-wrap: wrap;
 }
 .client-meta {
-  font-size: 11.5px;
+  font-size: 12.5px;
   color: var(--muted);
   margin-top: 3px;
   letter-spacing: 0.02em;
@@ -827,7 +827,7 @@ input:focus, select:focus, textarea:focus {
   color: var(--ink);
 }
 .action-detail .reason {
-  font-size: 11.5px;
+  font-size: 12.5px;
   color: var(--muted);
   margin-top: 3px;
   letter-spacing: 0.01em;
@@ -858,12 +858,12 @@ table.clients td {
 }
 .kpi-label {
   font-family: 'Inter', sans-serif;
-  font-size: 10px;
+  font-size: 11.5px;
   font-weight: 700;
   letter-spacing: 0.14em;
 }
 .kpi-sub {
-  font-size: 10.5px;
+  font-size: 12px;
   letter-spacing: 0.02em;
   color: var(--muted-2);
 }
@@ -907,7 +907,7 @@ table.clients td {
 
 /* ───────── Section title decorations ───────── */
 .section-title {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.16em;
   color: var(--ink-2);
@@ -969,7 +969,7 @@ button.primary:hover {
 }
 .live-bar-label {
   font-family: 'Inter', sans-serif;
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
 }
@@ -982,7 +982,7 @@ button.primary:hover {
   border: 1px solid var(--line);
 }
 .form-section h3 {
-  font-size: 10.5px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.14em;
   color: var(--accent);
@@ -998,7 +998,7 @@ button.primary:hover {
   padding: 18px 20px;
 }
 .detail-block dt {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
   letter-spacing: 0.05em;
 }
@@ -1011,7 +1011,7 @@ button.primary:hover {
 
 /* ───────── Status pill 微調整 ───────── */
 .status-pill {
-  font-size: 9.5px;
+  font-size: 11px;
   padding: 3px 10px;
   border-radius: 12px;
   letter-spacing: 0.08em;
@@ -1138,7 +1138,7 @@ button.primary:hover {
   margin-bottom: 3px;
 }
 .sched-meta {
-  font-size: 11.5px;
+  font-size: 12.5px;
   color: var(--muted);
   letter-spacing: 0.02em;
 }
@@ -1174,7 +1174,7 @@ button.primary:hover {
 }
 .bday-rel {
   font-family: 'Inter', sans-serif;
-  font-size: 10.5px;
+  font-size: 12px;
   color: var(--gold);
   margin-top: 3px;
   font-weight: 600;
@@ -1186,7 +1186,7 @@ button.primary:hover {
 }
 .bday-rel-tag {
   font-family: 'Inter', sans-serif;
-  font-size: 10px;
+  font-size: 11.5px;
   background: var(--accent-soft);
   color: var(--accent);
   padding: 2px 8px;
@@ -1196,14 +1196,14 @@ button.primary:hover {
   margin-left: 6px;
 }
 .bday-meta {
-  font-size: 11.5px;
+  font-size: 12.5px;
   color: var(--muted);
   margin-top: 4px;
   letter-spacing: 0.01em;
 }
 .line-status-pill {
   font-family: 'Inter', sans-serif;
-  font-size: 10px;
+  font-size: 11.5px;
   background: #f0f0f0;
   color: var(--muted);
   padding: 4px 10px;
@@ -1255,7 +1255,7 @@ button.primary:hover {
   color: var(--accent);
   padding: 3px 10px;
   border-radius: 11px;
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.02em;
   font-weight: 500;
 }
@@ -1270,7 +1270,7 @@ button.primary:hover {
   border-radius: var(--radius-lg);
 }
 .sched-table th {
-  font-size: 10.5px;
+  font-size: 12px;
   letter-spacing: 0.1em;
   padding: 14px 16px;
 }
@@ -1343,7 +1343,7 @@ button.primary:hover {
 }
 .tpl-cat {
   font-family: 'Inter', sans-serif;
-  font-size: 10px;
+  font-size: 11.5px;
   letter-spacing: 0.08em;
   font-weight: 700;
 }
@@ -1372,7 +1372,7 @@ button.primary:hover {
 }
 .settings-row label {
   font-family: 'Inter', sans-serif;
-  font-size: 10.5px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.1em;
   color: var(--muted);
@@ -1419,7 +1419,7 @@ button.primary:hover {
 }
 .step-day {
   font-family: 'Inter', sans-serif;
-  font-size: 10px;
+  font-size: 11.5px;
   background: var(--gold-soft);
   color: var(--gold);
   padding: 3px 9px;
@@ -1429,7 +1429,7 @@ button.primary:hover {
 }
 .step-time {
   font-family: 'Inter', sans-serif;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
   letter-spacing: 0.04em;
   margin-left: 8px;
@@ -1462,7 +1462,7 @@ button.primary:hover {
 .q-no {
   font-family: 'Inter', sans-serif;
   font-weight: 700;
-  font-size: 11px;
+  font-size: 12px;
   background: var(--accent-soft);
   color: var(--accent);
   width: 32px;
@@ -1480,7 +1480,7 @@ button.primary:hover {
   margin-bottom: 6px;
 }
 .q-opt {
-  font-size: 11.5px;
+  font-size: 12.5px;
   padding: 3px 10px;
   background: var(--surface-2);
   border: 1px solid var(--line);
@@ -1528,7 +1528,7 @@ button.primary:hover {
 }
 .howto-banner-title {
   font-family: 'Inter', 'Noto Sans JP', sans-serif;
-  font-size: 11.5px;
+  font-size: 12.5px;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -1563,7 +1563,7 @@ button.primary:hover {
   align-items: center;
   justify-content: center;
   font-family: 'Inter', sans-serif;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 800;
   margin-top: 1px;
 }
@@ -1577,7 +1577,7 @@ button.primary:hover {
   color: #8a6f1e;
   padding: 1px 7px;
   border-radius: 4px;
-  font-size: 11.5px;
+  font-size: 12.5px;
   font-weight: 600;
   white-space: nowrap;
   margin: 0 3px;
@@ -1612,7 +1612,7 @@ button[data-hint], a[data-hint] {
   background: var(--ink);
   color: #fff;
   font-family: 'Noto Sans JP', sans-serif;
-  font-size: 11.5px;
+  font-size: 12.5px;
   font-weight: 500;
   letter-spacing: 0.02em;
   padding: 8px 12px;
@@ -1635,7 +1635,7 @@ button[data-hint], a[data-hint] {
 
 /* ───── セクションタイトルの「目的」サブテキスト ───── */
 .section-sub {
-  font-size: 11.5px;
+  font-size: 12.5px;
   color: var(--muted);
   font-weight: 400;
   letter-spacing: 0.02em;
@@ -1658,7 +1658,7 @@ button.btn-with-hint .btn-main {
   font-weight: 700;
 }
 button.btn-with-hint .btn-sub {
-  font-size: 10px;
+  font-size: 11.5px;
   font-weight: 500;
   opacity: 0.75;
   margin-top: 2px;
@@ -1767,7 +1767,7 @@ button.btn-with-hint .btn-sub {
 }
 .task-card .task-label {
   font-family: 'Inter', sans-serif;
-  font-size: 10.5px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.14em;
   color: var(--muted);
@@ -1800,7 +1800,7 @@ button.btn-with-hint .btn-sub {
   line-height: 1.5;
 }
 .task-card .task-desc {
-  font-size: 11.5px;
+  font-size: 12.5px;
   color: var(--muted);
   letter-spacing: 0.01em;
   line-height: 1.55;
@@ -2042,7 +2042,7 @@ body {
     linear-gradient(180deg, #ffffff, #fafbfd) !important;
 }
 .kpi-label {
-  font-size: 10.5px !important;
+  font-size: 12px !important;
   font-weight: 700 !important;
   letter-spacing: 0.16em !important;
   color: var(--muted) !important;
@@ -2057,7 +2057,7 @@ body {
   font-feature-settings: 'tnum';
 }
 .kpi-sub {
-  font-size: 11px !important;
+  font-size: 12px !important;
   color: var(--muted-2) !important;
   margin-top: 8px !important;
   letter-spacing: 0.03em !important;
@@ -2105,7 +2105,7 @@ body {
   filter: drop-shadow(0 2px 4px rgba(20, 23, 31, 0.10));
 }
 .task-card .task-label {
-  font-size: 10.5px !important;
+  font-size: 12px !important;
   letter-spacing: 0.18em !important;
   margin-top: 10px !important;
   color: var(--muted) !important;
@@ -2207,7 +2207,7 @@ table.clients td {
   font-size: 13.5px !important;
 }
 table.clients th {
-  font-size: 11px !important;
+  font-size: 12px !important;
   letter-spacing: 0.14em !important;
   padding: 14px 18px !important;
   border-bottom: 1px solid var(--line-2) !important;
@@ -2221,7 +2221,7 @@ table.clients tbody tr:hover {
 
 /* ───── ステータスピル: 上質に ───── */
 .status-pill {
-  font-size: 10px !important;
+  font-size: 11.5px !important;
   padding: 4px 11px !important;
   font-weight: 800 !important;
   letter-spacing: 0.1em !important;
@@ -2278,7 +2278,7 @@ table.clients tbody tr:hover {
 }
 .detail-section h3 {
   font-family: 'Inter', 'Noto Sans JP', sans-serif !important;
-  font-size: 11px !important;
+  font-size: 12px !important;
   font-weight: 700 !important;
   letter-spacing: 0.16em !important;
   color: var(--accent) !important;
@@ -2302,7 +2302,7 @@ table.clients tbody tr:hover {
   border: 1px solid rgba(10, 37, 64, 0.15) !important;
   border-radius: 11px !important;
   padding: 3px 10px !important;
-  font-size: 10.5px !important;
+  font-size: 12px !important;
   font-weight: 700 !important;
   letter-spacing: 0.06em !important;
   font-family: 'Inter', sans-serif !important;

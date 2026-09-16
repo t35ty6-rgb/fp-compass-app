@@ -210,7 +210,7 @@ body, table, .kpi-value, .num, .funnel-value, .task-count,
 }
 .brand-badge {
   font-family: var(--font-display);
-  font-size: 9px; font-weight: 700;
+  font-size: 11px; font-weight: 700;
   letter-spacing: 0.08em; text-transform: uppercase;
   background: var(--accent-soft);
   color: var(--accent-2);
@@ -278,7 +278,7 @@ body, table, .kpi-value, .num, .funnel-value, .task-count,
 }
 .sidebar-quick-rec-pill {
   background: rgba(255, 255, 255, 0.18);
-  font-size: 9.5px;
+  font-size: 11px;
   font-weight: 800;
   padding: 2px 7px;
   border-radius: 4px;
@@ -301,7 +301,7 @@ body, table, .kpi-value, .num, .funnel-value, .task-count,
   .sidebar-nav .tab i[data-lucide], .sidebar-nav .tab svg.lucide {
     width: 15px !important; height: 15px !important;
   }
-  .sidebar-label { margin-top: 6px; margin-bottom: 4px; font-size: 10px; padding: 4px 12px 4px; }
+  .sidebar-label { margin-top: 6px; margin-bottom: 4px; font-size: 11.5px; padding: 4px 12px 4px; }
   .sidebar-group { margin-bottom: 8px; }
   .sidebar-scroll { gap: 6px; }
 }
@@ -322,7 +322,7 @@ body, table, .kpi-value, .num, .funnel-value, .task-count,
 .sidebar-search input::placeholder { color: var(--muted); }
 .kbd {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 11.5px;
   color: var(--ink-3);
   background: var(--surface);
   border: 1px solid var(--hairline-2);
@@ -465,12 +465,12 @@ body, table, .kpi-value, .num, .funnel-value, .task-count,
   .sidebar-foot { gap: 4px; padding-top: 8px; }
   .upgrade-mini { padding: 6px 10px; }
   .upgrade-mini-text { font-size: 11px; line-height: 1.35; }
-  .upgrade-mini-title { font-size: 10.5px; }
+  .upgrade-mini-title { font-size: 12px; }
   .real-mode-toggle { padding: 6px 10px; font-size: 11.5px; }
   .sidebar-user { padding: 6px 8px; margin-top: 0; }
   .user-avatar { width: 28px; height: 28px; font-size: 11px; }
   .user-name { font-size: 12.5px; }
-  .user-role { font-size: 10.5px; }
+  .user-role { font-size: 12px; }
 }
 
 /* Even shorter (< 600px) — real-mode label と upgrade bar を hide */
@@ -782,7 +782,7 @@ body, table, .kpi-value, .num, .funnel-value, .task-count,
 }
 .upgrade-sub {
   font-family: var(--font-body);
-  font-size: 10.5px; color: var(--ink-3);
+  font-size: 12px; color: var(--ink-3);
   margin-top: 1px;
 }
 .upgrade-progress {
@@ -800,7 +800,7 @@ body, table, .kpi-value, .num, .funnel-value, .task-count,
 .upgrade-meta {
   display: flex; justify-content: space-between; gap: 6px;
   font-family: var(--font-body);
-  font-size: 10.5px; color: var(--ink-3);
+  font-size: 12px; color: var(--ink-3);
   margin-bottom: 10px;
 }
 .upgrade-btn {
@@ -1038,7 +1038,7 @@ body, table, .kpi-value, .num, .funnel-value, .task-count,
   content: attr(data-eyebrow);
   display: block;
   font-family: var(--font-display);
-  font-size: 10.5px; font-weight: 700;
+  font-size: 12px; font-weight: 700;
   letter-spacing: 0.1em; text-transform: uppercase;
   color: var(--accent);
   margin-bottom: 6px;
@@ -1458,7 +1458,7 @@ button.btn-rec-start:not([data-rec-mode="inperson"]):hover {
   border-radius: 50% !important;
   min-width: 18px !important; height: 18px !important;
   display: inline-flex !important; align-items: center !important; justify-content: center !important;
-  font-size: 10px !important;
+  font-size: 11.5px !important;
   flex-shrink: 0; margin-top: 1px;
   box-shadow: none !important;
 }
@@ -2053,7 +2053,7 @@ table.clients [class*="avatar"],
 .cd-stat:last-child { border-bottom: none; }
 .cd-stat-label {
   font-family: var(--font-display);
-  font-size: 10.5px; font-weight: 600;
+  font-size: 12px; font-weight: 600;
   letter-spacing: 0.08em; text-transform: uppercase;
   color: var(--ink-3);
   margin-bottom: 4px;
@@ -2078,7 +2078,7 @@ table.clients [class*="avatar"],
 .cd-profile-section { margin-bottom: 20px; }
 .cd-section-label {
   font-family: var(--font-display);
-  font-size: 10.5px; font-weight: 700;
+  font-size: 12px; font-weight: 700;
   letter-spacing: 0.1em; text-transform: uppercase;
   color: var(--ink-3);
   margin-bottom: 8px;
@@ -2166,7 +2166,7 @@ table.clients [class*="avatar"],
 }
 .cd-cancel-rel {
   font-family: var(--font-body);
-  font-size: 10.5px; font-weight: 500;
+  font-size: 12px; font-weight: 500;
   color: var(--ink-3);
 }
 .cd-cancel-slot {
@@ -2242,7 +2242,7 @@ table.clients [class*="avatar"],
 .cd-flow-eyebrow-pill {
   display: inline-flex; align-items: center; gap: 6px;
   font-family: var(--font-display);
-  font-size: 10.5px; font-weight: 800;
+  font-size: 12px; font-weight: 800;
   letter-spacing: 0.12em; text-transform: uppercase;
   color: #FFFFFF;
   background: linear-gradient(135deg, #C19A3A, #A0822E);
@@ -2253,7 +2253,7 @@ table.clients [class*="avatar"],
 .cd-flow-eyebrow-pill i[data-lucide] { width: 12px !important; height: 12px !important; }
 .cd-flow-eyebrow-pri {
   font-family: var(--font-display);
-  font-size: 10.5px; font-weight: 800;
+  font-size: 12px; font-weight: 800;
   letter-spacing: 0.1em; text-transform: uppercase;
   background: #FEE2E2;
   color: #991B1B;
@@ -2413,7 +2413,7 @@ table.clients [class*="avatar"],
 .cd-nba-rank {
   display: inline-flex; align-items: center; gap: 6px;
   font-family: var(--font-display);
-  font-size: 10.5px; font-weight: 700;
+  font-size: 12px; font-weight: 700;
   letter-spacing: 0.12em; text-transform: uppercase;
   color: #A78BFA;
   background: rgba(167,139,250,0.18);
@@ -2426,7 +2426,7 @@ table.clients [class*="avatar"],
 }
 .cd-nba-pri {
   font-family: var(--font-display);
-  font-size: 10.5px; font-weight: 700;
+  font-size: 12px; font-weight: 700;
   letter-spacing: 0.1em; text-transform: uppercase;
   background: rgba(248,113,113,0.18);
   color: #FCA5A5;
@@ -2557,7 +2557,7 @@ table.clients [class*="avatar"],
   background: var(--accent-soft);
   color: var(--accent-2);
   font-family: var(--font-mono);
-  font-size: 10.5px; font-weight: 600;
+  font-size: 12px; font-weight: 600;
   padding: 1px 7px;
   border-radius: 100px;
   border: 1px solid #C7CDF5;
@@ -2593,7 +2593,7 @@ table.clients [class*="avatar"],
 }
 .cd-action-pri {
   font-family: var(--font-display);
-  font-size: 10px; font-weight: 700;
+  font-size: 11.5px; font-weight: 700;
   letter-spacing: 0.08em; text-transform: uppercase;
   background: var(--accent-soft);
   color: var(--accent-2);
@@ -2743,7 +2743,7 @@ table.clients [class*="avatar"],
 }
 .cd-prop-result {
   font-family: var(--font-display);
-  font-size: 10.5px; font-weight: 700;
+  font-size: 12px; font-weight: 700;
   letter-spacing: 0.08em; text-transform: uppercase;
   padding: 3px 9px;
   border-radius: 4px;
@@ -2825,7 +2825,7 @@ table.clients [class*="avatar"],
 
 .cd-line-label {
   font-family: var(--font-display);
-  font-size: 10px; font-weight: 700;
+  font-size: 11.5px; font-weight: 700;
   letter-spacing: 0.08em; text-transform: uppercase;
   background: rgba(15,23,42,0.65);
   color: #fff;
@@ -2856,7 +2856,7 @@ table.clients [class*="avatar"],
 }
 .cd-line-ts {
   font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: 12px;
   color: rgba(15, 23, 42, 0.6);
   margin-top: 4px;
 }
@@ -2981,7 +2981,7 @@ table.clients [class*="avatar"],
 .section-eyebrow-pill {
   display: inline-block;
   font-family: var(--font-display);
-  font-size: 10.5px; font-weight: 800;
+  font-size: 12px; font-weight: 800;
   letter-spacing: 0.18em; text-transform: uppercase;
   background: var(--accent);
   color: #fff;
@@ -3379,7 +3379,7 @@ table.clients [class*="avatar"],
 }
 .kpi-stat-label {
   font-family: var(--font-display);
-  font-size: 10.5px; font-weight: 700;
+  font-size: 12px; font-weight: 700;
   letter-spacing: 0.08em; text-transform: uppercase;
   color: var(--ink-3);
   margin-top: 2px;
@@ -3512,7 +3512,7 @@ table.clients [class*="avatar"],
 .aib-eyebrow {
   display: inline-flex; align-items: center; gap: 6px;
   font-family: var(--font-display);
-  font-size: 10.5px; font-weight: 700;
+  font-size: 12px; font-weight: 700;
   letter-spacing: 0.14em; text-transform: uppercase;
   color: #A78BFA;
   background: rgba(167,139,250,0.18);
@@ -3622,7 +3622,7 @@ table.clients [class*="avatar"],
 .aib-step-status {
   display: inline-flex; align-items: center; gap: 4px;
   font-family: var(--font-display);
-  font-size: 10.5px; font-weight: 700;
+  font-size: 12px; font-weight: 700;
   letter-spacing: 0.08em; text-transform: uppercase;
   padding: 4px 9px;
   border-radius: 100px;
@@ -3657,7 +3657,7 @@ table.clients [class*="avatar"],
 }
 .aib-verdict-label {
   font-family: var(--font-display);
-  font-size: 10.5px; font-weight: 700;
+  font-size: 12px; font-weight: 700;
   letter-spacing: 0.1em; text-transform: uppercase;
   color: var(--accent-2);
   margin-bottom: 6px;
@@ -3880,7 +3880,7 @@ table.clients [class*="avatar"],
 }
 .aib-slot-num {
   font-family: var(--font-display);
-  font-size: 10px; font-weight: 700;
+  font-size: 11.5px; font-weight: 700;
   letter-spacing: 0.08em; text-transform: uppercase;
   color: var(--accent-2);
   background: var(--accent-soft);
@@ -3928,7 +3928,7 @@ table.clients [class*="avatar"],
 .aib-slot-free {
   display: flex; align-items: center; gap: 4px;
   font-family: var(--font-body);
-  font-size: 10.5px;
+  font-size: 12px;
   color: var(--positive);
   margin-top: 8px;
 }
@@ -4022,7 +4022,7 @@ table.clients [class*="avatar"],
 }
 .aib-week-today-mark {
   font-family: var(--font-display);
-  font-size: 9.5px; font-weight: 700;
+  font-size: 11px; font-weight: 700;
   letter-spacing: 0.08em; text-transform: uppercase;
   color: #fff;
   background: var(--accent);
@@ -4046,7 +4046,7 @@ table.clients [class*="avatar"],
 }
 .aib-week-ev-time {
   font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: 12px;
   color: var(--ink-3);
   min-width: 36px;
 }
@@ -4078,8 +4078,8 @@ table.clients [class*="avatar"],
   border-color: var(--positive) !important;
 }
 .aib-week-slot i[data-lucide] { width: 11px !important; height: 11px !important; }
-.aib-week-slot-time { font-family: var(--font-mono); font-size: 10.5px; }
-.aib-week-slot-label { font-family: var(--font-body); font-size: 10.5px; opacity: 0.85; }
+.aib-week-slot-time { font-family: var(--font-mono); font-size: 12px; }
+.aib-week-slot-label { font-family: var(--font-body); font-size: 12px; opacity: 0.85; }
 .aib-week-slot-selected {
   background: var(--accent) !important;
   background-image: linear-gradient(135deg, var(--accent-3), var(--accent)) !important;
@@ -4094,7 +4094,7 @@ table.clients [class*="avatar"],
   margin-left: auto !important;
   display: inline-flex !important; align-items: center !important; gap: 4px !important;
   font-family: var(--font-body) !important;
-  font-size: 10.5px !important; font-weight: 500 !important;
+  font-size: 12px !important; font-weight: 500 !important;
   background: var(--surface) !important;
   color: var(--ink-2) !important;
   border: 1px solid var(--hairline-2) !important;
@@ -4133,7 +4133,7 @@ table.clients [class*="avatar"],
 .aib-gcal-iframe-wrap iframe { display: block; width: 100%; }
 .aib-gcal-note {
   font-family: var(--font-body);
-  font-size: 10.5px; color: var(--ink-3);
+  font-size: 12px; color: var(--ink-3);
   padding: 6px 10px;
   background: var(--surface-2);
   border-top: 1px solid var(--hairline);
@@ -4321,7 +4321,7 @@ table.clients [class*="avatar"],
 }
 .lp-card-eyebrow {
   display: flex; align-items: center; gap: 5px;
-  font-size: 10px;
+  font-size: 11.5px;
   font-weight: 700;
   letter-spacing: 0.05em;
   color: var(--ink-3);
@@ -4340,7 +4340,7 @@ table.clients [class*="avatar"],
 .lp-card-header .lp-card-title { color: #fff; font-size: 13px; }
 .lp-card-num {
   font-family: var(--font-display);
-  font-size: 10px; font-weight: 700;
+  font-size: 11.5px; font-weight: 700;
   letter-spacing: 0.08em; text-transform: uppercase;
   color: var(--accent-2);
   background: var(--accent-soft);
@@ -4699,7 +4699,7 @@ i[data-lucide], svg.lucide {
 .mega-hero-stat { display: flex; flex-direction: column; gap: 4px; }
 .mega-hero-stat-label {
   font-family: var(--font-display);
-  font-size: 10.5px; font-weight: 600;
+  font-size: 12px; font-weight: 600;
   letter-spacing: 0.1em; text-transform: uppercase;
   color: #7A8194;
 }
@@ -4765,7 +4765,7 @@ i[data-lucide], svg.lucide {
 .featured-rank {
   display: inline-flex; align-items: center; gap: 6px;
   font-family: var(--font-display);
-  font-size: 10.5px; font-weight: 700;
+  font-size: 12px; font-weight: 700;
   letter-spacing: 0.1em; text-transform: uppercase;
   background-image: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
   color: #92400E;
@@ -4815,7 +4815,7 @@ i[data-lucide], svg.lucide {
 }
 .featured-aum-label {
   font-family: var(--font-display);
-  font-size: 10px; font-weight: 600;
+  font-size: 11.5px; font-weight: 600;
   letter-spacing: 0.08em; text-transform: uppercase;
   color: var(--ink-3);
   margin-bottom: 2px;
@@ -4859,7 +4859,7 @@ i[data-lucide], svg.lucide {
 .featured-metric-label {
   display: block;
   font-family: var(--font-display);
-  font-size: 10px; font-weight: 600;
+  font-size: 11.5px; font-weight: 600;
   letter-spacing: 0.08em; text-transform: uppercase;
   color: var(--ink-3);
   margin-bottom: 6px;
@@ -4992,7 +4992,7 @@ i[data-lucide], svg.lucide {
   display: inline-block;
   margin-top: 10px;
   font-family: var(--font-display);
-  font-size: 10px; font-weight: 700;
+  font-size: 11.5px; font-weight: 700;
   letter-spacing: 0.08em; text-transform: uppercase;
   background: var(--accent);
   color: #fff;
@@ -5012,7 +5012,7 @@ i[data-lucide], svg.lucide {
 /* Common priority pills */
 .brief-pri {
   font-family: var(--font-display);
-  font-size: 10px; font-weight: 700;
+  font-size: 11.5px; font-weight: 700;
   letter-spacing: 0.1em; text-transform: uppercase;
   padding: 4px 9px;
   border-radius: 4px;
@@ -5062,7 +5062,7 @@ i[data-lucide], svg.lucide {
 .brief-rank-badge {
   display: inline-flex; align-items: center; gap: 6px;
   font-family: var(--font-display);
-  font-size: 10.5px; font-weight: 700;
+  font-size: 12px; font-weight: 700;
   letter-spacing: 0.12em; text-transform: uppercase;
   background-image: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
   color: #92400E;
@@ -5120,7 +5120,7 @@ i[data-lucide], svg.lucide {
 .brief-mega-action-label {
   display: block;
   font-family: var(--font-display);
-  font-size: 10.5px; font-weight: 700;
+  font-size: 12px; font-weight: 700;
   letter-spacing: 0.1em; text-transform: uppercase;
   color: var(--accent);
   margin-bottom: 8px;
@@ -5178,7 +5178,7 @@ i[data-lucide], svg.lucide {
 .brief-stat:last-child { border-bottom: none; padding-bottom: 0; }
 .brief-stat-label {
   font-family: var(--font-display);
-  font-size: 10px; font-weight: 600;
+  font-size: 11.5px; font-weight: 600;
   letter-spacing: 0.08em; text-transform: uppercase;
   color: var(--ink-3);
 }
@@ -5347,7 +5347,7 @@ i[data-lucide], svg.lucide {
   color: var(--ink); letter-spacing: -0.005em;
   display: inline-flex; align-items: center; gap: 8px;
 }
-.brief-compact-name .status-pill { font-size: 10px; padding: 2px 6px; }
+.brief-compact-name .status-pill { font-size: 11.5px; padding: 2px 6px; }
 .brief-compact-action {
   font-family: var(--font-body);
   font-size: 12px;
@@ -5374,7 +5374,7 @@ i[data-lucide], svg.lucide {
 .hero-focus-item { display: flex; flex-direction: column; gap: 6px; }
 .hero-focus-label {
   font-family: var(--font-display);
-  font-size: 10.5px; font-weight: 600;
+  font-size: 12px; font-weight: 600;
   letter-spacing: 0.08em; text-transform: uppercase;
   color: var(--ink-3);
 }
@@ -5444,7 +5444,7 @@ i[data-lucide], svg.lucide {
 .kpi-delta {
   margin-left: auto;
   font-family: var(--font-mono), var(--font-body);
-  font-size: 10.5px; font-weight: 600;
+  font-size: 12px; font-weight: 600;
   padding: 2px 7px;
   border-radius: 4px;
   letter-spacing: 0;
@@ -5653,7 +5653,7 @@ button.primary:hover::before { left: 130%; }
 /* ─── 2. セクション label ━━━━━ ハイラインで章立て感 ───── */
 .fp-section-eyebrow {
   display: flex; align-items: center; gap: 10px;
-  font-family: 'Manrope',sans-serif; font-size: 10.5px; font-weight: 800;
+  font-family: 'Manrope',sans-serif; font-size: 12px; font-weight: 800;
   letter-spacing: 0.22em; text-transform: uppercase;
   color: var(--fp-gold);
   margin-bottom: 12px;
@@ -5698,7 +5698,7 @@ button.primary:hover::before { left: 130%; }
   border-bottom: 1px solid var(--fp-line);
 }
 .fp-meeting-card-eyebrow {
-  font-family: 'Manrope',sans-serif; font-size: 9.5px; font-weight: 800;
+  font-family: 'Manrope',sans-serif; font-size: 11px; font-weight: 800;
   letter-spacing: 0.24em; text-transform: uppercase;
   color: var(--fp-gold); margin-bottom: 5px;
 }
@@ -5712,7 +5712,7 @@ button.primary:hover::before { left: 130%; }
 
 .fp-meeting-block { margin-bottom: 16px; }
 .fp-meeting-block-label {
-  font-family: 'Manrope',sans-serif; font-size: 10px; font-weight: 800;
+  font-family: 'Manrope',sans-serif; font-size: 11.5px; font-weight: 800;
   letter-spacing: 0.2em; text-transform: uppercase;
   color: var(--fp-ink-3); margin-bottom: 9px;
   display: flex; align-items: center; gap: 8px;
@@ -5903,7 +5903,7 @@ td:last-child small {
 .status-pill {
   font-family: 'Manrope', sans-serif !important;
   letter-spacing: 0.06em !important;
-  font-size: 10.5px !important;
+  font-size: 12px !important;
 }
 
 /* ─── 14. KPIカード active 状態を hairline 漆金で明確化 ─── */
@@ -5985,7 +5985,7 @@ td:last-child small {
 /* ─── 2. ステータスピル: 塗りつぶし + 白文字 ─────────── */
 .status-pill {
   font-family: 'Manrope', sans-serif !important;
-  font-size: 10.5px !important;
+  font-size: 12px !important;
   font-weight: 800 !important;
   letter-spacing: 0.08em !important;
   text-transform: uppercase !important;
@@ -6099,7 +6099,7 @@ td:last-child small {
   content: '✓ 議事録';
   position: absolute; top: 12px; left: 12px;
   background: var(--vv-green); color: #fff;
-  font-family: 'Manrope', sans-serif; font-size: 10px; font-weight: 800;
+  font-family: 'Manrope', sans-serif; font-size: 11.5px; font-weight: 800;
   letter-spacing: 0.12em; text-transform: uppercase;
   padding: 4px 12px; border-radius: 999px;
   box-shadow: var(--vv-shadow-sm);
@@ -6170,7 +6170,7 @@ td:last-child small {
   background: var(--vv-orange) !important;
   color: #fff !important;
   font-family: 'Manrope', sans-serif !important;
-  font-size: 10px !important; font-weight: 800 !important;
+  font-size: 11.5px !important; font-weight: 800 !important;
   letter-spacing: 0.12em !important;
   padding: 4px 12px !important; border-radius: 999px !important;
 }
@@ -6385,7 +6385,7 @@ td:last-child small {
   font-weight: 800 !important;
   border: none !important;
   box-shadow: 0 1px 2px rgba(15,23,42,0.1);
-  font-size: 10.5px !important;
+  font-size: 12px !important;
   letter-spacing: 0.08em !important;
   text-transform: uppercase !important;
 }
@@ -6413,7 +6413,7 @@ td:last-child small {
 }
 .fp-next-action-eyebrow {
   font-family: 'Manrope', sans-serif;
-  font-size: 10.5px; font-weight: 800;
+  font-size: 12px; font-weight: 800;
   letter-spacing: 0.22em; text-transform: uppercase;
   color: rgba(255,255,255,0.85);
   margin-bottom: 8px;
@@ -6800,7 +6800,7 @@ body[data-prod="1"] .brand-badge { display: none !important; }
   color: #FCFAF2;
   font-family: 'Inter', 'Hiragino Sans', sans-serif;
   font-weight: 800;
-  font-size: 10.5px;
+  font-size: 12px;
   letter-spacing: 0.08em;
   padding: 3px 9px;
   border-radius: 5px;
@@ -6961,7 +6961,7 @@ table tbody button.btn-mini:hover {
   color: #FBF5E3;
   font-family: 'Hiragino Sans', sans-serif;
   font-weight: 800;
-  font-size: 10.5px;
+  font-size: 12px;
   letter-spacing: 0.08em;
   padding: 4px 16px;
   border-radius: 99px;
@@ -7062,7 +7062,7 @@ table tbody button.btn-mini:hover {
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.18);
 }
 .fp-qa-label-sub {
-  font-size: 10.5px;
+  font-size: 12px;
   font-weight: 600;
   color: #FBF5E3;
   letter-spacing: 0.02em;
@@ -7294,11 +7294,11 @@ table tbody button.btn-mini:hover {
   letter-spacing: 0.01em;
 }
 .fp-qa-pop .fp-qa-label-sub {
-  font-size: 9.5px !important;
+  font-size: 11px !important;
   letter-spacing: 0.01em;
 }
 .fp-qa-pop .fp-qa-tip {
-  font-size: 9.5px !important;
+  font-size: 11px !important;
   padding: 3px 12px !important;
   letter-spacing: 0.03em !important;
   top: 2px;
@@ -7470,7 +7470,7 @@ body.mobile-nav-open #mobile-hamburger .mh-bar:nth-child(3) { transform: transla
     display: block !important;
     padding: 4px 0 !important;
     border: none !important;
-    font-size: 13.5px !important;
+    font-size: 14px !important;
   }
   table.clients tbody td:first-child {
     font-weight: 800 !important;
@@ -7483,7 +7483,7 @@ body.mobile-nav-open #mobile-hamburger .mh-bar:nth-child(3) { transform: transla
   table.clients tbody td::before {
     content: attr(data-label);
     display: inline-block;
-    font-size: 10.5px;
+    font-size: 11.5px;
     font-weight: 700;
     color: #9A5A18;
     letter-spacing: 0.08em;
@@ -7504,11 +7504,11 @@ body.mobile-nav-open #mobile-hamburger .mh-bar:nth-child(3) { transform: transla
   textarea { min-height: 88px; }
 
   /* font scale up + line-height ゆとり */
-  body { font-size: 14px !important; line-height: 1.7 !important; }
+  body { font-size: 15px !important; line-height: 1.7 !important; }
 
   /* hero / 見出し もモバイルで縮める */
   .hero-title { font-size: 24px !important; line-height: 1.35 !important; }
-  .hero-sub { font-size: 13px !important; }
+  .hero-sub { font-size: 14px !important; }
   .page-head { flex-direction: column; align-items: stretch; gap: 12px; }
   .hero-actions { width: 100%; }
   .hero-actions button { width: 100%; }
@@ -7532,9 +7532,9 @@ body.mobile-nav-open #mobile-hamburger .mh-bar:nth-child(3) { transform: transla
   .mh-actions { grid-column: 1 / -1; padding-top: 8px; border-top: 1px dashed #F0EBDF; margin-top: 4px; }
 
   /* CTA pop モバイルで コンパクトに (3列→2列 / 1列) */
-  .fp-qa-pop .fp-qa-tip { font-size: 9px !important; padding: 2px 10px !important; }
-  .fp-qa-pop .fp-qa-label-main { font-size: 12.5px !important; }
-  .fp-qa-pop .fp-qa-label-sub { font-size: 10px !important; }
+  .fp-qa-pop .fp-qa-tip { font-size: 11px !important; padding: 2px 10px !important; }
+  .fp-qa-pop .fp-qa-label-main { font-size: 13.5px !important; }
+  .fp-qa-pop .fp-qa-label-sub { font-size: 11.5px !important; }
 }
 
 /* < 380px = 極小スマホ */
@@ -7624,7 +7624,7 @@ body.mobile-nav-open #mobile-hamburger .mh-bar:nth-child(3) { transform: transla
     gap: 1px;
   }
   #mobile-title-wrap .m-eyebrow {
-    font-size: 9px;
+    font-size: 11px;
     font-weight: 800;
     letter-spacing: 0.22em;
     color: #C19A3A;
@@ -7651,7 +7651,7 @@ body.mobile-nav-open #mobile-hamburger .mh-bar:nth-child(3) { transform: transla
     color: #FBF5E3;
     font-family: 'Inter',sans-serif;
     font-weight: 800;
-    font-size: 11px;
+    font-size: 12.5px;
     letter-spacing: 0.04em;
   }
   #mobile-user-btn:hover { background: rgba(193,154,58,0.15); }
@@ -7686,7 +7686,7 @@ body.mobile-nav-open #mobile-hamburger .mh-bar:nth-child(3) { transform: transla
     gap: 3px;
     color: #94A3B8;
     font-family: 'Hiragino Sans',sans-serif;
-    font-size: 11px;   /* 2026-08-31 owner「収まり 良く」: 10 → 11px (可読性 up) */
+    font-size: 12.5px;   /* 2026-08-31 owner「収まり 良く」: 10 → 11px (可読性 up) */
     font-weight: 700;
     letter-spacing: 0.03em;
     padding: 9px 4px;
@@ -7844,7 +7844,7 @@ body.mobile-nav-open #mobile-hamburger .mh-bar:nth-child(3) { transform: transla
     display: block !important;
     padding: 4px 0 !important;
     border: none !important;
-    font-size: 13.5px !important;
+    font-size: 14px !important;
   }
   table.clients tbody td:first-child {
     font-weight: 800 !important;
@@ -7869,7 +7869,7 @@ body.mobile-nav-open #mobile-hamburger .mh-bar:nth-child(3) { transform: transla
   }
 
   /* font scale up */
-  body { font-size: 14px !important; line-height: 1.7 !important; }
+  body { font-size: 15px !important; line-height: 1.7 !important; }
 
   /* client-toolbar (検索 + フィルタ + ソート) を 縦に */
   .client-toolbar { flex-direction: column !important; align-items: stretch !important; gap: 10px !important; }
@@ -7881,9 +7881,9 @@ body.mobile-nav-open #mobile-hamburger .mh-bar:nth-child(3) { transform: transla
   .mh-actions { grid-column: 1 / -1; padding-top: 8px; border-top: 1px dashed #F0EBDF; margin-top: 4px; }
 
   /* fp-qa-pop モバイル font 縮める */
-  .fp-qa-pop .fp-qa-tip { font-size: 9px !important; padding: 2px 10px !important; }
-  .fp-qa-pop .fp-qa-label-main { font-size: 12.5px !important; }
-  .fp-qa-pop .fp-qa-label-sub { font-size: 10px !important; }
+  .fp-qa-pop .fp-qa-tip { font-size: 11px !important; padding: 2px 10px !important; }
+  .fp-qa-pop .fp-qa-label-main { font-size: 13.5px !important; }
+  .fp-qa-pop .fp-qa-label-sub { font-size: 11.5px !important; }
 
   /* サイドバーの上部に「閉じる」案内 (drawer モード) */
   body.mobile-nav-open .sidebar::before {
@@ -7891,7 +7891,7 @@ body.mobile-nav-open #mobile-hamburger .mh-bar:nth-child(3) { transform: transla
     display: block;
     background: rgba(193,154,58,0.18);
     color: #FBF5E3;
-    font-size: 10.5px;
+    font-size: 11.5px;
     padding: 8px 14px;
     letter-spacing: 0.04em;
     border-bottom: 1px solid rgba(193,154,58,0.3);
@@ -8024,7 +8024,7 @@ body.mobile-nav-open #mobile-hamburger .mh-bar:nth-child(3) { transform: transla
   .view[data-view="dashboard"] .hero-sub {
     display: block !important;
     text-align: left !important;
-    font-size: 12.5px !important;
+    font-size: 13.5px !important;
     color: #6B7280 !important;
     margin: 0 0 14px !important;
   }
@@ -8062,7 +8062,7 @@ body.mobile-nav-open #mobile-hamburger .mh-bar:nth-child(3) { transform: transla
   .view[data-view="clients"] .client-toolbar::after {
     content: '🔍 検索のみ表示 (フィルタは PC 推奨)';
     display: block;
-    font-size: 11px;
+    font-size: 12.5px;
     color: #94A3B8;
     text-align: center;
     margin-top: 4px;
@@ -8121,21 +8121,21 @@ body.mobile-nav-open #mobile-hamburger .mh-bar:nth-child(3) { transform: transla
     gap: 14px !important;
   }
   .fp-qa-pop .fp-qa-label-main {
-    font-size: 14.5px !important;
+    font-size: 15px !important;
     white-space: nowrap !important;
     overflow: visible !important;
     text-overflow: clip !important;
   }
   .fp-qa-pop .fp-qa-label-sub {
-    font-size: 11px !important;
+    font-size: 12.5px !important;
     white-space: nowrap !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
   }
-  .fp-qa-pop .fp-qa-arrow { width: 28px; height: 28px; font-size: 14px; }
+  .fp-qa-pop .fp-qa-arrow { width: 28px; height: 28px; font-size: 15px; }
   .fp-qa-pop .fp-qa-tip {
     top: 0 !important;
-    font-size: 10px !important;
+    font-size: 11.5px !important;
     padding: 3px 14px !important;
   }
 
@@ -8190,7 +8190,7 @@ body.mobile-nav-open #mobile-hamburger .mh-bar:nth-child(3) { transform: transla
   .mega-hero-grid { grid-template-columns: 1fr !important; gap: 14px !important; }
   .mega-hero-left { text-align: left !important; }
   .mega-hero-date {
-    font-size: 11px !important;
+    font-size: 12.5px !important;
     color: #94A3B8 !important;
     margin-bottom: 6px !important;
   }
@@ -8214,7 +8214,7 @@ body.mobile-nav-open #mobile-hamburger .mh-bar:nth-child(3) { transform: transla
     padding: 0 4px;
   }
   .mega-hero-lead {
-    font-size: 12.5px !important;
+    font-size: 13.5px !important;
     color: #6B7280 !important;
     line-height: 1.7 !important;
     margin: 0 0 14px !important;
@@ -8234,7 +8234,7 @@ body.mobile-nav-open #mobile-hamburger .mh-bar:nth-child(3) { transform: transla
     text-align: center !important;
   }
   .mega-hero-stat-label {
-    font-size: 10px !important;
+    font-size: 11.5px !important;
     color: #94A3B8 !important;
     letter-spacing: 0.04em;
     display: block !important;
@@ -8253,7 +8253,7 @@ body.mobile-nav-open #mobile-hamburger .mh-bar:nth-child(3) { transform: transla
     overflow: visible !important;
     text-overflow: clip !important;
     white-space: nowrap !important;
-    font-size: 13.5px !important;
+    font-size: 14px !important;
   }
   body.mobile-nav-open .sidebar-nav .tab .nav-count {
     margin-left: auto !important;
@@ -8306,7 +8306,7 @@ body.mobile-nav-open #mobile-hamburger .mh-bar:nth-child(3) { transform: transla
     color: #FBF5E3;
     box-shadow: 0 8px 22px rgba(15, 23, 42, 0.16);
   }
-  .m-greet-date { font-size: 11px; color: #94A3B8; letter-spacing: 0.06em; margin-bottom: 6px; font-family: 'Inter', sans-serif; }
+  .m-greet-date { font-size: 12.5px; color: #94A3B8; letter-spacing: 0.06em; margin-bottom: 6px; font-family: 'Inter', sans-serif; }
   .m-greet-line {
     font-family: 'Noto Serif JP', serif;
     font-size: 18px;
@@ -8329,7 +8329,7 @@ body.mobile-nav-open #mobile-hamburger .mh-bar:nth-child(3) { transform: transla
     line-height: 1;
     letter-spacing: -0.02em;
   }
-  .m-greet-unit { font-size: 13px; color: #CBD5E1; }
+  .m-greet-unit { font-size: 14px; color: #CBD5E1; }
 
   /* ステータス 3 boxes */
   .m-stats {
@@ -8354,7 +8354,7 @@ body.mobile-nav-open #mobile-hamburger .mh-bar:nth-child(3) { transform: transla
     line-height: 1;
   }
   .m-stat-label {
-    font-size: 10.5px;
+    font-size: 11.5px;
     color: #6B7280;
     margin-top: 6px;
     letter-spacing: 0.02em;
@@ -8375,7 +8375,7 @@ body.mobile-nav-open #mobile-hamburger .mh-bar:nth-child(3) { transform: transla
     padding: 14px 12px;
     font-family: 'Hiragino Sans', sans-serif;
     font-weight: 800;
-    font-size: 13.5px;
+    font-size: 14px;
     cursor: pointer;
     min-height: 56px;
     display: flex;
@@ -8452,7 +8452,7 @@ body.mobile-nav-open #mobile-hamburger .mh-bar:nth-child(3) { transform: transla
     min-width: 0;
   }
   .m-greet-date {
-    font-size: 10.5px;
+    font-size: 11.5px;
     color: #94A3B8;
     letter-spacing: 0.06em;
     font-family: 'Inter', sans-serif;
@@ -8460,7 +8460,7 @@ body.mobile-nav-open #mobile-hamburger .mh-bar:nth-child(3) { transform: transla
   }
   .m-greet-msg {
     font-family: 'Noto Serif JP', serif;
-    font-size: 14.5px;
+    font-size: 15px;
     font-weight: 700;
     line-height: 1.4;
     white-space: nowrap;
@@ -8489,7 +8489,7 @@ body.mobile-nav-open #mobile-hamburger .mh-bar:nth-child(3) { transform: transla
     line-height: 1;
   }
   .m-greet-unit {
-    font-size: 10px;
+    font-size: 11.5px;
     color: #CBD5E1;
     margin-top: 4px;
     letter-spacing: 0.04em;
@@ -8532,7 +8532,7 @@ body.mobile-nav-open #mobile-hamburger .mh-bar:nth-child(3) { transform: transla
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 14px;
+    font-size: 15px;
     background: #FBF5E3;
     color: #9A5A18;
   }
@@ -8545,7 +8545,7 @@ body.mobile-nav-open #mobile-hamburger .mh-bar:nth-child(3) { transform: transla
     letter-spacing: -0.02em;
   }
   .m-stat-label {
-    font-size: 11px;
+    font-size: 12.5px;
     color: #6B7280;
     font-weight: 600;
     letter-spacing: 0.02em;
@@ -8560,7 +8560,7 @@ body.mobile-nav-open #mobile-hamburger .mh-bar:nth-child(3) { transform: transla
     margin-top: 4px;
   }
   .m-today-eyebrow {
-    font-size: 10px;
+    font-size: 11.5px;
     font-weight: 800;
     color: #9A5A18;
     letter-spacing: 0.18em;
@@ -8588,13 +8588,13 @@ body.mobile-nav-open #mobile-hamburger .mh-bar:nth-child(3) { transform: transla
     margin-bottom: 4px;
   }
   .m-today-sub {
-    font-size: 12px;
+    font-size: 13px;
     color: #5e4d1a;
     line-height: 1.55;
     margin-bottom: 12px;
   }
   .m-today-empty {
-    font-size: 12px;
+    font-size: 13px;
     color: #6B7280;
     text-align: center;
     padding: 8px 0;
@@ -8611,7 +8611,7 @@ body.mobile-nav-open #mobile-hamburger .mh-bar:nth-child(3) { transform: transla
     padding: 10px 22px;
     font-family: 'Hiragino Sans', sans-serif;
     font-weight: 800;
-    font-size: 13px;
+    font-size: 14px;
     cursor: pointer;
     box-shadow: 0 4px 12px rgba(193, 154, 58, 0.32);
   }
@@ -8635,7 +8635,7 @@ body.mobile-nav-open #mobile-hamburger .mh-bar:nth-child(3) { transform: transla
     padding: 12px 8px;
     font-family: 'Hiragino Sans', sans-serif;
     font-weight: 800;
-    font-size: 12.5px;
+    font-size: 13.5px;
     cursor: pointer;
     min-height: 52px;
   }
@@ -8701,14 +8701,14 @@ body.mobile-nav-open #mobile-hamburger .mh-bar:nth-child(3) { transform: transla
   }
   table.clients tbody td {
     padding: 0 !important;
-    font-size: 12px !important;
+    font-size: 13px !important;
     line-height: 1.5 !important;
   }
   /* 1列目 = 名前 (顧客欄) */
   table.clients tbody td:first-child {
     grid-area: name !important;
     font-weight: 800 !important;
-    font-size: 14.5px !important;
+    font-size: 15px !important;
     color: #1F2A3F !important;
     padding-bottom: 4px !important;
     margin-bottom: 2px !important;
@@ -8718,7 +8718,7 @@ body.mobile-nav-open #mobile-hamburger .mh-bar:nth-child(3) { transform: transla
   table.clients tbody td:not(:first-child) {
     display: inline-flex !important;
     grid-area: info !important;
-    font-size: 11.5px !important;
+    font-size: 12.5px !important;
     color: #6B7280 !important;
     margin-right: 8px !important;
   }
@@ -8763,14 +8763,14 @@ body.mobile-nav-open #mobile-hamburger .mh-bar:nth-child(3) { transform: transla
     display: block !important;
     grid-area: auto !important;
     padding: 3px 0 !important;
-    font-size: 12px !important;
+    font-size: 13px !important;
     line-height: 1.5 !important;
     color: #6B7280 !important;
     margin: 0 !important;
   }
   /* 1列目 = 顧客名 */
   table.clients tbody td:first-child {
-    font-size: 14.5px !important;
+    font-size: 15px !important;
     font-weight: 800 !important;
     color: #1F2A3F !important;
     padding-bottom: 6px !important;
@@ -8853,7 +8853,7 @@ body.modal-open {
     padding: 0 !important;
     border: none !important;
     margin: 0 !important;
-    font-size: 11.5px !important;
+    font-size: 12.5px !important;
     line-height: 1.4 !important;
     color: #6B7280 !important;
     grid-area: meta !important;
@@ -8864,7 +8864,7 @@ body.modal-open {
   /* 1列目 = 名前 */
   table.clients tbody td:first-child {
     grid-area: name !important;
-    font-size: 14.5px !important;
+    font-size: 15px !important;
     font-weight: 800 !important;
     color: #1F2A3F !important;
     margin-bottom: 0 !important;
@@ -8912,7 +8912,7 @@ body.modal-open {
   .cd-modal .cd-card-title,
   .cd-modal h3,
   .cd-modal [class*="-title"] {
-    font-size: 10.5px !important;
+    font-size: 11.5px !important;
     font-weight: 800 !important;
     color: #9A5A18 !important;
     letter-spacing: 0.14em !important;
@@ -8965,13 +8965,13 @@ body.modal-open {
   }
   .cd-zoom-pair > button > span {
     flex: 1; padding-right: 18px;
-    font-size: 14px !important;
+    font-size: 15px !important;
     font-weight: 700 !important;
     color: #1F2A3F !important;
     line-height: 1.35 !important;
   }
   .cd-zoom-pair > button > span > span {
-    font-size: 11px !important;
+    font-size: 12.5px !important;
     color: #6B7280 !important;
     font-weight: 600 !important;
   }
@@ -8991,7 +8991,7 @@ body.modal-open {
     color: #9A5A18 !important;
     border-radius: 99px !important;
     padding: 6px 14px !important;
-    font-size: 11.5px !important;
+    font-size: 12.5px !important;
     font-weight: 700 !important;
   }
 
@@ -9039,11 +9039,11 @@ body.modal-open {
   .fp-qa-grid > .fp-qa-pop .fp-qa-label-main {
     color: #1F2A3F !important;
     text-shadow: none !important;
-    font-size: 14px !important;
+    font-size: 15px !important;
   }
   .fp-qa-grid > .fp-qa-pop .fp-qa-label-sub {
     color: #6B7280 !important;
-    font-size: 11px !important;
+    font-size: 12.5px !important;
   }
   .fp-qa-grid > .fp-qa-pop .fp-qa-arrow {
     background: transparent !important;
@@ -9080,12 +9080,12 @@ body.modal-open {
     padding: 1px 0 !important;
     margin: 0 !important;
     grid-area: auto !important;
-    font-size: 11.5px !important;
+    font-size: 12.5px !important;
     color: #6B7280 !important;
     line-height: 1.5 !important;
   }
   table.clients tbody td:first-child {
-    font-size: 14.5px !important;
+    font-size: 15px !important;
     font-weight: 800 !important;
     color: #1F2A3F !important;
     padding-bottom: 4px !important;
@@ -9122,7 +9122,7 @@ body.modal-open {
   table.clients tbody td:nth-child(1) {
     width: 100% !important;
     flex: 0 0 100% !important;
-    font-size: 14.5px !important;
+    font-size: 15px !important;
     font-weight: 800 !important;
     color: #1F2A3F !important;
     padding-bottom: 4px !important;
@@ -9132,12 +9132,12 @@ body.modal-open {
   /* 状態 (9列目) — chip 用 */
   table.clients tbody td:nth-child(9) {
     flex: 0 0 auto !important;
-    font-size: 11px !important;
+    font-size: 12.5px !important;
   }
   /* 管理資産 (10列目) — 数字、 右寄 */
   table.clients tbody td:nth-child(10) {
     flex: 1 1 auto !important;
-    font-size: 12.5px !important;
+    font-size: 13.5px !important;
     font-weight: 700 !important;
     color: #1F2A3F !important;
     text-align: right !important;
@@ -9145,7 +9145,7 @@ body.modal-open {
   /* 最終接触 (11列目) — 小さく */
   table.clients tbody td:nth-child(11) {
     flex: 0 0 100% !important;
-    font-size: 10.5px !important;
+    font-size: 11.5px !important;
     color: #94A3B8 !important;
     border: none !important;
   }
@@ -9194,7 +9194,7 @@ body.modal-open {
   [data-line-view="distributionHub"] > div:has(> [data-dist-subtab])::-webkit-scrollbar { display: none; }
   [data-line-view="distributionHub"] [data-dist-subtab] {
     padding: 10px 14px !important;
-    font-size: 12.5px !important;
+    font-size: 13.5px !important;
     min-height: 44px !important;
     flex: 0 0 auto !important;
     white-space: nowrap !important;
@@ -9313,7 +9313,7 @@ body.modal-open {
     margin-bottom: 2px !important;
   }
   .cd-modal .cd-profile-kana {
-    font-size: 11.5px !important;
+    font-size: 12.5px !important;
     color: #8C7A4B !important;
     letter-spacing: 0.08em !important;
     margin-bottom: 12px !important;
@@ -9331,7 +9331,7 @@ body.modal-open {
   .cd-modal .cd-kpi-label,
   .cd-modal .cd-flow-eyebrow,
   .cd-modal .cd-stat-label {
-    font-size: 11.5px !important;
+    font-size: 12.5px !important;
     font-weight: 800 !important;
     text-transform: uppercase !important;
     letter-spacing: 0.1em !important;
@@ -9375,7 +9375,7 @@ body.modal-open {
   .cd-modal .cd-dl dt {
     display: inline-block !important;
     width: 38% !important;
-    font-size: 13px !important;
+    font-size: 14px !important;
     font-weight: 600 !important;
     color: #6B7280 !important;
     padding: 13px 0 13px 18px !important;
@@ -9386,7 +9386,7 @@ body.modal-open {
   .cd-modal .cd-dl dd {
     display: inline-block !important;
     width: 60% !important;
-    font-size: 14px !important;
+    font-size: 15px !important;
     font-weight: 700 !important;
     color: #1F2A3F !important;
     padding: 13px 18px 13px 0 !important;
@@ -9428,7 +9428,7 @@ body.modal-open {
     border: none !important;
     padding: 0 !important;
     color: #6B7280 !important;
-    font-size: 13px !important;
+    font-size: 14px !important;
     font-weight: 600 !important;
     text-transform: none !important;
     letter-spacing: 0.02em !important;
@@ -9444,7 +9444,7 @@ body.modal-open {
     margin: 0 !important;
   }
   .cd-modal .cd-stat .cd-stat-unit {
-    font-size: 12px !important;
+    font-size: 13px !important;
     color: #8C7A4B !important;
     font-weight: 700 !important;
     margin-left: 3px !important;
@@ -9454,7 +9454,7 @@ body.modal-open {
     flex: 1 1 100% !important;
     width: 100% !important;
     text-align: right !important;
-    font-size: 11px !important;
+    font-size: 12.5px !important;
     color: #8C7A4B !important;
     margin-top: 2px !important;
     font-weight: 600 !important;
@@ -9470,7 +9470,7 @@ body.modal-open {
     border: none !important;
   }
   .cd-modal .cd-note {
-    font-size: 13.5px !important;
+    font-size: 14px !important;
     color: #1F2A3F !important;
     line-height: 1.65 !important;
   }
@@ -9483,7 +9483,7 @@ body.modal-open {
     gap: 6px !important;
   }
   .cd-modal .cd-kpi-section .senior-kpi-badge {
-    font-size: 12px !important;
+    font-size: 13px !important;
     padding: 6px 11px !important;
   }
 
@@ -9505,7 +9505,7 @@ body.modal-open {
     color: #FFFFFF !important;
     padding: 4px 10px !important;
     border-radius: 999px !important;
-    font-size: 10.5px !important;
+    font-size: 11.5px !important;
     font-weight: 900 !important;
     letter-spacing: 0.08em !important;
     display: inline-flex !important;
@@ -9520,7 +9520,7 @@ body.modal-open {
     margin-bottom: 4px !important;
   }
   .cd-modal .cd-flow-reason {
-    font-size: 12.5px !important;
+    font-size: 13.5px !important;
     color: #6B7280 !important;
     line-height: 1.55 !important;
     margin-bottom: 12px !important;
@@ -9539,7 +9539,7 @@ body.modal-open {
     border: none !important;
     border-bottom: 1px solid #ECE6D6 !important;
     border-radius: 0 !important;
-    font-size: 14px !important;
+    font-size: 15px !important;
     font-weight: 700 !important;
     display: flex !important;
     align-items: center !important;
@@ -9571,7 +9571,7 @@ body.modal-open {
   .cd-modal .cd-flow-step.cd-flow-step-active .cd-flow-step-no {
     width: 24px !important;
     height: 24px !important;
-    font-size: 13px !important;
+    font-size: 14px !important;
     font-weight: 800 !important;
     flex-shrink: 0 !important;
     background: linear-gradient(135deg, #C19A3A, #A0822E) !important;
@@ -9584,7 +9584,7 @@ body.modal-open {
   .cd-modal .fp-draft-cta .cd-flow-step-label,
   .cd-modal #modal-draft-btn .cd-flow-step-label,
   .cd-modal .cd-flow-step.cd-flow-step-active .cd-flow-step-label {
-    font-size: 14px !important;
+    font-size: 15px !important;
     font-weight: 700 !important;
     color: #1F2A3F !important;
     line-height: 1.3 !important;
@@ -9592,7 +9592,7 @@ body.modal-open {
   .cd-modal .fp-draft-cta .cd-flow-step-sub,
   .cd-modal #modal-draft-btn .cd-flow-step-sub,
   .cd-modal .cd-flow-step.cd-flow-step-active .cd-flow-step-sub {
-    font-size: 11px !important;
+    font-size: 12.5px !important;
     color: #8C7A4B !important;
     font-weight: 600 !important;
   }
@@ -9646,7 +9646,7 @@ body.modal-open {
   div[style*="z-index: 10200"] > div > div:first-child div {
     color: #1F2A3F !important;
   }
-  div[style*="z-index: 10200"] > div > div:first-child div[style*="font-size: 10.5px"] {
+  div[style*="z-index: 10200"] > div > div:first-child div[style*="font-size: 11.5px"] {
     color: #8C7A4B !important;
   }
   /* 閉じるボタン (✕) */
@@ -9664,7 +9664,7 @@ body.modal-open {
     border-left: 4px solid #C19A3A !important;
     padding: 14px 18px 6px 14px !important;
     margin: 0 !important;
-    font-size: 11.5px !important;
+    font-size: 12.5px !important;
     letter-spacing: 0.1em !important;
     text-transform: uppercase !important;
     font-weight: 800 !important;
@@ -9702,7 +9702,7 @@ body.modal-open {
     flex: 0 0 38% !important;
     margin-bottom: 0 !important;
     color: #6B7280 !important;
-    font-size: 13px !important;
+    font-size: 14px !important;
     font-weight: 600 !important;
     letter-spacing: 0.02em !important;
     text-transform: none !important;
@@ -9716,7 +9716,7 @@ body.modal-open {
     background: #FFFFFF !important;
     border-radius: 10px !important;
     padding: 10px 12px !important;
-    font-size: 14.5px !important;
+    font-size: 15px !important;
     color: #1F2A3F !important;
     min-height: 44px !important;
   }
@@ -9727,7 +9727,7 @@ body.modal-open {
     background: #FFFFFF !important;
     border-radius: 10px !important;
     padding: 12px 14px !important;
-    font-size: 14px !important;
+    font-size: 15px !important;
     margin: 8px 16px 12px !important;
     width: calc(100% - 32px) !important;
     box-sizing: border-box !important;
@@ -9798,7 +9798,7 @@ body.modal-open {
     padding: 14px 36px 14px 16px !important;
     min-height: 60px !important;
     box-shadow: none !important;
-    font-size: 14.5px !important;
+    font-size: 15px !important;
     color: #1F2A3F !important;
     font-weight: 800 !important;
     position: relative !important;
@@ -9820,11 +9820,11 @@ body.modal-open {
     height: 30px !important;
   }
   .cd-modal .cd-zoom-pair > button span {
-    font-size: 14px !important;
+    font-size: 15px !important;
     line-height: 1.35 !important;
   }
   .cd-modal .cd-zoom-pair > button span span {
-    font-size: 11px !important;
+    font-size: 12.5px !important;
     color: #8C7A4B !important;
     font-weight: 600 !important;
   }
@@ -9844,7 +9844,7 @@ body.modal-open {
   }
   .cd-modal #cd-tags-section #cd-tags-edit {
     padding: 7px 14px !important;
-    font-size: 12px !important;
+    font-size: 13px !important;
     background: #FFFFFF !important;
     color: #C19A3A !important;
     border: 1px solid #C19A3A !important;
@@ -9856,7 +9856,7 @@ body.modal-open {
   .cd-modal .cd-qa-collapse .cd-qa-summary {
     padding: 14px 18px !important;
     background: #FFFFFF !important;
-    font-size: 14px !important;
+    font-size: 15px !important;
     color: #1F2A3F !important;
     font-weight: 700 !important;
     border-radius: 0 !important;
@@ -9872,7 +9872,7 @@ body.modal-open {
     background: #FAF6EB !important;
     border: 1px solid #ECE6D6 !important;
     padding: 12px !important;
-    font-size: 12.5px !important;
+    font-size: 13.5px !important;
     color: #1F2A3F !important;
     font-weight: 700 !important;
     border-radius: 10px !important;
@@ -9887,7 +9887,7 @@ body.modal-open {
     color: #1F2A3F !important;
     border: 1px solid #ECE6D6 !important;
     border-radius: 12px !important;
-    font-size: 14px !important;
+    font-size: 15px !important;
     font-weight: 700 !important;
     text-align: left !important;
     position: relative !important;
@@ -9933,7 +9933,7 @@ body.modal-open {
     flex: 0 0 auto !important;
     /* 2026-09-08 owner「Q&A 切れる」対応: mobile で padding 12px 16px → 10px 10px に 縮小 で 4 tab 全 default 表示 */
     padding: 10px 10px !important;
-    font-size: 13px !important;
+    font-size: 14px !important;
     color: #6B7280 !important;
     background: transparent !important;
     border: none !important;
@@ -10014,7 +10014,7 @@ body.modal-open {
     padding: 0 !important;
     border: none !important;
     background: transparent !important;
-    font-size: 12.5px !important;
+    font-size: 13.5px !important;
     color: #6B7280 !important;
     line-height: 1.4 !important;
     overflow: visible !important;
@@ -10064,7 +10064,7 @@ body.modal-open {
   table.clients tbody td:nth-child(1) .avatar {
     width: 38px !important;
     height: 38px !important;
-    font-size: 14px !important;
+    font-size: 15px !important;
     flex-shrink: 0 !important;
   }
   table.clients tbody td:nth-child(1) strong {
@@ -10083,9 +10083,9 @@ body.modal-open {
     flex: 1 1 auto !important;
   }
   /* 名前直後のかな は隠す (情報密度優先) */
-  table.clients tbody td:nth-child(1) [style*="font-size:11px"][style*="muted"],
+  table.clients tbody td:nth-child(1) [style*="font-size:12.5px"][style*="muted"],
   table.clients tbody td:nth-child(1) .client-row-name div > div:not([style*="flex-wrap"]) {
-    font-size: 10.5px !important;
+    font-size: 11.5px !important;
     color: #8C7A4B !important;
   }
 
@@ -10106,22 +10106,22 @@ body.modal-open {
     display: none !important;
   }
   table.clients tbody td:nth-child(9) .status-pill {
-    font-size: 10px !important;
+    font-size: 11.5px !important;
     padding: 2px 8px !important;
   }
   /* unread 要返事 badge は コンパクト化 */
   table.clients tbody td:nth-child(9) .fp-unread-badge {
-    font-size: 9px !important;
+    font-size: 11px !important;
     padding: 2px 6px !important;
     margin-right: 4px !important;
   }
   /* task badge */
   table.clients tbody td:nth-child(9) .fp-task-badge {
-    font-size: 9px !important;
+    font-size: 11px !important;
     padding: 1px 5px !important;
   }
   table.clients tbody td:nth-child(9) .status-pill {
-    font-size: 10px !important;
+    font-size: 11.5px !important;
     padding: 2px 8px !important;
   }
 
@@ -10141,7 +10141,7 @@ body.modal-open {
     gap: 6px !important;
   }
   table.clients tbody td:nth-child(11) span {
-    font-size: 10.5px !important;
+    font-size: 11.5px !important;
   }
 
   /* 検索 + filter bar 上部 */
@@ -10201,17 +10201,17 @@ body.modal-open {
     gap: 8px !important;
   }
   div[style*="grid-template-columns:104px 1fr"] > div:first-child > div:nth-child(1) {
-    font-size: 14px !important;
+    font-size: 15px !important;
     color: #8C7A4B !important;
     font-weight: 700 !important;
   }
   div[style*="grid-template-columns:104px 1fr"] > div:first-child > div:nth-child(2) {
-    font-size: 11px !important;
+    font-size: 12.5px !important;
     color: #9CA3AF !important;
     margin-top: 0 !important;
   }
   div[style*="grid-template-columns:104px 1fr"] > div:first-child > div:nth-child(3) {
-    font-size: 14px !important;
+    font-size: 15px !important;
     color: #1F2A3F !important;
     font-weight: 800 !important;
     margin-top: 0 !important;
@@ -10230,7 +10230,7 @@ body.modal-open {
     white-space: nowrap !important;
     word-break: keep-all !important;
     word-wrap: normal !important;
-    font-size: 10px !important;
+    font-size: 11.5px !important;
     line-height: 1.3 !important;
     max-width: 100% !important;
     width: 100% !important;
@@ -10249,7 +10249,7 @@ body.modal-open {
     width: 100% !important;
     border-radius: 12px !important;
     padding: 12px 16px !important;
-    font-size: 14px !important;
+    font-size: 15px !important;
     font-weight: 800 !important;
     min-height: 50px !important;
     height: auto !important;
@@ -10281,7 +10281,7 @@ body.modal-open {
     width: 100% !important;
     min-height: 44px !important;
     padding: 10px 12px !important;
-    font-size: 13px !important;
+    font-size: 14px !important;
     border-radius: 10px !important;
     justify-content: center !important;
   }
@@ -10347,7 +10347,7 @@ body.modal-open {
     border-radius: 999px !important;
     background: rgba(255,255,255,0.96) !important;
     color: #0F172A !important;
-    font-size: 14px !important;
+    font-size: 15px !important;
     font-weight: 700 !important;
     letter-spacing: 0.02em !important;
     gap: 4px !important;
@@ -10362,7 +10362,7 @@ body.modal-open {
     content: '‹ 戻る' !important;
     display: inline !important;
     font-family: -apple-system, 'Hiragino Sans', 'Noto Sans JP', sans-serif !important;
-    font-size: 14px !important;
+    font-size: 15px !important;
     font-weight: 700 !important;
     letter-spacing: 0.02em !important;
     color: #0F172A !important;
@@ -10456,7 +10456,7 @@ body.modal-open {
   .sidebar-label {
     margin-top: 6px !important;
     margin-bottom: 4px !important;
-    font-size: 10px !important;
+    font-size: 11.5px !important;
     padding: 4px 12px 4px !important;
   }
   .sidebar-group { margin-bottom: 8px !important; }
@@ -10496,7 +10496,7 @@ body.modal-open {
 @media (max-width: 768px) {
   /* Critical: bottom nav label 10px → 12px (WCAG 可読 最低ライン) */
   #mobile-bottomnav .m-tab {
-    font-size: 12px !important;
+    font-size: 13px !important;
     font-weight: 700 !important;
     letter-spacing: 0.02em !important;
     color: #475569 !important; /* CR ~7:1 vs #fff */
@@ -10511,14 +10511,14 @@ body.modal-open {
     display: none !important;
   }
   /* 「業務のこと 何でも」 10.5px → 12px */
-  #sidebar-kompa-trigger span[style*="font-size:10.5px"],
-  #sidebar-kompa-trigger span[style*="font-size: 10.5px"] {
-    font-size: 12px !important;
+  #sidebar-kompa-trigger span[style*="font-size:11.5px"],
+  #sidebar-kompa-trigger span[style*="font-size: 11.5px"] {
+    font-size: 13px !important;
     line-height: 1.5 !important;
   }
   /* 「7/12 (日)」 date + 「名 フォロー待ち」 10-10.5px → 12px */
   .m-greet-date, .m-greet-unit {
-    font-size: 12px !important;
+    font-size: 13px !important;
   }
   /* form input iOS ズーム 防止 (16px 未満 で 自動ズーム 発生) */
   input[type="text"], input[type="email"], input[type="password"],
@@ -11000,7 +11000,7 @@ section > div[data-line-view] > div[style*="background: #fff"] {
   position: absolute !important;
   right: 10px !important; top: 10px !important;
   font-family: 'Manrope', 'Noto Sans JP', sans-serif !important;
-  font-size: 9px !important;
+  font-size: 11px !important;
   font-weight: 800 !important;
   letter-spacing: 0.14em !important;
   color: #B5530F !important;
@@ -11687,12 +11687,12 @@ section > div[data-line-view] > div[style*="background: #fff"] {
 .fp-quick-add-input::placeholder { color: #94A3B8; }
 .fp-quick-add-hint {
   font-family: 'Manrope', 'JetBrains Mono', sans-serif;
-  font-size: 10.5px; color: #94A3B8;
+  font-size: 12px; color: #94A3B8;
   display: flex; gap: 4px;
 }
 .fp-quick-add-hint code {
   background: #fff; border: 1px solid #E2E8F0; border-radius: 4px;
-  padding: 1px 6px; font-size: 10.5px; color: #64748B; font-family: inherit;
+  padding: 1px 6px; font-size: 12px; color: #64748B; font-family: inherit;
 }
 .fp-task-group {
   background: #fff;
@@ -11709,7 +11709,7 @@ section > div[data-line-view] > div[style*="background: #fff"] {
   border-bottom: 1px solid #F1F5F9;
 }
 .fp-task-group-arrow {
-  color: #94A3B8; font-size: 10px;
+  color: #94A3B8; font-size: 11.5px;
   transition: transform 180ms ease;
   display: inline-block;
   width: 10px;
@@ -12448,7 +12448,7 @@ label.fp-task-check:has(input:checked) { background: #5B5BF0; border-color: #5B5
 }
 .fp-sheet-opt-featured .fp-sheet-opt-label::after {
   content: 'おすすめ';
-  font-size: 10px;
+  font-size: 11.5px;
   font-weight: 900;
   background: #F59E0B;
   color: #fff;
@@ -12570,7 +12570,7 @@ body:not([data-home-view]) [data-view-target="cal"] { display: none !important; 
 .fp-kanban-col.is-overdue .fp-kanban-col-count { background: #FCA5A5; color: #7F1D1D; }
 .fp-kanban-card-deadline {
   display: inline-block;
-  font-size: 10.5px;
+  font-size: 12px;
   font-weight: 800;
   padding: 3px 8px;
   border-radius: 4px;
@@ -12641,7 +12641,7 @@ body:not([data-home-view]) [data-view-target="cal"] { display: none !important; 
   width: 22px; height: 22px; border-radius: 50%;
   background: #EEF0FF; color: #5B5BF0;
   display: inline-flex; align-items: center; justify-content: center;
-  font-family: 'Manrope', sans-serif; font-size: 10.5px; font-weight: 800;
+  font-family: 'Manrope', sans-serif; font-size: 12px; font-weight: 800;
   flex-shrink: 0; overflow: hidden;
 }
 .fp-kanban-card-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
@@ -12743,7 +12743,7 @@ body:not([data-home-view]) [data-view-target="cal"] { display: none !important; 
   padding: 1px 7px;
   border-radius: 999px;
   font-family: inherit;
-  font-size: 9.5px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.04em;
   cursor: pointer;
@@ -12811,7 +12811,7 @@ body:not([data-home-view]) [data-view-target="cal"] { display: none !important; 
 /* done badge (card 前面 · 明示) */
 .fp-kanban-card-donebadge {
   display: inline-block;
-  font-size: 10.5px; font-weight: 800;
+  font-size: 12px; font-weight: 800;
   background: #059669; color: #fff;
   padding: 2px 8px; border-radius: 4px;
   letter-spacing: 0.04em;
@@ -12847,7 +12847,7 @@ body:not([data-home-view]) [data-view-target="cal"] { display: none !important; 
     justify-self: stretch !important;
     width: 100% !important;
     padding: 10px 14px !important;
-    font-size: 13px !important;
+    font-size: 14px !important;
   }
   .cd-modal div[style*="grid-template-columns:56px 1fr auto"][style*="linear-gradient(135deg,#ECFDF5"] > div:first-child {
     width: 48px !important;
@@ -12903,20 +12903,20 @@ body:not([data-home-view]) [data-view-target="cal"] { display: none !important; 
   .fp-meeting-card .fp-meeting-card-actions > button,
   .fp-meeting-card .fp-meeting-card-actions > a {
     flex: 0 0 auto !important;
-    font-size: 12px !important;
+    font-size: 13px !important;
     padding: 6px 12px !important;
     white-space: nowrap !important;
   }
 
   /* 1. tiny badge (LINE / アンケ未回答 / DEMO MODE / 候補日 等 inline 9.5px) → 11px 昇格
      inline style 直書き の 場所 が 30+ 箇所 ある ので 一括 attribute selector で 上書き */
-  [style*="font-size:9.5px"],
-  [style*="font-size: 9.5px"] {
-    font-size: 11px !important;
+  [style*="font-size:11px"],
+  [style*="font-size: 11px"] {
+    font-size: 12.5px !important;
     letter-spacing: 0.02em !important;
   }
   /* .mh-kind (面談履歴 の Zoom/対面 pill) も 同じ */
-  .mh-kind { font-size: 11px !important; padding: 3px 8px !important; }
+  .mh-kind { font-size: 12.5px !important; padding: 3px 8px !important; }
 
   /* 2. bottom nav 被り 対策: 各 view の 一番 下 に padding を 明示 */
   #kpi-board, #mh-root, [data-view="clients"] .container, [data-view="dashboard"] .container {
@@ -12953,19 +12953,19 @@ body:not([data-home-view]) [data-view-target="cal"] { display: none !important; 
 
   /* 7. qa-reviewer P2-2: 「⚠ 要返事 N」 fp-unread-badge が 9px で 実機 4.5pt 相当、 視認 不能 */
   .fp-unread-badge {
-    font-size: 11px !important;
+    font-size: 12.5px !important;
     padding: 3px 9px !important;
   }
   /* 7b. qa-reviewer P2-1: .status-pill が 10px と 過小 (client-row 内) */
   .client-row .status-pill,
   .lch-item .status-pill,
   .brief-compact-name .status-pill {
-    font-size: 11px !important;
+    font-size: 12.5px !important;
   }
   /* 7c. qa-reviewer P2-4: 「AI」 バッジ 8px も 昇格 */
-  span[style*="font-size:8px"],
-  span[style*="font-size: 8px"] {
-    font-size: 10.5px !important;
+  span[style*="font-size:11px"],
+  span[style*="font-size: 11px"] {
+    font-size: 11.5px !important;
   }
 
   /* 8a. 対面 録音 mini widget + 議事録 生成中 badge が bnav の 下 に 44px 突き刺さり fix
@@ -13030,7 +13030,7 @@ body:not([data-home-view]) [data-view-target="cal"] { display: none !important; 
   #fp-slots-modal > div > div:last-child button {
     flex: 1 1 auto !important;
     min-width: 0 !important;
-    font-size: 14px !important;
+    font-size: 15px !important;
     padding: 12px 14px !important;
   }
   /* header の 「📅 客 様 へ 候補日 3つ を 送る」 が 長い ので 縮小 */
@@ -13072,7 +13072,7 @@ body:not([data-home-view]) [data-view-target="cal"] { display: none !important; 
     flex-shrink: 0 !important;
     white-space: nowrap !important;
     padding: 12px 12px 10px !important;
-    font-size: 12px !important;
+    font-size: 13px !important;
   }
   [data-tr-panel] {
     max-height: none !important;
@@ -13410,7 +13410,7 @@ body:not([data-home-view]) [data-view-target="cal"] { display: none !important; 
   table.clients tbody td:nth-child(1) .avatar {
     width: 40px !important;
     height: 40px !important;
-    font-size: 14.5px !important;
+    font-size: 15px !important;
   }
   table.clients tbody td:nth-child(1) .client-row-name > .avatar {
     margin-top: 0 !important;
@@ -13491,7 +13491,7 @@ body:not([data-home-view]) [data-view-target="cal"] { display: none !important; 
     display: inline-flex !important;
     align-items: center !important;
     gap: 5px !important;
-    font-size: 10.5px !important;
+    font-size: 11.5px !important;
     font-weight: 800 !important;
     letter-spacing: 0.03em !important;
     padding: 2px 9px !important;
@@ -13506,7 +13506,7 @@ body:not([data-home-view]) [data-view-target="cal"] { display: none !important; 
     flex-shrink: 0 !important;
   }
   table.clients tbody td:nth-child(11) > div > span:nth-child(2) {
-    font-size: 11px !important;
+    font-size: 12.5px !important;
     color: #A09A8A !important;
   }
   /* LINE の 最終アクション 行 は カード を 詰まらせる ので スマホ では 出さない */
@@ -13860,7 +13860,7 @@ body:not([data-home-view]) [data-view-target="cal"] { display: none !important; 
 /* 閉じた行: 補助テキストが「…」で切れないように、バッジ側を細くする */
 .fp-pend-head .fp-pend-badge {
   padding: 3px 8px !important;
-  font-size: 10.5px !important;
+  font-size: 12px !important;
   flex-shrink: 0;
 }
 .fp-pend-head .fp-pend-sub {
@@ -13987,4 +13987,27 @@ body.mobile-nav-open .sidebar-nav .tab .nav-count:empty { display: none !importa
   #confirm-list, #bookings-list, #aftercare-list { padding: 0 12px 12px !important; }
   #confirm-list { background: transparent !important; border-radius: 0 !important; }
   #confirm-list .fp-pend { margin-bottom: 8px !important; }
+}
+
+/* ============================================================
+   2026-09-16 (4) 予約待ちカードの文字も底上げ
+   ============================================================ */
+.fp-pend .fp-pend-name      { font-size: 16px !important; }
+.fp-pend .fp-pend-sub       { font-size: 13px !important; }
+.fp-pend .fp-pend-badge     { font-size: 12px !important; }
+.fp-pend .fp-pend-when-label{ font-size: 13px !important; }
+.fp-pend .fp-pend-when-value{ font-size: 21px !important; }
+.fp-pend .fp-pend-slot      { font-size: 14.5px !important; }
+.fp-pend .fp-pend-slot-no   { font-size: 12.5px !important; }
+.fp-pend .fp-pend-voice     { font-size: 14.5px !important; }
+.fp-pend .fp-pend-hint      { font-size: 13px !important; }
+.fp-pend .fp-pend-go        { font-size: 16.5px !important; }
+.fp-pend .fp-pend-sub-btn   { font-size: 14px !important; }
+/* バッジは14pxだと大きすぎるので12.5px・高さ22pxに */
+.sidebar-nav .tab .nav-count,
+body.mobile-nav-open .sidebar-nav .tab .nav-count,
+.sidebar .nav-count {
+  font-size: 12.5px !important;
+  height: 22px !important;
+  min-width: 24px !important;
 }

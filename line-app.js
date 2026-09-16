@@ -82,11 +82,11 @@
               <span style="display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;background:${c.accent}12;color:${c.accent};border:1px solid ${c.accent}33;">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${c.ic.replace(/<svg[^>]*>/, '').replace('</svg>', '')}</svg>
               </span>
-              <span style="font-family:'Inter',sans-serif;font-size:9.5px;font-weight:800;color:${c.accent};letter-spacing:0.22em;text-transform:uppercase;">${c.label}</span>
+              <span style="font-family:'Inter',sans-serif;font-size:11px;font-weight:800;color:${c.accent};letter-spacing:0.22em;text-transform:uppercase;">${c.label}</span>
             </div>
             <div style="font-family:'Inter',sans-serif;font-size:36px;font-weight:900;line-height:1;letter-spacing:-0.03em;color:${c.active ? c.accent : '#0f1729'};">${c.count}<span style="font-size:13px;font-weight:600;color:#6b7280;margin-left:6px;">${c.unit}</span></div>
             <div style="margin-top:12px;font-size:12.5px;color:#0f1729;font-weight:700;letter-spacing:0.02em;">${c.title}</div>
-            <div style="margin-top:4px;font-size:11px;color:#6b7280;line-height:1.55;">${c.desc}</div>
+            <div style="margin-top:4px;font-size:12.5px;color:#6b7280;line-height:1.55;">${c.desc}</div>
           </div>
         `).join('')}
       </div>
@@ -113,15 +113,15 @@
       <div style="background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 18px;margin-bottom:8px;display:grid;grid-template-columns:80px 1fr 140px;gap:16px;align-items:center;box-shadow:var(--shadow-xs);">
         <div>
           <div style="font-family:'Inter',sans-serif;font-size:18px;font-weight:700;letter-spacing:-0.01em;">${b.date.getMonth() + 1}/${b.date.getDate()}</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:2px;letter-spacing:0.04em;">${b.daysAhead === 0 ? '本日' : '+' + b.daysAhead + '日'}</div>
+          <div style="font-size:12.5px;color:var(--muted);margin-top:2px;letter-spacing:0.04em;">${b.daysAhead === 0 ? '本日' : '+' + b.daysAhead + '日'}</div>
         </div>
         <div>
           <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;">
             <strong style="font-family:'Noto Sans JP',sans-serif;font-size:14.5px;">${escapeHtml(b.personName)}</strong>
             <span class="status-pill ${b.rel === '本人' ? 'important' : 'new'}">${escapeHtml(b.rel)}</span>
-            <span style="font-size:11px;color:var(--muted);">${b.age}歳</span>
+            <span style="font-size:12.5px;color:var(--muted);">${b.age}歳</span>
           </div>
-          <div style="font-size:11.5px;color:var(--muted);margin-top:3px;">顧客: ${escapeHtml(b.client.name)} 様</div>
+          <div style="font-size:13px;color:var(--muted);margin-top:3px;">顧客: ${escapeHtml(b.client.name)} 様</div>
         </div>
         <div style="text-align:right;">
           ${b.daysAhead === 0
@@ -214,7 +214,7 @@
         <button class="primary" id="cal-blast-btn" data-hint="全LINE友だちに『年末カレンダー要りますか?』配信。年1回だけ押す想定"><i data-lucide="send"></i><span>友だち全員に一斉配信</span></button>
         <a class="ghost-btn" href="${allMapUrl}" target="_blank" data-hint="希望者の住所をGoogleマップ上に全部ピン表示" ${wantList.length===0?'style="pointer-events:none;opacity:0.4;"':''}><i data-lucide="map"></i><span>全員の住所を地図表示</span></a>
         <a class="ghost-btn" href="${routeUrl}" target="_blank" data-hint="希望者全員を回る最適ルートをGoogleマップで生成。当日ナビとして使用" ${wantList.length===0?'style="pointer-events:none;opacity:0.4;"':''}><i data-lucide="route"></i><span>配達ルートを最適化 (Google マップ)</span></a>
-        <span id="cal-blast-msg" style="font-size:12px;color:var(--muted);align-self:center;margin-left:auto;"></span>
+        <span id="cal-blast-msg" style="font-size:13.5px;color:var(--muted);align-self:center;margin-left:auto;"></span>
       </div>
 
       <section class="board-section" id="cal-want">
@@ -245,7 +245,7 @@
           : '<div style="display:grid;gap:6px;">' + wantNoAddr.map(r => `
               <div style="background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;">
                 <strong style="font-size:13.5px;">${escapeHtml(r.name) || '匿名'} 様</strong>
-                <span style="font-size:11px;color:var(--muted);">住所入力URLを送信済 / 入力待ち</span>
+                <span style="font-size:12.5px;color:var(--muted);">住所入力URLを送信済 / 入力待ち</span>
               </div>
             `).join('') + '</div>'
         }
@@ -262,7 +262,7 @@
       ${notWant.length > 0 ? `
       <section class="board-section">
         <h2><i data-lucide="x-circle"></i><span>不要 — ${notWant.length}名</span></h2>
-        <div style="display:grid;gap:4px;font-size:12px;color:var(--muted);">
+        <div style="display:grid;gap:4px;font-size:13.5px;color:var(--muted);">
           ${notWant.map(r => `<div style="padding:8px 14px;background:#fafbfc;border:1px solid var(--line);border-radius:6px;">${escapeHtml(r.name) || '匿名'}</div>`).join('')}
         </div>
       </section>` : ''}
@@ -320,7 +320,7 @@
           </div>
 
           <div style="background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:18px;">
-            <div style="font-size:11px;font-weight:800;color:#475569;letter-spacing:0.06em;margin-bottom:10px;">+ 新しいタグを作る</div>
+            <div style="font-size:12.5px;font-weight:800;color:#475569;letter-spacing:0.06em;margin-bottom:10px;">+ 新しいタグを作る</div>
             <div style="display:flex;gap:8px;align-items:center;">
               <input id="fp-tg-new" type="text" maxlength="20" placeholder="例: 法人客 / 紹介者 / VIP / 教育費相談中" style="flex:1;padding:10px 12px;border:1.5px solid #E2E8F0;border-radius:6px;font-size:13px;font-family:inherit;">
               <button id="fp-tg-create" style="background:#0F172A;color:#fff;border:none;padding:10px 20px;border-radius:6px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:0.04em;">作成</button>
@@ -328,7 +328,7 @@
           </div>
 
           <div style="background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px;">
-            <div style="font-size:11px;font-weight:800;color:#475569;letter-spacing:0.06em;margin-bottom:14px;display:flex;justify-content:space-between;">
+            <div style="font-size:12.5px;font-weight:800;color:#475569;letter-spacing:0.06em;margin-bottom:14px;display:flex;justify-content:space-between;">
               <span>📋 タグ一覧 (${master.length}個 / 計 ${totalTagged}人 にタグ付き)</span>
             </div>
             ${master.length === 0 ? `
@@ -347,13 +347,13 @@
                   const tagged = tagClients(t.id);
                   return `
                     <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:${t.color}0A;border:1px solid ${t.color}33;border-radius:8px;">
-                      <span style="background:${t.color};color:#fff;padding:6px 14px;border-radius:999px;font-size:12px;font-weight:800;letter-spacing:0.04em;white-space:nowrap;">${escapeHtml(t.label)}</span>
-                      <span style="flex:1;font-size:12px;color:#475569;">
+                      <span style="background:${t.color};color:#fff;padding:6px 14px;border-radius:999px;font-size:13.5px;font-weight:800;letter-spacing:0.04em;white-space:nowrap;">${escapeHtml(t.label)}</span>
+                      <span style="flex:1;font-size:13.5px;color:#475569;">
                         <strong style="color:${t.color};">${tagged.length}名</strong> に付与
-                        ${tagged.length > 0 ? ` — <span style="color:#64748B;font-size:11px;">${tagged.slice(0,5).map(c => escapeHtml(c.name)).join(' / ')}${tagged.length > 5 ? ` 他${tagged.length-5}名` : ''}</span>` : ''}
+                        ${tagged.length > 0 ? ` — <span style="color:#64748B;font-size:12.5px;">${tagged.slice(0,5).map(c => escapeHtml(c.name)).join(' / ')}${tagged.length > 5 ? ` 他${tagged.length-5}名` : ''}</span>` : ''}
                       </span>
-                      <button class="fp-tg-assign" data-id="${t.id}" style="background:${t.color};color:#fff;border:none;padding:5px 14px;border-radius:5px;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:0.04em;">+ 客を選んで付ける</button>
-                      <button class="fp-tg-del" data-id="${t.id}" style="background:transparent;color:#DC2626;border:1px solid #FEE2E2;padding:5px 12px;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">削除</button>
+                      <button class="fp-tg-assign" data-id="${t.id}" style="background:${t.color};color:#fff;border:none;padding:5px 14px;border-radius:5px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:0.04em;">+ 客を選んで付ける</button>
+                      <button class="fp-tg-del" data-id="${t.id}" style="background:transparent;color:#DC2626;border:1px solid #FEE2E2;padding:5px 12px;border-radius:5px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;">削除</button>
                     </div>
                   `;
                 }).join('')}
@@ -415,18 +415,18 @@
         <div style="background:#fff;max-width:640px;width:100%;max-height:80vh;border-radius:14px;box-shadow:0 24px 60px rgba(0,0,0,0.35);display:flex;flex-direction:column;overflow:hidden;">
           <div style="background:${tag.color};color:#fff;padding:16px 22px;display:flex;justify-content:space-between;align-items:center;">
             <div>
-              <div style="font-size:10px;font-weight:800;letter-spacing:0.22em;opacity:0.85;">TAG ASSIGNMENT</div>
+              <div style="font-size:11.5px;font-weight:800;letter-spacing:0.22em;opacity:0.85;">TAG ASSIGNMENT</div>
               <h3 style="margin:4px 0 0 0;font-size:15px;font-weight:900;">🏷 「${escapeHtml(tag.label)}」 を付ける客を選ぶ</h3>
             </div>
             <button id="fp-ta-close" style="background:rgba(255,255,255,0.2);border:none;color:#fff;width:32px;height:32px;border-radius:6px;cursor:pointer;font-size:16px;">✕</button>
           </div>
           <div style="padding:14px 22px;background:#F8FAFC;border-bottom:1px solid #E2E8F0;display:flex;gap:8px;align-items:center;">
             <input id="fp-ta-search" type="search" placeholder="名前で絞り込み..." style="flex:1;padding:8px 12px;border:1.5px solid #E2E8F0;border-radius:6px;font-size:12.5px;font-family:inherit;">
-            <button id="fp-ta-all" style="background:#0F172A;color:#fff;border:none;padding:8px 14px;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">全選択/解除</button>
+            <button id="fp-ta-all" style="background:#0F172A;color:#fff;border:none;padding:8px 14px;border-radius:5px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;">全選択/解除</button>
           </div>
           <div id="fp-ta-list" style="flex:1;overflow-y:auto;padding:14px 22px;"></div>
           <div style="padding:14px 22px;background:#F8FAFC;border-top:1px solid #E2E8F0;display:flex;justify-content:space-between;align-items:center;">
-            <span style="font-size:12px;font-weight:700;color:#475569;">選択 <span id="fp-ta-count" style="color:${tag.color};font-weight:900;">${working.size}</span> 名</span>
+            <span style="font-size:13.5px;font-weight:700;color:#475569;">選択 <span id="fp-ta-count" style="color:${tag.color};font-weight:900;">${working.size}</span> 名</span>
             <button id="fp-ta-save" style="background:${tag.color};color:#fff;border:none;padding:10px 22px;border-radius:6px;font-size:13px;font-weight:900;cursor:pointer;font-family:inherit;letter-spacing:0.04em;">✓ 保存</button>
           </div>
         </div>
@@ -444,8 +444,8 @@
           return `
             <label data-cid="${c.id}" class="fp-ta-row" style="display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px solid ${on ? tag.color : '#E2E8F0'};background:${on ? tag.color+'14' : '#fff'};border-radius:7px;margin-bottom:5px;cursor:pointer;">
               <input type="checkbox" data-cid="${c.id}" ${on ? 'checked' : ''} style="width:17px;height:17px;cursor:pointer;accent-color:${tag.color};">
-              <span style="flex:1;font-size:13px;font-weight:600;color:#0F172A;">${escapeHtml(c.name)} <span style="color:#94A3B8;font-size:11px;font-weight:500;margin-left:5px;">${escapeHtml(c.occupation || '')}</span></span>
-              ${c.lineFriendId ? '<span style="font-size:9px;color:#06C755;background:#DCFCE7;padding:1px 6px;border-radius:6px;font-weight:800;letter-spacing:0.05em;">LINE</span>' : ''}
+              <span style="flex:1;font-size:13px;font-weight:600;color:#0F172A;">${escapeHtml(c.name)} <span style="color:#94A3B8;font-size:12.5px;font-weight:500;margin-left:5px;">${escapeHtml(c.occupation || '')}</span></span>
+              ${c.lineFriendId ? '<span style="font-size:11px;color:#06C755;background:#DCFCE7;padding:1px 6px;border-radius:6px;font-weight:800;letter-spacing:0.05em;">LINE</span>' : ''}
             </label>
           `;
         }).join('');
@@ -586,20 +586,20 @@
         <label class="fp-dormant-row" style="display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:10px 14px;background:#fff;border:1px solid var(--line);border-radius:8px;margin-bottom:6px;cursor:pointer;">
           <input type="checkbox" class="fp-dormant-cb" data-uid="${escapeHtml(c.lineFriendId)}" data-name="${escapeHtml(c.name)}" checked style="width:18px;height:18px;cursor:pointer;">
           <div style="min-width:0;">
-            <div style="font-weight:700;font-size:13px;color:#0F172A;">${escapeHtml(c.name)} 様 <span style="font-size:10px;color:#94A3B8;font-weight:500;margin-left:6px;">${escapeHtml((c.occupation||''))}</span></div>
-            ${ctx ? `<div style="font-size:11px;color:#64748B;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">📝 ${escapeHtml(ctx)}</div>` : '<div style="font-size:11px;color:#CBD5E1;margin-top:2px;font-style:italic;">議事録なし</div>'}
+            <div style="font-weight:700;font-size:13px;color:#0F172A;">${escapeHtml(c.name)} 様 <span style="font-size:11.5px;color:#94A3B8;font-weight:500;margin-left:6px;">${escapeHtml((c.occupation||''))}</span></div>
+            ${ctx ? `<div style="font-size:12.5px;color:#64748B;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">📝 ${escapeHtml(ctx)}</div>` : '<div style="font-size:12.5px;color:#CBD5E1;margin-top:2px;font-style:italic;">議事録なし</div>'}
           </div>
-          <div style="text-align:right;font-size:11.5px;font-weight:800;color:${days===-1?'#94A3B8':days>=180?'#DC2626':days>=60?'#EA580C':'#CA8A04'};font-variant-numeric:tabular-nums;">${days===-1?'未接触':days+'日'}</div>
+          <div style="text-align:right;font-size:13px;font-weight:800;color:${days===-1?'#94A3B8':days>=180?'#DC2626':days>=60?'#EA580C':'#CA8A04'};font-variant-numeric:tabular-nums;">${days===-1?'未接触':days+'日'}</div>
         </label>
       `;
     };
 
     const renderBucket = (key, label, color, items) => items.length === 0 ? '' : `
       <section style="margin-bottom:18px;">
-        <h3 style="font-size:12px;font-weight:800;letter-spacing:0.06em;color:${color};margin:0 0 10px 0;display:flex;align-items:center;gap:8px;">
+        <h3 style="font-size:13.5px;font-weight:800;letter-spacing:0.06em;color:${color};margin:0 0 10px 0;display:flex;align-items:center;gap:8px;">
           <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${color};"></span>
           ${escapeHtml(label)} <span style="color:#94A3B8;font-weight:600;">— ${items.length}名</span>
-          <button class="fp-dormant-select-all" data-bucket="${key}" style="margin-left:auto;background:transparent;color:${color};border:1px solid ${color};padding:3px 10px;border-radius:5px;font-size:10.5px;font-weight:700;cursor:pointer;">全選択/解除</button>
+          <button class="fp-dormant-select-all" data-bucket="${key}" style="margin-left:auto;background:transparent;color:${color};border:1px solid ${color};padding:3px 10px;border-radius:5px;font-size:12px;font-weight:700;cursor:pointer;">全選択/解除</button>
         </h3>
         ${items.map(renderRow).join('')}
       </section>
@@ -619,7 +619,7 @@
       const c = color || '#5B5BF0';
       return `
         <label class="fp-filter-cell" style="display:flex;flex-direction:column;gap:6px;min-width:0;flex:1 1 150px;">
-          <span style="font-size:11px;font-weight:900;color:${active ? c : '#64748B'};letter-spacing:0.06em;display:flex;align-items:center;gap:4px;">${label}</span>
+          <span style="font-size:12.5px;font-weight:900;color:${active ? c : '#64748B'};letter-spacing:0.06em;display:flex;align-items:center;gap:4px;">${label}</span>
           <div style="position:relative;">
             <select data-multi-filter="${id}" style="width:100%;padding:13px 38px 13px 14px;border:2px solid ${active ? c : '#E2E8F0'};border-radius:11px;font-size:14px;font-weight:${active ? '800' : '600'};font-family:inherit;background:${active ? c + '0D' : '#fff'};color:${active ? c : '#0F172A'};cursor:pointer;min-height:50px;appearance:none;-webkit-appearance:none;transition:border-color .15s,background-color .15s;box-shadow:${active ? '0 4px 12px ' + c + '22' : '0 1px 2px rgba(15,23,42,0.04)'};">
               <option value="">— すべて —</option>
@@ -641,9 +641,9 @@
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
           <strong style="font-size:14.5px;font-weight:900;color:#0F172A;letter-spacing:-0.01em;display:inline-flex;align-items:center;gap:8px;">
             <span style="font-size:18px;">🔍</span>絞り込み
-            ${activeFilterCount > 0 ? `<span style="background:#5B5BF0;color:#fff;font-size:11px;font-weight:900;padding:3px 10px;border-radius:99px;letter-spacing:0.04em;">${activeFilterCount} 適用中</span>` : ''}
+            ${activeFilterCount > 0 ? `<span style="background:#5B5BF0;color:#fff;font-size:12.5px;font-weight:900;padding:3px 10px;border-radius:99px;letter-spacing:0.04em;">${activeFilterCount} 適用中</span>` : ''}
           </strong>
-          ${activeFilterCount > 0 ? '<button id="fp-dormant-filter-clear" style="background:#fff;color:#DC2626;border:1.5px solid #FECACA;padding:7px 14px;border-radius:9px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:5px;">✕ 全解除</button>' : ''}
+          ${activeFilterCount > 0 ? '<button id="fp-dormant-filter-clear" style="background:#fff;color:#DC2626;border:1.5px solid #FECACA;padding:7px 14px;border-radius:9px;font-size:13.5px;font-weight:800;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:5px;">✕ 全解除</button>' : ''}
         </div>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;">
           ${selBox('bucket', '⏰ 期間', bucketOptions, F.bucket, '#EA580C')}
@@ -654,13 +654,13 @@
         </div>
         ${tagsMaster.length > 0 ? `
           <div style="border-top:1.5px dashed #E2E8F0;margin-top:16px;padding-top:14px;">
-            <div style="font-size:11.5px;font-weight:900;color:#475569;letter-spacing:0.06em;margin-bottom:8px;">🏷 タグ で 絞る</div>
+            <div style="font-size:13px;font-weight:900;color:#475569;letter-spacing:0.06em;margin-bottom:8px;">🏷 タグ で 絞る</div>
             <div style="display:flex;flex-wrap:wrap;align-items:center;gap:7px;">
-              <button data-tag-filter="" style="background:${!F.tag ? '#0F172A' : '#fff'};color:${!F.tag ? '#fff' : '#475569'};border:1.5px solid ${!F.tag ? '#0F172A' : '#E2E8F0'};padding:7px 14px;border-radius:99px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;transition:all .12s;">指定なし</button>
+              <button data-tag-filter="" style="background:${!F.tag ? '#0F172A' : '#fff'};color:${!F.tag ? '#fff' : '#475569'};border:1.5px solid ${!F.tag ? '#0F172A' : '#E2E8F0'};padding:7px 14px;border-radius:99px;font-size:13.5px;font-weight:800;cursor:pointer;font-family:inherit;transition:all .12s;">指定なし</button>
               ${tagsMaster.map(t => {
                 const n = allClients.filter(c => (window.FpApp.getClientTags(c.id) || []).includes(t.id) && daysSinceLastContact(c) >= 21).length;
                 const on = F.tag === t.id;
-                return `<button data-tag-filter="${t.id}" style="background:${on ? t.color : '#fff'};color:${on ? '#fff' : t.color};border:1.5px solid ${t.color};padding:7px 14px;border-radius:99px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:${on ? '0 4px 12px ' + t.color + '44' : 'none'};transition:all .12s;">${escapeHtml(t.label)} <span style="opacity:0.75;font-weight:700;">(${n})</span></button>`;
+                return `<button data-tag-filter="${t.id}" style="background:${on ? t.color : '#fff'};color:${on ? '#fff' : t.color};border:1.5px solid ${t.color};padding:7px 14px;border-radius:99px;font-size:13.5px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:${on ? '0 4px 12px ' + t.color + '44' : 'none'};transition:all .12s;">${escapeHtml(t.label)} <span style="opacity:0.75;font-weight:700;">(${n})</span></button>`;
               }).join('')}
             </div>
           </div>` : ''}
@@ -678,10 +678,10 @@
         <!-- ★ 役割明示バナー: 配信タブとの混同防止 -->
         <div style="background:linear-gradient(135deg,#FEF3C7,#FFEDD5);border:1px solid #FCD34D;border-radius:12px;padding:18px 22px;margin-bottom:18px;">
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
-            <span style="background:#7C2D12;color:#fff;font-size:10px;font-weight:800;letter-spacing:0.12em;padding:3px 9px;border-radius:4px;">ご無沙汰フォロー — RE-ENGAGE</span>
-            <span style="font-size:12px;color:#64748B;">= <strong style="color:#7C2D12;">最終接触から日数が経った客</strong>を1人ずつ追客 (関係維持・再接続)</span>
+            <span style="background:#7C2D12;color:#fff;font-size:11.5px;font-weight:800;letter-spacing:0.12em;padding:3px 9px;border-radius:4px;">ご無沙汰フォロー — RE-ENGAGE</span>
+            <span style="font-size:13.5px;color:#64748B;">= <strong style="color:#7C2D12;">最終接触から日数が経った客</strong>を1人ずつ追客 (関係維持・再接続)</span>
           </div>
-          <div style="font-size:12px;color:#64748B;line-height:1.7;">
+          <div style="font-size:13.5px;color:#64748B;line-height:1.7;">
             キャンペーンやお知らせを全員に一斉送信したい時は → <a href="#" onclick="document.querySelector('.tab[data-tab=&quot;distributionHub&quot;]')?.click();return false;" style="color:#1D4ED8;font-weight:700;text-decoration:underline;">配信タブ</a> （テンプレ駆動でまとめて送信）
           </div>
         </div>
@@ -696,7 +696,7 @@
           <div style="background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:18px;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
               <strong style="font-size:13px;color:#0F172A;">対象者 ${enriched.length}名</strong>
-              <div style="font-size:11px;color:#64748B;">名前は送信時に {name} 自動置換</div>
+              <div style="font-size:12.5px;color:#64748B;">名前は送信時に {name} 自動置換</div>
             </div>
             ${renderBucket('light', '🟡 21日〜60日未満 (軽くタッチ)', '#CA8A04', buckets.light)}
             ${renderBucket('mid', '🟠 60日〜180日未満 (しっかりフォロー)', '#EA580C', buckets.mid)}
@@ -704,14 +704,14 @@
           </div>
 
           <div style="background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:18px;">
-            <div style="font-size:11px;font-weight:800;color:#475569;letter-spacing:0.06em;margin-bottom:8px;">📝 送信メッセージ (編集可・{name} は自動置換)</div>
+            <div style="font-size:12.5px;font-weight:800;color:#475569;letter-spacing:0.06em;margin-bottom:8px;">📝 送信メッセージ (編集可・{name} は自動置換)</div>
             <textarea id="fp-dormant-msg" rows="8" style="width:100%;padding:14px 16px;border:1.5px solid #E2E8F0;border-radius:8px;font-size:13.5px;font-family:'Noto Sans JP',sans-serif;line-height:1.75;resize:vertical;box-sizing:border-box;">${escapeHtml(defaultMsg)}</textarea>
           </div>
 
           <div style="position:sticky;bottom:18px;background:linear-gradient(135deg,#0F172A,#1E293B);border-radius:12px;padding:18px 22px;box-shadow:0 12px 36px rgba(15,23,42,0.32);display:flex;align-items:center;gap:18px;flex-wrap:wrap;">
             <div style="flex:1;color:#fff;min-width:180px;">
-              <div style="font-size:11.5px;font-weight:700;letter-spacing:0.06em;color:#94A3B8;">✓ 選択中 <span id="fp-dormant-selected-count" style="color:#FCD34D;font-weight:900;">${enriched.length}</span>名 に送信</div>
-              <div style="font-size:10px;color:#CBD5E1;margin-top:2px;">⚠ 送信後は取消不可。送信前に文面を確認してください</div>
+              <div style="font-size:13px;font-weight:700;letter-spacing:0.06em;color:#94A3B8;">✓ 選択中 <span id="fp-dormant-selected-count" style="color:#FCD34D;font-weight:900;">${enriched.length}</span>名 に送信</div>
+              <div style="font-size:11.5px;color:#CBD5E1;margin-top:2px;">⚠ 送信後は取消不可。送信前に文面を確認してください</div>
             </div>
             <div class="btn-cta-primary-wrap">
               <span class="btn-cta-primary-chip">\\ 全員に 1クリック /</span>
@@ -966,44 +966,44 @@
     v.innerHTML = `
       <div class="fp-lead-head" style="margin:0 0 14px;padding:0 0 12px;border-bottom:1px solid #DFE1E5;display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;">
         <div>
-          <div style="font-size:10.5px;font-weight:700;color:#565B66;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:6px;">New Consultation</div>
+          <div style="font-size:13.5px;font-weight:700;color:#565B66;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:6px;">New Consultation</div>
           <h1 style="font-family:'Noto Sans JP',sans-serif;font-size:24px;font-weight:800;letter-spacing:0.01em;margin:0 0 4px;color:#14171C;">新規相談</h1>
-          <p style="color:#565B66;font-size:13px;margin:0;line-height:1.6;">LINE — アンケート — 候補日 — Zoom面談 — 完了 までの進行状況</p>
+          <p style="color:#565B66;font-size:14px;margin:0;line-height:1.6;">LINE — アンケート — 候補日 — Zoom面談 — 完了 までの進行状況</p>
         </div>
         <!-- ★ 2026-08-25 owner「急遽面談 スタート 全部 いらない (客カード の 音声 upload に 統一)」 で 撤去 -->
         <!-- 旧 button 互換 のため hidden で 残置 (別 code path から click 発火 される 可能性) -->
         <button id="fp-quick-inperson" style="display:none;" hidden></button>
       </div>
 
-      ${isDemo ? '<div style="background:#FFFFFF;border:1px solid #DFE1E5;border-radius:6px;padding:11px 16px;margin-bottom:24px;font-size:12px;color:#565B66;font-family:\'Noto Sans JP\',sans-serif;letter-spacing:0.02em;"><strong style="font-weight:700;">Note —</strong> 表示中の候補日待ち4件はサンプルです。本番では実際のLINEアンケート回答が並びます</div>' : ''}
+      ${isDemo ? '<div style="background:#FFFFFF;border:1px solid #DFE1E5;border-radius:6px;padding:11px 16px;margin-bottom:24px;font-size:13px;color:#565B66;font-family:\'Noto Sans JP\',sans-serif;letter-spacing:0.02em;"><strong style="font-weight:700;">Note —</strong> 表示中の候補日待ち4件はサンプルです。本番では実際のLINEアンケート回答が並びます</div>' : ''}
 
       ${hero ? `
       <a href="${hero.target}" class="fp-lead-hero" style="text-decoration:none;color:inherit;display:block;background:${heroColor.bg};border:1.5px solid ${heroColor.border};border-radius:14px;padding:18px 20px;margin-bottom:20px;display:grid;grid-template-columns:1fr auto;gap:20px;align-items:center;box-shadow:0 1px 3px rgba(15,23,42,0.04),0 8px 24px rgba(15,23,42,0.06);transition:transform 0.15s,box-shadow 0.15s;">
         <div>
-          <div style="font-size:10px;font-weight:700;color:${heroColor.fg};letter-spacing:0.2em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:8px;">
+          <div style="font-size:13px;font-weight:700;color:${heroColor.fg};letter-spacing:0.2em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:8px;">
             <span style="width:6px;height:6px;background:${heroColor.dot};border-radius:50%;display:inline-block;"></span>
             Next Action
           </div>
           <div class="fp-lead-hero-num" style="display:flex;align-items:baseline;gap:14px;margin-bottom:8px;">
-            <div style="font-size:42px;font-weight:800;font-family:'Inter',sans-serif;color:${heroColor.fg};line-height:1;letter-spacing:-0.02em;">${hero.count}<span style="font-size:14px;color:#565B66;font-weight:600;margin-left:4px;">${hero.unit}</span></div>
+            <div style="font-size:42px;font-weight:800;font-family:'Inter',sans-serif;color:${heroColor.fg};line-height:1;letter-spacing:-0.02em;">${hero.count}<span style="font-size:15px;color:#565B66;font-weight:600;margin-left:4px;">${hero.unit}</span></div>
             <div style="font-family:'Noto Sans JP',sans-serif;font-size:18px;font-weight:600;color:#14171C;line-height:1.35;">${hero.title}</div>
           </div>
-          <div style="font-size:12.5px;color:#565B66;line-height:1.6;letter-spacing:0.02em;">${hero.sub}</div>
+          <div style="font-size:13.5px;color:#565B66;line-height:1.6;letter-spacing:0.02em;">${hero.sub}</div>
         </div>
         <div style="font-size:18px;color:${heroColor.fg};font-family:'Inter',sans-serif;font-weight:300;">→</div>
       </a>` : `
       <div style="background:${accents.ok.bg};border:1.5px solid ${accents.ok.border};border-radius:14px;padding:18px 20px;margin-bottom:20px;display:grid;grid-template-columns:1fr;gap:6px;box-shadow:0 1px 3px rgba(15,23,42,0.04);">
-        <div style="font-size:10px;font-weight:700;color:${accents.ok.fg};letter-spacing:0.2em;text-transform:uppercase;display:flex;align-items:center;gap:8px;">
+        <div style="font-size:13px;font-weight:700;color:${accents.ok.fg};letter-spacing:0.2em;text-transform:uppercase;display:flex;align-items:center;gap:8px;">
           <span style="width:6px;height:6px;background:${accents.ok.dot};border-radius:50%;display:inline-block;"></span>
           Status
         </div>
         <div style="font-family:'Noto Sans JP',sans-serif;font-size:18px;font-weight:600;color:#14171C;">対応待ちはありません</div>
-        <div style="font-size:12.5px;color:#565B66;line-height:1.6;">新しい LINE 流入があれば自動でここに表示されます</div>
+        <div style="font-size:13.5px;color:#565B66;line-height:1.6;">新しい LINE 流入があれば自動でここに表示されます</div>
       </div>`}
 
       <div style="display:flex;align-items:baseline;justify-content:space-between;margin:0 0 14px;padding-bottom:10px;border-bottom:1px solid #DFE1E5;">
         <div>
-          <div style="font-size:10.5px;font-weight:700;color:#565B66;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:3px;">Pipeline</div>
+          <div style="font-size:13.5px;font-weight:700;color:#565B66;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:3px;">Pipeline</div>
           <h2 style="font-family:'Noto Sans JP',sans-serif;font-size:18px;margin:0;font-weight:600;color:#14171C;">FP 作業フロー</h2>
         </div>
       </div>
@@ -1014,18 +1014,18 @@
         ].map(c => `
           <a href="${c.target}" style="text-decoration:none;color:inherit;background:#fff;border:${c.active ? '1.5px' : '1px'} solid ${c.active ? c.accent.border : '#DFE1E5'};border-radius:12px;padding:14px 14px 13px;display:flex;flex-direction:column;gap:4px;transition:all 0.15s;${c.active ? `box-shadow:0 1px 3px rgba(15,23,42,0.04),0 6px 20px ${c.accent.border}1f;` : 'box-shadow:0 1px 2px rgba(15,23,42,0.03);'}">
             <div style="display:flex;align-items:center;justify-content:space-between;">
-              <span style="font-size:9.5px;font-weight:700;color:${c.active ? c.accent.fg : '#565B66'};letter-spacing:0.18em;font-family:'Inter',sans-serif;">${c.step}</span>
+              <span style="font-size:13px;font-weight:700;color:${c.active ? c.accent.fg : '#565B66'};letter-spacing:0.18em;font-family:'Inter',sans-serif;">${c.step}</span>
               ${c.active ? `<span style="width:6px;height:6px;background:${c.accent.dot};border-radius:50%;display:inline-block;"></span>` : ''}
             </div>
-            <div style="font-size:12px;color:#14171C;font-weight:700;letter-spacing:0.02em;margin-top:2px;">${c.label}</div>
-            <div style="font-size:10.5px;color:#565B66;font-weight:500;letter-spacing:0.02em;line-height:1.4;">${c.desc}</div>
-            <div style="font-size:30px;font-weight:800;font-family:'Inter',sans-serif;color:${c.active ? c.accent.fg : '#14171C'};line-height:1;letter-spacing:-0.02em;margin-top:4px;">${c.value}<span style="font-size:11px;color:#565B66;font-weight:600;margin-left:4px;">${c.unit}</span></div>
+            <div style="font-size:13px;color:#14171C;font-weight:700;letter-spacing:0.02em;margin-top:2px;">${c.label}</div>
+            <div style="font-size:13.5px;color:#565B66;font-weight:500;letter-spacing:0.02em;line-height:1.4;">${c.desc}</div>
+            <div style="font-size:30px;font-weight:800;font-family:'Inter',sans-serif;color:${c.active ? c.accent.fg : '#14171C'};line-height:1;letter-spacing:-0.02em;margin-top:4px;">${c.value}<span style="font-size:12.5px;color:#565B66;font-weight:600;margin-left:4px;">${c.unit}</span></div>
           </a>
         `).join('')}
       </div>
       <!-- フロー説明 (2026-08-31 owner GO で 「仮予約 → admin 確定」 に 差替) -->
-      <div class="fp-lead-howto" style="background:#FFFFFF;border:1px solid #DFE1E5;border-radius:8px;padding:14px 20px;margin-bottom:36px;font-size:11.5px;color:#565B66;line-height:1.7;">
-        <div style="font-size:10px;font-weight:700;color:#565B66;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:6px;">How it works</div>
+      <div class="fp-lead-howto" style="background:#FFFFFF;border:1px solid #DFE1E5;border-radius:8px;padding:14px 20px;margin-bottom:36px;font-size:12.5px;color:#565B66;line-height:1.7;">
+        <div style="font-size:13px;font-weight:700;color:#565B66;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:6px;">How it works</div>
         <strong style="color:#14171C;font-weight:700;">01a</strong> 客 が アンケート + 候補日 3つ を LINE で 送る → 「📤 候補 送付 済 · お客様 タップ 待ち」 で 表示 (この段階 で は FP は 確定 できない) →
         <strong style="color:#14171C;font-weight:700;">01b</strong> 客 が LINE で 候補X tap → <strong style="color:#15803d;">「内容 を 確認 して 再度 ご連絡 させて頂きます」</strong> ack が 客 に 届く → 「🎯 お客様 選択 済 · 確定 待ち」 に 切替 →
         <strong style="color:#14171C;font-weight:700;">01c</strong> FP が 内容 verify → 「この日で確定」 押す → <strong style="color:#15803d;">Zoom URL + 確定 message + カレンダー まで 自動 発火</strong> →
@@ -1035,15 +1035,15 @@
       <section class="board-section" id="section-confirm">
         <div style="display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:12px;margin:0 0 14px;padding-bottom:10px;border-bottom:1px solid #DFE1E5;">
           <div>
-            <div style="font-size:10.5px;font-weight:700;color:#565B66;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:3px;">Action Required</div>
-            <h2 style="font-family:'Noto Sans JP',sans-serif;font-size:18px;margin:0;font-weight:600;color:#14171C;">候補日確定 待ち ${pendingConfirm > 0 ? `<span style="font-size:11px;background:#15803d;color:#fff;padding:2px 8px;border-radius:10px;margin-left:8px;font-family:'Inter',sans-serif;font-weight:700;letter-spacing:0.04em;">${pendingConfirm} 名</span>` : ''}</h2>
+            <div style="font-size:13.5px;font-weight:700;color:#565B66;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:3px;">Action Required</div>
+            <h2 style="font-family:'Noto Sans JP',sans-serif;font-size:18px;margin:0;font-weight:600;color:#14171C;">候補日確定 待ち ${pendingConfirm > 0 ? `<span style="font-size:12.5px;background:#15803d;color:#fff;padding:2px 8px;border-radius:10px;margin-left:8px;font-family:'Inter',sans-serif;font-weight:700;letter-spacing:0.04em;">${pendingConfirm} 名</span>` : ''}</h2>
           </div>
           <button id="fp-toggle-cal" class="fp-btn-elevated" type="button">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
             <span>自分の Google カレンダーを並べて表示</span>
           </button>
         </div>
-        <p class="fp-lead-note" style="color:#565B66;font-size:12.5px;margin:0 0 18px;line-height:1.65;letter-spacing:0.02em;">
+        <p class="fp-lead-note" style="color:#565B66;font-size:13.5px;margin:0 0 18px;line-height:1.65;letter-spacing:0.02em;">
           <strong style="color:#565B66;">📤 送付 直後</strong>: 「お客様 タップ 待ち」 表示、 確定 button は 押せない (客 が LINE で 選ぶ まで 待機)<br>
           <strong style="color:#15803d;">🎯 お客様 タップ 後</strong>: 選択 した slot だけ 緑 button で 目立ち、 「この日で確定」 押す と Zoom URL + 確定 message + カレンダー まで 自動 発火 → 下 の Zoom 打ち合わせ 予定 に 移動
         </p>
@@ -1053,12 +1053,12 @@
       <section class="board-section" id="section-recording" style="margin-top:20px;">
         <div style="display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:12px;margin:0 0 14px;padding-bottom:10px;border-bottom:1px solid #DFE1E5;">
           <div>
-            <div style="font-size:10.5px;font-weight:700;color:#565B66;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:3px;">Upcoming &amp; Active</div>
-            <h2 style="font-family:'Noto Sans JP',sans-serif;font-size:18px;margin:0;font-weight:600;color:#14171C;">Zoom 打ち合わせ ${upcomingZoomCount > 0 ? `<span style="font-size:11px;background:#565B66;color:#fff;padding:2px 8px;border-radius:10px;margin-left:8px;font-family:'Inter',sans-serif;font-weight:700;letter-spacing:0.04em;">${upcomingZoomCount} 件 予約あり</span>` : ''}</h2>
+            <div style="font-size:13.5px;font-weight:700;color:#565B66;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:3px;">Upcoming &amp; Active</div>
+            <h2 style="font-family:'Noto Sans JP',sans-serif;font-size:18px;margin:0;font-weight:600;color:#14171C;">Zoom 打ち合わせ ${upcomingZoomCount > 0 ? `<span style="font-size:12.5px;background:#565B66;color:#fff;padding:2px 8px;border-radius:10px;margin-left:8px;font-family:'Inter',sans-serif;font-weight:700;letter-spacing:0.04em;">${upcomingZoomCount} 件 予約あり</span>` : ''}</h2>
           </div>
-          <div style="display:flex;align-items:center;gap:8px;font-size:11.5px;color:#565B66;">
+          <div style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:#565B66;">
             <span style="letter-spacing:0.05em;">並び順:</span>
-            <select id="fp-bookings-sort" style="font-size:12px;padding:6px 10px;border:1px solid #DFE1E5;border-radius:5px;font-family:inherit;background:#fff;color:#14171C;">
+            <select id="fp-bookings-sort" style="font-size:13px;padding:6px 10px;border:1px solid #DFE1E5;border-radius:5px;font-family:inherit;background:#fff;color:#14171C;">
               <option value="upcoming">予定が近い順 (今日 → 未来 → 過去)</option>
               <option value="date-asc">面談日 — 古い順</option>
               <option value="date-desc">面談日 — 新しい順</option>
@@ -1067,28 +1067,28 @@
             </select>
           </div>
         </div>
-        <p class="fp-lead-note" style="color:#565B66;font-size:12.5px;margin:0 0 18px;line-height:1.65;letter-spacing:0.02em;">確定済みの予約 / 当日になったら「Zoomを開始」 → あとは Zoom を 終了 する だけ。 録画 と 議事録 は 自動 で 顧客台帳 に 反映</p>
+        <p class="fp-lead-note" style="color:#565B66;font-size:13.5px;margin:0 0 18px;line-height:1.65;letter-spacing:0.02em;">確定済みの予約 / 当日になったら「Zoomを開始」 → あとは Zoom を 終了 する だけ。 録画 と 議事録 は 自動 で 顧客台帳 に 反映</p>
         <div id="bookings-list"></div>
       </section>
 
       <section class="board-section" id="section-aftercare" style="margin-top:20px;">
         <div style="margin:0 0 14px;padding-bottom:10px;border-bottom:1px solid #DFE1E5;">
-          <div style="font-size:10.5px;font-weight:700;color:#565B66;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:3px;">Stuck / Re-engage</div>
-          <h2 style="font-family:'Noto Sans JP',sans-serif;font-size:18px;margin:0;font-weight:600;color:#14171C;">対応漏れ ${aftercare.length > 0 ? `<span style="font-size:11px;background:#9A3412;color:#fff;padding:2px 8px;border-radius:10px;margin-left:8px;font-family:'Inter',sans-serif;font-weight:700;letter-spacing:0.04em;">${aftercare.length} 名</span>` : ''}</h2>
+          <div style="font-size:13.5px;font-weight:700;color:#565B66;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:3px;">Stuck / Re-engage</div>
+          <h2 style="font-family:'Noto Sans JP',sans-serif;font-size:18px;margin:0;font-weight:600;color:#14171C;">対応漏れ ${aftercare.length > 0 ? `<span style="font-size:12.5px;background:#9A3412;color:#fff;padding:2px 8px;border-radius:10px;margin-left:8px;font-family:'Inter',sans-serif;font-weight:700;letter-spacing:0.04em;">${aftercare.length} 名</span>` : ''}</h2>
         </div>
-        <p class="fp-lead-note" style="color:#565B66;font-size:12.5px;margin:0 0 18px;line-height:1.65;letter-spacing:0.02em;">アンケート途中・候補日提示後・面談キャンセル等で<strong>途中で止まっている方</strong> / LINEで追撃メッセージを送りましょう</p>
+        <p class="fp-lead-note" style="color:#565B66;font-size:13.5px;margin:0 0 18px;line-height:1.65;letter-spacing:0.02em;">アンケート途中・候補日提示後・面談キャンセル等で<strong>途中で止まっている方</strong> / LINEで追撃メッセージを送りましょう</p>
         <div id="aftercare-list">
-          ${aftercare.length === 0 ? `<div style="background:#fff;border:1px dashed #DFE1E5;border-radius:8px;padding:20px 26px;color:#565B66;font-size:12.5px;line-height:1.7;letter-spacing:0.02em;">
+          ${aftercare.length === 0 ? `<div style="background:#fff;border:1px dashed #DFE1E5;border-radius:8px;padding:20px 26px;color:#565B66;font-size:13.5px;line-height:1.7;letter-spacing:0.02em;">
             <strong style="color:#14171C;">途中で止まってる方はいません</strong> · 該当者が出てきたら自動でここに並びます
           </div>` :
             aftercare.map(a => `
               <div style="background:#FFFFFF;border:1px solid ${a.stage==='completion-pending'?'#15803d':(a.days>=14?'#9A3412':'#DFE1E5')};border-radius:12px;padding:13px 14px;margin-bottom:8px;display:grid;grid-template-columns:36px 1fr auto;gap:14px;align-items:center;">
-                <div style="background:#06c755;color:#fff;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;font-family:inherit;">L</div>
+                <div style="background:#06c755;color:#fff;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;font-family:inherit;">L</div>
                 <div>
-                  <strong style="font-size:14px;">${escapeHtml(a.customerName)} 様</strong>
-                  <span style="font-size:10px;color:#06c755;background:#dcfce7;padding:1px 5px;border-radius:5px;margin-left:6px;font-weight:700;">LINE</span>
-                  <div style="font-size:12px;color:#565B66;margin-top:3px;">📍 ${escapeHtml(a.reason)}</div>
-                  <div style="font-size:11px;color:#565B66;margin-top:2px;">最終アクションから ${a.days}日経過</div>
+                  <strong style="font-size:15px;">${escapeHtml(a.customerName)} 様</strong>
+                  <span style="font-size:13px;color:#06c755;background:#dcfce7;padding:1px 5px;border-radius:5px;margin-left:6px;font-weight:700;">LINE</span>
+                  <div style="font-size:13px;color:#565B66;margin-top:3px;">📍 ${escapeHtml(a.reason)}</div>
+                  <div style="font-size:12.5px;color:#565B66;margin-top:2px;">最終アクションから ${a.days}日経過</div>
                 </div>
                 <button data-aftercare-uid="${escapeHtml(a.user.userId)}" data-aftercare-name="${escapeHtml(a.customerName)}" data-aftercare-stage="${a.stage}" class="aftercare-btn fp-btn-elevated fp-btn-elevated--line fp-btn-elevated--sm" type="button"><i data-lucide="send"></i><span>フォロー LINE</span></button>
               </div>
@@ -1182,11 +1182,11 @@
       <div style="${_cardStyle}">
         ${_isMobileQI ? '<div style="width:36px;height:4px;background:#CBD5E1;border-radius:999px;margin:-6px auto 12px;"></div>' : ''}
         <button id="fp-qi-close-top" aria-label="閉じる" style="position:absolute;top:12px;right:12px;background:transparent;border:none;font-size:26px;line-height:1;color:#6B7280;cursor:pointer;padding:4px 10px;border-radius:6px;font-weight:600;">×</button>
-        <div style="font-size:11px;font-weight:800;color:#9A5A18;letter-spacing:0.14em;margin-bottom:6px;">QUICK START</div>
+        <div style="font-size:12.5px;font-weight:800;color:#9A5A18;letter-spacing:0.14em;margin-bottom:6px;">QUICK START</div>
         <h2 style="font-size:20px;font-weight:800;color:#111827;margin:0 0 6px;font-family:'Noto Sans JP',sans-serif;">急遽 面談スタート</h2>
         <p style="font-size:13px;color:#6b7280;line-height:1.65;margin:0 0 18px;">予約なしで お客様から相談が入った時はこちら。 <strong style="color:#9A5A18;">Zoom 送付</strong> · <strong style="color:#1E40AF;">対面 録音</strong> · <strong style="color:#6B7280;">メモ のみ</strong> の 3 通り から 選べます。</p>
 
-        <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;letter-spacing:0.04em;margin-bottom:6px;">お客様を選択</label>
+        <label style="display:block;font-size:13px;font-weight:700;color:#374151;letter-spacing:0.04em;margin-bottom:6px;">お客様を選択</label>
         <!-- ★ 2026-08-19: 旧 native select → カスタム list (LINE アバター/未連携 pill 表示、 owner「LINEのアイコンとか出ない」対応) -->
         <div id="fp-qi-client-wrap" style="border:1.5px solid #e5e7eb;border-radius:10px;background:#fff;margin-bottom:14px;overflow:hidden;">
           <input id="fp-qi-client-search" type="text" placeholder="🔍 お客様名 で 検索" style="width:100%;padding:11px 14px;border:none;border-bottom:1px solid #F1F5F9;font-size:13.5px;font-family:inherit;box-sizing:border-box;outline:none;background:#FAFAF9;">
@@ -1195,7 +1195,7 @@
               <div style="width:36px;height:36px;background:#FBF5E3;border:1.5px dashed #C19A3A;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#9A5A18;font-size:19px;font-weight:800;">＋</div>
               <div style="flex:1;line-height:1.3;min-width:0;">
                 <div style="font-size:13.5px;font-weight:800;color:#1F2A3F;">新規 お客様 として 記録</div>
-                <div style="font-size:11px;font-weight:500;color:#6b7280;margin-top:1px;">後 で 顧客登録 · この場 で 名前 だけ 入力</div>
+                <div style="font-size:12.5px;font-weight:500;color:#6b7280;margin-top:1px;">後 で 顧客登録 · この場 で 名前 だけ 入力</div>
               </div>
             </button>
             ${clients.map(c => {
@@ -1206,8 +1206,8 @@
                 ? `<img src="${escapeHtml(pic)}" alt="" style="width:36px;height:36px;border-radius:10px;object-fit:cover;border:2px solid ${hasLine ? '#06C755' : '#E5E7EB'};" onerror="this.replaceWith(Object.assign(document.createElement('div'),{style:'width:36px;height:36px;border-radius:10px;background:#EEF1FE;color:#5B5BF0;font-weight:900;font-size:14.5px;display:flex;align-items:center;justify-content:center;',textContent:'${initial}'}))">`
                 : `<div style="width:36px;height:36px;border-radius:10px;background:${hasLine ? '#ECFDF5' : '#F1F5F9'};color:${hasLine ? '#06C755' : '#6B7280'};font-weight:900;font-size:14.5px;display:flex;align-items:center;justify-content:center;border:${hasLine ? '2px solid #06C755' : '1.5px solid #E5E7EB'};box-sizing:border-box;">${initial}</div>`;
               const linePill = hasLine
-                ? `<span style="display:inline-flex;align-items:center;gap:3px;background:#ECFDF5;color:#047847;border:1px solid #ABEFC6;padding:2px 7px;border-radius:999px;font-size:10px;font-weight:800;letter-spacing:0.02em;">💬 LINE 連携</span>`
-                : `<span style="display:inline-flex;align-items:center;gap:3px;background:#FEF3C7;color:#92400E;border:1px solid #FDE68A;padding:2px 7px;border-radius:999px;font-size:10px;font-weight:800;letter-spacing:0.02em;">⚠ 未連携</span>`;
+                ? `<span style="display:inline-flex;align-items:center;gap:3px;background:#ECFDF5;color:#047847;border:1px solid #ABEFC6;padding:2px 7px;border-radius:999px;font-size:11.5px;font-weight:800;letter-spacing:0.02em;">💬 LINE 連携</span>`
+                : `<span style="display:inline-flex;align-items:center;gap:3px;background:#FEF3C7;color:#92400E;border:1px solid #FDE68A;padding:2px 7px;border-radius:999px;font-size:11.5px;font-weight:800;letter-spacing:0.02em;">⚠ 未連携</span>`;
               return `<button type="button" class="fp-qi-cli-row" data-cid="${escapeHtml(c.id)}" style="width:100%;display:flex;align-items:center;gap:11px;padding:11px 14px;border:none;border-bottom:1px solid #F1F5F9;background:#fff;cursor:pointer;text-align:left;font-family:inherit;transition:background .12s;">
                 ${avatarInner}
                 <div style="flex:1;line-height:1.3;min-width:0;">
@@ -1221,36 +1221,36 @@
         <input type="hidden" id="fp-qi-client" value="">
 
         <div id="fp-qi-newname-row" style="display:none;margin-bottom:14px;">
-          <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;letter-spacing:0.04em;margin-bottom:6px;">新規お客様のお名前 (議事録ラベル用)</label>
+          <label style="display:block;font-size:13px;font-weight:700;color:#374151;letter-spacing:0.04em;margin-bottom:6px;">新規お客様のお名前 (議事録ラベル用)</label>
           <input id="fp-qi-newname" type="text" placeholder="例: 山田 太郎" style="width:100%;padding:11px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:14px;font-family:inherit;">
         </div>
 
         <!-- ★ 2026-08-19 owner「対面録音 消えてるじゃん」で 3 mode 復活
              Zoom (recommended) + 対面 audio + memo -->
-        <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;letter-spacing:0.04em;margin-bottom:8px;">面談 スタイル</label>
+        <label style="display:block;font-size:13px;font-weight:700;color:#374151;letter-spacing:0.04em;margin-bottom:8px;">面談 スタイル</label>
         <div id="fp-qi-mode-grid" style="display:grid;grid-template-columns:1fr;gap:8px;margin-bottom:16px;">
           <label class="fp-qi-mode" data-mode="zoom" style="display:flex;gap:12px;padding:16px 18px;border:1.5px solid #E5E7EB;border-radius:10px;cursor:pointer;background:#fff;transition:border-color .12s,background .12s;">
             <input type="radio" name="fp-qi-mode" value="zoom" checked style="margin-top:3px;flex-shrink:0;">
             <div style="flex:1;">
-              <div style="font-size:11px;font-weight:800;color:#9A5A18;letter-spacing:0.12em;margin-bottom:3px;">RECOMMENDED</div>
+              <div style="font-size:12.5px;font-weight:800;color:#9A5A18;letter-spacing:0.12em;margin-bottom:3px;">RECOMMENDED</div>
               <div style="font-size:15px;font-weight:800;color:#1F2A3F;line-height:1.4;">🎥 Zoom リンク を 今 すぐ 発行 → 双方 参加</div>
-              <div style="font-size:12px;color:#6b7280;margin-top:4px;line-height:1.6;">お客様 の LINE に Zoom URL を 即 push。 FP も 新 tab で host 参加。 録画 は Zoom side で 完結。</div>
+              <div style="font-size:13.5px;color:#6b7280;margin-top:4px;line-height:1.6;">お客様 の LINE に Zoom URL を 即 push。 FP も 新 tab で host 参加。 録画 は Zoom side で 完結。</div>
             </div>
           </label>
           <label class="fp-qi-mode" data-mode="audio" style="display:flex;gap:12px;padding:16px 18px;border:1.5px solid #E5E7EB;border-radius:10px;cursor:pointer;background:#fff;transition:border-color .12s,background .12s;">
             <input type="radio" name="fp-qi-mode" value="audio" style="margin-top:3px;flex-shrink:0;">
             <div style="flex:1;">
-              <div style="font-size:11px;font-weight:800;color:#1E40AF;letter-spacing:0.12em;margin-bottom:3px;">IN-PERSON</div>
+              <div style="font-size:12.5px;font-weight:800;color:#1E40AF;letter-spacing:0.12em;margin-bottom:3px;">IN-PERSON</div>
               <div style="font-size:15px;font-weight:800;color:#1F2A3F;line-height:1.4;">🎙 対面 で 音声 だけ 録音</div>
-              <div style="font-size:12px;color:#6b7280;margin-top:4px;line-height:1.6;">Zoom を 客 に 見せず、 端末 マイク で 音声 のみ 録音 → whisper で 文字起こし → 面談記録 化。 対面 商談 で 客 が Zoom アレルギー の 時 用。</div>
+              <div style="font-size:13.5px;color:#6b7280;margin-top:4px;line-height:1.6;">Zoom を 客 に 見せず、 端末 マイク で 音声 のみ 録音 → whisper で 文字起こし → 面談記録 化。 対面 商談 で 客 が Zoom アレルギー の 時 用。</div>
             </div>
           </label>
           <label class="fp-qi-mode" data-mode="memo" style="display:flex;gap:12px;padding:14px 18px;border:1.5px solid #E5E7EB;border-radius:10px;cursor:pointer;background:#fff;transition:border-color .12s,background .12s;">
             <input type="radio" name="fp-qi-mode" value="memo" style="margin-top:3px;flex-shrink:0;">
             <div style="flex:1;">
-              <div style="font-size:11px;font-weight:800;color:#6B7280;letter-spacing:0.12em;margin-bottom:3px;">TEXT ONLY</div>
+              <div style="font-size:12.5px;font-weight:800;color:#6B7280;letter-spacing:0.12em;margin-bottom:3px;">TEXT ONLY</div>
               <div style="font-size:15px;font-weight:800;color:#1F2A3F;line-height:1.4;">📝 録音 せず メモ だけ 書く</div>
-              <div style="font-size:12px;color:#6b7280;margin-top:4px;line-height:1.55;">手 入力 で 議事録 を 残す。 自動 生成 なし。</div>
+              <div style="font-size:13.5px;color:#6b7280;margin-top:4px;line-height:1.55;">手 入力 で 議事録 を 残す。 自動 生成 なし。</div>
             </div>
           </label>
         </div>
@@ -1615,7 +1615,7 @@
     }));
     const pending = pendingLegacy.concat(pendingFs);
     if (pending.length === 0) {
-      target.innerHTML = '<div style="background:var(--surface);border:1px dashed var(--line);border-radius:10px;padding:30px;text-align:center;color:var(--muted);font-size:13px;">候補日確定待ちのお客様はいません。<br><span style="font-size:11.5px;">LINEからアンケート + 候補日3つに回答するとここに並びます。</span></div>';
+      target.innerHTML = '<div style="background:var(--surface);border:1px dashed var(--line);border-radius:10px;padding:30px;text-align:center;color:var(--muted);font-size:13px;">候補日確定待ちのお客様はいません。<br><span style="font-size:13px;">LINEからアンケート + 候補日3つに回答するとここに並びます。</span></div>';
       return;
     }
     // user lookup (avatar + displayName)
@@ -1906,18 +1906,18 @@
       // ★ 2026-08-12 owner GO: 「客 が どの 候補 を 選んで 何日 に 確定 したか」 を FP が 把握 できる 表示
       //   自動 確定 (客 LINE tap → Cloud Function 自動 発火) vs 手動 確定 (FP が admin で 押した) を 見分ける
       const viaPill = b._confirmedVia === 'line_webhook_auto'
-        ? `<span style="font-size:10.5px;background:#dcfce7;color:#166534;border:1px solid #86efac;padding:2px 8px;border-radius:10px;font-weight:800;letter-spacing:0.02em;">🤖 客 選択 → 自動 確定</span>`
+        ? `<span style="font-size:12px;background:#dcfce7;color:#166534;border:1px solid #86efac;padding:2px 8px;border-radius:10px;font-weight:800;letter-spacing:0.02em;">🤖 客 選択 → 自動 確定</span>`
         : b._confirmedVia === 'admin_manual'
-        ? `<span style="font-size:10.5px;background:#dbeafe;color:#1e40af;border:1px solid #93c5fd;padding:2px 8px;border-radius:10px;font-weight:800;letter-spacing:0.02em;">👤 FP が 手動 確定</span>`
+        ? `<span style="font-size:12px;background:#dbeafe;color:#1e40af;border:1px solid #93c5fd;padding:2px 8px;border-radius:10px;font-weight:800;letter-spacing:0.02em;">👤 FP が 手動 確定</span>`
         : '';
       const selectionLine = b._pendingSelection
-        ? `<div style="font-size:11.5px;color:#166534;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:6px 10px;margin-bottom:10px;">👉 客 が 選んだ 候補: <strong>候補${escapeHtml(b._pendingSelection.index || '?')}</strong> (${escapeHtml(b._pendingSelection.slotText || b._pendingSelection.chosen || '')})</div>`
+        ? `<div style="font-size:13px;color:#166534;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:6px 10px;margin-bottom:10px;">👉 客 が 選んだ 候補: <strong>候補${escapeHtml(b._pendingSelection.index || '?')}</strong> (${escapeHtml(b._pendingSelection.slotText || b._pendingSelection.chosen || '')})</div>`
         : '';
       return `
         <div style="background:var(--surface);border:1px solid var(--line);border-left:4px solid ${rec === 'recording' ? 'var(--red)' : 'var(--line-green)'};border-radius:10px;padding:18px 22px;margin-bottom:10px;box-shadow:var(--shadow-xs);display:grid;grid-template-columns:104px 1fr;gap:18px;">
           <div style="border-right:1px solid var(--line);padding-right:14px;">
             <div style="font-size:22px;font-weight:800;font-family:'Inter',sans-serif;line-height:1.05;color:var(--ink);">${dateInfo.mmdd}</div>
-            <div style="font-size:11px;color:var(--muted);margin-top:1px;font-weight:600;">${dateInfo.weekday}</div>
+            <div style="font-size:12.5px;color:var(--muted);margin-top:1px;font-weight:600;">${dateInfo.weekday}</div>
             <div style="font-size:13px;color:var(--accent);margin-top:6px;font-weight:600;">${escapeHtml(timeStr)}</div>
           </div>
           <div style="min-width:0;">
@@ -1929,7 +1929,7 @@
               <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">${viaPill}${recPill}</div>
             </div>
             ${selectionLine}
-            ${b.zoomUrl ? `<div style="font-size:10.5px;color:var(--muted);font-family:ui-monospace,Menlo,monospace;margin-bottom:12px;word-break:break-all;line-height:1.5;">${escapeHtml(b.zoomUrl)}</div>` : ''}
+            ${b.zoomUrl ? `<div style="font-size:12px;color:var(--muted);font-family:ui-monospace,Menlo,monospace;margin-bottom:12px;word-break:break-all;line-height:1.5;">${escapeHtml(b.zoomUrl)}</div>` : ''}
             <div style="display:flex;gap:8px;flex-wrap:wrap;">${cta}</div>
           </div>
         </div>`;
@@ -1945,10 +1945,10 @@
             <span style="font-size:18px;">✅</span>
             <strong style="font-size:13.5px;color:#166534;">完了済み ${archivedCount}件 — 顧客台帳に反映済み</strong>
           </div>
-          <div style="font-size:12px;color:#365314;margin-left:28px;margin-bottom:8px;">${escapeHtml(archivedNames + moreSuffix)}</div>
+          <div style="font-size:13.5px;color:#365314;margin-left:28px;margin-bottom:8px;">${escapeHtml(archivedNames + moreSuffix)}</div>
           <div style="margin-left:28px;display:flex;gap:8px;flex-wrap:wrap;">
-            <a href="#" id="fp-jump-clients-tab" style="font-size:11.5px;padding:6px 12px;background:#fff;border:1px solid #86efac;color:#166534;border-radius:6px;text-decoration:none;font-weight:700;">→ 顧客台帳タブで確認</a>
-            <a href="#" id="fp-show-archived" style="font-size:11.5px;padding:6px 12px;background:transparent;border:1px solid transparent;color:#166534;text-decoration:none;font-weight:600;">アーカイブを見る →</a>
+            <a href="#" id="fp-jump-clients-tab" style="font-size:13px;padding:6px 12px;background:#fff;border:1px solid #86efac;color:#166534;border-radius:6px;text-decoration:none;font-weight:700;">→ 顧客台帳タブで確認</a>
+            <a href="#" id="fp-show-archived" style="font-size:13px;padding:6px 12px;background:transparent;border:1px solid transparent;color:#166534;text-decoration:none;font-weight:600;">アーカイブを見る →</a>
           </div>
         </div>`;
       const sa = document.getElementById('fp-show-archived');
@@ -1977,8 +1977,8 @@
         ・最終接触: ${client ? client.lastContact : '-'}
       </div>
       <div style="display:flex;gap:6px;">
-        <button id="fp-jump-client" style="font-size:11.5px;padding:7px 12px;background:linear-gradient(135deg,#b8893d,#d4a017);border:none;color:#fff;border-radius:6px;cursor:pointer;font-weight:700;font-family:inherit;">→ 顧客台帳で確認</button>
-        <button id="fp-comp-close" style="font-size:11.5px;padding:7px 12px;background:#fff;border:1px solid #e5e7eb;color:#374151;border-radius:6px;cursor:pointer;font-family:inherit;">✕</button>
+        <button id="fp-jump-client" style="font-size:13px;padding:7px 12px;background:linear-gradient(135deg,#b8893d,#d4a017);border:none;color:#fff;border-radius:6px;cursor:pointer;font-weight:700;font-family:inherit;">→ 顧客台帳で確認</button>
+        <button id="fp-comp-close" style="font-size:13px;padding:7px 12px;background:#fff;border:1px solid #e5e7eb;color:#374151;border-radius:6px;cursor:pointer;font-family:inherit;">✕</button>
       </div>`;
     document.body.appendChild(t);
     document.getElementById('fp-comp-close').addEventListener('click', () => t.remove());
@@ -2027,11 +2027,11 @@
                 <div style="font-size:14px;font-weight:800;font-family:'Inter',sans-serif;color:#0F172A;">${escapeHtml(String(b.date||'').slice(5,10).replace('-','/'))}</div>
                 <div>
                   <strong style="font-size:14px;color:#0F172A;">${escapeHtml(b.name || '匿名')}様</strong>
-                  <div style="font-size:11.5px;color:var(--muted);margin-top:2px;">${escapeHtml(String(b.time||'').slice(0,5))}${c ? '' : ' · ⚠ 顧客台帳 未紐付け'}</div>
+                  <div style="font-size:13px;color:var(--muted);margin-top:2px;">${escapeHtml(String(b.time||'').slice(0,5))}${c ? '' : ' · ⚠ 顧客台帳 未紐付け'}</div>
                 </div>
                 <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">
-                  ${cid ? `<button class="fp-arc-jump" data-cid="${escapeHtml(cid)}" style="font-size:12px;padding:8px 14px;background:linear-gradient(135deg,#5B5BF0,#4242C9);color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:inherit;font-weight:800;">📋 議事録を見る</button>` : ''}
-                  <button class="fp-arc-unar" data-ts="${escapeHtml(b.ts)}" style="font-size:11.5px;padding:8px 12px;background:#fff;border:1.5px solid #e5e7eb;border-radius:8px;cursor:pointer;font-family:inherit;font-weight:700;color:#64748B;">↩ 戻す</button>
+                  ${cid ? `<button class="fp-arc-jump" data-cid="${escapeHtml(cid)}" style="font-size:13.5px;padding:8px 14px;background:linear-gradient(135deg,#5B5BF0,#4242C9);color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:inherit;font-weight:800;">📋 議事録を見る</button>` : ''}
+                  <button class="fp-arc-unar" data-ts="${escapeHtml(b.ts)}" style="font-size:13px;padding:8px 12px;background:#fff;border:1.5px solid #e5e7eb;border-radius:8px;cursor:pointer;font-family:inherit;font-weight:700;color:#64748B;">↩ 戻す</button>
                 </div>
               </div>`;
           }).join('')}
@@ -2097,13 +2097,13 @@
     const list = src.slice().reverse().slice(0, 5);
     if (list.length === 0) { target.innerHTML = ''; return; }
     target.innerHTML = `
-      <div style="font-size:12px;font-weight:700;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px;">最新のアンケート回答 (確定済も含む)</div>
+      <div style="font-size:13.5px;font-weight:700;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px;">最新のアンケート回答 (確定済も含む)</div>
       ${list.map(s => `
         <div style="background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:12px 16px;margin-bottom:6px;display:grid;grid-template-columns:1fr auto;gap:10px;font-size:12.5px;">
           <div>
             <strong>${escapeHtml(s.q1_テーマ || '-')}</strong>
-            <span style="color:var(--muted);margin-left:6px;font-size:11px;">${(s.ts || '').slice(5, 16).replace('T', ' ')}</span>
-            <div style="color:var(--muted);font-size:11px;margin-top:2px;">${escapeHtml(s.q2_年代 || '-')} / ${escapeHtml(s.q3_家族 || '-')} / ${escapeHtml(s.q4_年収 || '-')}</div>
+            <span style="color:var(--muted);margin-left:6px;font-size:12.5px;">${(s.ts || '').slice(5, 16).replace('T', ' ')}</span>
+            <div style="color:var(--muted);font-size:12.5px;margin-top:2px;">${escapeHtml(s.q2_年代 || '-')} / ${escapeHtml(s.q3_家族 || '-')} / ${escapeHtml(s.q4_年収 || '-')}</div>
           </div>
           <div>${s.confirmedSlot ? `<span class="status-pill active">確定済</span>` : '<span class="status-pill important">確定待ち</span>'}</div>
         </div>
@@ -2189,14 +2189,14 @@
         ph.innerHTML = `
           <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px;">
             <div>
-              <span style="font-size:11px;font-weight:800;letter-spacing:0.08em;color:#166534;background:#bbf7d0;padding:3px 8px;border-radius:6px;">✅ 確定 完了</span>
+              <span style="font-size:12.5px;font-weight:800;letter-spacing:0.08em;color:#166534;background:#bbf7d0;padding:3px 8px;border-radius:6px;">✅ 確定 完了</span>
               <strong style="font-size:15px;margin-left:8px;color:#14532d;">${(displayName||'お客').replace(/[<>&"]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]))} 様</strong>
             </div>
-            <span style="font-size:11px;color:#166534;font-weight:600;">📅 ${dateStr} ${slotStr}</span>
+            <span style="font-size:12.5px;color:#166534;font-weight:600;">📅 ${dateStr} ${slotStr}</span>
           </div>
           <div style="font-size:12.5px;color:#166534;line-height:1.6;">
             Zoom URL 発行 + LINE 通知 + Google Cal 登録 が 完了 しました。<br>
-            <span style="font-size:11.5px;color:#4b5563;">最新 データ を 取得 中... (数秒 で 通常 表示 に 切り替わります)</span>
+            <span style="font-size:13px;color:#4b5563;">最新 データ を 取得 中... (数秒 で 通常 表示 に 切り替わります)</span>
           </div>
         `;
         bookingsList.prepend(ph);
@@ -2333,14 +2333,14 @@
           <p style="margin:0 0 14px;">LINE Messaging API はお客様が <strong>こちらの公式LINEを友だち追加した時点で userId が発行される仕組み</strong> です。まだ追加していないため、こちらから直接送信できません。</p>
           <p style="margin:0 0 14px;">下のリンクを SMS / メール / 名刺 QR などで送ってください。お客様が追加した瞬間、CRM に <strong>自動で userId が紐付き</strong>、こちらから LINE 送信できるようになります。</p>
           <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:14px;margin:14px 0;">
-            <div style="font-size:10.5px;font-weight:700;color:#166534;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;">友だち追加リンク (${escapeHtml(customerName || '匿名')} 様 専用)</div>
-            <code id="fp-friend-add-url" style="display:block;font-size:11.5px;color:#0f172a;background:#fff;border:1px solid #d1d5db;padding:10px 12px;border-radius:6px;word-break:break-all;font-family:Menlo,monospace;">${escapeHtml(addUrl)}</code>
+            <div style="font-size:12px;font-weight:700;color:#166534;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;">友だち追加リンク (${escapeHtml(customerName || '匿名')} 様 専用)</div>
+            <code id="fp-friend-add-url" style="display:block;font-size:13px;color:#0f172a;background:#fff;border:1px solid #d1d5db;padding:10px 12px;border-radius:6px;word-break:break-all;font-family:Menlo,monospace;">${escapeHtml(addUrl)}</code>
             <div style="display:flex;gap:8px;margin-top:10px;">
-              <button id="fp-friend-add-copy" style="flex:1;padding:9px;background:#06c755;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">📋 URL をコピー</button>
-              <button id="fp-friend-add-open" style="flex:1;padding:9px;background:#fff;color:#0f172a;border:1px solid #d1d5db;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">↗ 新タブで開く</button>
+              <button id="fp-friend-add-copy" style="flex:1;padding:9px;background:#06c755;color:#fff;border:none;border-radius:6px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:inherit;">📋 URL をコピー</button>
+              <button id="fp-friend-add-open" style="flex:1;padding:9px;background:#fff;color:#0f172a;border:1px solid #d1d5db;border-radius:6px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:inherit;">↗ 新タブで開く</button>
             </div>
           </div>
-          <p style="margin:0;font-size:11.5px;color:#6b7280;">※ ?ref=${escapeHtml(clientId || 'なし')} が末尾に付いてます。お客様が追加した時に この CRM の顧客カードと自動で紐付き、displayName と pictureUrl も自動取得されます。</p>
+          <p style="margin:0;font-size:13px;color:#6b7280;">※ ?ref=${escapeHtml(clientId || 'なし')} が末尾に付いてます。お客様が追加した時に この CRM の顧客カードと自動で紐付き、displayName と pictureUrl も自動取得されます。</p>
         </div>
       </div>`;
     document.body.appendChild(overlay);
@@ -2428,13 +2428,13 @@
       <div style="background:#fff;width:min(640px,100%);max-height:92vh;overflow-y:auto;border-radius:14px;box-shadow:0 24px 60px rgba(0,0,0,0.35);font-family:inherit;">
         <div style="padding:18px 22px;background:linear-gradient(135deg,#fef2f2,#fff5f5);border-bottom:1px solid #fecaca;display:flex;justify-content:space-between;align-items:baseline;">
           <div>
-            <div style="font-size:10.5px;font-weight:700;color:#7f1d1d;letter-spacing:0.18em;text-transform:uppercase;">CANCEL BOOKING</div>
+            <div style="font-size:12px;font-weight:700;color:#7f1d1d;letter-spacing:0.18em;text-transform:uppercase;">CANCEL BOOKING</div>
             <strong style="font-size:15px;color:#0f1729;">${escapeHtml(name)} 様 / ${escapeHtml(dateLabel)} 面談 キャンセル</strong>
           </div>
           <button id="fp-cancel-close" style="background:#fff;border:1px solid #fecaca;width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:14px;color:#7f1d1d;">✕</button>
         </div>
         <div style="padding:18px 22px;">
-          <div style="font-size:11.5px;color:#6b7280;margin-bottom:12px;">キャンセル理由のテンプレを選んでください。「自由入力」を選ぶと空白から書けます。</div>
+          <div style="font-size:13px;color:#6b7280;margin-bottom:12px;">キャンセル理由のテンプレを選んでください。「自由入力」を選ぶと空白から書けます。</div>
           <div style="display:grid;gap:8px;margin-bottom:14px;">
             ${templates.map((t, i) => `
               <label style="display:flex;align-items:flex-start;gap:10px;padding:11px 14px;border:1.5px solid #e5e7eb;border-radius:8px;cursor:pointer;background:#fff;transition:all 0.15s;">
@@ -2443,7 +2443,7 @@
               </label>
             `).join('')}
           </div>
-          <div style="font-size:10.5px;font-weight:700;color:#6b7280;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;">送信されるメッセージ (編集可)</div>
+          <div style="font-size:12px;font-weight:700;color:#6b7280;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;">送信されるメッセージ (編集可)</div>
           <textarea id="fp-cancel-msg" style="width:100%;min-height:200px;padding:12px 14px;font-size:13px;line-height:1.7;font-family:inherit;border:1.5px solid #d1d5db;border-radius:8px;resize:vertical;background:#fafbfc;">${escapeHtml(templates[0].body)}</textarea>
           <div style="display:flex;gap:10px;margin-top:16px;">
             <button id="fp-cancel-abort" style="flex:1;padding:11px;background:#fff;border:1.5px solid #d1d5db;color:#374151;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">キャンセル (送信しない)</button>
@@ -2589,13 +2589,13 @@
       <div style="background:#fff;width:min(680px,100%);max-height:92vh;overflow-y:auto;border-radius:14px;box-shadow:0 24px 60px rgba(0,0,0,0.35);font-family:inherit;">
         <div style="padding:18px 22px;background:linear-gradient(135deg,#fef9c3,#fffbeb);border-bottom:1px solid #fde68a;display:flex;justify-content:space-between;align-items:baseline;">
           <div>
-            <div style="font-size:10.5px;font-weight:700;color:#78350f;letter-spacing:0.18em;text-transform:uppercase;">REQUEST RESCHEDULE</div>
+            <div style="font-size:12px;font-weight:700;color:#78350f;letter-spacing:0.18em;text-transform:uppercase;">REQUEST RESCHEDULE</div>
             <strong style="font-size:15px;color:#0f1729;">${escapeHtml(name)} 様 / 候補日3つとも合わない → 別日を依頼</strong>
           </div>
           <button id="fp-resched-close" style="background:#fff;border:1px solid #fde68a;width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:14px;color:#78350f;">✕</button>
         </div>
         <div style="padding:18px 22px;">
-          <div style="font-size:11.5px;color:#6b7280;margin-bottom:12px;">FP からのひとことテンプレを選んでください。送信文末に <strong>再選択フォームのURL</strong>が自動で付きます。</div>
+          <div style="font-size:13px;color:#6b7280;margin-bottom:12px;">FP からのひとことテンプレを選んでください。送信文末に <strong>再選択フォームのURL</strong>が自動で付きます。</div>
           <div style="display:grid;gap:8px;margin-bottom:14px;">
             ${templates.map((t, i) => `
               <label style="display:flex;align-items:flex-start;gap:10px;padding:11px 14px;border:1.5px solid #e5e7eb;border-radius:8px;cursor:pointer;background:#fff;transition:all 0.15s;">
@@ -2604,9 +2604,9 @@
               </label>
             `).join('')}
           </div>
-          <div style="font-size:10.5px;font-weight:700;color:#6b7280;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;">送信されるメッセージ (編集可)</div>
+          <div style="font-size:12px;font-weight:700;color:#6b7280;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;">送信されるメッセージ (編集可)</div>
           <textarea id="fp-resched-msg" style="width:100%;min-height:220px;padding:12px 14px;font-size:13px;line-height:1.7;font-family:inherit;border:1.5px solid #d1d5db;border-radius:8px;resize:vertical;background:#fafbfc;">${escapeHtml(templates[0].body)}</textarea>
-          <div style="margin-top:8px;font-size:11px;color:#16a34a;background:#f0fdf4;border:1px solid #86efac;border-radius:6px;padding:8px 12px;">✓ お客様がこのURLから3つ選び直すと、CRMの「候補日確定待ち」に再度上がってきます。</div>
+          <div style="margin-top:8px;font-size:12.5px;color:#16a34a;background:#f0fdf4;border:1px solid #86efac;border-radius:6px;padding:8px 12px;">✓ お客様がこのURLから3つ選び直すと、CRMの「候補日確定待ち」に再度上がってきます。</div>
           <div style="display:flex;gap:10px;margin-top:16px;">
             <button id="fp-resched-abort" style="flex:1;padding:11px;background:#fff;border:1.5px solid #d1d5db;color:#374151;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">キャンセル (送信しない)</button>
             <button id="fp-resched-send" style="flex:2;padding:11px;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;">📤 この内容で送信 + 候補日3つを無効化</button>
@@ -2652,7 +2652,7 @@
           overlay.remove();
           const t = document.createElement('div');
           t.style.cssText = 'position:fixed;top:18px;left:50%;transform:translateX(-50%);background:#fff;border-left:5px solid #f59e0b;border-radius:12px;padding:14px 22px;box-shadow:0 12px 36px rgba(0,0,0,0.2);z-index:10010;font-family:inherit;';
-          t.innerHTML = `<strong style="font-size:14px;">↩ ${escapeHtml(name)} 様 再調整依頼を送信</strong><br><span style="font-size:12px;color:#6b7280;">LINE送信完了 / 候補日3つを無効化</span>`;
+          t.innerHTML = `<strong style="font-size:14px;">↩ ${escapeHtml(name)} 様 再調整依頼を送信</strong><br><span style="font-size:13.5px;color:#6b7280;">LINE送信完了 / 候補日3つを無効化</span>`;
           document.body.appendChild(t);
           setTimeout(() => t.remove(), 6000);
           if (window.refreshFirestoreCustomers) await window.refreshFirestoreCustomers();
@@ -2669,7 +2669,7 @@
           overlay.remove();
           const t = document.createElement('div');
           t.style.cssText = 'position:fixed;top:18px;left:50%;transform:translateX(-50%);background:#fff;border-left:5px solid #f59e0b;border-radius:12px;padding:14px 22px;box-shadow:0 12px 36px rgba(0,0,0,0.2);z-index:10010;font-family:inherit;';
-          t.innerHTML = `<strong style="font-size:14px;">↩ ${escapeHtml(name)} 様 再調整依頼を送信</strong><br><span style="font-size:12px;color:#6b7280;">再選択URL付き LINE 送信 / 候補日3つを無効化</span>`;
+          t.innerHTML = `<strong style="font-size:14px;">↩ ${escapeHtml(name)} 様 再調整依頼を送信</strong><br><span style="font-size:13.5px;color:#6b7280;">再選択URL付き LINE 送信 / 候補日3つを無効化</span>`;
           document.body.appendChild(t);
           setTimeout(() => t.remove(), 6000);
           await fetchLiveData();
@@ -2854,7 +2854,7 @@
         : 'カメラ起動 に 失敗しました';
       ov.innerHTML = `
         <div style="background:#fff;border-radius:14px;max-width:520px;width:92%;padding:28px 32px;box-shadow:0 28px 80px rgba(0,0,0,0.4);">
-          <div style="display:inline-flex;align-items:center;gap:8px;background:#FEF3C7;color:#92400E;font-size:11px;font-weight:800;padding:5px 12px;border-radius:99px;letter-spacing:0.1em;margin-bottom:14px;">⚠ 録画準備 に 問題</div>
+          <div style="display:inline-flex;align-items:center;gap:8px;background:#FEF3C7;color:#92400E;font-size:12.5px;font-weight:800;padding:5px 12px;border-radius:99px;letter-spacing:0.1em;margin-bottom:14px;">⚠ 録画準備 に 問題</div>
           <h2 style="font-family:'Noto Sans JP',serif;font-size:19px;font-weight:700;color:#111827;margin:0 0 8px;line-height:1.45;">${heading}</h2>
           <p style="font-size:13px;color:#6b7280;line-height:1.75;margin:0 0 18px;">大丈夫です。 <strong style="color:#111827;">下のどれかを選んで そのまま 面談に進めます</strong>。 設定の修正は あとで OK。</p>
 
@@ -2862,9 +2862,9 @@
           <button id="fp-rec-fallback-audio" style="display:block;width:100%;text-align:left;background:linear-gradient(135deg,#C19A3A,#9A5A18);color:#fff;border:none;border-radius:11px;padding:18px 22px;margin-bottom:10px;cursor:pointer;font-family:inherit;transition:transform .15s,box-shadow .15s;box-shadow:0 6px 18px rgba(193,154,58,0.3);">
             <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;">
               <div>
-                <div style="font-size:11px;font-weight:800;letter-spacing:0.14em;opacity:0.85;margin-bottom:4px;">RECOMMENDED</div>
+                <div style="font-size:12.5px;font-weight:800;letter-spacing:0.14em;opacity:0.85;margin-bottom:4px;">RECOMMENDED</div>
                 <div style="font-size:15.5px;font-weight:800;letter-spacing:0.03em;line-height:1.4;">🎤 マイクだけで 録音する</div>
-                <div style="font-size:11.5px;opacity:0.9;margin-top:4px;line-height:1.55;">カメラ無しで OK。 音声から 面談記録 まで 同じ流れで 作れます。</div>
+                <div style="font-size:13px;opacity:0.9;margin-top:4px;line-height:1.55;">カメラ無しで OK。 音声から 面談記録 まで 同じ流れで 作れます。</div>
               </div>
               <span style="font-size:22px;flex-shrink:0;">→</span>
             </div>
@@ -2874,9 +2874,9 @@
           <button id="fp-rec-fallback-memo" style="display:block;width:100%;text-align:left;background:#fff;color:#1F2A3F;border:1.5px solid #E8E2D4;border-radius:11px;padding:16px 22px;margin-bottom:10px;cursor:pointer;font-family:inherit;transition:background .12s,border-color .12s;">
             <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;">
               <div>
-                <div style="font-size:11px;font-weight:800;color:#9A5A18;letter-spacing:0.14em;margin-bottom:4px;">手書きメモ</div>
+                <div style="font-size:12.5px;font-weight:800;color:#9A5A18;letter-spacing:0.14em;margin-bottom:4px;">手書きメモ</div>
                 <div style="font-size:14px;font-weight:700;letter-spacing:0.03em;line-height:1.4;">📝 録音せず メモだけ 書く</div>
-                <div style="font-size:11.5px;color:#6b7280;margin-top:4px;line-height:1.55;">手入力で 議事録を 残す。 録音 / 議事録自動生成 は なし。</div>
+                <div style="font-size:13px;color:#6b7280;margin-top:4px;line-height:1.55;">手入力で 議事録を 残す。 録音 / 議事録自動生成 は なし。</div>
               </div>
               <span style="font-size:18px;color:#9A5A18;flex-shrink:0;">→</span>
             </div>
@@ -2904,7 +2904,7 @@
                 ]).map(s => `<li style="margin-bottom:4px;">${s}</li>`).join('')}
               </ol>
               <button onclick="location.reload()" class="btn-mini-action" style="margin-top:12px;">↻ ページをリロード</button>
-              <div style="margin-top:12px;font-size:10.5px;color:#94A3B8;font-family:'JetBrains Mono',monospace;line-height:1.5;">技術: ${escapeHtml(String(errName || e?.message || e).slice(0, 160))}</div>
+              <div style="margin-top:12px;font-size:12px;color:#94A3B8;font-family:'JetBrains Mono',monospace;line-height:1.5;">技術: ${escapeHtml(String(errName || e?.message || e).slice(0, 160))}</div>
             </div>
           </details>
 
@@ -3034,7 +3034,7 @@
     wait.innerHTML = `
       <div style="background:#fff;border-radius:14px;padding:32px 40px;max-width:420px;width:90%;box-shadow:0 32px 80px rgba(0,0,0,0.5);text-align:center;">
         <div style="width:56px;height:56px;border:4px solid #E2E8F0;border-top-color:#C19A3A;border-radius:50%;margin:0 auto 18px;animation:fp-spin 0.9s linear infinite;"></div>
-        <div style="font-size:11px;font-weight:800;color:#9A5A18;letter-spacing:0.14em;margin-bottom:6px;">QUICK ZOOM</div>
+        <div style="font-size:12.5px;font-weight:800;color:#9A5A18;letter-spacing:0.14em;margin-bottom:6px;">QUICK ZOOM</div>
         <div style="font-size:17px;font-weight:800;color:#111827;font-family:'Noto Sans JP',serif;margin-bottom:6px;">${escapeHtml(clientName)} 様 / Zoom 発行中…</div>
         <div style="font-size:12.5px;color:#6b7280;line-height:1.7;">Zoom Meeting を 作成 → お客様に LINE で URL 通知 → FP は host で 参加 します</div>
       </div>
@@ -3150,22 +3150,22 @@
       <div style="background:#fff;border-radius:14px;max-width:540px;width:100%;padding:28px 32px;box-shadow:0 32px 80px rgba(0,0,0,0.5);position:relative;">
         <!-- ★ 2026-07-18 fix: 閉じる button 追加 (owner が modal 詰み 報告 — 下 の 「閉じる」 が scroll 下 で 見えない ケース 対策) -->
         <button id="fp-qz-close-top" aria-label="閉じる" style="position:absolute;top:14px;right:14px;background:transparent;border:none;font-size:24px;line-height:1;color:#6B7280;cursor:pointer;padding:4px 8px;border-radius:6px;">×</button>
-        <div style="display:inline-flex;align-items:center;gap:8px;background:#FBF5E3;color:#9A5A18;font-size:11px;font-weight:800;padding:5px 12px;border-radius:99px;letter-spacing:0.12em;margin-bottom:14px;">⚡ Zoom 発行完了</div>
+        <div style="display:inline-flex;align-items:center;gap:8px;background:#FBF5E3;color:#9A5A18;font-size:12.5px;font-weight:800;padding:5px 12px;border-radius:99px;letter-spacing:0.12em;margin-bottom:14px;">⚡ Zoom 発行完了</div>
         <h2 style="font-family:'Noto Sans JP',serif;font-size:20px;font-weight:700;color:#111827;margin:0 0 6px;">${escapeHtml(clientName)} 様 と Zoom 開始</h2>
 
         ${result.linePushed
           ? `<p style="font-size:12.5px;color:#6b7280;line-height:1.7;margin:0 0 16px;">下の <strong>「FPとして 参加」</strong> を 押すと 新タブで Zoom が起動。 お客様 にも すでに LINE で URL を 送信済 です。</p>
-             <div style="display:inline-flex;align-items:center;gap:6px;background:#D1FAE5;color:#065F46;font-size:11px;font-weight:800;padding:5px 12px;border-radius:99px;letter-spacing:0.08em;margin-bottom:14px;">✓ LINE 送信済</div>`
+             <div style="display:inline-flex;align-items:center;gap:6px;background:#D1FAE5;color:#065F46;font-size:12.5px;font-weight:800;padding:5px 12px;border-radius:99px;letter-spacing:0.08em;margin-bottom:14px;">✓ LINE 送信済</div>`
           : `<p style="font-size:13.5px;color:#1F2A3F;line-height:1.7;margin:0 0 16px;"><strong style="color:#9A5A18;">LINE 未連携のお客様</strong>のため、 下の方法で URL を お伝えください。 まず <strong>「FPとして 参加」</strong> で Zoom 開いて お客様の入室を 待ちましょう。</p>`}
 
         <!-- FP 用 host URL — メインCTA (Zoom起動 + 画面録画自動開始) -->
         <div style="background:#FBF5E3;border:1.5px solid #C19A3A;border-radius:10px;padding:14px 16px;margin-bottom:14px;">
-          <div style="font-size:10.5px;font-weight:800;color:#9A5A18;letter-spacing:0.14em;margin-bottom:8px;">FP HOST URL (あなた用) — クリックで Zoom 起動 + 画面録画自動開始</div>
+          <div style="font-size:12px;font-weight:800;color:#9A5A18;letter-spacing:0.14em;margin-bottom:8px;">FP HOST URL (あなた用) — クリックで Zoom 起動 + 画面録画自動開始</div>
           <button id="fp-qz-join-record" class="btn-cta-primary" style="justify-content:center;width:100%;">
             <span>📹 FPとして Zoom に参加 + 録画開始</span>
             <span class="cta-arrow">→</span>
           </button>
-          <div style="font-size:11px;color:#6B7280;margin-top:8px;line-height:1.55;">画面共有ダイアログで <strong>「Zoom タブ」 + 音声を共有</strong> を 選んで OK → 自動で 議事録 生成 されます</div>
+          <div style="font-size:12.5px;color:#6B7280;margin-top:8px;line-height:1.55;">画面共有ダイアログで <strong>「Zoom タブ」 + 音声を共有</strong> を 選んで OK → 自動で 議事録 生成 されます</div>
         </div>
 
         <!-- ★ Chrome拡張機能 install 済 の場合の別ルート案内 (AirPods等 で 相手の声が拾えない客向け) -->
@@ -3173,12 +3173,12 @@
           <div style="background:#ECFDF5;border:1.5px solid #10B981;border-radius:10px;padding:14px 16px;margin-bottom:14px;">
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
               <span style="font-size:16px;">🧩</span>
-              <div style="font-size:10.5px;font-weight:800;color:#059669;letter-spacing:0.14em;">CHROME拡張で録音 (画面共有ダイアログ 不要)</div>
+              <div style="font-size:12px;font-weight:800;color:#059669;letter-spacing:0.14em;">CHROME拡張で録音 (画面共有ダイアログ 不要)</div>
             </div>
             <div style="font-size:12.5px;color:#0F1729;line-height:1.65;margin-bottom:6px;">
               ${escapeHtml(clientName)} さん を <b>拡張機能に arm済</b>。 上のZoom URL を 開いて、 <b>Zoom タブ の状態で 拡張機能アイコン (Chrome 右上) を 1回クリック</b> で 自動 録音開始します。
             </div>
-            <div style="font-size:11px;color:#065F46;line-height:1.6;">
+            <div style="font-size:12.5px;color:#065F46;line-height:1.6;">
               ✓ 顧客紐付け 済 &nbsp; ✓ AirPods でも 相手の声 拾える &nbsp; ✓ Zoom タブ 閉じたら 自動停止 → 議事録 生成
             </div>
           </div>
@@ -3192,15 +3192,15 @@
               <span style="font-size:14px;">▾</span>
             </summary>
             <div style="padding:0 16px 14px;">
-              <code style="display:block;font-size:11px;font-family:'JetBrains Mono',monospace;color:#1F2A3F;word-break:break-all;line-height:1.5;background:#fff;padding:8px 10px;border-radius:6px;border:1px solid #E2E8F0;">${escapeHtml(result.zoomUrl)}</code>
+              <code style="display:block;font-size:12.5px;font-family:'JetBrains Mono',monospace;color:#1F2A3F;word-break:break-all;line-height:1.5;background:#fff;padding:8px 10px;border-radius:6px;border:1px solid #E2E8F0;">${escapeHtml(result.zoomUrl)}</code>
               <button id="fp-qz-copy" class="btn-mini-action" style="margin-top:10px;"><span class="icon">📋</span>URLを コピー</button>
             </div>
           </details>
         ` : `
           <!-- LINE 未連携時: 共有手段を プロミネント に出す -->
           <div style="background:#fff;border:2px solid #C19A3A;border-radius:12px;padding:18px 20px;">
-            <div style="font-size:10.5px;font-weight:800;color:#9A5A18;letter-spacing:0.14em;margin-bottom:10px;">お客様 へ 共有する</div>
-            <code style="display:block;font-size:12px;font-family:'JetBrains Mono',monospace;color:#1F2A3F;word-break:break-all;line-height:1.6;background:#FBF5E3;padding:10px 12px;border-radius:6px;border:1px solid #E8D9A8;margin-bottom:14px;">${escapeHtml(result.zoomUrl)}</code>
+            <div style="font-size:12px;font-weight:800;color:#9A5A18;letter-spacing:0.14em;margin-bottom:10px;">お客様 へ 共有する</div>
+            <code style="display:block;font-size:13.5px;font-family:'JetBrains Mono',monospace;color:#1F2A3F;word-break:break-all;line-height:1.6;background:#FBF5E3;padding:10px 12px;border-radius:6px;border:1px solid #E8D9A8;margin-bottom:14px;">${escapeHtml(result.zoomUrl)}</code>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">
               <button id="fp-qz-copy" class="btn-mini-action" style="justify-content:center;"><span class="icon">📋</span>コピー</button>
               <a id="fp-qz-mail" href="${mailtoUrl}" class="btn-mini-action" style="justify-content:center;text-decoration:none;"><span class="icon">✉</span>メール 起動</a>
@@ -3209,12 +3209,12 @@
             </div>
             <div id="fp-qz-qr-wrap" style="display:none;text-align:center;background:#fff;border:1px solid #E2E8F0;border-radius:8px;padding:14px;">
               <img src="${qrSrc}" alt="Zoom URL QR" style="width:180px;height:180px;border-radius:6px;">
-              <div style="font-size:11px;color:#6B7280;margin-top:6px;">お客様 のスマホ で 読み取ると Zoom が 開きます</div>
+              <div style="font-size:12.5px;color:#6B7280;margin-top:6px;">お客様 のスマホ で 読み取ると Zoom が 開きます</div>
             </div>
           </div>
         `}
 
-        ${result.linePushError ? `<div style="margin-top:12px;background:#FEE2E2;border:1px solid #FCA5A5;border-radius:6px;padding:10px 14px;font-size:11.5px;color:#991B1B;line-height:1.6;"><strong>LINE 送信失敗:</strong> ${escapeHtml(result.linePushError.slice(0, 200))}</div>` : ''}
+        ${result.linePushError ? `<div style="margin-top:12px;background:#FEE2E2;border:1px solid #FCA5A5;border-radius:6px;padding:10px 14px;font-size:13px;color:#991B1B;line-height:1.6;"><strong>LINE 送信失敗:</strong> ${escapeHtml(result.linePushError.slice(0, 200))}</div>` : ''}
 
         <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:18px;">
           <button class="btn-cta-ghost" id="fp-qz-close">閉じる</button>
@@ -3273,7 +3273,7 @@
     document.getElementById('fp-qz-copy').addEventListener('click', () => {
       navigator.clipboard.writeText(result.zoomUrl).then(() => {
         const t = document.createElement('div');
-        t.style.cssText = 'position:fixed;top:24px;left:50%;transform:translateX(-50%);background:#065F46;color:#fff;padding:10px 22px;border-radius:99px;font-weight:800;font-size:12px;z-index:2147483647;';
+        t.style.cssText = 'position:fixed;top:24px;left:50%;transform:translateX(-50%);background:#065F46;color:#fff;padding:10px 22px;border-radius:99px;font-weight:800;font-size:13.5px;z-index:2147483647;';
         t.textContent = '✓ コピー完了';
         document.body.appendChild(t);
         setTimeout(() => t.remove(), 1800);
@@ -3290,7 +3290,7 @@
     ov.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.78);z-index:2147483647;display:flex;align-items:center;justify-content:center;font-family:"Hiragino Sans",sans-serif;padding:24px;';
     ov.innerHTML = `
       <div style="background:#fff;border-radius:14px;max-width:560px;width:100%;padding:28px 32px;box-shadow:0 28px 80px rgba(0,0,0,0.4);">
-        <div style="display:inline-flex;align-items:center;gap:8px;background:#FBF5E3;color:#9A5A18;font-size:11px;font-weight:800;padding:5px 12px;border-radius:99px;letter-spacing:0.12em;margin-bottom:14px;">📝 メモ ONLY</div>
+        <div style="display:inline-flex;align-items:center;gap:8px;background:#FBF5E3;color:#9A5A18;font-size:12.5px;font-weight:800;padding:5px 12px;border-radius:99px;letter-spacing:0.12em;margin-bottom:14px;">📝 メモ ONLY</div>
         <h2 style="font-family:'Noto Sans JP',serif;font-size:19px;font-weight:700;color:#111827;margin:0 0 6px;">${escapeHtml(clientName)} 様 / 面談メモ</h2>
         <p style="font-size:12.5px;color:#6b7280;line-height:1.7;margin:0 0 14px;">面談中・面談後に メモを 書いてください。 保存すると 顧客カードに 残ります。</p>
         <textarea id="fp-memo-only-text" rows="12" placeholder="例:\n相談テーマ: 老後資金 / NISA\n論点: 月3万 積立 / 配偶者 控除\n次のアクション: 来月 候補日3つ 送る" style="width:100%;padding:14px 16px;font-size:13.5px;font-family:'Hiragino Sans',sans-serif;line-height:1.75;border:1.5px solid #E5E7EB;border-radius:8px;resize:vertical;box-sizing:border-box;"></textarea>
@@ -3536,7 +3536,7 @@
     // ★ 永続 debug パネル (recording pad の 上 に 出す、 全 通信 log)
     const dbgPanel = document.createElement('div');
     dbgPanel.id = 'fp-rec-dbg';
-    dbgPanel.style.cssText = 'position:fixed;bottom:88px;left:50%;transform:translateX(-50%);z-index:2147483644;background:#0F1117;color:#E4E6EB;padding:10px 14px;border-radius:8px;font-family:ui-monospace,Menlo,monospace;font-size:11px;line-height:1.55;max-width:600px;max-height:200px;overflow-y:auto;box-shadow:0 12px 32px rgba(0,0,0,.4);display:none;';
+    dbgPanel.style.cssText = 'position:fixed;bottom:88px;left:50%;transform:translateX(-50%);z-index:2147483644;background:#0F1117;color:#E4E6EB;padding:10px 14px;border-radius:8px;font-family:ui-monospace,Menlo,monospace;font-size:12.5px;line-height:1.55;max-width:600px;max-height:200px;overflow-y:auto;box-shadow:0 12px 32px rgba(0,0,0,.4);display:none;';
     document.body.appendChild(dbgPanel);
     const dbg = (msg, color) => {
       const line = document.createElement('div');
@@ -3616,13 +3616,13 @@
     hud.innerHTML = `
       <div style="display:flex;align-items:center;gap:10px;">
         <span id="fp-hud-dot" style="width:10px;height:10px;border-radius:50%;background:#9A9A9A;flex-shrink:0;"></span>
-        <div style="font-family:'Manrope','Noto Sans JP',sans-serif;font-size:10.5px;font-weight:800;letter-spacing:0.14em;color:#6B6B6B;">RECORDING STATUS</div>
+        <div style="font-family:'Manrope','Noto Sans JP',sans-serif;font-size:12px;font-weight:800;letter-spacing:0.14em;color:#6B6B6B;">RECORDING STATUS</div>
         <button id="fp-hud-close" style="margin-left:auto;background:transparent;border:none;color:#9A9A9A;cursor:pointer;padding:0 4px;font-size:16px;line-height:1;">×</button>
       </div>
       <div id="fp-hud-title" style="font-size:14px;font-weight:800;color:#0A0A0A;margin-top:8px;line-height:1.4;">—</div>
-      <div id="fp-hud-body" style="font-size:12px;color:#3F3F46;margin-top:6px;line-height:1.65;">—</div>
+      <div id="fp-hud-body" style="font-size:13.5px;color:#3F3F46;margin-top:6px;line-height:1.65;">—</div>
       <div id="fp-hud-cta" style="margin-top:10px;display:none;">
-        <button style="width:100%;padding:8px 14px;background:#0A0A0A;color:#FFF;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;">action</button>
+        <button style="width:100%;padding:8px 14px;background:#0A0A0A;color:#FFF;border:none;border-radius:6px;font-size:13.5px;font-weight:700;cursor:pointer;">action</button>
       </div>
       <style>
         @keyframes fp-hud-pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
@@ -3772,8 +3772,8 @@
       indicator.innerHTML = `
         <span style="width:12px;height:12px;background:#DC2626;border-radius:50%;animation:fp-audio-pulse 1.2s ease-in-out infinite;"></span>
         <span style="font-weight:800;color:#1F2A3F;font-size:13px;">🎤 マイク 録音中…</span>
-        <span id="fp-audio-rec-timer" style="font-family:'Inter',monospace;font-weight:700;color:#9A5A18;font-size:12px;">00:00</span>
-        <span style="font-size:10.5px;color:#6B7280;border-left:1px solid #E5E7EB;padding-left:10px;margin-left:2px;">クリックで 停止</span>
+        <span id="fp-audio-rec-timer" style="font-family:'Inter',monospace;font-weight:700;color:#9A5A18;font-size:13.5px;">00:00</span>
+        <span style="font-size:12px;color:#6B7280;border-left:1px solid #E5E7EB;padding-left:10px;margin-left:2px;">クリックで 停止</span>
         <style>@keyframes fp-audio-pulse { 0%,100%{opacity:1;transform:scale(1);} 50%{opacity:.5;transform:scale(1.15);} }</style>`;
       document.body.appendChild(indicator);
     }
@@ -4153,9 +4153,9 @@
         <div id="fp-unified-icon" style="width:36px;height:36px;border:3px solid rgba(59,130,246,0.3);border-top-color:#3B82F6;border-radius:50%;animation:fp-unified-spin 0.9s linear infinite;flex-shrink:0;margin-top:2px;"></div>
         <div style="flex:1;min-width:0;">
           <div id="fp-unified-title" style="font-size:13.5px;font-weight:800;color:#1E40AF;letter-spacing:-0.005em;line-height:1.45;margin-bottom:4px;">議事録 生成 中</div>
-          <div id="fp-unified-sub" style="font-size:11.5px;color:#475569;line-height:1.55;">${escapeHtml(customerName || 'お客様')}様 ${sizeText} · 30秒〜5分</div>
+          <div id="fp-unified-sub" style="font-size:13px;color:#475569;line-height:1.55;">${escapeHtml(customerName || 'お客様')}様 ${sizeText} · 30秒〜5分</div>
         </div>
-        <button id="fp-unified-close" title="隠す (処理 継続、 議事録 は 消えない)" aria-label="隠す" style="background:#fff;border:1.5px solid #3B82F6;color:#1E40AF;font-size:11px;font-weight:800;cursor:pointer;padding:6px 10px;line-height:1.2;font-family:inherit;flex-shrink:0;border-radius:6px;white-space:nowrap;">▽ 隠す<br><span style="font-size:9.5px;font-weight:600;color:#64748B;">処理 継続</span></button>
+        <button id="fp-unified-close" title="隠す (処理 継続、 議事録 は 消えない)" aria-label="隠す" style="background:#fff;border:1.5px solid #3B82F6;color:#1E40AF;font-size:12.5px;font-weight:800;cursor:pointer;padding:6px 10px;line-height:1.2;font-family:inherit;flex-shrink:0;border-radius:6px;white-space:nowrap;">▽ 隠す<br><span style="font-size:11px;font-weight:600;color:#64748B;">処理 継続</span></button>
       </div>
       <!-- 2026-09-05 owner「進捗 わかる ように」対応: default 展開 5-step、 details 廃止 -->
       <div style="border-top:1px solid rgba(59,130,246,0.2);background:rgba(255,255,255,0.5);">
@@ -4166,7 +4166,7 @@
           ${renderStep('ai-claude', '④ Claude 議事録 生成', 'transcript → 要約 + TODO')}
           ${renderStep('ai', '⑤ 反映', '顧客 カード に 表示')}
         </div>
-        <div style="padding:8px 18px 12px;font-size:10.5px;color:#64748B;background:#F8FAFC;border-top:1px dashed #CBD5E1;text-align:center;">閉じても 処理 は 裏 で 継続。 議事録 は なくならない。</div>
+        <div style="padding:8px 18px 12px;font-size:12px;color:#64748B;background:#F8FAFC;border-top:1px dashed #CBD5E1;text-align:center;">閉じても 処理 は 裏 で 継続。 議事録 は なくならない。</div>
       </div>`;
     document.body.appendChild(panel);
     const closeBtn = document.getElementById('fp-unified-close');
@@ -4209,7 +4209,7 @@
         <div class="fp-step-ic" style="font-size:14px;text-align:center;color:#94a3b8;">○</div>
         <div>
           <strong style="font-size:12.5px;display:block;color:#1f2a3f;">${title}</strong>
-          <span class="fp-step-desc" style="font-size:10.5px;color:#6b7280;">${desc}</span>
+          <span class="fp-step-desc" style="font-size:12px;color:#6b7280;">${desc}</span>
         </div>
       </div>`;
   }
@@ -4291,7 +4291,7 @@
       : `<div style="font-size:30px;line-height:1;flex-shrink:0;">✅</div>`;
     const closeHtml = tone === 'progress'
       ? ''
-      : `<button id="fp-toast-close" style="margin-top:10px;background:transparent;border:1px solid ${accent}66;color:${accent};padding:6px 14px;border-radius:6px;font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit;">確認 ✓</button>`;
+      : `<button id="fp-toast-close" style="margin-top:10px;background:transparent;border:1px solid ${accent}66;color:${accent};padding:6px 14px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">確認 ✓</button>`;
     t.innerHTML = `
       <!-- ドラッグハンドル -->
       <div id="fp-toast-drag" style="position:absolute;top:0;left:0;right:0;height:8px;cursor:grab;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.04);border-radius:12px 12px 0 0;">
@@ -4301,7 +4301,7 @@
         ${iconHtml}
         <div style="flex:1;min-width:0;">
           <div style="font-size:13.5px;font-weight:800;color:${accent};letter-spacing:-0.005em;line-height:1.45;margin-bottom:4px;">${escapeHtml(title)}</div>
-          <div style="font-size:11.5px;color:#475569;line-height:1.55;cursor:text;user-select:text;">${escapeHtml(sub || '')}</div>
+          <div style="font-size:13px;color:#475569;line-height:1.55;cursor:text;user-select:text;">${escapeHtml(sub || '')}</div>
           ${closeHtml}
         </div>
         <button id="fp-toast-mini-close" title="閉じる" style="background:transparent;border:none;color:${accent};font-size:14px;cursor:pointer;padding:2px 6px;line-height:1;align-self:flex-start;font-weight:700;">✕</button>
@@ -4373,7 +4373,7 @@
           <div style="font-size:32px;line-height:1;flex-shrink:0;">⚠</div>
           <div style="flex:1;min-width:0;">
             <div style="font-size:14px;font-weight:800;color:#78350F;letter-spacing:-0.005em;line-height:1.4;margin-bottom:4px;">議事録 生成 出来 ませ ん でした (音声 が 短い or 無音)</div>
-            <div style="font-size:11.5px;color:#92400E;line-height:1.55;">${escapeHtml(customerName)}様 · transcript ${transcriptChars} 字 · <strong>30秒 以上 の 実 会話 音声 で 再 upload</strong> して ください</div>
+            <div style="font-size:13px;color:#92400E;line-height:1.55;">${escapeHtml(customerName)}様 · transcript ${transcriptChars} 字 · <strong>30秒 以上 の 実 会話 音声 で 再 upload</strong> して ください</div>
           </div>
           <button id="fp-unified-close" title="閉じる" aria-label="閉じる" style="background:transparent;border:none;color:#D97706;font-size:16px;cursor:pointer;padding:2px 6px;line-height:1;font-family:inherit;flex-shrink:0;">✕</button>
         </div>`;
@@ -4395,7 +4395,7 @@
         <div style="font-size:32px;line-height:1;flex-shrink:0;">✅</div>
         <div style="flex:1;min-width:0;">
           <div style="font-size:14px;font-weight:800;color:#065F46;letter-spacing:-0.005em;line-height:1.4;margin-bottom:4px;">議事録 が 完成 しました</div>
-          <div style="font-size:11.5px;color:#047857;line-height:1.55;">${escapeHtml(customerName)}様 · transcript ${transcriptChars} 字 · summary ${summaryChars} 字 · タスク ${taskCount} 件 · <strong style="font-weight:800;">タップ で 議事録 を 開く</strong> →</div>
+          <div style="font-size:13px;color:#047857;line-height:1.55;">${escapeHtml(customerName)}様 · transcript ${transcriptChars} 字 · summary ${summaryChars} 字 · タスク ${taskCount} 件 · <strong style="font-weight:800;">タップ で 議事録 を 開く</strong> →</div>
         </div>
         <button id="fp-unified-close" title="閉じる" aria-label="閉じる" style="background:transparent;border:none;color:#059669;font-size:16px;cursor:pointer;padding:2px 6px;line-height:1;font-family:inherit;flex-shrink:0;">✕</button>
       </div>`;
@@ -4525,13 +4525,13 @@
                 <div style="width:22px;height:22px;border:3px solid rgba(59,130,246,0.28);border-top-color:${stale ? '#F59E0B' : '#3B82F6'};border-radius:50%;animation:fp-unified-spin 0.9s linear infinite;flex-shrink:0;"></div>
                 <div style="flex:1;min-width:0;">
                   <div style="font-size:12.5px;font-weight:800;color:${stale ? '#78350F' : '#1E40AF'};line-height:1.35;">${stale ? '⚠ 処理 が 止まって いる 可能性 (' + ageSec + '秒 更新 なし)' : '議事録 生成 中 · ' + stageJa(active.progressStage)}</div>
-                  <div style="font-size:11px;color:#475569;line-height:1.5;margin-top:2px;">${active.audioSizeMB || 0}MB · ${timeAgo(active.receivedAt)} 開始</div>
+                  <div style="font-size:12.5px;color:#475569;line-height:1.5;margin-top:2px;">${active.audioSizeMB || 0}MB · ${timeAgo(active.receivedAt)} 開始</div>
                 </div>
               </div>
               <div style="height:8px;background:rgba(255,255,255,0.65);border-radius:4px;overflow:hidden;">
                 <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,#3B82F6,#1D4ED8);transition:width .4s;"></div>
               </div>
-              <div style="font-size:10.5px;color:#64748B;text-align:right;margin-top:3px;letter-spacing:0.04em;">${pct}%</div>
+              <div style="font-size:12px;color:#64748B;text-align:right;margin-top:3px;letter-spacing:0.04em;">${pct}%</div>
             </div>`;
           if (!document.getElementById('fp-unified-spin-style')) {
             const s = document.createElement('style'); s.id = 'fp-unified-spin-style';
@@ -4559,11 +4559,11 @@
                 </svg>
                 <div style="flex:1;min-width:0;">
                   <div style="font-size:13px;font-weight:900;color:#7F1D1D;line-height:1.35;letter-spacing:-0.005em;">前回 の upload が 失敗 しました</div>
-                  <div style="font-size:11.5px;color:#991B1B;line-height:1.55;margin-top:4px;">
+                  <div style="font-size:13px;color:#991B1B;line-height:1.55;margin-top:4px;">
                     ${stage ? `${stage} で 失敗 · ` : ''}${escapeHtml(err)}<br>
                     <span style="color:#B91C1C;font-weight:700;">${retriableTag}</span> · ${timeAgo(latest.errorAt || latest.updatedAt)}
                   </div>
-                  <button type="button" data-fpjobs-dismiss="${latest.bookingTs}" style="margin-top:10px;background:#7F1D1D;color:#fff;border:none;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;">閉じる (再 upload は 上 の button)</button>
+                  <button type="button" data-fpjobs-dismiss="${latest.bookingTs}" style="margin-top:10px;background:#7F1D1D;color:#fff;border:none;padding:8px 14px;border-radius:8px;font-size:13.5px;font-weight:800;cursor:pointer;font-family:inherit;">閉じる (再 upload は 上 の button)</button>
                 </div>
               </div>
             </div>`;
@@ -4589,7 +4589,7 @@
     }
 
     function renderHistoryBox(box, jobs) {
-      if (!jobs.length) { box.innerHTML = '<div style="font-size:12px;color:#94A3B8;padding:8px 0;">upload 履歴 なし</div>'; return; }
+      if (!jobs.length) { box.innerHTML = '<div style="font-size:13.5px;color:#94A3B8;padding:8px 0;">upload 履歴 なし</div>'; return; }
       const rows = jobs.slice(0, 15).map(j => {
         const st = j.status;
         const color = st === 'done' ? '#059669' : st === 'processing-failed' ? '#DC2626' : '#3B82F6';
@@ -4602,10 +4602,10 @@
         return `<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px solid #E4E7EE;border-radius:8px;background:#fff;margin-bottom:6px;">
           <span style="width:8px;height:8px;border-radius:50%;background:${color};flex-shrink:0;"></span>
           <div style="flex:1;min-width:0;">
-            <div style="font-size:12.5px;font-weight:800;color:#0F172A;line-height:1.4;">${escapeHtml(label)} · <span style="color:#64748B;font-weight:600;font-size:11px;">${escapeHtml(String(j.audioSizeMB || 0))}MB</span></div>
-            <div style="font-size:11px;color:#64748B;line-height:1.5;margin-top:2px;">${escapeHtml(meta)}</div>
+            <div style="font-size:12.5px;font-weight:800;color:#0F172A;line-height:1.4;">${escapeHtml(label)} · <span style="color:#64748B;font-weight:600;font-size:12.5px;">${escapeHtml(String(j.audioSizeMB || 0))}MB</span></div>
+            <div style="font-size:12.5px;color:#64748B;line-height:1.5;margin-top:2px;">${escapeHtml(meta)}</div>
           </div>
-          <div style="font-size:10.5px;color:#94A3B8;flex-shrink:0;">${timeAgo(j.updatedAt || j.receivedAt)}</div>
+          <div style="font-size:12px;color:#94A3B8;flex-shrink:0;">${timeAgo(j.updatedAt || j.receivedAt)}</div>
         </div>`;
       }).join('');
       box.innerHTML = rows;
@@ -4671,7 +4671,7 @@
           <div style="font-size:28px;line-height:1;flex-shrink:0;">❌</div>
           <div style="flex:1;min-width:0;">
             <div style="font-size:14px;font-weight:800;color:#7F1D1D;line-height:1.4;">upload 失敗 (${escapeHtml(stage)})</div>
-            <div style="font-size:11.5px;color:#991B1B;line-height:1.55;margin-top:4px;">${escapeHtml(String(message).slice(0, 160))}<br>もう 一度 upload button を タップ して 再試行 して ください</div>
+            <div style="font-size:13px;color:#991B1B;line-height:1.55;margin-top:4px;">${escapeHtml(String(message).slice(0, 160))}<br>もう 一度 upload button を タップ して 再試行 して ください</div>
           </div>
           <button id="fp-unified-close" style="background:transparent;border:none;color:#DC2626;font-size:16px;cursor:pointer;padding:2px 6px;">✕</button>
         </div>`;
@@ -4807,7 +4807,7 @@
               if (panel) {
                 panel.style.background = 'linear-gradient(135deg,#FEF2F2,#FEE2E2)';
                 if (window.innerWidth < 640) panel.style.borderBottomColor = '#DC2626'; else panel.style.borderColor = '#DC2626';
-                panel.innerHTML = `<div style="padding:16px 18px;display:flex;align-items:center;gap:12px;"><div style="font-size:32px;flex-shrink:0;">❌</div><div style="flex:1;min-width:0;"><div style="font-size:14px;font-weight:800;color:#7F1D1D;line-height:1.4;">議事録 生成 失敗</div><div style="font-size:11.5px;color:#991B1B;line-height:1.55;">${escapeHtml(customerName)}様 · ${escapeHtml(d.errorStage||'?')} · ${escapeHtml(String(d.error||'').slice(0,120))}</div></div><button id="fp-unified-close" style="background:transparent;border:none;color:#DC2626;font-size:16px;cursor:pointer;padding:2px 6px;">✕</button></div>`;
+                panel.innerHTML = `<div style="padding:16px 18px;display:flex;align-items:center;gap:12px;"><div style="font-size:32px;flex-shrink:0;">❌</div><div style="flex:1;min-width:0;"><div style="font-size:14px;font-weight:800;color:#7F1D1D;line-height:1.4;">議事録 生成 失敗</div><div style="font-size:13px;color:#991B1B;line-height:1.55;">${escapeHtml(customerName)}様 · ${escapeHtml(d.errorStage||'?')} · ${escapeHtml(String(d.error||'').slice(0,120))}</div></div><button id="fp-unified-close" style="background:transparent;border:none;color:#DC2626;font-size:16px;cursor:pointer;padding:2px 6px;">✕</button></div>`;
                 panel.querySelector('#fp-unified-close')?.addEventListener('click', () => panel.remove());
               }
               return;
@@ -5533,14 +5533,14 @@
         <div style="background:#fff;border:1px solid #e5e7eb;border-left:3px solid #c19a3a;border-radius:8px;padding:14px 18px;">
           <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:6px;">
             <span style="font-size:18px;">${t.icon || '✅'}</span>
-            <span style="font-size:10.5px;font-weight:700;background:${priColor};padding:3px 8px;border-radius:10px;letter-spacing:0.04em;">${escapeHtml(t.priority||'-')}</span>
-            <span style="font-size:11px;color:#6b7280;margin-left:auto;font-family:'Inter',sans-serif;">${escapeHtml(t.dueDate||'-')}</span>
+            <span style="font-size:12px;font-weight:700;background:${priColor};padding:3px 8px;border-radius:10px;letter-spacing:0.04em;">${escapeHtml(t.priority||'-')}</span>
+            <span style="font-size:12.5px;color:#6b7280;margin-left:auto;font-family:'Inter',sans-serif;">${escapeHtml(t.dueDate||'-')}</span>
           </div>
           <strong style="font-size:14px;display:block;margin-bottom:6px;">${escapeHtml(t.task||'')}</strong>
-          <div style="font-size:11.5px;color:#5e4d1a;background:#fdfbf4;border:1px solid #e8d9a8;border-radius:5px;padding:7px 11px;margin-bottom:8px;line-height:1.6;">${escapeHtml(t.recommendedAction||'')}</div>
+          <div style="font-size:13px;color:#5e4d1a;background:#fdfbf4;border:1px solid #e8d9a8;border-radius:5px;padding:7px 11px;margin-bottom:8px;line-height:1.6;">${escapeHtml(t.recommendedAction||'')}</div>
           ${t.lineDraft ? `
-            <div style="background:#dcfce7;border:1px solid #86efac;border-radius:5px;padding:9px 12px;font-size:12px;color:#166534;line-height:1.65;margin-bottom:6px;white-space:pre-wrap;">${escapeHtml(t.lineDraft)}</div>
-            <button class="fp-ai-send" data-uid="${escapeHtml((booking && booking.userId)||'')}" data-msg="${escapeHtml(t.lineDraft)}" style="font-size:11.5px;padding:6px 12px;background:#06c755;color:#fff;border:none;border-radius:5px;cursor:pointer;font-weight:700;font-family:inherit;">→ このLINEを送信</button>
+            <div style="background:#dcfce7;border:1px solid #86efac;border-radius:5px;padding:9px 12px;font-size:13.5px;color:#166534;line-height:1.65;margin-bottom:6px;white-space:pre-wrap;">${escapeHtml(t.lineDraft)}</div>
+            <button class="fp-ai-send" data-uid="${escapeHtml((booking && booking.userId)||'')}" data-msg="${escapeHtml(t.lineDraft)}" style="font-size:13px;padding:6px 12px;background:#06c755;color:#fff;border:none;border-radius:5px;cursor:pointer;font-weight:700;font-family:inherit;">→ このLINEを送信</button>
           ` : ''}
         </div>`;
     }).join('');
@@ -5548,31 +5548,31 @@
       <div style="background:#fff;width:min(820px,100%);max-height:92vh;overflow-y:auto;border-radius:14px;box-shadow:0 24px 60px rgba(0,0,0,0.35);">
         <div style="padding:20px 26px;border-bottom:1px solid #e8e2d4;display:flex;justify-content:space-between;align-items:baseline;">
           <div>
-            <div style="font-size:10.5px;font-weight:700;color:#8b7d5d;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:3px;">AI Meeting Summary${result.mock ? ' <span style="background:#fef2f2;color:#b91c3c;padding:1px 6px;border-radius:4px;font-size:9.5px;margin-left:4px;letter-spacing:0.02em;">DEMO MODE</span>' : ''}</div>
+            <div style="font-size:12px;font-weight:700;color:#8b7d5d;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:3px;">AI Meeting Summary${result.mock ? ' <span style="background:#fef2f2;color:#b91c3c;padding:1px 6px;border-radius:4px;font-size:11px;margin-left:4px;letter-spacing:0.02em;">DEMO MODE</span>' : ''}</div>
             <h2 style="font-family:'Noto Sans JP',serif;font-size:20px;margin:0;font-weight:600;color:#1f2a3f;">${escapeHtml(customerName)}様 面談 面談記録</h2>
           </div>
-          <button id="fp-ai-close-modal" title="保存済み・閉じる" style="background:#dcfce7;border:1px solid #86efac;color:#166534;width:auto;height:32px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:700;padding:0 12px;font-family:inherit;">✓ 保存済 ✕</button>
+          <button id="fp-ai-close-modal" title="保存済み・閉じる" style="background:#dcfce7;border:1px solid #86efac;color:#166534;width:auto;height:32px;border-radius:6px;cursor:pointer;font-size:13.5px;font-weight:700;padding:0 12px;font-family:inherit;">✓ 保存済 ✕</button>
         </div>
-        <div style="background:#f0fdf4;border-bottom:1px solid #bbf7d0;padding:8px 26px;font-size:11.5px;color:#166534;font-weight:600;">
+        <div style="background:#f0fdf4;border-bottom:1px solid #bbf7d0;padding:8px 26px;font-size:13px;color:#166534;font-weight:600;">
           ✓ この議事録・タスク・関心事はすでに <strong>顧客カード&gt;面談録</strong> に自動保存されています。✕ や 閉じる ボタンを押しても消えません。
         </div>
-        ${result.mock ? '<div style="background:#fff8e1;border-bottom:1px solid #f0d36b;padding:10px 26px;font-size:11.5px;color:#5e4d1a;">⚠ デモモード — Groq + Anthropic の API キーが未設定。実際の Zoom 音声ではなく、サンプル議事録を表示しています</div>' : ''}
+        ${result.mock ? '<div style="background:#fff8e1;border-bottom:1px solid #f0d36b;padding:10px 26px;font-size:13px;color:#5e4d1a;">⚠ デモモード — Groq + Anthropic の API キーが未設定。実際の Zoom 音声ではなく、サンプル議事録を表示しています</div>' : ''}
         <div style="padding:22px 26px;">
           ${result.summary ? `
             <div style="margin-bottom:22px;">
-              <div style="font-size:10.5px;font-weight:700;color:#8b7d5d;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:8px;">議事録</div>
+              <div style="font-size:12px;font-weight:700;color:#8b7d5d;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:8px;">議事録</div>
               <div style="background:#fafbfc;border:1px solid #e8e2d4;border-radius:8px;padding:14px 18px;font-size:13px;line-height:1.75;white-space:pre-wrap;">${escapeHtml(result.summary)}</div>
             </div>` : ''}
           ${result.key_concerns && result.key_concerns.length > 0 ? `
             <div style="margin-bottom:22px;">
-              <div style="font-size:10.5px;font-weight:700;color:#8b7d5d;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:8px;">お客様の関心事</div>
+              <div style="font-size:12px;font-weight:700;color:#8b7d5d;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:8px;">お客様の関心事</div>
               <div style="display:flex;gap:6px;flex-wrap:wrap;">
-                ${result.key_concerns.map(k => `<span style="background:#fff;border:1px solid #c19a3a;color:#5e4d1a;padding:5px 12px;border-radius:14px;font-size:12px;font-weight:600;">${escapeHtml(k)}</span>`).join('')}
+                ${result.key_concerns.map(k => `<span style="background:#fff;border:1px solid #c19a3a;color:#5e4d1a;padding:5px 12px;border-radius:14px;font-size:13.5px;font-weight:600;">${escapeHtml(k)}</span>`).join('')}
               </div>
             </div>` : ''}
           ${tasksHtml ? `
             <div style="margin-bottom:22px;">
-              <div style="font-size:10.5px;font-weight:700;color:#8b7d5d;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:8px;">FP が次にやるタスク (推奨)</div>
+              <div style="font-size:12px;font-weight:700;color:#8b7d5d;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:8px;">FP が次にやるタスク (推奨)</div>
               <div style="display:grid;gap:10px;">${tasksHtml}</div>
             </div>` : ''}
           ${result.next_meeting_suggestion ? `
@@ -5581,7 +5581,7 @@
             </div>` : ''}
         </div>
         <div style="padding:14px 26px;border-top:1px solid #e8e2d4;display:flex;justify-content:space-between;align-items:center;gap:8px;">
-          <span style="font-size:11.5px;color:#16a34a;font-weight:700;">✓ 顧客カード「面談録」タブに自動保存済み — どちらの閉じるボタンを押しても消えません</span>
+          <span style="font-size:13px;color:#16a34a;font-weight:700;">✓ 顧客カード「面談録」タブに自動保存済み — どちらの閉じるボタンを押しても消えません</span>
           <button id="fp-ai-save-tasks" style="font-size:13px;padding:9px 20px;background:linear-gradient(135deg,#1b2845,#0f1729);color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:700;">閉じる (保存済)</button>
         </div>
       </div>`;
@@ -5685,7 +5685,7 @@
           <li>表示されている <strong>モニター画像</strong> をクリックして選択</li>
           <li>右下の <strong style="color:#06c755;">「共有」</strong> ボタンを押す</li>
         </ol>
-        <div style="margin-top:14px;padding:10px 14px;background:#fffbf2;border:1px solid #f0d36b;border-radius:8px;font-size:12px;color:#5e4d1a;line-height:1.55;">
+        <div style="margin-top:14px;padding:10px 14px;background:#fffbf2;border:1px solid #f0d36b;border-radius:8px;font-size:13.5px;color:#5e4d1a;line-height:1.55;">
           💡 「ウィンドウ」 や 「Chrome タブ」 ではなく <strong>「画面全体」</strong> を選んでください<br>
           → 画面全体録画なので Zoom も メモも 全部1枚に収まります
         </div>
@@ -5753,13 +5753,13 @@
     overlay.innerHTML = `
       <div style="background:#fff;max-width:480px;width:100%;border-radius:14px;box-shadow:0 24px 60px rgba(0,0,0,0.35);overflow:hidden;">
         <div style="background:linear-gradient(135deg,#FEF3C7,#FDE68A);padding:18px 24px;border-bottom:1px solid #F59E0B;">
-          <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:10.5px;letter-spacing:0.22em;color:#92400E;text-transform:uppercase;margin-bottom:4px;">録画なし</div>
+          <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:12px;letter-spacing:0.22em;color:#92400E;text-transform:uppercase;margin-bottom:4px;">録画なし</div>
           <h3 style="font-family:'Noto Sans JP',sans-serif;font-weight:900;font-size:18px;margin:0;color:#0E1116;letter-spacing:-0.012em;">面談記録 は生成できませんでした</h3>
         </div>
         <div style="padding:20px 24px;font-size:13.5px;color:#353D4F;line-height:1.85;">
           画面録画 が 開始されていない 状態 で 「終了」 が押されたため、 <b style="color:#0E1116;">AI 音声議事録 の 生成 を スキップ</b> しました。<br><br>
           メモ 入力 がある場合 は ローカル に 保存済み です。<br><br>
-          <span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#6B7385;">▼ 議事録生成 を 実行 する 場合 は:<br>① 顧客カード → 予約 → 「● Zoomを開始 (自動録画)」<br>② Zoom を 終了 する だけ。 録画 が Zoom Cloud に 上がり 次第 自動 で AI 解析 + 議事録生成</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#6B7385;">▼ 議事録生成 を 実行 する 場合 は:<br>① 顧客カード → 予約 → 「● Zoomを開始 (自動録画)」<br>② Zoom を 終了 する だけ。 録画 が Zoom Cloud に 上がり 次第 自動 で AI 解析 + 議事録生成</span>
         </div>
         <div style="padding:14px 24px 20px;display:flex;gap:10px;justify-content:flex-end;">
           <button id="fp-no-rec-close" style="background:#0E1116;color:#fff;border:none;padding:10px 24px;border-radius:6px;font-family:'Manrope',sans-serif;font-weight:800;font-size:13px;letter-spacing:0.04em;cursor:pointer;">了解</button>
@@ -5829,9 +5829,9 @@
     el.innerHTML = `
       <div style="display:flex;align-items:flex-start;gap:10px;">
         <div style="flex:1;">
-          <div style="font-size:11px;font-weight:800;color:#5B5BF0;letter-spacing:0.12em;margin-bottom:6px;">議事録 を 準備 中</div>
+          <div style="font-size:12.5px;font-weight:800;color:#5B5BF0;letter-spacing:0.12em;margin-bottom:6px;">議事録 を 準備 中</div>
           <div style="font-size:13.5px;font-weight:800;color:#0F172A;line-height:1.5;margin-bottom:8px;">Zoom の 文字起こし が 終わり 次第、<br>議事録 の 生成 を 開始 します</div>
-          <div style="font-size:12px;color:#475569;line-height:1.7;">Zoom 側 の 処理 に <b>5〜15分</b> ほど かかり ます。<br>この 画面 を 閉じて も 大丈夫 です。 完了 すると 顧客 カード の 面談履歴 に 自動 で 入り ます。</div>
+          <div style="font-size:13.5px;color:#475569;line-height:1.7;">Zoom 側 の 処理 に <b>5〜15分</b> ほど かかり ます。<br>この 画面 を 閉じて も 大丈夫 です。 完了 すると 顧客 カード の 面談履歴 に 自動 で 入り ます。</div>
         </div>
         <button id="fp-zoom-wait-x" aria-label="閉じる" style="background:none;border:none;font-size:19px;line-height:1;color:#94A3B8;cursor:pointer;padding:0 2px;flex-shrink:0;">×</button>
       </div>`;
@@ -5897,13 +5897,13 @@
           <div style="display:flex;align-items:center;gap:10px;padding-right:14px;border-right:1px solid rgba(255,255,255,0.3);">
             <span style="width:14px;height:14px;background:#fff;border-radius:50%;display:inline-block;animation:fp-rec-pulse 1s infinite;box-shadow:0 0 12px rgba(255,255,255,0.8);"></span>
             <div style="display:flex;flex-direction:column;line-height:1;gap:4px;">
-              <span style="font-family:'Inter',sans-serif;font-size:10px;font-weight:800;letter-spacing:0.22em;opacity:0.85;">REC</span>
+              <span style="font-family:'Inter',sans-serif;font-size:11.5px;font-weight:800;letter-spacing:0.22em;opacity:0.85;">REC</span>
               <span id="fp-rec-time" style="font-weight:900;font-family:'Inter',sans-serif;letter-spacing:0.04em;font-size:18px;font-variant-numeric:tabular-nums;">00:00</span>
             </div>
           </div>
           <button id="fp-rec-stop-btn" style="background:#fff;color:#b91c3c;border:none;padding:13px 24px;border-radius:8px;font-weight:900;cursor:pointer;font-family:'Inter','Noto Sans JP',sans-serif;font-size:13.5px;letter-spacing:0.08em;box-shadow:0 4px 12px rgba(0,0,0,0.15);white-space:nowrap;">■ 面談を終了</button>
         </div>
-        <div style="margin-top:8px;font-size:10.5px;color:rgba(255,255,255,0.92);text-align:center;letter-spacing:0.04em;">Zoom も 一緒 に 閉じて 議事録 生成</div>
+        <div style="margin-top:8px;font-size:12px;color:rgba(255,255,255,0.92);text-align:center;letter-spacing:0.04em;">Zoom も 一緒 に 閉じて 議事録 生成</div>
       `;
       // ★ Zoom ウィンドウは右側に並ぶ → 右上配置だと Zoom に被る → 左上に固定 (4回目修正)
       el.style.cssText = 'position:fixed;top:18px;left:18px;background:linear-gradient(135deg,#d9264c,#b91c3c);color:#fff;padding:14px 18px 12px;border-radius:14px;box-shadow:0 16px 40px rgba(217,38,76,0.45),0 0 0 4px rgba(255,255,255,0.6);z-index:10201;font-size:13.5px;min-width:280px;';
@@ -5972,9 +5972,9 @@
       </div>
       <div style="font-size:12.5px;color:#4b5563;margin-bottom:12px;line-height:1.5;">${escapeHtml(name)}様の面談録画 (${sizeMB}MB)</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;">
-        <a href="${blobUrl}" download="meeting-${escapeHtml(name)}-${Date.now()}.webm" style="font-size:11.5px;padding:7px 12px;background:#f8fafc;border:1px solid #e5e7eb;border-radius:6px;text-decoration:none;color:#1f2937;font-weight:600;">💾 ダウンロード</a>
-        <button id="fp-open-memo" style="font-size:11.5px;padding:7px 14px;background:linear-gradient(135deg,#b8893d,#d4a017);color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:700;font-family:inherit;">📝 メモを書く</button>
-        <button id="fp-toast-close" style="font-size:11.5px;padding:7px 10px;background:transparent;border:none;color:#94a3b8;cursor:pointer;font-family:inherit;">✕</button>
+        <a href="${blobUrl}" download="meeting-${escapeHtml(name)}-${Date.now()}.webm" style="font-size:13px;padding:7px 12px;background:#f8fafc;border:1px solid #e5e7eb;border-radius:6px;text-decoration:none;color:#1f2937;font-weight:600;">💾 ダウンロード</a>
+        <button id="fp-open-memo" style="font-size:13px;padding:7px 14px;background:linear-gradient(135deg,#b8893d,#d4a017);color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:700;font-family:inherit;">📝 メモを書く</button>
+        <button id="fp-toast-close" style="font-size:13px;padding:7px 10px;background:transparent;border:none;color:#94a3b8;cursor:pointer;font-family:inherit;">✕</button>
       </div>
     `;
     document.body.appendChild(toast);
@@ -6088,7 +6088,7 @@
       <div style="padding:10px 14px;border-bottom:1px solid #e5e7eb;background:#fafbfc;display:flex;align-items:center;gap:8px;">
         <strong style="flex:1;font-size:12.5px;">🗓 自分のカレンダー (FP)</strong>
         <button id="fp-cal-prev-v3" title="前週" style="font-size:13px;width:26px;height:26px;background:#fff;border:1px solid #e5e7eb;border-radius:6px;cursor:pointer;color:#374151;font-family:inherit;">‹</button>
-        <button id="fp-cal-today-v3" title="今週へ" style="font-size:11px;padding:5px 10px;background:#fff;border:1px solid #e5e7eb;border-radius:6px;cursor:pointer;color:#374151;font-weight:600;font-family:inherit;">今週</button>
+        <button id="fp-cal-today-v3" title="今週へ" style="font-size:12.5px;padding:5px 10px;background:#fff;border:1px solid #e5e7eb;border-radius:6px;cursor:pointer;color:#374151;font-weight:600;font-family:inherit;">今週</button>
         <button id="fp-cal-next-v3" title="次週" style="font-size:13px;width:26px;height:26px;background:#fff;border:1px solid #e5e7eb;border-radius:6px;cursor:pointer;color:#374151;font-family:inherit;">›</button>
         <button id="fp-cal-close-v3" style="font-size:13px;width:26px;height:26px;background:#fff;border:1px solid #e5e7eb;border-radius:6px;cursor:pointer;color:#6b7280;font-family:inherit;">✕</button>
       </div>
@@ -6119,7 +6119,7 @@
           <div style="padding:26px 20px;text-align:center;">
             <div style="font-size:32px;line-height:1;margin-bottom:10px;">🔒</div>
             <p style="font-size:14px;font-weight:700;color:#3a4254;margin:0 0 6px;">Google カレンダー が 未 連携</p>
-            <p style="font-size:12px;color:#6b7280;margin:0 0 14px;line-height:1.6;">ダッシュボード 「今日 の 予定」 の <br>「🗓️ Google カレンダー 連携」 で 連携 して ください</p>
+            <p style="font-size:13.5px;color:#6b7280;margin:0 0 14px;line-height:1.6;">ダッシュボード 「今日 の 予定」 の <br>「🗓️ Google カレンダー 連携」 で 連携 して ください</p>
             <a href="/" style="display:inline-block;background:#0b5d9e;color:#fff;text-decoration:none;padding:9px 20px;border-radius:8px;font-size:13px;font-weight:800;font-family:inherit;">ダッシュボード へ 戻る</a>
           </div>`;
         return;
@@ -6153,16 +6153,16 @@
       const candChips = candidates.map(c => {
         const d = new Date(c.dateStr + 'T00:00:00');
         const wd = ['日','月','火','水','木','金','土'][d.getDay()];
-        return `<span style="display:inline-flex;align-items:center;gap:4px;background:#fef3c7;color:#92400e;border:1px solid #f59e0b;border-radius:14px;padding:3px 10px;font-size:11px;font-weight:700;">🎯 ${d.getMonth()+1}/${d.getDate()}(${wd}) ${escapeHtml(c.slotStr)}</span>`;
+        return `<span style="display:inline-flex;align-items:center;gap:4px;background:#fef3c7;color:#92400e;border:1px solid #f59e0b;border-radius:14px;padding:3px 10px;font-size:12.5px;font-weight:700;">🎯 ${d.getMonth()+1}/${d.getDate()}(${wd}) ${escapeHtml(c.slotStr)}</span>`;
       }).join(' ');
 
       root.innerHTML = `
-        <div style="padding:10px 14px 6px;font-size:11.5px;color:#6b7280;text-align:center;font-weight:600;letter-spacing:0.04em;">
+        <div style="padding:10px 14px 6px;font-size:13px;color:#6b7280;text-align:center;font-weight:600;letter-spacing:0.04em;">
           ${wkLabel} · Google カレンダー (${escapeHtml(email)})
         </div>
         ${candChips ? `<div style="padding:6px 12px 10px;display:flex;flex-wrap:wrap;gap:6px;justify-content:center;">${candChips}</div>` : ''}
         <iframe src="${escapeHtml(embedUrl)}" style="border:0;width:100%;height:calc(100% - 60px);min-height:520px;border-radius:8px;" title="Google Calendar embed" loading="lazy"></iframe>
-        <div style="padding:6px 12px;font-size:10.5px;color:#94a3b8;text-align:center;">${calIds.length} 予定 表 表示 中 · 別 予定 表 追加 は ダッシュボード 上部 の 「📚 予定 表 選択」 から</div>
+        <div style="padding:6px 12px;font-size:12px;color:#94a3b8;text-align:center;">${calIds.length} 予定 表 表示 中 · 別 予定 表 追加 は ダッシュボード 上部 の 「📚 予定 表 選択」 から</div>
       `;
     }
     document.getElementById('fp-cal-prev-v3').addEventListener('click', () => {
@@ -6197,7 +6197,7 @@
           <div style="padding:24px 18px;text-align:center;background:linear-gradient(135deg,#ecfdf5,#fff);border-bottom:1px solid #d1fae5;">
             <div style="font-size:30px;margin-bottom:6px;">🎉</div>
             <div style="font-size:13px;font-weight:700;color:#065f46;">確定待ちのお客様はいません</div>
-            <div style="font-size:11.5px;color:#6b7280;margin-top:4px;">アンケート + 候補日が届くとここに表示されます</div>
+            <div style="font-size:13px;color:#6b7280;margin-top:4px;">アンケート + 候補日が届くとここに表示されます</div>
           </div>`;
         return;
       }
@@ -6213,34 +6213,34 @@
       section.innerHTML = `
         <div style="padding:12px 14px;background:linear-gradient(135deg,#eef2ff,#fafaff);border-bottom:1px solid #c7d2fe;">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-            <button id="fp-cal-prev" ${currentIdx === 0 ? 'disabled' : ''} style="padding:6px 10px;background:#fff;border:1px solid #c7d2fe;border-radius:6px;cursor:${currentIdx === 0 ? 'not-allowed' : 'pointer'};font-family:inherit;font-size:12px;font-weight:700;color:${currentIdx === 0 ? '#cbd5e1' : '#3730a3'};">← 前</button>
+            <button id="fp-cal-prev" ${currentIdx === 0 ? 'disabled' : ''} style="padding:6px 10px;background:#fff;border:1px solid #c7d2fe;border-radius:6px;cursor:${currentIdx === 0 ? 'not-allowed' : 'pointer'};font-family:inherit;font-size:13.5px;font-weight:700;color:${currentIdx === 0 ? '#cbd5e1' : '#3730a3'};">← 前</button>
             <div style="flex:1;display:flex;align-items:center;justify-content:center;gap:10px;min-width:0;">
               ${avatarHtml}
               <div style="text-align:left;min-width:0;">
-                <div style="font-size:10px;font-weight:700;letter-spacing:0.08em;color:#6366f1;text-transform:uppercase;">確定待ち ${currentIdx + 1} / ${pendingByCustomer.length} 人目</div>
+                <div style="font-size:11.5px;font-weight:700;letter-spacing:0.08em;color:#6366f1;text-transform:uppercase;">確定待ち ${currentIdx + 1} / ${pendingByCustomer.length} 人目</div>
                 <div style="font-size:15px;font-weight:700;color:#1e1b4b;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(cur.customerName)} 様</div>
               </div>
             </div>
-            <button id="fp-cal-next" ${currentIdx >= pendingByCustomer.length - 1 ? 'disabled' : ''} style="padding:6px 10px;background:#fff;border:1px solid #c7d2fe;border-radius:6px;cursor:${currentIdx >= pendingByCustomer.length - 1 ? 'not-allowed' : 'pointer'};font-family:inherit;font-size:12px;font-weight:700;color:${currentIdx >= pendingByCustomer.length - 1 ? '#cbd5e1' : '#3730a3'};">次 →</button>
+            <button id="fp-cal-next" ${currentIdx >= pendingByCustomer.length - 1 ? 'disabled' : ''} style="padding:6px 10px;background:#fff;border:1px solid #c7d2fe;border-radius:6px;cursor:${currentIdx >= pendingByCustomer.length - 1 ? 'not-allowed' : 'pointer'};font-family:inherit;font-size:13.5px;font-weight:700;color:${currentIdx >= pendingByCustomer.length - 1 ? '#cbd5e1' : '#3730a3'};">次 →</button>
           </div>
-          <div style="font-size:11px;color:#4b5563;line-height:1.5;">${escapeHtml(meta)}${cur.theme ? ' / テーマ: ' + escapeHtml(cur.theme) : ''}</div>
-          ${cur.worry ? `<div style="margin-top:6px;padding:6px 9px;background:#fffbf2;border:1px solid #fde68a;border-radius:6px;font-size:11px;color:#5e4d1a;line-height:1.5;">💭 ${escapeHtml(cur.worry)}</div>` : ''}
+          <div style="font-size:12.5px;color:#4b5563;line-height:1.5;">${escapeHtml(meta)}${cur.theme ? ' / テーマ: ' + escapeHtml(cur.theme) : ''}</div>
+          ${cur.worry ? `<div style="margin-top:6px;padding:6px 9px;background:#fffbf2;border:1px solid #fde68a;border-radius:6px;font-size:12.5px;color:#5e4d1a;line-height:1.5;">💭 ${escapeHtml(cur.worry)}</div>` : ''}
           <div style="margin-top:8px;text-align:right;">
-            <button id="fp-cal-reschedule" title="候補日3つとも合わない時 → 改めて候補日を依頼" style="font-size:10.5px;font-weight:700;padding:5px 10px;background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;border-radius:6px;cursor:pointer;font-family:inherit;">✕ 3つとも合わない → 再調整依頼</button>
+            <button id="fp-cal-reschedule" title="候補日3つとも合わない時 → 改めて候補日を依頼" style="font-size:12px;font-weight:700;padding:5px 10px;background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;border-radius:6px;cursor:pointer;font-family:inherit;">✕ 3つとも合わない → 再調整依頼</button>
           </div>
         </div>
         <div style="padding:10px 12px;background:#fef2f2;border-bottom:2px solid #fca5a5;">
-          <div style="font-size:10.5px;color:#7f1d1d;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;margin-bottom:6px;">🎯 この方の希望日 (タップでカレンダー移動 → ✓で確定)</div>
+          <div style="font-size:12px;color:#7f1d1d;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;margin-bottom:6px;">🎯 この方の希望日 (タップでカレンダー移動 → ✓で確定)</div>
           <div id="fp-cand-chips" style="display:grid;gap:6px;">
             ${cur.candidates.map((c, i) => `
               <div data-cand-row="${i}" data-date="${escapeHtml(c.dateStr)}" data-slot="${escapeHtml(c.slotStr)}"
                 style="padding:9px 12px;background:#fff;border:1.5px solid #fca5a5;border-radius:8px;font-family:inherit;display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;transition:all 0.15s;">
                 <button class="fp-cand-jump" style="background:transparent;border:none;padding:0;cursor:pointer;display:flex;flex-direction:column;align-items:flex-start;font-family:inherit;">
-                  <span style="font-size:9.5px;color:#b91c3c;font-weight:700;">第${c.rank}希望</span>
-                  <span style="font-size:11.5px;font-weight:700;color:#1f2937;">${escapeHtml(c.dateStr.slice(5).replace('-','/'))} ${escapeHtml(c.slotStr)}</span>
+                  <span style="font-size:11px;color:#b91c3c;font-weight:700;">第${c.rank}希望</span>
+                  <span style="font-size:13px;font-weight:700;color:#1f2937;">${escapeHtml(c.dateStr.slice(5).replace('-','/'))} ${escapeHtml(c.slotStr)}</span>
                 </button>
-                <span class="fp-cand-status" data-status="loading" style="font-size:10px;color:#9ca3af;text-align:right;">⏳ 判定中</span>
-                <button class="fp-cand-confirm" title="この日で予約確定" style="padding:6px 10px;background:linear-gradient(135deg,#06c755,#04a045);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit;white-space:nowrap;">✓ 確定</button>
+                <span class="fp-cand-status" data-status="loading" style="font-size:11.5px;color:#9ca3af;text-align:right;">⏳ 判定中</span>
+                <button class="fp-cand-confirm" title="この日で予約確定" style="padding:6px 10px;background:linear-gradient(135deg,#06c755,#04a045);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12.5px;font-weight:700;font-family:inherit;white-space:nowrap;">✓ 確定</button>
               </div>
             `).join('')}
           </div>
@@ -6317,7 +6317,7 @@
               const res = await fn({ customerId: fsCustomerId, confirmedSlot: `${dateStr} ${slotStr}` });
               const t = document.createElement('div');
               t.style.cssText = 'position:fixed;top:18px;left:50%;transform:translateX(-50%);background:#fff;border-left:5px solid #06c755;border-radius:12px;padding:14px 22px;box-shadow:0 12px 36px rgba(0,0,0,0.2);z-index:10003;font-family:inherit;';
-              t.innerHTML = `<strong style="font-size:14px;">✅ ${escapeHtml(name)} 様 予約確定</strong><br><span style="font-size:12px;color:#6b7280;">${escapeHtml(dateStr)} ${escapeHtml(slotStr)} — Zoom + LINE 通知済</span><br><a href="${escapeHtml(res.data.googleCalendarAddUrl)}" target="_blank" style="display:inline-block;margin-top:8px;padding:8px 14px;background:#16A34A;color:#fff;text-decoration:none;border-radius:6px;font-size:12px;font-weight:700;">📅 Google カレンダー に追加</a>`;
+              t.innerHTML = `<strong style="font-size:14px;">✅ ${escapeHtml(name)} 様 予約確定</strong><br><span style="font-size:13.5px;color:#6b7280;">${escapeHtml(dateStr)} ${escapeHtml(slotStr)} — Zoom + LINE 通知済</span><br><a href="${escapeHtml(res.data.googleCalendarAddUrl)}" target="_blank" style="display:inline-block;margin-top:8px;padding:8px 14px;background:#16A34A;color:#fff;text-decoration:none;border-radius:6px;font-size:13.5px;font-weight:700;">📅 Google カレンダー に追加</a>`;
               document.body.appendChild(t);
               setTimeout(() => t.remove(), 12000);
               if (window.refreshFirestoreCustomers) await window.refreshFirestoreCustomers();
@@ -6338,7 +6338,7 @@
             if (data.ok) {
               const t = document.createElement('div');
               t.style.cssText = 'position:fixed;top:18px;left:50%;transform:translateX(-50%);background:#fff;border-left:5px solid #06c755;border-radius:12px;padding:14px 22px;box-shadow:0 12px 36px rgba(0,0,0,0.2);z-index:10003;font-family:inherit;';
-              t.innerHTML = `<strong style="font-size:14px;">✅ ${escapeHtml(name)} 様 予約確定</strong><br><span style="font-size:12px;color:#6b7280;">${escapeHtml(dateStr)} ${escapeHtml(slotStr)} — Zoom + カレンダー + LINE 通知済み</span>`;
+              t.innerHTML = `<strong style="font-size:14px;">✅ ${escapeHtml(name)} 様 予約確定</strong><br><span style="font-size:13.5px;color:#6b7280;">${escapeHtml(dateStr)} ${escapeHtml(slotStr)} — Zoom + カレンダー + LINE 通知済み</span>`;
               document.body.appendChild(t);
               setTimeout(() => t.remove(), 6000);
               // データ再取得 → 次の顧客へ自動移動
@@ -6374,7 +6374,7 @@
           .then(data => {
             if (!statusEl) return;
             if (data.ok && data.busy) {
-              statusEl.innerHTML = `🔴 予定あり<br><span style="font-size:9.5px;font-weight:400;">${escapeHtml(data.events.map(e => e.title).join(', ').slice(0, 24))}</span>`;
+              statusEl.innerHTML = `🔴 予定あり<br><span style="font-size:11px;font-weight:400;">${escapeHtml(data.events.map(e => e.title).join(', ').slice(0, 24))}</span>`;
               statusEl.style.color = '#b91c3c'; statusEl.style.fontWeight = '700';
               row.style.borderColor = '#fca5a5';
               const cb = row.querySelector('.fp-cand-confirm');
@@ -6487,7 +6487,7 @@
         <button id="fp-memo-close" title="閉じる" style="font-size:13px;width:26px;height:24px;background:#fff;border:1px solid #e5e7eb;border-radius:5px;cursor:pointer;color:#6b7280;font-family:inherit;">✕</button>
       </div>
       <div style="padding:14px 18px;overflow-y:auto;flex:1;">
-        <div style="background:#fffbf2;border:1px solid #f0d36b;border-radius:8px;padding:9px 13px;margin-bottom:12px;font-size:11px;color:#5e4d1a;line-height:1.5;">
+        <div style="background:#fffbf2;border:1px solid #f0d36b;border-radius:8px;padding:9px 13px;margin-bottom:12px;font-size:12.5px;color:#5e4d1a;line-height:1.5;">
           <strong>書き方のコツ:</strong> 「○月○日までに XXする」「来週 △△を送る」「3ヶ月後に □□確認」
         </div>
         <textarea id="fp-memo-text" placeholder="例:&#10;・新NISAの最適配分シミュレーション資料を 来週中に送る&#10;・教育費見直し 3ヶ月後に再面談&#10;・iDeCo加入手続きの進捗を 2ヶ月後に確認" style="width:100%;min-height:180px;padding:13px 15px;border:1.5px solid #e5e7eb;border-radius:9px;font-size:13px;font-family:'Noto Sans JP',sans-serif;line-height:1.7;resize:vertical;box-sizing:border-box;">${escapeHtml(existingMemo)}</textarea>
@@ -6732,10 +6732,10 @@
       <div style="display:grid;gap:7px;">
         ${tasks.map(t => `
           <div style="display:grid;grid-template-columns:90px 32px 1fr 130px;gap:12px;align-items:center;padding:11px 14px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;">
-            <span style="font-size:10.5px;font-weight:700;letter-spacing:0.05em;background:${t.priority==='至急'?'#fef2f2;color:#b91c3c':(t.priority==='今週'||t.priority==='2週間以内')?'#fff7ed;color:#c2410c':'#f0f9ff;color:#075985'};padding:4px 9px;border-radius:11px;text-align:center;">${t.priority}</span>
+            <span style="font-size:12px;font-weight:700;letter-spacing:0.05em;background:${t.priority==='至急'?'#fef2f2;color:#b91c3c':(t.priority==='今週'||t.priority==='2週間以内')?'#fff7ed;color:#c2410c':'#f0f9ff;color:#075985'};padding:4px 9px;border-radius:11px;text-align:center;">${t.priority}</span>
             <span style="font-size:18px;">${t.icon}</span>
             <span style="font-size:13px;">${escapeHtml(t.task)}</span>
-            <span style="font-size:11px;color:#6b7280;text-align:right;">${t.due}</span>
+            <span style="font-size:12.5px;color:#6b7280;text-align:right;">${t.due}</span>
           </div>`).join('')}
       </div>`;
   }
@@ -6768,7 +6768,7 @@
     stages.forEach((st, i) => {
       html += `<div id="fp-stage-${i}" style="display:grid;grid-template-columns:32px 1fr 24px;gap:12px;align-items:center;padding:12px 16px;background:#f8fafc;border-radius:10px;border:1px solid #e5e7eb;opacity:0.45;transition:all 0.3s;">
         <div style="font-size:20px;">${st.icon}</div>
-        <div><strong style="font-size:13.5px;">${st.label}</strong><div style="font-size:11.5px;color:#6b7280;margin-top:1px;">${st.detail}</div></div>
+        <div><strong style="font-size:13.5px;">${st.label}</strong><div style="font-size:13px;color:#6b7280;margin-top:1px;">${st.detail}</div></div>
         <div class="fp-stage-icon" style="font-size:14px;color:#94a3b8;">○</div>
       </div>`;
     });
@@ -6857,7 +6857,7 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
         <div style="font-size:28px;">✨</div>
         <div>
           <strong style="font-size:15px;color:#5e4d1a;">AI処理完了</strong>
-          <div style="font-size:12px;color:#8a6f1e;margin-top:2px;">議事録 / 次アクション5件 / フォローアップ予定3件 を自動生成しました</div>
+          <div style="font-size:13.5px;color:#8a6f1e;margin-top:2px;">議事録 / 次アクション5件 / フォローアップ予定3件 を自動生成しました</div>
         </div>
       </div>
 
@@ -6868,10 +6868,10 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
       <div style="display:grid;gap:8px;margin-bottom:20px;">
         ${actions.map(a => `
           <div style="display:grid;grid-template-columns:80px 32px 1fr 130px;gap:12px;align-items:center;padding:11px 14px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;">
-            <span style="font-size:10.5px;font-weight:700;letter-spacing:0.05em;background:${a.priority==='至急'?'#fef2f2;color:#b91c3c':a.priority==='今週'?'#fff7ed;color:#c2410c':'#f0f9ff;color:#075985'};padding:4px 9px;border-radius:11px;text-align:center;">${a.priority}</span>
+            <span style="font-size:12px;font-weight:700;letter-spacing:0.05em;background:${a.priority==='至急'?'#fef2f2;color:#b91c3c':a.priority==='今週'?'#fff7ed;color:#c2410c':'#f0f9ff;color:#075985'};padding:4px 9px;border-radius:11px;text-align:center;">${a.priority}</span>
             <span style="font-size:18px;">${a.icon}</span>
             <span style="font-size:13px;">${a.task}</span>
-            <span style="font-size:11px;color:#6b7280;text-align:right;">${a.when}</span>
+            <span style="font-size:12.5px;color:#6b7280;text-align:right;">${a.when}</span>
           </div>
         `).join('')}
       </div>
@@ -7063,10 +7063,10 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
       <!-- ★ 役割明示バナー: 「配信」 と 「ご無沙汰フォロー」 の混同防止 -->
       <div style="background:linear-gradient(135deg,#EFF6FF,#F5F3FF);border:1px solid #BFDBFE;border-radius:12px;padding:18px 22px;margin-bottom:20px;">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
-          <span style="background:#1D4ED8;color:#fff;font-size:10px;font-weight:800;letter-spacing:0.12em;padding:3px 9px;border-radius:4px;">配信タブ — BROADCAST</span>
-          <span style="font-size:12px;color:#64748B;">= テンプレで <strong style="color:#1D4ED8;">複数人に一斉送信</strong> (キャンペーン/お知らせ/季節企画)</span>
+          <span style="background:#1D4ED8;color:#fff;font-size:11.5px;font-weight:800;letter-spacing:0.12em;padding:3px 9px;border-radius:4px;">配信タブ — BROADCAST</span>
+          <span style="font-size:13.5px;color:#64748B;">= テンプレで <strong style="color:#1D4ED8;">複数人に一斉送信</strong> (キャンペーン/お知らせ/季節企画)</span>
         </div>
-        <div style="font-size:12px;color:#64748B;line-height:1.7;">
+        <div style="font-size:13.5px;color:#64748B;line-height:1.7;">
           1対1で個別追客したい時は → <a href="#" onclick="document.querySelector('.tab[data-tab=&quot;dormantFollowup&quot;]')?.click();return false;" style="color:#7C2D12;font-weight:700;text-decoration:underline;">ご無沙汰フォロー</a> （最終接触から日数が経った客を順番に1人ずつ）
         </div>
       </div>
@@ -7120,7 +7120,7 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
           <div class="howto-step"><div class="howto-step-no">2</div><div><strong>年末カレンダー配布</strong> — 12月にカレンダーを配るFP向け / LINE一斉配信 → 要不要 → 住所収集 → Google地図でルート最適化</div></div>
         </div>
       </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;font-size:11.5px;">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;font-size:13px;">
         <a href="#evt-birthdays" class="quick-jump">🎂 誕生日</a>
         <a href="#evt-calendar" class="quick-jump">🎍 年末カレンダー</a>
       </div>
@@ -7149,7 +7149,7 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
           <span class="howto-banner-subtitle">FP切替 / LINE接続情報 / セグメント定義</span>
         </div>
       </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;font-size:11.5px;">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;font-size:13px;">
         <a href="#set-tenant" class="quick-jump">🏢 FP切替・新規追加</a>
         <a href="#set-line" class="quick-jump">🔌 LINE接続</a>
         <a href="#set-segments" class="quick-jump">👥 セグメント</a>
@@ -7195,11 +7195,11 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
           ${list.map(f => `
             <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border:1.5px solid ${f.fpId === cur ? '#5B5BF0' : '#E2E8F0'};border-radius:8px;background:${f.fpId === cur ? '#EEF1FE' : '#fff'};">
               <div style="flex:1;">
-                <div style="font-weight:700;font-size:13.5px;color:#0F172A;">${escapeHtml(f.fpName || '(未設定)')} <span style="font-family:Manrope,monospace;font-size:10.5px;color:#94A3B8;">${escapeHtml(f.fpId)}</span></div>
-                <div style="font-size:11.5px;color:#64748B;margin-top:2px;">${escapeHtml(f.email || '')} ・ plan: ${escapeHtml(f.plan || '-')} ・ ${escapeHtml(f.status || '-')}</div>
+                <div style="font-weight:700;font-size:13.5px;color:#0F172A;">${escapeHtml(f.fpName || '(未設定)')} <span style="font-family:Manrope,monospace;font-size:12px;color:#94A3B8;">${escapeHtml(f.fpId)}</span></div>
+                <div style="font-size:13px;color:#64748B;margin-top:2px;">${escapeHtml(f.email || '')} ・ plan: ${escapeHtml(f.plan || '-')} ・ ${escapeHtml(f.status || '-')}</div>
               </div>
-              ${f.fpId === cur ? '<span style="background:#5B5BF0;color:#fff;padding:5px 12px;border-radius:99px;font-size:10.5px;font-weight:800;letter-spacing:0.06em;">CURRENT</span>'
-                : `<button data-switch-fp="${escapeHtml(f.fpId)}" style="background:#fff;border:1.5px solid #CBD5E1;color:#475569;padding:6px 14px;border-radius:6px;font-size:11.5px;font-weight:800;cursor:pointer;font-family:inherit;">切替</button>`}
+              ${f.fpId === cur ? '<span style="background:#5B5BF0;color:#fff;padding:5px 12px;border-radius:99px;font-size:12px;font-weight:800;letter-spacing:0.06em;">CURRENT</span>'
+                : `<button data-switch-fp="${escapeHtml(f.fpId)}" style="background:#fff;border:1.5px solid #CBD5E1;color:#475569;padding:6px 14px;border-radius:6px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;">切替</button>`}
             </div>
           `).join('')}
         </div>
@@ -7226,16 +7226,16 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
           <button id="fp-reg-close" style="background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);color:#fff;width:28px;height:28px;border-radius:5px;cursor:pointer;">✕</button>
         </div>
         <div style="padding:22px;">
-          <div style="font-size:11.5px;color:#64748B;line-height:1.7;margin-bottom:14px;background:#FFFBEB;border:1px solid #FBBF24;border-radius:6px;padding:10px 14px;color:#78350F;">
+          <div style="font-size:13px;color:#64748B;line-height:1.7;margin-bottom:14px;background:#FFFBEB;border:1px solid #FBBF24;border-radius:6px;padding:10px 14px;color:#78350F;">
             ⚠ 事前に Skeleton 運営側で 各FP用の LINE Channel + LIFF + Zoom 鍵を取得しておく必要があります。
           </div>
           <form id="fp-reg-form" style="display:grid;gap:12px;">
-            <label style="font-size:12px;color:#475569;font-weight:700;">FP 表示名 *<br><input name="fpName" required style="width:100%;padding:9px;border:1.5px solid #CBD5E1;border-radius:6px;font-family:inherit;margin-top:4px;" placeholder="例: 山田 太郎 (FP)"></label>
-            <label style="font-size:12px;color:#475569;font-weight:700;">メールアドレス *<br><input name="email" type="email" required style="width:100%;padding:9px;border:1.5px solid #CBD5E1;border-radius:6px;font-family:inherit;margin-top:4px;"></label>
-            <label style="font-size:12px;color:#475569;font-weight:700;">LINE Channel Access Token<br><input name="lineChannelAccessToken" style="width:100%;padding:9px;border:1.5px solid #CBD5E1;border-radius:6px;font-family:inherit;margin-top:4px;font-family:Menlo,monospace;font-size:11px;" placeholder="Messaging API 長期トークン"></label>
-            <label style="font-size:12px;color:#475569;font-weight:700;">LIFF ID<br><input name="liffId" style="width:100%;padding:9px;border:1.5px solid #CBD5E1;border-radius:6px;font-family:inherit;margin-top:4px;font-family:Menlo,monospace;font-size:11px;" placeholder="例: 2010266648-iX5kooZe"></label>
-            <label style="font-size:12px;color:#475569;font-weight:700;">Zoom Account ID<br><input name="zoomAccountId" style="width:100%;padding:9px;border:1.5px solid #CBD5E1;border-radius:6px;font-family:inherit;margin-top:4px;font-family:Menlo,monospace;font-size:11px;"></label>
-            <label style="font-size:12px;color:#475569;font-weight:700;">プラン<br><select name="plan" style="width:100%;padding:9px;border:1.5px solid #CBD5E1;border-radius:6px;font-family:inherit;margin-top:4px;"><option value="trial">トライアル (30日無料)</option><option value="pro" selected>Pro (月¥29,800)</option><option value="enterprise">Enterprise (応相談)</option></select></label>
+            <label style="font-size:13.5px;color:#475569;font-weight:700;">FP 表示名 *<br><input name="fpName" required style="width:100%;padding:9px;border:1.5px solid #CBD5E1;border-radius:6px;font-family:inherit;margin-top:4px;" placeholder="例: 山田 太郎 (FP)"></label>
+            <label style="font-size:13.5px;color:#475569;font-weight:700;">メールアドレス *<br><input name="email" type="email" required style="width:100%;padding:9px;border:1.5px solid #CBD5E1;border-radius:6px;font-family:inherit;margin-top:4px;"></label>
+            <label style="font-size:13.5px;color:#475569;font-weight:700;">LINE Channel Access Token<br><input name="lineChannelAccessToken" style="width:100%;padding:9px;border:1.5px solid #CBD5E1;border-radius:6px;font-family:inherit;margin-top:4px;font-family:Menlo,monospace;font-size:12.5px;" placeholder="Messaging API 長期トークン"></label>
+            <label style="font-size:13.5px;color:#475569;font-weight:700;">LIFF ID<br><input name="liffId" style="width:100%;padding:9px;border:1.5px solid #CBD5E1;border-radius:6px;font-family:inherit;margin-top:4px;font-family:Menlo,monospace;font-size:12.5px;" placeholder="例: 2010266648-iX5kooZe"></label>
+            <label style="font-size:13.5px;color:#475569;font-weight:700;">Zoom Account ID<br><input name="zoomAccountId" style="width:100%;padding:9px;border:1.5px solid #CBD5E1;border-radius:6px;font-family:inherit;margin-top:4px;font-family:Menlo,monospace;font-size:12.5px;"></label>
+            <label style="font-size:13.5px;color:#475569;font-weight:700;">プラン<br><select name="plan" style="width:100%;padding:9px;border:1.5px solid #CBD5E1;border-radius:6px;font-family:inherit;margin-top:4px;"><option value="trial">トライアル (30日無料)</option><option value="pro" selected>Pro (月¥29,800)</option><option value="enterprise">Enterprise (応相談)</option></select></label>
             <div style="display:flex;gap:10px;margin-top:8px;">
               <button type="button" id="fp-reg-cancel" style="flex:1;padding:11px;background:#fff;border:1.5px solid #CBD5E1;color:#475569;border-radius:8px;font-weight:700;cursor:pointer;font-family:inherit;">キャンセル</button>
               <button type="submit" style="flex:2;padding:11px;background:#5B5BF0;color:#fff;border:none;border-radius:8px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:0.04em;">+ 登録</button>
@@ -7350,7 +7350,7 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
         <button class="primary" id="cal-blast-btn" data-hint="全LINE友だちに「カレンダー要りますか?」配信。年1回だけ押す想定"><i data-lucide="send"></i><span>友だち全員に一斉配信</span></button>
         <a class="ghost" href="${allMapUrl}" target="_blank" data-hint="希望者の住所をGoogleマップ上に全部ピン表示" style="text-decoration:none;display:inline-block;padding:9px 18px;border:1px solid var(--line-2);border-radius:7px;color:var(--ink);${wantList.length===0?'pointer-events:none;opacity:0.4;':''}">🗺 全員の住所を地図表示</a>
         <a class="ghost" href="${routeUrl}" target="_blank" data-hint="希望者全員を回る最適ルートをGoogleマップで生成。当日ナビとして使用" style="text-decoration:none;display:inline-block;padding:9px 18px;border:1px solid var(--line-2);border-radius:7px;color:var(--ink);${wantList.length===0?'pointer-events:none;opacity:0.4;':''}">🚗 配達ルートを最適化 (Google マップ)</a>
-        <span id="cal-blast-msg" style="font-size:12px;color:var(--muted);align-self:center;margin-left:auto;"></span>
+        <span id="cal-blast-msg" style="font-size:13.5px;color:var(--muted);align-self:center;margin-left:auto;"></span>
       </div>
 
       <div class="section-title">🎁 受け取り希望 (住所済) — ${wantList.length}名</div>
@@ -7363,11 +7363,11 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
                 <div>
                   <strong style="font-size:14px;">${escapeHtml(r.name) || '匿名'}</strong>
                   <div style="font-size:12.5px;color:var(--ink-2);margin-top:3px;letter-spacing:0.01em;line-height:1.6;">📮 ${escapeHtml(r.address)}</div>
-                  ${r.phone ? `<div style="font-size:11.5px;color:var(--muted);margin-top:2px;">📞 ${escapeHtml(r.phone)}</div>` : ''}
-                  ${r.note ? `<div style="font-size:11px;color:var(--muted);margin-top:2px;font-style:italic;">📝 ${escapeHtml(r.note)}</div>` : ''}
+                  ${r.phone ? `<div style="font-size:13px;color:var(--muted);margin-top:2px;">📞 ${escapeHtml(r.phone)}</div>` : ''}
+                  ${r.note ? `<div style="font-size:12.5px;color:var(--muted);margin-top:2px;font-style:italic;">📝 ${escapeHtml(r.note)}</div>` : ''}
                 </div>
                 <div style="text-align:right;">
-                  <a href="https://www.google.com/maps/search/${encodeURIComponent(r.address)}" target="_blank" style="font-size:11.5px;color:var(--accent);text-decoration:none;background:var(--accent-soft);padding:4px 10px;border-radius:11px;display:inline-block;">📍 地図で見る</a>
+                  <a href="https://www.google.com/maps/search/${encodeURIComponent(r.address)}" target="_blank" style="font-size:13px;color:var(--accent);text-decoration:none;background:var(--accent-soft);padding:4px 10px;border-radius:11px;display:inline-block;">📍 地図で見る</a>
                 </div>
               </div>
             `).join('')}
@@ -7380,14 +7380,14 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
           ${wantNoAddr.map(r => `
             <div class="line-card" style="padding:12px 16px;display:flex;justify-content:space-between;align-items:center;">
               <strong style="font-size:13.5px;">${escapeHtml(r.name) || '匿名'}</strong>
-              <span style="font-size:11px;color:var(--muted);">住所入力URLを送信済 / 入力待ち</span>
+              <span style="font-size:12.5px;color:var(--muted);">住所入力URLを送信済 / 入力待ち</span>
             </div>
           `).join('')}
         </div>` : ''}
 
       ${notWant.length > 0 ? `
         <div class="section-title" style="margin-top:24px;">✗ 不要 — ${notWant.length}名</div>
-        <div style="display:grid;gap:4px;font-size:12px;color:var(--muted);">
+        <div style="display:grid;gap:4px;font-size:13.5px;color:var(--muted);">
           ${notWant.map(r => `<div style="padding:8px 14px;background:#fafbfc;border:1px solid var(--line);border-radius:6px;">${escapeHtml(r.name) || '匿名'}</div>`).join('')}
         </div>` : ''}
     `;
@@ -7801,19 +7801,19 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
     overlay.innerHTML = `
       <div style="background:#fff;max-width:500px;width:100%;border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,0.35);overflow:hidden;">
         <div style="background:linear-gradient(135deg,#F59E0B,#D97706);color:#fff;padding:20px 24px;">
-          <div style="font-size:10px;font-weight:800;letter-spacing:0.2em;margin-bottom:4px;opacity:0.9;">📅 日程確認リクエスト</div>
+          <div style="font-size:11.5px;font-weight:800;letter-spacing:0.2em;margin-bottom:4px;opacity:0.9;">📅 日程確認リクエスト</div>
           <h3 style="margin:0;font-size:18px;font-weight:900;">お客様から日程選択が届きました</h3>
         </div>
         <div style="padding:24px;">
           <div style="background:#FFFBEB;border:1.5px solid #FCD34D;border-radius:10px;padding:14px 16px;margin-bottom:16px;">
-            <div style="font-size:11px;font-weight:800;color:#92400E;letter-spacing:0.06em;margin-bottom:5px;">📩 ${escapeHtml(userName)}様からのメッセージ</div>
+            <div style="font-size:12.5px;font-weight:800;color:#92400E;letter-spacing:0.06em;margin-bottom:5px;">📩 ${escapeHtml(userName)}様からのメッセージ</div>
             <div style="font-size:14px;font-weight:800;color:#1F1A12;">${escapeHtml(originalText)}</div>
           </div>
           <div style="font-size:14px;color:#374151;margin-bottom:6px;line-height:1.8;">
             <strong>${escapeHtml(userName)}様</strong>が <strong style="color:#5B5BF0;">${escapeHtml(dateTimeStr)}</strong> を選択しました。<br>
             確定してよろしいですか？
           </div>
-          <div style="font-size:11.5px;color:#6B7280;margin-bottom:20px;">確定すると Zoom URL が自動生成・送信され、Googleカレンダーに登録されます。</div>
+          <div style="font-size:13px;color:#6B7280;margin-bottom:20px;">確定すると Zoom URL が自動生成・送信され、Googleカレンダーに登録されます。</div>
           <div id="fp-date-confirm-status" style="font-size:12.5px;font-weight:700;margin-bottom:14px;min-height:18px;"></div>
           <div style="display:flex;gap:10px;justify-content:flex-end;">
             <button id="fp-date-confirm-skip" style="background:#fff;color:#6B7280;border:1px solid #D1D5DB;padding:11px 22px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">後で確認</button>
@@ -7943,7 +7943,7 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
         <div style="display:flex;align-items:center;gap:6px;font-weight:700;font-size:13px;">
           <span style="width:8px;height:8px;background:#fff;border-radius:50%;animation:pulse 1.5s infinite;"></span> LIVE
         </div>
-        <div style="font-size:12px;opacity:0.9;">公式LINEから入った実データ</div>
+        <div style="font-size:13.5px;opacity:0.9;">公式LINEから入った実データ</div>
         <div style="margin-left:auto;display:flex;gap:16px;font-size:13px;">
           <div>友だち <strong>${liveStats.users}</strong></div>
           <div>回答 <strong>${liveStats.surveys}</strong></div>
@@ -7965,19 +7965,19 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
             <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;gap:8px;">
               <div>
                 <strong style="font-size:14px;">${escapeHtml(s.q1_テーマ || '-')}</strong>
-                <span style="font-size:11px;color:var(--muted);margin-left:8px;">${(s.ts || '').slice(5, 16).replace('T', ' ')}</span>
+                <span style="font-size:12.5px;color:var(--muted);margin-left:8px;">${(s.ts || '').slice(5, 16).replace('T', ' ')}</span>
               </div>
               ${confirmed
                 ? `<span class="status-pill active">✓ ${escapeHtml(confirmed)} 確定</span>`
                 : '<span class="status-pill new">確定待ち</span>'}
             </div>
-            <div style="font-size:12px;color:var(--muted);letter-spacing:0.02em;margin-bottom:4px;">
+            <div style="font-size:13.5px;color:var(--muted);letter-spacing:0.02em;margin-bottom:4px;">
               ${escapeHtml(s.q2_年代 || '-')} ・ ${escapeHtml(s.q3_家族 || '-')} ・ ${escapeHtml(s.q4_年収 || '-')} ・ userId:${uidShort}…
             </div>
             <div style="font-size:13px;color:var(--ink-2);margin-bottom:10px;line-height:1.6;">💭 ${escapeHtml(s.q5_悩み || '-')}</div>
             ${confirmed ? '' : (slots.length > 0 ? `
               <div style="background:#fafbfc;border:1px solid var(--line);border-radius:7px;padding:10px 12px;">
-                <div style="font-size:11px;color:var(--muted);font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px;">候補日 (タップで確定 → 自動でZoom URL作成・LINE通知・カレンダー登録)</div>
+                <div style="font-size:12.5px;color:var(--muted);font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px;">候補日 (タップで確定 → 自動でZoom URL作成・LINE通知・カレンダー登録)</div>
                 <div style="display:grid;gap:6px;">
                   ${slots.map((slot, idx) => {
                     const parts = (slot || '').split(/\s+/);
@@ -7988,11 +7988,11 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
                       data-hint="この日で確定 → ZoomURL自動発行・お客様にLINE通知・Googleカレンダー登録 が一括で動きます"
                       style="text-align:left;padding:10px 14px;background:#fff;border:1px solid var(--line);border-radius:6px;cursor:pointer;font-size:13px;display:flex;justify-content:space-between;align-items:center;font-family:inherit;">
                       <span><strong style="color:var(--accent);margin-right:8px;">第${idx + 1}希望</strong>${escapeHtml(slot)}</span>
-                      <span style="font-size:11px;color:var(--green);font-weight:700;">この日で確定 →</span>
+                      <span style="font-size:12.5px;color:var(--green);font-weight:700;">この日で確定 →</span>
                     </button>`;
                   }).join('')}
                 </div>
-              </div>` : '<div style="font-size:11.5px;color:var(--muted);">※ 候補日未取得 (旧バージョンのアンケート回答)</div>')}
+              </div>` : '<div style="font-size:13px;color:var(--muted);">※ 候補日未取得 (旧バージョンのアンケート回答)</div>')}
           </div>`;
         }).join('')}
       </div>
@@ -8031,7 +8031,7 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
               <div class="booking-name">${escapeHtml(b.name)} ${isLive ? '<span class="status-pill active">LIVE</span>' : '<span class="status-pill new">未登録</span>'} ${recPill}</div>
               ${!isLive ? `<div class="booking-meta">${escapeHtml(b.answers.q1)} / ${escapeHtml(b.answers.q2)} / ${escapeHtml(b.answers.q3)} / ${escapeHtml(b.answers.q4)}</div>` : ''}
               ${!isLive ? `<div class="booking-want">💭 ${escapeHtml(b.answers.q5)}</div>` : ''}
-              ${isLive ? `<div class="booking-want" style="font-family:ui-monospace,Menlo,monospace;font-size:11px;word-break:break-all;font-style:normal;">${escapeHtml(b.zoomUrl)}</div>` : ''}
+              ${isLive ? `<div class="booking-want" style="font-family:ui-monospace,Menlo,monospace;font-size:12.5px;word-break:break-all;font-style:normal;">${escapeHtml(b.zoomUrl)}</div>` : ''}
               ${recButtons ? `<div class="booking-rec-row">${recButtons}</div>` : ''}
             </div>
             <div class="booking-cta">
@@ -8047,8 +8047,8 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
         ${hotLeads.map(h => `
           <div class="booking-row">
             <div class="booking-when">
-              <div class="booking-time" style="font-size:11px;">${escapeHtml(h.answeredAt.slice(5, 16))}</div>
-              <div class="booking-date" style="font-size:10.5px;color:var(--muted);">回答済</div>
+              <div class="booking-time" style="font-size:12.5px;">${escapeHtml(h.answeredAt.slice(5, 16))}</div>
+              <div class="booking-date" style="font-size:12px;color:var(--muted);">回答済</div>
             </div>
             <div class="booking-main">
               <div class="booking-name">${escapeHtml(h.name)}</div>
@@ -8071,7 +8071,7 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
             <div style="padding:10px 14px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;">
               <div>
                 <div style="font-weight:600;font-size:13.5px;">${escapeHtml(scenario.name)}</div>
-                <div style="font-size:11px;color:var(--muted);">トリガー: ${escapeHtml(scenario.trigger)}</div>
+                <div style="font-size:12.5px;color:var(--muted);">トリガー: ${escapeHtml(scenario.trigger)}</div>
               </div>
               <label class="toggle-switch"><input type="checkbox" ${scenario.enabled ? 'checked' : ''} disabled><span></span></label>
             </div>
@@ -8095,7 +8095,7 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
           <div class="line-card">
             <div style="padding:10px 14px;border-bottom:1px solid var(--line);">
               <div style="font-weight:600;font-size:13.5px;">${escapeHtml(form.title)}</div>
-              <div style="font-size:11px;color:var(--muted);">回答結果が自動で顧客メモに反映される</div>
+              <div style="font-size:12.5px;color:var(--muted);">回答結果が自動で顧客メモに反映される</div>
             </div>
             ${form.questions.map((q, i) => `
               <div class="q-row">
@@ -8270,7 +8270,7 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
     const html = `
       <div class="modal-header" style="border-bottom:1px solid #E8E2D4;background:linear-gradient(180deg,#fdfbf4,#fff);">
         <div style="display:flex;flex-direction:column;gap:2px;">
-          <div style="font-size:10.5px;font-weight:700;color:#9A5A18;letter-spacing:0.22em;text-transform:uppercase;font-family:'Inter',sans-serif;">Meeting Minutes</div>
+          <div style="font-size:12px;font-weight:700;color:#9A5A18;letter-spacing:0.22em;text-transform:uppercase;font-family:'Inter',sans-serif;">Meeting Minutes</div>
           <h2 style="font-family:'Noto Sans JP',serif;font-size:19px;font-weight:700;color:#1F2A3F;margin:0;letter-spacing:0.02em;">${escapeHtml(title || '議事録')}</h2>
         </div>
         <button class="modal-close" id="tr-close">×</button>
@@ -8282,7 +8282,7 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
             <button data-tr-tab="${t.id}" class="tr-tab" style="background:transparent;border:none;padding:14px 18px 12px;font-family:'Hiragino Sans',sans-serif;font-size:13px;font-weight:700;color:#6B7280;cursor:pointer;border-bottom:3px solid transparent;letter-spacing:0.04em;display:inline-flex;align-items:center;gap:7px;">
               <span style="font-size:14px;opacity:0.8;">${t.icon}</span>
               ${t.label}
-              ${t.count ? `<span style="background:#F0EBDF;color:#9A5A18;font-size:10.5px;font-weight:800;padding:1px 7px;border-radius:99px;font-family:'Inter',sans-serif;">${t.count}</span>` : ''}
+              ${t.count ? `<span style="background:#F0EBDF;color:#9A5A18;font-size:12px;font-weight:800;padding:1px 7px;border-radius:99px;font-family:'Inter',sans-serif;">${t.count}</span>` : ''}
             </button>
           `).join('')}
         </div>
@@ -8292,27 +8292,27 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
           ${hasAny ? `
             ${summary ? `
               <div style="background:linear-gradient(135deg,#FBF5E3,#FDFBF4);border:1px solid #E8D9A8;border-left:3px solid #C19A3A;border-radius:10px;padding:18px 22px;margin-bottom:14px;">
-                <div style="font-size:10px;font-weight:800;color:#9A5A18;letter-spacing:0.18em;margin-bottom:6px;">TODAY'S THEME</div>
+                <div style="font-size:11.5px;font-weight:800;color:#9A5A18;letter-spacing:0.18em;margin-bottom:6px;">TODAY'S THEME</div>
                 <div style="font-family:'Noto Sans JP',serif;font-size:15.5px;font-weight:600;color:#1F2A3F;line-height:1.75;">${escapeHtml(summary)}</div>
               </div>
             ` : ''}
             ${concerns.length ? `
               <div style="margin-bottom:14px;">
-                <div style="font-size:10px;font-weight:800;color:#9A5A18;letter-spacing:0.18em;margin-bottom:8px;">CONCERNS · お客様の懸念</div>
+                <div style="font-size:11.5px;font-weight:800;color:#9A5A18;letter-spacing:0.18em;margin-bottom:8px;">CONCERNS · お客様の懸念</div>
                 <div style="display:flex;gap:6px;flex-wrap:wrap;">
-                  ${concerns.map(c => `<span style="background:#1F2A3F;color:#FCFAF2;font-family:'Hiragino Sans',sans-serif;font-weight:700;font-size:11.5px;padding:5px 12px;border-radius:99px;">${escapeHtml(c)}</span>`).join('')}
+                  ${concerns.map(c => `<span style="background:#1F2A3F;color:#FCFAF2;font-family:'Hiragino Sans',sans-serif;font-weight:700;font-size:13px;padding:5px 12px;border-radius:99px;">${escapeHtml(c)}</span>`).join('')}
                 </div>
               </div>
             ` : ''}
             ${summaryPoints ? `
               <div style="background:#fff;border:1px solid #E8E2D4;border-radius:10px;padding:18px 22px;margin-bottom:14px;">
-                <div style="font-size:10px;font-weight:800;color:#9A5A18;letter-spacing:0.18em;margin-bottom:8px;">SUMMARY · ポイント</div>
+                <div style="font-size:11.5px;font-weight:800;color:#9A5A18;letter-spacing:0.18em;margin-bottom:8px;">SUMMARY · ポイント</div>
                 <div style="font-family:'Hiragino Sans',sans-serif;font-size:13.5px;color:#1F2A3F;line-height:1.85;white-space:pre-wrap;">${escapeHtml(summaryPoints)}</div>
               </div>
             ` : ''}
             ${nextMeeting ? `
               <div style="background:#F0FDF4;border:1px solid #86EFAC;border-left:3px solid #065F46;border-radius:10px;padding:14px 18px;">
-                <div style="font-size:10px;font-weight:800;color:#065F46;letter-spacing:0.18em;margin-bottom:6px;">NEXT MEETING</div>
+                <div style="font-size:11.5px;font-weight:800;color:#065F46;letter-spacing:0.18em;margin-bottom:6px;">NEXT MEETING</div>
                 <div style="font-size:13px;color:#1F2A3F;line-height:1.7;">${escapeHtml(nextMeeting)}</div>
               </div>
             ` : ''}
@@ -8325,11 +8325,11 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
             <div style="background:#fff;border:1px solid #E8E2D4;border-left:4px solid ${priColor(t.priority)};border-radius:10px;padding:16px 20px;margin-bottom:10px;">
               <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:8px;">
                 <strong style="font-family:'Hiragino Sans',sans-serif;font-size:14px;color:#1F2A3F;line-height:1.4;flex:1;">${escapeHtml(t.task || '')}</strong>
-                <span style="font-size:10.5px;font-weight:800;color:${priColor(t.priority)};letter-spacing:0.08em;white-space:nowrap;font-family:'Hiragino Sans',sans-serif;">${escapeHtml(t.priority || '')}${t.dueDate ? ' · ' + escapeHtml(t.dueDate) : ''}</span>
+                <span style="font-size:12px;font-weight:800;color:${priColor(t.priority)};letter-spacing:0.08em;white-space:nowrap;font-family:'Hiragino Sans',sans-serif;">${escapeHtml(t.priority || '')}${t.dueDate ? ' · ' + escapeHtml(t.dueDate) : ''}</span>
               </div>
-              ${t.recommendedAction ? `<div style="font-size:12px;color:#5e4d1a;background:#FBF5E3;border-radius:6px;padding:9px 13px;line-height:1.7;margin-bottom:${t.lineDraft ? '8px' : '0'};">${escapeHtml(t.recommendedAction)}</div>` : ''}
+              ${t.recommendedAction ? `<div style="font-size:13.5px;color:#5e4d1a;background:#FBF5E3;border-radius:6px;padding:9px 13px;line-height:1.7;margin-bottom:${t.lineDraft ? '8px' : '0'};">${escapeHtml(t.recommendedAction)}</div>` : ''}
               ${t.lineDraft ? `
-                <div style="background:#F0FDF4;border:1px solid #86EFAC;border-radius:6px;padding:10px 13px;font-size:12px;color:#065F46;line-height:1.7;white-space:pre-wrap;margin-bottom:8px;">${escapeHtml(t.lineDraft)}</div>
+                <div style="background:#F0FDF4;border:1px solid #86EFAC;border-radius:6px;padding:10px 13px;font-size:13.5px;color:#065F46;line-height:1.7;white-space:pre-wrap;margin-bottom:8px;">${escapeHtml(t.lineDraft)}</div>
                 <button class="btn-mini-action is-line" data-tr-copy-draft="${escapeHtml(t.lineDraft).replace(/&quot;/g, '&#34;')}"><span class="icon">📋</span>LINE文案コピー</button>
               ` : ''}
             </div>
@@ -8339,14 +8339,14 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
         <!-- 全文 panel -->
         <div id="tr-panel-full" data-tr-panel="full" style="display:none;padding:24px 28px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-            <div style="font-size:10px;font-weight:800;color:#9A5A18;letter-spacing:0.18em;">FULL TRANSCRIPT · 文字起こし全文 (${transcript.length}文字)</div>
+            <div style="font-size:11.5px;font-weight:800;color:#9A5A18;letter-spacing:0.18em;">FULL TRANSCRIPT · 文字起こし全文 (${transcript.length}文字)</div>
             <button class="btn-mini-action" id="tr-copy"><span class="icon">📋</span>全文コピー</button>
           </div>
           <div style="background:#fafbfc;border:1px solid #E8E2D4;border-radius:8px;padding:20px 24px;font-family:'Hiragino Sans',monospace;font-size:13px;line-height:1.95;white-space:pre-wrap;max-height:520px;overflow-y:auto;letter-spacing:0.02em;color:#1F2A3F;">${escapeHtml(transcript) || '<span style="color:#9CA3AF;">文字起こしがありません</span>'}</div>
         </div>
 
         <div style="padding:14px 28px;border-top:1px solid #E8E2D4;display:flex;justify-content:space-between;align-items:center;background:#fafaf7;">
-          <div id="tr-msg" style="font-size:11.5px;color:#6B7280;"></div>
+          <div id="tr-msg" style="font-size:13px;color:#6B7280;"></div>
           <button class="btn-cta-ghost" id="tr-close-btn">閉じる</button>
         </div>
       </div>
@@ -8399,7 +8399,7 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
         <div style="background:#fafbfc;border:1px solid var(--line);border-radius:6px;padding:14px;">
           ${form.questions.map((q, i) => `
             <div style="margin-bottom:12px;">
-              <div style="font-size:11.5px;color:var(--muted);font-weight:600;margin-bottom:3px;">Q${i + 1}. ${escapeHtml(q.label)}</div>
+              <div style="font-size:13px;color:var(--muted);font-weight:600;margin-bottom:3px;">Q${i + 1}. ${escapeHtml(q.label)}</div>
               <div style="font-size:14px;font-weight:600;color:var(--ink);">${escapeHtml(b.answers[q.id] || '—')}</div>
             </div>
           `).join('')}
@@ -8428,8 +8428,8 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
           <div style="font-size:12.5px;color:var(--ink-2);">CRMの顧客一覧に追加されました。アンケート回答もメモに自動転記済み。</div>
         </div>
         <div style="background:#fafbfc;border:1px solid var(--line);border-radius:6px;padding:12px;">
-          <div style="font-size:11.5px;color:var(--muted);font-weight:600;margin-bottom:4px;">自動登録された内容</div>
-          <div style="font-family:ui-monospace,Menlo,monospace;font-size:11.5px;white-space:pre-wrap;color:var(--ink-2);line-height:1.6;">${escapeHtml(newClient.note)}</div>
+          <div style="font-size:13px;color:var(--muted);font-weight:600;margin-bottom:4px;">自動登録された内容</div>
+          <div style="font-family:ui-monospace,Menlo,monospace;font-size:13px;white-space:pre-wrap;color:var(--ink-2);line-height:1.6;">${escapeHtml(newClient.note)}</div>
         </div>
         <div style="display:flex;gap:8px;margin-top:14px;">
           <button class="primary" id="conv-open">顧客詳細を開く</button>
@@ -8635,7 +8635,7 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
       if (m) return `<div class="fp-cadence-mini">毎月<strong>${m[1]}</strong>日</div>`;
       if (/毎週/.test(cadence)) return `<div class="fp-cadence-mini">毎週</div>`;
       if (/誕生日/.test(cadence)) return `<div class="fp-cadence-mini">🎂</div>`;
-      return `<div class="fp-cadence-mini" style="font-size:9.5px;">${escapeHtml((cadence || '').slice(0, 8))}</div>`;
+      return `<div class="fp-cadence-mini" style="font-size:11px;">${escapeHtml((cadence || '').slice(0, 8))}</div>`;
     };
 
     // ★ 今日 FP が送るべきメッセージ案を組み立てる
@@ -8677,18 +8677,18 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
               <div style="background:#FFFBEB;border:1.5px solid #FCD34D;border-radius:10px;padding:11px 14px;margin-bottom:12px;display:flex;gap:10px;align-items:flex-start;">
                 <span style="font-size:14px;flex-shrink:0;line-height:1.4;">💡</span>
                 <div style="flex:1;min-width:0;">
-                  <div style="font-size:10.5px;font-weight:900;color:#B45309;letter-spacing:0.08em;margin-bottom:3px;">なぜ 今 この人に</div>
+                  <div style="font-size:12px;font-weight:900;color:#B45309;letter-spacing:0.08em;margin-bottom:3px;">なぜ 今 この人に</div>
                   <div style="font-size:13px;font-weight:700;color:#0F172A;line-height:1.55;">${escapeHtml(m.why)}</div>
                 </div>
               </div>
             ` : ''}
-            <div style="font-size:10.5px;font-weight:900;color:#475569;letter-spacing:0.08em;margin-bottom:5px;text-transform:uppercase;">📝 送る本文</div>
+            <div style="font-size:12px;font-weight:900;color:#475569;letter-spacing:0.08em;margin-bottom:5px;text-transform:uppercase;">📝 送る本文</div>
             <div class="fp-today-v2-bubble">${escapeHtml(m.body).replace(/\n/g, '<br>')}</div>
             ${m.nextAction ? `
               <div style="background:linear-gradient(135deg,#F0F9FF,#E0F2FE);border:1.5px solid #7DD3FC;border-radius:10px;padding:11px 14px;margin-bottom:14px;display:flex;gap:10px;align-items:flex-start;">
                 <span style="font-size:14px;flex-shrink:0;line-height:1.4;">→</span>
                 <div style="flex:1;min-width:0;">
-                  <div style="font-size:10.5px;font-weight:900;color:#0369A1;letter-spacing:0.08em;margin-bottom:3px;">送ったあと の 次の打ち手</div>
+                  <div style="font-size:12px;font-weight:900;color:#0369A1;letter-spacing:0.08em;margin-bottom:3px;">送ったあと の 次の打ち手</div>
                   <div style="font-size:13px;font-weight:700;color:#0F172A;line-height:1.55;">${escapeHtml(m.nextAction)}</div>
                 </div>
               </div>
@@ -9784,7 +9784,7 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
           <div class="seg-members">
             ${list.slice(0, 5).map(c => `<span class="seg-chip">${escapeHtml(c.name)}</span>`).join('')}
             ${list.length > 5 ? `<span class="seg-chip more">+${list.length - 5}名</span>` : ''}
-            ${list.length === 0 ? '<span style="color:var(--muted);font-size:11.5px;">該当者なし</span>' : ''}
+            ${list.length === 0 ? '<span style="color:var(--muted);font-size:13px;">該当者なし</span>' : ''}
           </div>
         </div>
       `;
@@ -9808,7 +9808,7 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
     const list = window.LineCRM.evaluateSegment(segId);
     const html = `
       <div class="modal-header">
-        <h2>${seg.icon} ${escapeHtml(seg.name)} <span style="font-size:12px;color:var(--muted);font-weight:400;">${list.length}名</span></h2>
+        <h2>${seg.icon} ${escapeHtml(seg.name)} <span style="font-size:13.5px;color:var(--muted);font-weight:400;">${list.length}名</span></h2>
         <button class="modal-close" id="seg-close-btn">×</button>
       </div>
       <div class="modal-body">
@@ -9846,7 +9846,7 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
       <div style="background:#fff;max-width:680px;width:100%;max-height:88vh;border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,0.35);overflow:hidden;display:flex;flex-direction:column;">
         <div style="background:linear-gradient(135deg,#FDFBF4,#FAF6E8);padding:22px 26px;border-bottom:1px solid #E8E2D4;display:flex;justify-content:space-between;align-items:center;">
           <div>
-            <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:10.5px;letter-spacing:0.22em;color:#C19A3A;text-transform:uppercase;margin-bottom:5px;">EDIT TEMPLATE</div>
+            <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:12px;letter-spacing:0.22em;color:#C19A3A;text-transform:uppercase;margin-bottom:5px;">EDIT TEMPLATE</div>
             <h3 style="margin:0;font-family:'Noto Sans JP',serif;font-weight:700;font-size:18px;color:#1F1A12;">${escapeHtml(preset.emoji)} ${escapeHtml(preset.title)} の文面を編集</h3>
           </div>
           <button id="fp-preset-close" style="background:transparent;border:none;cursor:pointer;font-size:22px;color:#8B7D5D;">✕</button>
@@ -9855,21 +9855,21 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;">
             <!-- 左: 編集 -->
             <div>
-              <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:10px;letter-spacing:0.16em;color:#8B7D5D;text-transform:uppercase;margin-bottom:8px;">📝 本文 (編集できます)</div>
+              <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:11.5px;letter-spacing:0.16em;color:#8B7D5D;text-transform:uppercase;margin-bottom:8px;">📝 本文 (編集できます)</div>
               <textarea id="fp-preset-textarea" rows="12" style="width:100%;padding:14px 16px;border:1.5px solid #E8E2D4;border-radius:8px;font-size:13px;font-family:'Hiragino Sans','Noto Sans JP',sans-serif;line-height:1.85;resize:vertical;box-sizing:border-box;background:#FDFBF4;">${escapeHtml(preset.sample)}</textarea>
-              <div style="font-size:10.5px;color:#8B7D5D;margin-top:6px;line-height:1.6;">
+              <div style="font-size:12px;color:#8B7D5D;margin-top:6px;line-height:1.6;">
                 <strong style="color:#C19A3A;">{name}</strong> = お客様の名前 / <strong style="color:#C19A3A;">{fpName}</strong> = FP事業者名<br>
                 送信時に自動で置換されます。
               </div>
-              ${preset.note ? `<div style="margin-top:12px;padding:10px 12px;background:#FFFBEB;border-left:3px solid #C19A3A;border-radius:6px;font-size:11px;color:#5E5648;line-height:1.6;">${escapeHtml(preset.note)}</div>` : ''}
+              ${preset.note ? `<div style="margin-top:12px;padding:10px 12px;background:#FFFBEB;border-left:3px solid #C19A3A;border-radius:6px;font-size:12.5px;color:#5E5648;line-height:1.6;">${escapeHtml(preset.note)}</div>` : ''}
             </div>
             <!-- 右: プレビュー -->
             <div>
-              <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:10px;letter-spacing:0.16em;color:#8B7D5D;text-transform:uppercase;margin-bottom:8px;">👁 お客様の LINE プレビュー</div>
+              <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:11.5px;letter-spacing:0.16em;color:#8B7D5D;text-transform:uppercase;margin-bottom:8px;">👁 お客様の LINE プレビュー</div>
               <div style="background:linear-gradient(180deg,#F1F5F9,#E2E8F0);border-radius:12px;padding:16px;">
                 <div id="fp-preset-preview" style="background:#fff;border-radius:14px 14px 14px 3px;padding:14px 16px;font-family:'Hiragino Sans','Noto Sans JP',sans-serif;font-size:13px;line-height:1.85;color:#0F172A;white-space:pre-wrap;box-shadow:0 1px 3px rgba(0,0,0,0.08);min-height:200px;"></div>
               </div>
-              <div style="font-size:10.5px;color:#8B7D5D;margin-top:6px;text-align:center;">山田 太郎 さんで表示</div>
+              <div style="font-size:12px;color:#8B7D5D;margin-top:6px;text-align:center;">山田 太郎 さんで表示</div>
             </div>
           </div>
         </div>
@@ -9940,32 +9940,32 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
         <div style="background:#fff;max-width:760px;width:100%;max-height:88vh;border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,0.35);overflow:hidden;display:flex;flex-direction:column;">
           <div style="background:linear-gradient(135deg,#FDFBF4,#FAF6E8);padding:22px 26px;border-bottom:1px solid #E8E2D4;display:flex;justify-content:space-between;align-items:flex-start;">
             <div>
-              <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:10.5px;letter-spacing:0.2em;color:#C19A3A;text-transform:uppercase;margin-bottom:5px;">SEND NOW</div>
+              <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:12px;letter-spacing:0.2em;color:#C19A3A;text-transform:uppercase;margin-bottom:5px;">SEND NOW</div>
               <h3 style="margin:0;font-family:'Noto Sans JP',serif;font-weight:700;font-size:19px;color:#1F1A12;">${escapeHtml(preset.emoji)} ${escapeHtml(preset.title)} を 今すぐ送る</h3>
-              <p style="margin:5px 0 0;font-size:12px;color:#8B7D5D;line-height:1.6;">該当する お客様 <strong style="color:#C19A3A;">${eligible.length}名</strong> です。 送りたい方を 選んでください。</p>
+              <p style="margin:5px 0 0;font-size:13.5px;color:#8B7D5D;line-height:1.6;">該当する お客様 <strong style="color:#C19A3A;">${eligible.length}名</strong> です。 送りたい方を 選んでください。</p>
             </div>
             <button id="fp-sn-close" style="background:transparent;border:none;cursor:pointer;font-size:22px;color:#8B7D5D;">✕</button>
           </div>
           <div style="padding:20px 26px;overflow-y:auto;flex:1;display:grid;grid-template-columns:1fr 1fr;gap:18px;">
             <!-- 左: 該当者リスト -->
             <div>
-              <div style="display:flex;justify-content:space-between;align-items:center;font-family:'Manrope',sans-serif;font-weight:800;font-size:10.5px;letter-spacing:0.14em;color:#8B7D5D;text-transform:uppercase;margin-bottom:10px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;font-family:'Manrope',sans-serif;font-weight:800;font-size:12px;letter-spacing:0.14em;color:#8B7D5D;text-transform:uppercase;margin-bottom:10px;">
                 <span>👥 送信先 (該当者一覧)</span>
-                <button id="fp-sn-toggle-all" style="background:transparent;border:1px solid #C19A3A;color:#C19A3A;font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:5px;cursor:pointer;font-family:inherit;letter-spacing:0.04em;">全選択/全解除</button>
+                <button id="fp-sn-toggle-all" style="background:transparent;border:1px solid #C19A3A;color:#C19A3A;font-size:12px;font-weight:700;padding:3px 9px;border-radius:5px;cursor:pointer;font-family:inherit;letter-spacing:0.04em;">全選択/全解除</button>
               </div>
               <div id="fp-sn-list" style="max-height:50vh;overflow-y:auto;display:grid;gap:6px;"></div>
             </div>
             <!-- 右: 本文 + プレビュー -->
             <div>
-              <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:10.5px;letter-spacing:0.14em;color:#8B7D5D;text-transform:uppercase;margin-bottom:10px;">📝 本文 (編集可)</div>
+              <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:12px;letter-spacing:0.14em;color:#8B7D5D;text-transform:uppercase;margin-bottom:10px;">📝 本文 (編集可)</div>
               <textarea id="fp-sn-textarea" rows="10" style="width:100%;padding:12px 14px;border:1.5px solid #E8E2D4;border-radius:8px;font-size:12.5px;font-family:'Hiragino Sans','Noto Sans JP',sans-serif;line-height:1.85;resize:vertical;box-sizing:border-box;background:#FDFBF4;">${escapeHtml(preset.sample)}</textarea>
-              <div style="font-size:10px;color:#8B7D5D;margin-top:5px;line-height:1.55;">
+              <div style="font-size:11.5px;color:#8B7D5D;margin-top:5px;line-height:1.55;">
                 <strong style="color:#C19A3A;">{name}</strong> = お客様の名前 / <strong style="color:#C19A3A;">{fpName}</strong> = 自分の名前。 送信時に置換します。
               </div>
             </div>
           </div>
           <div style="padding:16px 26px;background:#FDFBF4;border-top:1px solid #E8E2D4;display:flex;justify-content:space-between;align-items:center;gap:12px;">
-            <span style="font-size:12px;color:#5E5648;"><strong id="fp-sn-count" style="color:#C19A3A;font-size:14px;">${eligible.length}</strong>名 に 送信します</span>
+            <span style="font-size:13.5px;color:#5E5648;"><strong id="fp-sn-count" style="color:#C19A3A;font-size:14px;">${eligible.length}</strong>名 に 送信します</span>
             <div style="display:flex;gap:10px;">
               <button id="fp-sn-cancel" style="background:#fff;color:#5E5648;border:1px solid #D6CDB6;padding:11px 22px;border-radius:8px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;">キャンセル</button>
               <button id="fp-sn-send" style="background:linear-gradient(135deg,#06C755,#04A847);color:#fff;border:none;padding:11px 26px;border-radius:8px;font-size:13px;font-weight:900;cursor:pointer;font-family:inherit;letter-spacing:0.06em;box-shadow:0 4px 14px rgba(6,199,85,0.32);">📤 選択した方に 送信</button>
@@ -9982,7 +9982,7 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
               <input type="checkbox" data-idx="${i}" ${on ? 'checked' : ''} style="width:18px;height:18px;cursor:pointer;accent-color:#06C755;">
               <div style="flex:1;min-width:0;">
                 <div style="font-family:'Noto Sans JP',serif;font-weight:700;font-size:13.5px;color:#1F1A12;">${escapeHtml(e.client.name)} さん</div>
-                <div style="font-size:11px;color:#5E5648;margin-top:2px;">${escapeHtml(e.info)}</div>
+                <div style="font-size:12.5px;color:#5E5648;margin-top:2px;">${escapeHtml(e.info)}</div>
               </div>
             </label>
           `;
@@ -10048,9 +10048,9 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
       <div style="background:#fff;max-width:700px;width:100%;max-height:88vh;border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,0.35);overflow:hidden;display:flex;flex-direction:column;">
         <div style="background:linear-gradient(135deg,#FDFBF4,#FAF6E8);padding:20px 26px;border-bottom:1px solid #E8E2D4;display:flex;justify-content:space-between;align-items:flex-start;gap:14px;">
           <div style="flex:1;min-width:0;">
-            <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:10.5px;letter-spacing:0.2em;color:#C19A3A;text-transform:uppercase;margin-bottom:5px;">PREVIEW · 配信される本文</div>
+            <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:12px;letter-spacing:0.2em;color:#C19A3A;text-transform:uppercase;margin-bottom:5px;">PREVIEW · 配信される本文</div>
             <h3 style="margin:0;font-family:'Noto Sans JP',serif;font-weight:700;font-size:18px;color:#1F1A12;letter-spacing:-0.005em;">${escapeHtml(s.name)}</h3>
-            <div style="margin-top:5px;font-size:11.5px;color:#5E5648;line-height:1.6;">
+            <div style="margin-top:5px;font-size:13px;color:#5E5648;line-height:1.6;">
               ${escapeHtml(s.schedule || '')} · ${seg ? seg.icon + ' ' + escapeHtml(seg.name) : '🎂 誕生日対象者'}
             </div>
           </div>
@@ -10058,20 +10058,20 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
         </div>
         <div style="padding:20px 26px;overflow-y:auto;flex:1;display:grid;grid-template-columns:1fr 1fr;gap:18px;">
           <div>
-            <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:10.5px;letter-spacing:0.14em;color:#8B7D5D;text-transform:uppercase;margin-bottom:8px;">📝 本文 (編集可)</div>
+            <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:12px;letter-spacing:0.14em;color:#8B7D5D;text-transform:uppercase;margin-bottom:8px;">📝 本文 (編集可)</div>
             <textarea id="fp-sp-textarea" rows="12" style="width:100%;padding:14px 16px;border:1.5px solid #E8E2D4;border-radius:8px;font-size:13px;font-family:'Hiragino Sans','Noto Sans JP',sans-serif;line-height:1.85;resize:vertical;box-sizing:border-box;background:#FDFBF4;">${escapeHtml(initialBody)}</textarea>
-            <div style="font-size:10.5px;color:#8B7D5D;margin-top:6px;line-height:1.6;">
+            <div style="font-size:12px;color:#8B7D5D;margin-top:6px;line-height:1.6;">
               <strong style="color:#C19A3A;">{{name}}</strong> または <strong style="color:#C19A3A;">{name}</strong> = お客様の名前<br>
               <strong style="color:#C19A3A;">{{fp_name}}</strong> または <strong style="color:#C19A3A;">{fpName}</strong> = 自分の名前<br>
               送信時に 自動置換します。
             </div>
           </div>
           <div>
-            <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:10.5px;letter-spacing:0.14em;color:#8B7D5D;text-transform:uppercase;margin-bottom:8px;">👁 お客様のLINE プレビュー</div>
+            <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:12px;letter-spacing:0.14em;color:#8B7D5D;text-transform:uppercase;margin-bottom:8px;">👁 お客様のLINE プレビュー</div>
             <div style="background:linear-gradient(180deg,#F1F5F9,#E2E8F0);border-radius:12px;padding:16px;">
               <div id="fp-sp-preview" style="background:#fff;border-radius:14px 14px 14px 3px;padding:14px 16px;font-family:'Hiragino Sans','Noto Sans JP',sans-serif;font-size:13px;line-height:1.85;color:#0F172A;white-space:pre-wrap;box-shadow:0 1px 3px rgba(0,0,0,0.08);min-height:200px;"></div>
             </div>
-            <div style="font-size:10.5px;color:#8B7D5D;margin-top:6px;text-align:center;">山田 太郎 さん で 表示しています</div>
+            <div style="font-size:12px;color:#8B7D5D;margin-top:6px;text-align:center;">山田 太郎 さん で 表示しています</div>
           </div>
         </div>
         <div style="padding:16px 26px;background:#FDFBF4;border-top:1px solid #E8E2D4;display:flex;gap:10px;justify-content:flex-end;">
@@ -10118,14 +10118,14 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
       <div style="background:#fff;max-width:620px;width:100%;max-height:88vh;border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,0.35);overflow:hidden;display:flex;flex-direction:column;">
         <div style="background:linear-gradient(135deg,#FDFBF4,#FAF6E8);padding:20px 24px;border-bottom:1px solid #E8E2D4;display:flex;justify-content:space-between;align-items:center;">
           <div>
-            <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:10.5px;letter-spacing:0.16em;color:#C19A3A;text-transform:uppercase;margin-bottom:4px;">${msg.icon} ${escapeHtml(msg.category)}</div>
+            <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:12px;letter-spacing:0.16em;color:#C19A3A;text-transform:uppercase;margin-bottom:4px;">${msg.icon} ${escapeHtml(msg.category)}</div>
             <h3 style="margin:0;font-family:'Noto Sans JP',serif;font-weight:700;font-size:17px;color:#1F1A12;">${escapeHtml(msg.clientName)}さん への メッセージを直す</h3>
-            <div style="font-size:11.5px;color:#8B7D5D;margin-top:3px;">${escapeHtml(msg.reason)}</div>
+            <div style="font-size:13px;color:#8B7D5D;margin-top:3px;">${escapeHtml(msg.reason)}</div>
           </div>
           <button id="fp-tm-close" style="background:transparent;border:none;cursor:pointer;font-size:22px;color:#8B7D5D;">✕</button>
         </div>
         <div style="padding:20px 24px;overflow-y:auto;flex:1;">
-          <div style="font-family:'Manrope',sans-serif;font-weight:700;font-size:10.5px;letter-spacing:0.14em;color:#8B7D5D;text-transform:uppercase;margin-bottom:8px;">📝 本文 (お客様にこのまま届きます)</div>
+          <div style="font-family:'Manrope',sans-serif;font-weight:700;font-size:12px;letter-spacing:0.14em;color:#8B7D5D;text-transform:uppercase;margin-bottom:8px;">📝 本文 (お客様にこのまま届きます)</div>
           <textarea id="fp-tm-textarea" rows="10" style="width:100%;padding:14px 16px;border:1.5px solid #E8E2D4;border-radius:8px;font-size:13px;font-family:'Hiragino Sans','Noto Sans JP',sans-serif;line-height:1.85;resize:vertical;box-sizing:border-box;background:#FDFBF4;">${escapeHtml(msg.body)}</textarea>
         </div>
         <div style="padding:14px 24px;background:#FDFBF4;border-top:1px solid #E8E2D4;display:flex;gap:10px;justify-content:flex-end;">
@@ -10164,7 +10164,7 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
         </div>
       </div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-        <span style="font-size:11.5px;color:var(--muted);">${window.LINE_SCHEDULES.length} 本のシナリオ</span>
+        <span style="font-size:13px;color:var(--muted);">${window.LINE_SCHEDULES.length} 本のシナリオ</span>
         <button class="primary" id="add-sched-btn" data-hint="新しい自動配信シナリオを作る">+ 新規スケジュール</button>
       </div>
       <table class="sched-table">
@@ -10197,9 +10197,9 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
                 <td>${escapeHtml(s.schedule)}</td>
                 <td style="max-width:280px;">
                   ${bodyText ? `
-                    <div style="font-size:11.5px;color:#475569;line-height:1.55;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(previewShort)}${bodyText.length > 40 ? '…' : ''}</div>
-                    <button class="ghost" data-preview-schid="${s.id}" style="font-size:10.5px;color:#C19A3A;background:transparent;border:none;text-decoration:underline;padding:2px 0 0;cursor:pointer;font-family:inherit;">全文を見る</button>
-                  ` : '<span style="color:#DC2626;font-size:11px;font-weight:700;">⚠ 本文未設定</span>'}
+                    <div style="font-size:13px;color:#475569;line-height:1.55;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(previewShort)}${bodyText.length > 40 ? '…' : ''}</div>
+                    <button class="ghost" data-preview-schid="${s.id}" style="font-size:12px;color:#C19A3A;background:transparent;border:none;text-decoration:underline;padding:2px 0 0;cursor:pointer;font-family:inherit;">全文を見る</button>
+                  ` : '<span style="color:#DC2626;font-size:12.5px;font-weight:700;">⚠ 本文未設定</span>'}
                 </td>
                 <td>${s.lastSent || '—'}</td>
                 <td>${escapeHtml(s.nextSend)}</td>
@@ -10209,7 +10209,7 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
           }).join('')}
         </tbody>
       </table>
-      <div style="font-size:11.5px;color:var(--muted);margin-top:10px;">
+      <div style="font-size:13px;color:var(--muted);margin-top:10px;">
         ※ デモのため送信は実行されません。本番では LINE Messaging API の push でセグメント全員に同時送信されます。
       </div>
     `;
@@ -10327,7 +10327,7 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
     const html = `
       ${tplHelp}
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-        <span style="font-size:11.5px;color:var(--muted);">テンプレ内の <code>{{name}}</code> はLINE配信時に各顧客名に自動置換されます</span>
+        <span style="font-size:13px;color:var(--muted);">テンプレ内の <code>{{name}}</code> はLINE配信時に各顧客名に自動置換されます</span>
         <button class="primary" disabled style="opacity:0.6;cursor:not-allowed;">+ 新規テンプレ (v2)</button>
       </div>
       ${Object.keys(groups).map(cat => `
@@ -10363,7 +10363,7 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
       if (list.length === 0) return '';
       return `
         <div class="section-title" style="display:flex;align-items:center;gap:8px;">
-          <span>${title}</span><span style="background:${accent};color:white;padding:1px 8px;border-radius:9px;font-size:10px;font-weight:700;">${list.length}名</span>
+          <span>${title}</span><span style="background:${accent};color:white;padding:1px 8px;border-radius:9px;font-size:11.5px;font-weight:700;">${list.length}名</span>
         </div>
         <div class="line-card" style="margin-bottom:14px;">
           ${list.map(b => `
@@ -10443,7 +10443,7 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
               <td class="num">${l.recipients}</td>
               <td class="num" style="color:var(--green);font-weight:600;">${l.success}</td>
               <td class="num" style="color:${l.fail > 0 ? 'var(--red)' : 'var(--muted)'};font-weight:${l.fail > 0 ? '600' : '400'};">${l.fail}</td>
-              <td style="font-size:11.5px;color:var(--muted);">${escapeHtml(l.detail || '')}</td>
+              <td style="font-size:13px;color:var(--muted);">${escapeHtml(l.detail || '')}</td>
             </tr>
           `).join('')}
         </tbody>
@@ -10469,7 +10469,7 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
             手動で URL を コピペ する 必要 は ありません。
           </div>
           <a href="/account.html#line" class="primary" style="display:inline-block;background:#06C755;color:#fff;padding:12px 22px;border-radius:8px;font-weight:700;text-decoration:none;font-size:14px;">→ アカウント設定 で LINE 接続 する</a>
-          <details style="margin-top:18px;font-size:12px;color:var(--muted);">
+          <details style="margin-top:18px;font-size:13.5px;color:var(--muted);">
             <summary style="cursor:pointer;">設定 方法 が わからない (ガイド を 見る)</summary>
             <p style="margin-top:10px;line-height:1.85;">
               全10ステップ の 設定ガイド (実画面 + 矢印付き):<br>
@@ -10653,10 +10653,10 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
     ov.innerHTML = `
       <div style="background:#fff;border-radius:14px;padding:32px 40px;max-width:440px;width:90%;box-shadow:0 32px 80px rgba(0,0,0,0.5);text-align:center;">
         <div style="width:60px;height:60px;border:4px solid #E2E8F0;border-top-color:#7C3AED;border-radius:50%;margin:0 auto 20px;animation:fp-spin 0.9s linear infinite;"></div>
-        <div style="font-size:11px;font-weight:800;color:#7C3AED;letter-spacing:0.16em;margin-bottom:6px;">SENDING</div>
+        <div style="font-size:12.5px;font-weight:800;color:#7C3AED;letter-spacing:0.16em;margin-bottom:6px;">SENDING</div>
         <div id="fp-sending-label" style="font-size:18px;font-weight:800;color:#111827;font-family:'Noto Sans JP',serif;margin-bottom:8px;">${label || '送信中…'}</div>
         <div id="fp-sending-progress" style="font-size:12.5px;color:#6b7280;line-height:1.7;">${total ? '0 / ' + total + ' 名 完了' : '通信中…'}</div>
-        <div style="margin-top:18px;background:#FEF3C7;border:1px solid #F59E0B;border-radius:6px;padding:10px 14px;font-size:11px;color:#92400E;font-weight:600;line-height:1.6;">
+        <div style="margin-top:18px;background:#FEF3C7;border:1px solid #F59E0B;border-radius:6px;padding:10px 14px;font-size:12.5px;color:#92400E;font-weight:600;line-height:1.6;">
           ⚠ 完了するまで このまま お待ちください<br>他の操作 / ブラウザ閉じ は 行わないでください
         </div>
       </div>
@@ -10982,7 +10982,7 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
           ov.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.78);z-index:2147483647;display:flex;align-items:center;justify-content:center;font-family:"Hiragino Sans",sans-serif;padding:24px;';
           ov.innerHTML = `
             <div style="background:#fff;border-radius:14px;max-width:460px;width:100%;padding:28px 32px;box-shadow:0 28px 80px rgba(0,0,0,0.4);">
-              <div style="display:inline-flex;align-items:center;gap:8px;background:#FEF3C7;color:#92400E;font-size:11px;font-weight:800;padding:5px 12px;border-radius:99px;letter-spacing:0.12em;margin-bottom:14px;">⏳ 議事録 未生成</div>
+              <div style="display:inline-flex;align-items:center;gap:8px;background:#FEF3C7;color:#92400E;font-size:12.5px;font-weight:800;padding:5px 12px;border-radius:99px;letter-spacing:0.12em;margin-bottom:14px;">⏳ 議事録 未生成</div>
               <h2 style="font-family:'Noto Sans JP',serif;font-size:18px;font-weight:700;color:#111827;margin:0 0 8px;">${escapeHtml(cname)} 様 / 議事録</h2>
               <p style="font-size:13px;color:#6b7280;line-height:1.75;margin:0 0 18px;">この面談の議事録は まだ 生成されていません。 次のいずれかが 原因です:</p>
               <ul style="font-size:12.5px;color:#374151;line-height:1.85;padding-left:22px;margin:0 0 18px;">
@@ -11240,14 +11240,14 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
           <div class="lch-list-head">
             <h2 class="lch-list-title" style="display:flex;align-items:center;justify-content:space-between;">
               <span><span class="lch-live-dot"></span>LINE トーク</span>
-              <button id="lch-refresh-btn" title="最新 の LINE メッセージ を fetch" style="background:transparent;border:1px solid #E5E7EB;border-radius:6px;padding:4px 10px;font-family:inherit;font-size:11px;font-weight:700;color:#6B7280;cursor:pointer;">🔄 更新</button>
+              <button id="lch-refresh-btn" title="最新 の LINE メッセージ を fetch" style="background:transparent;border:1px solid #E5E7EB;border-radius:6px;padding:4px 10px;font-family:inherit;font-size:12.5px;font-weight:700;color:#6B7280;cursor:pointer;">🔄 更新</button>
             </h2>
             <input type="text" class="lch-search" id="lch-search" placeholder="名前 · メッセージ で 検索" value="${_lchEscape(_lchState.search)}">
           </div>
           <div class="lch-list-filter">
             <button class="lch-lf ${_lchState.filter === 'all' ? 'active' : ''}" data-f="all">すべて</button>
             <button class="lch-lf ${_lchState.filter === 'unread' ? 'active' : ''}" data-f="unread">未読 ${totalUnread > 0 ? '('+totalUnread+')' : ''}</button>
-            <button class="lch-lf ${_lchState.filter === 'reschedule' ? 'active' : ''}" data-f="reschedule" title="AI が 日程 変更 依頼 と 判定">再調整 ${rescheduleCnt > 0 ? '('+rescheduleCnt+')' : ''} <span style="font-size:8px;font-weight:800;background:#5B5BF0;color:#fff;padding:1px 4px;border-radius:3px;margin-left:2px;">AI</span></button>
+            <button class="lch-lf ${_lchState.filter === 'reschedule' ? 'active' : ''}" data-f="reschedule" title="AI が 日程 変更 依頼 と 判定">再調整 ${rescheduleCnt > 0 ? '('+rescheduleCnt+')' : ''} <span style="font-size:10.5px;font-weight:800;background:#5B5BF0;color:#fff;padding:1px 4px;border-radius:3px;margin-left:2px;">AI</span></button>
             <button class="lch-lf ${_lchState.filter === 'needsReply' ? 'active' : ''}" data-f="needsReply">返信 要 ${needsReplyCnt > 0 ? '('+needsReplyCnt+')' : ''}</button>
             <button class="lch-lf ${_lchState.filter === 'awaitingReply' ? 'active' : ''}" data-f="awaitingReply">返答 待ち ${awaitingReplyCnt > 0 ? '('+awaitingReplyCnt+')' : ''}</button>
             <button class="lch-lf ${_lchState.filter === 'linked' ? 'active' : ''}" data-f="linked">LINE連携済</button>
@@ -11361,7 +11361,7 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
         <div class="lch-item ${active}" data-cid="${_lchEscape(c.id)}">
           <div class="lch-item-avatar ${_lchAvatarClass(c.id)}">${avatarInner}</div>
           <div class="lch-item-main">
-            <div class="lch-item-name">${_lchEscape(c.name || '(名前 未設定)')}${tag ? ` <span style="font-size:9.5px;font-weight:800;color:#6B7280;background:#F1F3F5;padding:1px 6px;border-radius:3px;margin-left:4px;">${_lchEscape(tag)}</span>` : ''}</div>
+            <div class="lch-item-name">${_lchEscape(c.name || '(名前 未設定)')}${tag ? ` <span style="font-size:11px;font-weight:800;color:#6B7280;background:#F1F3F5;padding:1px 6px;border-radius:3px;margin-left:4px;">${_lchEscape(tag)}</span>` : ''}</div>
             <div class="lch-item-preview">${_lchEscape(preview)}</div>
           </div>
           <div class="lch-item-right">
@@ -11740,9 +11740,9 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
       <span style="font-size:20px;">💡</span>
       <div style="flex:1;">
         <div style="font-weight:800;margin-bottom:2px;">議事録 完了 · TODO 候補 ${count} 件</div>
-        <div style="font-size:11.5px;color:#94A3B8;">${escapeHtml(name || '')} 様 の 面談 から 抽出</div>
+        <div style="font-size:13px;color:#94A3B8;">${escapeHtml(name || '')} 様 の 面談 から 抽出</div>
       </div>
-      <button id="fp-ai-cand-review" style="background:#5B5BF0;color:#fff;border:none;padding:8px 14px;border-radius:6px;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;">レビュー</button>
+      <button id="fp-ai-cand-review" style="background:#5B5BF0;color:#fff;border:none;padding:8px 14px;border-radius:6px;font-family:inherit;font-size:13.5px;font-weight:800;cursor:pointer;">レビュー</button>
       <button id="fp-ai-cand-dismiss" style="background:transparent;color:#94A3B8;border:none;font-size:18px;cursor:pointer;padding:0 4px;">×</button>
     `;
     document.body.appendChild(t);
@@ -11784,7 +11784,7 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
     overlay.innerHTML = `
       <div style="background:#fff;border-radius:12px;max-width:640px;width:92%;max-height:82vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 32px 80px rgba(0,0,0,0.4);">
         <div style="padding:22px 26px;border-bottom:1px solid #E2E8F0;">
-          <div style="font-size:11.5px;font-weight:800;color:#5B5BF0;letter-spacing:0.1em;margin-bottom:4px;">MEETING → TODO${scopeBookingTs ? ' · SCOPED' : ''}</div>
+          <div style="font-size:13px;font-weight:800;color:#5B5BF0;letter-spacing:0.1em;margin-bottom:4px;">MEETING → TODO${scopeBookingTs ? ' · SCOPED' : ''}</div>
           ${scopeLabelHtml}
         </div>
         <div style="padding:16px 26px;overflow-y:auto;flex:1;" id="fp-ai-cand-list">
@@ -11793,7 +11793,7 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
               <input type="checkbox" data-cand-id="${escapeHtml(c.id)}" checked style="width:18px;height:18px;accent-color:#5B5BF0;cursor:pointer;flex-shrink:0;">
               <div style="flex:1;min-width:0;">
                 <div style="font-size:14px;font-weight:700;color:#0F172A;line-height:1.4;">${escapeHtml(c.task || '(内容 未 記載)')}</div>
-                <div style="font-size:11px;color:#94A3B8;margin-top:2px;">${escapeHtml(c.customerName || '')} 様${scopeBookingTs ? '' : (c.bookingTs ? ' · ' + escapeHtml(String(c.bookingTs).slice(5, 16)) : '')}</div>
+                <div style="font-size:12.5px;color:#94A3B8;margin-top:2px;">${escapeHtml(c.customerName || '')} 様${scopeBookingTs ? '' : (c.bookingTs ? ' · ' + escapeHtml(String(c.bookingTs).slice(5, 16)) : '')}</div>
               </div>
             </label>
           `).join('')}

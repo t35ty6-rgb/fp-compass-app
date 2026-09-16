@@ -94,7 +94,7 @@ input:focus, select:focus, textarea:focus {
   font-size: 14px;
 }
 .app-title .sub {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--muted);
   margin-left: 4px;
@@ -151,7 +151,7 @@ input:focus, select:focus, textarea:focus {
   padding: 14px 16px;
 }
 .kpi-label {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -170,7 +170,7 @@ input:focus, select:focus, textarea:focus {
   margin-left: 2px;
 }
 .kpi-sub {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
   margin-top: 2px;
 }
@@ -199,7 +199,7 @@ input:focus, select:focus, textarea:focus {
 .action-item:hover { background: #fafbfc; }
 .action-priority {
   display: inline-block;
-  font-size: 10px;
+  font-size: 11.5px;
   font-weight: 700;
   padding: 3px 8px;
   border-radius: 10px;
@@ -215,7 +215,7 @@ input:focus, select:focus, textarea:focus {
   font-size: 14px;
 }
 .action-client .client-meta {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
   font-weight: 400;
   margin-top: 2px;
@@ -225,7 +225,7 @@ input:focus, select:focus, textarea:focus {
   color: var(--ink-2);
 }
 .action-detail .reason {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
   margin-top: 2px;
 }
@@ -269,7 +269,7 @@ table.clients td {
 table.clients th {
   background: #f8f9fb;
   font-weight: 600;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -281,7 +281,7 @@ table.clients td.num { text-align: right; font-variant-numeric: tabular-nums; }
 
 .status-pill {
   display: inline-block;
-  font-size: 10px;
+  font-size: 11.5px;
   font-weight: 700;
   padding: 3px 8px;
   border-radius: 10px;
@@ -309,7 +309,7 @@ table.clients td.num { text-align: right; font-variant-numeric: tabular-nums; }
   border-bottom: 2px solid var(--line);
   padding-bottom: 6px;
   margin-bottom: 8px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--muted);
   text-transform: uppercase;
@@ -333,7 +333,7 @@ table.clients td.num { text-align: right; font-variant-numeric: tabular-nums; }
   padding-right: 12px;
 }
 .timeline-row .row-label .age {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
   margin-left: 4px;
 }
@@ -347,7 +347,7 @@ table.clients td.num { text-align: right; font-variant-numeric: tabular-nums; }
   height: 20px;
   padding: 0 8px;
   border-radius: 10px;
-  font-size: 10.5px;
+  font-size: 12px;
   line-height: 20px;
   white-space: nowrap;
   cursor: default;
@@ -368,7 +368,7 @@ table.clients td.num { text-align: right; font-variant-numeric: tabular-nums; }
   gap: 10px;
   flex-wrap: wrap;
   margin-top: 12px;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
 }
 .legend-item {
@@ -472,7 +472,7 @@ table.clients td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .family-list li:last-child { border-bottom: none; }
 .family-list .rel-tag {
   display: inline-block;
-  font-size: 10px;
+  font-size: 11.5px;
   padding: 1px 6px;
   border-radius: 8px;
   margin-right: 6px;
@@ -501,7 +501,7 @@ table.clients td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .proposals-list .pdate { color: var(--muted); font-size: 12px; }
 .proposals-list .presult {
   text-align: right;
-  font-size: 10px;
+  font-size: 11.5px;
   font-weight: 700;
   padding: 2px 7px;
   border-radius: 9px;
@@ -524,7 +524,7 @@ table.clients td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .detail-section h3 .count-badge {
   background: var(--accent-soft);
   color: var(--accent);
-  font-size: 11px;
+  font-size: 12px;
   padding: 1px 8px;
   border-radius: 9px;
   font-weight: 700;
@@ -555,7 +555,7 @@ table.clients td.num { text-align: right; font-variant-numeric: tabular-nums; }
 }
 .client-timeline-item .when .relative {
   display: block;
-  font-size: 10.5px;
+  font-size: 12px;
   margin-top: 1px;
 }
 .client-timeline-item .ev-label {
@@ -564,7 +564,7 @@ table.clients td.num { text-align: right; font-variant-numeric: tabular-nums; }
   gap: 8px;
 }
 .client-timeline-item .ev-label .ev-who {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
   background: white;
   padding: 1px 6px;
@@ -588,7 +588,7 @@ table.clients td.num { text-align: right; font-variant-numeric: tabular-nums; }
 }
 .actions-list .a-item .p-tag {
   display: inline-block;
-  font-size: 10px;
+  font-size: 11.5px;
   font-weight: 700;
   padding: 2px 7px;
   border-radius: 9px;
@@ -599,7 +599,7 @@ table.clients td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .actions-list .a-item .p-tag.mid { background: var(--yellow-soft); color: var(--yellow); }
 .actions-list .a-item .p-tag.low { background: var(--accent-soft); color: var(--accent); }
 .actions-list .a-item .a-reason {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
   margin-top: 2px;
 }
@@ -629,7 +629,7 @@ table.clients td.num { text-align: right; font-variant-numeric: tabular-nums; }
   flex-wrap: wrap;
 }
 .tl-label {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -654,7 +654,7 @@ table.clients td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .tl-pill.cat-inherit.on { background: var(--purple); border-color: var(--purple); }
 .tl-pill.cat-finance.on { background: var(--green); border-color: var(--green); }
 .tl-pill.cat-family.on { background: #8a6f1e; border-color: #8a6f1e; }
-.tl-count { margin-left: auto; font-size: 11.5px; color: var(--muted); }
+.tl-count { margin-left: auto; font-size: 12.5px; color: var(--muted); }
 
 .tl-month-group {
   margin-bottom: 18px;
@@ -673,7 +673,7 @@ table.clients td.num { text-align: right; font-variant-numeric: tabular-nums; }
   letter-spacing: -0.01em;
 }
 .tl-month-sub {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
   background: var(--accent-soft);
   color: var(--accent);
@@ -683,7 +683,7 @@ table.clients td.num { text-align: right; font-variant-numeric: tabular-nums; }
 }
 .tl-month-count {
   margin-left: auto;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
   font-weight: 600;
 }
@@ -732,7 +732,7 @@ table.clients td.num { text-align: right; font-variant-numeric: tabular-nums; }
   margin-bottom: 3px;
 }
 .tl-card-date {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
   font-variant-numeric: tabular-nums;
   font-weight: 600;
@@ -745,7 +745,7 @@ table.clients td.num { text-align: right; font-variant-numeric: tabular-nums; }
 }
 .tl-major-tag {
   display: inline-block;
-  font-size: 9.5px;
+  font-size: 11px;
   background: var(--red);
   color: white;
   padding: 1px 6px;
@@ -757,7 +757,7 @@ table.clients td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .tl-card-sub {
   display: flex;
   gap: 12px;
-  font-size: 11.5px;
+  font-size: 12.5px;
   color: var(--muted);
   flex-wrap: wrap;
 }
@@ -877,7 +877,7 @@ table.clients td.num { text-align: right; font-variant-numeric: tabular-nums; }
   color: var(--accent);
   padding: 2px 9px;
   border-radius: 10px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
 }
 .seg-desc { font-size: 12px; color: var(--muted); margin-bottom: 10px; line-height: 1.4; }
@@ -887,7 +887,7 @@ table.clients td.num { text-align: right; font-variant-numeric: tabular-nums; }
   color: var(--ink-2);
   padding: 2px 8px;
   border-radius: 9px;
-  font-size: 11px;
+  font-size: 12px;
 }
 .seg-chip.more { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
 
@@ -910,7 +910,7 @@ table.clients td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .sched-table th {
   background: #f8f9fb;
   font-weight: 600;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -930,7 +930,7 @@ table.clients td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .sched-row:last-child { border-bottom: none; }
 .sched-icon { font-size: 18px; text-align: center; }
 .sched-name { font-weight: 600; font-size: 13.5px; }
-.sched-meta { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+.sched-meta { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
 .sched-next {
   font-size: 12px;
   color: #06c755;
@@ -959,11 +959,11 @@ table.clients td.num { text-align: right; font-variant-numeric: tabular-nums; }
   color: var(--accent);
   padding: 2px 8px;
   border-radius: 9px;
-  font-size: 10.5px;
+  font-size: 12px;
   font-weight: 600;
 }
 .tpl-target {
-  font-size: 11.5px;
+  font-size: 12.5px;
   color: var(--muted);
   margin-bottom: 8px;
 }
@@ -995,7 +995,7 @@ table.clients td.num { text-align: right; font-variant-numeric: tabular-nums; }
 }
 .bday-date .bday-rel {
   display: block;
-  font-size: 10.5px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--muted);
   margin-top: 1px;
@@ -1003,7 +1003,7 @@ table.clients td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .bday-main strong { font-size: 14px; }
 .bday-rel-tag {
   display: inline-block;
-  font-size: 10px;
+  font-size: 11.5px;
   background: var(--accent-soft);
   color: var(--accent);
   padding: 1px 7px;
@@ -1012,7 +1012,7 @@ table.clients td.num { text-align: right; font-variant-numeric: tabular-nums; }
   margin-left: 4px;
   vertical-align: 1px;
 }
-.bday-meta { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+.bday-meta { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
 .bday-action { text-align: right; }
 
 .line-status-pill {
@@ -1021,7 +1021,7 @@ table.clients td.num { text-align: right; font-variant-numeric: tabular-nums; }
   color: var(--muted);
   padding: 3px 9px;
   border-radius: 10px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
 }
 .line-status-pill.on {
@@ -1065,7 +1065,7 @@ table.clients td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .settings-row:last-child { border-bottom: none; }
 .settings-row label {
   display: block;
-  font-size: 11.5px;
+  font-size: 12.5px;
   color: var(--muted);
   margin-bottom: 4px;
   font-weight: 600;
@@ -1106,7 +1106,7 @@ table.clients td.num { text-align: right; font-variant-numeric: tabular-nums; }
   margin-bottom: 10px;
 }
 .form-row label {
-  font-size: 11.5px;
+  font-size: 12.5px;
   color: var(--muted);
   font-weight: 600;
 }
@@ -1153,7 +1153,7 @@ table.clients td.num { text-align: right; font-variant-numeric: tabular-nums; }
 }
 .funnel-icon { font-size: 22px; }
 .funnel-label {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
   margin-top: 4px;
   letter-spacing: 0.02em;
@@ -1167,7 +1167,7 @@ table.clients td.num { text-align: right; font-variant-numeric: tabular-nums; }
   margin-top: 2px;
 }
 .funnel-conv {
-  font-size: 11px;
+  font-size: 12px;
   color: #06c755;
   font-weight: 700;
   margin-top: 2px;
@@ -1218,7 +1218,7 @@ table.clients td.num { text-align: right; font-variant-numeric: tabular-nums; }
   gap: 6px;
 }
 .booking-meta {
-  font-size: 11.5px;
+  font-size: 12.5px;
   color: var(--ink-2);
   background: var(--accent-soft);
   display: inline-block;
@@ -1267,14 +1267,14 @@ table.clients td.num { text-align: right; font-variant-numeric: tabular-nums; }
   background: #06c755;
   color: white;
   font-weight: 700;
-  font-size: 11px;
+  font-size: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 .step-head { display: flex; gap: 6px; align-items: baseline; margin-bottom: 4px; }
 .step-day {
-  font-size: 10.5px;
+  font-size: 12px;
   font-weight: 700;
   background: #fff4e0;
   color: #b87013;
@@ -1282,7 +1282,7 @@ table.clients td.num { text-align: right; font-variant-numeric: tabular-nums; }
   border-radius: 9px;
 }
 .step-time {
-  font-size: 10.5px;
+  font-size: 12px;
   color: var(--muted);
   font-weight: 600;
 }
@@ -1328,7 +1328,7 @@ table.clients td.num { text-align: right; font-variant-numeric: tabular-nums; }
   border: 1px solid var(--line-2);
   padding: 2px 8px;
   border-radius: 9px;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--ink-2);
 }
 
@@ -1366,7 +1366,7 @@ table.clients td.num { text-align: right; font-variant-numeric: tabular-nums; }
   .kpi { padding: 10px 12px; }
   .kpi-value { font-size: 20px; }
   .client-toolbar input[type="search"] { width: 100%; flex: 1; }
-  table.clients { font-size: 11.5px; }
+  table.clients { font-size: 12.5px; }
   table.clients th, table.clients td { padding: 6px 8px; }
   .modal-overlay { padding: 16px 8px; }
   .modal-header { padding: 14px 16px; }
@@ -1567,7 +1567,7 @@ table.clients td.num { text-align: right; font-variant-numeric: tabular-nums; }
   background: var(--accent);
   color: #fff;
   border-radius: 5px;
-  font-size: 11.5px;
+  font-size: 12.5px;
   font-weight: 700;
 }
 .v3h-zoom-empty {
@@ -1587,7 +1587,7 @@ table.clients td.num { text-align: right; font-variant-numeric: tabular-nums; }
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  font-size: 10.5px;
+  font-size: 12px;
   font-weight: 800;
   color: var(--muted);
   letter-spacing: 0.02em;
@@ -1685,7 +1685,7 @@ table.clients td.num { text-align: right; font-variant-numeric: tabular-nums; }
 }
 .v3h-sched-dow {
   font-family: 'Manrope', sans-serif;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 800;
   color: var(--muted);
   letter-spacing: 0.1em;
@@ -1750,7 +1750,7 @@ table.clients td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .v3h-sched-cell.sat .v3h-sched-cell-dnum { color: var(--accent); }
 .v3h-sched-cell.sun .v3h-sched-cell-dnum { color: var(--red); }
 .v3h-sched-cell-count {
-  font-size: 10px;
+  font-size: 11.5px;
   color: var(--muted);
   font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
   font-weight: 600;
@@ -1764,7 +1764,7 @@ table.clients td.num { text-align: right; font-variant-numeric: tabular-nums; }
   display: block;
   padding: 2px 6px;
   border-radius: 3px;
-  font-size: 10.5px;
+  font-size: 12px;
   line-height: 1.35;
   cursor: pointer;
   background: var(--v3h-line-soft, #f0f2f5);
@@ -1864,11 +1864,11 @@ table.clients td.num { text-align: right; font-variant-numeric: tabular-nums; }
   font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
   font-weight: 700;
   color: var(--ink-2);
-  font-size: 10px;
+  font-size: 11.5px;
   margin-right: 3px;
 }
 .v3h-sched-more {
-  font-size: 10px;
+  font-size: 11.5px;
   color: var(--muted);
   font-weight: 600;
   padding: 1px 6px;
@@ -1877,14 +1877,14 @@ table.clients td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .v3h-sched-more:hover { color: var(--accent); }
 /* 週 mode: cell 大きく (height 150) */
 .v3h-sched.mode-week .v3h-sched-cell { min-height: 150px; }
-.v3h-sched.mode-week .v3h-sched-event { font-size: 11.5px; padding: 3px 7px; }
+.v3h-sched.mode-week .v3h-sched-event { font-size: 12.5px; padding: 3px 7px; }
 .v3h-sched.mode-week .v3h-sched-cell-dnum { font-size: 15px; }
 /* 2week mode: cell 中 (height 110) */
 .v3h-sched.mode-2week .v3h-sched-cell { min-height: 110px; }
-.v3h-sched.mode-2week .v3h-sched-event { font-size: 10.5px; padding: 2px 6px; }
+.v3h-sched.mode-2week .v3h-sched-event { font-size: 12px; padding: 2px 6px; }
 /* month mode: cell 小 (height 85) */
 .v3h-sched.mode-month .v3h-sched-cell { min-height: 85px; }
-.v3h-sched.mode-month .v3h-sched-event { font-size: 10px; padding: 1px 5px; }
+.v3h-sched.mode-month .v3h-sched-event { font-size: 11.5px; padding: 1px 5px; }
 .v3h-sched.mode-month .v3h-sched-cell-dnum { font-size: 12px; }
 
 /* Responsive */
@@ -1895,8 +1895,8 @@ table.clients td.num { text-align: right; font-variant-numeric: tabular-nums; }
   .v3h-sched.mode-week .v3h-sched-cell { min-height: 100px; }
   .v3h-sched.mode-2week .v3h-sched-cell,
   .v3h-sched.mode-month .v3h-sched-cell { min-height: 60px; padding: 4px; }
-  .v3h-sched-cell-dnum { font-size: 11px; }
-  .v3h-sched-event { font-size: 9.5px; padding: 1px 4px; }
+  .v3h-sched-cell-dnum { font-size: 12px; }
+  .v3h-sched-event { font-size: 11px; padding: 1px 4px; }
 }
 
 /* Week calendar — accordion に (default closed で 詰め込み解消) */
@@ -1919,7 +1919,7 @@ table.clients td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .v3h-cal-head:hover { background: var(--v3h-line-soft, #f0f2f5); }
 .v3h-cal-head::after {
   content: '▼';
-  font-size: 10px;
+  font-size: 11.5px;
   color: var(--muted);
   margin-left: auto;
   transition: transform 0.2s;
@@ -1981,7 +1981,7 @@ table.clients td.num { text-align: right; font-variant-numeric: tabular-nums; }
 }
 .v3h-cal-day-dow {
   font-family: 'Manrope', sans-serif;
-  font-size: 10px;
+  font-size: 11.5px;
   font-weight: 800;
   color: var(--muted);
   letter-spacing: 0.08em;
@@ -1995,7 +1995,7 @@ table.clients td.num { text-align: right; font-variant-numeric: tabular-nums; }
   letter-spacing: -0.01em;
 }
 .v3h-cal-day-count {
-  font-size: 10px;
+  font-size: 11.5px;
   color: var(--muted);
   font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
   font-weight: 600;
@@ -2011,7 +2011,7 @@ table.clients td.num { text-align: right; font-variant-numeric: tabular-nums; }
   display: block;
   padding: 3px 6px;
   border-radius: 4px;
-  font-size: 10.5px;
+  font-size: 12px;
   line-height: 1.35;
   color: var(--ink);
   background: var(--v3h-line-soft, #f0f2f5);
@@ -2036,20 +2036,20 @@ table.clients td.num { text-align: right; font-variant-numeric: tabular-nums; }
   font-weight: 700;
   color: var(--ink-2);
   margin-right: 4px;
-  font-size: 9.5px;
+  font-size: 11px;
 }
 .v3h-cal-event .who {
   font-weight: 600;
   letter-spacing: -0.005em;
 }
 .v3h-cal-more {
-  font-size: 10px;
+  font-size: 11.5px;
   color: var(--muted);
   padding: 2px 4px;
   font-weight: 600;
 }
 .v3h-cal-empty-day {
-  font-size: 10px;
+  font-size: 11.5px;
   color: var(--line-2);
   text-align: center;
   padding: 4px 0;
@@ -2059,7 +2059,7 @@ table.clients td.num { text-align: right; font-variant-numeric: tabular-nums; }
   .v3h-cal { padding: 12px 16px 14px; }
   .v3h-cal-week { grid-template-columns: repeat(7, minmax(64px, 1fr)); overflow-x: auto; }
   .v3h-cal-day { min-height: 92px; padding: 6px; }
-  .v3h-cal-event { font-size: 10px; padding: 2px 5px; }
+  .v3h-cal-event { font-size: 11.5px; padding: 2px 5px; }
   .v3h-cal-day-date { font-size: 12px; }
 }
 
@@ -2201,7 +2201,7 @@ table.clients td.num { text-align: right; font-variant-numeric: tabular-nums; }
   display: inline-block;
   padding: 3px 10px;
   border-radius: 12px;
-  font-size: 11.5px;
+  font-size: 12.5px;
   font-weight: 800;
   letter-spacing: 0.02em;
 }
@@ -2314,7 +2314,7 @@ table.clients td.num { text-align: right; font-variant-numeric: tabular-nums; }
   background: var(--accent-soft);
   color: var(--accent);
   border-radius: 10px;
-  font-size: 10.5px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.04em;
   margin-left: 6px;
@@ -2441,7 +2441,7 @@ table.clients td.num { text-align: right; font-variant-numeric: tabular-nums; }
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 800;
   letter-spacing: -0.02em;
 }
@@ -2536,7 +2536,7 @@ table.clients td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .v3h-picker-row-badge {
   background: #06C755;
   color: #fff;
-  font-size: 10px;
+  font-size: 11.5px;
   font-weight: 800;
   padding: 2px 7px;
   border-radius: 10px;
@@ -2648,7 +2648,7 @@ table.clients td.num { text-align: right; font-variant-numeric: tabular-nums; }
   line-height: 1.55;
 }
 .v3h-ctx-section-title {
-  font-size: 10px;
+  font-size: 11.5px;
   font-weight: 800;
   color: var(--muted);
   letter-spacing: 0.14em;
@@ -2724,5 +2724,5 @@ table.clients td.num { text-align: right; font-variant-numeric: tabular-nums; }
   .v3h-zoom { padding: 12px 16px 14px; }
   .v3h-section { padding: 14px 16px 8px; }
   .v3h-context { padding: 16px; }
-  .v3h-stats { gap: 12px; font-size: 11.5px; }
+  .v3h-stats { gap: 12px; font-size: 12.5px; }
 }

@@ -577,24 +577,24 @@
       <section class="fp-home-unread" style="background:linear-gradient(135deg,#FEF2F2,#FEE2E2);border:1px solid #FCA5A5;border-radius:14px;padding:22px 26px;margin-bottom:26px;box-shadow:0 8px 24px rgba(220,38,38,0.12);">
         <header style="display:flex;align-items:baseline;justify-content:space-between;gap:14px;margin-bottom:16px;">
           <div>
-            <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:10.5px;letter-spacing:0.18em;text-transform:uppercase;color:#DC2626;margin-bottom:5px;">⚠ ACTION REQUIRED</div>
+            <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:12px;letter-spacing:0.18em;text-transform:uppercase;color:#DC2626;margin-bottom:5px;">⚠ ACTION REQUIRED</div>
             <h2 style="font-family:'Noto Sans JP',serif;font-weight:700;font-size:20px;letter-spacing:-0.01em;color:#7F1D1D;margin:0;">LINE で返信を待っている方 <span style="color:#DC2626;">${unreadList.length}名</span></h2>
           </div>
-          <span style="font-size:11px;color:#991B1B;font-weight:700;">放置すると 信頼を 損ねます</span>
+          <span style="font-size:12.5px;color:#991B1B;font-weight:700;">放置すると 信頼を 損ねます</span>
         </header>
         <div style="display:grid;gap:8px;">
           ${unreadList.slice(0, 5).map(u => `
             <button class="fp-home-unread-row" data-client-id="${escapeHtml(u.client.id)}" style="display:grid;grid-template-columns:auto 1fr auto auto;gap:14px;align-items:center;background:#fff;border:1px solid #FCA5A5;border-radius:10px;padding:12px 16px;cursor:pointer;font-family:inherit;text-align:left;transition:all 0.15s ease;">
               <div style="width:38px;height:38px;border-radius:50%;background:hsl(${(u.client.name.charCodeAt(0)*7)%360},55%,90%);color:hsl(${(u.client.name.charCodeAt(0)*7)%360},60%,30%);display:flex;align-items:center;justify-content:center;font-family:'Noto Sans JP',serif;font-weight:700;font-size:16px;">${escapeHtml(u.client.name.charAt(0))}</div>
               <div style="min-width:0;">
-                <div style="font-family:'Noto Sans JP',serif;font-weight:700;font-size:14.5px;color:#1F1A12;line-height:1.3;">${escapeHtml(u.client.name)} <span style="font-size:11px;color:#8B7D5D;font-weight:400;">さん</span></div>
-                <div style="font-size:11.5px;color:#5E5648;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.5;">💬 「${escapeHtml(u.latestText)}${u.latestText.length >= 80 ? '…' : ''}」</div>
+                <div style="font-family:'Noto Sans JP',serif;font-weight:700;font-size:14.5px;color:#1F1A12;line-height:1.3;">${escapeHtml(u.client.name)} <span style="font-size:12.5px;color:#8B7D5D;font-weight:400;">さん</span></div>
+                <div style="font-size:13px;color:#5E5648;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.5;">💬 「${escapeHtml(u.latestText)}${u.latestText.length >= 80 ? '…' : ''}」</div>
               </div>
-              <span style="background:linear-gradient(135deg,#DC2626,#991B1B);color:#fff;font-size:10.5px;font-weight:900;padding:5px 11px;border-radius:11px;letter-spacing:0.04em;box-shadow:0 4px 10px rgba(220,38,38,0.32);">${u.count}件 未読</span>
+              <span style="background:linear-gradient(135deg,#DC2626,#991B1B);color:#fff;font-size:12px;font-weight:900;padding:5px 11px;border-radius:11px;letter-spacing:0.04em;box-shadow:0 4px 10px rgba(220,38,38,0.32);">${u.count}件 未読</span>
               <span style="font-size:18px;color:#DC2626;font-weight:700;">→</span>
             </button>
           `).join('')}
-          ${unreadList.length > 5 ? `<div style="text-align:center;font-size:11px;color:#991B1B;margin-top:6px;">他 ${unreadList.length - 5}名 が返信待ち — 顧客台帳 で全件確認</div>` : ''}
+          ${unreadList.length > 5 ? `<div style="text-align:center;font-size:12.5px;color:#991B1B;margin-top:6px;">他 ${unreadList.length - 5}名 が返信待ち — 顧客台帳 で全件確認</div>` : ''}
         </div>
       </section>
       <style>
@@ -891,7 +891,7 @@
                   </tr>
                   <tr style="border-bottom:1px solid #f0f2f5;">
                     <td style="padding:10px 0;font-weight:700;color:#6b7280;">付与 scope</td>
-                    <td style="padding:10px 0;font-family:'JetBrains Mono',ui-monospace,monospace;color:#1a1f2c;font-size:11.5px;line-height:1.5;" id="v3h-gcal-status-scope">検証 中…</td>
+                    <td style="padding:10px 0;font-family:'JetBrains Mono',ui-monospace,monospace;color:#1a1f2c;font-size:13px;line-height:1.5;" id="v3h-gcal-status-scope">検証 中…</td>
                   </tr>
                   <tr>
                     <td style="padding:10px 0;font-weight:700;color:#6b7280;">Sync 履歴</td>
@@ -1087,7 +1087,7 @@
                 ⚠️ <b>Google Calendar 権限 が 付与 されていません</b><br>
                 popup で 「Calendar への アクセス」 に ✓ が 入って なかった 可能性。<br>
                 → 「もう一度 連携」 button で 再試行 して ください (今度 は Calendar 権限 も 承認)。<br>
-                <small>granted: <code style="font-size:11px;">${escapeHtml(grantedScopes.slice(0, 200) || '(なし)')}</code></small>
+                <small>granted: <code style="font-size:12.5px;">${escapeHtml(grantedScopes.slice(0, 200) || '(なし)')}</code></small>
               </div>`;
             overlay.innerHTML = `
               <div style="background:#fff;max-width:560px;width:100%;border-radius:14px;padding:28px 30px;text-align:center;">
@@ -1549,8 +1549,8 @@
     const doneGroupHtml = doneItems.length === 0 ? '' : `
       <div class="fp-task-group fp-task-group-done" data-group-collapsed="1">
         <div class="fp-task-group-head" data-group-toggle style="cursor:pointer;user-select:none;opacity:0.6;">
-          <span class="fp-task-group-arrow" style="display:inline-block;width:14px;font-size:11px;color:#94A3B8;">▶</span>
-          <span class="fp-task-group-pill" style="background:#DCFCE7;color:#166534;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:800;">✓ 完了 済 (今日)</span>
+          <span class="fp-task-group-arrow" style="display:inline-block;width:14px;font-size:12.5px;color:#94A3B8;">▶</span>
+          <span class="fp-task-group-pill" style="background:#DCFCE7;color:#166534;padding:3px 10px;border-radius:99px;font-size:12.5px;font-weight:800;">✓ 完了 済 (今日)</span>
           <span class="fp-task-group-count">${doneItems.length} 件</span>
         </div>
         <div class="fp-task-group-items" style="display:none;">
@@ -2031,13 +2031,13 @@
         //   操作 対象 (閉じる button / hover box / click box) だけ 個別 に auto に 戻す
         const insp = document.createElement('div');
         insp.id = 'fp-diag-inspector';
-        insp.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:2147483647;background:#0f172a;color:#fff;padding:8px 12px;font-family:ui-monospace,SFMono-Regular,monospace;font-size:11px;line-height:1.4;box-shadow:0 4px 12px rgba(0,0,0,0.4);pointer-events:none;max-height:60vh;overflow-y:auto;';
+        insp.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:2147483647;background:#0f172a;color:#fff;padding:8px 12px;font-family:ui-monospace,SFMono-Regular,monospace;font-size:12.5px;line-height:1.4;box-shadow:0 4px 12px rgba(0,0,0,0.4);pointer-events:none;max-height:60vh;overflow-y:auto;';
         const escHtml = s => String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
         insp.innerHTML = `
           <div style="color:#FCD34D;font-weight:800;margin-bottom:4px;display:flex;align-items:center;gap:8px;">
             <span>🔍 DIAG INSPECTOR (?diag=1)</span>
             <span style="font-weight:400;color:#94a3b8;">— カーソル 乗せる と element 表示 · click で 犯人 特定</span>
-            <button id="fp-diag-close" style="margin-left:auto;background:#ef4444;color:#fff;border:0;padding:2px 8px;font-size:11px;cursor:pointer;border-radius:4px;pointer-events:auto;">閉じる</button>
+            <button id="fp-diag-close" style="margin-left:auto;background:#ef4444;color:#fff;border:0;padding:2px 8px;font-size:12.5px;cursor:pointer;border-radius:4px;pointer-events:auto;">閉じる</button>
           </div>
           <div id="fp-diag-env" style="color:#93c5fd;">[env] ${escHtml(envLine)}</div>
           <div id="fp-diag-overlays" style="color:#a5b4fc;margin-top:4px;">[fullscreen overlays: ${candidates.length}]</div>
@@ -2513,7 +2513,7 @@
       stats.innerHTML = `
         <button class="stat" type="button" data-jump="zoom"><b>${zoomToday}</b>今日 Zoom</button>
         <button class="stat${scheduleCount > 0 ? ' warn' : ''}" type="button" data-jump="schedule"><b>${scheduleCount}</b>日程調整</button>
-        <button class="stat${rescheduleCount > 0 ? ' warn' : ''}" type="button" data-jump="reschedule" title="客 が LINE で 日程 変更 依頼 して きた の を AI が 検出"><b>${rescheduleCount}</b>再調整 依頼 <span style="font-size:8px;font-weight:800;background:#5B5BF0;color:#fff;padding:1px 4px;border-radius:3px;margin-left:2px;">AI</span></button>
+        <button class="stat${rescheduleCount > 0 ? ' warn' : ''}" type="button" data-jump="reschedule" title="客 が LINE で 日程 変更 依頼 して きた の を AI が 検出"><b>${rescheduleCount}</b>再調整 依頼 <span style="font-size:10.5px;font-weight:800;background:#5B5BF0;color:#fff;padding:1px 4px;border-radius:3px;margin-left:2px;">AI</span></button>
         <button class="stat${needsReplyCount > 0 ? ' warn' : ''}" type="button" data-jump="needs-reply"><b>${needsReplyCount}</b>返信 要</button>
         <button class="stat${awaitingReplyCount > 0 ? ' warn' : ''}" type="button" data-jump="awaiting-reply"><b>${awaitingReplyCount}</b>返答 待ち</button>
         <button class="stat${tasks.length > 0 ? ' warn' : ' ok'}" type="button" data-jump="all"><b>${tasks.length}</b>未完了</button>
@@ -2906,16 +2906,16 @@
       <div style="background:#fff;border-radius:12px;max-width:520px;width:92%;max-height:82vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 32px 80px rgba(0,0,0,0.4);">
         <div style="padding:20px 24px;border-bottom:1px solid #E2E8F0;display:flex;align-items:baseline;justify-content:space-between;gap:10px;">
           <div>
-            <div style="font-size:10.5px;font-weight:800;color:#5B5BF0;letter-spacing:0.14em;margin-bottom:3px;">TASK · ${isNew ? '新規' : (isManual ? '手動' : (t.type || 'auto'))}</div>
+            <div style="font-size:12px;font-weight:800;color:#5B5BF0;letter-spacing:0.14em;margin-bottom:3px;">TASK · ${isNew ? '新規' : (isManual ? '手動' : (t.type || 'auto'))}</div>
             <h2 style="font-size:16px;font-weight:800;color:#0F172A;margin:0;">${isNew ? '新しい カード を 追加' : (t.clientName ? escapeHtml(t.clientName) + ' 様 · ' : '') + escapeHtml(t.title)}</h2>
           </div>
           <button id="fp-kmodal-close" style="background:transparent;border:0;font-size:22px;color:#94A3B8;cursor:pointer;padding:0 4px;">×</button>
         </div>
         <div style="padding:16px 24px;overflow-y:auto;flex:1;">
-          <label style="display:block;font-size:11.5px;font-weight:700;color:#475569;margin-bottom:5px;">タイトル</label>
+          <label style="display:block;font-size:13px;font-weight:700;color:#475569;margin-bottom:5px;">タイトル</label>
           <input id="fp-kmodal-title" type="text" value="${escapeHtml(t.title || '')}" ${isManual ? '' : 'readonly style="background:#F1F5F9;"'} style="width:100%;padding:9px 12px;border:1.5px solid #E2E8F0;border-radius:6px;font-family:inherit;font-size:14px;margin-bottom:12px;">
 
-          <label style="display:block;font-size:11.5px;font-weight:700;color:#475569;margin-bottom:5px;">👤 客</label>
+          <label style="display:block;font-size:13px;font-weight:700;color:#475569;margin-bottom:5px;">👤 客</label>
           <div id="fp-kmodal-client-wrap" style="position:relative;margin-bottom:12px;">
             <button type="button" id="fp-kmodal-client-btn" ${isManual ? '' : 'disabled'} style="width:100%;padding:8px 12px;border:1.5px solid #E2E8F0;border-radius:6px;background:${isManual ? '#fff' : '#F1F5F9'};font-family:inherit;font-size:13px;cursor:${isManual ? 'pointer' : 'not-allowed'};display:flex;align-items:center;gap:8px;text-align:left;">
               <span id="fp-kmodal-client-selected" style="display:flex;align-items:center;gap:8px;flex:1;color:#0F172A;">
@@ -2926,7 +2926,7 @@
                   const initial = (sel.name || '?').replace(/\s+/g, '').charAt(0);
                   const avatar = avatarUrl
                     ? `<img src="${escapeHtml(avatarUrl)}" alt="" style="width:24px;height:24px;border-radius:50%;object-fit:cover;">`
-                    : `<span style="width:24px;height:24px;border-radius:50%;background:#EEF0FF;color:#5B5BF0;display:inline-flex;align-items:center;justify-content:center;font-family:Manrope,sans-serif;font-weight:800;font-size:11px;">${escapeHtml(initial)}</span>`;
+                    : `<span style="width:24px;height:24px;border-radius:50%;background:#EEF0FF;color:#5B5BF0;display:inline-flex;align-items:center;justify-content:center;font-family:Manrope,sans-serif;font-weight:800;font-size:12.5px;">${escapeHtml(initial)}</span>`;
                   return `${avatar}<span>${escapeHtml(sel.name)} 様</span>`;
                 })()}
               </span>
@@ -2945,7 +2945,7 @@
                   const initial = (c.name || '?').replace(/\s+/g, '').charAt(0);
                   const avatar = avatarUrl
                     ? `<img src="${escapeHtml(avatarUrl)}" alt="" style="width:24px;height:24px;border-radius:50%;object-fit:cover;">`
-                    : `<span style="width:24px;height:24px;border-radius:50%;background:#EEF0FF;color:#5B5BF0;display:inline-flex;align-items:center;justify-content:center;font-family:Manrope,sans-serif;font-weight:800;font-size:11px;">${escapeHtml(initial)}</span>`;
+                    : `<span style="width:24px;height:24px;border-radius:50%;background:#EEF0FF;color:#5B5BF0;display:inline-flex;align-items:center;justify-content:center;font-family:Manrope,sans-serif;font-weight:800;font-size:12.5px;">${escapeHtml(initial)}</span>`;
                   return `<button type="button" data-picker-id="${escapeHtml(c.id)}" data-picker-name="${escapeHtml(c.name || '')}" style="width:100%;padding:8px 12px;border:0;background:transparent;text-align:left;cursor:pointer;font-family:inherit;font-size:13px;color:#0F172A;display:flex;align-items:center;gap:8px;">
                     ${avatar}
                     <span>${escapeHtml(c.name || '(無名)')} 様</span>
@@ -2955,47 +2955,47 @@
             </div>
           </div>
 
-          <label style="display:block;font-size:11.5px;font-weight:700;color:#475569;margin-bottom:5px;">📝 メモ</label>
+          <label style="display:block;font-size:13px;font-weight:700;color:#475569;margin-bottom:5px;">📝 メモ</label>
           <textarea id="fp-kmodal-memo" rows="4" placeholder="自由 に メモ を 記入" style="width:100%;padding:9px 12px;border:1.5px solid #E2E8F0;border-radius:6px;font-family:inherit;font-size:13px;margin-bottom:12px;resize:vertical;">${escapeHtml(t.memo || '')}</textarea>
 
-          <label style="display:block;font-size:11.5px;font-weight:700;color:#475569;margin-bottom:5px;">🔗 関連 URL</label>
+          <label style="display:block;font-size:13px;font-weight:700;color:#475569;margin-bottom:5px;">🔗 関連 URL</label>
           <input id="fp-kmodal-url" type="url" placeholder="https://…" value="${escapeHtml(t.url || '')}" style="width:100%;padding:9px 12px;border:1.5px solid #E2E8F0;border-radius:6px;font-family:inherit;font-size:13px;margin-bottom:12px;">
 
-          <label style="display:block;font-size:11.5px;font-weight:700;color:#475569;margin-bottom:6px;">🚩 優先度</label>
+          <label style="display:block;font-size:13px;font-weight:700;color:#475569;margin-bottom:6px;">🚩 優先度</label>
           <div id="fp-kmodal-priority-seg" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:14px;">
             <button type="button" data-prio="p1" class="fp-prio-btn ${p==='p1'?'on':''}" style="padding:12px 8px;border:2px solid #E2E8F0;border-radius:8px;background:#fff;font-family:inherit;cursor:pointer;text-align:center;">
               <div style="font-size:20px;line-height:1;margin-bottom:3px;">🔴</div>
               <div style="font-size:13px;font-weight:800;color:#0F172A;">至急</div>
-              <div style="font-size:10px;color:#94A3B8;margin-top:1px;">今日 やる</div>
+              <div style="font-size:11.5px;color:#94A3B8;margin-top:1px;">今日 やる</div>
             </button>
             <button type="button" data-prio="p2" class="fp-prio-btn ${p==='p2'?'on':''}" style="padding:12px 8px;border:2px solid #E2E8F0;border-radius:8px;background:#fff;font-family:inherit;cursor:pointer;text-align:center;">
               <div style="font-size:20px;line-height:1;margin-bottom:3px;">🟠</div>
               <div style="font-size:13px;font-weight:800;color:#0F172A;">今週</div>
-              <div style="font-size:10px;color:#94A3B8;margin-top:1px;">今週 中 に</div>
+              <div style="font-size:11.5px;color:#94A3B8;margin-top:1px;">今週 中 に</div>
             </button>
             <button type="button" data-prio="p3" class="fp-prio-btn ${p==='p3'?'on':''}" style="padding:12px 8px;border:2px solid #E2E8F0;border-radius:8px;background:#fff;font-family:inherit;cursor:pointer;text-align:center;">
               <div style="font-size:20px;line-height:1;margin-bottom:3px;">🔵</div>
               <div style="font-size:13px;font-weight:800;color:#0F172A;">いつか</div>
-              <div style="font-size:10px;color:#94A3B8;margin-top:1px;">急ぎ で ない</div>
+              <div style="font-size:11.5px;color:#94A3B8;margin-top:1px;">急ぎ で ない</div>
             </button>
           </div>
           <input type="hidden" id="fp-kmodal-priority" value="${escapeHtml(p)}">
 
-          <label style="display:block;font-size:11.5px;font-weight:700;color:#475569;margin-bottom:6px;">📅 期間 (カレンダー で 開始 日 → 終了 日 の 順 に click)</label>
-          <div id="fp-kmodal-daterange-summary" style="font-size:12px;color:#5B5BF0;font-weight:700;margin-bottom:6px;min-height:16px;">まず 開始 日 を click して ください</div>
+          <label style="display:block;font-size:13px;font-weight:700;color:#475569;margin-bottom:6px;">📅 期間 (カレンダー で 開始 日 → 終了 日 の 順 に click)</label>
+          <div id="fp-kmodal-daterange-summary" style="font-size:13.5px;color:#5B5BF0;font-weight:700;margin-bottom:6px;min-height:16px;">まず 開始 日 を click して ください</div>
           <div id="fp-kmodal-daterange" style="border:1.5px solid #E2E8F0;border-radius:10px;padding:10px 12px;background:#fff;">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
               <button type="button" id="fp-kmodal-cal-prev" aria-label="前 の 月" style="width:28px;height:28px;border-radius:6px;border:1px solid #E2E8F0;background:#fff;color:#475569;font-family:inherit;font-size:14px;font-weight:800;cursor:pointer;">‹</button>
               <div id="fp-kmodal-cal-title" style="font-family:'Manrope',sans-serif;font-size:13.5px;font-weight:800;color:#0F172A;letter-spacing:0.02em;"></div>
               <button type="button" id="fp-kmodal-cal-next" aria-label="次 の 月" style="width:28px;height:28px;border-radius:6px;border:1px solid #E2E8F0;background:#fff;color:#475569;font-family:inherit;font-size:14px;font-weight:800;cursor:pointer;">›</button>
             </div>
-            <div id="fp-kmodal-cal-wkhdr" style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px;font-family:'Manrope',sans-serif;font-size:10.5px;font-weight:700;color:#94A3B8;text-align:center;">
+            <div id="fp-kmodal-cal-wkhdr" style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px;font-family:'Manrope',sans-serif;font-size:12px;font-weight:700;color:#94A3B8;text-align:center;">
               <div style="color:#DC2626;">日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div style="color:#2563EB;">土</div>
             </div>
             <div id="fp-kmodal-cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;"></div>
             <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
-              <button type="button" id="fp-kmodal-cal-today" style="background:transparent;border:0;color:#5B5BF0;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;">今日 に 戻る</button>
-              <button type="button" id="fp-kmodal-daterange-clear" style="background:transparent;border:0;color:#94A3B8;font-family:inherit;font-size:11px;cursor:pointer;text-decoration:underline;">× 期間 を 消す</button>
+              <button type="button" id="fp-kmodal-cal-today" style="background:transparent;border:0;color:#5B5BF0;font-family:inherit;font-size:12.5px;font-weight:700;cursor:pointer;">今日 に 戻る</button>
+              <button type="button" id="fp-kmodal-daterange-clear" style="background:transparent;border:0;color:#94A3B8;font-family:inherit;font-size:12.5px;cursor:pointer;text-decoration:underline;">× 期間 を 消す</button>
             </div>
           </div>
           <input type="hidden" id="fp-kmodal-startdate" value="${escapeHtml(t.startDate || '')}">
@@ -3160,7 +3160,7 @@
         cellsMeta = cells;
         gridEl.innerHTML = cells.map((c, idx) => {
           const wk = idx % 7;
-          if (c.muted) return `<div style="height:36px;display:flex;align-items:center;justify-content:center;color:#CBD5E1;font-size:12px;font-family:'Manrope',sans-serif;">${c.day}</div>`;
+          if (c.muted) return `<div style="height:36px;display:flex;align-items:center;justify-content:center;color:#CBD5E1;font-size:13.5px;font-family:'Manrope',sans-serif;">${c.day}</div>`;
           const baseColor = wk === 0 ? '#DC2626' : wk === 6 ? '#2563EB' : '#0F172A';
           return `<button type="button" data-iso="${c.iso}" data-wk="${wk}" class="fp-cal-cell" style="height:36px;display:flex;align-items:center;justify-content:center;background:transparent;color:${baseColor};font-family:'Manrope',sans-serif;font-size:12.5px;border:1.5px solid transparent;border-radius:6px;cursor:pointer;padding:0;transition:background 100ms;">${c.day}</button>`;
         }).join('');
@@ -3721,7 +3721,7 @@
             <p style="font-size:15px;font-weight:700;color:#3a4254;margin:0 0 6px;">Google 認証 の 期限 切れ</p>
             <p style="font-size:13px;color:#6b7280;margin:0 0 16px;">${escapeHtml(linkedEmail || '')} · 1 click で 更新 (登録 やり直し 不要)</p>
             <button id="v3h-gcal-refresh" style="background:#0b5d9e;color:#fff;border:none;padding:10px 22px;border-radius:8px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">🔄 認証 更新</button>
-            <p id="v3h-gcal-refresh-hint" style="font-size:11px;color:#9ca3af;margin:12px 0 0;">初回 は 「連携 済 の Google account」 を 選ぶ だけ で 完了</p>
+            <p id="v3h-gcal-refresh-hint" style="font-size:12.5px;color:#9ca3af;margin:12px 0 0;">初回 は 「連携 済 の Google account」 を 選ぶ だけ で 完了</p>
           </div>`;
         // wire: silent 試行 → fail 時 fullpopup に fallback
         wrap.querySelector('#v3h-gcal-refresh')?.addEventListener('click', async () => {
@@ -3770,13 +3770,13 @@
       wrap.innerHTML = `
         <div class="v3h-gcal-embed-controls" style="position:relative;">
           <span style="font-size:13px;font-weight:700;color:#3a4254;padding:8px 0;">${escapeHtml(localStorage.getItem('fp-gcal-email') || 'Google カレンダー')}</span>
-          <button id="v3h-gcal-cal-picker-btn" title="表示 する 予定 表 を 選ぶ (複数 可 · 共有 も 選択 可)" style="background:#f1f5f9;border:1px solid #cbd5e1;color:#0f172a;font-size:12px;font-weight:800;padding:6px 12px;border-radius:6px;cursor:pointer;font-family:inherit;">📚 予定 表 選択</button>
+          <button id="v3h-gcal-cal-picker-btn" title="表示 する 予定 表 を 選ぶ (複数 可 · 共有 も 選択 可)" style="background:#f1f5f9;border:1px solid #cbd5e1;color:#0f172a;font-size:13.5px;font-weight:800;padding:6px 12px;border-radius:6px;cursor:pointer;font-family:inherit;">📚 予定 表 選択</button>
           <a href="https://calendar.google.com/" target="_blank" rel="noopener" class="v3h-gcal-embed-open">Google Cal を 別 tab で 開く ↗</a>
           <div id="v3h-gcal-cal-picker-menu" style="display:none;position:absolute;top:48px;right:0;background:#fff;border:1px solid #cbd5e1;border-radius:10px;box-shadow:0 12px 30px rgba(15,23,42,0.15);padding:14px 16px;min-width:280px;max-width:360px;max-height:380px;overflow-y:auto;z-index:20;">
-            <div style="font-size:11.5px;font-weight:800;color:#475569;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px;">表示 する 予定 表</div>
+            <div style="font-size:13px;font-weight:800;color:#475569;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px;">表示 する 予定 表</div>
             <div id="v3h-gcal-cal-picker-list" style="display:flex;flex-direction:column;gap:6px;font-size:13px;"></div>
             <div style="margin-top:10px;padding-top:10px;border-top:1px solid #e2e8f0;display:flex;gap:8px;justify-content:flex-end;">
-              <button id="v3h-gcal-cal-picker-close" style="background:#0b5d9e;color:#fff;border:none;padding:6px 14px;border-radius:6px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;">閉じる</button>
+              <button id="v3h-gcal-cal-picker-close" style="background:#0b5d9e;color:#fff;border:none;padding:6px 14px;border-radius:6px;font-size:13.5px;font-weight:800;cursor:pointer;font-family:inherit;">閉じる</button>
             </div>
           </div>
         </div>
@@ -3785,7 +3785,7 @@
             <div style="padding:32px 20px;text-align:center;">
               <p style="font-size:14px;color:#3a4254;margin:0 0 14px;">連携 済 (${escapeHtml(localStorage.getItem('fp-gcal-email') || '')})</p>
               <button id="v3h-gcal-load-embed" style="background:#0b5d9e;color:#fff;border:none;padding:10px 22px;border-radius:8px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">📅 カレンダー を 読み込む</button>
-              <p style="font-size:11px;color:#9ca3af;margin:12px 0 0;">重い ので owner の click で 初回 だけ 読み込みます</p>
+              <p style="font-size:12.5px;color:#9ca3af;margin:12px 0 0;">重い ので owner の click で 初回 だけ 読み込みます</p>
             </div>
           `}
         </div>
@@ -3815,8 +3815,8 @@
             <input type="checkbox" data-cal-id="${escapeHtml(c.id)}" ${checked ? 'checked' : ''} style="cursor:pointer;">
             <span style="width:11px;height:11px;border-radius:50%;background:#${col};display:inline-block;flex-shrink:0;"></span>
             <span style="flex:1;font-weight:${isFpCompass ? '800' : '600'};color:#1f2937;">${escapeHtml(c.summary || c.id)}</span>
-            ${c.primary ? '<span style="font-size:9.5px;background:#dbeafe;color:#1e40af;padding:1px 6px;border-radius:8px;font-weight:800;">primary</span>' : ''}
-            ${isFpCompass ? '<span style="font-size:9.5px;background:#3b82f6;color:#fff;padding:1px 6px;border-radius:8px;font-weight:800;">FP面談</span>' : ''}
+            ${c.primary ? '<span style="font-size:11px;background:#dbeafe;color:#1e40af;padding:1px 6px;border-radius:8px;font-weight:800;">primary</span>' : ''}
+            ${isFpCompass ? '<span style="font-size:11px;background:#3b82f6;color:#fff;padding:1px 6px;border-radius:8px;font-weight:800;">FP面談</span>' : ''}
           </label>`;
         }).join('');
         pickerList.querySelectorAll('input[type="checkbox"]').forEach(cb => {
@@ -3928,7 +3928,7 @@
         return;
       }
       frame.innerHTML = `<iframe src="${escapeHtml(url)}" data-cal-url="${escapeHtml(url)}" style="border:0;width:100%;height:680px;border-radius:8px;" title="Google Calendar embed" loading="lazy"></iframe>
-        <p style="margin:8px 0 0;font-size:11.5px;color:#6b7280;">${escapeHtml(ids.length)} calendar 表示 中${allCals ? ` (全 ${allCals.length} 中)` : ''}</p>`;
+        <p style="margin:8px 0 0;font-size:13px;color:#6b7280;">${escapeHtml(ids.length)} calendar 表示 中${allCals ? ` (全 ${allCals.length} 中)` : ''}</p>`;
       // ★ 2026-08-12 owner「Cal から 直接 編集」対応 (B案): embed の 下 に FP面談 予定 の 編集 可能 リスト
       renderFpCalEditableList(wrap, allCals).catch(e => console.warn('[editable list]', e));
     }
@@ -3947,29 +3947,29 @@
     // FP 面談 calendar を 見つける
     const fpCal = (allCals || []).find(c => /FP面談|FPコンパス|FP Compass/i.test(c.summary || ''));
     if (!fpCal) {
-      existing.innerHTML = '<p style="font-size:12px;color:#6b7280;margin:0;">「FP面談」 calendar が 見 つかり ません · 初回 予約 確定 で 自動 作成 されます</p>';
+      existing.innerHTML = '<p style="font-size:13.5px;color:#6b7280;margin:0;">「FP面談」 calendar が 見 つかり ません · 初回 予約 確定 で 自動 作成 されます</p>';
       return;
     }
     const token = await ensureGcalToken();
-    if (!token) { existing.innerHTML = '<p style="font-size:12px;color:#6b7280;margin:0;">gcal 未 連携</p>'; return; }
+    if (!token) { existing.innerHTML = '<p style="font-size:13.5px;color:#6b7280;margin:0;">gcal 未 連携</p>'; return; }
     let events;
     try {
       const from = new Date();
       const to = new Date(Date.now() + 60 * 86400000);
       events = await gcalListEvents(token, fpCal.id, from, to);
     } catch (e) {
-      existing.innerHTML = `<p style="font-size:12px;color:#c53030;margin:0;">event 取得 失敗: ${escapeHtml(e.message)}</p>`;
+      existing.innerHTML = `<p style="font-size:13.5px;color:#c53030;margin:0;">event 取得 失敗: ${escapeHtml(e.message)}</p>`;
       return;
     }
     if (!events.length) {
-      existing.innerHTML = `<div style="font-size:12px;font-weight:800;color:#475569;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:6px;">📅 近日 の FP 面談 予定 (編集 可能)</div>
+      existing.innerHTML = `<div style="font-size:13.5px;font-weight:800;color:#475569;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:6px;">📅 近日 の FP 面談 予定 (編集 可能)</div>
         <p style="font-size:13px;color:#6b7280;margin:0;">今後 60 日 の 予定 なし</p>`;
       return;
     }
     existing.innerHTML = `
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-        <div style="font-size:12px;font-weight:800;color:#475569;letter-spacing:0.06em;text-transform:uppercase;">📅 近日 の FP 面談 予定 · <span style="color:#0b5d9e;">別 tab 開かず に 編集</span></div>
-        <span style="font-size:10.5px;color:#94a3b8;">${events.length} 件 (今後 60 日)</span>
+        <div style="font-size:13.5px;font-weight:800;color:#475569;letter-spacing:0.06em;text-transform:uppercase;">📅 近日 の FP 面談 予定 · <span style="color:#0b5d9e;">別 tab 開かず に 編集</span></div>
+        <span style="font-size:12px;color:#94a3b8;">${events.length} 件 (今後 60 日)</span>
       </div>
       <div style="display:flex;flex-direction:column;gap:8px;">${events.map(ev => renderFpEventRow(ev, fpCal.id)).join('')}</div>
     `;
@@ -4010,15 +4010,15 @@
     return `
       <div style="display:flex;align-items:center;gap:12px;background:#f8fafc;border:1px solid #e2e8f0;border-left:3px solid #3F51B5;border-radius:8px;padding:10px 14px;">
         <div style="min-width:78px;font-family:'Inter',sans-serif;font-weight:800;color:#3F51B5;font-size:13px;line-height:1.3;">
-          ${escapeHtml(dateLabel)}<br><span style="font-size:11.5px;color:#64748b;font-weight:600;">${escapeHtml(timeLabel)}</span>
+          ${escapeHtml(dateLabel)}<br><span style="font-size:13px;color:#64748b;font-weight:600;">${escapeHtml(timeLabel)}</span>
         </div>
         <div style="flex:1;min-width:0;">
           <div style="font-size:13.5px;font-weight:700;color:#0f172a;word-break:break-word;">${escapeHtml(ev.summary || '(無題)')}</div>
-          ${ev.location ? `<div style="font-size:11px;color:#6b7280;margin-top:2px;">📍 ${escapeHtml(ev.location)}</div>` : ''}
+          ${ev.location ? `<div style="font-size:12.5px;color:#6b7280;margin-top:2px;">📍 ${escapeHtml(ev.location)}</div>` : ''}
         </div>
         <div style="display:flex;gap:6px;">
-          <button data-fp-ev-edit="${escapeHtml(ev.id)}" style="background:#fff;border:1px solid #cbd5e1;color:#0f172a;font-size:11.5px;font-weight:800;padding:5px 11px;border-radius:6px;cursor:pointer;font-family:inherit;">✏ 編集</button>
-          <button data-fp-ev-del="${escapeHtml(ev.id)}" style="background:#fff;border:1px solid #fca5a5;color:#dc2626;font-size:11.5px;font-weight:800;padding:5px 11px;border-radius:6px;cursor:pointer;font-family:inherit;">🗑 削除</button>
+          <button data-fp-ev-edit="${escapeHtml(ev.id)}" style="background:#fff;border:1px solid #cbd5e1;color:#0f172a;font-size:13px;font-weight:800;padding:5px 11px;border-radius:6px;cursor:pointer;font-family:inherit;">✏ 編集</button>
+          <button data-fp-ev-del="${escapeHtml(ev.id)}" style="background:#fff;border:1px solid #fca5a5;color:#dc2626;font-size:13px;font-weight:800;padding:5px 11px;border-radius:6px;cursor:pointer;font-family:inherit;">🗑 削除</button>
         </div>
       </div>`;
   }
@@ -4037,27 +4037,27 @@
     ov.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.55);z-index:99999;display:flex;align-items:center;justify-content:center;font-family:"Hiragino Sans",sans-serif;';
     ov.innerHTML = `
       <div style="background:#fff;border-radius:12px;max-width:480px;width:92%;padding:24px 28px;box-shadow:0 32px 80px rgba(0,0,0,0.4);">
-        <div style="font-size:11px;font-weight:800;color:#3F51B5;letter-spacing:0.14em;margin-bottom:6px;">EDIT EVENT · FP 面談</div>
+        <div style="font-size:12.5px;font-weight:800;color:#3F51B5;letter-spacing:0.14em;margin-bottom:6px;">EDIT EVENT · FP 面談</div>
         <h2 style="font-size:19px;font-weight:800;color:#0f172a;margin:0 0 16px;font-family:'Noto Sans JP',serif;">予定 を 編集</h2>
-        <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:5px;">タイトル</label>
+        <label style="display:block;font-size:13px;font-weight:700;color:#374151;margin-bottom:5px;">タイトル</label>
         <input id="fp-cal-edit-title" type="text" value="${escapeHtml(ev.summary || '')}" style="width:100%;padding:9px 12px;border:1.5px solid #e5e7eb;border-radius:6px;font-size:14px;font-family:inherit;margin-bottom:12px;">
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;">
           <div>
-            <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:5px;">日付</label>
+            <label style="display:block;font-size:13px;font-weight:700;color:#374151;margin-bottom:5px;">日付</label>
             <input id="fp-cal-edit-date" type="date" value="${dateVal}" style="width:100%;padding:9px 10px;border:1.5px solid #e5e7eb;border-radius:6px;font-size:13px;font-family:inherit;">
           </div>
           <div>
-            <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:5px;">開始 時刻</label>
+            <label style="display:block;font-size:13px;font-weight:700;color:#374151;margin-bottom:5px;">開始 時刻</label>
             <input id="fp-cal-edit-time" type="time" value="${timeVal}" style="width:100%;padding:9px 10px;border:1.5px solid #e5e7eb;border-radius:6px;font-size:13px;font-family:inherit;">
           </div>
           <div>
-            <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:5px;">時間 (分)</label>
+            <label style="display:block;font-size:13px;font-weight:700;color:#374151;margin-bottom:5px;">時間 (分)</label>
             <input id="fp-cal-edit-dur" type="number" min="15" step="15" value="${durationMin}" style="width:100%;padding:9px 10px;border:1.5px solid #e5e7eb;border-radius:6px;font-size:13px;font-family:inherit;">
           </div>
         </div>
-        <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:5px;">場所</label>
+        <label style="display:block;font-size:13px;font-weight:700;color:#374151;margin-bottom:5px;">場所</label>
         <input id="fp-cal-edit-loc" type="text" value="${escapeHtml(ev.location || '')}" placeholder="Zoom URL / 住所 / メモ" style="width:100%;padding:9px 12px;border:1.5px solid #e5e7eb;border-radius:6px;font-size:14px;font-family:inherit;margin-bottom:12px;">
-        <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:5px;">メモ</label>
+        <label style="display:block;font-size:13px;font-weight:700;color:#374151;margin-bottom:5px;">メモ</label>
         <textarea id="fp-cal-edit-desc" rows="3" style="width:100%;padding:9px 12px;border:1.5px solid #e5e7eb;border-radius:6px;font-size:13px;font-family:inherit;margin-bottom:18px;resize:vertical;">${escapeHtml(ev.description || '')}</textarea>
         <div style="display:flex;gap:8px;justify-content:flex-end;">
           <button id="fp-cal-edit-cancel" style="background:#fff;border:1.5px solid #cbd5e1;color:#475569;padding:10px 20px;border-radius:8px;font-size:13.5px;font-weight:800;cursor:pointer;font-family:inherit;">キャンセル</button>
@@ -4452,7 +4452,7 @@
           <div id="family-list">
             ${(c.family || []).map((m, i) => familyRowHtml(m, i)).join('')}
           </div>
-          <div style="font-size:11px;color:var(--muted);margin-top:6px;">家族の生年月日を入れると、進学・退職などのライフイベントが自動でタイムラインに展開されます。</div>
+          <div style="font-size:12.5px;color:var(--muted);margin-top:6px;">家族の生年月日を入れると、進学・退職などのライフイベントが自動でタイムラインに展開されます。</div>
         </div>
 
         <div class="form-section">
@@ -4471,7 +4471,7 @@
               <label class="toggle-switch" style="margin-top:4px;">
                 <input type="checkbox" id="f-line-sub" ${c.lineSubscribed ? 'checked' : ''}><span></span>
               </label>
-              <div style="font-size:11px;color:var(--muted);margin-top:3px;">ONで配信対象に含まれます</div>
+              <div style="font-size:12.5px;color:var(--muted);margin-top:3px;">ONで配信対象に含まれます</div>
             </div>
           </div>
         </div>
@@ -4835,7 +4835,7 @@
       bar = document.createElement('div');
       bar.id = 'contact-filter-bar';
       bar.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap;margin:0 0 14px;padding:10px 12px;background:linear-gradient(135deg,#fafbfc,#f1f5f9);border:1px solid var(--line);border-radius:10px;align-items:center;';
-      bar.innerHTML = '<span style="font-size:11px;color:var(--muted);font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-right:6px;">📞 最終接触</span>';
+      bar.innerHTML = '<span style="font-size:12.5px;color:var(--muted);font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-right:6px;">📞 最終接触</span>';
       toolbar.parentNode.insertBefore(bar, toolbar);
     }
     const tabs = [
@@ -4846,13 +4846,13 @@
       { v: 'lt365', label: '181〜365日', count: buckets.lt365, color: '#f97316' },
       { v: 'gt365', label: '1年以上 未接触', count: buckets.gt365, color: '#d9264c' },
     ];
-    bar.innerHTML = '<span style="font-size:11px;color:var(--muted);font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-right:6px;">📞 最終接触</span>' +
+    bar.innerHTML = '<span style="font-size:12.5px;color:var(--muted);font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-right:6px;">📞 最終接触</span>' +
       tabs.map(t => {
         const active = (state.contactFilter || 'all') === t.v;
         const bg = active ? (t.color || '#1f2937') : '#fff';
         const fg = active ? '#fff' : (t.color || '#374151');
         const bd = active ? bg : '#e5e7eb';
-        return `<button data-cfilter="${t.v}" style="font-size:12px;padding:6px 12px;border-radius:18px;background:${bg};color:${fg};border:1.5px solid ${bd};cursor:pointer;font-weight:${active?'700':'500'};font-family:inherit;transition:all 0.15s;">${t.label} <span style="font-size:11px;opacity:0.85;margin-left:2px;">(${t.count})</span></button>`;
+        return `<button data-cfilter="${t.v}" style="font-size:13.5px;padding:6px 12px;border-radius:18px;background:${bg};color:${fg};border:1.5px solid ${bd};cursor:pointer;font-weight:${active?'700':'500'};font-family:inherit;transition:all 0.15s;">${t.label} <span style="font-size:12.5px;opacity:0.85;margin-left:2px;">(${t.count})</span></button>`;
       }).join('');
     bar.querySelectorAll('[data-cfilter]').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -4914,14 +4914,14 @@
     pop.id = 'col-config-pop';
     pop.style.cssText = `position:fixed;top:${rect.bottom + 6}px;right:${window.innerWidth - rect.right}px;background:#fff;border:1px solid #e3e7ee;border-radius:10px;box-shadow:0 12px 32px rgba(0,0,0,0.18);padding:12px 14px;z-index:10010;min-width:220px;font-family:inherit;`;
     pop.innerHTML = `
-      <div style="font-size:11.5px;color:#7b8499;font-weight:700;letter-spacing:0.08em;margin-bottom:8px;">列の表示</div>
+      <div style="font-size:13px;color:#7b8499;font-weight:700;letter-spacing:0.08em;margin-bottom:8px;">列の表示</div>
       ${COL_DEFS.map(c => `
         <label style="display:flex;align-items:center;gap:8px;padding:6px 4px;cursor:pointer;font-size:13px;">
           <input type="checkbox" data-col="${c.id}" ${prefs[c.id] ? 'checked' : ''} style="width:16px;height:16px;cursor:pointer;accent-color:#1B3A5C;">
           ${c.label}
         </label>
       `).join('')}
-      <div style="margin-top:8px;padding-top:8px;border-top:1px solid #f0f2f7;font-size:10.5px;color:#7b8499;">アンケート回答が無いお客様は「-」表示</div>
+      <div style="margin-top:8px;padding-top:8px;border-top:1px solid #f0f2f7;font-size:12px;color:#7b8499;">アンケート回答が無いお客様は「-」表示</div>
     `;
     document.body.appendChild(pop);
     pop.querySelectorAll('input[data-col]').forEach(cb => {
@@ -5051,11 +5051,11 @@
           <td>
             <div class="client-row-name">
               ${(c.linePictureUrl || c.pictureUrl)
-                ? `<span class="avatar avatar-sm" style="position:relative;padding:0;background:none;border:1.5px solid #06c755;overflow:visible;"><img src="${escapeHtml(c.linePictureUrl || c.pictureUrl)}" data-fallback-initial="${escapeHtml(initial)}" data-fallback-hue="${hue}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;"><span title="LINE友だち" style="position:absolute;bottom:-3px;right:-3px;background:#06c755;color:#fff;width:14px;height:14px;border-radius:50%;font-size:8px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid #fff;font-family:inherit;">L</span></span>`
-                : `<span class="avatar avatar-sm" style="--avh:${hue};position:relative;">${escapeHtml(initial)}${c.lineFriendId ? '<span title="LINE友だち" style="position:absolute;bottom:-3px;right:-3px;background:#06c755;color:#fff;width:14px;height:14px;border-radius:50%;font-size:8px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid #fff;font-family:inherit;">L</span>' : ''}</span>`}
+                ? `<span class="avatar avatar-sm" style="position:relative;padding:0;background:none;border:1.5px solid #06c755;overflow:visible;"><img src="${escapeHtml(c.linePictureUrl || c.pictureUrl)}" data-fallback-initial="${escapeHtml(initial)}" data-fallback-hue="${hue}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;"><span title="LINE友だち" style="position:absolute;bottom:-3px;right:-3px;background:#06c755;color:#fff;width:14px;height:14px;border-radius:50%;font-size:10.5px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid #fff;font-family:inherit;">L</span></span>`
+                : `<span class="avatar avatar-sm" style="--avh:${hue};position:relative;">${escapeHtml(initial)}${c.lineFriendId ? '<span title="LINE友だち" style="position:absolute;bottom:-3px;right:-3px;background:#06c755;color:#fff;width:14px;height:14px;border-radius:50%;font-size:10.5px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid #fff;font-family:inherit;">L</span>' : ''}</span>`}
               <div>
-                <strong>${escapeHtml(c.name)}</strong>${c.lineFriendId ? '<span style="font-size:9.5px;color:#06c755;font-weight:700;margin-left:5px;background:#dcfce7;padding:1px 5px;border-radius:6px;letter-spacing:0.05em;">LINE</span>' : ''}${c.source === 'line_follow' ? '<span title="友だち追加済みだが 事前アンケート 未回答" style="font-size:9.5px;color:#9A3412;font-weight:700;margin-left:5px;background:#FFEDD5;padding:1px 5px;border-radius:6px;letter-spacing:0.05em;">アンケ未回答</span>' : ''}
-                <div style="font-size:11px;color:var(--muted);letter-spacing:0.02em;">${escapeHtml(c.kana)}</div>
+                <strong>${escapeHtml(c.name)}</strong>${c.lineFriendId ? '<span style="font-size:11px;color:#06c755;font-weight:700;margin-left:5px;background:#dcfce7;padding:1px 5px;border-radius:6px;letter-spacing:0.05em;">LINE</span>' : ''}${c.source === 'line_follow' ? '<span title="友だち追加済みだが 事前アンケート 未回答" style="font-size:11px;color:#9A3412;font-weight:700;margin-left:5px;background:#FFEDD5;padding:1px 5px;border-radius:6px;letter-spacing:0.05em;">アンケ未回答</span>' : ''}
+                <div style="font-size:12.5px;color:var(--muted);letter-spacing:0.02em;">${escapeHtml(c.kana)}</div>
                 ${(function(){
                   const master = getTagsMaster();
                   const myTagIds = getClientTags(c.id);
@@ -5066,8 +5066,8 @@
                   // 重複除去 (label一致)
                   const seenLabels = new Set(myTags.map(t => t.label));
                   const autoUniq = autoTags.filter(t => !seenLabels.has(t.label));
-                  const manualHtml = myTags.map(t => { const col = validColor(t.color); return `<span style="background:${col};color:#fff;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:800;line-height:1.4;letter-spacing:0.03em;box-shadow:0 2px 6px ${col}66;">${escapeHtml(t.label)}</span>`; }).join('');
-                  const autoHtml = autoUniq.map(t => { const col = validColor(t.color); return `<span title="議事録から AI 自動抽出" style="background:${col}1A;color:${col};border:1.5px dashed ${col}80;padding:2px 9px;border-radius:999px;font-size:10.5px;font-weight:800;line-height:1.4;letter-spacing:0.03em;">${escapeHtml(t.label)}<span style="font-size:8px;margin-left:3px;opacity:0.7;">AI</span></span>`; }).join('');
+                  const manualHtml = myTags.map(t => { const col = validColor(t.color); return `<span style="background:${col};color:#fff;padding:3px 10px;border-radius:999px;font-size:12.5px;font-weight:800;line-height:1.4;letter-spacing:0.03em;box-shadow:0 2px 6px ${col}66;">${escapeHtml(t.label)}</span>`; }).join('');
+                  const autoHtml = autoUniq.map(t => { const col = validColor(t.color); return `<span title="議事録から AI 自動抽出" style="background:${col}1A;color:${col};border:1.5px dashed ${col}80;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:800;line-height:1.4;letter-spacing:0.03em;">${escapeHtml(t.label)}<span style="font-size:10.5px;margin-left:3px;opacity:0.7;">AI</span></span>`; }).join('');
                   return `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;">${manualHtml}${autoHtml}</div>`;
                 })()}
               </div>
@@ -5093,14 +5093,14 @@
             const productChips = PRODUCTS.map(p => {
               const fromSurvey = p.pattern.test(ownedRaw);
               const has = (fromSurvey || manualSet.has(p.key)) && !removedSet.has(p.key);
-              return `<span data-prod-toggle="${escapeHtml(c.id)}" data-prod-key="${escapeHtml(p.key)}" title="クリックで ${has ? '未加入' : '加入済'} に変更" style="display:inline-block;font-size:9.5px;font-weight:${has ? 800 : 600};padding:2px 6px;border-radius:8px;letter-spacing:0.02em;background:${has ? '#dcfce7' : '#f3f4f6'};color:${has ? '#166534' : '#9ca3af'};border:1px solid ${has ? '#86efac' : '#e5e7eb'};margin:1px 2px 1px 0;cursor:pointer;user-select:none;">${has ? '✓' : '–'} ${p.short}</span>`;
+              return `<span data-prod-toggle="${escapeHtml(c.id)}" data-prod-key="${escapeHtml(p.key)}" title="クリックで ${has ? '未加入' : '加入済'} に変更" style="display:inline-block;font-size:11px;font-weight:${has ? 800 : 600};padding:2px 6px;border-radius:8px;letter-spacing:0.02em;background:${has ? '#dcfce7' : '#f3f4f6'};color:${has ? '#166534' : '#9ca3af'};border:1px solid ${has ? '#86efac' : '#e5e7eb'};margin:1px 2px 1px 0;cursor:pointer;user-select:none;">${has ? '✓' : '–'} ${p.short}</span>`;
             }).join('');
             const hasAnyData = !!(s.q7_保有 || s.q14_既存商品 || c.mortgage || (c.productsManual && c.productsManual.length));
             return `
-              <td class="col-urgency" style="display:none;">${urgencyTxt ? `<span style="background:${urgencyBg};color:${urgencyFg};padding:3px 9px;border-radius:11px;font-size:11px;font-weight:700;letter-spacing:0.02em;white-space:nowrap;">${escapeHtml(trim(urgencyTxt, 12))}</span>` : '<span style="color:var(--muted);font-size:11px;">-</span>'}</td>
-              <td class="col-worry" style="display:none;font-size:12px;color:var(--ink-2);max-width:240px;">${s.q9_悩み ? escapeHtml(trim(s.q9_悩み, 60)) : '<span style="color:var(--muted);">-</span>'}</td>
-              <td class="col-goal" style="display:none;font-size:12px;color:var(--ink-2);max-width:240px;">${s.q14_理想 ? escapeHtml(trim(s.q14_理想, 60)) : '<span style="color:var(--muted);">-</span>'}</td>
-              <td class="col-products" style="display:none;max-width:320px;">${hasAnyData ? `<div style="display:flex;flex-wrap:wrap;align-items:center;gap:0;line-height:1.6;">${productChips}</div>` : '<span style="color:var(--muted);font-size:11px;">アンケート未回答</span>'}</td>
+              <td class="col-urgency" style="display:none;">${urgencyTxt ? `<span style="background:${urgencyBg};color:${urgencyFg};padding:3px 9px;border-radius:11px;font-size:12.5px;font-weight:700;letter-spacing:0.02em;white-space:nowrap;">${escapeHtml(trim(urgencyTxt, 12))}</span>` : '<span style="color:var(--muted);font-size:12.5px;">-</span>'}</td>
+              <td class="col-worry" style="display:none;font-size:13.5px;color:var(--ink-2);max-width:240px;">${s.q9_悩み ? escapeHtml(trim(s.q9_悩み, 60)) : '<span style="color:var(--muted);">-</span>'}</td>
+              <td class="col-goal" style="display:none;font-size:13.5px;color:var(--ink-2);max-width:240px;">${s.q14_理想 ? escapeHtml(trim(s.q14_理想, 60)) : '<span style="color:var(--muted);">-</span>'}</td>
+              <td class="col-products" style="display:none;max-width:320px;">${hasAnyData ? `<div style="display:flex;flex-wrap:wrap;align-items:center;gap:0;line-height:1.6;">${productChips}</div>` : '<span style="color:var(--muted);font-size:12.5px;">アンケート未回答</span>'}</td>
             `;
           })()}
           <td>${(function(){
@@ -5112,12 +5112,12 @@
               return isUser && ts > lastRead;
             }).length;
             const unreadBadge = unreadCount > 0
-              ? `<span class="fp-unread-badge" style="display:inline-flex;align-items:center;justify-content:center;gap:4px;background:linear-gradient(135deg,#DC2626,#991B1B);color:#fff;font-size:10px;font-weight:900;padding:3px 9px;border-radius:11px;margin-right:6px;box-shadow:0 4px 12px rgba(220,38,38,0.55),0 0 0 2px rgba(255,255,255,0.5);animation:fp-unread-pulse 1.4s ease-in-out infinite;letter-spacing:0.06em;white-space:nowrap;">⚠ 要返事 ${unreadCount > 99 ? '99+' : unreadCount}</span>`
+              ? `<span class="fp-unread-badge" style="display:inline-flex;align-items:center;justify-content:center;gap:4px;background:linear-gradient(135deg,#DC2626,#991B1B);color:#fff;font-size:11.5px;font-weight:900;padding:3px 9px;border-radius:11px;margin-right:6px;box-shadow:0 4px 12px rgba(220,38,38,0.55),0 0 0 2px rgba(255,255,255,0.5);animation:fp-unread-pulse 1.4s ease-in-out infinite;letter-spacing:0.06em;white-space:nowrap;">⚠ 要返事 ${unreadCount > 99 ? '99+' : unreadCount}</span>`
               : '';
-            return `${unreadBadge}<span class="status-pill ${c.status}">${statusLabel(c.status)}</span>${taskCount > 0 ? `<button class="fp-task-badge" data-task-cid="${escapeHtml(c.lineFriendId || c.id)}" data-task-name="${escapeHtml(c.name)}" style="display:inline-block;margin-left:6px;font-size:10px;background:#fff8e1;color:#a08537;padding:2px 7px;border-radius:9px;font-weight:700;border:1px solid #f0d36b;cursor:pointer;font-family:inherit;" title="タスク一覧を見る">📝${taskCount}</button>` : ''}`;
+            return `${unreadBadge}<span class="status-pill ${c.status}">${statusLabel(c.status)}</span>${taskCount > 0 ? `<button class="fp-task-badge" data-task-cid="${escapeHtml(c.lineFriendId || c.id)}" data-task-name="${escapeHtml(c.name)}" style="display:inline-block;margin-left:6px;font-size:11.5px;background:#fff8e1;color:#a08537;padding:2px 7px;border-radius:9px;font-weight:700;border:1px solid #f0d36b;cursor:pointer;font-family:inherit;" title="タスク一覧を見る">📝${taskCount}</button>` : ''}`;
           })()}</td>
           <td class="num">¥${fmtMoney(c.aum)}</td>
-          <td class="${contactCls}"><div style="display:flex;flex-direction:column;gap:3px;align-items:flex-start;"><span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;background:${contactBg};color:${contactFg};">${contactLabel}</span><span style="font-size:11px;color:var(--muted);">${dayDisplay}</span>${c.lastActionType ? `<span style="font-size:9.5px;color:var(--accent);font-weight:600;">📱 LINE: ${escapeHtml((c.lastActionType||'').split(':')[0])}</span>` : ''}</div></td>
+          <td class="${contactCls}"><div style="display:flex;flex-direction:column;gap:3px;align-items:flex-start;"><span style="font-size:12.5px;font-weight:700;padding:2px 8px;border-radius:10px;background:${contactBg};color:${contactFg};">${contactLabel}</span><span style="font-size:12.5px;color:var(--muted);">${dayDisplay}</span>${c.lastActionType ? `<span style="font-size:11px;color:var(--accent);font-weight:600;">📱 LINE: ${escapeHtml((c.lastActionType||'').split(':')[0])}</span>` : ''}</div></td>
         </tr>
       `;
     }).join('');
@@ -5206,10 +5206,10 @@
             '<div style="display:grid;gap:8px;">' + tasks.sort((a,b) => (a.due||'').localeCompare(b.due||'')).map((t,i) => `
               <div style="display:grid;grid-template-columns:36px 90px 1fr 130px 32px;gap:10px;align-items:center;padding:10px 14px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;">
                 <span style="font-size:18px;">${t.icon || '✅'}</span>
-                <span style="font-size:10.5px;font-weight:700;background:${t.priority==='至急'?'#fef2f2;color:#b91c3c':(t.priority==='今週'||t.priority==='2週間以内')?'#fff7ed;color:#c2410c':'#f0f9ff;color:#075985'};padding:4px 9px;border-radius:11px;text-align:center;">${t.priority||'-'}</span>
+                <span style="font-size:12px;font-weight:700;background:${t.priority==='至急'?'#fef2f2;color:#b91c3c':(t.priority==='今週'||t.priority==='2週間以内')?'#fff7ed;color:#c2410c':'#f0f9ff;color:#075985'};padding:4px 9px;border-radius:11px;text-align:center;">${t.priority||'-'}</span>
                 <span style="font-size:13px;">${escapeHtml(t.task||'')}</span>
-                <span style="font-size:11px;color:#6b7280;text-align:right;">${t.due||'-'}</span>
-                <button class="fp-task-del" data-idx="${i}" title="削除" style="background:#fff;border:1px solid #fecaca;color:#b91c3c;width:26px;height:26px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:12px;">✕</button>
+                <span style="font-size:12.5px;color:#6b7280;text-align:right;">${t.due||'-'}</span>
+                <button class="fp-task-del" data-idx="${i}" title="削除" style="background:#fff;border:1px solid #fecaca;color:#b91c3c;width:26px;height:26px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:13.5px;">✕</button>
               </div>
             `).join('') + '</div>'
           }
@@ -5566,33 +5566,33 @@
     if (entry.type === 'survey') {
       const s = entry.summary || {};
       const headLine = ['悩み', 'テーマ', '年代'].map(k => s[k] ? `${k}: ${s[k]}` : '').filter(Boolean).slice(0, 2).join(' / ');
-      const rows = Object.entries(s).filter(([k, v]) => v).map(([k, v]) => `<div style="display:flex;gap:8px;font-size:12px;margin:3px 0;"><span style="color:#92400e;min-width:64px;font-weight:600;">${escapeHtml(k)}</span><span style="color:#0F172A;">${escapeHtml(v)}</span></div>`).join('');
+      const rows = Object.entries(s).filter(([k, v]) => v).map(([k, v]) => `<div style="display:flex;gap:8px;font-size:13.5px;margin:3px 0;"><span style="color:#92400e;min-width:64px;font-weight:600;">${escapeHtml(k)}</span><span style="color:#0F172A;">${escapeHtml(v)}</span></div>`).join('');
       return `
         <details class="cd-line-msg cd-tl-entry cd-tl-survey" style="align-self:stretch;max-width:100%;background:#FEF9C3;border:1px solid #FDE68A;border-left:4px solid #EAB308;border-radius:8px;padding:10px 14px;margin:4px 0;">
           <summary style="cursor:pointer;font-weight:700;font-size:12.5px;color:#854D0E;letter-spacing:0.01em;list-style:none;">
             📝 事前アンケート回答 ${headLine ? `<span style="font-weight:400;color:#78350F;margin-left:6px;">— ${escapeHtml(headLine)}</span>` : ''}
-            <span style="float:right;font-weight:400;font-size:11px;opacity:0.65;">${safeTs}</span>
+            <span style="float:right;font-weight:400;font-size:12.5px;opacity:0.65;">${safeTs}</span>
           </summary>
-          <div style="margin-top:10px;padding-top:8px;border-top:1px dashed #FCD34D;">${rows || '<span style="color:#92400e;font-size:11px;">回答なし</span>'}</div>
+          <div style="margin-top:10px;padding-top:8px;border-top:1px dashed #FCD34D;">${rows || '<span style="color:#92400e;font-size:12.5px;">回答なし</span>'}</div>
         </details>`;
     }
     if (entry.type === 'booking_request') {
-      const list = (entry.candidates || []).map(c => `<div style="font-size:12px;margin:3px 0;">・${escapeHtml(c)}</div>`).join('');
+      const list = (entry.candidates || []).map(c => `<div style="font-size:13.5px;margin:3px 0;">・${escapeHtml(c)}</div>`).join('');
       return `
         <details class="cd-line-msg cd-tl-entry cd-tl-booking" style="align-self:stretch;max-width:100%;background:#F3E8FF;border:1px solid #DDD6FE;border-left:4px solid #A855F7;border-radius:8px;padding:10px 14px;margin:4px 0;">
           <summary style="cursor:pointer;font-weight:700;font-size:12.5px;color:#6B21A8;letter-spacing:0.01em;list-style:none;">
             📅 Zoom 候補日 ${entry.candidates.length}件 提示
-            <span style="float:right;font-weight:400;font-size:11px;opacity:0.65;">${safeTs}</span>
+            <span style="float:right;font-weight:400;font-size:12.5px;opacity:0.65;">${safeTs}</span>
           </summary>
           <div style="margin-top:8px;padding-top:8px;border-top:1px dashed #C4B5FD;color:#581C87;">${list}</div>
         </details>`;
     }
     if (entry.type === 'booking_confirmed') {
-      const zoomBtn = entry.zoomUrl ? `<a href="${escapeHtml(entry.zoomUrl)}" target="_blank" rel="noopener" style="display:inline-block;margin-left:8px;background:#2563EB;color:#fff;text-decoration:none;padding:3px 10px;border-radius:5px;font-size:11px;font-weight:700;">🎥 Zoom URL</a>` : '';
+      const zoomBtn = entry.zoomUrl ? `<a href="${escapeHtml(entry.zoomUrl)}" target="_blank" rel="noopener" style="display:inline-block;margin-left:8px;background:#2563EB;color:#fff;text-decoration:none;padding:3px 10px;border-radius:5px;font-size:12.5px;font-weight:700;">🎥 Zoom URL</a>` : '';
       return `
         <div class="cd-line-msg cd-tl-entry cd-tl-confirmed" style="align-self:stretch;max-width:100%;background:#DBEAFE;border:1px solid #BFDBFE;border-left:4px solid #2563EB;border-radius:8px;padding:10px 14px;margin:4px 0;font-size:12.5px;color:#1E3A8A;font-weight:600;">
           ✅ 候補日 確定 — ${escapeHtml(entry.slot || '')}${zoomBtn}
-          <span style="float:right;font-weight:400;font-size:11px;opacity:0.65;">${safeTs}</span>
+          <span style="float:right;font-weight:400;font-size:12.5px;opacity:0.65;">${safeTs}</span>
         </div>`;
     }
     if (entry.type === 'ai_minutes') {
@@ -5630,19 +5630,19 @@
       const dtLabel = (dObj && !isNaN(dObj.getTime()))
         ? `${dObj.getFullYear()}年${dObj.getMonth()+1}月${dObj.getDate()}日 (${['日','月','火','水','木','金','土'][dObj.getDay()]}) ${String(dObj.getHours()).padStart(2,'0')}:${String(dObj.getMinutes()).padStart(2,'0')}`
         : safeTs;
-      const concernChipsFull = keyConcerns.slice(0, 5).map(k => `<span style="display:inline-block;background:#EDE9FE;color:#5B21B6;padding:2px 8px;border-radius:99px;font-size:10.5px;font-weight:600;margin:2px 3px 2px 0;">${escapeHtml(k)}</span>`).join('');
+      const concernChipsFull = keyConcerns.slice(0, 5).map(k => `<span style="display:inline-block;background:#EDE9FE;color:#5B21B6;padding:2px 8px;border-radius:99px;font-size:12px;font-weight:600;margin:2px 3px 2px 0;">${escapeHtml(k)}</span>`).join('');
       const bodyHtml = rawSum
         ? (window.renderStructuredSummary
-            ? `<div class="fp-summary-structured" style="font-size:12px;">${window.renderStructuredSummary(rawSum)}</div>`
-            : `<div style="font-size:12px;color:#3B0764;white-space:pre-wrap;line-height:1.65;">${escapeHtml(rawSum.slice(0, 800))}${rawSum.length > 800 ? '…' : ''}</div>`)
-        : '<div style="font-size:11px;color:#7C3AED;opacity:0.7;">議事録 未生成</div>';
+            ? `<div class="fp-summary-structured" style="font-size:13.5px;">${window.renderStructuredSummary(rawSum)}</div>`
+            : `<div style="font-size:13.5px;color:#3B0764;white-space:pre-wrap;line-height:1.65;">${escapeHtml(rawSum.slice(0, 800))}${rawSum.length > 800 ? '…' : ''}</div>`)
+        : '<div style="font-size:12.5px;color:#7C3AED;opacity:0.7;">議事録 未生成</div>';
       return `
         <details class="cd-line-msg cd-tl-entry cd-tl-minutes" style="align-self:stretch;max-width:100%;background:#F5F3FF;border:1px solid #DDD6FE;border-left:4px solid #8B5CF6;border-radius:10px;padding:12px 14px;margin:4px 0;">
           <summary style="cursor:pointer;list-style:none;display:flex;align-items:center;gap:10px;">
             <span style="font-size:16px;flex-shrink:0;">🎙</span>
-            <span style="flex-shrink:0;font-family:'Manrope','Inter',monospace;font-size:11px;font-weight:700;color:#5B21B6;background:#EDE9FE;padding:2px 8px;border-radius:5px;">${escapeHtml(dtLabel)}</span>
+            <span style="flex-shrink:0;font-family:'Manrope','Inter',monospace;font-size:12.5px;font-weight:700;color:#5B21B6;background:#EDE9FE;padding:2px 8px;border-radius:5px;">${escapeHtml(dtLabel)}</span>
             <span style="flex:1;min-width:0;font-size:13px;font-weight:700;color:#3B0764;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(topic)}</span>
-            <span style="flex-shrink:0;color:#A78BFA;font-size:11px;font-weight:600;">▼ 詳細</span>
+            <span style="flex-shrink:0;color:#A78BFA;font-size:12.5px;font-weight:600;">▼ 詳細</span>
           </summary>
           <div style="margin-top:10px;padding-top:10px;border-top:1px dashed #C4B5FD;">${bodyHtml}</div>
           ${concernChipsFull ? `<div style="margin-top:8px;">${concernChipsFull}</div>` : ''}
@@ -5652,14 +5652,14 @@
       return `
         <div class="cd-line-msg cd-tl-entry cd-tl-cancel" style="align-self:stretch;max-width:100%;background:#FEE2E2;border:1px solid #FECACA;border-left:4px solid #DC2626;border-radius:8px;padding:10px 14px;margin:4px 0;font-size:12.5px;color:#991B1B;font-weight:600;">
           ❌ キャンセル ${entry.reason ? `— ${escapeHtml(entry.reason)}` : ''}
-          <span style="float:right;font-weight:400;font-size:11px;opacity:0.65;">${safeTs}</span>
+          <span style="float:right;font-weight:400;font-size:12.5px;opacity:0.65;">${safeTs}</span>
         </div>`;
     }
     if (entry.type === 'deliverable') {
       return `
         <div class="cd-line-msg cd-tl-entry cd-tl-deliv" style="align-self:stretch;max-width:100%;background:#E0F2FE;border:1px solid #BAE6FD;border-left:4px solid #0284C7;border-radius:8px;padding:10px 14px;margin:4px 0;font-size:12.5px;color:#075985;font-weight:600;">
           📎 配布資料: ${escapeHtml(entry.title || '')} <span style="color:#0369A1;font-weight:400;">(${escapeHtml(entry.kind || 'custom')})</span>
-          <span style="float:right;font-weight:400;font-size:11px;opacity:0.65;">${safeTs}</span>
+          <span style="float:right;font-weight:400;font-size:12.5px;opacity:0.65;">${safeTs}</span>
         </div>`;
     }
     return '';
@@ -6157,7 +6157,7 @@
           <div class="fp-next-action">
             <div class="fp-next-action-eyebrow" style="display:flex;justify-content:space-between;align-items:center;">
               <span style="display:flex;align-items:center;gap:8px;"><i data-lucide="zap" style="width:14px;height:14px;"></i>NEXT ACTION — この方への次の一手</span>
-              <button data-open-hearing="${escapeHtml(c.id)}" style="background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.32);color:#fff;padding:5px 12px;border-radius:5px;font-size:11px;font-weight:800;cursor:pointer;letter-spacing:0.04em;">📋 ヒアリングシート</button>
+              <button data-open-hearing="${escapeHtml(c.id)}" style="background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.32);color:#fff;padding:5px 12px;border-radius:5px;font-size:12.5px;font-weight:800;cursor:pointer;letter-spacing:0.04em;">📋 ヒアリングシート</button>
             </div>
             ${sugg ? `<div class="fp-next-action-title">${escapeHtml(sugg)}</div>` : '<div class="fp-next-action-title">優先タスク</div>'}
             ${latestAi && latestAi.summary ? `<div class="fp-next-action-body">${escapeHtml(latestAi.summary.split('\n').slice(0, 3).join('\n'))}</div>` : ''}
@@ -6200,7 +6200,7 @@
               <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
                 <div style="font-size:28px;">⚠️</div>
                 <div style="flex:1;">
-                  <div style="font-size:11px;font-weight:800;letter-spacing:0.18em;opacity:0.9;text-transform:uppercase;">お客様 返信 あり / FP 未返信</div>
+                  <div style="font-size:12.5px;font-weight:800;letter-spacing:0.18em;opacity:0.9;text-transform:uppercase;">お客様 返信 あり / FP 未返信</div>
                   <div style="font-size:15px;font-weight:900;margin-top:2px;letter-spacing:0.02em;">この方への返事がまだです</div>
                 </div>
               </div>
@@ -6219,9 +6219,9 @@
               <div style="font-size:22px;">📨</div>
               <div style="flex:1;">
                 <div style="font-size:13px;font-weight:800;">${urgency}前送信 — 返信なし (追撃 ${t.followupCount}回目)</div>
-                <div style="font-size:11.5px;opacity:0.92;margin-top:2px;line-height:1.45;">「${escapeHtml(t.lastSentText.slice(0, 60))}…」<br>${daysSinceSent >= 7 ? '関係維持リスク — 別アプローチの追撃推奨' : '柔らかい追撃で返信率UP'}</div>
+                <div style="font-size:13px;opacity:0.92;margin-top:2px;line-height:1.45;">「${escapeHtml(t.lastSentText.slice(0, 60))}…」<br>${daysSinceSent >= 7 ? '関係維持リスク — 別アプローチの追撃推奨' : '柔らかい追撃で返信率UP'}</div>
               </div>
-              <button id="fp-track-followup" data-cid="${escapeHtml(c.id)}" style="background:#fff;color:${daysSinceSent >= 7 ? '#dc2626' : '#EA580C'};border:none;padding:8px 14px;border-radius:6px;font-weight:800;cursor:pointer;font-size:12px;font-family:inherit;white-space:nowrap;">✨ 追撃ライン 作成</button>
+              <button id="fp-track-followup" data-cid="${escapeHtml(c.id)}" style="background:#fff;color:${daysSinceSent >= 7 ? '#dc2626' : '#EA580C'};border:none;padding:8px 14px;border-radius:6px;font-weight:800;cursor:pointer;font-size:13.5px;font-family:inherit;white-space:nowrap;">✨ 追撃ライン 作成</button>
             </div>
             <style>@keyframes fp-followup-pulse{0%,100%{box-shadow:0 0 0 0 rgba(249,115,22,0.5)}50%{box-shadow:0 0 0 8px rgba(249,115,22,0)}}</style>
           `;
@@ -6276,16 +6276,16 @@
       const workflowHtml = `
         <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;padding:14px 18px;margin-bottom:12px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-            <div style="font-size:11.5px;font-weight:800;color:#475569;letter-spacing:0.02em;">📍 進捗 — 現在 <strong style="color:#0F172A;">${escapeHtml(stages[currentStageIdx].label)}</strong></div>
-            <div style="font-size:11px;color:#64748B;font-weight:600;">面談 ${pastMs}回 / 次予約 ${futureMs}件</div>
+            <div style="font-size:13px;font-weight:800;color:#475569;letter-spacing:0.02em;">📍 進捗 — 現在 <strong style="color:#0F172A;">${escapeHtml(stages[currentStageIdx].label)}</strong></div>
+            <div style="font-size:12.5px;color:#64748B;font-weight:600;">面談 ${pastMs}回 / 次予約 ${futureMs}件</div>
           </div>
           <div style="display:flex;gap:4px;align-items:center;overflow-x:auto;">
             ${stages.map((s, i) => `
               <div style="flex:1;min-width:80px;text-align:center;padding:8px 6px;border-radius:8px;background:${i < currentStageIdx ? '#DCFCE7' : i === currentStageIdx ? 'linear-gradient(135deg,#FB923C,#EA580C)' : '#fff'};border:1.5px solid ${i < currentStageIdx ? '#86EFAC' : i === currentStageIdx ? '#EA580C' : '#E2E8F0'};color:${i === currentStageIdx ? '#fff' : '#0F172A'};">
                 <div style="font-size:18px;">${i < currentStageIdx ? '✓' : s.icon}</div>
-                <div style="font-size:10.5px;font-weight:700;margin-top:3px;${i > currentStageIdx ? 'opacity:0.5;' : ''}">${escapeHtml(s.label)}</div>
+                <div style="font-size:12px;font-weight:700;margin-top:3px;${i > currentStageIdx ? 'opacity:0.5;' : ''}">${escapeHtml(s.label)}</div>
               </div>
-              ${i < stages.length - 1 ? '<div style="font-size:12px;color:#CBD5E1;">→</div>' : ''}
+              ${i < stages.length - 1 ? '<div style="font-size:13.5px;color:#CBD5E1;">→</div>' : ''}
             `).join('')}
           </div>
         </div>
@@ -6301,7 +6301,7 @@
           const relCls = m.rel === 'spouse' ? 'spouse' : (m.rel === 'child' ? 'child' : '');
           const relLabel = m.rel === 'spouse' ? '配偶者' : (m.rel === 'child' ? 'お子様' : m.rel);
           const age = window.LifeEvents.currentAge({ birth: m.birth });
-          return `<li><span><span class="rel-tag ${relCls}">${relLabel}</span>${escapeHtml(m.name)}</span><span style="color:var(--muted);font-size:12px;">${age}歳 (${m.birth})</span></li>`;
+          return `<li><span><span class="rel-tag ${relCls}">${relLabel}</span>${escapeHtml(m.name)}</span><span style="color:var(--muted);font-size:13.5px;">${age}歳 (${m.birth})</span></li>`;
         }).join('');
 
     const proposalsHtml = (c.proposals || []).length === 0
@@ -6330,17 +6330,17 @@
           </div>
           <div id="life-cta-form" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;background:#fff;border-radius:10px;padding:14px 16px;border:1px solid #e9d5ff;">
             <div>
-              <label style="display:block;font-size:11px;color:#7b8499;font-weight:700;margin-bottom:4px;letter-spacing:0.06em;">本人 生年月日 ★</label>
+              <label style="display:block;font-size:12.5px;color:#7b8499;font-weight:700;margin-bottom:4px;letter-spacing:0.06em;">本人 生年月日 ★</label>
               <input type="date" id="life-cta-birth" value="${escapeHtml(needsBirth ? '' : c.birth)}" style="width:100%;padding:9px 11px;border:1.5px solid #e3e7ee;border-radius:7px;font-size:14px;font-family:inherit;">
             </div>
             <div>
-              <label style="display:block;font-size:11px;color:#7b8499;font-weight:700;margin-bottom:4px;letter-spacing:0.06em;">配偶者 生年月日 (任意)</label>
+              <label style="display:block;font-size:12.5px;color:#7b8499;font-weight:700;margin-bottom:4px;letter-spacing:0.06em;">配偶者 生年月日 (任意)</label>
               <input type="date" id="life-cta-spouse-birth" style="width:100%;padding:9px 11px;border:1.5px solid #e3e7ee;border-radius:7px;font-size:14px;font-family:inherit;">
             </div>
             <div style="grid-column:1 / -1;">
-              <label style="display:block;font-size:11px;color:#7b8499;font-weight:700;margin-bottom:4px;letter-spacing:0.06em;">お子様 生年月日 (複数可・任意)</label>
+              <label style="display:block;font-size:12.5px;color:#7b8499;font-weight:700;margin-bottom:4px;letter-spacing:0.06em;">お子様 生年月日 (複数可・任意)</label>
               <div id="life-cta-children" style="display:flex;flex-direction:column;gap:6px;"></div>
-              <button type="button" id="life-cta-add-child" style="margin-top:6px;background:#fff;color:#7c3aed;border:1.5px dashed #c4b5fd;padding:7px 12px;border-radius:6px;font-size:11.5px;font-weight:700;cursor:pointer;letter-spacing:0.04em;font-family:inherit;">+ お子様を追加</button>
+              <button type="button" id="life-cta-add-child" style="margin-top:6px;background:#fff;color:#7c3aed;border:1.5px dashed #c4b5fd;padding:7px 12px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:0.04em;font-family:inherit;">+ お子様を追加</button>
             </div>
             <div style="grid-column:1 / -1;display:flex;justify-content:flex-end;gap:8px;margin-top:4px;">
               <button type="button" id="life-cta-cancel" style="background:#fff;color:#6b7280;border:1px solid #e5e7eb;padding:9px 18px;border-radius:7px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;">あとで</button>
@@ -6520,10 +6520,10 @@
 
       // ★ KPI カード レンダリング
       const statusBadge = (s) => {
-        if (s === 'done')     return '<span style="background:#10b981;color:#fff;padding:3px 8px;border-radius:10px;font-size:10px;font-weight:800;letter-spacing:0.04em;">✓ 達成</span>';
-        if (s === 'progress') return '<span style="background:#f59e0b;color:#fff;padding:3px 8px;border-radius:10px;font-size:10px;font-weight:800;letter-spacing:0.04em;">⏳ 進行中</span>';
-        if (s === 'risk')     return '<span style="background:#dc2626;color:#fff;padding:3px 8px;border-radius:10px;font-size:10px;font-weight:800;letter-spacing:0.04em;">⚠ 要対応</span>';
-        return '<span style="background:#e5e7eb;color:#6b7280;padding:3px 8px;border-radius:10px;font-size:10px;font-weight:800;letter-spacing:0.04em;">○ 未着手</span>';
+        if (s === 'done')     return '<span style="background:#10b981;color:#fff;padding:3px 8px;border-radius:10px;font-size:11.5px;font-weight:800;letter-spacing:0.04em;">✓ 達成</span>';
+        if (s === 'progress') return '<span style="background:#f59e0b;color:#fff;padding:3px 8px;border-radius:10px;font-size:11.5px;font-weight:800;letter-spacing:0.04em;">⏳ 進行中</span>';
+        if (s === 'risk')     return '<span style="background:#dc2626;color:#fff;padding:3px 8px;border-radius:10px;font-size:11.5px;font-weight:800;letter-spacing:0.04em;">⚠ 要対応</span>';
+        return '<span style="background:#e5e7eb;color:#6b7280;padding:3px 8px;border-radius:10px;font-size:11.5px;font-weight:800;letter-spacing:0.04em;">○ 未着手</span>';
       };
 
       // KPI 名 → アクション ID マッピング (未着手なら「→ 今やる」ボタンで対応操作起動)
@@ -6550,12 +6550,12 @@
       const kpiRows = kpis.map(k => {
         const action = kpiActionMap[k.name];
         const isPending = k.status === 'todo' || k.status === 'risk' || k.status === 'progress';
-        const actionBtn = (action && isPending) ? `<button class="fp-kpi-do" data-kpi-action="${action}" data-kpi-name="${escapeHtml(k.name)}" data-client-id="${escapeHtml(c.id)}" style="font-size:11px;padding:6px 12px;background:#5B5BF0;color:#fff;border:none;border-radius:5px;cursor:pointer;font-weight:800;font-family:inherit;letter-spacing:0.02em;margin-top:4px;">→ 今やる</button>` : '';
+        const actionBtn = (action && isPending) ? `<button class="fp-kpi-do" data-kpi-action="${action}" data-kpi-name="${escapeHtml(k.name)}" data-client-id="${escapeHtml(c.id)}" style="font-size:12.5px;padding:6px 12px;background:#5B5BF0;color:#fff;border:none;border-radius:5px;cursor:pointer;font-weight:800;font-family:inherit;letter-spacing:0.02em;margin-top:4px;">→ 今やる</button>` : '';
         return `
         <div style="display:grid;grid-template-columns:1fr auto;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);">
           <div>
             <div style="font-size:13px;font-weight:700;color:var(--ink);margin-bottom:3px;">${escapeHtml(k.name)}</div>
-            <div style="font-size:11px;color:var(--muted);line-height:1.5;">↳ ${escapeHtml(k.howTo)}</div>
+            <div style="font-size:12.5px;color:var(--muted);line-height:1.5;">↳ ${escapeHtml(k.howTo)}</div>
             ${actionBtn}
           </div>
           <div style="align-self:flex-start;">${statusBadge(k.status)}</div>
@@ -6567,19 +6567,19 @@
         <div style="background:linear-gradient(135deg,${stageColor},#1b2845);color:#fff;border-radius:10px;padding:14px 18px;margin-bottom:14px;">
           <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;flex-wrap:wrap;gap:8px;">
             <div>
-              <div style="font-size:10.5px;font-weight:700;letter-spacing:0.14em;opacity:0.75;">STAGE: ${escapeHtml(stageLabel)} → ${escapeHtml(nextStageLabel)}</div>
+              <div style="font-size:12px;font-weight:700;letter-spacing:0.14em;opacity:0.75;">STAGE: ${escapeHtml(stageLabel)} → ${escapeHtml(nextStageLabel)}</div>
               <div style="font-size:16px;font-weight:800;margin-top:2px;">繋ぎ KPI 達成率 ${pct}%</div>
             </div>
             ${msDate ? `<div style="text-align:right;">
-              <div style="font-size:10.5px;opacity:0.75;font-weight:700;letter-spacing:0.08em;">${msIsActual ? 'NEXT ZOOM' : '目安日'}</div>
+              <div style="font-size:12px;opacity:0.75;font-weight:700;letter-spacing:0.08em;">${msIsActual ? 'NEXT ZOOM' : '目安日'}</div>
               <div style="font-size:14px;font-weight:800;">${fmtDate(msDate)}</div>
-              <div style="font-size:11px;opacity:0.85;">あと ${daysToMs} 日</div>
+              <div style="font-size:12.5px;opacity:0.85;">あと ${daysToMs} 日</div>
             </div>` : ''}
           </div>
           <div style="background:rgba(255,255,255,0.18);border-radius:99px;height:6px;overflow:hidden;">
             <div style="background:#fff;height:100%;width:${pct}%;transition:width 0.4s;"></div>
           </div>
-          <div style="margin-top:8px;font-size:11px;opacity:0.85;">${doneCount}/${kpis.length} 達成 ${progressCount > 0 ? ' · ' + progressCount + ' 進行中' : ''}</div>
+          <div style="margin-top:8px;font-size:12.5px;opacity:0.85;">${doneCount}/${kpis.length} 達成 ${progressCount > 0 ? ' · ' + progressCount + ' 進行中' : ''}</div>
         </div>
       `;
 
@@ -6618,21 +6618,21 @@
         const ringStyle = isHot ? `box-shadow:0 0 0 3px ${pri.border}33,0 8px 22px ${pri.border}44;` : '';
         const pulseStyle = '';
         return `<div style="background:#fff;border:2px solid ${pri.border};border-radius:10px;padding:12px 14px;margin-bottom:8px;${ringStyle}${pulseStyle}position:relative;">
-          ${isTop ? `<div style="position:absolute;top:-10px;right:14px;background:${isHot ? pri.bg : '#5B5BF0'};color:#fff;font-size:10px;font-weight:900;padding:3px 10px;border-radius:10px;letter-spacing:0.08em;box-shadow:0 4px 10px rgba(0,0,0,0.18);">⚡ 最優先で着手</div>` : ''}
+          ${isTop ? `<div style="position:absolute;top:-10px;right:14px;background:${isHot ? pri.bg : '#5B5BF0'};color:#fff;font-size:11.5px;font-weight:900;padding:3px 10px;border-radius:10px;letter-spacing:0.08em;box-shadow:0 4px 10px rgba(0,0,0,0.18);">⚡ 最優先で着手</div>` : ''}
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap;">
-            <div style="background:${pri.bg};color:${pri.textColor};font-size:10px;font-weight:900;padding:4px 10px;border-radius:10px;letter-spacing:0.06em;white-space:nowrap;">${escapeHtml(pri.label)}</div>
-            <div style="font-size:11px;color:var(--muted);font-family:'Inter',sans-serif;font-weight:700;">#${idx + 1}位</div>
-            <div style="margin-left:auto;font-size:11px;color:var(--muted);white-space:nowrap;">${fmtDate(ev.date)} · ${rel}</div>
+            <div style="background:${pri.bg};color:${pri.textColor};font-size:11.5px;font-weight:900;padding:4px 10px;border-radius:10px;letter-spacing:0.06em;white-space:nowrap;">${escapeHtml(pri.label)}</div>
+            <div style="font-size:12.5px;color:var(--muted);font-family:'Inter',sans-serif;font-weight:700;">#${idx + 1}位</div>
+            <div style="margin-left:auto;font-size:12.5px;color:var(--muted);white-space:nowrap;">${fmtDate(ev.date)} · ${rel}</div>
           </div>
           <div style="font-size:14px;font-weight:700;color:var(--ink);line-height:1.45;margin-bottom:10px;">${escapeHtml(rawLabel)}</div>
-          <button class="fp-task-make-deliv" data-task="${escapeHtml(rawLabel)}" data-type="${dt}" data-client-id="${escapeHtml(c.id||'')}" style="font-size:11.5px;padding:7px 14px;background:linear-gradient(135deg,#5B5BF0,#6D6DEF);color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:800;font-family:inherit;letter-spacing:0.02em;box-shadow:0 4px 10px rgba(91,91,240,0.25);">✨ Jobs に資料作成依頼 → 編集 → LINE送信</button>
+          <button class="fp-task-make-deliv" data-task="${escapeHtml(rawLabel)}" data-type="${dt}" data-client-id="${escapeHtml(c.id||'')}" style="font-size:13px;padding:7px 14px;background:linear-gradient(135deg,#5B5BF0,#6D6DEF);color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:800;font-family:inherit;letter-spacing:0.02em;box-shadow:0 4px 10px rgba(91,91,240,0.25);">✨ Jobs に資料作成依頼 → 編集 → LINE送信</button>
         </div>`;
       };
       // 段階別件数
       const tierCounts = { overdue: 0, now: 0, next: 0, soon: 0, later: 0 };
       taskEvents.forEach(e => tierCounts[calcPri(e.date).tier]++);
       const tierSummary = `
-        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;font-size:11px;">
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;font-size:12.5px;">
           ${tierCounts.overdue > 0 ? `<span style="background:#dc2626;color:#fff;padding:4px 10px;border-radius:10px;font-weight:800;">🔥 期限超過 ${tierCounts.overdue}</span>` : ''}
           ${tierCounts.now > 0 ?     `<span style="background:#f97316;color:#fff;padding:4px 10px;border-radius:10px;font-weight:800;">🔥 NOW ${tierCounts.now}</span>` : ''}
           ${tierCounts.next > 0 ?    `<span style="background:#fef3c7;color:#92400e;padding:4px 10px;border-radius:10px;font-weight:800;border:1px solid #fbbf24;">⏭ NEXT ${tierCounts.next}</span>` : ''}
@@ -6643,9 +6643,9 @@
       const taskListHtml = taskEvents.length === 0 ? '' : `
         <style>@keyframes fp-task-pulse{0%,100%{transform:translateY(0);box-shadow:0 0 0 3px rgba(249,115,22,0.22),0 8px 22px rgba(249,115,22,0.3)}50%{transform:translateY(-1px);box-shadow:0 0 0 5px rgba(249,115,22,0.3),0 12px 28px rgba(249,115,22,0.45)}}</style>
         <div style="background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:14px;">
-          <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
+          <div style="font-size:12.5px;font-weight:700;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
             <span>📋 議事録から抽出された具体タスク (優先度順)</span>
-            <span style="font-size:10.5px;color:#94a3b8;text-transform:none;letter-spacing:0;">フォロータスクと統合</span>
+            <span style="font-size:12px;color:#94a3b8;text-transform:none;letter-spacing:0;">フォロータスクと統合</span>
           </div>
           ${tierSummary}
           ${taskEvents.slice().sort((a,b) => new Date(a.date) - new Date(b.date)).map((e,i) => renderTaskRow(e,i)).join('')}
@@ -6680,9 +6680,9 @@
           <div style="display:flex;align-items:stretch;gap:0;background:#fff;border:1px solid var(--line);border-radius:8px;margin-bottom:6px;overflow:hidden;">
             <div style="width:5px;background:${ev.major ? '#DC2626' : (ev.cat === 'finance' ? '#5B5BF0' : ev.cat === 'education' ? '#0EA5E9' : ev.cat === 'retirement' ? '#EA580C' : ev.cat === 'family' ? '#CA8A04' : ev.cat === 'health' ? '#10B981' : '#94A3B8')};flex-shrink:0;"></div>
             <div style="flex:1;padding:12px 16px;display:flex;align-items:center;gap:14px;min-width:0;">
-              <span style="font-family:'Inter',sans-serif;font-weight:800;font-size:12px;color:#475569;font-variant-numeric:tabular-nums;flex-shrink:0;width:42px;">${ev._d.getMonth()+1}/${ev._d.getDate()}</span>
-              <span style="flex:1;font-size:13.5px;font-weight:700;color:#0F172A;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(ev.label)}${ev.major ? ' <span style="background:#DC2626;color:#fff;font-size:9.5px;font-weight:900;padding:2px 7px;border-radius:8px;letter-spacing:0.06em;margin-left:6px;">重要</span>' : ''}</span>
-              ${ev.who && ev.who !== c.name ? `<span style="font-size:11px;color:#64748B;flex-shrink:0;">対象: ${escapeHtml(ev.who)}</span>` : ''}
+              <span style="font-family:'Inter',sans-serif;font-weight:800;font-size:13.5px;color:#475569;font-variant-numeric:tabular-nums;flex-shrink:0;width:42px;">${ev._d.getMonth()+1}/${ev._d.getDate()}</span>
+              <span style="flex:1;font-size:13.5px;font-weight:700;color:#0F172A;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(ev.label)}${ev.major ? ' <span style="background:#DC2626;color:#fff;font-size:11px;font-weight:900;padding:2px 7px;border-radius:8px;letter-spacing:0.06em;margin-left:6px;">重要</span>' : ''}</span>
+              ${ev.who && ev.who !== c.name ? `<span style="font-size:12.5px;color:#64748B;flex-shrink:0;">対象: ${escapeHtml(ev.who)}</span>` : ''}
             </div>
           </div>
         `).join('');
@@ -6692,8 +6692,8 @@
           <div style="margin-bottom:18px;">
             <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid #E2E8F0;">
               <span style="font-family:'Noto Sans JP',serif;font-weight:800;font-size:15px;color:#0F172A;letter-spacing:-0.01em;">${monthLabel}</span>
-              <span style="font-size:10.5px;color:#5B5BF0;background:#EEF2FF;padding:2px 8px;border-radius:10px;font-weight:700;">${rel}</span>
-              <span style="margin-left:auto;font-size:11px;color:#94A3B8;font-weight:600;">${monthEvents.length} 件</span>
+              <span style="font-size:12px;color:#5B5BF0;background:#EEF2FF;padding:2px 8px;border-radius:10px;font-weight:700;">${rel}</span>
+              <span style="margin-left:auto;font-size:12.5px;color:#94A3B8;font-weight:600;">${monthEvents.length} 件</span>
             </div>
             ${cardsHtml}
           </div>
@@ -6701,9 +6701,9 @@
       }).join('');
       const eventsFold = allEvents.length === 0 ? '' : `
         <div style="background:linear-gradient(180deg,#FAFBFC,#F1F5F9);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin-top:8px;">
-          <div style="font-size:11px;color:var(--muted);font-weight:800;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;">
+          <div style="font-size:12.5px;color:var(--muted);font-weight:800;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;">
             <span>📅 ライフイベント・タイムライン</span>
-            <span style="font-family:'Inter',sans-serif;letter-spacing:0.04em;color:#5B5BF0;text-transform:none;font-size:11px;">${allEvents.length} 件 (最大60件)</span>
+            <span style="font-family:'Inter',sans-serif;letter-spacing:0.04em;color:#5B5BF0;text-transform:none;font-size:12.5px;">${allEvents.length} 件 (最大60件)</span>
           </div>
           ${monthsHtml}
         </div>
@@ -6761,7 +6761,7 @@
                 const master = getTagsMaster();
                 const myTagIds = getClientTags(c.id);
                 const myTags = myTagIds.map(id => master.find(t => t.id === id)).filter(Boolean);
-                return myTags.map(t => { const col = validColor(t.color); return `<span style="display:inline-flex;align-items:center;background:${col};color:#fff;padding:4px 12px;border-radius:999px;font-size:11.5px;font-weight:800;letter-spacing:0.04em;line-height:1.4;">${escapeHtml(t.label)}</span>`; }).join('');
+                return myTags.map(t => { const col = validColor(t.color); return `<span style="display:inline-flex;align-items:center;background:${col};color:#fff;padding:4px 12px;border-radius:999px;font-size:13px;font-weight:800;letter-spacing:0.04em;line-height:1.4;">${escapeHtml(t.label)}</span>`; }).join('');
               })()}
             </div>
           </div>
@@ -6775,7 +6775,7 @@
               <!-- 標準 音声 upload button (fallback: shortcut 未 setup の 客用) -->
               <button id="cd-audio-upload-btn" data-client-id="${escapeHtml(c.id)}" style="margin-top:8px;width:100%;background:linear-gradient(135deg,#5B5BF0,#4747C7);color:#fff;border:none;padding:14px 20px;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer;font-family:'Noto Sans JP',sans-serif;box-shadow:0 6px 18px rgba(91,91,240,0.28);display:flex;align-items:center;justify-content:center;gap:10px;transition:transform .12s,box-shadow .15s;">
                 <span style="font-size:18px;line-height:1;">📁</span>
-                <span style="text-align:left;line-height:1.3;">音声 を アップロード → 議事録 生成<span style="display:block;font-size:11px;font-weight:600;color:rgba(255,255,255,0.85);margin-top:2px;">対応: MP3 · M4A (iPhone ボイスメモ) · WAV · WEBM · MP4 (音声抽出)</span></span>
+                <span style="text-align:left;line-height:1.3;">音声 を アップロード → 議事録 生成<span style="display:block;font-size:12.5px;font-weight:600;color:rgba(255,255,255,0.85);margin-top:2px;">対応: MP3 · M4A (iPhone ボイスメモ) · WAV · WEBM · MP4 (音声抽出)</span></span>
               </button>
               <input type="file" id="cd-audio-upload-input" data-client-id="${escapeHtml(c.id)}" accept="audio/*,.m4a,.mp3,.wav,.aac" style="display:none;">
               <!-- 2026-08-28 R11 owner「まだ Photos chooser 出る」対応 + backtick 事故 修正:
@@ -6790,7 +6790,7 @@
               <button id="cd-instant-zoom-btn" data-client-id="${escapeHtml(c.id)}" style="display:none;"></button>
               <button id="cd-schedule-zoom-btn" data-client-id="${escapeHtml(c.id)}" style="display:none;"></button>
             </div>
-            <div id="cd-instant-zoom-status" style="font-size:12px;font-weight:700;margin-top:8px;text-align:center;"></div>
+            <div id="cd-instant-zoom-status" style="font-size:13.5px;font-weight:700;margin-top:8px;text-align:center;"></div>
 
           <!-- ★ オーナーfb 2026-06-20: タグ管理 を 顧客名 直下、 オリジナル タグ アイコン (ピンク+紺) -->
           <div class="cd-profile-section" id="cd-tags-section" data-client-id="${escapeHtml(c.id)}" style="margin-top:16px;padding:16px 18px;background:#F8FAFC;border:2px solid #E2E8F0;border-radius:12px;">
@@ -6909,12 +6909,12 @@
 
           <!-- 2026-07-11 v4 owner FB: 削除ボタン は 顧客モーダル 左タブ 一番下 (この画面 = この お客様 の 削除 と 文脈 明瞭) -->
           <div class="cd-left-delete-zone" style="margin-top:auto;padding-top:24px;border-top:1px solid rgba(148,163,184,0.22);">
-            <div style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;">danger zone</div>
+            <div style="font-size:12px;font-weight:700;color:#94A3B8;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;">danger zone</div>
             <button id="cd-left-delete-btn" data-cid="${escapeHtml(c.id)}" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;background:#fff;color:#DC2626;border:1.5px solid #FCA5A5;padding:11px 14px;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:0.02em;transition:background .15s,border-color .15s,box-shadow .15s;">
               <span style="font-size:15px;">🗑</span>
               <span>${escapeHtml(c.name)} さん を 削除</span>
             </button>
-            <div style="font-size:11px;color:#94A3B8;margin-top:6px;line-height:1.5;">この お客様 の LINE / 議事録 / 予約 / 資料 が すべて 消えます。 元 に 戻せません。</div>
+            <div style="font-size:12.5px;color:#94A3B8;margin-top:6px;line-height:1.5;">この お客様 の LINE / 議事録 / 予約 / 資料 が すべて 消えます。 元 に 戻せません。</div>
           </div>
         </aside>
 
@@ -6937,12 +6937,12 @@
                   <polyline points="17 8 12 3 7 8"></polyline>
                   <line x1="12" y1="3" x2="12" y2="15"></line>
                 </svg>
-                <span style="text-align:left;line-height:1.35;">音声 を アップロード → 議事録<br><span style="font-size:11px;font-weight:600;color:rgba(255,255,255,0.85);">MP3 · M4A · WAV · WEBM · MP4</span></span>
+                <span style="text-align:left;line-height:1.35;">音声 を アップロード → 議事録<br><span style="font-size:12.5px;font-weight:600;color:rgba(255,255,255,0.85);">MP3 · M4A · WAV · WEBM · MP4</span></span>
               </button>
               <!-- 2026-09-08 owner「Voice Memos の 文字起こし の 方が 精度 高い」対応: text 貼付 button -->
               <button id="cd-transcript-paste-btn" data-client-id="${escapeHtml(c.id)}" style="width:100%;background:#fff;color:#5B5BF0;border:2px solid #5B5BF0;padding:12px 20px;border-radius:12px;font-size:13px;font-weight:900;cursor:pointer;font-family:'Noto Sans JP',sans-serif;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:8px;">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-                <span style="text-align:left;line-height:1.3;">文字起こし text を 貼付 → 議事録<span style="display:block;font-size:10.5px;font-weight:600;color:#94A3B8;margin-top:1px;">iOS Voice Memos の コピー を そのまま (Whisper より 高精度)</span></span>
+                <span style="text-align:left;line-height:1.3;">文字起こし text を 貼付 → 議事録<span style="display:block;font-size:12px;font-weight:600;color:#94A3B8;margin-top:1px;">iOS Voice Memos の コピー を そのまま (Whisper より 高精度)</span></span>
               </button>
               <button id="cd-audio-upload-help" type="button" style="display:none;" hidden></button>
             </div>
@@ -7145,12 +7145,12 @@
             <!-- TIMELINE -->
             <!-- ★ 2026-06-29 速度改善: lazy render — overview/line のみ初期render、他はタブ click時に build -->
             <div class="cd-tabpanel" data-cdpanel="timeline" hidden data-lazy-render="timeline">
-              <div class="cd-empty" style="padding:24px;color:#94A3B8;font-size:12px;">読込中…</div>
+              <div class="cd-empty" style="padding:24px;color:#94A3B8;font-size:13.5px;">読込中…</div>
             </div>
 
             <!-- MEETINGS -->
             <div class="cd-tabpanel" data-cdpanel="meetings" hidden data-lazy-render="meetings">
-              <div class="cd-empty" style="padding:24px;color:#94A3B8;font-size:12px;">読込中…</div>
+              <div class="cd-empty" style="padding:24px;color:#94A3B8;font-size:13.5px;">読込中…</div>
             </div>
 
             <!-- Q&A (Phase 2: LINE質問 自動分類) -->
@@ -7164,7 +7164,7 @@
 
             <!-- FAMILY 家系図 -->
             <div class="cd-tabpanel" data-cdpanel="family" hidden data-lazy-render="family">
-              <div class="cd-empty" style="padding:24px;color:#94A3B8;font-size:12px;">読込中…</div>
+              <div class="cd-empty" style="padding:24px;color:#94A3B8;font-size:13.5px;">読込中…</div>
             </div>
           </div>
 
@@ -7847,12 +7847,12 @@
           <div style="display:flex;flex-direction:column;gap:16px;">
             <!-- STEP 1: 世代グループ -->
             <label style="display:block;">
-              <div style="font-size:13px;font-weight:800;color:#475569;margin-bottom:8px;letter-spacing:0.01em;"><span style="background:${REL_TREE[curGroup].color};color:#fff;font-size:11px;font-weight:900;padding:2px 9px;border-radius:5px;margin-right:8px;letter-spacing:0.06em;">STEP 1</span>世代</div>
+              <div style="font-size:13px;font-weight:800;color:#475569;margin-bottom:8px;letter-spacing:0.01em;"><span style="background:${REL_TREE[curGroup].color};color:#fff;font-size:12.5px;font-weight:900;padding:2px 9px;border-radius:5px;margin-right:8px;letter-spacing:0.06em;">STEP 1</span>世代</div>
               <select id="fp-fam-grp" style="width:100%;padding:14px 14px;border:2px solid #E2E8F0;border-radius:11px;font-size:17px;font-weight:700;font-family:inherit;background:#fff;min-height:56px;color:#0F172A;">${grpOpts}</select>
             </label>
             <!-- STEP 2: 関係 細部 (グループに応じて 更新) -->
             <label style="display:block;">
-              <div style="font-size:13px;font-weight:800;color:#475569;margin-bottom:8px;letter-spacing:0.01em;"><span style="background:${REL_TREE[curGroup].color};color:#fff;font-size:11px;font-weight:900;padding:2px 9px;border-radius:5px;margin-right:8px;letter-spacing:0.06em;">STEP 2</span>関係</div>
+              <div style="font-size:13px;font-weight:800;color:#475569;margin-bottom:8px;letter-spacing:0.01em;"><span style="background:${REL_TREE[curGroup].color};color:#fff;font-size:12.5px;font-weight:900;padding:2px 9px;border-radius:5px;margin-right:8px;letter-spacing:0.06em;">STEP 2</span>関係</div>
               <select id="fp-fam-rel" style="width:100%;padding:14px 14px;border:2px solid #E2E8F0;border-radius:11px;font-size:17px;font-weight:700;font-family:inherit;background:#fff;min-height:56px;color:#0F172A;"></select>
             </label>
             <!-- 名前 -->
@@ -7862,7 +7862,7 @@
             </label>
             <!-- 生年月日 (3プルダウン) -->
             <div>
-              <div style="font-size:13px;font-weight:800;color:#475569;margin-bottom:8px;">生年月日 <span style="font-weight:500;color:#94A3B8;font-size:11.5px;margin-left:6px;">(誕生日タブに 自動反映)</span></div>
+              <div style="font-size:13px;font-weight:800;color:#475569;margin-bottom:8px;">生年月日 <span style="font-weight:500;color:#94A3B8;font-size:13px;margin-left:6px;">(誕生日タブに 自動反映)</span></div>
               <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:8px;">
                 <select id="fp-fam-byear" style="padding:14px 8px;border:2px solid #E2E8F0;border-radius:11px;font-size:16px;font-weight:700;font-family:inherit;background:#fff;min-height:56px;color:#0F172A;">${yearOpts.join('')}</select>
                 <select id="fp-fam-bmonth" style="padding:14px 8px;border:2px solid #E2E8F0;border-radius:11px;font-size:16px;font-weight:700;font-family:inherit;background:#fff;min-height:56px;color:#0F172A;">${monthOpts.join('')}</select>
@@ -7871,7 +7871,7 @@
             </div>
             <!-- メモ -->
             <label style="display:block;">
-              <div style="font-size:13px;font-weight:800;color:#475569;margin-bottom:8px;">メモ <span style="font-weight:500;color:#94A3B8;font-size:11.5px;margin-left:6px;">(任意 — 職業 / 学年 等)</span></div>
+              <div style="font-size:13px;font-weight:800;color:#475569;margin-bottom:8px;">メモ <span style="font-weight:500;color:#94A3B8;font-size:13px;margin-left:6px;">(任意 — 職業 / 学年 等)</span></div>
               <input id="fp-fam-note" type="text" value="${escapeHtml(m.note || '')}" placeholder="例: 中学2年 / 公務員" style="width:100%;padding:14px 14px;border:2px solid #E2E8F0;border-radius:11px;font-size:16px;font-weight:500;font-family:inherit;box-sizing:border-box;min-height:56px;">
             </label>
           </div>
@@ -8075,7 +8075,7 @@ ${ctxText}${surveyTxt}`;
                 // 2026-09-05 owner「upload 履歴 見えて」対応: 議事録 tab の 最上部 に upload 履歴 slot 挿入。
                 //   fpJobs.render() が cd-jobs-history 内 の HTML を 書く。 mobileJobs cache 空 なら 「なし」 表示。
                 const audioUploadTopBar = `<div style="padding:14px 18px 4px;font-family:'Noto Sans JP',-apple-system,sans-serif;">
-                  <div style="font-size:11px;font-weight:800;color:#64748B;letter-spacing:0.14em;text-transform:uppercase;margin-bottom:8px;">▾ upload 履歴 (直近 15件)</div>
+                  <div style="font-size:12.5px;font-weight:800;color:#64748B;letter-spacing:0.14em;text-transform:uppercase;margin-bottom:8px;">▾ upload 履歴 (直近 15件)</div>
                   <div id="cd-jobs-history"></div>
                 </div>`;
                 const bindAltUploadBtn = () => { try { if (typeof window.__fpJobs?.render === 'function') window.__fpJobs.render(); } catch (_) {} };
@@ -8122,7 +8122,7 @@ ${ctxText}${surveyTxt}`;
                   panel.innerHTML = audioUploadTopBar + `<div style="padding:36px 20px;text-align:center;font-family:'Noto Sans JP',-apple-system,sans-serif;color:#94A3B8;">
                     <div style="font-size:32px;margin-bottom:8px;">📝</div>
                     <div style="font-size:13px;font-weight:700;color:#64748B;">面談録 が まだ ありません</div>
-                    <div style="font-size:11px;margin-top:4px;color:#94A3B8;">面談 の 音声/動画 を upload すると ここ に 表示 されます</div>
+                    <div style="font-size:12.5px;margin-top:4px;color:#94A3B8;">面談 の 音声/動画 を upload すると ここ に 表示 されます</div>
                   </div>`;
                 }
                 bindAltUploadBtn();
@@ -8383,17 +8383,17 @@ ${ctxText}${surveyTxt}`;
                   <span style="font-size:22px;flex-shrink:0;">${icon}</span>
                   <span style="flex:1;min-width:0;">
                     <span style="display:block;font-size:14px;font-weight:800;color:#1F2A3F;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${label}</span>
-                    <span style="display:block;font-size:11px;color:#6B7280;margin-top:2px;">${hint}</span>
+                    <span style="display:block;font-size:12.5px;color:#6B7280;margin-top:2px;">${hint}</span>
                   </span>
                 </label>`;
               }).join('');
               ov.innerHTML = `
                 <div style="background:#fff;border-radius:18px;padding:22px 22px 18px;max-width:440px;width:100%;box-shadow:0 24px 60px rgba(0,0,0,0.32);max-height:88vh;overflow-y:auto;">
-                  <div style="font-size:11px;font-weight:800;color:#9A5A18;letter-spacing:0.14em;margin-bottom:6px;">SELECT MICROPHONE</div>
+                  <div style="font-size:12.5px;font-weight:800;color:#9A5A18;letter-spacing:0.14em;margin-bottom:6px;">SELECT MICROPHONE</div>
                   <h2 style="font-size:19px;font-weight:800;color:#111827;margin:0 0 8px;font-family:'Noto Sans JP',sans-serif;">🎤 マイク を 選択</h2>
                   <p style="font-size:12.5px;color:#6b7280;line-height:1.7;margin:0 0 16px;">面談 録音 に 使う マイク を 選んで ください。<br>${inputs.length} 台 検出 されて います。</p>
                   <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;">${micHtml}</div>
-                  <label style="display:flex;align-items:center;gap:8px;margin-bottom:14px;font-size:12px;color:#6b7280;cursor:pointer;">
+                  <label style="display:flex;align-items:center;gap:8px;margin-bottom:14px;font-size:13.5px;color:#6b7280;cursor:pointer;">
                     <input type="checkbox" id="fp-mic-remember" checked style="width:16px;height:16px;">
                     <span>次回 も この マイク を 使う (自動選択)</span>
                   </label>
@@ -8474,7 +8474,7 @@ ${ctxText}${surveyTxt}`;
         ov.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.62);backdrop-filter:blur(4px);z-index:99999;display:flex;align-items:center;justify-content:center;padding:18px;font-family:"Noto Sans JP","Hiragino Sans",sans-serif;';
         ov.innerHTML = `
           <div style="background:#fff;border-radius:16px;padding:22px;max-width:440px;width:100%;max-height:88vh;overflow-y:auto;box-shadow:0 24px 60px rgba(15,23,42,0.35);">
-            <div style="font-size:11px;font-weight:800;color:#5B5BF0;letter-spacing:0.14em;margin-bottom:8px;">HELP · iPHONE VOICE MEMOS</div>
+            <div style="font-size:12.5px;font-weight:800;color:#5B5BF0;letter-spacing:0.14em;margin-bottom:8px;">HELP · iPHONE VOICE MEMOS</div>
             <h2 style="font-size:19px;font-weight:800;color:#0F172A;margin:0 0 14px;line-height:1.35;">Voice Memos が Files アプリ に<br>出て こ ない 時</h2>
             <p style="font-size:13px;color:#334155;line-height:1.75;margin:0 0 16px;">iPhone の Voice Memos は default で iCloud 同期 が OFF に なって いる ため、 Files.app から は 見え ません。 <b>1回 だけ</b> 設定 する と、 以降 は Voice Memos で 録音 する だけ で ここ から アップロード でき ます。</p>
 
@@ -8563,13 +8563,13 @@ ${ctxText}${surveyTxt}`;
         ov.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.62);backdrop-filter:blur(4px);z-index:99999;display:flex;align-items:center;justify-content:center;padding:18px;font-family:"Noto Sans JP","Hiragino Sans",sans-serif;';
         ov.innerHTML = `
           <div style="background:#fff;border-radius:16px;padding:22px;max-width:520px;width:100%;max-height:88vh;overflow-y:auto;box-shadow:0 24px 60px rgba(15,23,42,0.35);">
-            <div style="font-size:11px;font-weight:800;color:#5B5BF0;letter-spacing:0.14em;margin-bottom:6px;">TRANSCRIPT PASTE · ${escapeHtml(scopedName)} 様</div>
+            <div style="font-size:12.5px;font-weight:800;color:#5B5BF0;letter-spacing:0.14em;margin-bottom:6px;">TRANSCRIPT PASTE · ${escapeHtml(scopedName)} 様</div>
             <h2 style="font-size:18px;font-weight:900;color:#0F172A;margin:0 0 12px;">文字起こし text を 貼付</h2>
             <p style="font-size:12.5px;color:#334155;line-height:1.7;margin:0 0 14px;">Voice Memos で 録音 → 「文字起こし を 表示」 → 全選択 コピー → 下 に 貼付 → 「議事録 を 生成」 タップ。</p>
             <textarea id="cd-transcript-textarea" placeholder="ここに 文字起こし を 貼付…" style="width:100%;min-height:220px;padding:12px 14px;border:1.5px solid #CBD5E1;border-radius:10px;font-family:inherit;font-size:13.5px;line-height:1.7;resize:vertical;box-sizing:border-box;color:#0F172A;"></textarea>
             <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;">
-              <div id="cd-transcript-charcount" style="font-size:11.5px;color:#64748B;font-weight:700;">0 字</div>
-              <div style="font-size:11px;color:#94A3B8;">30 字 以上 · 100,000 字 以下</div>
+              <div id="cd-transcript-charcount" style="font-size:13px;color:#64748B;font-weight:700;">0 字</div>
+              <div style="font-size:12.5px;color:#94A3B8;">30 字 以上 · 100,000 字 以下</div>
             </div>
             <div style="display:flex;gap:10px;margin-top:16px;">
               <button id="cd-transcript-cancel" style="flex:1;padding:12px;background:#F1F5F9;color:#334155;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;">キャンセル</button>
@@ -8665,12 +8665,12 @@ ${ctxText}${surveyTxt}`;
             const joinUrl = data.joinUrl || '';
             const urlBlock = joinUrl ? (`
               <div style="margin-top:10px;padding:10px 12px;background:#F9FAFB;border:1px solid #E5E7EB;border-radius:8px;">
-                <div style="font-size:10.5px;font-weight:800;color:#6B7280;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:5px;">客 に 伝える URL</div>
+                <div style="font-size:12px;font-weight:800;color:#6B7280;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:5px;">客 に 伝える URL</div>
                 <div style="display:flex;align-items:center;gap:8px;">
-                  <input type="text" readonly value="${escapeHtml(joinUrl)}" id="fp-zoom-url-${Date.now()}" style="flex:1;min-width:0;font-size:12px;padding:6px 8px;border:1px solid #D1D5DB;border-radius:5px;background:#fff;font-family:'JetBrains Mono',monospace;color:#1F2937;" onclick="this.select()">
-                  <button type="button" data-copy-url="${escapeHtml(joinUrl)}" style="background:#1F2937;color:#fff;border:none;padding:6px 12px;border-radius:5px;font-size:11.5px;font-weight:800;cursor:pointer;font-family:inherit;flex-shrink:0;">コピー</button>
+                  <input type="text" readonly value="${escapeHtml(joinUrl)}" id="fp-zoom-url-${Date.now()}" style="flex:1;min-width:0;font-size:13.5px;padding:6px 8px;border:1px solid #D1D5DB;border-radius:5px;background:#fff;font-family:'JetBrains Mono',monospace;color:#1F2937;" onclick="this.select()">
+                  <button type="button" data-copy-url="${escapeHtml(joinUrl)}" style="background:#1F2937;color:#fff;border:none;padding:6px 12px;border-radius:5px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;flex-shrink:0;">コピー</button>
                 </div>
-                <div style="font-size:10.5px;color:#6B7280;margin-top:5px;">電話 / SMS / メール で 客 に 伝えて 開始 して ください</div>
+                <div style="font-size:12px;color:#6B7280;margin-top:5px;">電話 / SMS / メール で 客 に 伝えて 開始 して ください</div>
               </div>`) : '';
             if (data.lineSent) {
               status.style.color = '#059669';
@@ -8684,7 +8684,7 @@ ${ctxText}${surveyTxt}`;
               status.innerHTML = '⚠ Zoom Meeting は 作成 OK / LINE 送信 のみ 失敗 ' +
                 '<div style="margin-top:6px;font-size:12.5px;font-weight:600;color:#7C2D12;">' + escapeHtml(errMsg) + '</div>' +
                 (isTokenIssue
-                  ? '<div style="margin-top:8px;"><a href="/account.html" target="_blank" style="display:inline-block;background:#DC2626;color:#fff;padding:6px 14px;border-radius:6px;text-decoration:none;font-weight:800;font-size:12px;">🔧 マイページ で LINE 再連携</a></div>'
+                  ? '<div style="margin-top:8px;"><a href="/account.html" target="_blank" style="display:inline-block;background:#DC2626;color:#fff;padding:6px 14px;border-radius:6px;text-decoration:none;font-weight:800;font-size:13.5px;">🔧 マイページ で LINE 再連携</a></div>'
                   : '') + urlBlock;
             }
             // copy button 実装 (delegation で 拾う)
@@ -9168,7 +9168,7 @@ ${ctxText}${surveyTxt}`;
         root.innerHTML = `<div style="padding:32px 24px;text-align:center;color:#64748B;font-family:'Noto Sans JP',-apple-system,sans-serif;">
           <div style="display:inline-block;width:22px;height:22px;border:3px solid #E2E8F0;border-top-color:#3B82F6;border-radius:50%;animation:fp-spin-qa 0.7s linear infinite;margin-bottom:10px;"></div>
           <div style="font-size:13px;font-weight:700;">LINE 履歴 を 取得 中…</div>
-          <div style="font-size:11px;color:#94A3B8;margin-top:4px;">取得 完了 後 に AI 分析 を 開始 します</div>
+          <div style="font-size:12.5px;color:#94A3B8;margin-top:4px;">取得 完了 後 に AI 分析 を 開始 します</div>
         </div>
         <style>@keyframes fp-spin-qa { to { transform: rotate(360deg); } }</style>`;
         const tabBadge = document.getElementById('cd-qa-count');
@@ -9187,7 +9187,7 @@ ${ctxText}${surveyTxt}`;
       root.innerHTML = `<div style="padding:36px 20px;text-align:center;color:#94A3B8;font-family:'Noto Sans JP',-apple-system,sans-serif;">
         <div style="font-size:32px;margin-bottom:8px;">💬</div>
         <div style="font-size:13px;font-weight:700;color:#64748B;">LINE 履歴 が ありません</div>
-        <div style="font-size:11px;margin-top:4px;color:#94A3B8;">客 が LINE 送って くる と 自動 分析 されます</div>
+        <div style="font-size:12.5px;margin-top:4px;color:#94A3B8;">客 が LINE 送って くる と 自動 分析 されます</div>
       </div>`;
       const tabBadge = document.getElementById('cd-qa-count');
       if (tabBadge) tabBadge.textContent = '0';
@@ -9249,20 +9249,20 @@ ${ctxText}${surveyTxt}`;
       <div style="padding:18px 16px 80px;">
         <!-- summary header -->
         <div style="margin-bottom:18px;padding:14px 16px;background:linear-gradient(135deg,#FBF5E3,#FFFBF1);border:1px solid #E8D9A8;border-left:4px solid #C19A3A;border-radius:8px;">
-          <div style="font-size:11px;font-weight:800;color:#8B7D5D;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:4px;">Q&A 自動分析</div>
+          <div style="font-size:12.5px;font-weight:800;color:#8B7D5D;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:4px;">Q&A 自動分析</div>
           <div style="font-size:17px;font-weight:800;color:#1F2A3F;">${data.totalQuestions || 0} 件の質問</div>
-          ${data.topCategories && data.topCategories.length > 0 ? `<div style="font-size:12px;color:#5e4d1a;margin-top:4px;">頻出: ${data.topCategories.slice(0,3).map(c => escapeHtml(c)).join(' · ')}</div>` : ''}
-          <button id="cd-qa-refresh" style="margin-top:10px;background:#fff;color:#8B6F26;border:1px solid #C19A3A;padding:5px 12px;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">🔄 再分析</button>
+          ${data.topCategories && data.topCategories.length > 0 ? `<div style="font-size:13.5px;color:#5e4d1a;margin-top:4px;">頻出: ${data.topCategories.slice(0,3).map(c => escapeHtml(c)).join(' · ')}</div>` : ''}
+          <button id="cd-qa-refresh" style="margin-top:10px;background:#fff;color:#8B6F26;border:1px solid #C19A3A;padding:5px 12px;border-radius:5px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;">🔄 再分析</button>
         </div>
 
         <!-- predicted next questions -->
         ${pred.length > 0 ? `
         <div style="margin-bottom:18px;padding:14px 16px;background:#F8FAFC;border:1px solid #CBD5E1;border-left:4px solid #5B5BF0;border-radius:8px;">
-          <div style="font-size:11px;font-weight:800;color:#5B5BF0;letter-spacing:0.16em;text-transform:uppercase;margin-bottom:8px;">🔮 次に 聞かれそうな 質問</div>
+          <div style="font-size:12.5px;font-weight:800;color:#5B5BF0;letter-spacing:0.16em;text-transform:uppercase;margin-bottom:8px;">🔮 次に 聞かれそうな 質問</div>
           <ul style="margin:0;padding-left:18px;font-size:13px;color:#1F2A3F;line-height:1.85;">
             ${pred.slice(0, 6).map(q => `<li style="margin-bottom:4px;">${escapeHtml(q)}</li>`).join('')}
           </ul>
-          <div style="font-size:10.5px;color:#64748B;margin-top:8px;line-height:1.55;">↑ AI が お客様の 質問パターン から 予測。 次回 面談の 事前準備 や 先回り LINE 返信 に。</div>
+          <div style="font-size:12px;color:#64748B;margin-top:8px;line-height:1.55;">↑ AI が お客様の 質問パターン から 予測。 次回 面談の 事前準備 や 先回り LINE 返信 に。</div>
         </div>
         ` : ''}
 
@@ -9275,14 +9275,14 @@ ${ctxText}${surveyTxt}`;
           <div style="margin-bottom:14px;background:#fff;border:1px solid #E2E8F0;border-left:4px solid ${color};border-radius:8px;overflow:hidden;">
             <div style="padding:11px 14px;background:${color}08;display:flex;align-items:center;justify-content:space-between;">
               <div style="font-size:13px;font-weight:800;color:#1F2A3F;">${escapeHtml(cat.name)}</div>
-              <div style="font-size:11px;font-weight:800;color:${color};background:${color}1F;padding:2px 9px;border-radius:99px;letter-spacing:0.04em;">${cat.count || qs.length} 件</div>
+              <div style="font-size:12.5px;font-weight:800;color:${color};background:${color}1F;padding:2px 9px;border-radius:99px;letter-spacing:0.04em;">${cat.count || qs.length} 件</div>
             </div>
             <div style="padding:10px 14px;">
               ${qs.slice(0, 8).map(q => `
                 <div style="padding:7px 0;border-bottom:1px solid #F1F5F9;font-size:12.5px;color:#334155;line-height:1.65;">
                   <span style="color:${color};font-weight:700;margin-right:4px;">Q.</span>
                   ${escapeHtml(q.q || q)}
-                  ${q.ts ? `<span style="font-size:10px;color:#94A3B8;margin-left:6px;">${escapeHtml(String(q.ts).slice(0,10))}</span>` : ''}
+                  ${q.ts ? `<span style="font-size:11.5px;color:#94A3B8;margin-left:6px;">${escapeHtml(String(q.ts).slice(0,10))}</span>` : ''}
                 </div>
               `).join('')}
             </div>
@@ -9326,9 +9326,9 @@ ${ctxText}${surveyTxt}`;
         <div style="min-width:0;">
           <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;">
             <span style="font-size:17px;font-weight:900;color:#0F1729;letter-spacing:-0.01em;">${escapeHtml(c.name || '(名前未設定)')}</span>
-            ${tags.map(t => `<span style="background:${t.color || '#6B7280'};color:#fff;font-size:10px;font-weight:800;padding:2px 8px;border-radius:999px;letter-spacing:0.04em;">${escapeHtml(t.label || t.key || '')}</span>`).join('')}
+            ${tags.map(t => `<span style="background:${t.color || '#6B7280'};color:#fff;font-size:11.5px;font-weight:800;padding:2px 8px;border-radius:999px;letter-spacing:0.04em;">${escapeHtml(t.label || t.key || '')}</span>`).join('')}
           </div>
-          <div style="display:flex;gap:14px;margin-top:6px;flex-wrap:wrap;font-size:11.5px;color:#065F46;">
+          <div style="display:flex;gap:14px;margin-top:6px;flex-wrap:wrap;font-size:13px;color:#065F46;">
             <span><b style="color:#0F1729;">最終接触</b> ${escapeHtml(lastContactDisp)}</span>
             <span><b style="color:#0F1729;">家族</b> ${escapeHtml(familyLine)}</span>
             <span><b style="color:#0F1729;">管理資産</b> ${escapeHtml(aumDisp)}</span>
@@ -9336,7 +9336,7 @@ ${ctxText}${surveyTxt}`;
             <span><b style="color:#0F1729;">面談</b> ${meetCount}件</span>
           </div>
         </div>
-        <button type="button" class="c1s-jump-overview" style="background:#fff;color:#065F46;border:1.5px solid #00844A;padding:8px 14px;border-radius:8px;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap;">✨ AI推奨 / CTA →</button>
+        <button type="button" class="c1s-jump-overview" style="background:#fff;color:#065F46;border:1.5px solid #00844A;padding:8px 14px;border-radius:8px;font-family:inherit;font-size:13.5px;font-weight:800;cursor:pointer;white-space:nowrap;">✨ AI推奨 / CTA →</button>
       </div>
     `;
     const cntLine = sorted.filter(e => e.type === 'line').length;
@@ -9354,9 +9354,9 @@ ${ctxText}${surveyTxt}`;
       { k: 'cancel', label: 'キャンセル', n: cntCanc, color: '#DC2626' },
     ];
     const chipsHtml = chips.map(c => `
-      <button type="button" class="c1s-chip ${c.k === 'all' ? 'active' : ''}" data-filter="${c.k}" style="background:${c.k==='all' ? '#00844A' : '#fff'};color:${c.k==='all'?'#fff':'#334155'};border:1.5px solid ${c.k==='all' ? '#00844A' : '#E2E8F0'};padding:6px 12px;border-radius:999px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:0.02em;display:inline-flex;align-items:center;gap:5px;">
+      <button type="button" class="c1s-chip ${c.k === 'all' ? 'active' : ''}" data-filter="${c.k}" style="background:${c.k==='all' ? '#00844A' : '#fff'};color:${c.k==='all'?'#fff':'#334155'};border:1.5px solid ${c.k==='all' ? '#00844A' : '#E2E8F0'};padding:6px 12px;border-radius:999px;font-size:13.5px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:0.02em;display:inline-flex;align-items:center;gap:5px;">
         <span>${c.label}</span>
-        <span style="font-family:'Manrope',monospace;background:${c.k==='all'?'rgba(255,255,255,0.22)':'#F1F3F5'};color:${c.k==='all'?'#fff':(c.color||'#6B7280')};font-size:10.5px;font-weight:900;padding:1px 6px;border-radius:4px;letter-spacing:0;">${c.n}</span>
+        <span style="font-family:'Manrope',monospace;background:${c.k==='all'?'rgba(255,255,255,0.22)':'#F1F3F5'};color:${c.k==='all'?'#fff':(c.color||'#6B7280')};font-size:12px;font-weight:900;padding:1px 6px;border-radius:4px;letter-spacing:0;">${c.n}</span>
       </button>
     `).join('');
     const listHtml = sorted.length === 0
@@ -9371,8 +9371,8 @@ ${ctxText}${surveyTxt}`;
       <div style="padding:20px 24px 32px;">
         ${heroHtml}
         <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid #E2E8F0;">
-          <div style="font-size:11px;font-weight:900;color:#00844A;letter-spacing:0.12em;text-transform:uppercase;margin-right:8px;">✨ AI 統合 timeline</div>
-          <span style="font-size:11.5px;color:#64748B;">${total} 件の 活動 · 新しい 順</span>
+          <div style="font-size:12.5px;font-weight:900;color:#00844A;letter-spacing:0.12em;text-transform:uppercase;margin-right:8px;">✨ AI 統合 timeline</div>
+          <span style="font-size:13px;color:#64748B;">${total} 件の 活動 · 新しい 順</span>
         </div>
         <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;" data-c1s-chips>
           ${chipsHtml}
@@ -9474,17 +9474,17 @@ ${ctxText}${surveyTxt}`;
 
     const familySectionHtml = `
     <div style="background:#fff;border:1px solid #E2E8F0;border-radius:14px;padding:18px 20px;margin-bottom:14px;">
-      <div style="font-size:11.5px;font-weight:800;color:#475569;letter-spacing:0.1em;margin-bottom:14px;">👨‍👩‍👧‍👦 家族構成 & 年齢</div>
+      <div style="font-size:13px;font-weight:800;color:#475569;letter-spacing:0.1em;margin-bottom:14px;">👨‍👩‍👧‍👦 家族構成 & 年齢</div>
       <div style="display:flex;flex-direction:column;gap:10px;">
         <!-- 本人 -->
         <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:#F1F5FF;border-radius:10px;">
           <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#5B5BF0,#4338CA);display:flex;align-items:center;justify-content:center;font-size:17px;color:#fff;font-weight:800;flex-shrink:0;">${escapeHtml((c.name || '?').slice(0,1))}</div>
           <div style="flex:1;min-width:0;">
             <div style="font-size:13.5px;font-weight:800;color:#0F172A;">${escapeHtml(c.name || 'お客様')}</div>
-            <div style="font-size:11.5px;color:#5B5BF0;font-weight:600;">${selfAge != null ? selfAge + '歳' : ''}${c.occupation ? ' · ' + escapeHtml(c.occupation) : ''}</div>
+            <div style="font-size:13px;color:#5B5BF0;font-weight:600;">${selfAge != null ? selfAge + '歳' : ''}${c.occupation ? ' · ' + escapeHtml(c.occupation) : ''}</div>
           </div>
           <div style="text-align:right;">
-            <span style="display:inline-block;background:#EEF2FF;color:#5B5BF0;padding:3px 10px;border-radius:99px;font-size:10.5px;font-weight:700;">本人</span>
+            <span style="display:inline-block;background:#EEF2FF;color:#5B5BF0;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:700;">本人</span>
           </div>
         </div>
         <!-- 配偶者 -->
@@ -9493,10 +9493,10 @@ ${ctxText}${surveyTxt}`;
           <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#EF4444,#DC2626);display:flex;align-items:center;justify-content:center;font-size:17px;color:#fff;font-weight:800;flex-shrink:0;">${escapeHtml((spouse.name || '?').slice(0,1))}</div>
           <div style="flex:1;min-width:0;">
             <div style="font-size:13.5px;font-weight:800;color:#0F172A;">${escapeHtml(spouse.name || '配偶者')}</div>
-            <div style="font-size:11.5px;color:#EF4444;font-weight:600;">${spouseAge != null ? spouseAge + '歳' : '年齢未設定'}${spouse.note ? ' · ' + escapeHtml(spouse.note) : ''}</div>
+            <div style="font-size:13px;color:#EF4444;font-weight:600;">${spouseAge != null ? spouseAge + '歳' : '年齢未設定'}${spouse.note ? ' · ' + escapeHtml(spouse.note) : ''}</div>
           </div>
           <div style="text-align:right;">
-            <span style="display:inline-block;background:#FFF1F2;border:1px solid #FCA5A5;color:#DC2626;padding:3px 10px;border-radius:99px;font-size:10.5px;font-weight:700;">配偶者</span>
+            <span style="display:inline-block;background:#FFF1F2;border:1px solid #FCA5A5;color:#DC2626;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:700;">配偶者</span>
           </div>
         </div>` : ''}
         <!-- 子供 -->
@@ -9507,21 +9507,21 @@ ${ctxText}${surveyTxt}`;
           <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:#FFF7ED;border-radius:10px;">
             <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#EA580C,#C2410C);display:flex;align-items:center;justify-content:center;font-size:17px;color:#fff;font-weight:800;flex-shrink:0;">${escapeHtml((child.name || '?').slice(0,1))}</div>
             <div style="flex:1;min-width:0;">
-              <div style="font-size:13.5px;font-weight:800;color:#0F172A;">${escapeHtml(child.name || 'お子様')} <span style="font-size:11px;color:#EA580C;font-weight:600;">${childAge != null ? childAge + '歳' : ''}${child.note ? ' · ' + escapeHtml(child.note) : ''}</span></div>
-              ${next ? `<div style="font-size:11px;color:#7C3AED;font-weight:700;margin-top:2px;">${next.icon} ${next.yr}年 → ${next.label} (あと${next.yearsUntil}年)</div>` : ''}
+              <div style="font-size:13.5px;font-weight:800;color:#0F172A;">${escapeHtml(child.name || 'お子様')} <span style="font-size:12.5px;color:#EA580C;font-weight:600;">${childAge != null ? childAge + '歳' : ''}${child.note ? ' · ' + escapeHtml(child.note) : ''}</span></div>
+              ${next ? `<div style="font-size:12.5px;color:#7C3AED;font-weight:700;margin-top:2px;">${next.icon} ${next.yr}年 → ${next.label} (あと${next.yearsUntil}年)</div>` : ''}
             </div>
             <div style="text-align:right;">
-              <span style="display:inline-block;background:#FFF7ED;border:1px solid #FDBA74;color:#EA580C;padding:3px 10px;border-radius:99px;font-size:10.5px;font-weight:700;">${relLabel(child.rel)}</span>
+              <span style="display:inline-block;background:#FFF7ED;border:1px solid #FDBA74;color:#EA580C;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:700;">${relLabel(child.rel)}</span>
             </div>
           </div>`;
         }).join('')}
         ${!spouse && children.length === 0 ? `
-        <div style="text-align:center;padding:12px;color:#94A3B8;font-size:12px;">
+        <div style="text-align:center;padding:12px;color:#94A3B8;font-size:13.5px;">
           家族情報が未登録です
-          <button type="button" class="cd-tab-jump" data-jump-tab="family" style="display:block;margin:8px auto 0;background:#F8FAFC;border:1px solid #CBD5E1;color:#475569;padding:7px 18px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">👨‍👩‍👧 家族タブ で 登録する →</button>
+          <button type="button" class="cd-tab-jump" data-jump-tab="family" style="display:block;margin:8px auto 0;background:#F8FAFC;border:1px solid #CBD5E1;color:#475569;padding:7px 18px;border-radius:7px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:inherit;">👨‍👩‍👧 家族タブ で 登録する →</button>
         </div>` : `
         <div style="text-align:right;margin-top:4px;">
-          <button type="button" class="cd-tab-jump" data-jump-tab="family" style="background:transparent;border:0;color:#94A3B8;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;">✏ 家族構成を編集 →</button>
+          <button type="button" class="cd-tab-jump" data-jump-tab="family" style="background:transparent;border:0;color:#94A3B8;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;">✏ 家族構成を編集 →</button>
         </div>`}
       </div>
     </div>`;
@@ -9544,34 +9544,34 @@ ${ctxText}${surveyTxt}`;
       return `<div style="display:flex;align-items:flex-start;gap:12px;padding:10px 0;${isPast ? 'opacity:0.5;' : ''}">
         <div style="width:48px;text-align:center;flex-shrink:0;">
           <div style="font-size:14px;font-weight:900;color:${color};line-height:1;">${yr}</div>
-          <div style="font-size:10px;color:#94A3B8;margin-top:1px;">${relStr}</div>
+          <div style="font-size:11.5px;color:#94A3B8;margin-top:1px;">${relStr}</div>
         </div>
         <div style="flex:1;padding-left:12px;border-left:2px solid ${isPast ? '#E2E8F0' : color}${ev.major ? '' : '66'};">
           <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-            <span style="background:${color}18;color:${color};padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700;">${catLabel[ev.cat] || ev.cat}</span>
-            ${ev.major ? '<span style="background:#FEF3C7;color:#92400E;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700;">★ 重要</span>' : ''}
+            <span style="background:${color}18;color:${color};padding:2px 8px;border-radius:99px;font-size:11.5px;font-weight:700;">${catLabel[ev.cat] || ev.cat}</span>
+            ${ev.major ? '<span style="background:#FEF3C7;color:#92400E;padding:2px 8px;border-radius:99px;font-size:11.5px;font-weight:700;">★ 重要</span>' : ''}
           </div>
           <div style="font-size:13.5px;font-weight:${ev.major ? '800' : '700'};color:#0F172A;margin-top:4px;">${escapeHtml(ev.label)}</div>
-          ${ev.who && ev.who !== c.name ? `<div style="font-size:11px;color:#64748B;margin-top:2px;">対象: ${escapeHtml(ev.who)}</div>` : ''}
+          ${ev.who && ev.who !== c.name ? `<div style="font-size:12.5px;color:#64748B;margin-top:2px;">対象: ${escapeHtml(ev.who)}</div>` : ''}
         </div>
       </div>`;
     };
 
     const timelineSectionHtml = `
     <div style="background:#fff;border:1px solid #E2E8F0;border-radius:14px;padding:18px 20px;margin-bottom:14px;">
-      <div style="font-size:11.5px;font-weight:800;color:#475569;letter-spacing:0.1em;margin-bottom:4px;">📅 ライフイベント タイムライン</div>
+      <div style="font-size:13px;font-weight:800;color:#475569;letter-spacing:0.1em;margin-bottom:4px;">📅 ライフイベント タイムライン</div>
       ${lifeCtaCard}
       ${futureLife.length === 0 && !lifeCtaCard ? `
         <div style="text-align:center;padding:20px;color:#94A3B8;font-size:12.5px;">
           生年月日・家族を登録すると<br>向こう30年のイベントが自動で表示されます
-          <button type="button" class="cd-tab-jump" data-jump-tab="family" style="display:block;margin:10px auto 0;background:#5B5BF0;color:#fff;border:none;padding:8px 20px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">家族情報を登録 →</button>
+          <button type="button" class="cd-tab-jump" data-jump-tab="family" style="display:block;margin:10px auto 0;background:#5B5BF0;color:#fff;border:none;padding:8px 20px;border-radius:7px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:inherit;">家族情報を登録 →</button>
         </div>` :
         `<div style="margin-top:12px;">
           ${futureLife.slice(0, 15).map(ev => evCard(ev, false)).join('<hr style="border:none;border-top:1px solid #F1F5F9;margin:0;">')}
-          ${futureLife.length > 15 ? `<div style="text-align:center;padding:10px;font-size:12px;color:#94A3B8;">他 ${futureLife.length - 15} 件 (家族タブ → 生年修正で更新)</div>` : ''}
+          ${futureLife.length > 15 ? `<div style="text-align:center;padding:10px;font-size:13.5px;color:#94A3B8;">他 ${futureLife.length - 15} 件 (家族タブ → 生年修正で更新)</div>` : ''}
           ${pastLife.length > 0 ? `
             <div style="margin-top:14px;padding-top:14px;border-top:2px dashed #E2E8F0;">
-              <div style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:0.08em;margin-bottom:8px;">過去 (直近3件)</div>
+              <div style="font-size:12px;font-weight:700;color:#94A3B8;letter-spacing:0.08em;margin-bottom:8px;">過去 (直近3件)</div>
               ${pastLife.map(ev => evCard(ev, true)).join('')}
             </div>` : ''}
         </div>`
@@ -9603,19 +9603,19 @@ ${ctxText}${surveyTxt}`;
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
           <span style="font-size:16px;">🤖</span>
           <div>
-            <div style="font-size:11.5px;font-weight:800;color:#065F46;letter-spacing:0.06em;">AI が議事録から自動抽出</div>
-            ${date ? `<div style="font-size:10.5px;color:#059669;">${date} の面談より</div>` : ''}
+            <div style="font-size:13px;font-weight:800;color:#065F46;letter-spacing:0.06em;">AI が議事録から自動抽出</div>
+            ${date ? `<div style="font-size:12px;color:#059669;">${date} の面談より</div>` : ''}
           </div>
         </div>
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:6px;">
           ${items.map(it => `
             <div style="background:#fff;border:1px solid #BBF7D0;border-radius:8px;padding:8px 12px;">
-              <div style="font-size:10px;color:#6B7280;font-weight:700;letter-spacing:0.06em;">${escapeHtml(it.label)}</div>
+              <div style="font-size:11.5px;color:#6B7280;font-weight:700;letter-spacing:0.06em;">${escapeHtml(it.label)}</div>
               <div style="font-size:12.5px;color:#0F172A;font-weight:700;margin-top:2px;">${escapeHtml(it.val)}</div>
             </div>`).join('')}
         </div>
         <div style="margin-top:10px;text-align:right;">
-          <button type="button" class="cd-tab-jump" data-jump-tab="family" style="background:transparent;border:0;color:#059669;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">✏ 家族タブで確認・修正 →</button>
+          <button type="button" class="cd-tab-jump" data-jump-tab="family" style="background:transparent;border:0;color:#059669;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;">✏ 家族タブで確認・修正 →</button>
         </div>
       </div>`;
     })() : '';
@@ -9760,7 +9760,7 @@ ${ctxText}${surveyTxt}`;
           <button id="fp-fam-ai" data-client-id="${escapeHtml(client.id)}" style="background:#5B5BF0;color:#fff;border:none;padding:12px 20px;border-radius:8px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;">✨ 議事録から自動</button>
           <button id="fp-fam-add" data-client-id="${escapeHtml(client.id)}" style="background:#fff;border:1.5px solid #CBD5E1;color:#475569;padding:12px 20px;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;">＋ 追加</button>
         </div>
-        <div id="fp-fam-msg" style="font-size:11.5px;font-weight:700;margin-bottom:10px;"></div>
+        <div id="fp-fam-msg" style="font-size:13px;font-weight:700;margin-bottom:10px;"></div>
         <style>
           /* 家計図 — 世代縦積み + カード型 + SVG接続線風CSS */
           .fp-fam-tree{display:flex;flex-direction:column;gap:0;font-family:'Noto Sans JP',sans-serif;}
@@ -9768,16 +9768,16 @@ ${ctxText}${surveyTxt}`;
           .fp-fam-gen-row + .fp-fam-gen-row{margin-top:2px;}
           .fp-fam-gen-row::before{content:'';display:block;width:2px;height:20px;background:linear-gradient(180deg,#CBD5E1,#94A3B8);margin:0 auto -2px;position:relative;left:0;}
           .fp-fam-gen-row:first-child::before{display:none;}
-          .fp-fam-gen-label{font-size:10px;font-weight:900;letter-spacing:0.14em;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:6px;}
+          .fp-fam-gen-label{font-size:11.5px;font-weight:900;letter-spacing:0.14em;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:6px;}
           .fp-fam-gen-label::after{content:'';flex:1;height:1px;background:#E2E8F0;}
           .fp-fam-gen-cards{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start;position:relative;}
           .fp-fam-gen-cards::before{content:'';position:absolute;left:50%;top:-16px;width:2px;height:16px;background:#CBD5E1;display:none;}
           .fp-fam-card{position:relative;min-width:140px;padding:13px 16px 11px;border-radius:12px;font-family:'Noto Sans JP',sans-serif;transition:transform 0.15s ease,box-shadow 0.15s ease;}
           .fp-fam-card:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,0.12);}
-          .fp-fam-card .fp-fam-rel{font-size:10px;font-weight:900;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;display:flex;align-items:center;gap:4px;}
+          .fp-fam-card .fp-fam-rel{font-size:11.5px;font-weight:900;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;display:flex;align-items:center;gap:4px;}
           .fp-fam-card .fp-fam-name{font-size:15.5px;font-weight:900;color:#0F172A;margin-bottom:4px;line-height:1.3;letter-spacing:-0.01em;}
-          .fp-fam-card .fp-fam-age{font-size:12px;color:#475569;line-height:1.4;font-weight:600;}
-          .fp-fam-card .fp-fam-edit{position:absolute;top:8px;right:8px;background:rgba(255,255,255,0.85);border:1px solid rgba(0,0,0,0.1);border-radius:6px;width:26px;height:26px;cursor:pointer;font-size:12px;padding:0;}
+          .fp-fam-card .fp-fam-age{font-size:13.5px;color:#475569;line-height:1.4;font-weight:600;}
+          .fp-fam-card .fp-fam-edit{position:absolute;top:8px;right:8px;background:rgba(255,255,255,0.85);border:1px solid rgba(0,0,0,0.1);border-radius:6px;width:26px;height:26px;cursor:pointer;font-size:13.5px;padding:0;}
           .fp-fam-card .fp-fam-edit:hover{background:#fff;border-color:rgba(0,0,0,0.22);}
         </style>
         <div class="fp-fam-tree">
@@ -9810,12 +9810,12 @@ ${ctxText}${surveyTxt}`;
         <script type="application/json" id="${payloadId}">${JSON.stringify(rawPayload).replace(/</g,'\\u003c')}</script>
         <div class="fp-meeting-block-label" style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
           🤖 この 議事録 に AI で 質問
-          <span style="font-size:9.5px;font-weight:800;color:#7c3aed;background:#ede9fe;padding:2px 8px;border-radius:99px;letter-spacing:0.03em;">Claude Haiku · 会話 続きます</span>
-          <button type="button" class="fp-mai-qa-clear" style="margin-left:auto;background:transparent;border:none;color:#94a3b8;font-size:11px;cursor:pointer;padding:2px 6px;font-family:inherit;" title="この 会話 を クリア">↻ 新しい 会話</button>
+          <span style="font-size:11px;font-weight:800;color:#7c3aed;background:#ede9fe;padding:2px 8px;border-radius:99px;letter-spacing:0.03em;">Claude Haiku · 会話 続きます</span>
+          <button type="button" class="fp-mai-qa-clear" style="margin-left:auto;background:transparent;border:none;color:#94a3b8;font-size:12.5px;cursor:pointer;padding:2px 6px;font-family:inherit;" title="この 会話 を クリア">↻ 新しい 会話</button>
         </div>
         <div class="fp-mai-qa-answers" style="display:flex;flex-direction:column;gap:10px;margin-bottom:12px;"></div>
         <div class="fp-mai-qa-chips" data-role="initial-chips" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
-          ${AI_QA_CHIPS.map((q) => `<button type="button" class="fp-mai-qa-chip" data-mai-chip data-q="${escapeHtml(q)}" style="background:#fff;border:1.5px solid #ddd6fe;color:#5b21b6;font-size:11.5px;font-weight:700;padding:6px 12px;border-radius:99px;cursor:pointer;font-family:inherit;transition:all 0.12s;">${escapeHtml(q.length > 22 ? q.slice(0, 22) + '…' : q)}</button>`).join('')}
+          ${AI_QA_CHIPS.map((q) => `<button type="button" class="fp-mai-qa-chip" data-mai-chip data-q="${escapeHtml(q)}" style="background:#fff;border:1.5px solid #ddd6fe;color:#5b21b6;font-size:13px;font-weight:700;padding:6px 12px;border-radius:99px;cursor:pointer;font-family:inherit;transition:all 0.12s;">${escapeHtml(q.length > 22 ? q.slice(0, 22) + '…' : q)}</button>`).join('')}
         </div>
         <div style="display:flex;gap:6px;">
           <input type="text" class="fp-mai-qa-input" placeholder="自由 に 質問 (Enter で 送信 · 会話 続けられます)"
@@ -9967,7 +9967,7 @@ ${ctxText}${surveyTxt}`;
           bubble.innerHTML = `
             <div style="max-width:92%;background:#fff;color:#1a1f2c;padding:14px 16px;border-radius:14px 14px 14px 4px;border:1.5px solid #ddd6fe;box-shadow:0 2px 8px rgba(124,58,237,0.10);">
               ${renderQaMarkdown(answer)}
-              <div style="margin-top:10px;padding-top:8px;border-top:1px dashed #e5e7eb;font-size:10px;color:#9ca3af;">🤖 Claude Haiku 4.5 · 会話 ターン ${Math.ceil(state.history.length / 2)}</div>
+              <div style="margin-top:10px;padding-top:8px;border-top:1px dashed #e5e7eb;font-size:11.5px;color:#9ca3af;">🤖 Claude Haiku 4.5 · 会話 ターン ${Math.ceil(state.history.length / 2)}</div>
             </div>
           `;
         }
@@ -9975,8 +9975,8 @@ ${ctxText}${surveyTxt}`;
         if (suggestions.length > 0) {
           const followupHtml = `
             <div class="fp-mai-qa-followup-row" style="display:flex;flex-wrap:wrap;gap:6px;padding:2px 0 6px 4px;">
-              <span style="font-size:10.5px;color:#7c3aed;font-weight:800;margin-right:4px;align-self:center;letter-spacing:0.03em;">続けて 聞く →</span>
-              ${suggestions.map(s => `<button type="button" class="fp-mai-qa-chip fp-mai-qa-followup" data-q="${escapeHtml(s)}" style="background:#f5f3ff;border:1px solid #ddd6fe;color:#5b21b6;font-size:11.5px;font-weight:700;padding:5px 11px;border-radius:99px;cursor:pointer;font-family:inherit;">${escapeHtml(s)}</button>`).join('')}
+              <span style="font-size:12px;color:#7c3aed;font-weight:800;margin-right:4px;align-self:center;letter-spacing:0.03em;">続けて 聞く →</span>
+              ${suggestions.map(s => `<button type="button" class="fp-mai-qa-chip fp-mai-qa-followup" data-q="${escapeHtml(s)}" style="background:#f5f3ff;border:1px solid #ddd6fe;color:#5b21b6;font-size:13px;font-weight:700;padding:5px 11px;border-radius:99px;cursor:pointer;font-family:inherit;">${escapeHtml(s)}</button>`).join('')}
             </div>
           `;
           answersEl.insertAdjacentHTML('beforeend', followupHtml);
@@ -9985,7 +9985,7 @@ ${ctxText}${surveyTxt}`;
         const bubble = document.getElementById(bubbleId);
         if (bubble) {
           bubble.innerHTML = `
-            <div style="max-width:92%;background:#fee2e2;color:#7f1d1d;padding:10px 14px;border-radius:14px 14px 14px 4px;font-size:12px;line-height:1.6;border:1.5px solid #fca5a5;">
+            <div style="max-width:92%;background:#fee2e2;color:#7f1d1d;padding:10px 14px;border-radius:14px 14px 14px 4px;font-size:13.5px;line-height:1.6;border:1.5px solid #fca5a5;">
               ✗ 失敗: ${escapeHtml(err.message || err.code || String(err)).slice(0, 200)}
             </div>
           `;
@@ -10123,9 +10123,9 @@ ${ctxText}${surveyTxt}`;
         <div class="fp-pending-row" style="display:flex;align-items:flex-start;gap:11px;background:${bg};border:1px solid ${accent}33;border-left:4px solid ${accent};border-radius:11px;padding:12px 14px;margin-bottom:10px;">
           <div style="padding-top:3px;">${dot}</div>
           <div style="flex:1;min-width:0;">
-            <div style="font-size:11px;font-weight:800;color:${accent};letter-spacing:0.1em;margin-bottom:3px;">${label}${p.name ? ' · ' + escapeHtml(p.name) : ''}</div>
+            <div style="font-size:12.5px;font-weight:800;color:${accent};letter-spacing:0.1em;margin-bottom:3px;">${label}${p.name ? ' · ' + escapeHtml(p.name) : ''}</div>
             <div style="font-size:13px;font-weight:700;color:#0F172A;line-height:1.55;">${line}</div>
-            <div style="font-size:11.5px;color:#64748B;line-height:1.6;margin-top:3px;">${note}</div>
+            <div style="font-size:13px;color:#64748B;line-height:1.6;margin-top:3px;">${note}</div>
           </div>
         </div>`;
     }).join('') + `<style>
@@ -10378,7 +10378,7 @@ ${ctxText}${surveyTxt}`;
         <h3>面談記録 <span class="count-badge">${bookingsWithMemo.length} 回</span></h3>
         ${window.fpPendingBanner ? window.fpPendingBanner(client.name) : ''}
         ${window.FP_DEBUG ? `
-        <details style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-family:Menlo,monospace;font-size:11px;">
+        <details style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-family:Menlo,monospace;font-size:12.5px;">
           <summary style="cursor:pointer;color:#475569;font-weight:700;font-family:inherit;">🔧 デバッグ (面談記録 lookup)</summary>
           <div style="margin-top:10px;line-height:1.7;color:#334155;">
             <div><strong>client.lineFriendId:</strong> ${escapeHtml(client.lineFriendId || '(空)')}</div>
@@ -10449,15 +10449,15 @@ ${ctxText}${surveyTxt}`;
                     const cname = (client && (client.name || client.customerName)) || aiData.customerName || '';
                     const rawTitle = aiData.title || (Array.isArray(aiData.key_concerns) && aiData.key_concerns[0]) || `Zoom ${zN}回目`;
                     const label = [hhmm, escapeHtml(String(rawTitle).slice(0, 30)), cname ? escapeHtml(cname) + ' 様' : ''].filter(Boolean).join(' ');
-                    return `<div class="fp-meeting-card-eyebrow" style="font-size:13px !important;font-weight:900 !important;color:#1B3A5C !important;letter-spacing:0 !important;"><span class="fp-meeting-toggle-icon" style="display:inline-block;width:14px;font-size:10px;color:#94A3B8;margin-right:4px;transition:transform 0.15s;">▶</span>📹 ${label}</div>`;
+                    return `<div class="fp-meeting-card-eyebrow" style="font-size:13px !important;font-weight:900 !important;color:#1B3A5C !important;letter-spacing:0 !important;"><span class="fp-meeting-toggle-icon" style="display:inline-block;width:14px;font-size:11.5px;color:#94A3B8;margin-right:4px;transition:transform 0.15s;">▶</span>📹 ${label}</div>`;
                   })()}
                   <div class="fp-meeting-card-date" style="font-size:12.5px;font-weight:600;color:#6B7280;">Zoom ${zN}回目 · ${escapeHtml(fmtDateRobust(aiData.ts || aiData.createdAt) || fmtDateRobust(b.date))} ${escapeHtml(fmtJstTime(aiData.ts || aiData.createdAt) || fmtTimeRobust(b.time))}</div>
-                  ${aiData.ts || aiData.createdAt ? `<div class="fp-meeting-card-recstart" style="font-size:11.5px;color:#6B7280;font-weight:600;margin-top:3px;">録画開始: ${escapeHtml(fmtJstTime(aiData.ts || aiData.createdAt))} (${escapeHtml(fmtDateRobust(aiData.ts || aiData.createdAt))})</div>` : ''}
+                  ${aiData.ts || aiData.createdAt ? `<div class="fp-meeting-card-recstart" style="font-size:13px;color:#6B7280;font-weight:600;margin-top:3px;">録画開始: ${escapeHtml(fmtJstTime(aiData.ts || aiData.createdAt))} (${escapeHtml(fmtDateRobust(aiData.ts || aiData.createdAt))})</div>` : ''}
                 </div>
                 <div class="fp-meeting-card-actions" style="display:flex;gap:6px;flex-wrap:wrap;">
                   ${b.driveUrl ? `<a href="${escapeHtml(b.driveUrl)}" target="_blank" class="fp-btn fp-btn-sm fp-btn-gold">🎥 録画を見る</a>` : ''}
-                  <button class="fp-meeting-todo-review" data-booking-ts="${escapeHtml(b.ts || '')}" data-ai-ts="${escapeHtml(aiData.ts || aiData.createdAt || '')}" data-client-id="${escapeHtml(client?.id || '')}" data-client-name="${escapeHtml(client?.name || '')}" style="background:#EEF0FF;border:1.5px solid #5B5BF0;color:#5B5BF0;font-size:11.5px;font-weight:700;padding:5px 11px;border-radius:5px;cursor:pointer;font-family:inherit;">📋 TODO 候補 レビュー</button>
-                  <button class="fp-meeting-delete" data-booking-ts="${escapeHtml(b.ts || '')}" data-ai-ts="${escapeHtml(aiData.ts || aiData.createdAt || '')}" data-client-id="${escapeHtml(client?.id || '')}" data-client-name="${escapeHtml(client?.name || '')}" style="background:#fff;border:1.5px solid #FCA5A5;color:#DC2626;font-size:11.5px;font-weight:700;padding:5px 11px;border-radius:5px;cursor:pointer;font-family:inherit;">🗑 削除</button>
+                  <button class="fp-meeting-todo-review" data-booking-ts="${escapeHtml(b.ts || '')}" data-ai-ts="${escapeHtml(aiData.ts || aiData.createdAt || '')}" data-client-id="${escapeHtml(client?.id || '')}" data-client-name="${escapeHtml(client?.name || '')}" style="background:#EEF0FF;border:1.5px solid #5B5BF0;color:#5B5BF0;font-size:13px;font-weight:700;padding:5px 11px;border-radius:5px;cursor:pointer;font-family:inherit;">📋 TODO 候補 レビュー</button>
+                  <button class="fp-meeting-delete" data-booking-ts="${escapeHtml(b.ts || '')}" data-ai-ts="${escapeHtml(aiData.ts || aiData.createdAt || '')}" data-client-id="${escapeHtml(client?.id || '')}" data-client-name="${escapeHtml(client?.name || '')}" style="background:#fff;border:1.5px solid #FCA5A5;color:#DC2626;font-size:13px;font-weight:700;padding:5px 11px;border-radius:5px;cursor:pointer;font-family:inherit;">🗑 削除</button>
                 </div>
               </div>
               <div class="fp-meeting-card-body" data-meeting-body hidden>
@@ -10466,35 +10466,35 @@ ${ctxText}${surveyTxt}`;
                   <div class="fp-meeting-block-label" style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
                     <span>AI 文字起こし (Whisper)</span>
                     <div class="fp-transcript-view-toggle" data-transcript-toggle style="display:inline-flex;background:#F1F5F9;border-radius:8px;padding:2px;gap:2px;font-family:inherit;">
-                      <button type="button" class="fp-tv-btn fp-tv-active" data-tv-mode="chat" style="background:#fff;color:#0F172A;border:none;padding:5px 12px;border-radius:6px;font-size:11px;font-weight:800;letter-spacing:0.04em;cursor:pointer;box-shadow:0 1px 3px rgba(15,23,42,0.08);font-family:inherit;">💬 会話</button>
-                      <button type="button" class="fp-tv-btn" data-tv-mode="raw" style="background:transparent;color:#64748B;border:none;padding:5px 12px;border-radius:6px;font-size:11px;font-weight:700;letter-spacing:0.04em;cursor:pointer;font-family:inherit;">📄 プレーン</button>
+                      <button type="button" class="fp-tv-btn fp-tv-active" data-tv-mode="chat" style="background:#fff;color:#0F172A;border:none;padding:5px 12px;border-radius:6px;font-size:12.5px;font-weight:800;letter-spacing:0.04em;cursor:pointer;box-shadow:0 1px 3px rgba(15,23,42,0.08);font-family:inherit;">💬 会話</button>
+                      <button type="button" class="fp-tv-btn" data-tv-mode="raw" style="background:transparent;color:#64748B;border:none;padding:5px 12px;border-radius:6px;font-size:12.5px;font-weight:700;letter-spacing:0.04em;cursor:pointer;font-family:inherit;">📄 プレーン</button>
                     </div>
                   </div>
                   <details open style="background:#fff;border:1px solid var(--fp-line);">
-                    <summary style="padding:11px 16px;cursor:pointer;font-size:12px;color:var(--fp-ink);font-weight:700;background:var(--fp-paper);border-bottom:1px solid var(--fp-line);font-family:Manrope,sans-serif;letter-spacing:0.04em;">AI 文字起こし 全文 (${(aiData.transcript||'').length}文字) — クリックで折りたたみ</summary>
+                    <summary style="padding:11px 16px;cursor:pointer;font-size:13.5px;color:var(--fp-ink);font-weight:700;background:var(--fp-paper);border-bottom:1px solid var(--fp-line);font-family:Manrope,sans-serif;letter-spacing:0.04em;">AI 文字起こし 全文 (${(aiData.transcript||'').length}文字) — クリックで折りたたみ</summary>
                     <div class="fp-transcript-chat" style="padding:14px 18px;max-height:420px;overflow-y:auto;background:linear-gradient(180deg,#F8FAFC 0%,#F1F5F9 100%);">
                       ${splitTranscriptToTurns(aiData.transcript).map((turn, i) => turn.speaker === 'fp'
-                        ? `<div style="display:flex;justify-content:flex-end;margin-bottom:10px;"><div style="max-width:78%;background:linear-gradient(135deg,#059669,#047857);color:#fff;padding:9px 13px;border-radius:14px 14px 4px 14px;font-size:12.5px;line-height:1.7;box-shadow:0 2px 6px rgba(5,150,105,0.22);"><div style="font-size:10px;font-weight:800;opacity:0.9;letter-spacing:0.08em;margin-bottom:3px;">FP先生</div><div>${escapeHtml(turn.text)}</div></div></div>`
-                        : `<div style="display:flex;justify-content:flex-start;margin-bottom:10px;"><div style="max-width:78%;background:#fff;color:#0F172A;padding:9px 13px;border-radius:14px 14px 14px 4px;font-size:12.5px;line-height:1.7;box-shadow:0 1px 3px rgba(15,23,42,0.10);border:1px solid #E2E8F0;"><div style="font-size:10px;font-weight:800;color:#64748B;letter-spacing:0.08em;margin-bottom:3px;">お客様</div><div>${escapeHtml(turn.text)}</div></div></div>`
+                        ? `<div style="display:flex;justify-content:flex-end;margin-bottom:10px;"><div style="max-width:78%;background:linear-gradient(135deg,#059669,#047857);color:#fff;padding:9px 13px;border-radius:14px 14px 4px 14px;font-size:12.5px;line-height:1.7;box-shadow:0 2px 6px rgba(5,150,105,0.22);"><div style="font-size:11.5px;font-weight:800;opacity:0.9;letter-spacing:0.08em;margin-bottom:3px;">FP先生</div><div>${escapeHtml(turn.text)}</div></div></div>`
+                        : `<div style="display:flex;justify-content:flex-start;margin-bottom:10px;"><div style="max-width:78%;background:#fff;color:#0F172A;padding:9px 13px;border-radius:14px 14px 14px 4px;font-size:12.5px;line-height:1.7;box-shadow:0 1px 3px rgba(15,23,42,0.10);border:1px solid #E2E8F0;"><div style="font-size:11.5px;font-weight:800;color:#64748B;letter-spacing:0.08em;margin-bottom:3px;">お客様</div><div>${escapeHtml(turn.text)}</div></div></div>`
                       ).join('')}
                     </div>
                     <div class="fp-transcript-raw" style="display:none;padding:14px 18px;font-size:12.5px;line-height:1.95;white-space:pre-wrap;max-height:420px;overflow-y:auto;color:var(--fp-ink);">${escapeHtml(aiData.transcript)}</div>
-                    <div style="padding:6px 16px;background:#F8FAFC;border-top:1px solid var(--fp-line);font-size:10.5px;color:#94A3B8;font-style:italic;letter-spacing:0.02em;">※ 話者 は AI が 会話 の 流れ から 推定。 実際 と 違う 場合 は 「📄 プレーン」 で 全文 確認 を。</div>
+                    <div style="padding:6px 16px;background:#F8FAFC;border-top:1px solid var(--fp-line);font-size:12px;color:#94A3B8;font-style:italic;letter-spacing:0.02em;">※ 話者 は AI が 会話 の 流れ から 推定。 実際 と 違う 場合 は 「📄 プレーン」 で 全文 確認 を。</div>
                   </details>
                 </div>` : ''}
               <div class="fp-meeting-block" data-minutes-editor data-booking-ts="${escapeHtml(b.ts || '')}" data-client-id="${escapeHtml(client.id)}">
                 <div class="fp-meeting-block-label" style="display:flex;justify-content:space-between;align-items:center;">
-                  <span>面談記録 (Claude) <span style="font-size:10px;color:#9CA3AF;font-weight:600;margin-left:6px;">編集・追記可</span></span>
-                  <button class="fp-minutes-edit" style="background:#fff;border:1px solid #E2E8F0;color:#475569;font-size:11px;font-weight:700;padding:4px 10px;border-radius:5px;cursor:pointer;font-family:inherit;">✏ 編集</button>
+                  <span>面談記録 (Claude) <span style="font-size:11.5px;color:#9CA3AF;font-weight:600;margin-left:6px;">編集・追記可</span></span>
+                  <button class="fp-minutes-edit" style="background:#fff;border:1px solid #E2E8F0;color:#475569;font-size:12.5px;font-weight:700;padding:4px 10px;border-radius:5px;cursor:pointer;font-family:inherit;">✏ 編集</button>
                 </div>
                 <div class="fp-meeting-body fp-minutes-view fp-summary-structured" data-raw-summary="${escapeHtml(aiData.summary || '')}">${window.renderStructuredSummary ? window.renderStructuredSummary(aiData.summary) : (aiData.summary ? escapeHtml(aiData.summary) : '議事録 未生成 — 「✏ 編集」 から手動追記 可')}</div>
                 <div class="fp-minutes-edit-wrap" style="display:none;">
                   <textarea class="fp-minutes-textarea" rows="10" style="width:100%;padding:12px 14px;border:1.5px solid #BFDBFE;border-radius:8px;font-size:13px;font-family:inherit;line-height:1.9;resize:vertical;box-sizing:border-box;">${escapeHtml(aiData.summary || '')}</textarea>
                   <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;">
-                    <button class="fp-minutes-cancel" style="background:#fff;border:1px solid #E2E8F0;color:#475569;font-size:12px;font-weight:700;padding:7px 14px;border-radius:6px;cursor:pointer;font-family:inherit;">キャンセル</button>
+                    <button class="fp-minutes-cancel" style="background:#fff;border:1px solid #E2E8F0;color:#475569;font-size:13.5px;font-weight:700;padding:7px 14px;border-radius:6px;cursor:pointer;font-family:inherit;">キャンセル</button>
                     <button class="fp-minutes-save" style="background:linear-gradient(135deg,#3B82F6,#2563EB);border:none;color:#fff;font-size:12.5px;font-weight:800;padding:7px 18px;border-radius:6px;cursor:pointer;font-family:inherit;box-shadow:0 3px 10px rgba(59,130,246,0.3);">💾 保存</button>
                   </div>
-                  <div class="fp-minutes-msg" style="margin-top:6px;font-size:11.5px;font-weight:700;text-align:right;"></div>
+                  <div class="fp-minutes-msg" style="margin-top:6px;font-size:13px;font-weight:700;text-align:right;"></div>
                 </div>
               </div>
               ${aiData.key_concerns && aiData.key_concerns.length > 0 ? `
@@ -10508,12 +10508,12 @@ ${ctxText}${surveyTxt}`;
                 <div class="fp-meeting-block">
                   <div class="fp-meeting-block-label" style="display:flex;align-items:center;gap:6px;">
                     🔮 次回 聞かれそうな 質問
-                    <span style="font-size:9.5px;font-weight:600;color:#94A3B8;background:#F1F5F9;padding:1px 6px;border-radius:99px;">AI 予測</span>
+                    <span style="font-size:11px;font-weight:600;color:#94A3B8;background:#F1F5F9;padding:1px 6px;border-radius:99px;">AI 予測</span>
                   </div>
                   <ul style="margin:0;padding-left:18px;font-size:13px;color:#1F2A3F;line-height:1.85;">
                     ${aiData.predicted_next_questions.slice(0, 6).map(q => `<li style="margin-bottom:3px;">${escapeHtml(q)}</li>`).join('')}
                   </ul>
-                  <div style="font-size:10.5px;color:#64748B;margin-top:6px;line-height:1.55;">次の LINE 連絡 や 次回 面談 の 事前 準備 で 先回り 対応 してください。</div>
+                  <div style="font-size:12px;color:#64748B;margin-top:6px;line-height:1.55;">次の LINE 連絡 や 次回 面談 の 事前 準備 で 先回り 対応 してください。</div>
                 </div>` : ''}
               ${b.memo ? `
                 <div class="fp-meeting-block">
@@ -10586,14 +10586,14 @@ ${ctxText}${surveyTxt}`;
                       const cname = (client && (client.name || client.customerName)) || a.customerName || '';
                       const rawTitle = a.title || (Array.isArray(a.key_concerns) && a.key_concerns[0]) || `Zoom ${zN}回目`;
                       const label = [hhmm, escapeHtml(String(rawTitle).slice(0, 30)), cname ? escapeHtml(cname) + ' 様' : ''].filter(Boolean).join(' ');
-                      return `<div class="fp-meeting-card-eyebrow" style="font-size:13px !important;font-weight:900 !important;color:#1B3A5C !important;letter-spacing:0 !important;"><span class="fp-meeting-toggle-icon" style="display:inline-block;width:14px;font-size:10px;color:#94A3B8;margin-right:4px;transition:transform 0.15s;">▶</span>📹 ${label}</div>`;
+                      return `<div class="fp-meeting-card-eyebrow" style="font-size:13px !important;font-weight:900 !important;color:#1B3A5C !important;letter-spacing:0 !important;"><span class="fp-meeting-toggle-icon" style="display:inline-block;width:14px;font-size:11.5px;color:#94A3B8;margin-right:4px;transition:transform 0.15s;">▶</span>📹 ${label}</div>`;
                     })()}
                     <div class="fp-meeting-card-date" style="font-size:12.5px;font-weight:600;color:#6B7280;">Zoom ${zN}回目 · ${escapeHtml(fmtDateRobust(a.ts || a.createdAt) || fmtDateRobust(a.date))} ${escapeHtml(fmtJstTime(a.ts || a.createdAt))}</div>
-                    ${a.ts || a.createdAt ? `<div class="fp-meeting-card-recstart" style="font-size:11.5px;color:#6B7280;font-weight:600;margin-top:3px;">録画開始: ${escapeHtml(fmtJstTime(a.ts || a.createdAt))} (${escapeHtml(fmtDateRobust(a.ts || a.createdAt))})</div>` : ''}
+                    ${a.ts || a.createdAt ? `<div class="fp-meeting-card-recstart" style="font-size:13px;color:#6B7280;font-weight:600;margin-top:3px;">録画開始: ${escapeHtml(fmtJstTime(a.ts || a.createdAt))} (${escapeHtml(fmtDateRobust(a.ts || a.createdAt))})</div>` : ''}
                   </div>
                   <div class="fp-meeting-card-actions" style="display:flex;gap:6px;flex-wrap:wrap;">
-                    <button class="fp-meeting-todo-review" data-booking-ts="${escapeHtml(a.bookingTs || '')}" data-ai-ts="${escapeHtml(a.ts || a.createdAt || '')}" data-client-id="${escapeHtml(client?.id || '')}" data-client-name="${escapeHtml(client?.name || a.customerName || '')}" style="background:#EEF0FF;border:1.5px solid #5B5BF0;color:#5B5BF0;font-size:11.5px;font-weight:700;padding:5px 11px;border-radius:5px;cursor:pointer;font-family:inherit;">📋 TODO 候補 レビュー</button>
-                    <button class="fp-meeting-delete" data-booking-ts="${escapeHtml(a.bookingTs || '')}" data-ai-ts="${escapeHtml(a.ts || a.createdAt || '')}" data-client-id="${escapeHtml(client?.id || '')}" data-client-name="${escapeHtml(client?.name || a.customerName || '')}" style="background:#fff;border:1.5px solid #FCA5A5;color:#DC2626;font-size:11.5px;font-weight:700;padding:5px 11px;border-radius:5px;cursor:pointer;font-family:inherit;">🗑 削除</button>
+                    <button class="fp-meeting-todo-review" data-booking-ts="${escapeHtml(a.bookingTs || '')}" data-ai-ts="${escapeHtml(a.ts || a.createdAt || '')}" data-client-id="${escapeHtml(client?.id || '')}" data-client-name="${escapeHtml(client?.name || a.customerName || '')}" style="background:#EEF0FF;border:1.5px solid #5B5BF0;color:#5B5BF0;font-size:13px;font-weight:700;padding:5px 11px;border-radius:5px;cursor:pointer;font-family:inherit;">📋 TODO 候補 レビュー</button>
+                    <button class="fp-meeting-delete" data-booking-ts="${escapeHtml(a.bookingTs || '')}" data-ai-ts="${escapeHtml(a.ts || a.createdAt || '')}" data-client-id="${escapeHtml(client?.id || '')}" data-client-name="${escapeHtml(client?.name || a.customerName || '')}" style="background:#fff;border:1.5px solid #FCA5A5;color:#DC2626;font-size:13px;font-weight:700;padding:5px 11px;border-radius:5px;cursor:pointer;font-family:inherit;">🗑 削除</button>
                   </div>
                 </div>
                 <div class="fp-meeting-card-body" data-meeting-body hidden>
@@ -10601,7 +10601,7 @@ ${ctxText}${surveyTxt}`;
                   <div class="fp-meeting-block">
                     <div class="fp-meeting-block-label">AI 文字起こし (Whisper)</div>
                     <details open style="background:#fff;border:1px solid var(--fp-line);">
-                      <summary style="padding:11px 16px;cursor:pointer;font-size:12px;color:var(--fp-ink);font-weight:700;background:var(--fp-paper);border-bottom:1px solid var(--fp-line);font-family:Manrope,sans-serif;letter-spacing:0.04em;">AI 文字起こし 全文 (${(a.transcript||'').length}文字) — クリックで折りたたみ</summary>
+                      <summary style="padding:11px 16px;cursor:pointer;font-size:13.5px;color:var(--fp-ink);font-weight:700;background:var(--fp-paper);border-bottom:1px solid var(--fp-line);font-family:Manrope,sans-serif;letter-spacing:0.04em;">AI 文字起こし 全文 (${(a.transcript||'').length}文字) — クリックで折りたたみ</summary>
                       <div style="padding:14px 18px;font-size:12.5px;line-height:1.95;white-space:pre-wrap;max-height:320px;overflow-y:auto;color:var(--fp-ink);">${escapeHtml(a.transcript)}</div>
                     </details>
                   </div>` : ''}
@@ -10621,7 +10621,7 @@ ${ctxText}${surveyTxt}`;
                   <div class="fp-meeting-block">
                     <div class="fp-meeting-block-label" style="display:flex;align-items:center;gap:6px;">
                       🔮 次回 聞かれそうな 質問
-                      <span style="font-size:9.5px;font-weight:600;color:#94A3B8;background:#F1F5F9;padding:1px 6px;border-radius:99px;">AI 予測</span>
+                      <span style="font-size:11px;font-weight:600;color:#94A3B8;background:#F1F5F9;padding:1px 6px;border-radius:99px;">AI 予測</span>
                     </div>
                     <ul style="margin:0;padding-left:18px;font-size:13px;color:#1F2A3F;line-height:1.85;">
                       ${a.predicted_next_questions.slice(0, 6).map(q => `<li style="margin-bottom:3px;">${escapeHtml(q)}</li>`).join('')}
@@ -10655,7 +10655,7 @@ ${ctxText}${surveyTxt}`;
           });
           return `
             <h3 style="margin-top:18px;">📁 ${escapeHtml(client.name)} 様 専用 生成済 資料 <span class="count-badge">${items.length}</span></h3>
-            <div style="background:#EEF2FF;border:1px solid #C7D2FE;border-radius:8px;padding:8px 12px;font-size:11px;color:#4338CA;margin-bottom:8px;">
+            <div style="background:#EEF2FF;border:1px solid #C7D2FE;border-radius:8px;padding:8px 12px;font-size:12.5px;color:#4338CA;margin-bottom:8px;">
               💾 編集済成果物はブラウザに自動保存され、いつでも再オープン・LINE再送信できます
             </div>
             <div style="display:grid;gap:6px;">
@@ -10663,11 +10663,11 @@ ${ctxText}${surveyTxt}`;
                 <div style="background:#fff;border:1px solid var(--line);border-radius:7px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
                   <div style="flex:1;min-width:0;">
                     <div style="font-size:13px;font-weight:700;color:var(--ink);">${escapeHtml(it.title || it.type)}</div>
-                    <div style="font-size:10.5px;color:var(--muted);">タイプ: ${escapeHtml(it.type)} · サイズ: ${it.sizeKb}KB</div>
+                    <div style="font-size:12px;color:var(--muted);">タイプ: ${escapeHtml(it.type)} · サイズ: ${it.sizeKb}KB</div>
                   </div>
                   <div style="display:flex;gap:5px;">
-                    <button class="fp-deliv-open" data-deliv-key="${escapeHtml(it.key)}" data-type="${escapeHtml(it.type)}" data-title="${escapeHtml(it.title)}" data-client-id="${escapeHtml(client.id)}" style="font-size:11px;padding:6px 12px;background:#5B5BF0;color:#fff;border:none;border-radius:5px;cursor:pointer;font-weight:700;font-family:inherit;">📝 再開</button>
-                    <button class="fp-deliv-del" data-deliv-key="${escapeHtml(it.key)}" style="font-size:11px;padding:6px 10px;background:#fff;color:#dc2626;border:1px solid #fecaca;border-radius:5px;cursor:pointer;font-weight:700;font-family:inherit;">🗑</button>
+                    <button class="fp-deliv-open" data-deliv-key="${escapeHtml(it.key)}" data-type="${escapeHtml(it.type)}" data-title="${escapeHtml(it.title)}" data-client-id="${escapeHtml(client.id)}" style="font-size:12.5px;padding:6px 12px;background:#5B5BF0;color:#fff;border:none;border-radius:5px;cursor:pointer;font-weight:700;font-family:inherit;">📝 再開</button>
+                    <button class="fp-deliv-del" data-deliv-key="${escapeHtml(it.key)}" style="font-size:12.5px;padding:6px 10px;background:#fff;color:#dc2626;border:1px solid #fecaca;border-radius:5px;cursor:pointer;font-weight:700;font-family:inherit;">🗑</button>
                   </div>
                 </div>
               `).join('')}
@@ -10675,7 +10675,7 @@ ${ctxText}${surveyTxt}`;
           `;
         })()}
         ${tasks.length === 0 ? '' : `
-          <div style="background:#EEF2FF;border:1px solid #C7D2FE;border-radius:8px;padding:10px 14px;margin-top:14px;font-size:12px;color:#4338CA;display:flex;align-items:center;gap:8px;">
+          <div style="background:#EEF2FF;border:1px solid #C7D2FE;border-radius:8px;padding:10px 14px;margin-top:14px;font-size:13.5px;color:#4338CA;display:flex;align-items:center;gap:8px;">
             <span style="font-size:16px;">↗️</span>
             <span><strong>フォロータスク は タイムラインタブに統合されました</strong> — 「📋 議事録から抽出された具体タスク」セクションで操作してください</span>
           </div>
@@ -10708,7 +10708,7 @@ ${ctxText}${surveyTxt}`;
       : `<ul style="list-style:none;padding:0;margin:0;display:grid;gap:6px;">
           ${referredByMe.map(c => `
             <li style="padding:10px 14px;background:#fafbfc;border:1px solid var(--line);border-radius:7px;display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13px;">
-              <span><strong>${escapeHtml(c.name)}</strong> <span style="font-size:11px;color:var(--muted);">${window.LifeEvents.currentAge(c)}歳 / AUM ¥${fmtMoney(c.aum)}</span></span>
+              <span><strong>${escapeHtml(c.name)}</strong> <span style="font-size:12.5px;color:var(--muted);">${window.LifeEvents.currentAge(c)}歳 / AUM ¥${fmtMoney(c.aum)}</span></span>
               <span class="status-pill ${c.status}">${statusLabel(c.status)}</span>
             </li>
           `).join('')}
@@ -10720,7 +10720,7 @@ ${ctxText}${surveyTxt}`;
         <div style="display:grid;grid-template-columns:200px 1fr;gap:16px;background:linear-gradient(135deg,#fbf4e6,#fff);border:1px solid #f0d36b;border-radius:10px;padding:18px;align-items:start;">
           <div style="text-align:center;">
             <img src="${qrUrl}" alt="referral QR" style="width:180px;height:180px;background:#fff;padding:6px;border:1px solid var(--line);border-radius:8px;">
-            <div style="font-size:10.5px;color:var(--muted);margin-top:6px;letter-spacing:0.05em;font-weight:600;">${escapeHtml(client.name)} 様 専用QR</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:6px;letter-spacing:0.05em;font-weight:600;">${escapeHtml(client.name)} 様 専用QR</div>
           </div>
           <div>
             <div style="font-size:12.5px;color:var(--ink-2);line-height:1.7;margin-bottom:10px;">
@@ -10728,14 +10728,14 @@ ${ctxText}${surveyTxt}`;
               スキャンで友だち追加されると <strong>自動で紹介者が ${escapeHtml(client.name)} 様 と紐付き</strong>、お礼メッセージも自動送信されます。
             </div>
             <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
-              <button class="ghost" id="ref-copy-url" style="font-size:12px;">📋 URLをコピー</button>
-              <a class="ghost" href="${qrUrl}" download="referral-${client.id}.png" style="font-size:12px;text-decoration:none;display:inline-block;padding:7px 12px;border:1px solid var(--line-2);border-radius:7px;color:var(--ink);">📥 QRをダウンロード</a>
+              <button class="ghost" id="ref-copy-url" style="font-size:13.5px;">📋 URLをコピー</button>
+              <a class="ghost" href="${qrUrl}" download="referral-${client.id}.png" style="font-size:13.5px;text-decoration:none;display:inline-block;padding:7px 12px;border:1px solid var(--line-2);border-radius:7px;color:var(--ink);">📥 QRをダウンロード</a>
             </div>
-            <div style="font-size:11px;color:var(--muted);font-family:ui-monospace,Menlo,monospace;background:#fff;padding:6px 10px;border-radius:5px;border:1px solid var(--line);word-break:break-all;">${escapeHtml(referralUrl)}</div>
+            <div style="font-size:12.5px;color:var(--muted);font-family:ui-monospace,Menlo,monospace;background:#fff;padding:6px 10px;border-radius:5px;border:1px solid var(--line);word-break:break-all;">${escapeHtml(referralUrl)}</div>
           </div>
         </div>
         <div style="margin-top:14px;">
-          <h4 style="font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;margin:0 0 8px;font-weight:700;">この方からのご紹介</h4>
+          <h4 style="font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;margin:0 0 8px;font-weight:700;">この方からのご紹介</h4>
           ${referredList}
         </div>
       </div>
@@ -10760,7 +10760,7 @@ ${ctxText}${surveyTxt}`;
     const overlay = document.createElement('div');
     overlay.id = 'fp-hearing-modal';
     overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.55);backdrop-filter:blur(3px);z-index:10010;display:flex;align-items:center;justify-content:center;padding:20px;';
-    const row = (label, val) => `<tr><th style="text-align:left;padding:9px 14px;background:#F8FAFC;font-size:11.5px;color:#475569;font-weight:700;letter-spacing:0.04em;width:38%;border-bottom:1px solid #E2E8F0;">${label}</th><td style="padding:9px 14px;font-size:13px;color:#0F172A;border-bottom:1px solid #E2E8F0;">${val || '<span style="color:#94A3B8;">未回答</span>'}</td></tr>`;
+    const row = (label, val) => `<tr><th style="text-align:left;padding:9px 14px;background:#F8FAFC;font-size:13px;color:#475569;font-weight:700;letter-spacing:0.04em;width:38%;border-bottom:1px solid #E2E8F0;">${label}</th><td style="padding:9px 14px;font-size:13px;color:#0F172A;border-bottom:1px solid #E2E8F0;">${val || '<span style="color:#94A3B8;">未回答</span>'}</td></tr>`;
     const familyTxt = (client.family || []).map(m => {
       const r = m.rel === 'spouse' ? '配偶者' : (m.rel === 'child' ? 'お子様' : m.rel);
       const a = window.LifeEvents.currentAge({ birth: m.birth });
@@ -10770,9 +10770,9 @@ ${ctxText}${surveyTxt}`;
       <div style="background:#fff;width:min(720px,100%);max-height:90vh;overflow-y:auto;border-radius:14px;box-shadow:0 24px 60px rgba(0,0,0,0.35);font-family:'Noto Sans JP',sans-serif;">
         <div style="padding:20px 24px;background:linear-gradient(135deg,#0EA5E9,#22D3EE);color:#fff;display:flex;justify-content:space-between;align-items:start;">
           <div>
-            <div style="font-family:Manrope,sans-serif;font-size:10.5px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;opacity:0.9;">📋 HEARING SHEET</div>
+            <div style="font-family:Manrope,sans-serif;font-size:12px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;opacity:0.9;">📋 HEARING SHEET</div>
             <div style="font-size:19px;font-weight:800;margin-top:4px;letter-spacing:-0.01em;">FP相談 事前ヒアリングシート</div>
-            <div style="font-size:12px;opacity:0.92;margin-top:3px;">${escapeHtml(client.name)} 様 / ${age}歳 / 作成 ${new Date().toISOString().slice(0,10)}</div>
+            <div style="font-size:13.5px;opacity:0.92;margin-top:3px;">${escapeHtml(client.name)} 様 / ${age}歳 / 作成 ${new Date().toISOString().slice(0,10)}</div>
           </div>
           <div style="display:flex;gap:6px;">
             <button id="fp-hearing-print" title="印刷 / PDF" style="background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.32);color:#fff;width:36px;height:30px;border-radius:6px;cursor:pointer;font-size:14px;">🖨</button>
@@ -10800,7 +10800,7 @@ ${ctxText}${surveyTxt}`;
               ${row('面談候補日 ③', escapeHtml(s.q13_候補3 || ''))}
             </tbody>
           </table>
-          <div style="margin-top:18px;font-size:11px;color:#94A3B8;text-align:right;">© Skeleton Inc. / FP Compass</div>
+          <div style="margin-top:18px;font-size:12.5px;color:#94A3B8;text-align:right;">© Skeleton Inc. / FP Compass</div>
         </div>
       </div>
     `;
@@ -10829,9 +10829,9 @@ ${ctxText}${surveyTxt}`;
       <div style="background:#fff;width:min(1280px,100%);height:96vh;overflow-y:auto;border-radius:14px;box-shadow:0 24px 60px rgba(0,0,0,0.35);font-family:'Noto Sans JP',sans-serif;">
         <div style="padding:20px 24px;background:linear-gradient(135deg,#5B5BF0,#6D6DEF);color:#fff;display:flex;justify-content:space-between;align-items:start;">
           <div>
-            <div style="font-family:Manrope,sans-serif;font-size:10.5px;font-weight:800;letter-spacing:0.18em;text-transform:uppercase;opacity:0.85;">📎 成果物 ドラフト</div>
+            <div style="font-family:Manrope,sans-serif;font-size:12px;font-weight:800;letter-spacing:0.18em;text-transform:uppercase;opacity:0.85;">📎 成果物 ドラフト</div>
             <div style="font-size:17px;font-weight:800;margin-top:4px;letter-spacing:-0.01em;">${escapeHtml(taskTitle)}</div>
-            <div style="font-size:12px;opacity:0.85;margin-top:3px;">${escapeHtml(client.name)} 様 専用</div>
+            <div style="font-size:13.5px;opacity:0.85;margin-top:3px;">${escapeHtml(client.name)} 様 専用</div>
           </div>
           <button id="fp-deliv-close" style="background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.32);color:#fff;width:30px;height:30px;border-radius:6px;cursor:pointer;font-size:16px;">✕</button>
         </div>
@@ -10864,7 +10864,7 @@ ${ctxText}${surveyTxt}`;
             const subs = recs.slice(1, 5);
             return `
               <div style="background:linear-gradient(135deg,#EEF2FF,#FAFBFF);border:2px solid #5B5BF0;border-radius:10px;padding:14px 16px;margin-bottom:14px;">
-                <div style="font-size:10.5px;font-weight:800;letter-spacing:0.12em;color:#3730A3;margin-bottom:8px;text-transform:uppercase;">💡 Jobs からの提案 — このタスクには複数の資料が役立ちます</div>
+                <div style="font-size:12px;font-weight:800;letter-spacing:0.12em;color:#3730A3;margin-bottom:8px;text-transform:uppercase;">💡 Jobs からの提案 — このタスクには複数の資料が役立ちます</div>
                 <div style="font-size:12.5px;color:#1F2937;line-height:1.6;margin-bottom:10px;">
                   タスク「<strong>${escapeHtml(t.slice(0, 40))}${t.length>40?'…':''}</strong>」に対して、<strong style="color:#5B5BF0;">${recs.length}つの資料</strong>を推奨します。
                 </div>
@@ -10872,8 +10872,8 @@ ${ctxText}${surveyTxt}`;
                   <button class="fp-deliv-rec" data-type="${escapeHtml(main.type)}" style="background:#5B5BF0;color:#fff;border:none;padding:10px 14px;border-radius:8px;cursor:pointer;font-family:inherit;text-align:left;display:flex;align-items:center;gap:10px;font-weight:800;">
                     <span style="font-size:18px;">${main.ico}</span>
                     <div style="flex:1;">
-                      <div style="font-size:13px;">${escapeHtml(main.label)} <span style="background:rgba(255,255,255,0.25);font-size:9.5px;padding:2px 7px;border-radius:8px;margin-left:6px;letter-spacing:0.06em;">主推奨</span></div>
-                      <div style="font-size:10.5px;opacity:0.85;font-weight:500;margin-top:1px;">${escapeHtml(main.reason)}</div>
+                      <div style="font-size:13px;">${escapeHtml(main.label)} <span style="background:rgba(255,255,255,0.25);font-size:11px;padding:2px 7px;border-radius:8px;margin-left:6px;letter-spacing:0.06em;">主推奨</span></div>
+                      <div style="font-size:12px;opacity:0.85;font-weight:500;margin-top:1px;">${escapeHtml(main.reason)}</div>
                     </div>
                   </button>
                   ${subs.map(s => `
@@ -10881,12 +10881,12 @@ ${ctxText}${surveyTxt}`;
                       <span style="font-size:16px;">${s.ico}</span>
                       <div style="flex:1;">
                         <div style="font-size:12.5px;font-weight:700;">${escapeHtml(s.label)}</div>
-                        <div style="font-size:10.5px;color:#64748B;font-weight:500;margin-top:1px;">${escapeHtml(s.reason)}</div>
+                        <div style="font-size:12px;color:#64748B;font-weight:500;margin-top:1px;">${escapeHtml(s.reason)}</div>
                       </div>
                     </button>
                   `).join('')}
                 </div>
-                <div style="font-size:10.5px;color:#6B7280;margin-top:10px;line-height:1.55;">↑ 上を押すと該当テンプレが選択され、AI生成までジャンプ。下の全テンプレリストからも選べます</div>
+                <div style="font-size:12px;color:#6B7280;margin-top:10px;line-height:1.55;">↑ 上を押すと該当テンプレが選択され、AI生成までジャンプ。下の全テンプレリストからも選べます</div>
               </div>
             `;
           })()}
@@ -10938,8 +10938,8 @@ ${ctxText}${surveyTxt}`;
         const aiBar = document.createElement('div');
         aiBar.style.cssText = 'margin-top:10px;display:flex;gap:8px;align-items:center;background:#EEF1FE;border:1px solid #C7D2FE;border-radius:8px;padding:10px 14px;';
         aiBar.innerHTML = `
-          <span style="font-size:11.5px;color:#3730A3;flex:1;">↑ これは汎用テンプレ。<strong>議事録 + 台帳データ</strong> からこのお客様用にカスタムする?</span>
-          <button id="fp-deliv-ai" style="background:#5B5BF0;color:#fff;border:none;border-radius:6px;padding:7px 14px;font-size:12px;font-weight:800;cursor:pointer;letter-spacing:0.04em;font-family:inherit;">✨ AIで個別作成</button>
+          <span style="font-size:13px;color:#3730A3;flex:1;">↑ これは汎用テンプレ。<strong>議事録 + 台帳データ</strong> からこのお客様用にカスタムする?</span>
+          <button id="fp-deliv-ai" style="background:#5B5BF0;color:#fff;border:none;border-radius:6px;padding:7px 14px;font-size:13.5px;font-weight:800;cursor:pointer;letter-spacing:0.04em;font-family:inherit;">✨ AIで個別作成</button>
         `;
         result.appendChild(aiBar);
         document.getElementById('fp-deliv-ai').addEventListener('click', async () => {
@@ -10950,7 +10950,7 @@ ${ctxText}${surveyTxt}`;
         if (printBtn) printBtn.addEventListener('click', () => {
           const html = result.querySelector('.fp-deliv-content').outerHTML;
           const w = window.open('', '_blank');
-          w.document.write(`<!doctype html><html><head><title>${escapeHtml(taskTitle)} - ${escapeHtml(client.name)}</title><style>body{font-family:'Noto Sans JP',sans-serif;padding:30px;color:#0F172A;}table{border-collapse:collapse;width:100%;}th,td{padding:8px 12px;border:1px solid #E2E8F0;font-size:12px;text-align:left;}th{background:#F8FAFC;}</style></head><body>${html}</body></html>`);
+          w.document.write(`<!doctype html><html><head><title>${escapeHtml(taskTitle)} - ${escapeHtml(client.name)}</title><style>body{font-family:'Noto Sans JP',sans-serif;padding:30px;color:#0F172A;}table{border-collapse:collapse;width:100%;}th,td{padding:8px 12px;border:1px solid #E2E8F0;font-size:13.5px;text-align:left;}th{background:#F8FAFC;}</style></head><body>${html}</body></html>`);
           w.document.close();
           setTimeout(() => w.print(), 300);
         });
@@ -10993,8 +10993,8 @@ ${ctxText}${surveyTxt}`;
           <button id="fp-lsm-close" style="background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);color:#fff;width:28px;height:28px;border-radius:5px;cursor:pointer;">✕</button>
         </div>
         <div style="padding:18px 22px;">
-          <div style="font-size:12px;color:#64748B;margin-bottom:10px;">送信先: <strong>${escapeHtml(client.name)} 様</strong></div>
-          <div style="font-size:10.5px;color:#5B5BF0;background:#EEF2FF;border:1px solid #C7D2FE;border-radius:6px;padding:8px 12px;margin-bottom:10px;line-height:1.55;">💡 テンプレを編集してご送信ください。送信後、このKPIは自動で「✓ 達成」になります</div>
+          <div style="font-size:13.5px;color:#64748B;margin-bottom:10px;">送信先: <strong>${escapeHtml(client.name)} 様</strong></div>
+          <div style="font-size:12px;color:#5B5BF0;background:#EEF2FF;border:1px solid #C7D2FE;border-radius:6px;padding:8px 12px;margin-bottom:10px;line-height:1.55;">💡 テンプレを編集してご送信ください。送信後、このKPIは自動で「✓ 達成」になります</div>
           <textarea id="fp-lsm-msg" style="width:100%;min-height:240px;border:1.5px solid #E2E8F0;border-radius:8px;padding:12px;font-family:inherit;font-size:13px;line-height:1.75;">${escapeHtml(prefillText)}</textarea>
           <div style="display:flex;gap:10px;margin-top:14px;">
             <button id="fp-lsm-cancel" style="flex:1;padding:11px;background:#fff;border:1.5px solid #CBD5E1;color:#475569;border-radius:8px;font-weight:700;cursor:pointer;font-family:inherit;">キャンセル</button>
@@ -11034,7 +11034,7 @@ ${ctxText}${surveyTxt}`;
           ov.remove();
           const t = document.createElement('div');
           t.style.cssText = 'position:fixed;top:18px;left:50%;transform:translateX(-50%);background:#fff;border-left:5px solid #06C755;border-radius:10px;padding:14px 22px;box-shadow:0 12px 36px rgba(0,0,0,0.2);z-index:10030;';
-          t.innerHTML = `<strong style="font-size:14px;">✓ ${escapeHtml(client.name)} 様 に送信完了</strong><div style="font-size:12px;color:#6b7280;margin-top:4px;">LINE 履歴に追加済 — 次の提案で Jobs が参照します</div>`;
+          t.innerHTML = `<strong style="font-size:14px;">✓ ${escapeHtml(client.name)} 様 に送信完了</strong><div style="font-size:13.5px;color:#6b7280;margin-top:4px;">LINE 履歴に追加済 — 次の提案で Jobs が参照します</div>`;
           document.body.appendChild(t);
           setTimeout(() => t.remove(), 4000);
         } else { console.error('LINE 送信 失敗 (server):', d.error); alert('LINE で 送信 できませんでした。 通信 か LINE 連携 設定 を 確認 して 再度 お試し ください。'); btn.disabled = false; btn.textContent = '📤 LINE 送信'; }
@@ -11059,12 +11059,12 @@ ${ctxText}${surveyTxt}`;
     ov.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.7);z-index:10020;display:flex;align-items:center;justify-content:center;padding:16px;';
     const attachmentBlock = hasAttachment ? `
       <div style="flex:1.6;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px;display:flex;flex-direction:column;overflow:hidden;min-width:0;">
-        <div style="padding:10px 14px;background:#5B5BF0;color:#fff;font-size:11.5px;font-weight:800;letter-spacing:0.06em;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;">
-          <span>📎 添付資料プレビュー <span style="opacity:0.85;font-weight:600;font-size:10.5px;margin-left:8px;">直接クリックで編集可</span></span>
+        <div style="padding:10px 14px;background:#5B5BF0;color:#fff;font-size:13px;font-weight:800;letter-spacing:0.06em;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;">
+          <span>📎 添付資料プレビュー <span style="opacity:0.85;font-weight:600;font-size:12px;margin-left:8px;">直接クリックで編集可</span></span>
           <span style="opacity:0.85;font-weight:600;" id="fp-ds-size">${(finalHtml.length / 1000).toFixed(1)}KB</span>
         </div>
         <div id="fp-ds-preview" contenteditable="true" style="flex:1;overflow:auto;padding:18px 22px;font-size:13px;background:#fff;line-height:1.75;outline:none;">${finalHtml}</div>
-        <div style="padding:8px 14px;background:#FAFBFC;border-top:1px solid #E2E8F0;font-size:10.5px;color:#64748B;display:flex;justify-content:space-between;flex-shrink:0;">
+        <div style="padding:8px 14px;background:#FAFBFC;border-top:1px solid #E2E8F0;font-size:12px;color:#64748B;display:flex;justify-content:space-between;flex-shrink:0;">
           <span>✏️ クリック → 編集 → 自動保存 → そのまま送信</span>
           <span id="fp-ds-edit-status">編集モード ON</span>
         </div>
@@ -11082,7 +11082,7 @@ ${ctxText}${surveyTxt}`;
         <div style="padding:18px 22px;flex:1;display:flex;gap:18px;min-height:0;${hasAttachment ? '' : 'flex-direction:column;'}">
           ${attachmentBlock}
           <div style="flex:1;display:flex;flex-direction:column;min-width:0;${hasAttachment ? 'max-width:420px;' : ''}">
-            <div style="font-size:11px;font-weight:700;color:#64748B;letter-spacing:0.06em;margin-bottom:6px;text-transform:uppercase;">💬 LINE本文 (編集可)</div>
+            <div style="font-size:12.5px;font-weight:700;color:#64748B;letter-spacing:0.06em;margin-bottom:6px;text-transform:uppercase;">💬 LINE本文 (編集可)</div>
             <textarea id="fp-ds-msg" style="flex:1;width:100%;min-height:280px;border:1.5px solid #E2E8F0;border-radius:8px;padding:14px;font-family:inherit;font-size:13.5px;line-height:1.85;resize:none;">${escapeHtml(prefill)}</textarea>
           </div>
         </div>
@@ -11157,9 +11157,9 @@ ${ctxText}${surveyTxt}`;
       <div style="display:flex;align-items:center;gap:12px;">
         <div style="width:36px;height:36px;border:3px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:fp-ai-spin 0.9s linear infinite;flex-shrink:0;"></div>
         <div style="flex:1;min-width:0;">
-          <div style="font-family:'Inter',sans-serif;font-size:10px;font-weight:800;letter-spacing:0.22em;opacity:0.85;">AI 生成中</div>
+          <div style="font-family:'Inter',sans-serif;font-size:11.5px;font-weight:800;letter-spacing:0.22em;opacity:0.85;">AI 生成中</div>
           <div style="font-size:13px;font-weight:800;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(client.name)} 様 / ${escapeHtml(type)}</div>
-          <div style="font-size:11px;opacity:0.85;margin-top:2px;"><span class="fp-pill-timer" style="font-family:'Inter',sans-serif;font-variant-numeric:tabular-nums;">0</span> 秒経過 — 別作業 続けて OK</div>
+          <div style="font-size:12.5px;opacity:0.85;margin-top:2px;"><span class="fp-pill-timer" style="font-family:'Inter',sans-serif;font-variant-numeric:tabular-nums;">0</span> 秒経過 — 別作業 続けて OK</div>
         </div>
       </div>
     `;
@@ -11188,9 +11188,9 @@ ${ctxText}${surveyTxt}`;
           <div style="display:flex;align-items:center;gap:12px;">
             <div style="width:36px;height:36px;background:rgba(255,255,255,0.22);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">✓</div>
             <div style="flex:1;min-width:0;">
-              <div style="font-family:'Inter',sans-serif;font-size:10px;font-weight:800;letter-spacing:0.22em;opacity:0.9;">AI 生成 完了 (${elapsed}秒)</div>
+              <div style="font-family:'Inter',sans-serif;font-size:11.5px;font-weight:800;letter-spacing:0.22em;opacity:0.9;">AI 生成 完了 (${elapsed}秒)</div>
               <div style="font-size:13px;font-weight:800;margin-top:2px;">${escapeHtml(client.name)} 様 / ${escapeHtml(type)}</div>
-              <div style="font-size:11px;opacity:0.92;margin-top:2px;">→ クリックで開いて編集 (📁 顧客モーダル > 面談記録タブ にも保管)</div>
+              <div style="font-size:12.5px;opacity:0.92;margin-top:2px;">→ クリックで開いて編集 (📁 顧客モーダル > 面談記録タブ にも保管)</div>
             </div>
             <button style="background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);color:#fff;width:24px;height:24px;border-radius:5px;cursor:pointer;font-size:13px;" data-pill-close>✕</button>
           </div>
@@ -11206,9 +11206,9 @@ ${ctxText}${surveyTxt}`;
           <div style="display:flex;align-items:center;gap:12px;">
             <div style="font-size:22px;flex-shrink:0;">⚠</div>
             <div style="flex:1;min-width:0;">
-              <div style="font-family:'Inter',sans-serif;font-size:10px;font-weight:800;letter-spacing:0.22em;opacity:0.9;">AI 生成 失敗</div>
+              <div style="font-family:'Inter',sans-serif;font-size:11.5px;font-weight:800;letter-spacing:0.22em;opacity:0.9;">AI 生成 失敗</div>
               <div style="font-size:13px;font-weight:800;margin-top:2px;">${escapeHtml(client.name)} 様 / ${escapeHtml(type)}</div>
-              <div style="font-size:11px;opacity:0.92;margin-top:2px;">${escapeHtml(err || '不明エラー')}</div>
+              <div style="font-size:12.5px;opacity:0.92;margin-top:2px;">${escapeHtml(err || '不明エラー')}</div>
             </div>
             <button style="background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);color:#fff;width:24px;height:24px;border-radius:5px;cursor:pointer;font-size:13px;" data-pill-close>✕</button>
           </div>
@@ -11236,27 +11236,27 @@ ${ctxText}${surveyTxt}`;
       <div style="background:#fff;max-width:580px;width:100%;border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,0.35);overflow:hidden;">
         <div style="background:linear-gradient(135deg,#5B5BF0,#6D6DEF);color:#fff;padding:22px 26px;display:flex;justify-content:space-between;align-items:flex-start;">
           <div>
-            <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:10.5px;letter-spacing:0.2em;opacity:0.88;text-transform:uppercase;margin-bottom:5px;">📎 DELIVERABLE</div>
+            <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:12px;letter-spacing:0.2em;opacity:0.88;text-transform:uppercase;margin-bottom:5px;">📎 DELIVERABLE</div>
             <h3 style="margin:0;font-family:'Noto Sans JP',serif;font-weight:700;font-size:18px;">${escapeHtml(client.name)} さん の 資料を 作成</h3>
-            <p style="margin:6px 0 0;font-size:11.5px;opacity:0.88;line-height:1.6;">JSON + プロンプト の 2ファイル を ダウンロード → 自分の Claude Code で 生成 (コスト $0)</p>
+            <p style="margin:6px 0 0;font-size:13px;opacity:0.88;line-height:1.6;">JSON + プロンプト の 2ファイル を ダウンロード → 自分の Claude Code で 生成 (コスト $0)</p>
           </div>
           <button id="fp-qdp-close" style="background:rgba(255,255,255,0.2);border:none;color:#fff;width:32px;height:32px;border-radius:6px;cursor:pointer;font-size:18px;">✕</button>
         </div>
         <div style="padding:22px 26px;">
-          <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:10.5px;letter-spacing:0.14em;color:#8B7D5D;text-transform:uppercase;margin-bottom:12px;">タイプを選ぶ</div>
+          <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:12px;letter-spacing:0.14em;color:#8B7D5D;text-transform:uppercase;margin-bottom:12px;">タイプを選ぶ</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
             ${types.map(t => `
               <button class="fp-qdp-type" data-type="${t.id}" style="display:flex;align-items:flex-start;gap:12px;background:#fff;border:1.5px solid #E8E2D4;border-radius:10px;padding:14px;cursor:pointer;text-align:left;font-family:inherit;transition:all 0.15s ease;">
                 <div style="font-size:24px;line-height:1;flex-shrink:0;">${t.emoji}</div>
                 <div style="flex:1;min-width:0;">
                   <div style="font-family:'Noto Sans JP',serif;font-weight:700;font-size:13.5px;color:#1F1A12;margin-bottom:3px;">${escapeHtml(t.title)}</div>
-                  <div style="font-size:11px;color:#8B7D5D;line-height:1.5;">${escapeHtml(t.sub)}</div>
+                  <div style="font-size:12.5px;color:#8B7D5D;line-height:1.5;">${escapeHtml(t.sub)}</div>
                 </div>
               </button>
             `).join('')}
           </div>
           <div id="fp-qdp-custom-wrap" style="display:none;margin-top:18px;padding-top:18px;border-top:1px dashed #E8E2D4;">
-            <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:10.5px;letter-spacing:0.14em;color:#8B7D5D;text-transform:uppercase;margin-bottom:8px;">どんな資料?</div>
+            <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:12px;letter-spacing:0.14em;color:#8B7D5D;text-transform:uppercase;margin-bottom:8px;">どんな資料?</div>
             <input id="fp-qdp-custom" type="text" placeholder="例: 新NISA配分の説明資料" style="width:100%;padding:12px 14px;border:1.5px solid #E8E2D4;border-radius:8px;font-size:13px;font-family:inherit;box-sizing:border-box;">
             <button id="fp-qdp-custom-go" style="margin-top:10px;background:linear-gradient(135deg,#5B5BF0,#6D6DEF);color:#fff;border:none;padding:11px 22px;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:0.04em;">この内容で 作成 →</button>
           </div>
@@ -11491,22 +11491,22 @@ STEP C: 結果報告
         </div>
         <div style="padding:24px 28px;">
           <div style="background:linear-gradient(135deg,#FDFBF4,#FAF6E8);border:1px solid #E8C56F;border-radius:10px;padding:18px;margin-bottom:14px;">
-            <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:10.5px;letter-spacing:0.16em;color:#C19A3A;margin-bottom:8px;">STEP 1</div>
+            <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:12px;letter-spacing:0.16em;color:#C19A3A;margin-bottom:8px;">STEP 1</div>
             <p style="margin:0;font-size:14px;font-weight:700;color:#1F1A12;line-height:1.65;">下のボタンを 押す → Claude が 開きます</p>
             <button id="fp-open-claude" style="margin-top:12px;width:100%;background:#1F1A12;color:#FFE9A8;border:none;padding:14px;border-radius:8px;font-size:14px;font-weight:900;cursor:pointer;font-family:inherit;letter-spacing:0.06em;">🌐 Claude を 開く →</button>
           </div>
           <div style="background:linear-gradient(135deg,#FDFBF4,#FAF6E8);border:1px solid #E8C56F;border-radius:10px;padding:18px;">
-            <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:10.5px;letter-spacing:0.16em;color:#C19A3A;margin-bottom:8px;">STEP 2</div>
+            <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:12px;letter-spacing:0.16em;color:#C19A3A;margin-bottom:8px;">STEP 2</div>
             <p style="margin:0;font-size:14px;font-weight:700;color:#1F1A12;line-height:1.65;">Claude の 入力欄で <strong style="background:#1F1A12;color:#FFE9A8;padding:2px 8px;border-radius:4px;">Cmd + V</strong> を 押して 貼り付け → Enter</p>
-            <p style="margin:8px 0 0;font-size:11.5px;color:#5E5648;line-height:1.7;">(指示文は すでに クリップボードに 入っています)</p>
+            <p style="margin:8px 0 0;font-size:13px;color:#5E5648;line-height:1.7;">(指示文は すでに クリップボードに 入っています)</p>
           </div>
-          <div style="margin-top:14px;padding:10px 14px;background:#F8FAFC;border-radius:8px;font-size:11.5px;color:#5E5648;line-height:1.7;">
+          <div style="margin-top:14px;padding:10px 14px;background:#F8FAFC;border-radius:8px;font-size:13px;color:#5E5648;line-height:1.7;">
             💡 1〜2分で HTML が 出来上がります。 そのまま Chrome で 印刷 → PDF 保存 で 完成。
           </div>
         </div>
         <div style="padding:12px 28px;background:#FDFBF4;border-top:1px solid #E8E2D4;display:flex;justify-content:space-between;align-items:center;">
-          <span style="font-size:10.5px;color:#8B7D5D;">バックアップで .txt ファイルも DL 済み</span>
-          <button id="fp-dl-done" style="background:transparent;color:#8B7D5D;border:1px solid #D6CDB6;padding:8px 18px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">閉じる</button>
+          <span style="font-size:12px;color:#8B7D5D;">バックアップで .txt ファイルも DL 済み</span>
+          <button id="fp-dl-done" style="background:transparent;color:#8B7D5D;border:1px solid #D6CDB6;padding:8px 18px;border-radius:7px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:inherit;">閉じる</button>
         </div>
       </div>
     `;
@@ -11538,9 +11538,9 @@ STEP C: 結果報告
       <div style="display:flex;align-items:center;gap:12px;">
         <div style="width:32px;height:32px;border:3px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:fp-deliv-spin 0.9s linear infinite;"></div>
         <div style="flex:1;min-width:0;">
-          <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:10px;letter-spacing:0.18em;opacity:0.85;">📎 ${escapeHtml(taskTitle)}</div>
+          <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:11.5px;letter-spacing:0.18em;opacity:0.85;">📎 ${escapeHtml(taskTitle)}</div>
           <div style="font-size:13px;font-weight:800;margin-top:2px;">${escapeHtml(client.name)}さん の 資料を 作成中</div>
-          <div style="font-size:11px;opacity:0.85;margin-top:2px;">Mac mini で生成中... <span class="fp-deliv-timer" style="font-variant-numeric:tabular-nums;">0</span>秒</div>
+          <div style="font-size:12.5px;opacity:0.85;margin-top:2px;">Mac mini で生成中... <span class="fp-deliv-timer" style="font-variant-numeric:tabular-nums;">0</span>秒</div>
         </div>
       </div>
     `;
@@ -11579,9 +11579,9 @@ STEP C: 結果報告
           <div style="display:flex;align-items:center;gap:12px;">
             <div style="width:32px;height:32px;background:rgba(255,255,255,0.22);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;">✓</div>
             <div style="flex:1;">
-              <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:10px;letter-spacing:0.18em;opacity:0.92;">DELIVERABLE READY</div>
+              <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:11.5px;letter-spacing:0.18em;opacity:0.92;">DELIVERABLE READY</div>
               <div style="font-size:13px;font-weight:800;margin-top:2px;">${escapeHtml(client.name)}さん 資料完成</div>
-              ${d.driveUrl ? `<a href="${d.driveUrl}" target="_blank" style="display:inline-block;margin-top:6px;background:#fff;color:#065F46;text-decoration:none;padding:6px 14px;border-radius:6px;font-size:11px;font-weight:800;">📎 PDF を開く</a>` : `<div style="font-size:11px;opacity:0.92;margin-top:2px;">Mac mini の ~/.skeleton-fp-deliverable/output/${d.macMiniReqId}.pdf</div>`}
+              ${d.driveUrl ? `<a href="${d.driveUrl}" target="_blank" style="display:inline-block;margin-top:6px;background:#fff;color:#065F46;text-decoration:none;padding:6px 14px;border-radius:6px;font-size:12.5px;font-weight:800;">📎 PDF を開く</a>` : `<div style="font-size:12.5px;opacity:0.92;margin-top:2px;">Mac mini の ~/.skeleton-fp-deliverable/output/${d.macMiniReqId}.pdf</div>`}
             </div>
             <button onclick="this.parentElement.parentElement.remove()" style="background:rgba(255,255,255,0.2);border:none;color:#fff;width:26px;height:26px;border-radius:5px;cursor:pointer;">✕</button>
           </div>
@@ -11589,7 +11589,7 @@ STEP C: 結果報告
         setTimeout(() => toast.remove(), 60 * 1000);
       } else {
         toast.style.background = 'linear-gradient(135deg,#DC2626,#991B1B)';
-        toast.innerHTML = `<div style="font-size:13px;font-weight:700;">❌ 失敗: ${escapeHtml(d.error || '不明')}</div><button onclick="this.parentElement.remove()" style="margin-top:8px;background:rgba(255,255,255,0.2);border:none;color:#fff;padding:5px 12px;border-radius:5px;cursor:pointer;font-size:11px;">閉じる</button>`;
+        toast.innerHTML = `<div style="font-size:13px;font-weight:700;">❌ 失敗: ${escapeHtml(d.error || '不明')}</div><button onclick="this.parentElement.remove()" style="margin-top:8px;background:rgba(255,255,255,0.2);border:none;color:#fff;padding:5px 12px;border-radius:5px;cursor:pointer;font-size:12.5px;">閉じる</button>`;
       }
     } catch (e) {
       clearInterval(timer);
@@ -11765,14 +11765,14 @@ STEP C: 結果報告
     ];
     return cats.map(cat => `
       <div style="margin-bottom:14px;">
-        <div style="font-family:Manrope,sans-serif;font-size:10.5px;font-weight:800;letter-spacing:0.15em;color:#64748B;margin-bottom:6px;text-transform:uppercase;">${cat.name}</div>
+        <div style="font-family:Manrope,sans-serif;font-size:12px;font-weight:800;letter-spacing:0.15em;color:#64748B;margin-bottom:6px;text-transform:uppercase;">${cat.name}</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
           ${cat.items.map(([t, ico, ttl, sub]) => `
             <button class="fp-deliv-type" data-type="${t}" style="background:#fff;border:1.5px solid #E2E8F0;border-radius:8px;padding:11px 14px;text-align:left;cursor:pointer;font-family:inherit;display:flex;align-items:flex-start;gap:9px;transition:border-color 0.15s,background 0.15s;">
               <span style="font-size:18px;line-height:1;">${ico}</span>
               <div style="min-width:0;">
-                <div style="font-weight:700;font-size:12px;color:#0F172A;line-height:1.3;">${ttl}</div>
-                <div style="font-size:10.5px;color:#94A3B8;margin-top:2px;line-height:1.4;">${sub}</div>
+                <div style="font-weight:700;font-size:13.5px;color:#0F172A;line-height:1.3;">${ttl}</div>
+                <div style="font-size:12px;color:#94A3B8;margin-top:2px;line-height:1.4;">${sub}</div>
               </div>
             </button>
           `).join('')}
@@ -11789,8 +11789,8 @@ STEP C: 結果報告
     const s = surveys.find(x => x.userId === client.lineFriendId || x.name === client.name) || {};
     const inc = (s.q4_年収 || '').includes('1000') ? 900 : (s.q4_年収 || '').includes('700') ? 700 : 500;
     const hd = `<div style="background:linear-gradient(135deg,#10B981,#34D399);color:#fff;padding:14px 18px;border-radius:8px 8px 0 0;display:flex;justify-content:space-between;align-items:center;">
-      <div><strong style="font-size:14px;letter-spacing:0.04em;">{TITLE}</strong><div style="font-size:11px;opacity:0.9;margin-top:2px;">${escapeHtml(client.name)} 様 / ${age}歳 / 作成 ${new Date().toISOString().slice(0,10)}</div></div>
-      <div style="display:flex;gap:6px;"><button data-deliv-print style="background:rgba(255,255,255,0.22);border:1px solid rgba(255,255,255,0.4);color:#fff;padding:5px 10px;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer;">🖨 印刷/PDF</button><button data-deliv-send style="background:#06C755;border:1px solid #06C755;color:#fff;padding:5px 12px;border-radius:5px;font-size:11px;font-weight:800;cursor:pointer;">📤 LINE送信</button></div>
+      <div><strong style="font-size:14px;letter-spacing:0.04em;">{TITLE}</strong><div style="font-size:12.5px;opacity:0.9;margin-top:2px;">${escapeHtml(client.name)} 様 / ${age}歳 / 作成 ${new Date().toISOString().slice(0,10)}</div></div>
+      <div style="display:flex;gap:6px;"><button data-deliv-print style="background:rgba(255,255,255,0.22);border:1px solid rgba(255,255,255,0.4);color:#fff;padding:5px 10px;border-radius:5px;font-size:12.5px;font-weight:700;cursor:pointer;">🖨 印刷/PDF</button><button data-deliv-send style="background:#06C755;border:1px solid #06C755;color:#fff;padding:5px 12px;border-radius:5px;font-size:12.5px;font-weight:800;cursor:pointer;">📤 LINE送信</button></div>
     </div>`;
     if (type === 'cashflow') {
       const rows = [];
@@ -11804,18 +11804,18 @@ STEP C: 結果報告
       }
       return `<div class="fp-deliv-content" style="border:1px solid #E2E8F0;border-radius:8px;overflow:hidden;">
         ${hd.replace('{TITLE}', '📊 キャッシュフロー表 (向こう10年)')}
-        <table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <table style="width:100%;border-collapse:collapse;font-size:13.5px;">
           <thead><tr style="background:#F8FAFC;"><th style="padding:8px 10px;border-bottom:1px solid #E2E8F0;text-align:left;">西暦</th><th style="padding:8px 10px;border-bottom:1px solid #E2E8F0;text-align:left;">年齢</th><th style="padding:8px 10px;border-bottom:1px solid #E2E8F0;text-align:left;">年収</th><th style="padding:8px 10px;border-bottom:1px solid #E2E8F0;text-align:left;">支出</th><th style="padding:8px 10px;border-bottom:1px solid #E2E8F0;text-align:left;">貯蓄</th></tr></thead>
           <tbody>${rows.map(r => r.replace(/<td>/g, '<td style="padding:7px 10px;border-bottom:1px solid #F1F5F9;">')).join('')}</tbody>
         </table>
-        <div style="padding:12px 18px;background:#F8FAFC;font-size:11px;color:#64748B;border-top:1px solid #E2E8F0;">⚠ ドラフト: 年収/支出は概算。次フェーズで Claude が顧客データから精緻化。</div>
+        <div style="padding:12px 18px;background:#F8FAFC;font-size:12.5px;color:#64748B;border-top:1px solid #E2E8F0;">⚠ ドラフト: 年収/支出は概算。次フェーズで Claude が顧客データから精緻化。</div>
       </div>`;
     }
     if (type === 'lifeplan') {
       const evs = (window.LifeEvents.generate(client) || []).slice(0, 12);
       return `<div class="fp-deliv-content" style="border:1px solid #E2E8F0;border-radius:8px;overflow:hidden;">
         ${hd.replace('{TITLE}', '📈 ライフプラン表 (主要イベント12件)')}
-        <table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <table style="width:100%;border-collapse:collapse;font-size:13.5px;">
           <thead><tr style="background:#F8FAFC;"><th style="padding:8px 10px;border-bottom:1px solid #E2E8F0;text-align:left;">時期</th><th style="padding:8px 10px;border-bottom:1px solid #E2E8F0;text-align:left;">イベント</th><th style="padding:8px 10px;border-bottom:1px solid #E2E8F0;text-align:left;">対象</th></tr></thead>
           <tbody>${evs.map(e => `<tr><td style="padding:7px 10px;border-bottom:1px solid #F1F5F9;">${new Date(e.date).toISOString().slice(0,10)}</td><td style="padding:7px 10px;border-bottom:1px solid #F1F5F9;">${escapeHtml(e.label)}</td><td style="padding:7px 10px;border-bottom:1px solid #F1F5F9;color:#64748B;">${escapeHtml(e.who || '—')}</td></tr>`).join('') || '<tr><td colspan="3" style="padding:16px;text-align:center;color:#94A3B8;">予測イベントなし</td></tr>'}</tbody>
         </table>
@@ -11823,7 +11823,7 @@ STEP C: 結果報告
     }
     if (type === 'nisa') {
       const propA = { 株式: 70, 債券: 20, REIT: 10 }, propB = { 株式: 50, 債券: 40, REIT: 10 }, propC = { 株式: 30, 債券: 60, REIT: 10 };
-      const bar = (lbl, p, c) => `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:11.5px;"><span style="width:60px;color:#475569;">${lbl}</span><div style="flex:1;height:18px;background:#F1F5F9;border-radius:4px;overflow:hidden;"><div style="width:${p}%;height:100%;background:${c};"></div></div><span style="width:36px;text-align:right;font-weight:700;">${p}%</span></div>`;
+      const bar = (lbl, p, c) => `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:13px;"><span style="width:60px;color:#475569;">${lbl}</span><div style="flex:1;height:18px;background:#F1F5F9;border-radius:4px;overflow:hidden;"><div style="width:${p}%;height:100%;background:${c};"></div></div><span style="width:36px;text-align:right;font-weight:700;">${p}%</span></div>`;
       return `<div class="fp-deliv-content" style="border:1px solid #E2E8F0;border-radius:8px;overflow:hidden;">
         ${hd.replace('{TITLE}', '💹 NISA / iDeCo 配分シミュレーション')}
         <div style="padding:18px;">
@@ -11837,15 +11837,15 @@ STEP C: 結果報告
       const rows = [['死亡保障', '5,000万', '3,000万', '-2,000万', '不足'], ['医療保障 (日額)', '15,000円', '8,000円', '-7,000円', '不足'], ['就業不能保障', '20万/月', '0', '-20万', '完全不足'], ['がん保障 (一時金)', '300万', '100万', '-200万', '不足']];
       return `<div class="fp-deliv-content" style="border:1px solid #E2E8F0;border-radius:8px;overflow:hidden;">
         ${hd.replace('{TITLE}', '🛡 保険 見直しレポート (必要 vs 現状)')}
-        <table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <table style="width:100%;border-collapse:collapse;font-size:13.5px;">
           <thead><tr style="background:#F8FAFC;"><th style="padding:8px 10px;border-bottom:1px solid #E2E8F0;text-align:left;">保障項目</th><th style="padding:8px 10px;border-bottom:1px solid #E2E8F0;text-align:right;">必要</th><th style="padding:8px 10px;border-bottom:1px solid #E2E8F0;text-align:right;">現状</th><th style="padding:8px 10px;border-bottom:1px solid #E2E8F0;text-align:right;">差分</th><th style="padding:8px 10px;border-bottom:1px solid #E2E8F0;text-align:right;">判定</th></tr></thead>
-          <tbody>${rows.map(r => `<tr><td style="padding:7px 10px;border-bottom:1px solid #F1F5F9;">${r[0]}</td><td style="padding:7px 10px;border-bottom:1px solid #F1F5F9;text-align:right;">${r[1]}</td><td style="padding:7px 10px;border-bottom:1px solid #F1F5F9;text-align:right;">${r[2]}</td><td style="padding:7px 10px;border-bottom:1px solid #F1F5F9;text-align:right;color:#B91C1C;font-weight:700;">${r[3]}</td><td style="padding:7px 10px;border-bottom:1px solid #F1F5F9;text-align:right;"><span style="background:#FEF2F2;color:#B91C1C;padding:2px 8px;border-radius:99px;font-size:10.5px;font-weight:700;">${r[4]}</span></td></tr>`).join('')}</tbody>
+          <tbody>${rows.map(r => `<tr><td style="padding:7px 10px;border-bottom:1px solid #F1F5F9;">${r[0]}</td><td style="padding:7px 10px;border-bottom:1px solid #F1F5F9;text-align:right;">${r[1]}</td><td style="padding:7px 10px;border-bottom:1px solid #F1F5F9;text-align:right;">${r[2]}</td><td style="padding:7px 10px;border-bottom:1px solid #F1F5F9;text-align:right;color:#B91C1C;font-weight:700;">${r[3]}</td><td style="padding:7px 10px;border-bottom:1px solid #F1F5F9;text-align:right;"><span style="background:#FEF2F2;color:#B91C1C;padding:2px 8px;border-radius:99px;font-size:12px;font-weight:700;">${r[4]}</span></td></tr>`).join('')}</tbody>
         </table>
       </div>`;
     }
     // ---- 追加 11 種 ----
     const wrap = (title, inner) => `<div class="fp-deliv-content" style="border:1px solid #E2E8F0;border-radius:8px;overflow:hidden;">${hd.replace('{TITLE}', title)}<div style="padding:18px;">${inner}</div></div>`;
-    const tbl = (head, rows) => `<table style="width:100%;border-collapse:collapse;font-size:12px;"><thead><tr style="background:#F8FAFC;">${head.map(h => `<th style="padding:8px 10px;border-bottom:1px solid #E2E8F0;text-align:left;">${h}</th>`).join('')}</tr></thead><tbody>${rows.map(r => `<tr>${r.map(c => `<td style="padding:7px 10px;border-bottom:1px solid #F1F5F9;">${c}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+    const tbl = (head, rows) => `<table style="width:100%;border-collapse:collapse;font-size:13.5px;"><thead><tr style="background:#F8FAFC;">${head.map(h => `<th style="padding:8px 10px;border-bottom:1px solid #E2E8F0;text-align:left;">${h}</th>`).join('')}</tr></thead><tbody>${rows.map(r => `<tr>${r.map(c => `<td style="padding:7px 10px;border-bottom:1px solid #F1F5F9;">${c}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
 
     if (type === 'emergency') {
       const monthlyExp = Math.round(inc * 0.55 / 12);  // 月支出推定
@@ -11864,7 +11864,7 @@ STEP C: 結果報告
           ['交通費','2万','3%','適正'],
           ['趣味・交際','5万','8%','過剰'],
           ['貯蓄・投資','12万','20%','理想25%'],
-        ])}<div style="margin-top:12px;background:#FEF3C7;border:1px solid #FBBF24;border-radius:6px;padding:10px 14px;font-size:12px;color:#78350F;">💡 通信費削減 + 趣味交際見直しで月5万浮かせます</div>`);
+        ])}<div style="margin-top:12px;background:#FEF3C7;border:1px solid #FBBF24;border-radius:6px;padding:10px 14px;font-size:13.5px;color:#78350F;">💡 通信費削減 + 趣味交際見直しで月5万浮かせます</div>`);
     }
     if (type === 'education') {
       return wrap('🎒 教育費シミュレーション (進路別)',
@@ -11883,7 +11883,7 @@ STEP C: 結果報告
           ['ローン残期間','長い (20年+)','短い (10年-)'],
           ['住宅ローン控除 残期間','5年未満','10年以上'],
           ['手元現金','十分 (6ヶ月+)','少ない'],
-        ])}<div style="margin-top:12px;background:#ECFDF5;border:1px solid #6EE7B7;border-radius:6px;padding:10px 14px;font-size:12px;color:#065F46;">✓ 判定: 3軸中 2軸が運用優位 → <strong>NISAつみたて投資推奨</strong></div>`);
+        ])}<div style="margin-top:12px;background:#ECFDF5;border:1px solid #6EE7B7;border-radius:6px;padding:10px 14px;font-size:13.5px;color:#065F46;">✓ 判定: 3軸中 2軸が運用優位 → <strong>NISAつみたて投資推奨</strong></div>`);
     }
     if (type === 'risk') {
       return wrap('🎯 リスク許容度 診断シート',
@@ -11894,7 +11894,7 @@ STEP C: 結果報告
           ['3','投資期間 (1年/3/5/10/20年+)','4'],
           ['4','収入の安定性','4'],
           ['5','緊急予備資金の有無','3'],
-        ])}<div style="margin-top:12px;background:#EEF1FE;border:1px solid #C7D2FE;border-radius:6px;padding:10px 14px;font-size:12px;color:#3730A3;">合計17点 → <strong>標準型 (株式50% / 債券40% / REIT 10%)</strong></div>`);
+        ])}<div style="margin-top:12px;background:#EEF1FE;border:1px solid #C7D2FE;border-radius:6px;padding:10px 14px;font-size:13.5px;color:#3730A3;">合計17点 → <strong>標準型 (株式50% / 債券40% / REIT 10%)</strong></div>`);
     }
     if (type === 'hoshougaku') {
       return wrap('💉 必要保障額 詳細計算',
@@ -11920,7 +11920,7 @@ STEP C: 結果報告
           ['総必要額',`¥${needed}万`],
           ['公的年金 見込',`-¥${pension}万`],
           ['<strong>不足額</strong>',`<strong style="color:#B91C1C;">¥${needed-pension}万</strong>`],
-        ])}<div style="margin-top:12px;background:#FEF3C7;border:1px solid #FBBF24;border-radius:6px;padding:10px 14px;font-size:12px;color:#78350F;">💡 30代から月3万積立 (年利4%) で達成可能</div>`);
+        ])}<div style="margin-top:12px;background:#FEF3C7;border:1px solid #FBBF24;border-radius:6px;padding:10px 14px;font-size:13.5px;color:#78350F;">💡 30代から月3万積立 (年利4%) で達成可能</div>`);
     }
     if (type === 'taishokukin') {
       return wrap('💼 退職金 受取最適化シミュ',
@@ -11928,7 +11928,7 @@ STEP C: 結果報告
           ['全額一時金','¥1,950万','¥50万','退職所得控除フル活用'],
           ['全額年金','¥1,750万','¥250万','公的年金等控除のみ'],
           ['一時金70% + 年金30%','<strong>¥1,920万</strong>','¥80万','<strong>推奨</strong>'],
-        ])}<div style="margin-top:12px;background:#ECFDF5;border:1px solid #6EE7B7;border-radius:6px;padding:10px 14px;font-size:12px;color:#065F46;">✓ 一時金主体が税優遇大。年金枠を一部使い 控除上限まで取る</div>`);
+        ])}<div style="margin-top:12px;background:#ECFDF5;border:1px solid #6EE7B7;border-radius:6px;padding:10px 14px;font-size:13.5px;color:#065F46;">✓ 一時金主体が税優遇大。年金枠を一部使い 控除上限まで取る</div>`);
     }
     if (type === 'kaigo') {
       return wrap('🏥 老後の医療・介護費 試算',
@@ -11948,7 +11948,7 @@ STEP C: 結果報告
           ['法定相続人数 (推定)',`${heirs}名`],
           ['<strong>当家 基礎控除</strong>',`<strong style="color:#5B5BF0;">¥${base}万</strong>`],
           ['配偶者控除','¥1.6億 or 法定相続分'],
-        ])}<div style="margin-top:12px;background:#EEF1FE;border:1px solid #C7D2FE;border-radius:6px;padding:10px 14px;font-size:12px;color:#3730A3;">💡 ¥${base}万以下なら相続税ゼロ。超える分は10〜55%課税</div>`);
+        ])}<div style="margin-top:12px;background:#EEF1FE;border:1px solid #C7D2FE;border-radius:6px;padding:10px 14px;font-size:13.5px;color:#3730A3;">💡 ¥${base}万以下なら相続税ゼロ。超える分は10〜55%課税</div>`);
     }
     if (type === 'zoyo') {
       return wrap('🎁 生前贈与 簡易シミュ',
@@ -11958,7 +11958,7 @@ STEP C: 結果報告
           ['教育資金一括','1,500万/孫','30歳まで'],
           ['結婚・子育て一括','1,000万','50歳まで'],
           ['住宅取得資金','500〜1,000万',''],
-        ])}<div style="margin-top:12px;background:#FEF3C7;border:1px solid #FBBF24;border-radius:6px;padding:10px 14px;font-size:12px;color:#78350F;">💡 配偶者+子2人 → 暦年贈与年330万を10年で<strong>3,300万非課税移転</strong>可能</div>`);
+        ])}<div style="margin-top:12px;background:#FEF3C7;border:1px solid #FBBF24;border-radius:6px;padding:10px 14px;font-size:13.5px;color:#78350F;">💡 配偶者+子2人 → 暦年贈与年330万を10年で<strong>3,300万非課税移転</strong>可能</div>`);
     }
     if (type === 'kakutei') {
       return wrap('📄 確定申告 簡易チェック (自営業)',
@@ -12040,7 +12040,7 @@ STEP C: 結果報告
       <span class="fp-minutes-spinner" style="display:inline-block;width:14px;height:14px;border:2.5px solid rgba(255,255,255,0.35);border-top-color:#fff;border-radius:50%;animation:fpMinutesSpin 1s linear infinite;flex-shrink:0;"></span>
       <div style="flex:1;min-width:0;line-height:1.35;">
         <div style="font-size:12.5px;font-weight:800;">議事録 生成 中</div>
-        <div style="font-size:11px;font-weight:600;opacity:0.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(client.name || 'お客様')} 様 · <span class="fp-minutes-elapsed">00:00</span></div>
+        <div style="font-size:12.5px;font-weight:600;opacity:0.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(client.name || 'お客様')} 様 · <span class="fp-minutes-elapsed">00:00</span></div>
       </div>
       <button class="fp-minutes-close" title="非表示 (生成 は バックグラウンド 継続)" style="background:transparent;color:rgba(255,255,255,0.75);border:none;font-size:16px;line-height:1;cursor:pointer;padding:2px 4px;flex-shrink:0;">×</button>
     `;
@@ -12185,7 +12185,7 @@ STEP C: 結果報告
           <span style="width:10px;background:linear-gradient(180deg,#10B981 0%,#059669 100%);border-radius:3px;height:6px;transition:height .08s ease;opacity:0.35;"></span>
           <span style="width:10px;background:linear-gradient(180deg,#10B981 0%,#059669 100%);border-radius:3px;height:6px;transition:height .08s ease;opacity:0.35;"></span>
         </div>
-        <div id="fp-mic-hint" style="font-size:11.5px;color:#94A3B8;margin:0 0 18px;letter-spacing:0.03em;">🎤 マイク 音量 · 喋る と bar が 動く = 録音 されて る 証拠</div>
+        <div id="fp-mic-hint" style="font-size:13px;color:#94A3B8;margin:0 0 18px;letter-spacing:0.03em;">🎤 マイク 音量 · 喋る と bar が 動く = 録音 されて る 証拠</div>
         <h1 style="font-size:32px;font-weight:900;margin:0 0 10px;letter-spacing:-0.02em;">面談 記録 中</h1>
         <p style="font-size:15px;font-weight:600;color:#94A3B8;margin:0 0 20px;">${escapeHtml(client.name || 'お客様')} 様 と の 面談</p>
         <div id="fp-inperson-timer" style="font-size:44px;font-weight:900;color:#fff;font-variant-numeric:tabular-nums;font-family:'JetBrains Mono',ui-monospace,monospace;letter-spacing:0.02em;margin-bottom:28px;">00:00</div>
@@ -12193,11 +12193,11 @@ STEP C: 結果報告
         <button id="fp-inperson-end" disabled style="background:#DC2626;color:#fff;border:none;padding:14px 32px;border-radius:10px;font-family:inherit;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 8px 20px rgba(220,38,38,0.35);opacity:0.6;letter-spacing:0.02em;">⏹ 面談 終了 (録音 停止)</button>
       </div>
       <!-- ★ 2026-08-11 owner「Zoom 実際 動いてる か 見えない」対応: 右上 隅 の 小 button で iframe を 可視化 (owner 目視 確認 用) -->
-      <button id="fp-inperson-debug" style="position:absolute;top:14px;right:14px;background:rgba(255,255,255,0.06);color:#94A3B8;border:1px solid rgba(255,255,255,0.14);padding:7px 12px;border-radius:6px;font-family:inherit;font-size:11.5px;font-weight:700;cursor:pointer;letter-spacing:0.02em;">🔍 Zoom 動作 確認</button>
+      <button id="fp-inperson-debug" style="position:absolute;top:14px;right:14px;background:rgba(255,255,255,0.06);color:#94A3B8;border:1px solid rgba(255,255,255,0.14);padding:7px 12px;border-radius:6px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:0.02em;">🔍 Zoom 動作 確認</button>
       <!-- ★ 2026-08-20 owner「何もさわれない」対応 · 緊急 escape hatch -->
-      <button id="fp-inperson-force-close" title="緊急 閉じる (録音 は 保存 されません)" style="position:absolute;top:14px;left:14px;background:rgba(220,38,38,0.14);color:#FCA5A5;border:1px solid rgba(220,38,38,0.35);padding:7px 12px;border-radius:6px;font-family:inherit;font-size:11.5px;font-weight:800;cursor:pointer;letter-spacing:0.02em;">✕ 緊急 閉じる</button>
+      <button id="fp-inperson-force-close" title="緊急 閉じる (録音 は 保存 されません)" style="position:absolute;top:14px;left:14px;background:rgba(220,38,38,0.14);color:#FCA5A5;border:1px solid rgba(220,38,38,0.35);padding:7px 12px;border-radius:6px;font-family:inherit;font-size:13px;font-weight:800;cursor:pointer;letter-spacing:0.02em;">✕ 緊急 閉じる</button>
       <!-- ★ 2026-08-20 owner「録音してる間にFPコンパス触れない」対応 · 最小化 button (mini widget に 変換) -->
-      <button id="fp-inperson-minimize" title="最小化 (録音は継続、admin panel 操作可)" style="position:absolute;top:14px;left:135px;background:rgba(59,130,246,0.14);color:#93C5FD;border:1px solid rgba(59,130,246,0.35);padding:7px 12px;border-radius:6px;font-family:inherit;font-size:11.5px;font-weight:800;cursor:pointer;letter-spacing:0.02em;">— 最小化</button>
+      <button id="fp-inperson-minimize" title="最小化 (録音は継続、admin panel 操作可)" style="position:absolute;top:14px;left:135px;background:rgba(59,130,246,0.14);color:#93C5FD;border:1px solid rgba(59,130,246,0.35);padding:7px 12px;border-radius:6px;font-family:inherit;font-size:13px;font-weight:800;cursor:pointer;letter-spacing:0.02em;">— 最小化</button>
       <style>
         @keyframes fpRecPulse { 0%,100%{opacity:1;transform:scale(1);} 50%{opacity:0.6;transform:scale(1.35);} }
         /* mini widget state */
@@ -12238,10 +12238,10 @@ STEP C: 結果報告
         <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
           <div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1;">
             <span style="width:10px;height:10px;background:#DC2626;border-radius:50%;box-shadow:0 0 10px rgba(220,38,38,0.9);animation:fpRecPulse 1.4s ease-in-out infinite;flex-shrink:0;"></span>
-            <span style="font-size:11px;font-weight:800;color:#FCA5A5;letter-spacing:0.06em;">録音 中</span>
+            <span style="font-size:12.5px;font-weight:800;color:#FCA5A5;letter-spacing:0.06em;">録音 中</span>
             <span id="fp-mini-timer" style="font-size:13.5px;font-weight:900;color:#fff;margin-left:auto;font-variant-numeric:tabular-nums;font-family:'JetBrains Mono',ui-monospace,monospace;">00:00</span>
           </div>
-          <button id="fp-inperson-restore" title="全画面 に 戻す" style="background:rgba(59,130,246,0.14);color:#93C5FD;border:1px solid rgba(59,130,246,0.35);padding:4px 8px;border-radius:5px;font-family:inherit;font-size:10.5px;font-weight:800;cursor:pointer;flex-shrink:0;">⛶ 拡大</button>
+          <button id="fp-inperson-restore" title="全画面 に 戻す" style="background:rgba(59,130,246,0.14);color:#93C5FD;border:1px solid rgba(59,130,246,0.35);padding:4px 8px;border-radius:5px;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;flex-shrink:0;">⛶ 拡大</button>
         </div>
         <div style="font-size:12.5px;font-weight:700;color:#DBEAFE;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(client.name || 'お客様')} 様 の 面談</div>
         <button id="fp-mini-end" disabled style="background:#DC2626;color:#fff;border:none;padding:9px 12px;border-radius:7px;font-family:inherit;font-size:12.5px;font-weight:800;cursor:pointer;letter-spacing:0.02em;opacity:0.6;">⏹ 面談 終了 (録音 停止)</button>
@@ -12553,7 +12553,7 @@ STEP C: 結果報告
             <div style="width:38px;height:38px;background:rgba(255,255,255,0.18);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;">🎙</div>
             <div>
               <div style="font-size:16.5px;font-weight:900;line-height:1.3;">${escapeHtml(client.name || 'お客様')} 様 と 面談</div>
-              <div style="font-size:11.5px;font-weight:600;margin-top:3px;opacity:0.92;">開始 方法 を 4つ から 選ぶ</div>
+              <div style="font-size:13px;font-weight:600;margin-top:3px;opacity:0.92;">開始 方法 を 4つ から 選ぶ</div>
             </div>
           </div>
           <button id="fp-ms-close" style="background:rgba(255,255,255,0.18);color:#fff;border:none;font-size:18px;cursor:pointer;width:34px;height:34px;border-radius:8px;font-family:inherit;">✕</button>
@@ -12563,8 +12563,8 @@ STEP C: 結果報告
           <button id="fp-ms-instant" style="width:100%;background:#059669;color:#fff;border:none;padding:16px 18px;border-radius:10px;font-family:inherit;font-size:14.5px;font-weight:800;cursor:pointer;text-align:left;display:flex;align-items:center;gap:14px;box-shadow:0 5px 16px rgba(5,150,105,0.28);margin-bottom:12px;transition:background .15s,box-shadow .15s;">
             <div style="width:42px;height:42px;background:rgba(255,255,255,0.18);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff;font-size:22px;">⚡</div>
             <div style="flex:1;line-height:1.5;">
-              <div style="font-size:15px;font-weight:900;color:#fff;display:flex;align-items:center;gap:8px;">今すぐ Zoom を 開始 <span style="background:rgba(255,255,255,0.22);color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:4px;letter-spacing:0.04em;">推奨</span></div>
-              <div style="font-size:12px;font-weight:600;color:#DCFCE7;margin-top:3px;">Zoom Instant Meeting 作成 → ${hasLine ? 'LINE 自動 送付' : 'URL を コピー / SMS'} → 拡張機能 が 自動 で 録音</div>
+              <div style="font-size:15px;font-weight:900;color:#fff;display:flex;align-items:center;gap:8px;">今すぐ Zoom を 開始 <span style="background:rgba(255,255,255,0.22);color:#fff;font-size:11.5px;font-weight:800;padding:2px 7px;border-radius:4px;letter-spacing:0.04em;">推奨</span></div>
+              <div style="font-size:13.5px;font-weight:600;color:#DCFCE7;margin-top:3px;">Zoom Instant Meeting 作成 → ${hasLine ? 'LINE 自動 送付' : 'URL を コピー / SMS'} → 拡張機能 が 自動 で 録音</div>
             </div>
           </button>
 
@@ -12574,7 +12574,7 @@ STEP C: 結果報告
               <div style="width:38px;height:38px;background:#ECFDF5;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#059669;font-size:19px;">🔗</div>
               <div style="flex:1;line-height:1.5;">
                 <div style="font-size:14.5px;font-weight:900;color:#0F172A;">相手 が 送ってきた Zoom URL を 使う</div>
-                <div style="font-size:12px;font-weight:600;color:#475569;margin-top:2px;">お客様 or 別会社 が host の Zoom も、 両者 の 音声 を 録音 + 面談記録 化</div>
+                <div style="font-size:13.5px;font-weight:600;color:#475569;margin-top:2px;">お客様 or 別会社 が host の Zoom も、 両者 の 音声 を 録音 + 面談記録 化</div>
               </div>
             </div>
             <input id="fp-ms-external-url" type="url" placeholder="https://zoom.us/j/..." style="width:100%;padding:11px 13px;border:2px solid #E2E8F0;border-radius:8px;font-size:13.5px;font-family:'JetBrains Mono',ui-monospace,Menlo,monospace;box-sizing:border-box;background:#F8FAFC;margin-bottom:10px;">
@@ -12586,7 +12586,7 @@ STEP C: 結果報告
             <div style="width:34px;height:34px;background:#F1F5F9;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#64748B;font-size:17px;">📅</div>
             <div style="flex:1;line-height:1.5;">
               <div style="font-size:13.5px;font-weight:800;color:#0F172A;">予約 する (数日後 / 指定日時)</div>
-              <div style="font-size:11.5px;font-weight:600;color:#64748B;margin-top:2px;">Zoom 予約 + カレンダー 登録 + LINE 通知</div>
+              <div style="font-size:13px;font-weight:600;color:#64748B;margin-top:2px;">Zoom 予約 + カレンダー 登録 + LINE 通知</div>
             </div>
           </button>
 
@@ -12595,7 +12595,7 @@ STEP C: 結果報告
             <div style="width:38px;height:38px;background:#DBEAFE;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#1E40AF;font-size:19px;">🎤</div>
             <div style="flex:1;line-height:1.5;">
               <div style="font-size:14px;font-weight:900;color:#0F172A;">対面 で 面談 (音声 だけ 録音)</div>
-              <div style="font-size:11.5px;font-weight:600;color:#475569;margin-top:2px;">客 に は Zoom 見せず、 音声 だけ 拾って 議事録 自動 生成</div>
+              <div style="font-size:13px;font-weight:600;color:#475569;margin-top:2px;">客 に は Zoom 見せず、 音声 だけ 拾って 議事録 自動 生成</div>
             </div>
           </button>
 
@@ -12604,12 +12604,12 @@ STEP C: 結果報告
             <div style="width:30px;height:30px;background:transparent;border:1px solid #E2E8F0;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#94A3B8;font-size:15px;">☎</div>
             <div style="flex:1;line-height:1.4;">
               <div style="font-size:12.5px;font-weight:700;color:#475569;">電話 で 対応 (録音 なし)</div>
-              <div style="font-size:11px;font-weight:600;color:#94A3B8;margin-top:1px;">面談履歴 に 手動 メモ 追加 だけ</div>
+              <div style="font-size:12.5px;font-weight:600;color:#94A3B8;margin-top:1px;">面談履歴 に 手動 メモ 追加 だけ</div>
             </div>
           </button>
 
           <!-- ヒント -->
-          <div style="margin-top:14px;padding:10px 13px;background:#ECFDF5;border:1px solid rgba(5,150,105,0.22);border-radius:8px;font-size:11.5px;line-height:1.7;color:#065F46;">
+          <div style="margin-top:14px;padding:10px 13px;background:#ECFDF5;border:1px solid rgba(5,150,105,0.22);border-radius:8px;font-size:13px;line-height:1.7;color:#065F46;">
             <b style="font-weight:800;">録音 の 仕組み</b> — 拡張機能 (v1.5.4) が Zoom タブ 音声 + Mac マイク を 合成 録音 → Whisper で 文字起こし → Claude で 議事録 化。 AirPods / Bluetooth 対応 済。
           </div>
 
@@ -12726,7 +12726,7 @@ STEP C: 結果報告
               <text x="50" y="62" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-weight="700" font-size="28" fill="#2D8CFF" letter-spacing="-1">zoom</text>
             </svg>
             <div>
-              <div style="font-size:10.5px;font-weight:800;letter-spacing:0.16em;opacity:0.85;">SCHEDULE ZOOM</div>
+              <div style="font-size:12px;font-weight:800;letter-spacing:0.16em;opacity:0.85;">SCHEDULE ZOOM</div>
               <div style="font-size:17.5px;font-weight:900;margin-top:2px;">📅 ${escapeHtml(client.name)} 様 と Zoom 予約</div>
             </div>
           </div>
@@ -12737,24 +12737,24 @@ STEP C: 結果報告
           <div style="background:linear-gradient(135deg,#EFF6FF,#DBEAFE);border:2px solid #93C5FD;border-radius:12px;padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:12px;">
             <div style="font-size:24px;">🎯</div>
             <div style="flex:1;">
-              <div style="font-size:11px;font-weight:800;letter-spacing:0.08em;color:#1D4ED8;margin-bottom:3px;">お客様 が LINE で 選択 した 日時</div>
+              <div style="font-size:12.5px;font-weight:800;letter-spacing:0.08em;color:#1D4ED8;margin-bottom:3px;">お客様 が LINE で 選択 した 日時</div>
               <div style="font-size:16.5px;font-weight:900;color:#0F172A;">${escapeHtml(preSelectDateJa)}</div>
-              <div style="font-size:11.5px;font-weight:600;color:#475569;margin-top:3px;">プリフィル 済 · そのまま 「予約 + LINE 送信」 で 確定 できます</div>
+              <div style="font-size:13px;font-weight:600;color:#475569;margin-top:3px;">プリフィル 済 · そのまま 「予約 + LINE 送信」 で 確定 できます</div>
             </div>
           </div>` : ''}
-          <div style="font-size:11.5px;font-weight:800;letter-spacing:0.06em;color:#5B5BF0;margin-bottom:10px;">STEP 1 — 日時 を 1つ 指定</div>
+          <div style="font-size:13px;font-weight:800;letter-spacing:0.06em;color:#5B5BF0;margin-bottom:10px;">STEP 1 — 日時 を 1つ 指定</div>
           <div style="background:#F8FAFC;border:2px solid #E2E8F0;border-radius:12px;padding:16px 18px;margin-bottom:16px;">
             <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:10px;">
               <div>
-                <div style="font-size:11px;font-weight:800;color:#64748B;letter-spacing:0.04em;margin-bottom:5px;">📆 日付</div>
+                <div style="font-size:12.5px;font-weight:800;color:#64748B;letter-spacing:0.04em;margin-bottom:5px;">📆 日付</div>
                 <input type="date" id="fp-sch-date" value="${defaultDate}" style="width:100%;padding:13px 12px;border:2px solid #E2E8F0;border-radius:10px;font-size:15.5px;font-weight:700;font-family:inherit;background:#fff;min-height:52px;">
               </div>
               <div>
-                <div style="font-size:11px;font-weight:800;color:#64748B;letter-spacing:0.04em;margin-bottom:5px;">🕐 時刻</div>
+                <div style="font-size:12.5px;font-weight:800;color:#64748B;letter-spacing:0.04em;margin-bottom:5px;">🕐 時刻</div>
                 <input type="time" id="fp-sch-time" value="${defaultTime}" style="width:100%;padding:13px 12px;border:2px solid #E2E8F0;border-radius:10px;font-size:15.5px;font-weight:700;font-family:inherit;background:#fff;min-height:52px;">
               </div>
               <div>
-                <div style="font-size:11px;font-weight:800;color:#64748B;letter-spacing:0.04em;margin-bottom:5px;">⏱ 時間 (分)</div>
+                <div style="font-size:12.5px;font-weight:800;color:#64748B;letter-spacing:0.04em;margin-bottom:5px;">⏱ 時間 (分)</div>
                 <select id="fp-sch-dur" style="width:100%;padding:13px 12px;border:2px solid #E2E8F0;border-radius:10px;font-size:15.5px;font-weight:700;font-family:inherit;background:#fff;min-height:52px;">
                   <option value="30">30分</option>
                   <option value="60" selected>60分</option>
@@ -12764,7 +12764,7 @@ STEP C: 結果報告
               </div>
             </div>
           </div>
-          <div style="font-size:11.5px;font-weight:800;letter-spacing:0.06em;color:#5B5BF0;margin-bottom:10px;">STEP 2 — 添える 一言 (任意)</div>
+          <div style="font-size:13px;font-weight:800;letter-spacing:0.06em;color:#5B5BF0;margin-bottom:10px;">STEP 2 — 添える 一言 (任意)</div>
           <textarea id="fp-sch-msg" rows="5" placeholder="お客様への一言 — 空欄で 標準メッセージ" style="width:100%;padding:14px 16px;border:2px solid #E2E8F0;border-radius:10px;font-size:14.5px;font-family:inherit;box-sizing:border-box;resize:vertical;line-height:1.7;min-height:120px;background:#fff;">${escapeHtml(client.name)}様\n\nZoom 面談の日時を確定しました。\n下記URLからご参加ください。</textarea>
           <div id="fp-sch-status" style="margin-top:14px;font-size:13.5px;font-weight:800;text-align:center;"></div>
         </div>
@@ -12855,7 +12855,7 @@ STEP C: 結果報告
         <!-- Header -->
         <div style="background:linear-gradient(135deg,#5B5BF0,#4242C9);color:#fff;padding:16px 24px;display:flex;justify-content:space-between;align-items:center;">
           <div>
-            <div style="font-size:10.5px;font-weight:800;letter-spacing:0.16em;opacity:0.85;">SEND CANDIDATE DATES</div>
+            <div style="font-size:12px;font-weight:800;letter-spacing:0.16em;opacity:0.85;">SEND CANDIDATE DATES</div>
             <div style="font-size:18px;font-weight:900;margin-top:2px;">📅 ${escapeHtml(client.name)} 様 へ 候補日 3つ を 送る</div>
           </div>
           <button id="fp-slots-close" style="background:rgba(255,255,255,0.18);color:#fff;border:none;font-size:18px;cursor:pointer;width:36px;height:36px;border-radius:8px;font-family:inherit;">✕</button>
@@ -12864,27 +12864,27 @@ STEP C: 結果報告
         <div style="display:grid;grid-template-columns:1fr 380px;gap:0;flex:1;min-height:0;overflow:hidden;">
           <!-- 左: 入力 -->
           <div style="padding:24px 26px;overflow-y:auto;border-right:1px solid #E2E8F0;background:#F8FAFC;">
-            <div style="font-size:11px;font-weight:800;letter-spacing:0.12em;color:#5B5BF0;margin-bottom:10px;">STEP 1 — 候補日 3つ を 選ぶ</div>
+            <div style="font-size:12.5px;font-weight:800;letter-spacing:0.12em;color:#5B5BF0;margin-bottom:10px;">STEP 1 — 候補日 3つ を 選ぶ</div>
             ${[1,2,3].map(i => `
               <div style="background:#fff;border:2px solid #E2E8F0;border-radius:12px;padding:14px 16px;margin-bottom:12px;">
-                <div style="font-size:12px;font-weight:900;color:#5B5BF0;letter-spacing:0.05em;margin-bottom:8px;">候補 ${i}</div>
+                <div style="font-size:13.5px;font-weight:900;color:#5B5BF0;letter-spacing:0.05em;margin-bottom:8px;">候補 ${i}</div>
                 <div style="display:flex;gap:10px;align-items:center;">
                   <input type="date" id="fp-slot-d${i}" value="${defaults[i-1]}" style="flex:1.4;padding:13px 12px;border:2px solid #E2E8F0;border-radius:9px;font-size:15px;font-weight:700;font-family:inherit;min-height:50px;">
                   <input type="time" id="fp-slot-t${i}" value="${defaultTimes[i-1]}" style="flex:1;padding:13px 12px;border:2px solid #E2E8F0;border-radius:9px;font-size:15px;font-weight:700;font-family:inherit;min-height:50px;">
                 </div>
               </div>
             `).join('')}
-            <div style="font-size:11px;font-weight:800;letter-spacing:0.12em;color:#5B5BF0;margin:24px 0 10px;">STEP 2 — 添える 一言</div>
+            <div style="font-size:12.5px;font-weight:800;letter-spacing:0.12em;color:#5B5BF0;margin:24px 0 10px;">STEP 2 — 添える 一言</div>
             <textarea id="fp-slots-msg" rows="5" placeholder="お客様への一言..." style="width:100%;padding:14px 16px;border:2px solid #E2E8F0;border-radius:10px;font-size:14.5px;font-family:inherit;box-sizing:border-box;resize:vertical;line-height:1.7;min-height:120px;background:#fff;">${escapeHtml(defaultMsg)}</textarea>
           </div>
           <!-- 右: iPhone LIVE PREVIEW (Flex Carousel) -->
           <div style="padding:20px 18px 22px;background:linear-gradient(180deg,#475569,#1E293B);overflow-y:auto;">
-            <div style="text-align:center;font-size:10.5px;font-weight:800;letter-spacing:0.16em;color:#fff;opacity:0.7;text-transform:uppercase;margin-bottom:12px;">LIVE PREVIEW · お客様 の iPhone</div>
+            <div style="text-align:center;font-size:12px;font-weight:800;letter-spacing:0.16em;color:#fff;opacity:0.7;text-transform:uppercase;margin-bottom:12px;">LIVE PREVIEW · お客様 の iPhone</div>
             <div id="fp-slots-phone" style="position:relative;background:#8AB1D2;border-radius:28px;border:3px solid #0F172A;overflow:hidden;min-height:540px;display:flex;flex-direction:column;">
               <!-- Notch -->
               <div style="position:absolute;top:6px;left:50%;transform:translateX(-50%);width:90px;height:18px;background:#0F172A;border-radius:0 0 14px 14px;z-index:3;"></div>
               <!-- Status bar -->
-              <div style="background:rgba(255,255,255,0.92);height:28px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;font-family:-apple-system,sans-serif;font-size:11px;font-weight:700;color:#0F172A;z-index:2;">
+              <div style="background:rgba(255,255,255,0.92);height:28px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;font-family:-apple-system,sans-serif;font-size:12.5px;font-weight:700;color:#0F172A;z-index:2;">
                 <span>21:30</span>
                 <span>●●● 5G</span>
               </div>
@@ -12894,7 +12894,7 @@ STEP C: 結果報告
                 <div style="width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.22);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;">FP</div>
                 <div>
                   <div style="font-size:13.5px;font-weight:800;">${escapeHtml(companyName)}</div>
-                  <div style="font-size:10px;opacity:0.8;">公式アカウント</div>
+                  <div style="font-size:11.5px;opacity:0.8;">公式アカウント</div>
                 </div>
               </div>
               <!-- チャット -->
@@ -12936,22 +12936,22 @@ STEP C: 結果報告
           const wday = wdayJa[d.getDay()];
           html += `
             <div style="flex-shrink:0;width:140px;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.14);font-family:'Noto Sans JP',sans-serif;">
-              <div style="background:#5B5BF0;color:#fff;padding:8px 12px;font-size:10.5px;font-weight:800;letter-spacing:0.08em;">候補 ${i+1}</div>
+              <div style="background:#5B5BF0;color:#fff;padding:8px 12px;font-size:12px;font-weight:800;letter-spacing:0.08em;">候補 ${i+1}</div>
               <div style="padding:12px 14px;">
                 <div style="font-size:22px;font-weight:900;color:#0F172A;line-height:1.1;letter-spacing:-0.025em;">${d.getMonth()+1}月${d.getDate()}日</div>
-                <div style="font-size:12px;color:#64748B;font-weight:700;margin-top:2px;">(${wday})</div>
+                <div style="font-size:13.5px;color:#64748B;font-weight:700;margin-top:2px;">(${wday})</div>
                 <div style="border-top:1px solid #F1F5F9;margin-top:8px;padding-top:8px;display:flex;align-items:center;gap:5px;">
-                  <span style="font-size:11px;">🕐</span>
+                  <span style="font-size:12.5px;">🕐</span>
                   <span style="font-size:14px;font-weight:800;color:#0F172A;">${s.time}</span>
                 </div>
-                <button style="margin-top:8px;width:100%;background:#5B5BF0;color:#fff;border:none;padding:7px 6px;border-radius:6px;font-size:11.5px;font-weight:800;font-family:inherit;cursor:default;">この日でお願いします</button>
+                <button style="margin-top:8px;width:100%;background:#5B5BF0;color:#fff;border:none;padding:7px 6px;border-radius:6px;font-size:13px;font-weight:800;font-family:inherit;cursor:default;">この日でお願いします</button>
               </div>
             </div>`;
         });
         html += `</div>`;
       }
       if (!html) {
-        html = `<div style="background:rgba(255,255,255,0.6);color:#475569;font-size:11.5px;padding:10px 14px;border-radius:10px;font-style:italic;text-align:center;">日付 + 時刻 を入力すると ここに プレビュー が出ます</div>`;
+        html = `<div style="background:rgba(255,255,255,0.6);color:#475569;font-size:13px;padding:10px 14px;border-radius:10px;font-style:italic;text-align:center;">日付 + 時刻 を入力すると ここに プレビュー が出ます</div>`;
       }
       chat.innerHTML = html;
     };
@@ -13156,17 +13156,17 @@ STEP C: 結果報告
       <div style="background:#fff;max-width:640px;width:100%;border-radius:14px;box-shadow:0 24px 60px rgba(0,0,0,0.35);overflow:hidden;">
         <div style="background:linear-gradient(135deg,#10B981,#059669);color:#fff;padding:18px 24px;display:flex;justify-content:space-between;align-items:center;">
           <div>
-            <div style="font-size:10px;font-weight:800;letter-spacing:0.22em;opacity:0.85;">FP → CUSTOMER</div>
+            <div style="font-size:11.5px;font-weight:800;letter-spacing:0.22em;opacity:0.85;">FP → CUSTOMER</div>
             <h3 style="margin:4px 0 0 0;font-size:16px;font-weight:900;">✍ ${escapeHtml(client.name)}様 への LINE 下書き</h3>
           </div>
           <button id="fp-brief-close" style="background:rgba(255,255,255,0.2);border:none;color:#fff;width:34px;height:34px;border-radius:6px;cursor:pointer;font-size:18px;">✕</button>
         </div>
         <div style="padding:22px 24px;">
           <div id="fp-brief-step1">
-            <div style="font-size:11px;font-weight:800;color:#475569;letter-spacing:0.06em;margin-bottom:8px;">📝 伝えたいことを 1-2 行で書く</div>
+            <div style="font-size:12.5px;font-weight:800;color:#475569;letter-spacing:0.06em;margin-bottom:8px;">📝 伝えたいことを 1-2 行で書く</div>
             <textarea id="fp-brief-input" rows="3" placeholder="例: 相続のテーマで来月会いたい / 新NISAの配分見直しを提案したい / お子様の進学費用シミュ作ってある旨を伝えたい" style="width:100%;padding:12px 14px;border:1.5px solid #E2E8F0;border-radius:8px;font-size:13.5px;font-family:inherit;line-height:1.7;resize:vertical;box-sizing:border-box;"></textarea>
             <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center;gap:10px;">
-              <div style="font-size:10.5px;color:#94A3B8;">${escapeHtml(client.name)}様の 家族 / 議事録 / LINE履歴 / アンケート回答 を Claude が 踏まえて 整えます</div>
+              <div style="font-size:12px;color:#94A3B8;">${escapeHtml(client.name)}様の 家族 / 議事録 / LINE履歴 / アンケート回答 を Claude が 踏まえて 整えます</div>
               <button id="fp-brief-gen" style="background:linear-gradient(135deg,#10B981,#059669);color:#fff;border:none;padding:11px 22px;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:0.04em;box-shadow:0 4px 14px rgba(16,185,129,0.35);">✨ AI で 下書き 生成</button>
             </div>
           </div>
@@ -13176,21 +13176,21 @@ STEP C: 結果報告
               ✅ プロンプトを <strong>クリップボードに自動コピー</strong> しました。 prompt.txt も 念のため ダウンロード済。
             </div>
             <div style="background:#1F1A12;color:#FFE9A8;border-radius:10px;padding:18px;margin-bottom:10px;">
-              <div style="font-family:'Inter',sans-serif;font-size:10px;letter-spacing:0.22em;color:#C5A268;font-weight:700;margin-bottom:4px;">STEP 1</div>
+              <div style="font-family:'Inter',sans-serif;font-size:11.5px;letter-spacing:0.22em;color:#C5A268;font-weight:700;margin-bottom:4px;">STEP 1</div>
               <div style="font-family:'Noto Sans JP',serif;font-size:15px;font-weight:700;margin-bottom:10px;">Claude を開きます</div>
               <button id="fp-brief-open-claude" style="background:#FFE9A8;color:#1F1A12;border:none;padding:11px 22px;border-radius:7px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:0.04em;">🌐 Claude を開く</button>
             </div>
             <div style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;padding:16px;margin-bottom:10px;">
-              <div style="font-family:'Inter',sans-serif;font-size:10px;letter-spacing:0.22em;color:#94A3B8;font-weight:700;margin-bottom:4px;">STEP 2</div>
+              <div style="font-family:'Inter',sans-serif;font-size:11.5px;letter-spacing:0.22em;color:#94A3B8;font-weight:700;margin-bottom:4px;">STEP 2</div>
               <div style="font-family:'Noto Sans JP',serif;font-size:15px;font-weight:700;color:#1F1A12;margin-bottom:6px;">Cmd + V → Enter</div>
-              <div style="font-size:12px;color:#475569;line-height:1.7;">Claude の 入力欄 に 貼り付け (Cmd+V) → Enter で 送信。 <strong>${escapeHtml(client.name)}様 専用</strong> の 自然な LINE 文面 が 出ます。</div>
+              <div style="font-size:13.5px;color:#475569;line-height:1.7;">Claude の 入力欄 に 貼り付け (Cmd+V) → Enter で 送信。 <strong>${escapeHtml(client.name)}様 専用</strong> の 自然な LINE 文面 が 出ます。</div>
             </div>
             <div style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;padding:16px;">
-              <div style="font-family:'Inter',sans-serif;font-size:10px;letter-spacing:0.22em;color:#94A3B8;font-weight:700;margin-bottom:4px;">STEP 3</div>
+              <div style="font-family:'Inter',sans-serif;font-size:11.5px;letter-spacing:0.22em;color:#94A3B8;font-weight:700;margin-bottom:4px;">STEP 3</div>
               <div style="font-family:'Noto Sans JP',serif;font-size:15px;font-weight:700;color:#1F1A12;margin-bottom:6px;">Claude の 出力 を コピー → LINE に 貼って 送信</div>
-              <div style="font-size:12px;color:#475569;line-height:1.7;">Claude が 出した 文面 を コピー → このモーダルを閉じて、 LINE 履歴 タブの 下の <strong>送信欄</strong> に 貼って 「送信」 ボタンで お送り下さい。</div>
+              <div style="font-size:13.5px;color:#475569;line-height:1.7;">Claude が 出した 文面 を コピー → このモーダルを閉じて、 LINE 履歴 タブの 下の <strong>送信欄</strong> に 貼って 「送信」 ボタンで お送り下さい。</div>
             </div>
-            <div id="fp-brief-msg" style="margin-top:10px;font-size:12px;font-weight:700;text-align:center;"></div>
+            <div id="fp-brief-msg" style="margin-top:10px;font-size:13.5px;font-weight:700;text-align:center;"></div>
           </div>
         </div>
       </div>
@@ -13426,38 +13426,38 @@ ${JSON.stringify(jsonPayload, null, 2)}
       const after = overlay.querySelector('#fp-brief-after');
       after.style.display = 'block';
       const refineBadge = refineHistory.length > 0
-        ? `<span style="background:#5B5BF0;color:#fff;font-size:10px;font-weight:800;padding:2px 8px;border-radius:99px;margin-left:8px;letter-spacing:0.04em;">${refineHistory.length} 回 添削</span>` : '';
+        ? `<span style="background:#5B5BF0;color:#fff;font-size:11.5px;font-weight:800;padding:2px 8px;border-radius:99px;margin-left:8px;letter-spacing:0.04em;">${refineHistory.length} 回 添削</span>` : '';
       const modelTag = modelLabel
-        ? `<span style="margin-left:auto;font-size:10px;font-weight:700;color:#475569;background:#F1F5F9;padding:2px 8px;border-radius:99px;">${escapeHtml(modelLabel)}${elapsedMs ? ' / ' + (elapsedMs/1000).toFixed(1) + '秒' : ''}</span>` : '';
+        ? `<span style="margin-left:auto;font-size:11.5px;font-weight:700;color:#475569;background:#F1F5F9;padding:2px 8px;border-radius:99px;">${escapeHtml(modelLabel)}${elapsedMs ? ' / ' + (elapsedMs/1000).toFixed(1) + '秒' : ''}</span>` : '';
       after.innerHTML = `
         <div style="background:linear-gradient(135deg,#F0FDF4,#fff);border:1px solid #BBF7D0;border-radius:10px;padding:14px 16px;margin-bottom:14px;font-size:12.5px;color:#065F46;font-weight:700;display:flex;align-items:center;">
           ✅ AI下書き 生成 完了 ${refineBadge} ${modelTag}
         </div>
         <!-- ★ Model toggle (Sonnet で 再生成 ボタン) -->
-        <div style="background:#fff;border:1px solid #E2E8F0;border-radius:8px;padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:11.5px;">
+        <div style="background:#fff;border:1px solid #E2E8F0;border-radius:8px;padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:13px;">
           <span style="color:#64748B;font-weight:700;">🎚 質をあげる:</span>
-          <button id="fp-model-sonnet" style="background:${modelPref === 'sonnet' ? 'linear-gradient(135deg,#C19A3A,#8B6F26)' : '#fff'};color:${modelPref === 'sonnet' ? '#fff' : '#1F2A3F'};border:1px solid ${modelPref === 'sonnet' ? '#C19A3A' : '#CBD5E1'};padding:5px 12px;border-radius:99px;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit;">🌟 Sonnet (3-5秒/質高)</button>
-          <button id="fp-model-groq" style="background:${modelPref === 'groq' ? 'linear-gradient(135deg,#3F6B4C,#2C4D38)' : '#fff'};color:${modelPref === 'groq' ? '#fff' : '#1F2A3F'};border:1px solid ${modelPref === 'groq' ? '#3F6B4C' : '#CBD5E1'};padding:5px 12px;border-radius:99px;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit;">⚡ Groq (1秒/速度)</button>
-          <span style="color:#94A3B8;font-size:10.5px;">↑ ボタンで モデル切替 → 「再生成」 で 別モデル比較</span>
+          <button id="fp-model-sonnet" style="background:${modelPref === 'sonnet' ? 'linear-gradient(135deg,#C19A3A,#8B6F26)' : '#fff'};color:${modelPref === 'sonnet' ? '#fff' : '#1F2A3F'};border:1px solid ${modelPref === 'sonnet' ? '#C19A3A' : '#CBD5E1'};padding:5px 12px;border-radius:99px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit;">🌟 Sonnet (3-5秒/質高)</button>
+          <button id="fp-model-groq" style="background:${modelPref === 'groq' ? 'linear-gradient(135deg,#3F6B4C,#2C4D38)' : '#fff'};color:${modelPref === 'groq' ? '#fff' : '#1F2A3F'};border:1px solid ${modelPref === 'groq' ? '#3F6B4C' : '#CBD5E1'};padding:5px 12px;border-radius:99px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit;">⚡ Groq (1秒/速度)</button>
+          <span style="color:#94A3B8;font-size:12px;">↑ ボタンで モデル切替 → 「再生成」 で 別モデル比較</span>
         </div>
         <div style="background:#fff;border:1.5px solid #BBF7D0;border-radius:12px;padding:18px 20px;margin-bottom:14px;">
-          <div style="font-family:'Inter',sans-serif;font-size:10px;letter-spacing:0.18em;color:#059669;font-weight:800;margin-bottom:8px;">📝 LINE 下書き 案</div>
+          <div style="font-family:'Inter',sans-serif;font-size:11.5px;letter-spacing:0.18em;color:#059669;font-weight:800;margin-bottom:8px;">📝 LINE 下書き 案</div>
           <textarea id="fp-brief-result" rows="9" style="width:100%;padding:12px 14px;border:1px solid #E2E8F0;border-radius:8px;font-size:13.5px;font-family:inherit;line-height:1.85;resize:vertical;box-sizing:border-box;">${escapeHtml(reply)}</textarea>
         </div>
         <!-- ★ Phase C: 添削チャット UI -->
         <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-left:3px solid #5B5BF0;border-radius:10px;padding:12px 14px;margin-bottom:12px;">
-          <div style="font-size:11px;font-weight:800;color:#5B5BF0;letter-spacing:0.12em;margin-bottom:6px;">🔁 AI に 直してもらう</div>
+          <div style="font-size:12.5px;font-weight:800;color:#5B5BF0;letter-spacing:0.12em;margin-bottom:6px;">🔁 AI に 直してもらう</div>
           <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
-            <button class="fp-refine-quick" data-q="もっとフランクに" style="background:#fff;border:1px solid #CBD5E1;color:#475569;padding:4px 10px;border-radius:99px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">もっとフランクに</button>
-            <button class="fp-refine-quick" data-q="もっと丁寧に" style="background:#fff;border:1px solid #CBD5E1;color:#475569;padding:4px 10px;border-radius:99px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">もっと丁寧に</button>
-            <button class="fp-refine-quick" data-q="もっと短く (100字以内)" style="background:#fff;border:1px solid #CBD5E1;color:#475569;padding:4px 10px;border-radius:99px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">短く</button>
-            <button class="fp-refine-quick" data-q="数字を入れてもっと具体的に" style="background:#fff;border:1px solid #CBD5E1;color:#475569;padding:4px 10px;border-radius:99px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">数字 入れる</button>
-            <button class="fp-refine-quick" data-q="絵文字を1-2個 入れて 柔らかく" style="background:#fff;border:1px solid #CBD5E1;color:#475569;padding:4px 10px;border-radius:99px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">絵文字</button>
-            <button class="fp-refine-quick" data-q="押し売り感を消して もっと相手のペースに寄せて" style="background:#fff;border:1px solid #CBD5E1;color:#475569;padding:4px 10px;border-radius:99px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">押し売り感 消す</button>
+            <button class="fp-refine-quick" data-q="もっとフランクに" style="background:#fff;border:1px solid #CBD5E1;color:#475569;padding:4px 10px;border-radius:99px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;">もっとフランクに</button>
+            <button class="fp-refine-quick" data-q="もっと丁寧に" style="background:#fff;border:1px solid #CBD5E1;color:#475569;padding:4px 10px;border-radius:99px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;">もっと丁寧に</button>
+            <button class="fp-refine-quick" data-q="もっと短く (100字以内)" style="background:#fff;border:1px solid #CBD5E1;color:#475569;padding:4px 10px;border-radius:99px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;">短く</button>
+            <button class="fp-refine-quick" data-q="数字を入れてもっと具体的に" style="background:#fff;border:1px solid #CBD5E1;color:#475569;padding:4px 10px;border-radius:99px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;">数字 入れる</button>
+            <button class="fp-refine-quick" data-q="絵文字を1-2個 入れて 柔らかく" style="background:#fff;border:1px solid #CBD5E1;color:#475569;padding:4px 10px;border-radius:99px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;">絵文字</button>
+            <button class="fp-refine-quick" data-q="押し売り感を消して もっと相手のペースに寄せて" style="background:#fff;border:1px solid #CBD5E1;color:#475569;padding:4px 10px;border-radius:99px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;">押し売り感 消す</button>
           </div>
           <div style="display:flex;gap:6px;">
             <input id="fp-refine-input" type="text" placeholder="例: お子様の名前を 入れて / 結論を先に / etc" style="flex:1;padding:8px 12px;border:1px solid #CBD5E1;border-radius:6px;font-size:12.5px;font-family:inherit;">
-            <button id="fp-refine-go" style="background:#5B5BF0;color:#fff;border:none;padding:8px 16px;border-radius:6px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;white-space:nowrap;">🔁 直す</button>
+            <button id="fp-refine-go" style="background:#5B5BF0;color:#fff;border:none;padding:8px 16px;border-radius:6px;font-size:13.5px;font-weight:800;cursor:pointer;font-family:inherit;white-space:nowrap;">🔁 直す</button>
           </div>
         </div>
         <div style="display:flex;gap:8px;justify-content:flex-end;align-items:center;">
@@ -13465,7 +13465,7 @@ ${JSON.stringify(jsonPayload, null, 2)}
           <button id="fp-brief-copy" style="background:#fff;border:1px solid #10B981;color:#059669;padding:10px 18px;border-radius:8px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit;">📋 コピー</button>
           <button id="fp-brief-send-line" style="background:linear-gradient(135deg,#06c755,#04a045);color:#fff;border:none;padding:10px 22px;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 4px 12px rgba(6,199,85,0.4);">📤 LINE で 送信</button>
         </div>
-        <div id="fp-brief-msg" style="margin-top:10px;font-size:11.5px;font-weight:700;text-align:center;color:#059669;"></div>`;
+        <div id="fp-brief-msg" style="margin-top:10px;font-size:13px;font-weight:700;text-align:center;color:#059669;"></div>`;
       bindResultButtons(brief);
     }
 
@@ -13603,15 +13603,15 @@ ${JSON.stringify(jsonPayload, null, 2)}
 
         <div class="aib-body" style="display:grid !important;grid-template-columns:400px 1fr !important;gap:18px;align-items:start;padding:24px 28px 28px !important;">
           <!-- 左カラム: 議事録ペイン (常時表示・自然スクロール) -->
-          <aside id="aib-minutes-pane" style="background:linear-gradient(180deg,#F8FAFC,#FFFFFF);border:2px solid #5B5BF0;border-radius:12px;padding:16px 18px;font-size:12px;line-height:1.6;color:#0F172A;box-shadow:0 8px 24px rgba(91,91,240,0.15);">
+          <aside id="aib-minutes-pane" style="background:linear-gradient(180deg,#F8FAFC,#FFFFFF);border:2px solid #5B5BF0;border-radius:12px;padding:16px 18px;font-size:13.5px;line-height:1.6;color:#0F172A;box-shadow:0 8px 24px rgba(91,91,240,0.15);">
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding-bottom:10px;border-bottom:2px solid #C7D2FE;">
               <span style="font-size:20px;">📋</span>
               <div style="flex:1;">
                 <strong style="font-size:13.5px;letter-spacing:0.02em;color:#3730A3;display:block;">議事録 (左) を見ながら LINE (右) を編集</strong>
-                <span style="font-size:10.5px;color:#64748B;">Jobs の提案が議事録に合ってるか この場で確認</span>
+                <span style="font-size:12px;color:#64748B;">Jobs の提案が議事録に合ってるか この場で確認</span>
               </div>
             </div>
-            <div id="aib-minutes-body" style="font-size:12px;color:#475569;">
+            <div id="aib-minutes-body" style="font-size:13.5px;color:#475569;">
               <div style="text-align:center;padding:20px;color:#94A3B8;">📡 議事録 読み込み中…</div>
             </div>
           </aside>
@@ -13660,7 +13660,7 @@ ${JSON.stringify(jsonPayload, null, 2)}
                 <div id="draft-claude-overlay" style="display:none;position:absolute;inset:0;background:rgba(255,255,255,0.92);z-index:5;align-items:center;justify-content:center;flex-direction:column;gap:14px;border-radius:8px;">
                   <div style="width:46px;height:46px;border:4px solid #C7D2FE;border-top-color:#5B5BF0;border-radius:50%;animation:fp-ai-spin 0.9s linear infinite;"></div>
                   <div style="font-weight:800;color:#5B5BF0;font-size:14px;">✨ Claude が ${escapeHtml(client.name)} 様 専用に下書きを生成中</div>
-                  <div style="font-size:11px;color:#64748B;text-align:center;line-height:1.6;">家族構成・最終接触・議事録・提案履歴・LINE 履歴・<br>ライフイベント を全て読み込んで、本気の下書きを生成しています (10-20秒)</div>
+                  <div style="font-size:12.5px;color:#64748B;text-align:center;line-height:1.6;">家族構成・最終接触・議事録・提案履歴・LINE 履歴・<br>ライフイベント を全て読み込んで、本気の下書きを生成しています (10-20秒)</div>
                 </div>
                 <textarea id="draft-text" class="aib-textarea">${escapeHtml(draft.body)}</textarea>
               </div>
@@ -13796,11 +13796,11 @@ ${JSON.stringify(jsonPayload, null, 2)}
       window._fpDraftMinutesFound = uniq;
       if (uniq.length === 0) {
         body.innerHTML = `
-          <div style="background:#FEF2F2;border:1px solid #FCA5A5;border-radius:8px;padding:10px 12px;color:#7F1D1D;font-size:11.5px;line-height:1.6;">
+          <div style="background:#FEF2F2;border:1px solid #FCA5A5;border-radius:8px;padding:10px 12px;color:#7F1D1D;font-size:13px;line-height:1.6;">
             <strong>議事録 見つかりません</strong><br>
             この顧客 (${escapeHtml(client.name)}) の lineFriendId = "${escapeHtml(client.lineFriendId || '空')}" でマッチする 面談記録が無いです。<br><br>
             <strong>localStorage 全 fp-ai-* キー:</strong><br>
-            ${Object.keys(localStorage).filter(k => k.startsWith('fp-ai-')).map(k => `<code style="font-size:10px;background:#fff;padding:1px 4px;border-radius:3px;display:inline-block;margin:1px;">${escapeHtml(k)}</code>`).join('') || '<em>(なし)</em>'}
+            ${Object.keys(localStorage).filter(k => k.startsWith('fp-ai-')).map(k => `<code style="font-size:11.5px;background:#fff;padding:1px 4px;border-radius:3px;display:inline-block;margin:1px;">${escapeHtml(k)}</code>`).join('') || '<em>(なし)</em>'}
           </div>
         `;
         return;
@@ -13808,15 +13808,15 @@ ${JSON.stringify(jsonPayload, null, 2)}
       body.innerHTML = uniq.map((f, i) => `
         <div style="background:#fff;border:1px solid #E2E8F0;border-radius:8px;padding:10px 12px;margin-bottom:8px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-            <span style="font-size:10.5px;font-weight:800;color:#5B5BF0;letter-spacing:0.04em;">議事録 #${i + 1}${f.score >= 3 ? ' (確定)' : f.score >= 2 ? ' (名前一致)' : ' (推定)'}</span>
-            <span style="font-size:10px;color:#94A3B8;">${escapeHtml(String(f.ts).slice(0, 16))}</span>
+            <span style="font-size:12px;font-weight:800;color:#5B5BF0;letter-spacing:0.04em;">議事録 #${i + 1}${f.score >= 3 ? ' (確定)' : f.score >= 2 ? ' (名前一致)' : ' (推定)'}</span>
+            <span style="font-size:11.5px;color:#94A3B8;">${escapeHtml(String(f.ts).slice(0, 16))}</span>
           </div>
           ${f.concerns.length > 0 ? `
           <div style="margin-bottom:6px;">
-            ${f.concerns.slice(0, 5).map(k => `<span style="display:inline-block;background:#EEF2FF;color:#4338CA;font-size:10.5px;padding:2px 7px;border-radius:9px;margin:1px;font-weight:600;">${escapeHtml(k)}</span>`).join('')}
+            ${f.concerns.slice(0, 5).map(k => `<span style="display:inline-block;background:#EEF2FF;color:#4338CA;font-size:12px;padding:2px 7px;border-radius:9px;margin:1px;font-weight:600;">${escapeHtml(k)}</span>`).join('')}
           </div>
           ` : ''}
-          <div style="font-size:12px;color:#334155;line-height:1.55;white-space:pre-line;">${escapeHtml(String(f.summary).slice(0, 500))}${f.summary.length > 500 ? '…' : ''}</div>
+          <div style="font-size:13.5px;color:#334155;line-height:1.55;white-space:pre-line;">${escapeHtml(String(f.summary).slice(0, 500))}${f.summary.length > 500 ? '…' : ''}</div>
         </div>
       `).join('');
       console.log('[minutes-pane] found', uniq.length, 'minutes for', client.name);
@@ -13957,9 +13957,9 @@ ${JSON.stringify(jsonPayload, null, 2)}
           nextLoopUi.innerHTML = `
             <div style="flex:1;min-width:200px;">
               <div style="font-size:13px;font-weight:800;color:#3730A3;">📨 送信完了 → 次のステップ</div>
-              <div style="font-size:11.5px;color:#475569;margin-top:3px;line-height:1.5;">お客様から返信があったら自動で次の最適提案を生成 / または「今すぐ次の提案」で先に下書きを準備</div>
+              <div style="font-size:13px;color:#475569;margin-top:3px;line-height:1.5;">お客様から返信があったら自動で次の最適提案を生成 / または「今すぐ次の提案」で先に下書きを準備</div>
             </div>
-            <button id="aib-next-loop" style="background:#5B5BF0;color:#fff;border:none;padding:10px 18px;border-radius:8px;cursor:pointer;font-weight:800;font-size:12px;font-family:inherit;letter-spacing:0.04em;">✨ 今すぐ 次の提案を生成</button>
+            <button id="aib-next-loop" style="background:#5B5BF0;color:#fff;border:none;padding:10px 18px;border-radius:8px;cursor:pointer;font-weight:800;font-size:13.5px;font-family:inherit;letter-spacing:0.04em;">✨ 今すぐ 次の提案を生成</button>
           `;
           msg.parentElement.appendChild(nextLoopUi);
           document.getElementById('aib-next-loop').addEventListener('click', () => {
@@ -14296,7 +14296,7 @@ ${client.name}さん、ありがとうございます。
             }
             // ★ クオリティチェック 視覚化
             const qc = parsed.qualityCheck || {};
-            const qcBadge = (label, ok) => `<span style="background:${ok ? '#10B981' : '#94A3B8'};color:#fff;font-size:9.5px;font-weight:800;padding:2px 7px;border-radius:8px;letter-spacing:0.04em;margin-right:4px;">${ok ? '✓' : '○'} ${label}</span>`;
+            const qcBadge = (label, ok) => `<span style="background:${ok ? '#10B981' : '#94A3B8'};color:#fff;font-size:11px;font-weight:800;padding:2px 7px;border-radius:8px;letter-spacing:0.04em;margin-right:4px;">${ok ? '✓' : '○'} ${label}</span>`;
             const qcRow = `
               <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:3px;">
                 ${qcBadge('①②③選択肢', qc.hasNumberedChoices)}
@@ -14305,13 +14305,13 @@ ${client.name}さん、ありがとうございます。
                 ${qcBadge('お世辞なし', qc.noFlattery)}
                 ${qcBadge('文字数OK', qc.underWordLimit)}
               </div>
-              ${parsed.questionCategory ? `<div style="margin-top:6px;font-size:10px;color:#92400E;font-weight:700;">📌 質問カテゴリ: ${escapeHtml(parsed.questionCategory)}</div>` : ''}`;
+              ${parsed.questionCategory ? `<div style="margin-top:6px;font-size:11.5px;color:#92400E;font-weight:700;">📌 質問カテゴリ: ${escapeHtml(parsed.questionCategory)}</div>` : ''}`;
             if (parsed.jobsAdvice) {
               adviceEl.innerHTML = `
                 <div style="display:flex;align-items:flex-start;gap:10px;">
                   <div style="font-size:22px;flex-shrink:0;">💡</div>
                   <div style="flex:1;min-width:0;">
-                    <div style="font-size:10.5px;font-weight:800;letter-spacing:0.1em;color:#92400E;text-transform:uppercase;margin-bottom:4px;">JOBS の ワンポイントアドバイス${parsed.intent ? ' · 戦略意図: ' + escapeHtml(parsed.intent) : ''}</div>
+                    <div style="font-size:12px;font-weight:800;letter-spacing:0.1em;color:#92400E;text-transform:uppercase;margin-bottom:4px;">JOBS の ワンポイントアドバイス${parsed.intent ? ' · 戦略意図: ' + escapeHtml(parsed.intent) : ''}</div>
                     <div style="font-size:13px;color:#78350F;line-height:1.65;font-weight:600;">${escapeHtml(parsed.jobsAdvice)}</div>
                     ${qcRow}
                   </div>
@@ -14324,7 +14324,7 @@ ${client.name}さん、ありがとうございます。
             try { renderPreview(); } catch(_){}
             const t = document.createElement('div');
             t.style.cssText = 'position:fixed;top:18px;left:50%;transform:translateX(-50%);background:#fff;border-left:5px solid #5B5BF0;border-radius:10px;padding:14px 22px;box-shadow:0 12px 36px rgba(0,0,0,0.2);z-index:99999;font-family:inherit;';
-            t.innerHTML = `<strong style="font-size:14px;color:#5B5BF0;">✨ ${escapeHtml(client.name)} 様 専用 下書き 生成完了</strong><div style="font-size:11.5px;color:#6b7280;margin-top:3px;">議事録・家族・LINE履歴 すべてを踏まえた本気の下書き</div>`;
+            t.innerHTML = `<strong style="font-size:14px;color:#5B5BF0;">✨ ${escapeHtml(client.name)} 様 専用 下書き 生成完了</strong><div style="font-size:13px;color:#6b7280;margin-top:3px;">議事録・家族・LINE履歴 すべてを踏まえた本気の下書き</div>`;
             document.body.appendChild(t);
             setTimeout(() => t.remove(), 5000);
           } else {
@@ -15333,7 +15333,7 @@ ${client.name}さん、ありがとうございます。
       const bg = on ? col : '#fff';
       const fg = on ? '#fff' : col;
       const border = col;
-      return `<button data-client-tag-filter="${escapeHtml(t.id)}" style="background:${bg};color:${fg};border:1.5px solid ${border};padding:5px 12px;border-radius:99px;font-size:11.5px;font-weight:800;cursor:pointer;font-family:'Hiragino Sans',sans-serif;letter-spacing:0.02em;display:inline-flex;align-items:center;gap:5px;transition:all .12s;">${escapeHtml(t.label || t.id)}<span style="opacity:.75;font-weight:700;font-size:10.5px;">${tagCount[t.id]}</span></button>`;
+      return `<button data-client-tag-filter="${escapeHtml(t.id)}" style="background:${bg};color:${fg};border:1.5px solid ${border};padding:5px 12px;border-radius:99px;font-size:13px;font-weight:800;cursor:pointer;font-family:'Hiragino Sans',sans-serif;letter-spacing:0.02em;display:inline-flex;align-items:center;gap:5px;transition:all .12s;">${escapeHtml(t.label || t.id)}<span style="opacity:.75;font-weight:700;font-size:12px;">${tagCount[t.id]}</span></button>`;
     }).join('');
     clearBtn.style.display = state.tagFilter.length > 0 ? '' : 'none';
     chipsEl.querySelectorAll('[data-client-tag-filter]').forEach(btn => {
@@ -15367,11 +15367,11 @@ ${client.name}さん、ありがとうございます。
     const myTagIds = getClientTags(clientId);
     const myTags = myTagIds.map(id => master.find(t => t.id === id)).filter(Boolean);
     if (myTags.length === 0) {
-      wrap.innerHTML = '<div style="font-size:11px;color:#94A3B8;font-style:italic;">タグなし — 「+ 追加 / 編集」 から付けてみる</div>';
+      wrap.innerHTML = '<div style="font-size:12.5px;color:#94A3B8;font-style:italic;">タグなし — 「+ 追加 / 編集」 から付けてみる</div>';
       return;
     }
     wrap.innerHTML = myTags.map(t => { const col = validColor(t.color); return `
-      <span style="display:inline-flex;align-items:center;gap:6px;background:${col}1A;color:${col};border:1px solid ${col}55;padding:4px 10px;border-radius:999px;font-size:11.5px;font-weight:700;">
+      <span style="display:inline-flex;align-items:center;gap:6px;background:${col}1A;color:${col};border:1px solid ${col}55;padding:4px 10px;border-radius:999px;font-size:13px;font-weight:700;">
         ${escapeHtml(t.label)}
       </span>
     `; }).join('');
@@ -15400,24 +15400,24 @@ ${client.name}さん、ありがとうございます。
             <button id="fp-tag-close" style="background:transparent;border:none;cursor:pointer;font-size:20px;color:#94A3B8;">✕</button>
           </div>
           <div style="padding:20px 24px;">
-            <div style="font-size:11px;font-weight:800;color:#475569;letter-spacing:0.06em;margin-bottom:10px;">この顧客に付けるタグ (クリックでON/OFF)</div>
+            <div style="font-size:12.5px;font-weight:800;color:#475569;letter-spacing:0.06em;margin-bottom:10px;">この顧客に付けるタグ (クリックでON/OFF)</div>
             <div id="fp-tag-list" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px;min-height:24px;">
-              ${m.length === 0 ? '<div style="font-size:11.5px;color:#94A3B8;font-style:italic;">まだタグがありません — 下から作ってください</div>' :
+              ${m.length === 0 ? '<div style="font-size:13px;color:#94A3B8;font-style:italic;">まだタグがありません — 下から作ってください</div>' :
                 m.map(t => {
                   const on = mySet.has(t.id);
                   const col = validColor(t.color);
-                  return `<button data-tag="${escapeHtml(t.id)}" class="fp-tag-toggle" style="background:${on ? col : col+'1A'};color:${on ? '#fff' : col};border:1px solid ${col}${on ? '' : '55'};padding:6px 14px;border-radius:999px;font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit;">${on ? '✓ ' : ''}${escapeHtml(t.label)}</button>`;
+                  return `<button data-tag="${escapeHtml(t.id)}" class="fp-tag-toggle" style="background:${on ? col : col+'1A'};color:${on ? '#fff' : col};border:1px solid ${col}${on ? '' : '55'};padding:6px 14px;border-radius:999px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">${on ? '✓ ' : ''}${escapeHtml(t.label)}</button>`;
                 }).join('')}
             </div>
 
             <div style="border-top:1px dashed #E2E8F0;padding-top:18px;">
-              <div style="font-size:11px;font-weight:800;color:#475569;letter-spacing:0.06em;margin-bottom:10px;">+ 新しいタグを作る</div>
+              <div style="font-size:12.5px;font-weight:800;color:#475569;letter-spacing:0.06em;margin-bottom:10px;">+ 新しいタグを作る</div>
               <div style="display:flex;gap:8px;align-items:center;">
                 <input id="fp-tag-new-name" type="text" maxlength="20" placeholder="例: 法人客 / 紹介者 / VIP" style="flex:1;padding:9px 12px;border:1.5px solid #E2E8F0;border-radius:6px;font-size:13px;font-family:inherit;">
-                <button id="fp-tag-create" style="background:#0F172A;color:#fff;border:none;padding:9px 18px;border-radius:6px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;">作成</button>
+                <button id="fp-tag-create" style="background:#0F172A;color:#fff;border:none;padding:9px 18px;border-radius:6px;font-size:13.5px;font-weight:800;cursor:pointer;font-family:inherit;">作成</button>
               </div>
 
-              ${m.length > 0 ? `<div style="margin-top:14px;font-size:10.5px;color:#94A3B8;">タグを削除: <span style="color:#64748B;">${m.map(t => `<button data-del="${t.id}" class="fp-tag-del" style="background:transparent;border:none;color:#DC2626;cursor:pointer;font-size:10.5px;text-decoration:underline;padding:0 4px;">${escapeHtml(t.label)}</button>`).join(' / ')}</span></div>` : ''}
+              ${m.length > 0 ? `<div style="margin-top:14px;font-size:12px;color:#94A3B8;">タグを削除: <span style="color:#64748B;">${m.map(t => `<button data-del="${t.id}" class="fp-tag-del" style="background:transparent;border:none;color:#DC2626;cursor:pointer;font-size:12px;text-decoration:underline;padding:0 4px;">${escapeHtml(t.label)}</button>`).join(' / ')}</span></div>` : ''}
             </div>
           </div>
           <div style="padding:14px 24px;background:#F8FAFC;border-top:1px solid #E2E8F0;display:flex;justify-content:flex-end;">
@@ -16070,23 +16070,23 @@ window._fpMaskCode = 'loaded';
       const subColor = 'rgba(255,255,255,0.82)';
       const closeColor = 'rgba(255,255,255,0.55)';
       const iconContent = isDone ? '✓' : '<div class="fp-spin" style="width:16px;height:16px;border:2px solid rgba(255,255,255,0.30);border-top-color:#fff;border-radius:50%;animation:fpSpin 1s linear infinite;"></div>';
-      const staleTag = stale ? '<span style="background:#fbbf24;color:#78350f;font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:99px;margin-left:6px;letter-spacing:0.04em;">遅延中</span>' : '';
+      const staleTag = stale ? '<span style="background:#fbbf24;color:#78350f;font-size:12px;font-weight:800;padding:2px 8px;border-radius:99px;margin-left:6px;letter-spacing:0.04em;">遅延中</span>' : '';
       const label = isDone
         ? `<span style="font-weight:900;">${esc(p.customerName || 'お客様')} 様 の 議事録 が 完成 しました</span>`
         : `<span style="font-weight:800;">${esc(p.customerName || 'お客様')} 様 の Zoom 面談 · 議事録 準備中</span>${staleTag}`;
       const sub = isDone
         ? `Meeting ${esc(p.meetingId)} · ${elapsed} の 面談`
         : `Meeting ${esc(p.meetingId)} · 開始 ${elapsed}`;
-      const eta = isDone ? '' : `<span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:${subColor};font-weight:600;white-space:nowrap;">あと 約 ${Math.max(1, 15 - Math.round((Date.now() - p.startedAt) / 60000))} 分</span>`;
+      const eta = isDone ? '' : `<span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:${subColor};font-weight:600;white-space:nowrap;">あと 約 ${Math.max(1, 15 - Math.round((Date.now() - p.startedAt) / 60000))} 分</span>`;
       const cta = isDone
-        ? `<button class="fp-pending-cta" data-idx="${i}" style="background:#fff;color:#065F46;border:none;padding:6px 14px;border-radius:7px;font-family:inherit;font-size:11.5px;font-weight:800;cursor:pointer;letter-spacing:0.02em;white-space:nowrap;">面談履歴 を 開く</button>`
-        : `<button class="fp-pending-refresh" data-idx="${i}" title="今すぐ 確認" aria-label="今すぐ 確認" style="background:transparent;border:1px solid rgba(255,255,255,0.28);color:#fff;padding:3px 9px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">更新</button>`;
+        ? `<button class="fp-pending-cta" data-idx="${i}" style="background:#fff;color:#065F46;border:none;padding:6px 14px;border-radius:7px;font-family:inherit;font-size:13px;font-weight:800;cursor:pointer;letter-spacing:0.02em;white-space:nowrap;">面談履歴 を 開く</button>`
+        : `<button class="fp-pending-refresh" data-idx="${i}" title="今すぐ 確認" aria-label="今すぐ 確認" style="background:transparent;border:1px solid rgba(255,255,255,0.28);color:#fff;padding:3px 9px;border-radius:6px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;">更新</button>`;
       return `
         <div class="fp-pending-zoom-item" data-idx="${i}" style="pointer-events:auto;background:${barBg};color:#fff;padding:11px 14px 11px 18px;border-radius:12px;display:flex;align-items:center;gap:14px;font-size:13px;box-shadow:${barShadow};">
           <div style="width:26px;height:26px;border-radius:50%;background:${iconBg};display:flex;align-items:center;justify-content:center;font-family:'Manrope',sans-serif;font-weight:900;font-size:13px;flex-shrink:0;">${iconContent}</div>
           <div style="min-width:0;flex:0 1 auto;line-height:1.35;">
             <div style="line-height:1.35;">${label}</div>
-            <div style="font-size:12px;color:${subColor};margin-top:1px;">${sub}</div>
+            <div style="font-size:13.5px;color:${subColor};margin-top:1px;">${sub}</div>
           </div>
           <div style="flex:1;height:4px;background:${trackBg};border-radius:999px;overflow:hidden;min-width:80px;"><div style="height:100%;width:${fillPct}%;background:${fillBg};border-radius:999px;transition:width .6s;"></div></div>
           ${eta}

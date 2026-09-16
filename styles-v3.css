@@ -73,7 +73,7 @@ body {
 }
 .app-title .sub {
   font-family: 'Inter', sans-serif;
-  font-size: 10.5px;
+  font-size: 12px;
   letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--muted);
@@ -84,7 +84,7 @@ body {
 }
 .app-meta {
   font-family: 'Inter', sans-serif;
-  font-size: 10.5px;
+  font-size: 12px;
   letter-spacing: 0.12em;
   color: var(--muted);
   text-transform: uppercase;
@@ -141,7 +141,7 @@ body {
   content: attr(data-eyebrow);
   display: block !important;
   font-family: 'Inter', sans-serif !important;
-  font-size: 10.5px !important;
+  font-size: 12px !important;
   font-weight: 700 !important;
   color: var(--gold) !important;
   letter-spacing: 0.22em !important;
@@ -202,7 +202,7 @@ body {
 .kpi:hover::before { opacity: 1; }
 .kpi-label {
   font-family: 'Inter', sans-serif;
-  font-size: 10px;
+  font-size: 11.5px;
   font-weight: 700;
   color: var(--muted);
   text-transform: uppercase;
@@ -230,7 +230,7 @@ body {
   margin-left: 6px;
 }
 .kpi-sub {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
   margin-top: 10px;
   letter-spacing: 0.04em;
@@ -262,7 +262,7 @@ body {
 }
 .howto-banner-subtitle {
   font-family: 'Inter', sans-serif;
-  font-size: 10.5px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--muted);
   letter-spacing: 0.18em;
@@ -298,7 +298,7 @@ body {
   color: var(--gold-2);
   padding: 1px 8px;
   border-radius: 3px;
-  font-size: 10.5px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.04em;
   margin: 0 2px;
@@ -317,7 +317,7 @@ table.clients thead th {
   background: #fafaf6;
   border-bottom: 1px solid var(--line);
   font-family: 'Inter', sans-serif;
-  font-size: 10.5px;
+  font-size: 12px;
   font-weight: 700;
   color: var(--muted);
   letter-spacing: 0.16em;
@@ -362,7 +362,7 @@ button.primary:hover, .primary:hover {
   gap: 6px;
   padding: 3px 10px;
   border-radius: 12px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.04em;
   border: 1px solid transparent;
