@@ -4846,8 +4846,16 @@
       { v: 'lt365', label: '181〜365日', count: buckets.lt365, color: '#f97316' },
       { v: 'gt365', label: '1年以上 未接触', count: buckets.gt365, color: '#d9264c' },
     ];
-    bar.innerHTML = '<span style="font-size:12.5px;color:var(--muted);font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-right:6px;">📞 最終接触</span>' +
-      tabs.map(t => {
+    // ★ 2026-09-16 スマホ: 0件の絞り込みは出さない (画面の上半分を占領していた)
+    let _tabs = tabs;
+    try {
+      if (window.matchMedia('(max-width: 768px)').matches) {
+        const cur = state.contactFilter || 'all';
+        _tabs = tabs.filter(t => t.v === 'all' || t.count > 0 || t.v === cur);
+      }
+    } catch (_) {}
+    bar.innerHTML = '<span class="cfbar-label" style="font-size:12.5px;color:var(--muted);font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-right:6px;">📞 最終接触</span>' +
+      _tabs.map(t => {
         const active = (state.contactFilter || 'all') === t.v;
         const bg = active ? (t.color || '#1f2937') : '#fff';
         const fg = active ? '#fff' : (t.color || '#374151');

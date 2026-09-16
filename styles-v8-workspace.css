@@ -14221,3 +14221,49 @@ button.btn-rec-start:not([data-rec-mode="inperson"]):hover { background: #116534
   #section-recording > div:first-child > div > div:first-child,
   #section-aftercare > div:first-child > div > div:first-child { display: none !important; }
 }
+
+/* ============================================================
+   2026-09-16 (9) 顧客リストも E案 に揃える
+   ・地色を白に
+   ・絞り込みチップの箱をやめ、1行の横スクロールに (0件は JS 側で非表示)
+   ・白カードをやめて線区切りのリストに (白地の上では白カードは見えない)
+   ============================================================ */
+@media (max-width: 768px) {
+  .view[data-view="clients"] { background: #FFFFFF !important; }
+
+  /* --- 絞り込みチップ --- */
+  #contact-filter-bar {
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 4px 2px 10px !important;
+    margin: 0 !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  #contact-filter-bar::-webkit-scrollbar { display: none; }
+  #contact-filter-bar .cfbar-label { display: none !important; }
+  #contact-filter-bar button {
+    flex: 0 0 auto !important;
+    font-size: 13.5px !important;
+    padding: 7px 13px !important;
+    min-height: 36px !important;
+  }
+
+  /* 「検索のみ表示 (フィルタは PC 推奨)」の注記は畳む */
+  .view[data-view="clients"] .client-toolbar::after { display: none !important; }
+
+  /* --- 一覧: カード → 線区切り --- */
+  table.clients tbody tr {
+    background: transparent !important;
+    border: none !important;
+    border-bottom: 1px solid #E8EAED !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+    padding: 12px 26px 12px 4px !important;
+  }
+  table.clients tbody tr:last-child { border-bottom: none !important; }
+}
