@@ -1056,14 +1056,14 @@
             <div style="font-size:13.5px;font-weight:700;color:#565B66;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:3px;">Upcoming &amp; Active</div>
             <h2 style="font-family:'Noto Sans JP',sans-serif;font-size:18px;margin:0;font-weight:600;color:#14171C;">Zoom 打ち合わせ ${upcomingZoomCount > 0 ? `<span style="font-size:12.5px;background:#565B66;color:#fff;padding:2px 8px;border-radius:10px;margin-left:8px;font-family:'Inter',sans-serif;font-weight:700;letter-spacing:0.04em;">${upcomingZoomCount} 件 予約あり</span>` : ''}</h2>
           </div>
-          <div style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:#565B66;">
-            <span style="letter-spacing:0.05em;">並び順:</span>
-            <select id="fp-bookings-sort" style="font-size:13px;padding:6px 10px;border:1px solid #DFE1E5;border-radius:5px;font-family:inherit;background:#fff;color:#14171C;">
-              <option value="upcoming">予定が近い順 (今日 → 未来 → 過去)</option>
-              <option value="date-asc">面談日 — 古い順</option>
-              <option value="date-desc">面談日 — 新しい順</option>
-              <option value="created-desc">予約日 — 新しい順</option>
-              <option value="name">お客様名 — あいうえお順</option>
+          <div class="fp-bk-sort" style="display:flex;align-items:center;gap:8px;font-size:13px;color:#565B66;">
+            <span style="letter-spacing:0.05em;white-space:nowrap;">並び順</span>
+            <select id="fp-bookings-sort" style="font-size:14px;padding:9px 10px;border:1px solid #DFE1E5;border-radius:10px;font-family:inherit;background:#fff;color:#14171C;">
+              <option value="upcoming">予定が近い順</option>
+              <option value="date-asc">面談日が古い順</option>
+              <option value="date-desc">面談日が新しい順</option>
+              <option value="created-desc">予約日が新しい順</option>
+              <option value="name">お客様名 あいうえお順</option>
             </select>
           </div>
         </div>
@@ -1914,7 +1914,7 @@
         ? `<div style="font-size:13px;color:#166534;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:6px 10px;margin-bottom:10px;">👉 客 が 選んだ 候補: <strong>候補${escapeHtml(b._pendingSelection.index || '?')}</strong> (${escapeHtml(b._pendingSelection.slotText || b._pendingSelection.chosen || '')})</div>`
         : '';
       return `
-        <div style="background:var(--surface);border:1px solid var(--line);border-left:4px solid ${rec === 'recording' ? 'var(--red)' : 'var(--line-green)'};border-radius:10px;padding:18px 22px;margin-bottom:10px;box-shadow:var(--shadow-xs);display:grid;grid-template-columns:104px 1fr;gap:18px;">
+        <div class="fp-bk" style="background:#FFFFFF;border:1.5px solid ${rec === 'recording' ? '#B91C1C' : '#15803d'};border-radius:14px;padding:14px 16px;margin-bottom:10px;display:grid;grid-template-columns:96px 1fr;gap:14px;">
           <div style="border-right:1px solid var(--line);padding-right:14px;">
             <div style="font-size:22px;font-weight:800;font-family:'Inter',sans-serif;line-height:1.05;color:var(--ink);">${dateInfo.mmdd}</div>
             <div style="font-size:12.5px;color:var(--muted);margin-top:1px;font-weight:600;">${dateInfo.weekday}</div>

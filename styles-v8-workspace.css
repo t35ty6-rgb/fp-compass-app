@@ -14011,3 +14011,72 @@ body.mobile-nav-open .sidebar-nav .tab .nav-count,
   height: 22px !important;
   min-width: 24px !important;
 }
+
+/* ============================================================
+   2026-09-16 (5) Zoom打ち合わせ / ドロワー下部 / コンパちゃん
+   ============================================================ */
+
+/* --- 並び順のセレクト: 「並 び 順:」の縦割れ と 右はみ出しを解消 --- */
+.fp-bk-sort {
+  flex-wrap: nowrap !important;
+  min-width: 0 !important;
+}
+.fp-bk-sort > span { flex: 0 0 auto !important; }
+.fp-bk-sort #fp-bookings-sort {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+@media (max-width: 768px) {
+  /* 見出しの右に置くと入らないので、下に1行フル幅で置く */
+  #section-recording > div:first-child { flex-direction: column !important; align-items: stretch !important; }
+  .fp-bk-sort { width: 100% !important; }
+  .fp-bk-sort #fp-bookings-sort { width: 100% !important; min-height: 44px !important; }
+}
+
+/* --- Zoom予約カード --- */
+.fp-bk { box-shadow: none !important; }
+@media (max-width: 768px) {
+  .fp-bk { grid-template-columns: 78px 1fr !important; gap: 12px !important; padding: 13px 13px !important; }
+  /* Zoom URL はタップしないので畳む (「Zoomを開始」から開く) */
+  .fp-bk [style*="ui-monospace"] { display: none !important; }
+}
+/* 金 → 緑 (E案の配色に統一) */
+button.btn-rec-start:not([data-rec-mode="inperson"]) {
+  background: #15803d !important;
+  box-shadow: none !important;
+  border-radius: 12px !important;
+  font-size: 15.5px !important;
+  padding: 13px 20px !important;
+}
+button.btn-rec-start:not([data-rec-mode="inperson"]):hover { background: #116534 !important; }
+
+/* --- ドロワー下部: コンパちゃんがボトムナビに隠れて途切れていた --- */
+@media (max-width: 768px) {
+  body.mobile-nav-open .sidebar {
+    display: flex !important;
+    flex-direction: column !important;
+    box-sizing: border-box !important;
+    padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+  body.mobile-nav-open .sidebar-scroll {
+    flex: 1 1 auto !important;
+    max-height: none !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  body.mobile-nav-open .sidebar-foot {
+    flex: 0 0 auto !important;
+    position: sticky !important;
+    bottom: 0 !important;
+    background: #FFFFFF !important;
+    border-top: 1px solid #DFE1E5 !important;
+    padding: 10px 12px 12px !important;
+  }
+  #sidebar-kompa-trigger {
+    min-height: 54px !important;
+    align-items: center !important;
+  }
+  /* --- コンパちゃんは顧客タブでも出す (どこからでも相談できるように) --- */
+  body.tab-clients-active #mbFab { display: flex !important; }
+}

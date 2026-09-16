@@ -37,10 +37,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20260916K">
-<link rel="stylesheet" href="styles-v2.css?v=20260916K">
-<link rel="stylesheet" href="styles-v3.css?v=20260916K">
-<link rel="stylesheet" href="styles-v8-workspace.css?v=20260916K">
+<link rel="stylesheet" href="styles.css?v=20260916L">
+<link rel="stylesheet" href="styles-v2.css?v=20260916L">
+<link rel="stylesheet" href="styles-v3.css?v=20260916L">
+<link rel="stylesheet" href="styles-v8-workspace.css?v=20260916L">
 <!-- ★ 2026-06-26 perf: lucide(350KB) と chart.js(201KB) を defer 化 -->
 <!--   どちらも DOMContentLoaded 後ハイドレートで OK (lucide: setInterval scan / chart: tryRender polling) -->
 <script defer src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
@@ -48,19 +48,19 @@
 <!-- ★ 2026-08-20 owner「認証中 で 5分 待たされる」fix:
      旧: 認証後 に fpReadyAfterAuth で critical scripts を 直列 fetch → mobile 4G で 5-8 秒
      新: login 画面 表示 中 に 平行 preload (browser cache に 入れる、 実行 は 認証後) → 認証後 は 実質 0秒 -->
-<link rel="preload" as="script" href="life-events.js?v=20260916K">
-<link rel="preload" as="script" href="recommender.js?v=20260916K">
-<link rel="preload" as="script" href="line-data.js?v=20260916K">
-<link rel="preload" as="script" href="recording-persist.js?v=20260916K">
-<link rel="preload" as="script" href="app.js?v=20260916K">
-<link rel="preload" as="script" href="line-app.js?v=20260916K">
+<link rel="preload" as="script" href="life-events.js?v=20260916L">
+<link rel="preload" as="script" href="recommender.js?v=20260916L">
+<link rel="preload" as="script" href="line-data.js?v=20260916L">
+<link rel="preload" as="script" href="recording-persist.js?v=20260916L">
+<link rel="preload" as="script" href="app.js?v=20260916L">
+<link rel="preload" as="script" href="line-app.js?v=20260916L">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- ★ 2026-09-02 P0 fix: nocache redirect 削除
      - 全 初回 load で JS redirect → +46ms (国内) / +400ms (4G) 追加 RTT
      - bfcache 破壊 + URL param 汚染 (Analytics session 分断)
-     - JS/CSS は 個別 ?v=20260916K で bust 済 · nocache は 完全 に 無意味
+     - JS/CSS は 個別 ?v=20260916L で bust 済 · nocache は 完全 に 無意味
      判定書_FP-Compass_多視点10_Performance_2026-09-02.md P0 fix
 -->
 
@@ -1275,9 +1275,9 @@
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
     <span>顧客</span>
   </button>
-  <button class="m-tab" data-mtab="meetingHistory" data-target-tab="meetingHistory">
-    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
-    <span>履歴</span>
+  <button class="m-tab" data-mtab="lineChat" data-target-tab="lineChat">
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9.9 9.9 0 0 1-2.1-.2L4 21l1.4-4.2A8.2 8.2 0 0 1 3 11.5 8.4 8.4 0 0 1 12 3a8.4 8.4 0 0 1 9 8.5z"/></svg>
+    <span>LINE送信</span>
   </button>
   <button class="m-tab" data-mtab="leadHub" data-target-tab="leadHub">
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
@@ -1931,7 +1931,7 @@ window.fpReadyAfterAuth = function() {
     });
   })();
 
-  const ver = "20260916K";
+  const ver = "20260916L";
   // ★ 2026-06-26 perf: critical (画面初期表示に必須) と deferred (LINE/charts) を 分離
   // critical: 顧客台帳・ホーム描画に必須
   // deferred: LINE タブ (line-app.js 555KB) / dashboard charts (charts.js) → idle で 後ロード
@@ -2114,6 +2114,7 @@ window.fpReadyAfterAuth = function() {
     // 既存 .tab click → ボトムナビ active 同期 + トップバータイトル 更新
     const tabLabelMap = {
       dashboard: 'ホーム', clients: '顧客', timeline: 'ライフイベント', meetingHistory: '面談履歴',
+      lineChat: 'LINE送信',
       leadHub: '新規相談', distributionHub: '配信', dormantFollowup: 'ご無沙汰',
       tagsHub: 'タグ管理', birthdayTab: '誕生日', calendarTab: '年末配布', settingsHub: '設定',
     };
@@ -2683,7 +2684,7 @@ window.fpReadyAfterAuth = function() {
 <script>
 (function(){
   // 最新の ver を 1 箇所に集約 (fpReadyAfterAuth 側と一致させる必要あり)
-    const FP_VERSION = "20260916K";
+    const FP_VERSION = "20260916L";
   try { window.FP_VERSION = FP_VERSION; } catch(_) {}
 
   // 2026-07-13 v11: Chrome拡張 (Zoom タブ音声 レコーダー) 検知
