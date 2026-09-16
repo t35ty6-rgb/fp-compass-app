@@ -980,17 +980,17 @@
       ${hero ? `
       <a href="${hero.target}" class="fp-lead-hero" style="text-decoration:none;color:inherit;display:block;background:${heroColor.bg};border:1.5px solid ${heroColor.border};border-radius:14px;padding:18px 20px;margin-bottom:20px;display:grid;grid-template-columns:1fr auto;gap:20px;align-items:center;box-shadow:0 1px 3px rgba(15,23,42,0.04),0 8px 24px rgba(15,23,42,0.06);transition:transform 0.15s,box-shadow 0.15s;">
         <div>
-          <div style="font-size:13px;font-weight:700;color:${heroColor.fg};letter-spacing:0.2em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:8px;">
-            <span style="width:6px;height:6px;background:${heroColor.dot};border-radius:50%;display:inline-block;"></span>
-            Next Action
+          <div class="fp-lead-hero-eyebrow" style="font-size:13px;font-weight:800;color:${heroColor.fg};letter-spacing:0.14em;margin-bottom:8px;display:flex;align-items:center;gap:8px;">
+            <span class="fp-lead-hero-dot" style="width:7px;height:7px;background:${heroColor.dot};border-radius:50%;display:inline-block;"></span>
+            今日やること
           </div>
           <div class="fp-lead-hero-num" style="display:flex;align-items:baseline;gap:14px;margin-bottom:8px;">
-            <div style="font-size:42px;font-weight:800;font-family:'Inter',sans-serif;color:${heroColor.fg};line-height:1;letter-spacing:-0.02em;">${hero.count}<span style="font-size:15px;color:#565B66;font-weight:600;margin-left:4px;">${hero.unit}</span></div>
-            <div style="font-family:'Noto Sans JP',sans-serif;font-size:18px;font-weight:600;color:#14171C;line-height:1.35;">${hero.title}</div>
+            <div class="fp-lead-hero-count" style="font-size:42px;font-weight:800;font-family:'Inter',sans-serif;color:${heroColor.fg};line-height:1;letter-spacing:-0.02em;">${hero.count}<span class="fp-lead-hero-unit" style="font-size:15px;color:#565B66;font-weight:600;margin-left:4px;">${hero.unit}</span></div>
+            <div class="fp-lead-hero-title" style="font-family:'Noto Sans JP',sans-serif;font-size:18px;font-weight:800;color:#14171C;line-height:1.35;">${hero.title}</div>
           </div>
-          <div style="font-size:13.5px;color:#565B66;line-height:1.6;letter-spacing:0.02em;">${hero.sub}</div>
+          <div class="fp-lead-hero-sub" style="font-size:13.5px;color:#565B66;line-height:1.6;letter-spacing:0.02em;">${hero.sub}</div>
         </div>
-        <div style="font-size:18px;color:${heroColor.fg};font-family:'Inter',sans-serif;font-weight:300;">→</div>
+        <div class="fp-lead-hero-arrow" style="font-size:18px;color:${heroColor.fg};font-family:'Inter',sans-serif;font-weight:300;">→</div>
       </a>` : `
       <div style="background:${accents.ok.bg};border:1.5px solid ${accents.ok.border};border-radius:14px;padding:18px 20px;margin-bottom:20px;display:grid;grid-template-columns:1fr;gap:6px;box-shadow:0 1px 3px rgba(15,23,42,0.04);">
         <div style="font-size:13px;font-weight:700;color:${accents.ok.fg};letter-spacing:0.2em;text-transform:uppercase;display:flex;align-items:center;gap:8px;">

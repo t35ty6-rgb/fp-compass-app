@@ -14172,3 +14172,52 @@ button.btn-rec-start:not([data-rec-mode="inperson"]):hover { background: #116534
   .shell { padding-left: 0 !important; padding-right: 0 !important; }
   table.clients tbody { padding-left: 0 !important; padding-right: 0 !important; }
 }
+
+/* ============================================================
+   2026-09-16 (8) 相談タブ E案
+   ・地色を白に (ベージュと白カードの差が無く、のっぺりしていた)
+   ・上の「新規相談」の白い箱を廃止
+   ・NEXT ACTION を緑のベタ塗りにして「今日やること」から始める
+   ============================================================ */
+@media (max-width: 768px) {
+  .shell, .main, main,
+  [data-line-view="leadHub"] { background: #FFFFFF !important; }
+
+  /* 「新規相談」の見出しブロックを畳む */
+  [data-line-view="leadHub"] .fp-lead-head { display: none !important; }
+
+  /* 今日やること = 緑のベタ塗り */
+  .fp-lead-hero {
+    background: #15803d !important;
+    border: none !important;
+    border-radius: 16px !important;
+    padding: 16px 16px 15px !important;
+    margin: 12px 0 12px !important;
+    box-shadow: none !important;
+  }
+  .fp-lead-hero .fp-lead-hero-eyebrow { color: #E9F6EE !important; }
+  .fp-lead-hero .fp-lead-hero-dot     { background: #E9F6EE !important; }
+  .fp-lead-hero .fp-lead-hero-count   { color: #FFFFFF !important; font-size: 40px !important; }
+  .fp-lead-hero .fp-lead-hero-unit    { color: #E9F6EE !important; }
+  .fp-lead-hero .fp-lead-hero-title   { color: #FFFFFF !important; }
+  .fp-lead-hero .fp-lead-hero-sub     { color: #E9F6EE !important; }
+  .fp-lead-hero .fp-lead-hero-arrow   { color: #FFFFFF !important; }
+
+  /* セクションの白カードをやめる (白地の上に白カードは見えないので) */
+  #section-confirm, #section-recording, #section-aftercare {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
+  #section-confirm > div:first-child,
+  #section-recording > div:first-child,
+  #section-aftercare > div:first-child {
+    border-bottom: none !important;
+    padding: 6px 4px 8px !important;
+  }
+  /* セクションの英字ラベル (ACTION REQUIRED 等) は畳む */
+  #section-confirm > div:first-child > div > div:first-child,
+  #section-recording > div:first-child > div > div:first-child,
+  #section-aftercare > div:first-child > div > div:first-child { display: none !important; }
+}
