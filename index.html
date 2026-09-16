@@ -11,7 +11,7 @@
 /* ★ 2026-09-16 自動更新チェック
    これが無いと iPhone のホーム画面アプリが古い index.html を握ったままになり、
    何を直しても画面が変わらない。version.txt はデプロイ時に自動生成される。 */
-window.FP_VER = "20260916T";
+window.FP_VER = "20260916U";
 (function () {
   function check() {
     fetch('/version.txt?t=' + Date.now(), { cache: 'no-store' })
@@ -69,10 +69,10 @@ window.FP_VER = "20260916T";
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20260916T">
-<link rel="stylesheet" href="styles-v2.css?v=20260916T">
-<link rel="stylesheet" href="styles-v3.css?v=20260916T">
-<link rel="stylesheet" href="styles-v8-workspace.css?v=20260916T">
+<link rel="stylesheet" href="styles.css?v=20260916U">
+<link rel="stylesheet" href="styles-v2.css?v=20260916U">
+<link rel="stylesheet" href="styles-v3.css?v=20260916U">
+<link rel="stylesheet" href="styles-v8-workspace.css?v=20260916U">
 <!-- ★ 2026-06-26 perf: lucide(350KB) と chart.js(201KB) を defer 化 -->
 <!--   どちらも DOMContentLoaded 後ハイドレートで OK (lucide: setInterval scan / chart: tryRender polling) -->
 <script defer src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
@@ -80,19 +80,19 @@ window.FP_VER = "20260916T";
 <!-- ★ 2026-08-20 owner「認証中 で 5分 待たされる」fix:
      旧: 認証後 に fpReadyAfterAuth で critical scripts を 直列 fetch → mobile 4G で 5-8 秒
      新: login 画面 表示 中 に 平行 preload (browser cache に 入れる、 実行 は 認証後) → 認証後 は 実質 0秒 -->
-<link rel="preload" as="script" href="life-events.js?v=20260916T">
-<link rel="preload" as="script" href="recommender.js?v=20260916T">
-<link rel="preload" as="script" href="line-data.js?v=20260916T">
-<link rel="preload" as="script" href="recording-persist.js?v=20260916T">
-<link rel="preload" as="script" href="app.js?v=20260916T">
-<link rel="preload" as="script" href="line-app.js?v=20260916T">
+<link rel="preload" as="script" href="life-events.js?v=20260916U">
+<link rel="preload" as="script" href="recommender.js?v=20260916U">
+<link rel="preload" as="script" href="line-data.js?v=20260916U">
+<link rel="preload" as="script" href="recording-persist.js?v=20260916U">
+<link rel="preload" as="script" href="app.js?v=20260916U">
+<link rel="preload" as="script" href="line-app.js?v=20260916U">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <!-- ★ 2026-09-02 P0 fix: nocache redirect 削除
      - 全 初回 load で JS redirect → +46ms (国内) / +400ms (4G) 追加 RTT
      - bfcache 破壊 + URL param 汚染 (Analytics session 分断)
-     - JS/CSS は 個別 ?v=20260916T で bust 済 · nocache は 完全 に 無意味
+     - JS/CSS は 個別 ?v=20260916U で bust 済 · nocache は 完全 に 無意味
      判定書_FP-Compass_多視点10_Performance_2026-09-02.md P0 fix
 -->
 
@@ -1309,11 +1309,15 @@ window.FP_VER = "20260916T";
   </button>
   <button class="m-tab" data-mtab="lineChat" data-target-tab="lineChat">
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9.9 9.9 0 0 1-2.1-.2L4 21l1.4-4.2A8.2 8.2 0 0 1 3 11.5 8.4 8.4 0 0 1 12 3a8.4 8.4 0 0 1 9 8.5z"/></svg>
-    <span>LINE送信</span>
+    <span>LINE</span>
   </button>
   <button class="m-tab" data-mtab="leadHub" data-target-tab="leadHub">
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
     <span>相談</span>
+  </button>
+  <button class="m-tab m-tab-kompa" id="mtab-kompa" title="コンパちゃん に 相談 する">
+    <img src="/img/mebuki-kun-400.jpg" alt="" width="24" height="24" style="border-radius:50%;object-fit:cover;display:block;">
+    <span>コンパ</span>
   </button>
   <button class="m-tab" data-mtab="more" id="mtab-more">
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
@@ -2716,7 +2720,7 @@ window.fpReadyAfterAuth = function() {
 <script>
 (function(){
   // 最新の ver を 1 箇所に集約 (fpReadyAfterAuth 側と一致させる必要あり)
-    const FP_VERSION = "20260916T";
+    const FP_VERSION = "20260916U";
   try { window.FP_VERSION = FP_VERSION; } catch(_) {}
 
   // 2026-07-13 v11: Chrome拡張 (Zoom タブ音声 レコーダー) 検知
@@ -2930,6 +2934,17 @@ window.fpReadyAfterAuth = function() {
     panel.classList.remove('open');
     fab.classList.remove('hidden');
   });
+  // 2026-09-16: 下のタブバーの「コンパ」からも開く
+  //   (FAB がボトムナビに隠れて押せない、というオーナー指摘)
+  const tabKompa = document.getElementById('mtab-kompa');
+  if (tabKompa) {
+    tabKompa.addEventListener('click', () => {
+      panel.classList.add('open');
+      try { fab.classList.add('hidden'); } catch (_) {}
+      setTimeout(() => input.focus(), 100);
+    });
+  }
+
   // 2026-07-11 v5: sidebar-kompa-trigger も 同じ mbPanel を 開く
   const sideKompa = document.getElementById('sidebar-kompa-trigger');
   if (sideKompa) {
