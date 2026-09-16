@@ -13962,10 +13962,10 @@ body.mobile-nav-open .sidebar-nav .tab .nav-count:empty { display: none !importa
    2026-09-16 (3) 相談タブ: スマホの余白を詰める
    ============================================================ */
 @media (max-width: 768px) {
-  [data-line-view="leadHub"] { padding: 12px !important; }
-  .fp-lead-head { margin: 0 0 12px !important; padding: 0 0 10px !important; }
+  [data-line-view="leadHub"] { padding: 9px !important; }
+  .fp-lead-head { margin: 0 0 8px !important; padding: 0 0 6px !important; }
   .fp-lead-head h1 { font-size: 21px !important; }
-  .fp-lead-hero { padding: 14px 14px 13px !important; margin-bottom: 14px !important; }
+  .fp-lead-hero { padding: 11px 12px 10px !important; margin-bottom: 9px !important; }
   .fp-lead-hero-num { margin-bottom: 4px !important; }
 
   #section-confirm,
@@ -13974,17 +13974,17 @@ body.mobile-nav-open .sidebar-nav .tab .nav-count:empty { display: none !importa
     margin-bottom: 12px !important;
     border-radius: 14px !important;
   }
-  #section-recording, #section-aftercare { margin-top: 12px !important; }
+  #section-recording, #section-aftercare { margin-top: 8px !important; }
   #section-confirm > *:not(h2),
   #section-recording > *:not(h2),
-  #section-aftercare > *:not(h2) { padding: 0 12px 12px !important; }
+  #section-aftercare > *:not(h2) { padding: 0 9px 9px !important; }
   #section-confirm > div:first-child,
   #section-recording > div:first-child,
   #section-aftercare > div:first-child {
-    padding: 12px 12px 10px !important;
+    padding: 9px 10px 7px !important;
     margin: 0 !important;
   }
-  #confirm-list, #bookings-list, #aftercare-list { padding: 0 12px 12px !important; }
+  #confirm-list, #bookings-list, #aftercare-list { padding: 0 9px 9px !important; }
   #confirm-list { background: transparent !important; border-radius: 0 !important; }
   #confirm-list .fp-pend { margin-bottom: 8px !important; }
 }
@@ -14087,26 +14087,26 @@ button.btn-rec-start:not([data-rec-mode="inperson"]):hover { background: #116534
    ============================================================ */
 @media (max-width: 768px) {
   /* --- 各ページの見出しブロック --- */
-  .page-head { margin-bottom: 10px !important; padding-bottom: 0 !important; }
-  .view[data-view="dashboard"] .page-head { padding: 8px 4px 6px !important; }
-  .view[data-view="dashboard"] .hero-sub { margin: 0 0 10px !important; }
+  .page-head { margin-bottom: 6px !important; padding-bottom: 0 !important; }
+  .view[data-view="dashboard"] .page-head { padding: 4px 4px 2px !important; }
+  .view[data-view="dashboard"] .hero-sub { margin: 0 0 6px !important; }
 
   /* --- ホーム --- */
-  .m-screen-home { padding: 4px 2px 12px !important; }
-  .m-greet { padding: 12px 14px !important; margin-bottom: 10px !important; }
-  .mega-hero { padding: 14px 14px 14px !important; margin: 0 0 12px !important; }
-  .mega-hero-lead { margin: 0 0 10px !important; }
-  .mega-hero-stats { margin-top: 10px !important; }
+  .m-screen-home { padding: 2px 2px 8px !important; }
+  .m-greet { padding: 9px 12px !important; margin-bottom: 7px !important; }
+  .mega-hero { padding: 11px 12px 11px !important; margin: 0 0 8px !important; }
+  .mega-hero-lead { margin: 0 0 6px !important; }
+  .mega-hero-stats { margin-top: 7px !important; }
   .m-today-cta { padding: 10px 16px !important; }
   .view[data-view="dashboard"] .stat-row,
   .view[data-view="dashboard"] .stat-grid { margin-bottom: 12px !important; }
 
   /* --- 一覧・カード共通 --- */
-  .board-section, .sched-table { margin-bottom: 12px !important; }
-  .hub-section-title { padding: 10px 14px !important; }
+  .board-section, .sched-table { margin-bottom: 8px !important; }
+  .hub-section-title { padding: 8px 12px !important; }
 
   /* --- 顧客リストのカード (1件あたりの縦を詰める) --- */
-  table.clients tbody tr { padding: 10px 28px 10px 12px !important; }
+  table.clients tbody tr { padding: 8px 26px 8px 11px !important; margin-bottom: 6px !important; }
   table.clients tbody tr td:first-child { padding-bottom: 0 !important; }
 
   /* --- 履歴 / 誕生日 などのカード --- */
@@ -14115,6 +14115,6 @@ button.btn-rec-start:not([data-rec-mode="inperson"]):hover { background: #116534
   [data-view="birthdayTab"] div[style*="border-radius"] { padding: 12px 12px 10px !important; }
 
   /* --- モーダル内 --- */
-  .cd-modal .cd-section { padding: 12px 14px !important; }
-  .cd-modal .cd-pane { padding: 0 0 16px !important; }
+  .cd-modal .cd-section { padding: 9px 12px !important; }
+  .cd-modal .cd-pane { padding: 0 0 10px !important; }
 }
