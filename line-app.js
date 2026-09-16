@@ -955,40 +955,40 @@
 
     // 配色: 上品な navy / gold / cream トーン
     const accents = {
-      urgent:   { fg: '#7a1530', bg: 'linear-gradient(135deg,#fdf2f4,#fafafa)', border: '#7a1530', dot: '#a23a55' },
-      active:   { fg: '#365314', bg: 'linear-gradient(135deg,#f0f7e8,#fafafa)', border: '#4d7c0f', dot: '#65a30d' },
-      upcoming: { fg: '#1e3a5f', bg: 'linear-gradient(135deg,#f0f4fa,#fafafa)', border: '#1e3a5f', dot: '#3b5c8f' },
-      followup: { fg: '#7c4a14', bg: 'linear-gradient(135deg,#fcf7eb,#fafafa)', border: '#9a5a18', dot: '#b8893d' },
-      ok:       { fg: '#5e4d1a', bg: 'linear-gradient(135deg,#fdfbf4,#fafafa)', border: '#c19a3a', dot: '#c19a3a' },
+      urgent:   { fg: '#15803d', bg: '#FFFFFF', border: '#15803d', dot: '#15803d' },
+      active:   { fg: '#15803d', bg: '#FFFFFF', border: '#15803d', dot: '#15803d' },
+      upcoming: { fg: '#565B66', bg: '#FFFFFF', border: '#DFE1E5', dot: '#A7ACB5' },
+      followup: { fg: '#9A3412', bg: '#FFFFFF', border: '#9A3412', dot: '#9A3412' },
+      ok:       { fg: '#565B66', bg: '#FFFFFF', border: '#DFE1E5', dot: '#A7ACB5' },
     };
     const heroColor = hero ? accents[hero.kind] : accents.ok;
 
     v.innerHTML = `
-      <div style="margin:0 0 18px;padding:0 0 16px;border-bottom:1px solid #e8e2d4;display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;">
+      <div style="margin:0 0 18px;padding:0 0 16px;border-bottom:1px solid #DFE1E5;display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;">
         <div>
-          <div style="font-size:10.5px;font-weight:700;color:#8b7d5d;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:6px;">New Consultation</div>
-          <h1 style="font-family:'Noto Sans JP',serif;font-size:28px;font-weight:700;letter-spacing:0.02em;margin:0 0 6px;color:#1f2a3f;">新規相談</h1>
-          <p style="color:#6b7280;font-size:13px;margin:0;line-height:1.6;">LINE — アンケート — 候補日 — Zoom面談 — 完了 までの進行状況</p>
+          <div style="font-size:10.5px;font-weight:700;color:#565B66;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:6px;">New Consultation</div>
+          <h1 style="font-family:'Noto Sans JP',sans-serif;font-size:28px;font-weight:700;letter-spacing:0.02em;margin:0 0 6px;color:#14171C;">新規相談</h1>
+          <p style="color:#565B66;font-size:13px;margin:0;line-height:1.6;">LINE — アンケート — 候補日 — Zoom面談 — 完了 までの進行状況</p>
         </div>
         <!-- ★ 2026-08-25 owner「急遽面談 スタート 全部 いらない (客カード の 音声 upload に 統一)」 で 撤去 -->
         <!-- 旧 button 互換 のため hidden で 残置 (別 code path から click 発火 される 可能性) -->
         <button id="fp-quick-inperson" style="display:none;" hidden></button>
       </div>
 
-      ${isDemo ? '<div style="background:#fdfbf4;border:1px solid #e8d9a8;border-radius:6px;padding:11px 16px;margin-bottom:24px;font-size:12px;color:#5e4d1a;font-family:\'Noto Sans JP\',sans-serif;letter-spacing:0.02em;"><strong style="font-weight:700;">Note —</strong> 表示中の候補日待ち4件はサンプルです。本番では実際のLINEアンケート回答が並びます</div>' : ''}
+      ${isDemo ? '<div style="background:#FFFFFF;border:1px solid #DFE1E5;border-radius:6px;padding:11px 16px;margin-bottom:24px;font-size:12px;color:#565B66;font-family:\'Noto Sans JP\',sans-serif;letter-spacing:0.02em;"><strong style="font-weight:700;">Note —</strong> 表示中の候補日待ち4件はサンプルです。本番では実際のLINEアンケート回答が並びます</div>' : ''}
 
       ${hero ? `
-      <a href="${hero.target}" style="text-decoration:none;color:inherit;display:block;background:${heroColor.bg};border:1px solid ${heroColor.border}33;border-left:3px solid ${heroColor.border};border-radius:8px;padding:24px 28px;margin-bottom:32px;display:grid;grid-template-columns:1fr auto;gap:20px;align-items:center;box-shadow:0 1px 3px rgba(15,23,42,0.04),0 8px 24px rgba(15,23,42,0.06);transition:transform 0.15s,box-shadow 0.15s;">
+      <a href="${hero.target}" class="fp-lead-hero" style="text-decoration:none;color:inherit;display:block;background:${heroColor.bg};border:1px solid ${heroColor.border}33;border-left:3px solid ${heroColor.border};border-radius:8px;padding:24px 28px;margin-bottom:32px;display:grid;grid-template-columns:1fr auto;gap:20px;align-items:center;box-shadow:0 1px 3px rgba(15,23,42,0.04),0 8px 24px rgba(15,23,42,0.06);transition:transform 0.15s,box-shadow 0.15s;">
         <div>
           <div style="font-size:10px;font-weight:700;color:${heroColor.fg};letter-spacing:0.2em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:8px;">
             <span style="width:6px;height:6px;background:${heroColor.dot};border-radius:50%;display:inline-block;"></span>
             Next Action
           </div>
-          <div style="display:flex;align-items:baseline;gap:14px;margin-bottom:8px;">
-            <div style="font-size:42px;font-weight:800;font-family:'Inter',sans-serif;color:${heroColor.fg};line-height:1;letter-spacing:-0.02em;">${hero.count}<span style="font-size:14px;color:#6b7280;font-weight:600;margin-left:4px;">${hero.unit}</span></div>
-            <div style="font-family:'Noto Sans JP',serif;font-size:18px;font-weight:600;color:#1f2a3f;line-height:1.35;">${hero.title}</div>
+          <div class="fp-lead-hero-num" style="display:flex;align-items:baseline;gap:14px;margin-bottom:8px;">
+            <div style="font-size:42px;font-weight:800;font-family:'Inter',sans-serif;color:${heroColor.fg};line-height:1;letter-spacing:-0.02em;">${hero.count}<span style="font-size:14px;color:#565B66;font-weight:600;margin-left:4px;">${hero.unit}</span></div>
+            <div style="font-family:'Noto Sans JP',sans-serif;font-size:18px;font-weight:600;color:#14171C;line-height:1.35;">${hero.title}</div>
           </div>
-          <div style="font-size:12.5px;color:#6b7280;line-height:1.6;letter-spacing:0.02em;">${hero.sub}</div>
+          <div style="font-size:12.5px;color:#565B66;line-height:1.6;letter-spacing:0.02em;">${hero.sub}</div>
         </div>
         <div style="font-size:18px;color:${heroColor.fg};font-family:'Inter',sans-serif;font-weight:300;">→</div>
       </a>` : `
@@ -997,14 +997,14 @@
           <span style="width:6px;height:6px;background:${accents.ok.dot};border-radius:50%;display:inline-block;"></span>
           Status
         </div>
-        <div style="font-family:'Noto Sans JP',serif;font-size:18px;font-weight:600;color:#1f2a3f;">対応待ちはありません</div>
-        <div style="font-size:12.5px;color:#6b7280;line-height:1.6;">新しい LINE 流入があれば自動でここに表示されます</div>
+        <div style="font-family:'Noto Sans JP',sans-serif;font-size:18px;font-weight:600;color:#14171C;">対応待ちはありません</div>
+        <div style="font-size:12.5px;color:#565B66;line-height:1.6;">新しい LINE 流入があれば自動でここに表示されます</div>
       </div>`}
 
-      <div style="display:flex;align-items:baseline;justify-content:space-between;margin:0 0 14px;padding-bottom:10px;border-bottom:1px solid #e8e2d4;">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;margin:0 0 14px;padding-bottom:10px;border-bottom:1px solid #DFE1E5;">
         <div>
-          <div style="font-size:10.5px;font-weight:700;color:#8b7d5d;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:3px;">Pipeline</div>
-          <h2 style="font-family:'Noto Sans JP',serif;font-size:18px;margin:0;font-weight:600;color:#1f2a3f;">FP 作業フロー</h2>
+          <div style="font-size:10.5px;font-weight:700;color:#565B66;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:3px;">Pipeline</div>
+          <h2 style="font-family:'Noto Sans JP',sans-serif;font-size:18px;margin:0;font-weight:600;color:#14171C;">FP 作業フロー</h2>
         </div>
       </div>
       <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:14px;">
@@ -1012,53 +1012,53 @@
           { label: '候補日確定', desc: 'お客様の3候補から確定', value: pendingConfirm, unit: '名', target: '#section-confirm', accent: accents.urgent, active: pendingConfirm > 0, step: '01' },
           { label: 'Zoom 打ち合わせ予定', desc: '確定済 / 面談日待ち', value: upcomingZoomCount, unit: '件', target: '#section-recording', accent: accents.upcoming, active: upcomingZoomCount > 0, step: '02' },
         ].map(c => `
-          <a href="${c.target}" style="text-decoration:none;color:inherit;background:#fff;border:1px solid ${c.active ? c.accent.border + '55' : '#e8e2d4'};${c.active ? `border-top:2px solid ${c.accent.border};` : ''}border-radius:8px;padding:18px 18px 16px;display:flex;flex-direction:column;gap:4px;transition:all 0.15s;${c.active ? `box-shadow:0 1px 3px rgba(15,23,42,0.04),0 6px 20px ${c.accent.border}1f;` : 'box-shadow:0 1px 2px rgba(15,23,42,0.03);'}">
+          <a href="${c.target}" style="text-decoration:none;color:inherit;background:#fff;border:1px solid ${c.active ? c.accent.border + '55' : '#DFE1E5'};${c.active ? `border-top:2px solid ${c.accent.border};` : ''}border-radius:8px;padding:18px 18px 16px;display:flex;flex-direction:column;gap:4px;transition:all 0.15s;${c.active ? `box-shadow:0 1px 3px rgba(15,23,42,0.04),0 6px 20px ${c.accent.border}1f;` : 'box-shadow:0 1px 2px rgba(15,23,42,0.03);'}">
             <div style="display:flex;align-items:center;justify-content:space-between;">
-              <span style="font-size:9.5px;font-weight:700;color:${c.active ? c.accent.fg : '#94a3b8'};letter-spacing:0.18em;font-family:'Inter',sans-serif;">${c.step}</span>
+              <span style="font-size:9.5px;font-weight:700;color:${c.active ? c.accent.fg : '#565B66'};letter-spacing:0.18em;font-family:'Inter',sans-serif;">${c.step}</span>
               ${c.active ? `<span style="width:6px;height:6px;background:${c.accent.dot};border-radius:50%;display:inline-block;"></span>` : ''}
             </div>
-            <div style="font-size:12px;color:#1f2a3f;font-weight:700;letter-spacing:0.02em;margin-top:2px;">${c.label}</div>
-            <div style="font-size:10.5px;color:#9ca3af;font-weight:500;letter-spacing:0.02em;line-height:1.4;">${c.desc}</div>
-            <div style="font-size:30px;font-weight:800;font-family:'Inter',sans-serif;color:${c.active ? c.accent.fg : '#1f2a3f'};line-height:1;letter-spacing:-0.02em;margin-top:4px;">${c.value}<span style="font-size:11px;color:#9ca3af;font-weight:600;margin-left:4px;">${c.unit}</span></div>
+            <div style="font-size:12px;color:#14171C;font-weight:700;letter-spacing:0.02em;margin-top:2px;">${c.label}</div>
+            <div style="font-size:10.5px;color:#565B66;font-weight:500;letter-spacing:0.02em;line-height:1.4;">${c.desc}</div>
+            <div style="font-size:30px;font-weight:800;font-family:'Inter',sans-serif;color:${c.active ? c.accent.fg : '#14171C'};line-height:1;letter-spacing:-0.02em;margin-top:4px;">${c.value}<span style="font-size:11px;color:#565B66;font-weight:600;margin-left:4px;">${c.unit}</span></div>
           </a>
         `).join('')}
       </div>
       <!-- フロー説明 (2026-08-31 owner GO で 「仮予約 → admin 確定」 に 差替) -->
-      <div class="fp-lead-howto" style="background:#fdfbf4;border:1px solid #e8d9a8;border-radius:8px;padding:14px 20px;margin-bottom:36px;font-size:11.5px;color:#5e4d1a;line-height:1.7;">
-        <div style="font-size:10px;font-weight:700;color:#8b7d5d;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:6px;">How it works</div>
-        <strong style="color:#1f2a3f;font-weight:700;">01a</strong> 客 が アンケート + 候補日 3つ を LINE で 送る → 「📤 候補 送付 済 · お客様 タップ 待ち」 で 表示 (この段階 で は FP は 確定 できない) →
-        <strong style="color:#1f2a3f;font-weight:700;">01b</strong> 客 が LINE で 候補X tap → <strong style="color:#166534;">「内容 を 確認 して 再度 ご連絡 させて頂きます」</strong> ack が 客 に 届く → 「🎯 お客様 選択 済 · 確定 待ち」 に 切替 →
-        <strong style="color:#1f2a3f;font-weight:700;">01c</strong> FP が 内容 verify → 「この日で確定」 押す → <strong style="color:#166534;">Zoom URL + 確定 message + カレンダー まで 自動 発火</strong> →
-        <strong style="color:#1f2a3f;font-weight:700;">02</strong> 当日 「録画ONで Zoom 開始」 → 終了 後 面談 履歴 に アーカイブ
+      <div class="fp-lead-howto" style="background:#FFFFFF;border:1px solid #DFE1E5;border-radius:8px;padding:14px 20px;margin-bottom:36px;font-size:11.5px;color:#565B66;line-height:1.7;">
+        <div style="font-size:10px;font-weight:700;color:#565B66;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:6px;">How it works</div>
+        <strong style="color:#14171C;font-weight:700;">01a</strong> 客 が アンケート + 候補日 3つ を LINE で 送る → 「📤 候補 送付 済 · お客様 タップ 待ち」 で 表示 (この段階 で は FP は 確定 できない) →
+        <strong style="color:#14171C;font-weight:700;">01b</strong> 客 が LINE で 候補X tap → <strong style="color:#15803d;">「内容 を 確認 して 再度 ご連絡 させて頂きます」</strong> ack が 客 に 届く → 「🎯 お客様 選択 済 · 確定 待ち」 に 切替 →
+        <strong style="color:#14171C;font-weight:700;">01c</strong> FP が 内容 verify → 「この日で確定」 押す → <strong style="color:#15803d;">Zoom URL + 確定 message + カレンダー まで 自動 発火</strong> →
+        <strong style="color:#14171C;font-weight:700;">02</strong> 当日 「録画ONで Zoom 開始」 → 終了 後 面談 履歴 に アーカイブ
       </div>
 
       <section class="board-section" id="section-confirm">
-        <div style="display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:12px;margin:0 0 14px;padding-bottom:10px;border-bottom:1px solid #e8e2d4;">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:12px;margin:0 0 14px;padding-bottom:10px;border-bottom:1px solid #DFE1E5;">
           <div>
-            <div style="font-size:10.5px;font-weight:700;color:#8b7d5d;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:3px;">Action Required</div>
-            <h2 style="font-family:'Noto Sans JP',serif;font-size:18px;margin:0;font-weight:600;color:#1f2a3f;">候補日確定 待ち ${pendingConfirm > 0 ? `<span style="font-size:11px;background:#7a1530;color:#fff;padding:2px 8px;border-radius:10px;margin-left:8px;font-family:'Inter',sans-serif;font-weight:700;letter-spacing:0.04em;">${pendingConfirm} 名</span>` : ''}</h2>
+            <div style="font-size:10.5px;font-weight:700;color:#565B66;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:3px;">Action Required</div>
+            <h2 style="font-family:'Noto Sans JP',sans-serif;font-size:18px;margin:0;font-weight:600;color:#14171C;">候補日確定 待ち ${pendingConfirm > 0 ? `<span style="font-size:11px;background:#15803d;color:#fff;padding:2px 8px;border-radius:10px;margin-left:8px;font-family:'Inter',sans-serif;font-weight:700;letter-spacing:0.04em;">${pendingConfirm} 名</span>` : ''}</h2>
           </div>
           <button id="fp-toggle-cal" class="fp-btn-elevated" type="button">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
             <span>自分の Google カレンダーを並べて表示</span>
           </button>
         </div>
-        <p class="fp-lead-note" style="color:#6b7280;font-size:12.5px;margin:0 0 18px;line-height:1.65;letter-spacing:0.02em;">
-          <strong style="color:#3730a3;">📤 送付 直後</strong>: 「お客様 タップ 待ち」 表示、 確定 button は 押せない (客 が LINE で 選ぶ まで 待機)<br>
-          <strong style="color:#166534;">🎯 お客様 タップ 後</strong>: 選択 した slot だけ 緑 button で 目立ち、 「この日で確定」 押す と Zoom URL + 確定 message + カレンダー まで 自動 発火 → 下 の Zoom 打ち合わせ 予定 に 移動
+        <p class="fp-lead-note" style="color:#565B66;font-size:12.5px;margin:0 0 18px;line-height:1.65;letter-spacing:0.02em;">
+          <strong style="color:#565B66;">📤 送付 直後</strong>: 「お客様 タップ 待ち」 表示、 確定 button は 押せない (客 が LINE で 選ぶ まで 待機)<br>
+          <strong style="color:#15803d;">🎯 お客様 タップ 後</strong>: 選択 した slot だけ 緑 button で 目立ち、 「この日で確定」 押す と Zoom URL + 確定 message + カレンダー まで 自動 発火 → 下 の Zoom 打ち合わせ 予定 に 移動
         </p>
         <div id="confirm-list"></div>
       </section>
 
       <section class="board-section" id="section-recording" style="margin-top:36px;">
-        <div style="display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:12px;margin:0 0 14px;padding-bottom:10px;border-bottom:1px solid #e8e2d4;">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:12px;margin:0 0 14px;padding-bottom:10px;border-bottom:1px solid #DFE1E5;">
           <div>
-            <div style="font-size:10.5px;font-weight:700;color:#8b7d5d;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:3px;">Upcoming &amp; Active</div>
-            <h2 style="font-family:'Noto Sans JP',serif;font-size:18px;margin:0;font-weight:600;color:#1f2a3f;">Zoom 打ち合わせ ${upcomingZoomCount > 0 ? `<span style="font-size:11px;background:#1e3a5f;color:#fff;padding:2px 8px;border-radius:10px;margin-left:8px;font-family:'Inter',sans-serif;font-weight:700;letter-spacing:0.04em;">${upcomingZoomCount} 件 予約あり</span>` : ''}</h2>
+            <div style="font-size:10.5px;font-weight:700;color:#565B66;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:3px;">Upcoming &amp; Active</div>
+            <h2 style="font-family:'Noto Sans JP',sans-serif;font-size:18px;margin:0;font-weight:600;color:#14171C;">Zoom 打ち合わせ ${upcomingZoomCount > 0 ? `<span style="font-size:11px;background:#565B66;color:#fff;padding:2px 8px;border-radius:10px;margin-left:8px;font-family:'Inter',sans-serif;font-weight:700;letter-spacing:0.04em;">${upcomingZoomCount} 件 予約あり</span>` : ''}</h2>
           </div>
-          <div style="display:flex;align-items:center;gap:8px;font-size:11.5px;color:#6b7280;">
+          <div style="display:flex;align-items:center;gap:8px;font-size:11.5px;color:#565B66;">
             <span style="letter-spacing:0.05em;">並び順:</span>
-            <select id="fp-bookings-sort" style="font-size:12px;padding:6px 10px;border:1px solid #e8e2d4;border-radius:5px;font-family:inherit;background:#fff;color:#1f2a3f;">
+            <select id="fp-bookings-sort" style="font-size:12px;padding:6px 10px;border:1px solid #DFE1E5;border-radius:5px;font-family:inherit;background:#fff;color:#14171C;">
               <option value="upcoming">予定が近い順 (今日 → 未来 → 過去)</option>
               <option value="date-asc">面談日 — 古い順</option>
               <option value="date-desc">面談日 — 新しい順</option>
@@ -1067,28 +1067,28 @@
             </select>
           </div>
         </div>
-        <p class="fp-lead-note" style="color:#6b7280;font-size:12.5px;margin:0 0 18px;line-height:1.65;letter-spacing:0.02em;">確定済みの予約 / 当日になったら「Zoomを開始」 → あとは Zoom を 終了 する だけ。 録画 と 議事録 は 自動 で 顧客台帳 に 反映</p>
+        <p class="fp-lead-note" style="color:#565B66;font-size:12.5px;margin:0 0 18px;line-height:1.65;letter-spacing:0.02em;">確定済みの予約 / 当日になったら「Zoomを開始」 → あとは Zoom を 終了 する だけ。 録画 と 議事録 は 自動 で 顧客台帳 に 反映</p>
         <div id="bookings-list"></div>
       </section>
 
       <section class="board-section" id="section-aftercare" style="margin-top:36px;">
-        <div style="margin:0 0 14px;padding-bottom:10px;border-bottom:1px solid #e8e2d4;">
-          <div style="font-size:10.5px;font-weight:700;color:#8b7d5d;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:3px;">Stuck / Re-engage</div>
-          <h2 style="font-family:'Noto Sans JP',serif;font-size:18px;margin:0;font-weight:600;color:#1f2a3f;">対応漏れ ${aftercare.length > 0 ? `<span style="font-size:11px;background:#9a5a18;color:#fff;padding:2px 8px;border-radius:10px;margin-left:8px;font-family:'Inter',sans-serif;font-weight:700;letter-spacing:0.04em;">${aftercare.length} 名</span>` : ''}</h2>
+        <div style="margin:0 0 14px;padding-bottom:10px;border-bottom:1px solid #DFE1E5;">
+          <div style="font-size:10.5px;font-weight:700;color:#565B66;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:3px;">Stuck / Re-engage</div>
+          <h2 style="font-family:'Noto Sans JP',sans-serif;font-size:18px;margin:0;font-weight:600;color:#14171C;">対応漏れ ${aftercare.length > 0 ? `<span style="font-size:11px;background:#9A3412;color:#fff;padding:2px 8px;border-radius:10px;margin-left:8px;font-family:'Inter',sans-serif;font-weight:700;letter-spacing:0.04em;">${aftercare.length} 名</span>` : ''}</h2>
         </div>
-        <p class="fp-lead-note" style="color:#6b7280;font-size:12.5px;margin:0 0 18px;line-height:1.65;letter-spacing:0.02em;">アンケート途中・候補日提示後・面談キャンセル等で<strong>途中で止まっている方</strong> / LINEで追撃メッセージを送りましょう</p>
+        <p class="fp-lead-note" style="color:#565B66;font-size:12.5px;margin:0 0 18px;line-height:1.65;letter-spacing:0.02em;">アンケート途中・候補日提示後・面談キャンセル等で<strong>途中で止まっている方</strong> / LINEで追撃メッセージを送りましょう</p>
         <div id="aftercare-list">
-          ${aftercare.length === 0 ? `<div style="background:#fff;border:1px dashed #e8e2d4;border-radius:8px;padding:20px 26px;color:#6b7280;font-size:12.5px;line-height:1.7;letter-spacing:0.02em;">
-            <strong style="color:#1f2a3f;">途中で止まってる方はいません</strong> · 該当者が出てきたら自動でここに並びます
+          ${aftercare.length === 0 ? `<div style="background:#fff;border:1px dashed #DFE1E5;border-radius:8px;padding:20px 26px;color:#565B66;font-size:12.5px;line-height:1.7;letter-spacing:0.02em;">
+            <strong style="color:#14171C;">途中で止まってる方はいません</strong> · 該当者が出てきたら自動でここに並びます
           </div>` :
             aftercare.map(a => `
-              <div style="background:var(--surface);border:1px solid var(--line);border-left:4px solid ${a.stage==='completion-pending'?'#06c755':(a.days>=14?'#b91c3c':(a.days>=7?'#f59e0b':'#0ea5e9'))};border-radius:10px;padding:14px 18px;margin-bottom:8px;display:grid;grid-template-columns:36px 1fr auto;gap:14px;align-items:center;">
+              <div style="background:#FFFFFF;border:1px solid #DFE1E5;border-left:4px solid ${a.stage==='completion-pending'?'#06c755':(a.days>=14?'#b91c3c':(a.days>=7?'#f59e0b':'#0ea5e9'))};border-radius:10px;padding:14px 18px;margin-bottom:8px;display:grid;grid-template-columns:36px 1fr auto;gap:14px;align-items:center;">
                 <div style="background:#06c755;color:#fff;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;font-family:inherit;">L</div>
                 <div>
                   <strong style="font-size:14px;">${escapeHtml(a.customerName)} 様</strong>
                   <span style="font-size:10px;color:#06c755;background:#dcfce7;padding:1px 5px;border-radius:5px;margin-left:6px;font-weight:700;">LINE</span>
-                  <div style="font-size:12px;color:var(--ink-2);margin-top:3px;">📍 ${escapeHtml(a.reason)}</div>
-                  <div style="font-size:11px;color:var(--muted);margin-top:2px;">最終アクションから ${a.days}日経過</div>
+                  <div style="font-size:12px;color:#565B66;margin-top:3px;">📍 ${escapeHtml(a.reason)}</div>
+                  <div style="font-size:11px;color:#565B66;margin-top:2px;">最終アクションから ${a.days}日経過</div>
                 </div>
                 <button data-aftercare-uid="${escapeHtml(a.user.userId)}" data-aftercare-name="${escapeHtml(a.customerName)}" data-aftercare-stage="${a.stage}" class="aftercare-btn fp-btn-elevated fp-btn-elevated--line fp-btn-elevated--sm" type="button"><i data-lucide="send"></i><span>フォロー LINE</span></button>
               </div>

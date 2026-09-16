@@ -13875,3 +13875,60 @@ body:not([data-home-view]) [data-view-target="cal"] { display: none !important; 
   padding: 10px 12px !important;
   font-size: 12.5px !important;
 }
+
+/* 選んだE案は白地の上にカードが並ぶ絵だった。実機はベージュ地だったので白に戻す */
+@media (max-width: 768px) {
+  #confirm-list {
+    background: #FFFFFF !important;
+    padding: 16px !important;
+    border-radius: 14px !important;
+  }
+  #confirm-list .fp-pend { margin-bottom: 10px !important; }
+  #confirm-list .fp-pend:last-child { margin-bottom: 0 !important; }
+}
+.fp-pend .fp-pend-sub { color: #565B66 !important; }
+
+/* ============================================================
+   2026-09-16  相談タブ 全体を E案 の配色へ
+   白地 / 緑#15803d / 文字2段階 (#14171C, #565B66) / 罫線 #DFE1E5
+   ============================================================ */
+
+/* 見出しの裏に出ていたグレーの箱を消す
+   (.board-section h2 が「セクション上部の帯」前提で背景を持っていたが、
+    相談タブでは h2 が入れ子なので、文字だけがグレーで囲まれて見えていた) */
+#section-confirm h2,
+#section-recording h2,
+#section-aftercare h2 {
+  background: transparent !important;
+  padding: 0 !important;
+  border-bottom: 0 !important;
+  font-size: 18px !important;
+  color: #14171C !important;
+  font-family: 'Noto Sans JP', -apple-system, 'Hiragino Sans', sans-serif !important;
+}
+
+/* セクションの枠 */
+#section-confirm,
+#section-recording,
+#section-aftercare {
+  background: #FFFFFF !important;
+  border: 1px solid #DFE1E5 !important;
+  box-shadow: none !important;
+}
+
+@media (max-width: 768px) {
+  /* 相談タブの地色を白に (E案は白地の上にカードが並ぶ) */
+  [data-line-view="leadHub"] { background: #FFFFFF !important; }
+  #section-confirm h2,
+  #section-recording h2,
+  #section-aftercare h2 { font-size: 17px !important; }
+  /* カレンダー並列表示ボタンはスマホでは効かないので畳む */
+  #fp-toggle-cal { display: none !important; }
+}
+
+@media (max-width: 768px) {
+  /* NEXT ACTION: 390px だと見出しが「確定す / る」で割れるので、数字の下に回す */
+  .fp-lead-hero { padding: 18px 18px 16px !important; }
+  .fp-lead-hero-num { flex-wrap: wrap !important; gap: 4px 14px !important; }
+  .fp-lead-hero-num > div:last-child { flex: 1 0 100% !important; }
+}
