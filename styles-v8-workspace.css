@@ -14118,3 +14118,57 @@ button.btn-rec-start:not([data-rec-mode="inperson"]):hover { background: #116534
   .cd-modal .cd-section { padding: 9px 12px !important; }
   .cd-modal .cd-pane { padding: 0 0 10px !important; }
 }
+
+/* ============================================================
+   2026-09-16 (7) スマホ: 左右の余白を削ってカードを画面幅いっぱいに
+   オーナー指摘「横に色があってもったいない / 真ん中に集まっている」
+   外側のベージュ帯を 42〜59pt → 6pt に。
+   ============================================================ */
+@media (max-width: 768px) {
+  .shell, .main, main {
+    padding-left: 6px !important;
+    padding-right: 6px !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+  .view, .view.active, [data-line-view] {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+  .page-head { padding-left: 4px !important; padding-right: 4px !important; }
+
+  /* --- 顧客リスト: カードを端まで --- */
+  table.clients { margin-left: 0 !important; margin-right: 0 !important; width: 100% !important; }
+  table.clients tbody tr {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 11px !important;
+    padding-right: 26px !important;
+  }
+
+  /* --- 相談タブ: セクションと中のカードを端まで --- */
+  #section-confirm, #section-recording, #section-aftercare,
+  .board-section, .sched-table {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+  #section-confirm > *:not(h2),
+  #section-recording > *:not(h2),
+  #section-aftercare > *:not(h2) { padding-left: 6px !important; padding-right: 6px !important; }
+  #section-confirm > div:first-child,
+  #section-recording > div:first-child,
+  #section-aftercare > div:first-child { padding-left: 9px !important; padding-right: 9px !important; }
+  #confirm-list, #bookings-list, #aftercare-list { padding-left: 4px !important; padding-right: 4px !important; }
+  .fp-lead-hero { margin-left: 0 !important; margin-right: 0 !important; }
+
+  /* --- ホーム --- */
+  .m-screen-home { padding-left: 0 !important; padding-right: 0 !important; }
+  .m-greet, .mega-hero, .m-today-box { margin-left: 0 !important; margin-right: 0 !important; }
+}
+/* 上の指定でも残っていた2か所: .shell の二重padding と tbody の 14px */
+@media (max-width: 768px) {
+  .shell { padding-left: 0 !important; padding-right: 0 !important; }
+  table.clients tbody { padding-left: 0 !important; padding-right: 0 !important; }
+}
