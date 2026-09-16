@@ -13932,3 +13932,59 @@ body:not([data-home-view]) [data-view-target="cal"] { display: none !important; 
   .fp-lead-hero-num { flex-wrap: wrap !important; gap: 4px 14px !important; }
   .fp-lead-hero-num > div:last-child { flex: 1 0 100% !important; }
 }
+
+/* ============================================================
+   2026-09-16 (2) サイドメニューのバッジが行幅いっぱいに伸びる不具合
+   原因: .sidebar-nav .tab span { flex: 1 } が nav-count(span) にも当たり、
+         ラベルとバッジが 50:50 で伸びていた。数字の見切れも
+         display:inline-block 上書きによる縦位置ずれが原因。
+   ============================================================ */
+.sidebar-nav .tab .nav-count,
+body.mobile-nav-open .sidebar-nav .tab .nav-count,
+.sidebar .nav-count {
+  flex: 0 0 auto !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: auto !important;
+  max-width: max-content !important;
+  min-width: 22px !important;
+  height: 20px !important;
+  padding: 0 7px !important;
+  margin-left: auto !important;
+  line-height: 1 !important;
+  box-sizing: border-box !important;
+}
+.sidebar-nav .tab .nav-count:empty,
+body.mobile-nav-open .sidebar-nav .tab .nav-count:empty { display: none !important; }
+
+/* ============================================================
+   2026-09-16 (3) 相談タブ: スマホの余白を詰める
+   ============================================================ */
+@media (max-width: 768px) {
+  [data-line-view="leadHub"] { padding: 12px !important; }
+  .fp-lead-head { margin: 0 0 12px !important; padding: 0 0 10px !important; }
+  .fp-lead-head h1 { font-size: 21px !important; }
+  .fp-lead-hero { padding: 14px 14px 13px !important; margin-bottom: 14px !important; }
+  .fp-lead-hero-num { margin-bottom: 4px !important; }
+
+  #section-confirm,
+  #section-recording,
+  #section-aftercare {
+    margin-bottom: 12px !important;
+    border-radius: 14px !important;
+  }
+  #section-recording, #section-aftercare { margin-top: 12px !important; }
+  #section-confirm > *:not(h2),
+  #section-recording > *:not(h2),
+  #section-aftercare > *:not(h2) { padding: 0 12px 12px !important; }
+  #section-confirm > div:first-child,
+  #section-recording > div:first-child,
+  #section-aftercare > div:first-child {
+    padding: 12px 12px 10px !important;
+    margin: 0 !important;
+  }
+  #confirm-list, #bookings-list, #aftercare-list { padding: 0 12px 12px !important; }
+  #confirm-list { background: transparent !important; border-radius: 0 !important; }
+  #confirm-list .fp-pend { margin-bottom: 8px !important; }
+}

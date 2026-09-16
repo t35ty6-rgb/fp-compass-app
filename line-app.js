@@ -964,10 +964,10 @@
     const heroColor = hero ? accents[hero.kind] : accents.ok;
 
     v.innerHTML = `
-      <div style="margin:0 0 18px;padding:0 0 16px;border-bottom:1px solid #DFE1E5;display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;">
+      <div class="fp-lead-head" style="margin:0 0 14px;padding:0 0 12px;border-bottom:1px solid #DFE1E5;display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;">
         <div>
           <div style="font-size:10.5px;font-weight:700;color:#565B66;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:6px;">New Consultation</div>
-          <h1 style="font-family:'Noto Sans JP',sans-serif;font-size:28px;font-weight:700;letter-spacing:0.02em;margin:0 0 6px;color:#14171C;">新規相談</h1>
+          <h1 style="font-family:'Noto Sans JP',sans-serif;font-size:24px;font-weight:800;letter-spacing:0.01em;margin:0 0 4px;color:#14171C;">新規相談</h1>
           <p style="color:#565B66;font-size:13px;margin:0;line-height:1.6;">LINE — アンケート — 候補日 — Zoom面談 — 完了 までの進行状況</p>
         </div>
         <!-- ★ 2026-08-25 owner「急遽面談 スタート 全部 いらない (客カード の 音声 upload に 統一)」 で 撤去 -->
@@ -978,7 +978,7 @@
       ${isDemo ? '<div style="background:#FFFFFF;border:1px solid #DFE1E5;border-radius:6px;padding:11px 16px;margin-bottom:24px;font-size:12px;color:#565B66;font-family:\'Noto Sans JP\',sans-serif;letter-spacing:0.02em;"><strong style="font-weight:700;">Note —</strong> 表示中の候補日待ち4件はサンプルです。本番では実際のLINEアンケート回答が並びます</div>' : ''}
 
       ${hero ? `
-      <a href="${hero.target}" class="fp-lead-hero" style="text-decoration:none;color:inherit;display:block;background:${heroColor.bg};border:1px solid ${heroColor.border}33;border-left:3px solid ${heroColor.border};border-radius:8px;padding:24px 28px;margin-bottom:32px;display:grid;grid-template-columns:1fr auto;gap:20px;align-items:center;box-shadow:0 1px 3px rgba(15,23,42,0.04),0 8px 24px rgba(15,23,42,0.06);transition:transform 0.15s,box-shadow 0.15s;">
+      <a href="${hero.target}" class="fp-lead-hero" style="text-decoration:none;color:inherit;display:block;background:${heroColor.bg};border:1.5px solid ${heroColor.border};border-radius:14px;padding:18px 20px;margin-bottom:20px;display:grid;grid-template-columns:1fr auto;gap:20px;align-items:center;box-shadow:0 1px 3px rgba(15,23,42,0.04),0 8px 24px rgba(15,23,42,0.06);transition:transform 0.15s,box-shadow 0.15s;">
         <div>
           <div style="font-size:10px;font-weight:700;color:${heroColor.fg};letter-spacing:0.2em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:8px;">
             <span style="width:6px;height:6px;background:${heroColor.dot};border-radius:50%;display:inline-block;"></span>
@@ -992,7 +992,7 @@
         </div>
         <div style="font-size:18px;color:${heroColor.fg};font-family:'Inter',sans-serif;font-weight:300;">→</div>
       </a>` : `
-      <div style="background:${accents.ok.bg};border:1px solid ${accents.ok.border}33;border-left:3px solid ${accents.ok.border};border-radius:8px;padding:24px 28px;margin-bottom:32px;display:grid;grid-template-columns:1fr;gap:6px;box-shadow:0 1px 3px rgba(15,23,42,0.04);">
+      <div style="background:${accents.ok.bg};border:1.5px solid ${accents.ok.border};border-radius:14px;padding:18px 20px;margin-bottom:20px;display:grid;grid-template-columns:1fr;gap:6px;box-shadow:0 1px 3px rgba(15,23,42,0.04);">
         <div style="font-size:10px;font-weight:700;color:${accents.ok.fg};letter-spacing:0.2em;text-transform:uppercase;display:flex;align-items:center;gap:8px;">
           <span style="width:6px;height:6px;background:${accents.ok.dot};border-radius:50%;display:inline-block;"></span>
           Status
@@ -1012,7 +1012,7 @@
           { label: '候補日確定', desc: 'お客様の3候補から確定', value: pendingConfirm, unit: '名', target: '#section-confirm', accent: accents.urgent, active: pendingConfirm > 0, step: '01' },
           { label: 'Zoom 打ち合わせ予定', desc: '確定済 / 面談日待ち', value: upcomingZoomCount, unit: '件', target: '#section-recording', accent: accents.upcoming, active: upcomingZoomCount > 0, step: '02' },
         ].map(c => `
-          <a href="${c.target}" style="text-decoration:none;color:inherit;background:#fff;border:1px solid ${c.active ? c.accent.border + '55' : '#DFE1E5'};${c.active ? `border-top:2px solid ${c.accent.border};` : ''}border-radius:8px;padding:18px 18px 16px;display:flex;flex-direction:column;gap:4px;transition:all 0.15s;${c.active ? `box-shadow:0 1px 3px rgba(15,23,42,0.04),0 6px 20px ${c.accent.border}1f;` : 'box-shadow:0 1px 2px rgba(15,23,42,0.03);'}">
+          <a href="${c.target}" style="text-decoration:none;color:inherit;background:#fff;border:${c.active ? '1.5px' : '1px'} solid ${c.active ? c.accent.border : '#DFE1E5'};border-radius:12px;padding:14px 14px 13px;display:flex;flex-direction:column;gap:4px;transition:all 0.15s;${c.active ? `box-shadow:0 1px 3px rgba(15,23,42,0.04),0 6px 20px ${c.accent.border}1f;` : 'box-shadow:0 1px 2px rgba(15,23,42,0.03);'}">
             <div style="display:flex;align-items:center;justify-content:space-between;">
               <span style="font-size:9.5px;font-weight:700;color:${c.active ? c.accent.fg : '#565B66'};letter-spacing:0.18em;font-family:'Inter',sans-serif;">${c.step}</span>
               ${c.active ? `<span style="width:6px;height:6px;background:${c.accent.dot};border-radius:50%;display:inline-block;"></span>` : ''}
@@ -1050,7 +1050,7 @@
         <div id="confirm-list"></div>
       </section>
 
-      <section class="board-section" id="section-recording" style="margin-top:36px;">
+      <section class="board-section" id="section-recording" style="margin-top:20px;">
         <div style="display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:12px;margin:0 0 14px;padding-bottom:10px;border-bottom:1px solid #DFE1E5;">
           <div>
             <div style="font-size:10.5px;font-weight:700;color:#565B66;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:3px;">Upcoming &amp; Active</div>
@@ -1071,7 +1071,7 @@
         <div id="bookings-list"></div>
       </section>
 
-      <section class="board-section" id="section-aftercare" style="margin-top:36px;">
+      <section class="board-section" id="section-aftercare" style="margin-top:20px;">
         <div style="margin:0 0 14px;padding-bottom:10px;border-bottom:1px solid #DFE1E5;">
           <div style="font-size:10.5px;font-weight:700;color:#565B66;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:3px;">Stuck / Re-engage</div>
           <h2 style="font-family:'Noto Sans JP',sans-serif;font-size:18px;margin:0;font-weight:600;color:#14171C;">対応漏れ ${aftercare.length > 0 ? `<span style="font-size:11px;background:#9A3412;color:#fff;padding:2px 8px;border-radius:10px;margin-left:8px;font-family:'Inter',sans-serif;font-weight:700;letter-spacing:0.04em;">${aftercare.length} 名</span>` : ''}</h2>
@@ -1082,7 +1082,7 @@
             <strong style="color:#14171C;">途中で止まってる方はいません</strong> · 該当者が出てきたら自動でここに並びます
           </div>` :
             aftercare.map(a => `
-              <div style="background:#FFFFFF;border:1px solid #DFE1E5;border-left:4px solid ${a.stage==='completion-pending'?'#06c755':(a.days>=14?'#b91c3c':(a.days>=7?'#f59e0b':'#0ea5e9'))};border-radius:10px;padding:14px 18px;margin-bottom:8px;display:grid;grid-template-columns:36px 1fr auto;gap:14px;align-items:center;">
+              <div style="background:#FFFFFF;border:1px solid ${a.stage==='completion-pending'?'#15803d':(a.days>=14?'#9A3412':'#DFE1E5')};border-radius:12px;padding:13px 14px;margin-bottom:8px;display:grid;grid-template-columns:36px 1fr auto;gap:14px;align-items:center;">
                 <div style="background:#06c755;color:#fff;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;font-family:inherit;">L</div>
                 <div>
                   <strong style="font-size:14px;">${escapeHtml(a.customerName)} 様</strong>
