@@ -11312,7 +11312,15 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
       });
       selectId = sorted[0]?.id || null;
     }
-    if (selectId) _lchSelectClient(selectId);
+    // ★ 2026-09-16 スマホは一覧を最初に出す。
+    //   以前は最新のトークを勝手に開いていて、
+    //   「LINE送信」を押すといきなり誰かの会話画面になっていた。
+    var _lchMobile = false;
+    try { _lchMobile = window.matchMedia('(max-width: 768px)').matches; } catch (_) {}
+    if (selectId && !_lchMobile) _lchSelectClient(selectId);
+    if (_lchMobile) {
+      try { document.querySelector('.lch-wrap')?.classList.remove('chat-active'); } catch (_) {}
+    }
   }
 
   function _lchRenderList(clients) {
