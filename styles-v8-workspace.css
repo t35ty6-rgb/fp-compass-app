@@ -14080,3 +14080,41 @@ button.btn-rec-start:not([data-rec-mode="inperson"]):hover { background: #116534
   /* --- コンパちゃんは顧客タブでも出す (どこからでも相談できるように) --- */
   body.tab-clients-active #mbFab { display: flex !important; }
 }
+
+/* ============================================================
+   2026-09-16 (6) スマホ全タブ 余白の圧縮
+   相談タブだけ詰まっていて、顧客・履歴・ホームが緩かったのを揃える
+   ============================================================ */
+@media (max-width: 768px) {
+  /* --- 各ページの見出しブロック --- */
+  .page-head { margin-bottom: 10px !important; padding-bottom: 0 !important; }
+  .view[data-view="dashboard"] .page-head { padding: 8px 4px 6px !important; }
+  .view[data-view="dashboard"] .hero-sub { margin: 0 0 10px !important; }
+
+  /* --- ホーム --- */
+  .m-screen-home { padding: 4px 2px 12px !important; }
+  .m-greet { padding: 12px 14px !important; margin-bottom: 10px !important; }
+  .mega-hero { padding: 14px 14px 14px !important; margin: 0 0 12px !important; }
+  .mega-hero-lead { margin: 0 0 10px !important; }
+  .mega-hero-stats { margin-top: 10px !important; }
+  .m-today-cta { padding: 10px 16px !important; }
+  .view[data-view="dashboard"] .stat-row,
+  .view[data-view="dashboard"] .stat-grid { margin-bottom: 12px !important; }
+
+  /* --- 一覧・カード共通 --- */
+  .board-section, .sched-table { margin-bottom: 12px !important; }
+  .hub-section-title { padding: 10px 14px !important; }
+
+  /* --- 顧客リストのカード (1件あたりの縦を詰める) --- */
+  table.clients tbody tr { padding: 10px 28px 10px 12px !important; }
+  table.clients tbody tr td:first-child { padding-bottom: 0 !important; }
+
+  /* --- 履歴 / 誕生日 などのカード --- */
+  [data-view="meetingHistory"] .board-section > *:not(h2),
+  [data-view="birthdayTab"] .board-section > *:not(h2) { padding: 0 12px 12px !important; }
+  [data-view="birthdayTab"] div[style*="border-radius"] { padding: 12px 12px 10px !important; }
+
+  /* --- モーダル内 --- */
+  .cd-modal .cd-section { padding: 12px 14px !important; }
+  .cd-modal .cd-pane { padding: 0 0 16px !important; }
+}
