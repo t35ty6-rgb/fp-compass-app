@@ -1024,7 +1024,7 @@
         `).join('')}
       </div>
       <!-- フロー説明 (2026-08-31 owner GO で 「仮予約 → admin 確定」 に 差替) -->
-      <div style="background:#fdfbf4;border:1px solid #e8d9a8;border-radius:8px;padding:14px 20px;margin-bottom:36px;font-size:11.5px;color:#5e4d1a;line-height:1.7;">
+      <div class="fp-lead-howto" style="background:#fdfbf4;border:1px solid #e8d9a8;border-radius:8px;padding:14px 20px;margin-bottom:36px;font-size:11.5px;color:#5e4d1a;line-height:1.7;">
         <div style="font-size:10px;font-weight:700;color:#8b7d5d;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:6px;">How it works</div>
         <strong style="color:#1f2a3f;font-weight:700;">01a</strong> 客 が アンケート + 候補日 3つ を LINE で 送る → 「📤 候補 送付 済 · お客様 タップ 待ち」 で 表示 (この段階 で は FP は 確定 できない) →
         <strong style="color:#1f2a3f;font-weight:700;">01b</strong> 客 が LINE で 候補X tap → <strong style="color:#166534;">「内容 を 確認 して 再度 ご連絡 させて頂きます」</strong> ack が 客 に 届く → 「🎯 お客様 選択 済 · 確定 待ち」 に 切替 →
@@ -1043,7 +1043,7 @@
             <span>自分の Google カレンダーを並べて表示</span>
           </button>
         </div>
-        <p style="color:#6b7280;font-size:12.5px;margin:0 0 18px;line-height:1.65;letter-spacing:0.02em;">
+        <p class="fp-lead-note" style="color:#6b7280;font-size:12.5px;margin:0 0 18px;line-height:1.65;letter-spacing:0.02em;">
           <strong style="color:#3730a3;">📤 送付 直後</strong>: 「お客様 タップ 待ち」 表示、 確定 button は 押せない (客 が LINE で 選ぶ まで 待機)<br>
           <strong style="color:#166534;">🎯 お客様 タップ 後</strong>: 選択 した slot だけ 緑 button で 目立ち、 「この日で確定」 押す と Zoom URL + 確定 message + カレンダー まで 自動 発火 → 下 の Zoom 打ち合わせ 予定 に 移動
         </p>
@@ -1067,7 +1067,7 @@
             </select>
           </div>
         </div>
-        <p style="color:#6b7280;font-size:12.5px;margin:0 0 18px;line-height:1.65;letter-spacing:0.02em;">確定済みの予約 / 当日になったら「Zoomを開始」 → あとは Zoom を 終了 する だけ。 録画 と 議事録 は 自動 で 顧客台帳 に 反映</p>
+        <p class="fp-lead-note" style="color:#6b7280;font-size:12.5px;margin:0 0 18px;line-height:1.65;letter-spacing:0.02em;">確定済みの予約 / 当日になったら「Zoomを開始」 → あとは Zoom を 終了 する だけ。 録画 と 議事録 は 自動 で 顧客台帳 に 反映</p>
         <div id="bookings-list"></div>
       </section>
 
@@ -1076,7 +1076,7 @@
           <div style="font-size:10.5px;font-weight:700;color:#8b7d5d;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:3px;">Stuck / Re-engage</div>
           <h2 style="font-family:'Noto Sans JP',serif;font-size:18px;margin:0;font-weight:600;color:#1f2a3f;">対応漏れ ${aftercare.length > 0 ? `<span style="font-size:11px;background:#9a5a18;color:#fff;padding:2px 8px;border-radius:10px;margin-left:8px;font-family:'Inter',sans-serif;font-weight:700;letter-spacing:0.04em;">${aftercare.length} 名</span>` : ''}</h2>
         </div>
-        <p style="color:#6b7280;font-size:12.5px;margin:0 0 18px;line-height:1.65;letter-spacing:0.02em;">アンケート途中・候補日提示後・面談キャンセル等で<strong>途中で止まっている方</strong> / LINEで追撃メッセージを送りましょう</p>
+        <p class="fp-lead-note" style="color:#6b7280;font-size:12.5px;margin:0 0 18px;line-height:1.65;letter-spacing:0.02em;">アンケート途中・候補日提示後・面談キャンセル等で<strong>途中で止まっている方</strong> / LINEで追撃メッセージを送りましょう</p>
         <div id="aftercare-list">
           ${aftercare.length === 0 ? `<div style="background:#fff;border:1px dashed #e8e2d4;border-radius:8px;padding:20px 26px;color:#6b7280;font-size:12.5px;line-height:1.7;letter-spacing:0.02em;">
             <strong style="color:#1f2a3f;">途中で止まってる方はいません</strong> · 該当者が出てきたら自動でここに並びます
@@ -1099,6 +1099,14 @@
 
       <div id="surveys-list" style="margin-top:18px;"></div>
     `;
+    // ★ スマホ: 確定待ち一覧を NEXT ACTION の直後へ引き上げる
+    try {
+      if (window.matchMedia('(max-width: 768px)').matches) {
+        const sc = v.querySelector('#section-confirm');
+        const heroLink = v.querySelector('a[href="#section-confirm"]');
+        if (sc) v.insertBefore(sc, (heroLink && heroLink.nextSibling) || v.firstChild);
+      }
+    } catch (e) {}
     fillConfirmList();
     fillBookingsList();
     // フォローアップ追撃ボタン
@@ -1393,6 +1401,19 @@
   }
 
   // Sheets が自動で日付型に変換してしまった ISO 文字列を JST の "YYYY-MM-DD / 帯+時間" に戻す
+  // ★ 確定待ちカードの開閉状態 (45秒ごとの再描画で閉じないように保持)
+  const _fpPendOpen = new Set();
+  // ★ 2026-09-14 10:00 → 9月14日(日) 10:00
+  function fmtSlotJa(parsed) {
+    if (!parsed) return '';
+    const d = String(parsed.dateStr || '');
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) return parsed.display || '';
+    const dt = new Date(d + 'T00:00:00+09:00');
+    if (isNaN(dt.getTime())) return parsed.display || '';
+    const w = ['日','月','火','水','木','金','土'][dt.getDay()];
+    return (dt.getMonth() + 1) + '月' + dt.getDate() + '日(' + w + ') ' + (parsed.slotStr || '').trim();
+  }
+
   function parseSlotString(raw) {
     if (!raw) return { dateStr: '', slotStr: '', display: '' };
     const str = String(raw);
@@ -1623,6 +1644,7 @@
       //   handler 互換のため data-focus-cal / data-reschedule / data-slot-confirm は据え置き。
       // ============================================================
       const canConfirm = !!s._pendingSelection;
+      const isOpen = canConfirm || _fpPendOpen.has(String(s.userId || ''));
       const chosenIdx  = canConfirm ? parseInt(s._pendingSelection.index, 10) - 1 : -1;
       const chosenText = canConfirm
         ? (s._pendingSelection.slotText || s._pendingSelection.chosen || (slots[chosenIdx] || ''))
@@ -1632,14 +1654,14 @@
         ? '<span class="fp-pend-badge fp-pend-badge-go">確定できます</span>'
         : '<span class="fp-pend-badge fp-pend-badge-wait">返事待ち</span>';
       const headSub = canConfirm
-        ? escapeHtml((parsedChosen && parsedChosen.display) || chosenText) + ' を希望'
-        : escapeHtml(tsJst) + ' に候補日を送信';
+        ? escapeHtml(fmtSlotJa(parsedChosen) || chosenText) + ' を希望'
+        : escapeHtml(String(tsJst).split(' ')[0]) + ' に送信済み';
 
       const detail = canConfirm
         ? `
             <div class="fp-pend-when">
               <div class="fp-pend-when-label">お客様が選んだ日時</div>
-              <div class="fp-pend-when-value">${escapeHtml((parsedChosen && parsedChosen.display) || chosenText)}</div>
+              <div class="fp-pend-when-value">${escapeHtml(fmtSlotJa(parsedChosen) || chosenText)}</div>
             </div>
             ${s.q5_悩み ? `<div class="fp-pend-voice">${escapeHtml(s.q5_悩み)}</div>` : ''}
             <button class="slot-confirm-btn fp-pend-go" data-slot-confirm
@@ -1656,15 +1678,15 @@
               <div class="fp-pend-when-label">送った候補日</div>
               ${slots.map((slot, i) => {
                 const ps = parseSlotString(slot);
-                return `<div class="fp-pend-slot"><span class="fp-pend-slot-no">第${i + 1}希望</span>${escapeHtml(ps.display)}</div>`;
+                return `<div class="fp-pend-slot"><span class="fp-pend-slot-no">第${i + 1}希望</span>${escapeHtml(fmtSlotJa(ps))}</div>`;
               }).join('')}
             </div>
             ${s.q5_悩み ? `<div class="fp-pend-voice">${escapeHtml(s.q5_悩み)}</div>` : ''}
             <div class="fp-pend-hint">お客様が LINE で日時を選ぶまで待ちます。</div>`;
 
       return `
-        <div data-pending-card data-uid="${escapeHtml(s.userId || '')}" class="fp-pend${canConfirm ? ' fp-pend-go-state' : ''}">
-          <button type="button" class="fp-pend-head" data-pend-toggle aria-expanded="${canConfirm ? 'true' : 'false'}">
+        <div data-pending-card data-uid="${escapeHtml(s.userId || '')}" class="fp-pend${canConfirm ? ' fp-pend-go-state' : ''}${isOpen ? ' fp-pend-open' : ''}">
+          <button type="button" class="fp-pend-head" data-pend-toggle aria-expanded="${isOpen ? 'true' : 'false'}">
             ${avatarHtml}
             <span class="fp-pend-id">
               <span class="fp-pend-name">${escapeHtml(displayName)} 様</span>
@@ -1673,7 +1695,7 @@
             ${badge}
             <span class="fp-pend-chev" aria-hidden="true">›</span>
           </button>
-          <div class="fp-pend-body"${canConfirm ? '' : ' hidden'}>
+          <div class="fp-pend-body"${isOpen ? '' : ' hidden'}>
             ${detail}
             <div class="fp-pend-subrow">
               <button data-focus-cal="${escapeHtml(s.userId || '')}" data-name="${escapeHtml(displayName)}" class="fp-pend-sub-btn" type="button">予定表で見る</button>
@@ -1693,6 +1715,8 @@
         body.hidden = !open;
         head.setAttribute('aria-expanded', open ? 'true' : 'false');
         card.classList.toggle('fp-pend-open', open);
+        const cuid = String(card.dataset.uid || '');
+        if (open) _fpPendOpen.add(cuid); else _fpPendOpen.delete(cuid);
       });
     });
     bindConfirmButtons();

@@ -13847,3 +13847,31 @@ body:not([data-home-view]) [data-view-target="cal"] { display: none !important; 
   content: none !important;
   display: none !important;
 }
+
+/* ============================================================
+   2026-09-16  相談タブ: スマホで本題(確定待ち)を先に出す + カード微修正
+   ============================================================ */
+@media (max-width: 768px) {
+  /* 長い解説文・How it works はスマホでは畳む (3ブロック分のスクロールを削る) */
+  .fp-lead-note,
+  .fp-lead-howto { display: none !important; }
+}
+
+/* 閉じた行: 補助テキストが「…」で切れないように、バッジ側を細くする */
+.fp-pend-head .fp-pend-badge {
+  padding: 3px 8px !important;
+  font-size: 10.5px !important;
+  flex-shrink: 0;
+}
+.fp-pend-head .fp-pend-sub {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 下段の小ボタンが2行に折れていたので1行に固定 */
+.fp-pend-subrow .fp-pend-sub-btn {
+  white-space: nowrap !important;
+  padding: 10px 12px !important;
+  font-size: 12.5px !important;
+}
