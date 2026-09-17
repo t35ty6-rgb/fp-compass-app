@@ -14339,3 +14339,29 @@ button.btn-rec-start:not([data-rec-mode="inperson"]):hover { background: #116534
     padding: 8px 12px 10px !important;
   }
 }
+
+/* ============================================================
+   13. 2026-09-18 スマホ 実機 バグ 2件 (使い方動画 の 撮影 中 に 実測 で 発覚)
+
+   (a) 客カード の 中 から 開く モーダル が 客カード の 裏 に 回って いた。
+       2026-09-02 の P0 fix で .modal-overlay を z-index:10400 に 上げた 時、
+       JS 側 で z-index:10200 を 直書き して いる overlay
+       (openSlotsSendModal = 候補日 3つ 送る / openScheduleZoomModal = 日時 指定 Zoom)
+       が 相対的 に 下 に なった。 スマホ から 「候補日 3つ 送る」 を 押すと
+       何も 起きない ように 見える 状態 だった (DOM に は 出て いた)。
+
+   (b) 「Zoom で 面談 する」「LINE で 返信 する」 の ボトムシート が 画面 外 に 出て いた。
+       .cd-modal の contain:layout が fixed 子孫 の 包含ブロック に なる ため、
+       position:fixed の シート が viewport では なく 3300px 級 の モーダル本体 を
+       基準 に 配置 され、 実質 押しても 見えなかった。
+       contain から layout を 外す (style だけ 残す) と 直る。
+   ============================================================ */
+.cd-modal {
+  contain: style;   /* was: layout style — fixed 子孫 (fp-sheet) が 画面外 に 飛ぶ */
+}
+@media (max-width: 768px) {
+  div[style*="z-index: 10200"],
+  div[style*="z-index:10200"] {
+    z-index: 10600 !important;   /* .modal-overlay(10400) · #mobile-bottomnav(10300) より 上 */
+  }
+}
