@@ -14324,3 +14324,18 @@ button.btn-rec-start:not([data-rec-mode="inperson"]):hover { background: #116534
     max-height: none !important;
   }
 }
+
+/* ============================================================
+   2026-09-17 (12) コンパちゃんはタブに集約したので重複を撤去
+   ・浮いていた丸ボタン (#mbFab) … (11) で撤去済み
+   ・ドロワー下部の大きなコンパちゃんボタンも不要に
+   ============================================================ */
+@media (max-width: 768px) {
+  #sidebar-kompa-trigger { display: none !important; }
+  /* コンパちゃんが抜けた分、ドロワー下段の固定をやめて詰める */
+  body.mobile-nav-open .sidebar-foot {
+    position: static !important;
+    border-top: 1px solid #DFE1E5 !important;
+    padding: 8px 12px 10px !important;
+  }
+}
