@@ -7798,10 +7798,10 @@
           // ★ 2026-09-20: 編集 保存 で 元 entry の 属性 を 落とさ ない
           //   (落とす と 手入力 の 面談 が 編集 した 瞬間 「Zoom N回目 / 録画開始」 表示 に 化ける)
           if (existing.source) entry.source = existing.source;
-          if (existing.title) entry.title = existing.title;
-          // ts/createdAt は 従来 送って いなかった field。 録画 由来 の 既存 議事録 の
-          // upsert キー を 変えて しまわ ない よう、 手入力 の 時 だけ 付ける。
+          // title/ts/createdAt は 従来 送って いなかった field。 録画 由来 の 既存 議事録 の
+          // 保存 挙動 を 変えて しまわ ない よう、 手入力 の 時 だけ 付ける。
           if (_isManualAi(existing)) {
+            if (existing.title) entry.title = existing.title;
             if (existing.ts) entry.ts = existing.ts;
             if (existing.createdAt) entry.createdAt = existing.createdAt;
           }
