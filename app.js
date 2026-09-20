@@ -4477,6 +4477,19 @@
         </div>
 
         <div class="form-section">
+          <h3>前回の面談 (任意)</h3>
+          <div class="form-grid">
+            <div class="form-row"><label>面談日</label><input type="date" id="f-mtg-date" value=""></div>
+            <div class="form-row"><label>時刻</label><input type="time" id="f-mtg-time" value="10:00"></div>
+          </div>
+          <div class="form-row" style="margin-top:10px;"><label>議題</label><input type="text" id="f-mtg-title" placeholder="例: 教育費と住宅ローンの見直し" style="width:100%;"></div>
+          <div class="form-row" style="margin-top:10px;"><label>面談の内容</label>
+            <textarea id="f-mtg-body" rows="6" placeholder="話したことをそのまま書いてください。登録すると議事録タブに残り、AIの提案にも使われます。" style="width:100%;resize:vertical;"></textarea>
+          </div>
+          <div style="font-size:12.5px;color:var(--muted);margin-top:6px;">録音のない面談 (過去の面談・対面・電話) をここで記録に残せます。日付と内容を入れて登録してください。あとから客カードの「面談 を 手入力」ボタンでも追加できます。</div>
+        </div>
+
+        <div class="form-section">
           <h3>メモ</h3>
           <textarea id="f-note" rows="3" style="width:100%;resize:vertical;">${escapeHtml(c.note || '')}</textarea>
         </div>
@@ -4585,6 +4598,28 @@
             console.log('[persist] LINE profile fetched:', _rd.displayName, _rd.pictureUrl ? 'YES' : 'no');
           }
         } catch (e) { console.warn('[persist] LINE profile fetch fail (要 friend 追加 or token 有効):', e?.message || e); }
+      }
+      // ★ 2026-09-20 owner fb: 登録 と 同時 に 「前回の面談」 を 議事録 として 保存
+      try {
+        const _mDate = (document.getElementById('f-mtg-date') || {}).value || '';
+        const _mBody = ((document.getElementById('f-mtg-body') || {}).value || '').trim();
+        if (_mDate && _mBody.length >= 10 && window.FpManualMeeting) {
+          await window.FpManualMeeting.save({
+            customerId: _persistFsDocId(c),
+            customerName: c.name || '',
+            lineFriendId: c.lineFriendId || '',
+            date: _mDate,
+            time: (document.getElementById('f-mtg-time') || {}).value || '10:00',
+            title: (document.getElementById('f-mtg-title') || {}).value || '',
+            body: _mBody,
+            concerns: [],
+          });
+          if (!c.lastContact || c.lastContact < _mDate) { c.lastContact = _mDate; saveClientsToLS(); }
+        } else if (_mDate && _mBody.length > 0 && _mBody.length < 10) {
+          alert('⚠ 面談の内容が短すぎます (10字以上)。顧客は登録しましたが、面談記録は保存していません。');
+        }
+      } catch (e) {
+        alert('⚠ 顧客は登録しましたが、面談記録の保存に失敗しました: ' + ((e && e.message) || e));
       }
       close();
       // モーダルが開いていれば閉じる
@@ -6952,6 +6987,11 @@
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
                 <span style="text-align:left;line-height:1.3;">文字起こし text を 貼付 → 議事録<span style="display:block;font-size:12px;font-weight:600;color:#94A3B8;margin-top:1px;">iOS Voice Memos の コピー を そのまま (Whisper より 高精度)</span></span>
               </button>
+              <!-- 2026-09-20 owner fb「手動登録した客の 前回面談 を 手入力 したい」: 録音 なし の 面談 を 後から 記録 -->
+              <button id="cd-manual-meeting-btn" data-client-id="${escapeHtml(c.id)}" style="width:100%;background:#fff;color:#0F766E;border:2px solid #0F766E;padding:12px 20px;border-radius:12px;font-size:13px;font-weight:900;cursor:pointer;font-family:'Noto Sans JP',sans-serif;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:8px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                <span style="text-align:left;line-height:1.3;">面談 を 手入力 → 記録 に 残す<span style="display:block;font-size:12px;font-weight:600;color:#94A3B8;margin-top:1px;">過去 の 面談 · 録音 なし の 対面/電話 を 後から 登録</span></span>
+              </button>
               <button id="cd-audio-upload-help" type="button" style="display:none;" hidden></button>
             </div>
           </div>
@@ -8602,6 +8642,29 @@ ${ctxText}${surveyTxt}`;
           } else {
             alert('⚠ transcript upload module 未 load、 数秒 後 再試行');
           }
+        });
+      });
+    }
+    // ★ 2026-09-20 owner fb: 面談 を 手入力 → /api/save-ai-result (音声 upload と 同 経路)
+    const manualMtgBtn = document.getElementById('cd-manual-meeting-btn');
+    if (manualMtgBtn && !manualMtgBtn._bound) {
+      manualMtgBtn._bound = true;
+      manualMtgBtn.addEventListener('click', () => {
+        if (!window.FpManualMeeting) { alert('⚠ 手入力 module 未 load、 数秒 後 再試行'); return; }
+        window.FpManualMeeting.open({
+          customerId: c._fsCustomerId || c.id,
+          customerName: c.name || 'お客様',
+          lineFriendId: c.lineFriendId || '',
+          onSaved: () => {
+            try { c.lastContact = (new Date(Date.now() + 9 * 3600 * 1000)).toISOString().slice(0, 10); } catch (_) {}
+            const tabBtn = document.querySelector('.cd-tab[data-cdtab="meetings"]');
+            if (tabBtn) tabBtn.click();
+            const panel = document.querySelector('[data-cdpanel="meetings"]');
+            if (panel && typeof renderMeetingRecordsBlock === 'function') {
+              const _h = renderMeetingRecordsBlock(c);
+              if (_h) panel.innerHTML = _h;
+            }
+          },
         });
       });
     }
@@ -10592,12 +10655,14 @@ ${ctxText}${surveyTxt}`;
                       const dt = a.ts || a.createdAt;
                       const hhmm = dt ? fmtJstTime(dt) : '';
                       const cname = (client && (client.name || client.customerName)) || a.customerName || '';
-                      const rawTitle = a.title || (Array.isArray(a.key_concerns) && a.key_concerns[0]) || `Zoom ${zN}回目`;
+                      // ★ 2026-09-20: 手入力 の 面談 は 録画 じゃない → 📹/Zoom N回目 を 出さない
+                      const isManual = String(a.source || '') === 'manual';
+                      const rawTitle = a.title || (Array.isArray(a.key_concerns) && a.key_concerns[0]) || (isManual ? '面談 記録 (手入力)' : `Zoom ${zN}回目`);
                       const label = [hhmm, escapeHtml(String(rawTitle).slice(0, 30)), cname ? escapeHtml(cname) + ' 様' : ''].filter(Boolean).join(' ');
-                      return `<div class="fp-meeting-card-eyebrow" style="font-size:13px !important;font-weight:900 !important;color:#1B3A5C !important;letter-spacing:0 !important;"><span class="fp-meeting-toggle-icon" style="display:inline-block;width:14px;font-size:11.5px;color:#94A3B8;margin-right:4px;transition:transform 0.15s;">▶</span>📹 ${label}</div>`;
+                      return `<div class="fp-meeting-card-eyebrow" style="font-size:13px !important;font-weight:900 !important;color:#1B3A5C !important;letter-spacing:0 !important;"><span class="fp-meeting-toggle-icon" style="display:inline-block;width:14px;font-size:11.5px;color:#94A3B8;margin-right:4px;transition:transform 0.15s;">▶</span>${isManual ? '✍️' : '📹'} ${label}</div>`;
                     })()}
-                    <div class="fp-meeting-card-date" style="font-size:12.5px;font-weight:600;color:#6B7280;">Zoom ${zN}回目 · ${escapeHtml(fmtDateRobust(a.ts || a.createdAt) || fmtDateRobust(a.date))} ${escapeHtml(fmtJstTime(a.ts || a.createdAt))}</div>
-                    ${a.ts || a.createdAt ? `<div class="fp-meeting-card-recstart" style="font-size:13px;color:#6B7280;font-weight:600;margin-top:3px;">録画開始: ${escapeHtml(fmtJstTime(a.ts || a.createdAt))} (${escapeHtml(fmtDateRobust(a.ts || a.createdAt))})</div>` : ''}
+                    <div class="fp-meeting-card-date" style="font-size:12.5px;font-weight:600;color:#6B7280;">${String(a.source || '') === 'manual' ? '✍️ 手入力 の 記録' : `Zoom ${zN}回目`} · ${escapeHtml(fmtDateRobust(a.ts || a.createdAt) || fmtDateRobust(a.date))} ${escapeHtml(fmtJstTime(a.ts || a.createdAt))}</div>
+                    ${(a.ts || a.createdAt) && String(a.source || '') !== 'manual' ? `<div class="fp-meeting-card-recstart" style="font-size:13px;color:#6B7280;font-weight:600;margin-top:3px;">録画開始: ${escapeHtml(fmtJstTime(a.ts || a.createdAt))} (${escapeHtml(fmtDateRobust(a.ts || a.createdAt))})</div>` : ''}
                   </div>
                   <div class="fp-meeting-card-actions" style="display:flex;gap:6px;flex-wrap:wrap;">
                     <button class="fp-meeting-todo-review" data-booking-ts="${escapeHtml(a.bookingTs || '')}" data-ai-ts="${escapeHtml(a.ts || a.createdAt || '')}" data-client-id="${escapeHtml(client?.id || '')}" data-client-name="${escapeHtml(client?.name || a.customerName || '')}" style="background:#EEF0FF;border:1.5px solid #5B5BF0;color:#5B5BF0;font-size:13px;font-weight:700;padding:5px 11px;border-radius:5px;cursor:pointer;font-family:inherit;">📋 TODO 候補 レビュー</button>
@@ -10615,7 +10680,7 @@ ${ctxText}${surveyTxt}`;
                   </div>` : ''}
                 ${a.summary ? `
                   <div class="fp-meeting-block">
-                    <div class="fp-meeting-block-label">面談記録 (Claude)</div>
+                    <div class="fp-meeting-block-label">${String(a.source || '') === 'manual' ? '面談記録 (手入力)' : '面談記録 (Claude)'}</div>
                     <div class="fp-meeting-body fp-minutes-view fp-summary-structured" data-raw-summary="${escapeHtml(a.summary)}">${window.renderStructuredSummary ? window.renderStructuredSummary(a.summary) : escapeHtml(a.summary)}</div>
                   </div>` : ''}
                 ${a.key_concerns && a.key_concerns.length > 0 ? `
