@@ -4759,9 +4759,17 @@
         if (!c) return;
         if (!Array.isArray(c.lineHistory)) c.lineHistory = [];
         const ts = String(m.ts || '').slice(0, 19);
-        const seen = c.lineHistory.some(h => String(h.ts || '').slice(0, 19) === ts && (h.text || h.message) === m.text);
+        const seen = c.lineHistory.some(h => String(h.ts || '').slice(0, 19) === ts && (h.text || h.message) === m.text && (!m.mediaPath || h.mediaPath === m.mediaPath));
         if (seen) return;
         const entry = { from: 'user', direction: 'in', text: m.text, message: m.text, ts: m.ts, date: String(m.ts || '').slice(0, 10), source: 'gas-webhook' };
+        // ★ 2026-09-20: 客 から 届いた 写真/ファイル の 参照 を 引き継ぐ (無い時 は 従来どおり)
+        if (m.mediaPath) {
+          entry.mediaPath = m.mediaPath;
+          entry.messageType = m.messageType || '';
+          entry.mediaContentType = m.mediaContentType || '';
+          entry.mediaFileName = m.mediaFileName || '';
+          entry.mediaBytes = m.mediaBytes || 0;
+        }
         c.lineHistory.push(entry);
         try {
           const key = 'fp-line-history-' + c.id;

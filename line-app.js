@@ -7531,6 +7531,12 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
               date: String(ts).slice(0, 10),
               direction: md.direction || md.from || 'unknown',
               from: md.direction === 'out' ? 'fp' : 'user',
+              // ★ 2026-09-20: 客 から 届いた 写真/ファイル の 参照 を 落とさ ない
+              messageType: md.messageType || '',
+              mediaPath: md.mediaPath || '',
+              mediaContentType: md.mediaContentType || '',
+              mediaFileName: md.mediaFileName || '',
+              mediaBytes: md.mediaBytes || 0,
               _fromFirestore: true,
             });
           });
@@ -7650,7 +7656,7 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
             if (!c) return;
             if (!Array.isArray(c.lineHistory)) c.lineHistory = [];
             const ts = String(m.ts || '').slice(0, 19);
-            const seen = c.lineHistory.some(h => String(h.ts || '').slice(0, 19) === ts && (h.text || h.message) === m.text);
+            const seen = c.lineHistory.some(h => String(h.ts || '').slice(0, 19) === ts && (h.text || h.message) === m.text && (!m.mediaPath || h.mediaPath === m.mediaPath));
             if (seen) return;
             // ★ 2026-08-17 owner「こっち から 送ってる の が hub に 反映 されて ない」bug fix:
             //   direction を hardcode 'in' して た → owner 送信 out msg も 「客 送信 in」 で 表示 → 送信 分 消え
@@ -7663,6 +7669,14 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
               date: String(m.ts || '').slice(0, 10),
               source: m.source || 'gas-webhook',
             };
+            // ★ 2026-09-20: 写真/ファイル の 参照 を lineHistory に 引き継ぐ (無い時 は 従来どおり)
+            if (m.mediaPath) {
+              entry.mediaPath = m.mediaPath;
+              entry.messageType = m.messageType || '';
+              entry.mediaContentType = m.mediaContentType || '';
+              entry.mediaFileName = m.mediaFileName || '';
+              entry.mediaBytes = m.mediaBytes || 0;
+            }
             c.lineHistory.push(entry);
             // 独立キーにも保存 (リロード耐性) — 古いLINE消すと FPの業務に支障 → cap せず 全保持
             try {
@@ -11030,6 +11044,83 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
   function _lchEscape(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
   }
+  // ============================================================
+  // 2026-09-20 owner fb「LINE で 写メ を 受け取った 時 に 保存 できる?」
+  //   lineWebhook が Cloud Storage に 置いた 実体 を、 ここ で 表示 する。
+  //   URL は 描画 後 に getDownloadURL で 遅延 解決 (Storage rules が tenant を 判定)。
+  //   mediaPath が 無い message は 一切 通ら ない = 既存 の text 表示 に 影響 なし。
+  // ============================================================
+  const _lchMediaUrlCache = new Map();
+
+  function _lchIsImageMedia(m) {
+    if (!m) return false;
+    if (String(m.messageType || '') === 'image') return true;
+    return /^image\//.test(String(m.mediaContentType || ''));
+  }
+
+  function _lchMediaLabel(m) {
+    const t = String(m.messageType || '');
+    if (t === 'video') return '🎬 動画';
+    if (t === 'audio') return '🎤 音声';
+    if (t === 'file') return '📎 ' + (m.mediaFileName || 'ファイル');
+    if (t === 'image') return '🖼 画像';
+    return String(m.text || m.message || 'ファイル');
+  }
+
+  function _lchMediaHtml(m) {
+    const p = _lchEscape(m.mediaPath);
+    const kb = m.mediaBytes ? Math.max(1, Math.round(m.mediaBytes / 1024)) + ' KB' : '';
+    if (_lchIsImageMedia(m)) {
+      return '<a class="lch-media-link" data-line-media="' + p + '" href="#" target="_blank" rel="noopener"'
+        + ' style="display:block;text-decoration:none;">'
+        + '<img data-line-media-img="' + p + '" alt="お客様 から の 画像" loading="lazy"'
+        + ' style="display:block;max-width:220px;width:100%;height:auto;border-radius:10px;background:#E2E8F0;min-height:90px;">'
+        + '<span data-line-media-msg style="display:block;font-size:11.5px;color:#64748B;margin-top:4px;">読み込み中…</span>'
+        + '</a>';
+    }
+    return '<a class="lch-media-link" data-line-media="' + p + '" href="#" target="_blank" rel="noopener"'
+      + ' style="display:inline-flex;align-items:center;gap:8px;padding:9px 12px;background:#F1F5F9;border:1px solid #CBD5E1;'
+      + 'border-radius:10px;text-decoration:none;color:#0F172A;font-size:13px;font-weight:700;">'
+      + _lchEscape(_lchMediaLabel(m))
+      + (kb ? '<span style="font-weight:600;color:#64748B;font-size:11.5px;">' + kb + '</span>' : '')
+      + '</a>';
+  }
+
+  async function _lchMediaUrl(path) {
+    if (_lchMediaUrlCache.has(path)) return _lchMediaUrlCache.get(path);
+    const { getStorage, ref, getDownloadURL } =
+      await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-storage.js');
+    const { getApps } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js');
+    const app = (window.__fp && window.__fp.app) || getApps()[0];
+    if (!app) throw new Error('firebase app 未 init');
+    const url = await getDownloadURL(ref(getStorage(app), path));
+    _lchMediaUrlCache.set(path, url);
+    return url;
+  }
+
+  function _lchHydrateMedia(root) {
+    if (!root) return;
+    const links = root.querySelectorAll('[data-line-media]');
+    if (!links.length) return;
+    links.forEach(a => {
+      if (a._mediaBound) return;
+      a._mediaBound = true;
+      const path = a.getAttribute('data-line-media');
+      const img = a.querySelector('[data-line-media-img]');
+      const msg = a.querySelector('[data-line-media-msg]');
+      _lchMediaUrl(path).then(url => {
+        a.href = url;
+        if (img) img.src = url;
+        if (msg) msg.remove();
+      }).catch(e => {
+        console.warn('[lch-media] url 解決 fail:', path, e && e.message);
+        if (msg) { msg.textContent = '画像 を 表示 できません'; msg.style.color = '#B91C1C'; }
+        if (img) img.remove();
+        a.removeAttribute('href');
+      });
+    });
+  }
+
   function _lchTsStr(t) {
     if (!t) return '';
     if (typeof t === 'string') return t;
@@ -11435,7 +11526,7 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
               <div class="lch-msg-avatar ${_lchAvatarClass(c.id)}">${_lchEscape(avatarChar)}</div>
               <div class="lch-msg-content">
                 <div class="lch-bubble-wrap">
-                  <div class="lch-bubble">${_lchEscape(m.text || m.message || '')}</div>
+                  <div class="lch-bubble">${m && m.mediaPath ? _lchMediaHtml(m) : _lchEscape(m.text || m.message || '')}</div>
                   <div class="lch-msg-meta">${read}<span>${_lchEscape(time)}</span></div>
                 </div>
               </div>
@@ -11509,6 +11600,8 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
         _lchState.selectedClientId = null;
       });
     }
+    // ★ 2026-09-20: 写真/ファイル の URL を 描画 後 に 解決 (失敗 して も chat は 壊さ ない)
+    try { _lchHydrateMedia(pane); } catch (e) { console.warn('[lch-media] hydrate fail:', e && e.message); }
   }
 
   function _lchToast(msg, isErr) {

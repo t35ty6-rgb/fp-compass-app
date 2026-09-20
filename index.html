@@ -250,7 +250,7 @@ window.FP_VER = "20260920A";
   //   localStorage に 保存 (tab 閉じても 継承)、 desktop は 従来 通り session 限定。
   const _persistenceIsMobile = /iPhone|iPad|iPod|Android/.test(navigator.userAgent) || window.innerWidth < 640;
   setPersistence(auth, _persistenceIsMobile ? browserLocalPersistence : browserSessionPersistence).catch(console.error);
-  window.__fp = { auth, db, functions, httpsCallable, signOut, GoogleAuthProvider, linkWithPopup, reauthenticateWithPopup, signInWithPopup };
+  window.__fp = { app, auth, db, functions, httpsCallable, signOut, GoogleAuthProvider, linkWithPopup, reauthenticateWithPopup, signInWithPopup };
 
   // ★ 2026-09-02 P0 fix: beforeunload 離脱 警告 (30人監査 #15 Error UX P0)
   //   window.__fp.isDirty = true に set した flow (議事録 編集 · 顧客 form 入力 中 等) で
