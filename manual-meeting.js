@@ -70,12 +70,10 @@
     if (!data.ok) throw new Error(data.error || ('保存 に 失敗 しました (HTTP ' + res.status + ')'));
     if (data.skipped) throw new Error('内容 が 空 と 判定 され 保存 され ません でした');
 
-    // 画面 側 キャッシュ にも 即 反映 (再 fetch なし で 議事録 タブ に 出す)
-    try {
-      var live = (window.LineAppLiveData = window.LineAppLiveData || {});
-      if (!Array.isArray(live.ai_results)) live.ai_results = [];
-      live.ai_results.push(entry);
-    } catch (_) {}
+    // ※ ここで window.LineAppLiveData.ai_results に push しない。
+    //   議事録 タブ は click の たび に ai_results を空にして サーバから 取り直す 作り なので
+    //   push しても 必ず 捨てられ、 捨てられ なかった 場合 は 同じ 議事録 が 2 枚 出る。
+    //   表示 は 既存 の 取得 経路 に 任せる (保存 は 完了 して いる)。
     return entry;
   }
 

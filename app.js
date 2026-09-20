@@ -4552,6 +4552,7 @@
         _saveBtnEl.disabled = true;
         _saveBtnEl.textContent = '保存中…';
       }
+      try {
       c.name = name;
       c.kana = document.getElementById('f-kana').value;
       c.birth = birth;
@@ -4630,10 +4631,13 @@
       } catch (e) {
         alert('⚠ 顧客は登録しましたが、面談記録の保存に失敗しました: ' + ((e && e.message) || e));
       }
-      if (_saveBtnEl) {
-        _saveBtnEl.dataset.saving = '';
-        _saveBtnEl.disabled = false;
-        _saveBtnEl.textContent = isNew ? '登録' : '保存';
+      } finally {
+        // 途中 で 何 が 起きて も ボタン は 必ず 戻す (押せ なく なる の を 防ぐ)
+        if (_saveBtnEl) {
+          _saveBtnEl.dataset.saving = '';
+          _saveBtnEl.disabled = false;
+          _saveBtnEl.textContent = isNew ? '登録' : '保存';
+        }
       }
       close();
       // モーダルが開いていれば閉じる
@@ -4698,6 +4702,21 @@
     if (c.id && String(c.id).startsWith('fs-')) return String(c.id).slice(3);
     return c.id || '';
   }
+  // ★ 2026-09-20: lastContact だけ を 書く。
+  //   persistClientToFirestore は 全 field を payload に 載せる ので、
+  //   Firestore 由来 の 欠損 スタブ 客 (kana:'' / gender:'O' / note なし) で 呼ぶと
+  //   読み仮名・性別・メモ・LINE配信フラグ を 空 で 上書き して しまう。
+  //   顧客 form 以外 から 触る 時 は 必ず こちら を 使う。
+  async function persistLastContactOnly(c, ymd) {
+    const tenantId = _persistTenantId();
+    if (!tenantId) return;
+    const fsId = _persistFsDocId(c);
+    if (!fsId || !ymd) return;
+    const { db, doc, setDoc, serverTimestamp } = await _persistLoadFirebase();
+    await setDoc(doc(db, 'tenants', tenantId, 'customers', fsId),
+      { lastContact: ymd, updatedAt: serverTimestamp() }, { merge: true });
+  }
+
   async function persistClientToFirestore(c) {
     const tenantId = _persistTenantId();
     if (!tenantId) return;
@@ -7779,9 +7798,13 @@
           // ★ 2026-09-20: 編集 保存 で 元 entry の 属性 を 落とさ ない
           //   (落とす と 手入力 の 面談 が 編集 した 瞬間 「Zoom N回目 / 録画開始」 表示 に 化ける)
           if (existing.source) entry.source = existing.source;
-          if (existing.ts) entry.ts = existing.ts;
-          if (existing.createdAt) entry.createdAt = existing.createdAt;
           if (existing.title) entry.title = existing.title;
+          // ts/createdAt は 従来 送って いなかった field。 録画 由来 の 既存 議事録 の
+          // upsert キー を 変えて しまわ ない よう、 手入力 の 時 だけ 付ける。
+          if (_isManualAi(existing)) {
+            if (existing.ts) entry.ts = existing.ts;
+            if (existing.createdAt) entry.createdAt = existing.createdAt;
+          }
           const res = await fetch('https://fp-compass-webhook-527726449426.asia-northeast1.run.app/api/save-ai-result', {
             method: 'POST',
             headers: await (window.getFpAuthHeaders ? window.getFpAuthHeaders() : Promise.resolve({ 'Content-Type': 'application/json' })),
@@ -8691,7 +8714,7 @@ ${ctxText}${surveyTxt}`;
               if (d && (!c.lastContact || c.lastContact < d)) {
                 c.lastContact = d;
                 saveClientsToLS();
-                persistClientToFirestore(c).catch(() => {});
+                persistLastContactOnly(c, d).catch(() => {});
               }
             } catch (_) {}
             // 描画 は 既存 の 議事録 タブ の 経路 に 任せる (panel を 直接 書き換える と
