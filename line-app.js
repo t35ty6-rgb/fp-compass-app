@@ -7537,6 +7537,7 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
               mediaContentType: md.mediaContentType || '',
               mediaFileName: md.mediaFileName || '',
               mediaBytes: md.mediaBytes || 0,
+              mediaBucket: md.mediaBucket || '',
               _fromFirestore: true,
             });
           });
@@ -7676,6 +7677,7 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
               entry.mediaContentType = m.mediaContentType || '';
               entry.mediaFileName = m.mediaFileName || '';
               entry.mediaBytes = m.mediaBytes || 0;
+              entry.mediaBucket = m.mediaBucket || '';
             }
             c.lineHistory.push(entry);
             // 独立キーにも保存 (リロード耐性) — 古いLINE消すと FPの業務に支障 → cap せず 全保持
@@ -11069,16 +11071,18 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
 
   function _lchMediaHtml(m) {
     const p = _lchEscape(m.mediaPath);
+    // bucket は webhook が 実際 に 書いた もの を 使う (既定 bucket と ズレて も 表示 できる)
+    const bk = _lchEscape(m.mediaBucket || '');
     const kb = m.mediaBytes ? Math.max(1, Math.round(m.mediaBytes / 1024)) + ' KB' : '';
     if (_lchIsImageMedia(m)) {
-      return '<a class="lch-media-link" data-line-media="' + p + '" href="#" target="_blank" rel="noopener"'
+      return '<a class="lch-media-link" data-line-media="' + p + '" data-line-media-bucket="' + bk + '" href="#" target="_blank" rel="noopener"'
         + ' style="display:block;text-decoration:none;">'
         + '<img data-line-media-img="' + p + '" alt="お客様 から の 画像" loading="lazy"'
         + ' style="display:block;max-width:220px;width:100%;height:auto;border-radius:10px;background:#E2E8F0;min-height:90px;">'
         + '<span data-line-media-msg style="display:block;font-size:11.5px;color:#64748B;margin-top:4px;">読み込み中…</span>'
         + '</a>';
     }
-    return '<a class="lch-media-link" data-line-media="' + p + '" href="#" target="_blank" rel="noopener"'
+    return '<a class="lch-media-link" data-line-media="' + p + '" data-line-media-bucket="' + bk + '" href="#" target="_blank" rel="noopener"'
       + ' style="display:inline-flex;align-items:center;gap:8px;padding:9px 12px;background:#F1F5F9;border:1px solid #CBD5E1;'
       + 'border-radius:10px;text-decoration:none;color:#0F172A;font-size:13px;font-weight:700;">'
       + _lchEscape(_lchMediaLabel(m))
@@ -11086,15 +11090,17 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
       + '</a>';
   }
 
-  async function _lchMediaUrl(path) {
-    if (_lchMediaUrlCache.has(path)) return _lchMediaUrlCache.get(path);
+  async function _lchMediaUrl(path, bucket) {
+    const ck = (bucket || '') + '|' + path;
+    if (_lchMediaUrlCache.has(ck)) return _lchMediaUrlCache.get(ck);
     const { getStorage, ref, getDownloadURL } =
       await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-storage.js');
     const { getApps } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js');
     const app = (window.__fp && window.__fp.app) || getApps()[0];
     if (!app) throw new Error('firebase app 未 init');
-    const url = await getDownloadURL(ref(getStorage(app), path));
-    _lchMediaUrlCache.set(path, url);
+    const st = bucket ? getStorage(app, 'gs://' + bucket) : getStorage(app);
+    const url = await getDownloadURL(ref(st, path));
+    _lchMediaUrlCache.set(ck, url);
     return url;
   }
 
@@ -11106,9 +11112,10 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
       if (a._mediaBound) return;
       a._mediaBound = true;
       const path = a.getAttribute('data-line-media');
+      const bucket = a.getAttribute('data-line-media-bucket') || '';
       const img = a.querySelector('[data-line-media-img]');
       const msg = a.querySelector('[data-line-media-msg]');
-      _lchMediaUrl(path).then(url => {
+      _lchMediaUrl(path, bucket).then(url => {
         a.href = url;
         if (img) img.src = url;
         if (msg) msg.remove();

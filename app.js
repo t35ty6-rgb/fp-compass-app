@@ -4476,6 +4476,7 @@
           </div>
         </div>
 
+        ${isNew ? `
         <div class="form-section">
           <h3>前回の面談 (任意)</h3>
           <div class="form-grid">
@@ -4487,7 +4488,7 @@
             <textarea id="f-mtg-body" rows="6" placeholder="話したことをそのまま書いてください。登録すると議事録タブに残り、AIの提案にも使われます。" style="width:100%;resize:vertical;"></textarea>
           </div>
           <div style="font-size:12.5px;color:var(--muted);margin-top:6px;">録音のない面談 (過去の面談・対面・電話) をここで記録に残せます。日付と内容を入れて登録してください。あとから客カードの「面談 を 手入力」ボタンでも追加できます。</div>
-        </div>
+        </div>` : ''}
 
         <div class="form-section">
           <h3>メモ</h3>
@@ -4537,11 +4538,19 @@
     document.getElementById('form-cancel-btn').addEventListener('click', close);
 
     document.getElementById('form-save-btn').addEventListener('click', async () => {
+      // ★ 2026-09-20: 保存 に await が 増えた ので 二重 クリック で 二重 登録 に ならない よう ガード
+      const _saveBtnEl = document.getElementById('form-save-btn');
+      if (_saveBtnEl && _saveBtnEl.dataset.saving === '1') return;
       const name = document.getElementById('f-name').value.trim();
       const birth = document.getElementById('f-birth').value;
       if (!name || !birth) {
         alert('お名前と生年月日は必須です');
         return;
+      }
+      if (_saveBtnEl) {
+        _saveBtnEl.dataset.saving = '1';
+        _saveBtnEl.disabled = true;
+        _saveBtnEl.textContent = '保存中…';
       }
       c.name = name;
       c.kana = document.getElementById('f-kana').value;
@@ -4620,6 +4629,11 @@
         }
       } catch (e) {
         alert('⚠ 顧客は登録しましたが、面談記録の保存に失敗しました: ' + ((e && e.message) || e));
+      }
+      if (_saveBtnEl) {
+        _saveBtnEl.dataset.saving = '';
+        _saveBtnEl.disabled = false;
+        _saveBtnEl.textContent = isNew ? '登録' : '保存';
       }
       close();
       // モーダルが開いていれば閉じる
@@ -4769,6 +4783,7 @@
           entry.mediaContentType = m.mediaContentType || '';
           entry.mediaFileName = m.mediaFileName || '';
           entry.mediaBytes = m.mediaBytes || 0;
+          entry.mediaBucket = m.mediaBucket || '';
         }
         c.lineHistory.push(entry);
         try {
@@ -7761,6 +7776,12 @@
             next_meeting_suggestion: existing.next_meeting_suggestion || '',
             lifeEventCandidates: existing.lifeEventCandidates || [],
           };
+          // ★ 2026-09-20: 編集 保存 で 元 entry の 属性 を 落とさ ない
+          //   (落とす と 手入力 の 面談 が 編集 した 瞬間 「Zoom N回目 / 録画開始」 表示 に 化ける)
+          if (existing.source) entry.source = existing.source;
+          if (existing.ts) entry.ts = existing.ts;
+          if (existing.createdAt) entry.createdAt = existing.createdAt;
+          if (existing.title) entry.title = existing.title;
           const res = await fetch('https://fp-compass-webhook-527726449426.asia-northeast1.run.app/api/save-ai-result', {
             method: 'POST',
             headers: await (window.getFpAuthHeaders ? window.getFpAuthHeaders() : Promise.resolve({ 'Content-Type': 'application/json' })),
@@ -8663,15 +8684,22 @@ ${ctxText}${surveyTxt}`;
           customerId: c._fsCustomerId || c.id,
           customerName: c.name || 'お客様',
           lineFriendId: c.lineFriendId || '',
-          onSaved: () => {
-            try { c.lastContact = (new Date(Date.now() + 9 * 3600 * 1000)).toISOString().slice(0, 10); } catch (_) {}
-            const tabBtn = document.querySelector('.cd-tab[data-cdtab="meetings"]');
-            if (tabBtn) tabBtn.click();
-            const panel = document.querySelector('[data-cdpanel="meetings"]');
-            if (panel && typeof renderMeetingRecordsBlock === 'function') {
-              const _h = renderMeetingRecordsBlock(c);
-              if (_h) panel.innerHTML = _h;
-            }
+          onSaved: (entry) => {
+            // 最終接触日 は 「今日」 では なく 入力 された 面談日 で 更新 (過去 入力 なら 更新 しない)
+            try {
+              const d = (entry && entry.date) || '';
+              if (d && (!c.lastContact || c.lastContact < d)) {
+                c.lastContact = d;
+                saveClientsToLS();
+                persistClientToFirestore(c).catch(() => {});
+              }
+            } catch (_) {}
+            // 描画 は 既存 の 議事録 タブ の 経路 に 任せる (panel を 直接 書き換える と
+            // upload 履歴 バー や 取得中 skeleton など 既存 UI を 巻き込んで 壊す)
+            try {
+              const tabBtn = document.querySelector('.cd-tab[data-cdtab="meetings"]');
+              if (tabBtn) tabBtn.click();
+            } catch (_) {}
           },
         });
       });
@@ -10213,6 +10241,14 @@ ${ctxText}${surveyTxt}`;
     </style>`;
   };
 
+  // ★ 2026-09-20: 手入力 の 面談 か どうか。
+  //   source は GAS sheet 往復 で 落ちる こと が ある ので bookingTs prefix も 見る。
+  function _isManualAi(a) {
+    if (!a) return false;
+    if (String(a.source || '') === 'manual') return true;
+    return /^manual-/.test(String(a.bookingTs || ''));
+  }
+
   function renderMeetingRecordsBlock(client) {
     // この顧客に関連する bookings を liveData から探す
     const liveBookings = (window.LineAppLiveData && window.LineAppLiveData.bookings) || [];
@@ -10486,7 +10522,10 @@ ${ctxText}${surveyTxt}`;
             // ★ Zoom 連番 — ai_results を ts昇順 で 並べ 1, 2, 3... を 振る (orphan と統一)
             const aiSortedAll = aiResults.slice().sort((a, b) => String(a.ts || a.createdAt || '').localeCompare(String(b.ts || b.createdAt || '')));
             const aiZoomMap = new Map();
-            aiSortedAll.forEach((a, i) => aiZoomMap.set((a.bookingTs || '') + '|' + (a.ts || a.createdAt || ''), i + 1));
+            // ★ 2026-09-20: 手入力 の 面談 は 「Zoom N回目」 の 連番 に 入れない
+            //   (入れる と 過去日 の 手入力 を 足す たび に 既存 の 録画 カード の 番号 が ずれる)
+            let _zc = 0;
+            aiSortedAll.forEach((a) => { if (!_isManualAi(a)) aiZoomMap.set((a.bookingTs || '') + '|' + (a.ts || a.createdAt || ''), ++_zc); });
             // メインカード = bookingsWithMemo (legacy / fs 顧客) を ts順 で 並べる
             const sortedBks = bookingsWithMemo.slice().sort((a, b) => {
               const da = new Date(String(a.date || '') + 'T' + String(a.time || '00:00')).getTime();
@@ -10643,9 +10682,12 @@ ${ctxText}${surveyTxt}`;
           //   メインカード で「Zoom 1回目」 既に使ってる → orphan は「Zoom 2回目」 から始める
           const allChronological = aiResults.slice().sort((a, b) => String(a.ts || a.createdAt || '').localeCompare(String(b.ts || b.createdAt || '')));
           const aiZoomIdx = new Map();
-          allChronological.forEach((a, i) => {
+          // ★ 2026-09-20: 手入力 の 面談 は 連番 の 母集団 から 除外 (既存 カード の 番号 を ずらさ ない)
+          let _zcO = 0;
+          allChronological.forEach((a) => {
+            if (_isManualAi(a)) return;
             const key = (a.bookingTs || '') + '|' + (a.ts || a.createdAt || '');
-            aiZoomIdx.set(key, i + 1);
+            aiZoomIdx.set(key, ++_zcO);
           });
           // ★ 2026-06-27: 議事録 並び順 を 新→旧 (newest first) で明示 sort
           return '<div style="display:grid;gap:14px;margin-bottom:18px;">' +
@@ -10664,13 +10706,13 @@ ${ctxText}${surveyTxt}`;
                       const hhmm = dt ? fmtJstTime(dt) : '';
                       const cname = (client && (client.name || client.customerName)) || a.customerName || '';
                       // ★ 2026-09-20: 手入力 の 面談 は 録画 じゃない → 📹/Zoom N回目 を 出さない
-                      const isManual = String(a.source || '') === 'manual';
+                      const isManual = _isManualAi(a);
                       const rawTitle = a.title || (Array.isArray(a.key_concerns) && a.key_concerns[0]) || (isManual ? '面談 記録 (手入力)' : `Zoom ${zN}回目`);
                       const label = [hhmm, escapeHtml(String(rawTitle).slice(0, 30)), cname ? escapeHtml(cname) + ' 様' : ''].filter(Boolean).join(' ');
                       return `<div class="fp-meeting-card-eyebrow" style="font-size:13px !important;font-weight:900 !important;color:#1B3A5C !important;letter-spacing:0 !important;"><span class="fp-meeting-toggle-icon" style="display:inline-block;width:14px;font-size:11.5px;color:#94A3B8;margin-right:4px;transition:transform 0.15s;">▶</span>${isManual ? '✍️' : '📹'} ${label}</div>`;
                     })()}
-                    <div class="fp-meeting-card-date" style="font-size:12.5px;font-weight:600;color:#6B7280;">${String(a.source || '') === 'manual' ? '✍️ 手入力 の 記録' : `Zoom ${zN}回目`} · ${escapeHtml(fmtDateRobust(a.ts || a.createdAt) || fmtDateRobust(a.date))} ${escapeHtml(fmtJstTime(a.ts || a.createdAt))}</div>
-                    ${(a.ts || a.createdAt) && String(a.source || '') !== 'manual' ? `<div class="fp-meeting-card-recstart" style="font-size:13px;color:#6B7280;font-weight:600;margin-top:3px;">録画開始: ${escapeHtml(fmtJstTime(a.ts || a.createdAt))} (${escapeHtml(fmtDateRobust(a.ts || a.createdAt))})</div>` : ''}
+                    <div class="fp-meeting-card-date" style="font-size:12.5px;font-weight:600;color:#6B7280;">${_isManualAi(a) ? '✍️ 手入力 の 記録' : `Zoom ${zN}回目`} · ${escapeHtml(fmtDateRobust(a.ts || a.createdAt) || fmtDateRobust(a.date))} ${escapeHtml(fmtJstTime(a.ts || a.createdAt))}</div>
+                    ${(a.ts || a.createdAt) && !_isManualAi(a) ? `<div class="fp-meeting-card-recstart" style="font-size:13px;color:#6B7280;font-weight:600;margin-top:3px;">録画開始: ${escapeHtml(fmtJstTime(a.ts || a.createdAt))} (${escapeHtml(fmtDateRobust(a.ts || a.createdAt))})</div>` : ''}
                   </div>
                   <div class="fp-meeting-card-actions" style="display:flex;gap:6px;flex-wrap:wrap;">
                     <button class="fp-meeting-todo-review" data-booking-ts="${escapeHtml(a.bookingTs || '')}" data-ai-ts="${escapeHtml(a.ts || a.createdAt || '')}" data-client-id="${escapeHtml(client?.id || '')}" data-client-name="${escapeHtml(client?.name || a.customerName || '')}" style="background:#EEF0FF;border:1.5px solid #5B5BF0;color:#5B5BF0;font-size:13px;font-weight:700;padding:5px 11px;border-radius:5px;cursor:pointer;font-family:inherit;">📋 TODO 候補 レビュー</button>
@@ -10688,7 +10730,7 @@ ${ctxText}${surveyTxt}`;
                   </div>` : ''}
                 ${a.summary ? `
                   <div class="fp-meeting-block">
-                    <div class="fp-meeting-block-label">${String(a.source || '') === 'manual' ? '面談記録 (手入力)' : '面談記録 (Claude)'}</div>
+                    <div class="fp-meeting-block-label">${_isManualAi(a) ? '面談記録 (手入力)' : '面談記録 (Claude)'}</div>
                     <div class="fp-meeting-body fp-minutes-view fp-summary-structured" data-raw-summary="${escapeHtml(a.summary)}">${window.renderStructuredSummary ? window.renderStructuredSummary(a.summary) : escapeHtml(a.summary)}</div>
                   </div>` : ''}
                 ${a.key_concerns && a.key_concerns.length > 0 ? `
