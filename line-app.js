@@ -11073,57 +11073,127 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
     const p = _lchEscape(m.mediaPath);
     // bucket は webhook が 実際 に 書いた もの を 使う (既定 bucket と ズレて も 表示 できる)
     const bk = _lchEscape(m.mediaBucket || '');
+    const nm = _lchEscape(m.mediaFileName || '');
     const kb = m.mediaBytes ? Math.max(1, Math.round(m.mediaBytes / 1024)) + ' KB' : '';
+    const attrs = ' data-line-media="' + p + '" data-line-media-bucket="' + bk + '" data-line-media-name="' + nm + '"';
     if (_lchIsImageMedia(m)) {
-      return '<a class="lch-media-link" data-line-media="' + p + '" data-line-media-bucket="' + bk + '" href="#" target="_blank" rel="noopener"'
-        + ' style="display:block;text-decoration:none;">'
+      // 押す = 大きく 見る (アプリ 内 ビューア)、 ⤓ 保存 = その まま ダウンロード
+      return '<div class="lch-media-photo" style="display:inline-block;max-width:220px;">'
+        + '<button type="button" class="lch-media-open"' + attrs
+        + ' title="大きく 見る" style="display:block;padding:0;border:0;background:transparent;cursor:zoom-in;width:100%;font:inherit;">'
         + '<img data-line-media-img="' + p + '" alt="お客様 から の 画像" loading="lazy"'
-        + ' style="display:block;max-width:220px;width:100%;height:auto;border-radius:10px;background:#E2E8F0;min-height:90px;">'
-        + '<span data-line-media-msg style="display:block;font-size:11.5px;color:#64748B;margin-top:4px;">読み込み中…</span>'
-        + '</a>';
+        + ' style="display:block;width:100%;height:auto;border-radius:10px;background:#E2E8F0;min-height:90px;">'
+        + '<span data-line-media-msg style="display:block;font-size:11.5px;color:#64748B;margin-top:4px;text-align:left;">読み込み中…</span>'
+        + '</button>'
+        + '<a class="lch-media-save"' + attrs + ' href="#" download target="_blank" rel="noopener"'
+        + ' style="display:inline-flex;align-items:center;gap:5px;margin-top:6px;padding:5px 11px;background:#F1F5F9;'
+        + 'border:1px solid #CBD5E1;border-radius:8px;text-decoration:none;color:#334155;font-size:12.5px;font-weight:700;">'
+        + '⤓ 保存</a>'
+        + '</div>';
     }
-    return '<a class="lch-media-link" data-line-media="' + p + '" data-line-media-bucket="' + bk + '" href="#" target="_blank" rel="noopener"'
+    return '<a class="lch-media-save"' + attrs + ' href="#" download target="_blank" rel="noopener"'
       + ' style="display:inline-flex;align-items:center;gap:8px;padding:9px 12px;background:#F1F5F9;border:1px solid #CBD5E1;'
       + 'border-radius:10px;text-decoration:none;color:#0F172A;font-size:13px;font-weight:700;">'
       + _lchEscape(_lchMediaLabel(m))
       + (kb ? '<span style="font-weight:600;color:#64748B;font-size:11.5px;">' + kb + '</span>' : '')
+      + '<span style="font-weight:700;color:#64748B;font-size:12px;">⤓ 保存</span>'
       + '</a>';
   }
 
-  async function _lchMediaUrl(path, bucket) {
+  // ★ 2026-09-21: 画像 を 大きく 見る ビューア。
+  //   保存 は サーバ 側 が attachment で 返す ので、 リンク を 押す だけ で 保存 される。
+  function _lchOpenPhoto(url, name) {
+    const ov = document.createElement('div');
+    ov.setAttribute('role', 'dialog');
+    ov.setAttribute('aria-modal', 'true');
+    ov.setAttribute('aria-label', 'お客様 から の 画像');
+    ov.style.cssText = 'position:fixed;inset:0;background:rgba(9,14,22,.9);z-index:100000;display:flex;'
+      + 'flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:20px;'
+      + 'font-family:"Noto Sans JP","Hiragino Sans",sans-serif;';
+    const img = document.createElement('img');
+    img.src = url;
+    img.alt = 'お客様 から の 画像';
+    img.style.cssText = 'max-width:100%;max-height:calc(100% - 76px);object-fit:contain;border-radius:8px;background:#fff;';
+    const bar = document.createElement('div');
+    bar.style.cssText = 'display:flex;gap:10px;flex-wrap:wrap;justify-content:center;';
+    const save = document.createElement('a');
+    save.href = url;
+    save.setAttribute('download', name || '');
+    save.target = '_blank';
+    save.rel = 'noopener';
+    save.textContent = '⤓ 保存';
+    save.style.cssText = 'padding:10px 20px;background:#fff;color:#0F172A;border-radius:9px;text-decoration:none;'
+      + 'font-size:14px;font-weight:800;';
+    const close = document.createElement('button');
+    close.type = 'button';
+    close.textContent = '閉じる';
+    close.style.cssText = 'padding:10px 20px;background:transparent;color:#fff;border:1.5px solid rgba(255,255,255,.5);'
+      + 'border-radius:9px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;';
+    bar.appendChild(save); bar.appendChild(close);
+    ov.appendChild(img); ov.appendChild(bar);
+    const prevOverflow = document.body.style.overflow;
+    const shut = () => {
+      try { document.body.removeChild(ov); } catch (_) {}
+      document.removeEventListener('keydown', onKey);
+      try { document.body.style.overflow = prevOverflow; } catch (_) {}
+    };
+    const onKey = (e) => { if (e.key === 'Escape') shut(); };
+    close.addEventListener('click', shut);
+    ov.addEventListener('click', (e) => { if (e.target === ov) shut(); });
+    document.addEventListener('keydown', onKey);
+    try { document.body.style.overflow = 'hidden'; } catch (_) {}
+    document.body.appendChild(ov);
+    try { close.focus(); } catch (_) {}
+  }
+
+  function _lchMediaUrl(path, bucket) {
+    // ★ 解決 「後」 の 値 だけ を 持つ と、 1 枚 の 写真 に 対して サムネイル と 保存 の
+    //   2 要素 が 同じ tick で 走り、 どちら も cache miss して 2 回 取りに 行く。
+    //   Promise ごと 入れて おけば 2 本目 は 1 本目 に 相乗り する。
     const ck = (bucket || '') + '|' + path;
     if (_lchMediaUrlCache.has(ck)) return _lchMediaUrlCache.get(ck);
-    const { getStorage, ref, getDownloadURL } =
-      await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-storage.js');
-    const { getApps } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js');
-    const app = (window.__fp && window.__fp.app) || getApps()[0];
-    if (!app) throw new Error('firebase app 未 init');
-    const st = bucket ? getStorage(app, 'gs://' + bucket) : getStorage(app);
-    const url = await getDownloadURL(ref(st, path));
-    _lchMediaUrlCache.set(ck, url);
-    return url;
+    const pr = (async () => {
+      const { getStorage, ref, getDownloadURL } =
+        await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-storage.js');
+      const { getApps } = await import('https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js');
+      const app = (window.__fp && window.__fp.app) || getApps()[0];
+      if (!app) throw new Error('firebase app 未 init');
+      const st = bucket ? getStorage(app, 'gs://' + bucket) : getStorage(app);
+      return await getDownloadURL(ref(st, path));
+    })();
+    _lchMediaUrlCache.set(ck, pr);
+    pr.catch(() => { try { _lchMediaUrlCache.delete(ck); } catch (_) {} }); // 失敗 は 覚えない
+    return pr;
   }
 
   function _lchHydrateMedia(root) {
     if (!root) return;
-    const links = root.querySelectorAll('[data-line-media]');
-    if (!links.length) return;
-    links.forEach(a => {
-      if (a._mediaBound) return;
-      a._mediaBound = true;
-      const path = a.getAttribute('data-line-media');
-      const bucket = a.getAttribute('data-line-media-bucket') || '';
-      const img = a.querySelector('[data-line-media-img]');
-      const msg = a.querySelector('[data-line-media-msg]');
+    const els = root.querySelectorAll('[data-line-media]');
+    if (!els.length) return;
+    els.forEach(el => {
+      if (el._mediaBound) return;
+      el._mediaBound = true;
+      const path = el.getAttribute('data-line-media');
+      const bucket = el.getAttribute('data-line-media-bucket') || '';
+      const name = el.getAttribute('data-line-media-name') || '';
+      const img = el.querySelector('[data-line-media-img]');
+      const msg = el.querySelector('[data-line-media-msg]');
       _lchMediaUrl(path, bucket).then(url => {
-        a.href = url;
         if (img) img.src = url;
         if (msg) msg.remove();
+        if (el.tagName === 'A') {
+          el.href = url;
+          if (name) el.setAttribute('download', name);
+        } else {
+          // 画像 本体 = 押すと 大きく 見る
+          el.addEventListener('click', (e) => { e.preventDefault(); _lchOpenPhoto(url, name); });
+        }
       }).catch(e => {
         console.warn('[lch-media] url 解決 fail:', path, e && e.message);
         if (msg) { msg.textContent = '画像 を 表示 できません'; msg.style.color = '#B91C1C'; }
         if (img) img.remove();
-        a.removeAttribute('href');
+        if (el.tagName === 'A') { el.removeAttribute('href'); el.style.opacity = '.55'; }
+        else { el.disabled = true; el.style.cursor = 'default'; }
       });
     });
   }
