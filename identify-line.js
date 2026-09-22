@@ -1,4 +1,4 @@
-/* identify-line.js — 「この人は誰ですか?」 LINE 友だち と 台帳 の 名寄せ  (v20260922B)
+/* identify-line.js — 「この人は誰ですか?」 LINE 友だち と 台帳 の 名寄せ  (v20260922C)
    ------------------------------------------------------------------
    2026-09-22 owner fb:
      「先 に 面談 → 後 から アンケート → 最後 に LINE 友だち登録」 の 客 は
@@ -262,45 +262,56 @@
     if (d) d.addEventListener('click', closeOverlay);
   }
 
+  function candRowHtml(x) {
+    var c = x.client;
+    var badge = x.score >= 100 ? '<span style="background:#DCFCE7;color:#166534;font-size:11px;font-weight:800;padding:2px 8px;border-radius:999px;">名前が一致</span>'
+              : x.score >= 60 ? '<span style="background:#FEF3C7;color:#92400E;font-size:11px;font-weight:800;padding:2px 8px;border-radius:999px;">名前が近い</span>'
+              : '';
+    return '<div style="display:flex;align-items:center;gap:12px;padding:12px 4px;border-top:1px solid #EEF2F6;">' +
+      avatarHtml(c, 38) +
+      '<div style="flex:1;min-width:0;">' +
+        '<div style="font-size:14px;font-weight:700;color:#16202B;">' + esc(c.name) + ' 様 ' + badge + '</div>' +
+        '<div style="font-size:12px;color:#6B7280;margin-top:2px;">' +
+          (c.kana ? esc(c.kana) + ' ／ ' : '') +
+          (c.occupation ? esc(c.occupation) + ' ／ ' : '') +
+          '最終接触 ' + esc(c.lastContact || '記録なし') +
+        '</div>' +
+      '</div>' +
+      '<button class="idl-pick" data-cid="' + esc(String(c.id)) + '" style="background:#06c755;color:#fff;border:none;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;white-space:nowrap;">この人です</button>' +
+    '</div>';
+  }
+  function sectionLabel(txt) {
+    return '<div style="padding:14px 4px 4px;font-size:11.5px;font-weight:800;color:#94A3B8;letter-spacing:0.1em;">' + esc(txt) + '</div>';
+  }
+
+  // 2026-09-22 owner fb「一覧で出てきて選ぶだけにしたい。検索も残して」
+  //   → 既定 で LINE 未連携 の お客様 を 全員 出す。 名前 が 近い 人 を 上 に 固めて 見出し を 付ける。
   function rowsHtmlFor(friend, query) {
     var cands = candidatesFor(friend);
-    var shown;
+    if (cands.length === 0) {
+      return '<div style="padding:22px;text-align:center;color:#94A3B8;font-size:13px;">LINE未連携のお客様が台帳にいません</div>';
+    }
     if (String(query || '').trim()) {
       var q = norm(query);
-      shown = cands.filter(function (x) {
+      var hit = cands.filter(function (x) {
         return norm(x.client.name).indexOf(q) >= 0 || norm(x.client.kana).indexOf(q) >= 0;
-      }).slice(0, 12);
-    } else {
-      shown = cands.filter(function (x) { return x.score >= MIN_SCORE; }).slice(0, 5);
-      if (shown.length === 0 && cands.length > 0) {
-        return '<div style="padding:18px 4px;color:#6B7280;font-size:13px;line-height:1.9;">' +
-          'LINEの表示名から近いお客様を見つけられませんでした。<br>' +
-          '<b style="color:#16202B;">台帳に登録しているお名前</b>（例: 山田）を上の欄に入れて探してください。' +
-          '</div>';
+      });
+      if (hit.length === 0) {
+        return '<div style="padding:22px;text-align:center;color:#94A3B8;font-size:13px;">該当するお客様がいません</div>';
       }
+      return hit.map(candRowHtml).join('');
     }
-    if (shown.length === 0) {
-      return '<div style="padding:22px;text-align:center;color:#94A3B8;font-size:13px;">' +
-        (cands.length === 0 ? 'LINE未連携のお客様が台帳にいません' : '該当するお客様がいません') + '</div>';
+    var near = cands.filter(function (x) { return x.score >= MIN_SCORE; });
+    var rest = cands.filter(function (x) { return x.score < MIN_SCORE; });
+    var html = '';
+    if (near.length > 0) {
+      html += sectionLabel('名前が近い人') + near.map(candRowHtml).join('');
+      if (rest.length > 0) html += sectionLabel('そのほかのお客様 (' + rest.length + '人 · 最終接触が新しい順)');
+    } else {
+      html += sectionLabel('LINE未連携のお客様 (' + rest.length + '人 · 最終接触が新しい順)');
     }
-    return shown.map(function (x) {
-      var c = x.client;
-      var badge = x.score >= 100 ? '<span style="background:#DCFCE7;color:#166534;font-size:11px;font-weight:800;padding:2px 8px;border-radius:999px;">名前が一致</span>'
-                : x.score >= 60 ? '<span style="background:#FEF3C7;color:#92400E;font-size:11px;font-weight:800;padding:2px 8px;border-radius:999px;">名前が近い</span>'
-                : '';
-      return '<div style="display:flex;align-items:center;gap:12px;padding:12px 4px;border-top:1px solid #EEF2F6;">' +
-        avatarHtml(c, 38) +
-        '<div style="flex:1;min-width:0;">' +
-          '<div style="font-size:14px;font-weight:700;color:#16202B;">' + esc(c.name) + ' 様 ' + badge + '</div>' +
-          '<div style="font-size:12px;color:#6B7280;margin-top:2px;">' +
-            (c.kana ? esc(c.kana) + ' ／ ' : '') +
-            (c.occupation ? esc(c.occupation) + ' ／ ' : '') +
-            '最終接触 ' + esc(c.lastContact || '記録なし') +
-          '</div>' +
-        '</div>' +
-        '<button class="idl-pick" data-cid="' + esc(String(c.id)) + '" style="background:#06c755;color:#fff;border:none;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;white-space:nowrap;">この人です</button>' +
-      '</div>';
-    }).join('');
+    html += rest.map(candRowHtml).join('');
+    return html;
   }
 
   function bindPickButtons(friend) {
@@ -324,7 +335,7 @@
         '<div style="flex:1;">' +
           '<div style="font-size:11.5px;font-weight:800;color:#94A3B8;letter-spacing:0.12em;">LINE の 名寄せ</div>' +
           '<div style="font-size:20px;font-weight:900;color:#16202B;margin-top:4px;">この人は どのお客様 ですか？</div>' +
-          '<div style="font-size:12.5px;color:#6B7280;margin-top:5px;">選ぶと、LINEのやりとりが そのお客様のカードにまとまります。</div>' +
+          '<div style="font-size:12.5px;color:#6B7280;margin-top:5px;">LINE未連携のお客様を全員出しています。名前が近い人が上です。選ぶと、LINEのやりとりが そのお客様のカードにまとまります。</div>' +
         '</div>' +
         '<button id="idl-close" aria-label="閉じる" style="background:none;border:none;font-size:22px;line-height:1;color:#94A3B8;cursor:pointer;">×</button>' +
       '</div>' +
@@ -344,7 +355,7 @@
           'style="width:100%;padding:10px 12px;border:1.5px solid #E3E7EE;border-radius:8px;font-size:13.5px;font-family:inherit;box-sizing:border-box;">' +
       '</div>' +
 
-      '<div id="idl-rows" style="padding:0 26px;">' + rowsHtmlFor(f, query) + '</div>' +
+      '<div id="idl-rows" style="padding:0 26px;max-height:44vh;overflow-y:auto;">' + rowsHtmlFor(f, query) + '</div>' +
 
       '<div style="padding:18px 26px 22px;margin-top:10px;border-top:1px solid #EEF2F6;display:flex;gap:10px;flex-wrap:wrap;">' +
         '<button id="idl-new" style="background:#fff;border:1.5px solid #1B3A5C;color:#1B3A5C;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;">新しいお客様として そのまま残す</button>' +
@@ -468,8 +479,8 @@
 
   function friendRowsHtml(client) {
     var shown = String(_friendQuery || '').trim()
-      ? _friends.filter(function (fr) { return norm(fr.displayName).indexOf(norm(_friendQuery)) >= 0; }).slice(0, 20)
-      : _friends.slice(0, 12);
+      ? _friends.filter(function (fr) { return norm(fr.displayName).indexOf(norm(_friendQuery)) >= 0; })
+      : _friends.slice();
     if (shown.length === 0) {
       return '<div style="padding:22px;text-align:center;color:#94A3B8;font-size:13px;">該当する友だちがいません</div>';
     }
@@ -516,7 +527,7 @@
       '<div style="padding:16px 26px 8px;">' +
         '<input id="idl-fsearch" type="search" placeholder="LINE の 表示名 で 探す" value="' + esc(_friendQuery) + '" style="width:100%;padding:10px 12px;border:1.5px solid #E3E7EE;border-radius:8px;font-size:13.5px;font-family:inherit;box-sizing:border-box;">' +
       '</div>' +
-      '<div id="idl-frows" style="padding:0 26px 18px;">' + friendRowsHtml(client) + '</div>' +
+      '<div id="idl-frows" style="padding:0 26px 18px;max-height:46vh;overflow-y:auto;">' + friendRowsHtml(client) + '</div>' +
       '<div style="padding:0 26px 22px;text-align:right;"><span id="idl-status" style="font-size:12.5px;font-weight:700;color:#6B7280;"></span></div>'
     );
     var cb2 = document.getElementById('idl-close');
