@@ -1540,6 +1540,7 @@
         if (!fx) return;
         if (fx.identityConfirmed) cl.identityConfirmed = true;
         if (fx.lineDisplayName && !cl.lineDisplayName) cl.lineDisplayName = fx.lineDisplayName;
+        if (Array.isArray(fx.mergedFrom)) cl.mergedFrom = fx.mergedFrom;
       });
     } catch (e) { console.warn('[fsSync] identity refresh:', e); }
 
@@ -1577,6 +1578,7 @@
         // ★ 2026-09-22: 「この人は誰ですか?」 名寄せ 用
         lineDisplayName: c.lineDisplayName || '',
         identityConfirmed: !!c.identityConfirmed,
+        mergedFrom: Array.isArray(c.mergedFrom) ? c.mergedFrom : [],
         lastContact: (c.lastContactAt?.toDate?.()?.toISOString?.() || c.confirmedAt?.toDate?.()?.toISOString?.() || c.createdAt?.toDate?.()?.toISOString?.() || new Date().toISOString()).slice(0,10),
         confirmedSlot: c.confirmedSlot || null,
         zoomUrl: c.zoomUrl || null,

@@ -1,4 +1,4 @@
-/* identify-line.js — 「この人は誰ですか?」 LINE 友だち と 台帳 の 名寄せ  (v20260922C)
+/* identify-line.js — 「この人は誰ですか?」 LINE 友だち と 台帳 の 名寄せ  (v20260922D)
    ------------------------------------------------------------------
    2026-09-22 owner fb:
      「先 に 面談 → 後 から アンケート → 最後 に LINE 友だち登録」 の 客 は
@@ -360,6 +360,7 @@
       '<div style="padding:18px 26px 22px;margin-top:10px;border-top:1px solid #EEF2F6;display:flex;gap:10px;flex-wrap:wrap;">' +
         '<button id="idl-new" style="background:#fff;border:1.5px solid #1B3A5C;color:#1B3A5C;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;">新しいお客様として そのまま残す</button>' +
         '<button id="idl-skip" style="background:#fff;border:1.5px solid #E3E7EE;color:#6B7280;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">あとで</button>' +
+        '<button id="idl-hist" style="background:none;border:none;color:#6B7280;padding:10px 4px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;text-decoration:underline;">まとめた記録 · 元に戻す</button>' +
         '<div id="idl-status" style="flex:1;min-width:120px;font-size:12.5px;font-weight:700;color:#6B7280;align-self:center;text-align:right;"></div>' +
       '</div>'
     );
@@ -377,6 +378,8 @@
 
     var nb = document.getElementById('idl-new');
     if (nb) nb.addEventListener('click', function () { doKeepAsNew(f, nb); });
+    var hb = document.getElementById('idl-hist');
+    if (hb) hb.addEventListener('click', function () { openHistory(null); });
     var sb = document.getElementById('idl-skip');
     if (sb) sb.addEventListener('click', function () {
       if (_idx + 1 < pending().length) { _idx++; drawFrame(''); }
@@ -393,7 +396,7 @@
     if (!confirm('LINE の「' + fname + '」さん を\n台帳 の「' + target.name + '」様 に まとめます。\n\n' +
                  '・LINE の やりとり は 「' + target.name + '」様 の カード に 移ります\n' +
                  '・「' + fname + '」の カード は なくなります\n' +
-                 '・元 に 戻せません\n\nよろしい ですか?')) return;
+                 '・まちがえたら 「' + target.name + '」様 の カード の 「↩ まとめを元に戻す」 から 戻せます\n\nよろしい ですか?')) return;
 
     if (btn) { btn.disabled = true; btn.textContent = 'まとめ中…'; }
     setStatus('まとめています…', '#1B3A5C');
@@ -549,7 +552,7 @@
       msg = 'この LINE は すでに 台帳 の「' + dupClient.name + '」様 に 登録 されて います。\n\n' +
             '「' + dupClient.name + '」様 の カード を 削除 して、\n' +
             '面談 · 議事録 · LINE の やりとり を すべて「' + client.name + '」様 に まとめます。\n\n' +
-            '元 に 戻せません。 本当 に 進めます か?';
+            'まちがえたら 「' + client.name + '」様 の カード の 「↩ まとめを元に戻す」 から 戻せます。\n進めます か?';
     } else if (dupClient) {
       msg = 'LINE の「' + friendName + '」さん を 台帳 の「' + client.name + '」様 に 紐付けます。\n\n' +
             'LINE から 自動 で できた 仮 の カード「' + dupClient.name + '」は なくなり、\n' +
@@ -587,6 +590,122 @@
     }
   }
 
+
+  /* ================================================================
+     C. まとめた 履歴 と 「元 に 戻す」
+     ================================================================ */
+  function fmtLogDate(v) {
+    try {
+      var d = v && typeof v.toDate === 'function' ? v.toDate() : (v ? new Date(v) : null);
+      if (!d || isNaN(d.getTime())) return '';
+      return d.getFullYear() + '年' + (d.getMonth() + 1) + '月' + d.getDate() + '日 ' +
+        String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+    } catch (_) { return ''; }
+  }
+
+  var _logs = [];
+
+  async function loadLogs(client) {
+    var tid = tenantId();
+    if (!tid) throw new Error('事務所 の 情報 が 読み込めて いません。 画面 を 開き直して ください');
+    var L = await fsLib();
+    var col = L.fs.collection(L.db, 'tenants', tid, 'merge_log');
+    var q = client
+      ? L.fs.query(col, L.fs.where('targetCustomerId', '==', fsId(client)), L.fs.limit(30))
+      : L.fs.query(col, L.fs.orderBy('at', 'desc'), L.fs.limit(30));
+    var snap = await L.fs.getDocs(q);
+    var out = [];
+    snap.forEach(function (d) { out.push(Object.assign({ __id: d.id }, d.data())); });
+    out.sort(function (a, b) {
+      var am = (a.at && a.at.toMillis) ? a.at.toMillis() : 0;
+      var bm = (b.at && b.at.toMillis) ? b.at.toMillis() : 0;
+      return bm - am;
+    });
+    return out;
+  }
+
+  async function openHistory(client) {
+    shell('<div style="padding:40px 28px;text-align:center;color:#6B7280;font-size:13.5px;">まとめた記録 を 読み込んでいます…</div>');
+    try {
+      _logs = await loadLogs(client);
+    } catch (e) {
+      shell('<div style="padding:34px 28px;text-align:center;">' +
+        '<div style="font-size:15px;font-weight:800;color:#991B1B;">記録 を 読めません でした</div>' +
+        '<div style="font-size:13px;color:#6B7280;margin-top:8px;">' + esc((e && e.message) || e) + '</div>' +
+        '<button id="idl-close3" style="margin-top:18px;background:#1B3A5C;color:#fff;border:none;padding:10px 24px;border-radius:8px;font-size:13.5px;font-weight:800;cursor:pointer;font-family:inherit;">閉じる</button></div>');
+      var cb = document.getElementById('idl-close3');
+      if (cb) cb.addEventListener('click', closeOverlay);
+      return;
+    }
+    drawHistory(client);
+  }
+
+  function historyRowsHtml() {
+    if (_logs.length === 0) {
+      return '<div style="padding:26px;text-align:center;color:#94A3B8;font-size:13px;">まとめた記録はまだありません</div>';
+    }
+    return _logs.map(function (g) {
+      var canUndo = !g.undone && g.sourceData && !g.sourceData._truncated && !g.sourceData._unserializable && Array.isArray(g.movedPaths);
+      var right = g.undone
+        ? '<span style="font-size:12px;font-weight:700;color:#94A3B8;white-space:nowrap;">戻し済み</span>'
+        : (canUndo
+            ? '<button class="idl-undo" data-lid="' + esc(g.__id) + '" style="background:#fff;border:1.5px solid #B45309;color:#B45309;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;white-space:nowrap;">元に戻す</button>'
+            : '<span style="font-size:12px;font-weight:700;color:#94A3B8;white-space:nowrap;">戻せません</span>');
+      return '<div style="display:flex;align-items:center;gap:12px;padding:14px 4px;border-top:1px solid #EEF2F6;">' +
+        '<div style="flex:1;min-width:0;">' +
+          '<div style="font-size:14px;font-weight:700;color:#16202B;">' +
+            esc(g.sourceName || '(名前なし)') + '　→　' + esc(g.targetName || '(名前なし)') + ' 様</div>' +
+          '<div style="font-size:12px;color:#6B7280;margin-top:3px;">' +
+            esc(fmtLogDate(g.at)) + ' ／ 移した記録 ' + (g.movedDocs || 0) + '件</div>' +
+        '</div>' + right +
+      '</div>';
+    }).join('');
+  }
+
+  function drawHistory(client) {
+    shell(
+      '<div style="padding:22px 26px 14px;border-bottom:1px solid #EEF2F6;display:flex;align-items:flex-start;gap:14px;">' +
+        '<div style="flex:1;">' +
+          '<div style="font-size:11.5px;font-weight:800;color:#94A3B8;letter-spacing:0.12em;">LINE の 名寄せ</div>' +
+          '<div style="font-size:20px;font-weight:900;color:#16202B;margin-top:4px;">まとめた記録' +
+            (client ? '（' + esc(client.name) + ' 様）' : '') + '</div>' +
+          '<div style="font-size:12.5px;color:#6B7280;margin-top:5px;">まちがえて まとめた 場合 は「元に戻す」で 2つ の カード に 戻せます。</div>' +
+        '</div>' +
+        '<button id="idl-close" aria-label="閉じる" style="background:none;border:none;font-size:22px;line-height:1;color:#94A3B8;cursor:pointer;">×</button>' +
+      '</div>' +
+      '<div id="idl-hrows" style="padding:0 26px 10px;max-height:52vh;overflow-y:auto;">' + historyRowsHtml() + '</div>' +
+      '<div style="padding:12px 26px 22px;text-align:right;"><span id="idl-status" style="font-size:12.5px;font-weight:700;color:#6B7280;"></span></div>'
+    );
+    var cb = document.getElementById('idl-close');
+    if (cb) cb.addEventListener('click', closeOverlay);
+    Array.prototype.forEach.call(document.querySelectorAll('.idl-undo'), function (b) {
+      b.addEventListener('click', function () { doUndo(b.dataset.lid, b); });
+    });
+  }
+
+  async function doUndo(logId, btn) {
+    var g = _logs.filter(function (x) { return x.__id === logId; })[0] || {};
+    if (!confirm('「' + (g.sourceName || '?') + '」を「' + (g.targetName || '?') + '」様 に まとめた の を 元 に 戻します。\n\n' +
+                 '・「' + (g.sourceName || '?') + '」の カード が 作り直されます\n' +
+                 '・移した LINE の やりとり · 議事録 は そちら に 戻ります\n' +
+                 '・まとめ先 に もともと あった 分 は そのまま です\n\nよろしい ですか?')) return;
+    var label = btn ? btn.textContent : '';
+    if (btn) { btn.disabled = true; btn.textContent = '戻し中…'; }
+    setStatus('元に戻しています…', '#1B3A5C');
+    try {
+      var r = await callFn('undoMergeCustomerRecords', { mergeLogId: logId });
+      if (!r.ok) throw new Error('元に戻せませんでした');
+      setStatus('元に戻しました', '#166534');
+      try { localStorage.removeItem('fp-crm-clients-v1'); } catch (_) {}
+      setTimeout(function () { location.reload(); }, 800);
+    } catch (e) {
+      console.error('[identify-line] undo failed', e);
+      setStatus('', '');
+      alert('元に戻せませんでした: ' + ((e && e.message) || e) + '\n\nデータ は 変わって いません。');
+      if (btn) { btn.disabled = false; btn.textContent = label || '元に戻す'; }
+    }
+  }
+
   window.IdentifyLine = {
     pending: pending,
     score: score,
@@ -596,6 +715,7 @@
     renderBar: renderBar,
     open: open,
     openForClient: openForClient,
+    openHistory: openHistory,
     close: closeOverlay,
   };
 })();

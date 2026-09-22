@@ -6858,6 +6858,9 @@
               ${c.lineFriendId
                 ? '<span class="cd-line-pill"><i data-lucide="message-circle"></i>LINE連携</span>'
                 : '<button type="button" id="cd-line-link-btn" style="display:inline-flex;align-items:center;gap:5px;background:#FEF3C7;color:#92400E;border:1px solid #FDE68A;padding:4px 11px;border-radius:999px;font-size:11.5px;font-weight:800;letter-spacing:0.04em;cursor:pointer;font-family:inherit;line-height:1.5;" title="押すと LINE の 友だち一覧 から この お客様 を 選べます">⚠ LINE 未連携 — 紐付ける</button>'}
+              ${(Array.isArray(c.mergedFrom) && c.mergedFrom.length > 0)
+                ? '<button type="button" id="cd-unmerge-btn" style="display:inline-flex;align-items:center;gap:5px;background:#fff;color:#B45309;border:1px solid #FDBA74;padding:4px 11px;border-radius:999px;font-size:11.5px;font-weight:800;letter-spacing:0.04em;cursor:pointer;font-family:inherit;line-height:1.5;" title="まちがえて まとめた 場合 は ここ から 元 に 戻せます">↩ まとめを元に戻す</button>'
+                : ''}
               ${(function(){
                 // ★ オーナーfb: ステータスpill 並びにタグも表示
                 const master = getTagsMaster();
@@ -7308,6 +7311,17 @@
         });
       }
     } catch (e) { console.warn('cd-line-link-btn:', e); }
+    // ★ 2026-09-22: 「まとめを元に戻す」 → まとめた記録 から 復元
+    try {
+      const _unmBtn = document.getElementById('cd-unmerge-btn');
+      if (_unmBtn && !_unmBtn._boundOnce) {
+        _unmBtn._boundOnce = true;
+        _unmBtn.addEventListener('click', () => {
+          if (window.IdentifyLine) window.IdentifyLine.openHistory(c);
+          else alert('読み込み中です。少し待ってからもう一度押してください。');
+        });
+      }
+    } catch (e) { console.warn('cd-unmerge-btn:', e); }
     // ★ 2026-07-11 v4: cd-left 内 の 削除ボタン → modal-delete-btn に forward
     try {
       const cdDelBtn = document.getElementById('cd-left-delete-btn');
