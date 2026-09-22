@@ -5042,6 +5042,140 @@
     }, 0);
   }
 
+  // ============================================================
+  // 2026-09-22 owner fb「写真は全部、顧客データに自動で保存されるように」
+  //   保存 自体 は webhook が 受信 時 に やって いる (tenants/{tid}/customers/{cid}/line_messages)。
+  //   ただ LINE トーク を 遡らない と 見つから なかった ので、
+  //   顧客カード に 「写真・ファイル」 タブ を 足して 1 箇所 に 集める。
+  // ============================================================
+  function _fileTsMs(m) {
+    const v = m && (m.ts || m.createdAt || m.date);
+    if (!v) return 0;
+    try {
+      if (typeof v.toMillis === 'function') return v.toMillis();
+      if (typeof v.toDate === 'function') return v.toDate().getTime();
+      if (v instanceof Date) return v.getTime();
+      const t = Date.parse(String(v));
+      return isNaN(t) ? 0 : t;
+    } catch (_) { return 0; }
+  }
+  function _fileDateLabel(m) {
+    const ms = _fileTsMs(m);
+    if (!ms) return '';
+    const d = new Date(ms);
+    return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')} ` +
+           `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  }
+  function _fileKind(m) {
+    const ct = String((m && m.mediaContentType) || '');
+    if (/^image\//.test(ct)) return 'image';
+    if (/^video\//.test(ct)) return 'video';
+    if (/^audio\//.test(ct)) return 'audio';
+    return 'file';
+  }
+  function _fileSize(n) {
+    const b = Number(n || 0);
+    if (!b) return '';
+    if (b < 1024) return b + ' B';
+    if (b < 1024 * 1024) return Math.round(b / 1024) + ' KB';
+    return (b / 1024 / 1024).toFixed(1) + ' MB';
+  }
+
+  // 顧客 の LINE 履歴 から media 付き だけ 取り出す (新しい順)
+  async function collectCustomerMedia(c) {
+    let msgs = Array.isArray(c.lineHistory) ? c.lineHistory.slice() : [];
+    try {
+      if (typeof window.fetchFullLineHistory === 'function') {
+        const full = await window.fetchFullLineHistory(c._fsCustomerId || c.id);
+        if (Array.isArray(full) && full.length > 0) msgs = full;
+      }
+    } catch (e) { console.warn('[files] full history fetch:', e && e.message); }
+    const seen = new Set();
+    const out = [];
+    msgs.forEach((m) => {
+      if (!m || !m.mediaPath) return;
+      const k = String(m.mediaBucket || '') + '|' + String(m.mediaPath);
+      if (seen.has(k)) return;
+      seen.add(k);
+      out.push(m);
+    });
+    out.sort((a, b) => _fileTsMs(b) - _fileTsMs(a));
+    return out;
+  }
+
+  async function renderCustomerFilesPanel(c, panel) {
+    if (!panel) return;
+    panel.innerHTML = '<div style="padding:26px;color:#94A3B8;font-size:13.5px;">読込中…</div>';
+    let media = [];
+    try { media = await collectCustomerMedia(c); }
+    catch (e) {
+      panel.innerHTML = '<div style="padding:26px;color:#991B1B;font-size:13.5px;">読み込めませんでした: ' + escapeHtml((e && e.message) || e) + '</div>';
+      return;
+    }
+    const cnt = document.getElementById('cd-files-count');
+    if (cnt) cnt.textContent = media.length ? String(media.length) : '—';
+
+    if (media.length === 0) {
+      panel.innerHTML = `<div style="padding:30px 22px;text-align:center;color:#94A3B8;font-size:13.5px;line-height:1.9;font-family:'Noto Sans JP',sans-serif;">
+        このお客様から届いた写真・ファイルはまだありません。<br>
+        <span style="font-size:12.5px;">LINEで写真が届くと、自動でここに入ります。</span>
+      </div>`;
+      return;
+    }
+
+    const cards = media.map((m, i) => {
+      const kind = _fileKind(m);
+      const name = String(m.mediaFileName || m.mediaPath || '').split('/').pop();
+      const meta = [_fileDateLabel(m), _fileSize(m.mediaBytes)].filter(Boolean).join(' ／ ');
+      const icon = kind === 'video' ? '🎬' : (kind === 'audio' ? '🎧' : '📄');
+      const thumb = kind === 'image'
+        ? `<div class="cdf-thumb" data-cdf="${i}" style="width:100%;aspect-ratio:4/3;background:#F1F5F9;border-radius:8px;overflow:hidden;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+             <span style="font-size:12px;color:#94A3B8;">読込中…</span></div>`
+        : `<div style="width:100%;aspect-ratio:4/3;background:#F8FAFC;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:34px;">${icon}</div>`;
+      return `<div style="border:1px solid #E2E8F0;border-radius:10px;padding:10px;background:#fff;">
+        ${thumb}
+        <div style="margin-top:8px;font-size:12.5px;font-weight:700;color:#16202B;word-break:break-all;line-height:1.5;">${escapeHtml(name)}</div>
+        <div style="margin-top:2px;font-size:11.5px;color:#6B7280;">${escapeHtml(meta)}</div>
+        <a class="cdf-save" data-cdf="${i}" href="#" download target="_blank" rel="noopener"
+           style="display:inline-flex;align-items:center;gap:4px;margin-top:8px;font-size:12px;font-weight:800;color:#1B3A5C;text-decoration:none;border:1px solid #CBD5E1;border-radius:7px;padding:5px 10px;">⤓ 保存</a>
+      </div>`;
+    }).join('');
+
+    panel.innerHTML = `<div style="padding:16px 18px;font-family:'Noto Sans JP',sans-serif;">
+      <div style="font-size:12.5px;color:#6B7280;margin-bottom:12px;line-height:1.8;">
+        LINEで届いた写真・ファイルは、自動でこのお客様に保存されています（${media.length}件）。
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:12px;">${cards}</div>
+    </div>`;
+
+    // URL は 1件ずつ 非同期 で 埋める (Promise は line-app 側 で cache 済)
+    const getUrl = (window.LineApp && window.LineApp.mediaUrl) ? window.LineApp.mediaUrl : null;
+    if (!getUrl) return;
+    media.forEach(async (m, i) => {
+      let url = '';
+      try { url = await getUrl(m.mediaPath, m.mediaBucket); } catch (_) { url = ''; }
+      const name = String(m.mediaFileName || m.mediaPath || '').split('/').pop();
+      const a = panel.querySelector(`.cdf-save[data-cdf="${i}"]`);
+      if (a) {
+        if (url) { a.setAttribute('href', url); a.setAttribute('download', name); }
+        else { a.textContent = '表示できません'; a.style.color = '#94A3B8'; a.style.borderColor = '#E2E8F0'; }
+      }
+      const t = panel.querySelector(`.cdf-thumb[data-cdf="${i}"]`);
+      if (t) {
+        if (url) {
+          t.innerHTML = `<img src="${escapeHtml(url)}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;">`;
+          t.addEventListener('click', () => {
+            if (window.LineApp && window.LineApp.openPhoto) window.LineApp.openPhoto(url, name);
+            else window.open(url, '_blank', 'noopener');
+          });
+        } else {
+          t.innerHTML = '<span style="font-size:12px;color:#94A3B8;">表示できません</span>';
+          t.style.cursor = 'default';
+        }
+      }
+    });
+  }
+
   function renderClients() {
     const searchEl = document.getElementById('client-search');
     const filterEl = document.getElementById('status-filter');
@@ -7241,6 +7375,7 @@
             <button class="cd-tab cd-tab-active" data-cdtab="overview" style="font-size:15px !important;font-weight:700 !important;">概観</button>
             <button class="cd-tab" data-cdtab="timeline" style="font-size:15px !important;font-weight:700 !important;">ライフ <span class="cd-tab-count">${events.filter(e => e.kind !== 'meeting' && e.kind !== 'task').length}</span></button>
             <button class="cd-tab" data-cdtab="meetings" style="font-size:15px !important;font-weight:700 !important;">議事録 <span class="cd-tab-count" id="cd-meetings-count">…</span></button>
+            <button class="cd-tab" data-cdtab="files" style="font-size:15px !important;font-weight:700 !important;">写真・ファイル <span class="cd-tab-count" id="cd-files-count">…</span></button>
             <button class="cd-tab" data-cdtab="qa" style="font-size:15px !important;font-weight:700 !important;">Q&A <span class="cd-tab-count" id="cd-qa-count">—</span></button>
             <button class="cd-tab" data-cdtab="family" style="font-size:15px !important;font-weight:700 !important;">家族 <span class="cd-tab-count">${(c.family || []).length + 1}</span></button>
           </div>
@@ -7255,6 +7390,11 @@
             <!-- TIMELINE -->
             <!-- ★ 2026-06-29 速度改善: lazy render — overview/line のみ初期render、他はタブ click時に build -->
             <div class="cd-tabpanel" data-cdpanel="timeline" hidden data-lazy-render="timeline">
+              <div class="cd-empty" style="padding:24px;color:#94A3B8;font-size:13.5px;">読込中…</div>
+            </div>
+
+            <!-- ★ 2026-09-22: LINE で 届いた 写真・ファイル の 一覧 -->
+            <div class="cd-tabpanel" data-cdpanel="files" hidden data-lazy-render="files">
               <div class="cd-empty" style="padding:24px;color:#94A3B8;font-size:13.5px;">読込中…</div>
             </div>
 
@@ -7300,6 +7440,14 @@
     setTimeout(_scrollLineChatBottom, 250);
     setTimeout(_scrollLineChatBottom, 800);
     document.getElementById('modal-close-btn').addEventListener('click', closeModal);
+    // ★ 2026-09-22: 「写真・ファイル」 タブ の 件数 (手元 の 履歴 から 即時。 タブ を 開いた 時 に 正確 な 数 に 直る)
+    try {
+      const _fc = document.getElementById('cd-files-count');
+      if (_fc) {
+        const _n = (Array.isArray(c.lineHistory) ? c.lineHistory : []).filter(m => m && m.mediaPath).length;
+        _fc.textContent = _n > 0 ? String(_n) : '—';
+      }
+    } catch (_) {}
     // ★ 2026-09-22: 「LINE 未連携 — 紐付ける」 → LINE 友だち一覧 から 選ぶ
     try {
       const _lnkBtn = document.getElementById('cd-line-link-btn');
@@ -8380,6 +8528,8 @@ ${ctxText}${surveyTxt}`;
                   doRender();
                 });
               }
+            } else if (key === 'files') {
+              try { renderCustomerFilesPanel(c, panel); } catch (e) { console.warn('filesPanel:', e); }
             } else if (key === 'timeline' && panel.dataset.cacheHasContent !== '1') {
               panel.innerHTML = buildLifePlanPanel(c, events, lifeCtaCard);
               panel.dataset.cacheHasContent = '1';

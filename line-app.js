@@ -11784,6 +11784,9 @@ ${family} ${era}層は「教育費ピーク (子18歳) と退職金準備が重�
   // 初期化 (LINEタブが activate されたら)
   // ============================
   window.LineApp = {
+    // ★ 2026-09-22: 顧客カード の 「写真・ファイル」 タブ から 使う media helper
+    mediaUrl: _lchMediaUrl,
+    openPhoto: _lchOpenPhoto,
     // ★ 2026-08-17 LINE 意図 pickup helpers (main assignment に 同居 で 上書き 事故 防止)
     computeReplyStatus: computeReplyStatus,
     getClientsWithReplyStatus: function() {
