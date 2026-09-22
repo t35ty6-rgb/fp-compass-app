@@ -1,4 +1,4 @@
-/* identify-line.js — 「この人は誰ですか?」 LINE 友だち と 台帳 の 名寄せ  (v20260922D)
+/* identify-line.js — 「この人は誰ですか?」 LINE 友だち と 台帳 の 名寄せ  (v20260922E)
    ------------------------------------------------------------------
    2026-09-22 owner fb:
      「先 に 面談 → 後 から アンケート → 最後 に LINE 友だち登録」 の 客 は
@@ -644,13 +644,23 @@
     if (_logs.length === 0) {
       return '<div style="padding:26px;text-align:center;color:#94A3B8;font-size:13px;">まとめた記録はまだありません</div>';
     }
+    // 同じ まとめ先 は 新しい 方 から しか 戻せない (古い 方 を 先 に 戻す と 紐付け が 入れ替わる)
+    var latestPerTarget = {};
+    _logs.forEach(function (g) {                 // _logs は 新しい順
+      if (g.undone) return;
+      if (!latestPerTarget[g.targetCustomerId]) latestPerTarget[g.targetCustomerId] = g.__id;
+    });
     return _logs.map(function (g) {
-      var canUndo = !g.undone && g.sourceData && !g.sourceData._truncated && !g.sourceData._unserializable && Array.isArray(g.movedPaths);
+      var hasBackup = g.sourceData && !g.sourceData._truncated && !g.sourceData._unserializable && Array.isArray(g.movedPaths);
+      var isLatest = latestPerTarget[g.targetCustomerId] === g.__id;
+      var canUndo = !g.undone && hasBackup && isLatest;
       var right = g.undone
         ? '<span style="font-size:12px;font-weight:700;color:#94A3B8;white-space:nowrap;">戻し済み</span>'
         : (canUndo
             ? '<button class="idl-undo" data-lid="' + esc(g.__id) + '" style="background:#fff;border:1.5px solid #B45309;color:#B45309;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;white-space:nowrap;">元に戻す</button>'
-            : '<span style="font-size:12px;font-weight:700;color:#94A3B8;white-space:nowrap;">戻せません</span>');
+            : (hasBackup && !isLatest
+                ? '<span style="font-size:11.5px;font-weight:700;color:#94A3B8;white-space:nowrap;text-align:right;line-height:1.5;">先に新しい方を<br>戻してください</span>'
+                : '<span style="font-size:12px;font-weight:700;color:#94A3B8;white-space:nowrap;">戻せません</span>'));
       return '<div style="display:flex;align-items:center;gap:12px;padding:14px 4px;border-top:1px solid #EEF2F6;">' +
         '<div style="flex:1;min-width:0;">' +
           '<div style="font-size:14px;font-weight:700;color:#16202B;">' +
@@ -697,6 +707,13 @@
       if (!r.ok) throw new Error('元に戻せませんでした');
       setStatus('元に戻しました', '#166534');
       try { localStorage.removeItem('fp-crm-clients-v1'); } catch (_) {}
+      var notes = [];
+      if (r.missing > 0) notes.push('・' + r.missing + '件 は まとめ先 に 残って いなかった ため 戻せません でした (統合後 に 消された 記録)');
+      if (r.skippedFields > 0) notes.push('・' + r.skippedFields + '項目 は 統合後 に 手 で 直されて いた ため、 今 の 内容 の まま に しました');
+      if (r.skipped > 0) notes.push('・' + r.skipped + '件 は 統合 の とき に 移せて いません (同じ番号 の 記録 が すでに あった)');
+      if (notes.length > 0) {
+        alert('元に戻しました。\n\n' + notes.join('\n'));
+      }
       setTimeout(function () { location.reload(); }, 800);
     } catch (e) {
       console.error('[identify-line] undo failed', e);

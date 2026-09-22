@@ -11,7 +11,7 @@
 /* ★ 2026-09-16 自動更新チェック
    これが無いと iPhone のホーム画面アプリが古い index.html を握ったままになり、
    何を直しても画面が変わらない。version.txt はデプロイ時に自動生成される。 */
-window.FP_VER = "20260922C";
+window.FP_VER = "20260922D";
 (function () {
   function check() {
     fetch('/version.txt?t=' + Date.now(), { cache: 'no-store' })
@@ -85,7 +85,7 @@ window.FP_VER = "20260922C";
 <link rel="preload" as="script" href="line-data.js?v=20260917A">
 <link rel="preload" as="script" href="recording-persist.js?v=20260917A">
 <link rel="preload" as="script" href="manual-meeting.js?v=20260920A">
-<link rel="preload" as="script" href="identify-line.js?v=20260922C">
+<link rel="preload" as="script" href="identify-line.js?v=20260922D">
 <link rel="preload" as="script" href="app.js?v=20260917A">
 <link rel="preload" as="script" href="line-app.js?v=20260917A">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -2726,7 +2726,7 @@ window.fpReadyAfterAuth = function() {
 <script>
 (function(){
   // 最新の ver を 1 箇所に集約 (fpReadyAfterAuth 側と一致させる必要あり)
-    const FP_VERSION = "20260922C";
+    const FP_VERSION = "20260922D";
   try { window.FP_VERSION = FP_VERSION; } catch(_) {}
 
   // 2026-07-13 v11: Chrome拡張 (Zoom タブ音声 レコーダー) 検知
