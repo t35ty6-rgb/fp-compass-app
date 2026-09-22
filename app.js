@@ -6842,7 +6842,7 @@
               <span class="status-pill ${c.status}">${statusLabel(c.status)}</span>
               ${c.lineFriendId
                 ? '<span class="cd-line-pill"><i data-lucide="message-circle"></i>LINE連携</span>'
-                : '<button type="button" id="cd-line-link-btn" class="cd-line-pill" style="background:#FEF3C7;color:#92400E;border:1px solid #FDE68A;cursor:pointer;font-family:inherit;" title="押すと LINE の 友だち一覧 から この お客様 を 選べます"><i data-lucide="alert-triangle"></i>LINE 未連携 — 紐付ける</button>'}
+                : '<button type="button" id="cd-line-link-btn" style="display:inline-flex;align-items:center;gap:5px;background:#FEF3C7;color:#92400E;border:1px solid #FDE68A;padding:4px 11px;border-radius:999px;font-size:11.5px;font-weight:800;letter-spacing:0.04em;cursor:pointer;font-family:inherit;line-height:1.5;" title="押すと LINE の 友だち一覧 から この お客様 を 選べます">⚠ LINE 未連携 — 紐付ける</button>'}
               ${(function(){
                 // ★ オーナーfb: ステータスpill 並びにタグも表示
                 const master = getTagsMaster();
