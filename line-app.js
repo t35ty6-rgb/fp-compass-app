@@ -1535,7 +1535,7 @@
       const fsByDoc = new Map();
       fsList.forEach(x => { if (x && x.docId) fsByDoc.set(x.docId, x); });
       window.DUMMY_CLIENTS.forEach(cl => {
-        const did = cl._fsCustomerId || (String(cl.id || '').indexOf('fs-') === 0 ? String(cl.id).slice(3) : '');
+        const did = cl._fsCustomerId || (String(cl.id || '').indexOf('fs-') === 0 ? String(cl.id).slice(3) : String(cl.id || ''));
         const fx = fsByDoc.get(did);
         if (!fx) return;
         if (fx.identityConfirmed) cl.identityConfirmed = true;

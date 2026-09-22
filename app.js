@@ -4607,7 +4607,22 @@
             saveClientsToLS();
             console.log('[persist] LINE profile fetched:', _rd.displayName, _rd.pictureUrl ? 'YES' : 'no');
           }
-        } catch (e) { console.warn('[persist] LINE profile fetch fail (要 friend 追加 or token 有効):', e?.message || e); }
+        } catch (e) {
+          // 2026-09-22: 同じ LINE が 別 の お客様 に すでに 付いて いる 場合 は、
+          //   ここ で 止めない と 「userId が 2つ の doc に ある」 状態 が 残り、
+          //   webhook が どちら に 入れる か 不定 に なる (= LINE が 届かない 客 が 出る)。
+          //   直前 の persistClientToFirestore が 書いた lineFriendId を 取り消す。
+          if (e && (e.code === 'functions/already-exists' || /すでに/.test(String(e.message || '')))) {
+            c.lineFriendId = '';
+            try { await persistClientToFirestore(c); } catch (_) {}
+            saveClientsToLS();
+            alert('⚠ ' + (e.message || 'この LINE は すでに 別 の お客様 に 登録 されて います') +
+                  '\n\nLINE ID は 保存 しません でした。\n' +
+                  '2つ を 1つ に まとめる 場合 は、 顧客カード の 「LINE 未連携 — 紐付ける」 から 選び直して ください。');
+          } else {
+            console.warn('[persist] LINE profile fetch fail (要 friend 追加 or token 有効):', e?.message || e);
+          }
+        }
       }
       // ★ 2026-09-20 owner fb: 登録 と 同時 に 「前回の面談」 を 議事録 として 保存
       try {

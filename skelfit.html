@@ -1138,6 +1138,8 @@
             </div>
           </div>
           <!-- ★ 2026-06-22 roundI: タグセグメントfilter (オーナーが作ったタグで絞り込み) -->
+          <!-- ★ 2026-09-22: 「この人は誰ですか?」 LINE 名寄せ バナー (identify-line.js が 描画) -->
+          <div id="idl-bar" style="display:none;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 16px;background:#EFF6FF;border:1px solid #BFDBFE;border-radius:10px;margin-bottom:12px;"></div>
           <div id="client-tag-segment-bar" style="display:none;align-items:center;gap:8px;flex-wrap:wrap;padding:12px 14px;background:#FBF5E3;border:1px solid #E8D9A8;border-radius:10px;margin-bottom:12px;">
             <span style="font-size:11px;font-weight:800;color:#9A5A18;letter-spacing:0.12em;margin-right:4px;">🏷 タグで絞込</span>
             <div id="client-tag-chips" style="display:flex;gap:6px;flex-wrap:wrap;flex:1;"></div>
@@ -1383,6 +1385,7 @@ window.fpReadyAfterAuth = function() {
     "life-events.js?v=" + ver,
     "recommender.js?v=" + ver,
     "line-data.js?v=" + ver,
+    "identify-line.js?v=" + ver,
     "app.js?v=" + ver,
   ];
   const deferred = [

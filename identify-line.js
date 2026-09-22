@@ -187,6 +187,8 @@
   }
   function closeOverlay() {
     var o = document.getElementById('idl-overlay');
+    // IME 変換中 に 閉じる と compositionend が 来ない browser が ある。 必ず 戻す
+    _composing = false;
     if (o && o.parentNode) o.parentNode.removeChild(o);
     if (_prevOverflow !== null) { document.body.style.overflow = _prevOverflow; _prevOverflow = null; }
     document.removeEventListener('keydown', onEsc, true);
@@ -202,6 +204,7 @@
         'display:flex;align-items:center;justify-content:center;padding:18px;overflow:auto;';
       o.addEventListener('click', function (e) { if (e.target === o) closeOverlay(); });
       document.body.appendChild(o);
+      _composing = false;
       _prevOverflow = document.body.style.overflow;
       document.body.style.overflow = 'hidden';
       document.addEventListener('keydown', onEsc, true);
@@ -221,7 +224,11 @@
     if (!se) return;
     se.addEventListener('compositionstart', function () { _composing = true; });
     se.addEventListener('compositionend', function () { _composing = false; onChange(se.value); });
-    se.addEventListener('input', function () { if (!_composing) onChange(se.value); });
+    se.addEventListener('input', function (e) {
+      if (e && e.isComposing) return;
+      if (_composing) return;
+      onChange(se.value);
+    });
   }
 
   function avatarHtml(c, size) {
@@ -266,7 +273,10 @@
     } else {
       shown = cands.filter(function (x) { return x.score >= MIN_SCORE; }).slice(0, 5);
       if (shown.length === 0 && cands.length > 0) {
-        return '<div style="padding:18px 4px;color:#6B7280;font-size:13px;">名前が近いお客様は見つかりませんでした。上の欄でお名前を入れて探してください。</div>';
+        return '<div style="padding:18px 4px;color:#6B7280;font-size:13px;line-height:1.9;">' +
+          'LINEの表示名から近いお客様を見つけられませんでした。<br>' +
+          '<b style="color:#16202B;">台帳に登録しているお名前</b>（例: 山田）を上の欄に入れて探してください。' +
+          '</div>';
       }
     }
     if (shown.length === 0) {
@@ -538,6 +548,7 @@
     }
     if (!confirm(msg)) return;
 
+    var _label = btn ? btn.textContent : '';
     if (btn) { btn.disabled = true; btn.textContent = '処理中…'; }
     setStatus('紐付けています…', '#1B3A5C');
     try {
@@ -561,7 +572,7 @@
       var extra = (e && e.code === 'functions/already-exists')
         ? '\n\n画面 を 開き直す と 「1つにまとめる」 ボタン が 出ます。' : '';
       alert('紐付けられませんでした: ' + ((e && e.message) || e) + extra);
-      if (btn) { btn.disabled = false; btn.textContent = 'この人です'; }
+      if (btn) { btn.disabled = false; btn.textContent = _label || 'この人です'; }
     }
   }
 
