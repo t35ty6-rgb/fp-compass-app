@@ -5038,6 +5038,8 @@
     try { autoTagAllClients(); } catch (e) { console.warn('autoTagAllClients:', e); }
     // ★ 2026-06-22 roundI: タグ filter UI を 動的描画
     try { renderClientTagSegmentBar(); } catch (e) { console.warn('tagSegmentBar:', e); }
+    // ★ 2026-09-22: 「この人は誰ですか?」 LINE 名寄せ バナー
+    try { window.IdentifyLine && window.IdentifyLine.renderBar(); } catch (e) { console.warn('identifyLineBar:', e); }
     const q = state.search.trim().toLowerCase();
     let list = clients.slice();
     if (state.statusFilter !== 'all') {
@@ -6840,7 +6842,7 @@
               <span class="status-pill ${c.status}">${statusLabel(c.status)}</span>
               ${c.lineFriendId
                 ? '<span class="cd-line-pill"><i data-lucide="message-circle"></i>LINE連携</span>'
-                : '<span class="cd-line-pill" style="background:#FEF3C7;color:#92400E;border:1px solid #FDE68A;" title="この 客 は 公式 LINE に 友だち追加 して ない ため、 admin から の LINE 送信 は できません。 客 に 友だち追加 URL / QR を 案内 する か、 情報編集 で LINE friend ID を 手動 登録 して ください。"><i data-lucide="alert-triangle"></i>LINE 未連携</span>'}
+                : '<button type="button" id="cd-line-link-btn" class="cd-line-pill" style="background:#FEF3C7;color:#92400E;border:1px solid #FDE68A;cursor:pointer;font-family:inherit;" title="押すと LINE の 友だち一覧 から この お客様 を 選べます"><i data-lucide="alert-triangle"></i>LINE 未連携 — 紐付ける</button>'}
               ${(function(){
                 // ★ オーナーfb: ステータスpill 並びにタグも表示
                 const master = getTagsMaster();
@@ -7280,6 +7282,17 @@
     setTimeout(_scrollLineChatBottom, 250);
     setTimeout(_scrollLineChatBottom, 800);
     document.getElementById('modal-close-btn').addEventListener('click', closeModal);
+    // ★ 2026-09-22: 「LINE 未連携 — 紐付ける」 → LINE 友だち一覧 から 選ぶ
+    try {
+      const _lnkBtn = document.getElementById('cd-line-link-btn');
+      if (_lnkBtn && !_lnkBtn._boundOnce) {
+        _lnkBtn._boundOnce = true;
+        _lnkBtn.addEventListener('click', () => {
+          if (window.IdentifyLine) window.IdentifyLine.openForClient(c);
+          else alert('読み込み中です。少し待ってからもう一度押してください。');
+        });
+      }
+    } catch (e) { console.warn('cd-line-link-btn:', e); }
     // ★ 2026-07-11 v4: cd-left 内 の 削除ボタン → modal-delete-btn に forward
     try {
       const cdDelBtn = document.getElementById('cd-left-delete-btn');

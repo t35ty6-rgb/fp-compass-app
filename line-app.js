@@ -1529,6 +1529,20 @@
       console.log('[fsSync] dedupe 重複自動entry除去', toRemove.length, '件');
     }
 
+    // ★ 2026-09-22: 既存 entry に identityConfirmed / lineDisplayName だけ 反映
+    //   (他 の field は 触らない — 手入力 を 壊さない ため)
+    try {
+      const fsByDoc = new Map();
+      fsList.forEach(x => { if (x && x.docId) fsByDoc.set(x.docId, x); });
+      window.DUMMY_CLIENTS.forEach(cl => {
+        const did = cl._fsCustomerId || (String(cl.id || '').indexOf('fs-') === 0 ? String(cl.id).slice(3) : cl.id);
+        const fx = fsByDoc.get(did);
+        if (!fx) return;
+        if (fx.identityConfirmed) cl.identityConfirmed = true;
+        if (fx.lineDisplayName && !cl.lineDisplayName) cl.lineDisplayName = fx.lineDisplayName;
+      });
+    } catch (e) { console.warn('[fsSync] identity refresh:', e); }
+
     const knownIds = new Set(window.DUMMY_CLIENTS.map(c => c.id));
     const knownUids = new Set(window.DUMMY_CLIENTS.map(c => c.lineFriendId).filter(Boolean));
     // ★ 同名顧客 既存check (lineFriendId null 同士でも 重複 防止)
@@ -1560,6 +1574,9 @@
         aum: c.aum || 0,
         lineFriendId: c.lineFriendId || c.userId || '',
         linePictureUrl: c.pictureUrl || c.linePictureUrl || '',
+        // ★ 2026-09-22: 「この人は誰ですか?」 名寄せ 用
+        lineDisplayName: c.lineDisplayName || '',
+        identityConfirmed: !!c.identityConfirmed,
         lastContact: (c.lastContactAt?.toDate?.()?.toISOString?.() || c.confirmedAt?.toDate?.()?.toISOString?.() || c.createdAt?.toDate?.()?.toISOString?.() || new Date().toISOString()).slice(0,10),
         confirmedSlot: c.confirmedSlot || null,
         zoomUrl: c.zoomUrl || null,
