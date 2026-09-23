@@ -11230,6 +11230,7 @@ section > div[data-line-view] > div[style*="background: #fff"] {
   display: grid !important;
   grid-template-columns: 1fr 1fr 1fr !important;
   grid-auto-rows: min-content !important;
+  grid-auto-flow: row dense !important;
   gap: 14px !important;
   align-items: start !important;
 }
@@ -11242,6 +11243,10 @@ section > div[data-line-view] > div[style*="background: #fff"] {
 .fp-summary-structured .fp-sum-p:not(.fp-sum-section .fp-sum-p) {
   grid-column: 1 / -1 !important;
 }
+/* 2026-09-23 fix: grid-row を 1 / 2 に 固定 して いた ため、 同じ 種類 の 見出し が 2つ 出る と
+   まったく 同じ マス に 置かれて カード が 重なって いた
+   (例: 「合意事項・次回方針」 と 「決定事項」 は どちらも vital 判定)。
+   列 だけ 固定 して 行 は auto + dense に する。 カード内 の 420px スクロール も 廃止。 */
 /* 3 primary column sections */
 .fp-summary-structured .fp-sum-section {
   background: #fff !important;
@@ -11254,13 +11259,13 @@ section > div[data-line-view] > div[style*="background: #fff"] {
   flex-direction: column !important;
   box-shadow: 0 1px 3px rgba(15,23,32,0.04) !important;
 }
-.fp-summary-structured .fp-sum-section.fp-sum-tone-vital    { grid-column: 1 !important; grid-row: 1 !important; border-top-color: #047647 !important; }
-.fp-summary-structured .fp-sum-section.fp-sum-tone-attn     { grid-column: 2 !important; grid-row: 1 !important; border-top-color: #F59E0B !important; }
-.fp-summary-structured .fp-sum-section.fp-sum-tone-critical { grid-column: 3 !important; grid-row: 1 !important; border-top-color: #DC2B2B !important; }
+.fp-summary-structured .fp-sum-section.fp-sum-tone-vital    { grid-column: 1 !important; grid-row: auto !important; border-top-color: #047647 !important; }
+.fp-summary-structured .fp-sum-section.fp-sum-tone-attn     { grid-column: 2 !important; grid-row: auto !important; border-top-color: #F59E0B !important; }
+.fp-summary-structured .fp-sum-section.fp-sum-tone-critical { grid-column: 3 !important; grid-row: auto !important; border-top-color: #DC2B2B !important; }
 /* bottom strip: trust (関心事) 2/3幅 + mono (数字) 1/3幅 */
-.fp-summary-structured .fp-sum-section.fp-sum-tone-trust    { grid-column: 1 / 3 !important; grid-row: 2 !important; border-top-color: #4338CA !important; }
+.fp-summary-structured .fp-sum-section.fp-sum-tone-trust    { grid-column: 1 / 3 !important; grid-row: auto !important; border-top-color: #4338CA !important; }
 .fp-summary-structured .fp-sum-section.fp-sum-tone-mono,
-.fp-summary-structured .fp-sum-section.fp-sum-tone-ink      { grid-column: 3 !important; grid-row: 2 !important; border-top-color: #0F1720 !important; }
+.fp-summary-structured .fp-sum-section.fp-sum-tone-ink      { grid-column: 3 !important; grid-row: auto !important; border-top-color: #0F1720 !important; }
 
 /* section header (pill やめる、 sect-h ラベル に) */
 .fp-summary-structured .fp-sum-section .fp-sum-section-h {
@@ -11287,8 +11292,8 @@ section > div[data-line-view] > div[style*="background: #fff"] {
 .fp-summary-structured .fp-sum-section .fp-sum-section-body {
   padding: 10px 14px 14px !important;
   flex: 1 !important;
-  overflow-y: auto !important;
-  max-height: 420px !important;
+  overflow: visible !important;
+  max-height: none !important;
 }
 
 /* card 化 - list items become chips */
