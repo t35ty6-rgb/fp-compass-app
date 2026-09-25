@@ -15903,13 +15903,20 @@ ${client.name}さん、ありがとうございます。
     }
 
     // tone 判定 (見出し / ラベル 用)
+    // 2026-09-25: 議事録 の セクション を FP 実務 の 記録 項目 に 増やした (意向把握 / 現況 の 棚卸し /
+    //   提案 と 理由 / 説明 した 重要事項 · 交付書面) ので、 その 見出し も tone 判定 に 入れる。
+    //   判定 は 上 から 順 に 当たる ので 並び 順 を 変え ない こと。
+    //   「懸念事項・リスク」 が 「確認」 系 に 食われ ない よう critical を 先 に 置いて いる。
     const toneOf = (label) => {
-      if (/決定|合意|確認|結論|完了/.test(label)) return 'vital';
-      if (/TODO|todo|次回|課題|宿題|action|やること|アクション/i.test(label)) return 'attn';
       if (/懸念|リスク|不安|注意|要検討|警告/.test(label)) return 'critical';
-      if (/質問|関心|興味|希望|プロフィール|人物/.test(label)) return 'trust';
+      if (/TODO|todo|課題|宿題|action|やること|アクション/i.test(label)) return 'attn';
+      if (/重要事項|書類|書面|交付|お渡し|説明義務|コンプラ/.test(label)) return 'legal';
+      if (/状況|現状|家族|収支|既契約|属性|棚卸/.test(label)) return 'info';
+      if (/意向|要望|ご希望|希望|関心|興味|質問|プロフィール|人物/.test(label)) return 'trust';
       if (/数字|試算|金額|コスト|見積|価格/.test(label)) return 'mono';
-      if (/提案|検討|方針|戦略/.test(label)) return 'vital';
+      if (/決定|合意|確認|結論|完了/.test(label)) return 'vital';
+      if (/提案|検討|方針|戦略|理由/.test(label)) return 'vital';
+      if (/次回/.test(label)) return 'attn';
       return 'ink';
     };
 
