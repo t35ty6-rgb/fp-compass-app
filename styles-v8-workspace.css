@@ -14370,3 +14370,67 @@ button.btn-rec-start:not([data-rec-mode="inperson"]):hover { background: #116534
     z-index: 10600 !important;   /* .modal-overlay(10400) · #mobile-bottomnav(10300) より 上 */
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   2026-09-25 · 議事録 の セクション を FP 実務 の 記録 項目 に 拡張 した 分 の 見た目
+   owner fb「この 議事録 の クオリティ とか、 この まとめ方 って 本当 に FP に 特化 した もの?」
+
+   追加 した セクション:
+     ## ご意向・ご要望                    → tone trust  (意向把握)
+     ## 現在のご状況                      → tone info   (家族 · 収支 · 既契約 の 棚卸し)  ★新tone
+     ## ご提案した内容と、その理由         → tone vital  (比較推奨 の 理由)
+     ## 説明した重要事項・お渡しした書類   → tone legal  (説明 と 交付 の 記録)          ★新tone
+
+   これ まで は tone ごと に 列 を 固定 して いた (vital→1列目 / attn→2列目 / critical→3列目)。
+   セクション が 5 → 8 に 増えた ので、 その まま だと vital が 1 列目 に 2 枚 積み上がり
+   info · legal は どの 列 の 指定 も 無い、 という 偏った 並び に なる。
+   → 出て きた 順 に 素直 に 流す (grid-column: auto)。 中身 が 長い 2 つ だけ 2 列 ぶん 取る。
+   ═══════════════════════════════════════════════════════════════════════ */
+.fp-summary-structured .fp-sum-section,
+.fp-summary-structured .fp-sum-section.fp-sum-tone-vital,
+.fp-summary-structured .fp-sum-section.fp-sum-tone-attn,
+.fp-summary-structured .fp-sum-section.fp-sum-tone-critical,
+.fp-summary-structured .fp-sum-section.fp-sum-tone-mono,
+.fp-summary-structured .fp-sum-section.fp-sum-tone-legal,
+.fp-summary-structured .fp-sum-section.fp-sum-tone-ink {
+  grid-column: auto !important;
+  grid-row: auto !important;
+}
+/* 意向 と 現況 は 項目 が 多く なる ので 2 列 ぶん */
+.fp-summary-structured .fp-sum-section.fp-sum-tone-trust,
+.fp-summary-structured .fp-sum-section.fp-sum-tone-info {
+  grid-column: span 2 !important;
+  grid-row: auto !important;
+}
+/* 新 tone の 色 (info = 事実 の 青緑、 legal = 記録 の 紫) */
+.fp-summary-structured .fp-sum-section.fp-sum-tone-info  { border-top-color: #0E7490 !important; }
+.fp-summary-structured .fp-sum-section.fp-sum-tone-legal { border-top-color: #7C3AED !important; }
+.fp-summary-structured .fp-sum-tone-info .fp-sum-section-title,
+.fp-summary-structured .fp-sum-tone-legal .fp-sum-section-title {
+  background: transparent !important;
+  color: #0F1720 !important;
+}
+.fp-summary-structured .fp-sum-h4.fp-sum-tone-info  { background: #0E7490 !important; color: #FFFFFF !important; }
+.fp-summary-structured .fp-sum-h4.fp-sum-tone-legal { background: #7C3AED !important; color: #FFFFFF !important; }
+.fp-summary-structured .fp-sum-tone-info  .fp-sum-list > li { background: #ECFEFF !important; border-left-color: #0E7490 !important; }
+.fp-summary-structured .fp-sum-tone-legal .fp-sum-list > li { background: #F5F3FF !important; border-left-color: #7C3AED !important; }
+.fp-summary-structured .fp-sum-tone-info  .fp-sum-item { background: #ECFEFF !important; border-left-color: #0E7490 !important; }
+.fp-summary-structured .fp-sum-tone-legal .fp-sum-item { background: #F5F3FF !important; border-left-color: #7C3AED !important; }
+
+/* ─ responsive: 1 列 の とき は span も 解除 する ─
+   grid-template-columns: 1fr の 中 で span 2 を 残す と、 暗黙 の 2 列目 が 生えて
+   カード が 画面 幅 から はみ出す。 */
+@media (max-width: 900px) {
+  .fp-summary-structured .fp-sum-section,
+  .fp-summary-structured .fp-sum-section.fp-sum-tone-vital,
+  .fp-summary-structured .fp-sum-section.fp-sum-tone-attn,
+  .fp-summary-structured .fp-sum-section.fp-sum-tone-critical,
+  .fp-summary-structured .fp-sum-section.fp-sum-tone-trust,
+  .fp-summary-structured .fp-sum-section.fp-sum-tone-info,
+  .fp-summary-structured .fp-sum-section.fp-sum-tone-legal,
+  .fp-summary-structured .fp-sum-section.fp-sum-tone-mono,
+  .fp-summary-structured .fp-sum-section.fp-sum-tone-ink {
+    grid-column: 1 / -1 !important;
+    grid-row: auto !important;
+  }
+}
