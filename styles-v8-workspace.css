@@ -14434,3 +14434,86 @@ button.btn-rec-start:not([data-rec-mode="inperson"]):hover { background: #116534
     grid-row: auto !important;
   }
 }
+
+/* ─ 2026-09-25 「面談の詳しい記録」 の 折りたたみ ─
+   セクション を 8 枚 全部 開く と 面談 1 本 で 画面 2 枚 半 に なる ので、
+   面談 直後 に 見る 3 枚 だけ 残して 他 は たたむ。 中身 は 消さない。 */
+.fp-summary-structured .fp-sum-more {
+  grid-column: 1 / -1 !important;
+  margin-top: 2px !important;
+  border: 1px solid #E2E8F0 !important;
+  border-radius: 8px !important;
+  background: #FFFFFF !important;
+  overflow: hidden !important;
+}
+.fp-summary-structured .fp-sum-more > .fp-sum-more-sum {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  padding: 12px 16px !important;
+  cursor: pointer !important;
+  list-style: none !important;
+  user-select: none !important;
+  background: #F8FAFC !important;
+  min-height: 44px !important;
+  box-sizing: border-box !important;
+}
+.fp-summary-structured .fp-sum-more > .fp-sum-more-sum::-webkit-details-marker { display: none !important; }
+.fp-summary-structured .fp-sum-more > .fp-sum-more-sum::marker { content: none !important; }
+.fp-summary-structured .fp-sum-more-sum:hover { background: #F1F5F9 !important; }
+.fp-summary-structured .fp-sum-more-label {
+  font-size: 12.5px !important;
+  font-weight: 800 !important;
+  color: #0F1720 !important;
+  letter-spacing: 0.04em !important;
+  white-space: nowrap !important;
+}
+.fp-summary-structured .fp-sum-more-count {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 20px !important;
+  height: 20px !important;
+  padding: 0 6px !important;
+  border-radius: 10px !important;
+  background: #0F1720 !important;
+  color: #FFFFFF !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  flex: 0 0 auto !important;
+}
+.fp-summary-structured .fp-sum-more-names {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  font-size: 11.5px !important;
+  color: #64748B !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+.fp-summary-structured .fp-sum-more-caret {
+  flex: 0 0 auto !important;
+  font-size: 13px !important;
+  color: #64748B !important;
+  transition: transform 0.15s ease !important;
+}
+.fp-summary-structured .fp-sum-more[open] .fp-sum-more-caret { transform: rotate(180deg) !important; }
+.fp-summary-structured .fp-sum-more[open] .fp-sum-more-names { display: none !important; }
+.fp-summary-structured .fp-sum-more-grid {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr 1fr !important;
+  grid-auto-rows: min-content !important;
+  grid-auto-flow: row dense !important;
+  gap: 14px !important;
+  align-items: start !important;
+  padding: 14px !important;
+  border-top: 1px solid #EEF2F6 !important;
+  background: #FBFCFD !important;
+}
+@media (max-width: 900px) {
+  .fp-summary-structured .fp-sum-more-grid {
+    grid-template-columns: 1fr !important;
+    padding: 12px !important;
+  }
+  .fp-summary-structured .fp-sum-more-names { display: none !important; }
+}

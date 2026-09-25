@@ -16057,6 +16057,42 @@ ${client.name}さん、ありがとうございます。
       out += `<p class="fp-sum-p">${inline(trimmed)}</p>`;
     }
     closeSection();
+
+    // ------------------------------------------------------------------
+    // 2026-09-25 owner fb「多すぎても わかりづらい」対応:
+    //   セクション を 5 → 8 に 増やした ぶん、 全部 開いて いると 面談 1 本 で 画面 2 枚 半 に なる。
+    //   面談 直後 に 見る 3 枚 (決定事項 / 次回 まで の TODO / 懸念) だけ 開いた まま に して、
+    //   残り (意向 / 現況 / 提案 の 理由 / 数字 / 重要事項) は 1 行 に たたむ。
+    //   中身 は 消さ ない (記録 と して は 全部 必要)。 押せば 開く。
+    //   たたむ の は 折りたたみ 対象 が 3 枚 以上 の とき だけ。 短い 議事録 は これ まで 通り 全部 出す。
+    // ------------------------------------------------------------------
+    const PRIMARY_RE = /決定|合意|結論|TODO|todo|次回|アクション|やること|懸念|リスク|注意/i;
+    const secRe = /<section class="fp-sum-section[\s\S]*?<\/section>/g;
+    const secs = out.match(secRe) || [];
+    if (secs.length >= 5) {
+      const firstIdx = out.indexOf('<section class="fp-sum-section');
+      const head = firstIdx > 0 ? out.slice(0, firstIdx) : '';
+      const titleOf = (html) => {
+        const m = html.match(/class="fp-sum-section-title">([^<]*)</);
+        return m ? m[1] : '';
+      };
+      const primary = [], folded = [];
+      secs.forEach(sec => (PRIMARY_RE.test(titleOf(sec)) ? primary : folded).push(sec));
+      if (primary.length >= 1 && folded.length >= 3) {
+        out = head + primary.join('') +
+          '<details class="fp-sum-more">' +
+            '<summary class="fp-sum-more-sum">' +
+              '<span class="fp-sum-more-label">面談の詳しい記録</span>' +
+              '<span class="fp-sum-more-count">' + folded.length + '</span>' +
+              '<span class="fp-sum-more-names">' +
+                escapeHtml(folded.map(titleOf).filter(Boolean).join(' ・ ')) +
+              '</span>' +
+              '<span class="fp-sum-more-caret">▾</span>' +
+            '</summary>' +
+            '<div class="fp-sum-more-grid">' + folded.join('') + '</div>' +
+          '</details>';
+      }
+    }
     return out;
   };
 
