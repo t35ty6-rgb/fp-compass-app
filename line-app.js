@@ -4567,7 +4567,27 @@
         if (showFailAlert) {
           const err = String(latest.error || '不明 な エラー').slice(0, 200);
           const stage = latest.errorStage ? stageJa(latest.errorStage) : '';
-          const retriableTag = latest.retriable ? '再試行 で 直る 可能性 あり (もう 一度 upload)' : '同じ 音声 で 再試行 しても 失敗 する 可能性 · 音声 形式 (MP3 / M4A / WAV) を 変えて 再 upload、 or 短く 分割 して 再 upload';
+          // 2026-09-25 owner fb「エラー が 出る 原因 は?」対応:
+          //   残高切れ (credit balance too low) の とき に 「音声 形式 を 変えて 再 upload」 と
+          //   案内 して いた。 音声 を 入れ直して も 絶対 に 直らない ので、 原因 別 に 出し分ける。
+          const _errLow = String(latest.error || '').toLowerCase();
+          let _cause = '';
+          let retriableTag;
+          if (/credit balance|billing|insufficient.quota|payment/.test(_errLow)) {
+            _cause = 'AI の 残高 が 切れて います';
+            retriableTag = '音声 は 入れ直さ なくて 大丈夫 です。 Anthropic の 管理画面 (Plans & Billing) で クレジット を 足す と 直ります';
+          } else if (/rate.?limit|429|overloaded|529|too many requests/.test(_errLow)) {
+            _cause = 'AI が 混み合って います';
+            retriableTag = '数分 おいて から もう 一度 upload して ください (音声 は その まま で OK)';
+          } else if (/api key|authentication|invalid.x-api-key|401|403|permission/.test(_errLow)) {
+            _cause = 'AI の 接続 設定 に 問題 が あります';
+            retriableTag = '音声 の 問題 では ありません。 管理者 に ご連絡 ください';
+          } else if (/上限|quota|クォータ/.test(String(latest.error || ''))) {
+            _cause = '今日 の 利用 上限 に 達して います';
+            retriableTag = '明日 に なると 戻ります。 急ぐ 場合 は 管理者 に ご連絡 ください';
+          } else {
+            retriableTag = latest.retriable ? '再試行 で 直る 可能性 あり (もう 一度 upload)' : '同じ 音声 で 再試行 しても 失敗 する 可能性 · 音声 形式 (MP3 / M4A / WAV) を 変えて 再 upload、 or 短く 分割 して 再 upload';
+          }
           alertBox.innerHTML = `
             <div style="background:linear-gradient(135deg,#FEF2F2,#FEE2E2);border:2px solid #DC2626;border-radius:12px;padding:12px 14px;margin-bottom:10px;box-shadow:0 6px 18px rgba(220,38,38,0.20);">
               <div style="display:flex;align-items:flex-start;gap:10px;">
@@ -4579,7 +4599,7 @@
                 <div style="flex:1;min-width:0;">
                   <div style="font-size:13px;font-weight:900;color:#7F1D1D;line-height:1.35;letter-spacing:-0.005em;">前回 の upload が 失敗 しました</div>
                   <div style="font-size:13px;color:#991B1B;line-height:1.55;margin-top:4px;">
-                    ${stage ? `${stage} で 失敗 · ` : ''}${escapeHtml(err)}<br>
+                    ${_cause ? `<span style="font-weight:800;">${escapeHtml(_cause)}</span><br>` : ''}${stage ? `${stage} で 失敗 · ` : ''}${escapeHtml(err)}<br>
                     <span style="color:#B91C1C;font-weight:700;">${retriableTag}</span> · ${timeAgo(latest.errorAt || latest.updatedAt)}
                   </div>
                   <button type="button" data-fpjobs-dismiss="${latest.bookingTs}" style="margin-top:10px;background:#7F1D1D;color:#fff;border:none;padding:8px 14px;border-radius:8px;font-size:13.5px;font-weight:800;cursor:pointer;font-family:inherit;">閉じる (再 upload は 上 の button)</button>

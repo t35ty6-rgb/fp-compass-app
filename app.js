@@ -4424,7 +4424,7 @@
           <div class="form-grid">
             <div class="form-row"><label>お名前 *</label><input type="text" id="f-name" value="${escapeHtml(c.name)}" placeholder="例: 田中 健一"></div>
             <div class="form-row"><label>フリガナ</label><input type="text" id="f-kana" value="${escapeHtml(c.kana)}" placeholder="たなか けんいち"></div>
-            <div class="form-row"><label>生年月日 *</label><input type="date" id="f-birth" value="${c.birth || ''}"></div>
+            <div class="form-row"><label>生年月日</label><input type="date" id="f-birth" value="${c.birth || ''}"><div style="font-size:11.5px;color:var(--muted);margin-top:4px;">入れるとライフイベントが自動で並びます（後からでOK）</div></div>
             <div class="form-row"><label>性別</label>
               <select id="f-gender">
                 <option value="M" ${c.gender === 'M' ? 'selected' : ''}>男性</option>
@@ -4543,8 +4543,12 @@
       if (_saveBtnEl && _saveBtnEl.dataset.saving === '1') return;
       const name = document.getElementById('f-name').value.trim();
       const birth = document.getElementById('f-birth').value;
-      if (!name || !birth) {
-        alert('お名前と生年月日は必須です');
+      // 2026-09-25 owner fb「新規顧客の登録の際の必須は名前だけにして」
+      //   生年月日 は 後 から 入れられる (顧客カード に 「生年月日 を 入れる」 CTA が 既に ある)。
+      //   LINE 友だち 登録 経由 の 客 も 生年月日 なし で 入って くる ので、 手 入力 だけ 必須 に する
+      //   理由 が なかった。 年齢 計算 は currentAge() が null を 返す ので 壊れ ない。
+      if (!name) {
+        alert('お名前を入れてください');
         return;
       }
       if (_saveBtnEl) {
@@ -15560,12 +15564,13 @@ ${client.name}さん、ありがとうございます。
       const job = overlay.querySelector('#rm-job').value.trim() || '未設定';
       const uid = overlay.querySelector('#rm-uid').value.trim();
       const aumMan = parseInt(overlay.querySelector('#rm-aum').value, 10) || 0;
-      if (!name || !age) {
-        alert('お名前と年齢は必須です');
+      // 2026-09-25: 新規登録 の 必須 は 名前 だけ に 揃える (年齢 は 後 から でも 入れられる)
+      if (!name) {
+        alert('お名前を入れてください');
         return;
       }
       const cYear = TODAY.getFullYear();
-      const birth = (cYear - age) + '-01-01';
+      const birth = age ? (cYear - age) + '-01-01' : '';
       const id = 'r-' + Date.now().toString(36);
       const newClient = {
         id, name, kana,

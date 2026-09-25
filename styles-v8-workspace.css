@@ -14517,3 +14517,18 @@ button.btn-rec-start:not([data-rec-mode="inperson"]):hover { background: #116534
   }
   .fp-summary-structured .fp-sum-more-names { display: none !important; }
 }
+/* たたみ の 中 は 2 列 ぶん の span を 解除 する。
+   3 列 の まま span 2 を 残す と、 背 の 高い カード の 横 に 大きな 空白 が できる。 */
+.fp-summary-structured .fp-sum-more-grid .fp-sum-section,
+.fp-summary-structured .fp-sum-more-grid .fp-sum-section.fp-sum-tone-trust,
+.fp-summary-structured .fp-sum-more-grid .fp-sum-section.fp-sum-tone-info {
+  grid-column: auto !important;
+  grid-row: auto !important;
+}
+@media (max-width: 900px) {
+  .fp-summary-structured .fp-sum-more-grid .fp-sum-section,
+  .fp-summary-structured .fp-sum-more-grid .fp-sum-section.fp-sum-tone-trust,
+  .fp-summary-structured .fp-sum-more-grid .fp-sum-section.fp-sum-tone-info {
+    grid-column: 1 / -1 !important;
+  }
+}
