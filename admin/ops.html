@@ -230,6 +230,48 @@ table.ledger tbody td.rank { font-family: var(--num); font-size: 11px; color: va
         </div>
       </div>
 
+      <!-- 2026-09-25 owner fb「使いすぎてる場合にストップできる機能」 -->
+      <div class="sec" id="budget-sec">
+        <div class="sec-head">
+          <div><div class="sec-label">Spending Cap</div><div class="sec-title">AI の 上限 と 自動停止</div></div>
+          <div class="sec-note" id="budget-state">読込中…</div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-top:4px;">
+          <div>
+            <div style="font-size:11px;letter-spacing:.12em;color:#8a8f98;font-weight:800;">本日</div>
+            <div style="font-size:22px;font-weight:900;margin-top:2px;"><span id="bg-today">—</span>
+              <span style="font-size:13px;color:#8a8f98;font-weight:700;"> / <span id="bg-today-cap">—</span></span></div>
+            <div style="height:6px;background:#ECEFF3;border-radius:3px;overflow:hidden;margin-top:6px;">
+              <div id="bg-today-bar" style="height:100%;width:0%;background:#047647;transition:width .4s;"></div></div>
+          </div>
+          <div>
+            <div style="font-size:11px;letter-spacing:.12em;color:#8a8f98;font-weight:800;">今月</div>
+            <div style="font-size:22px;font-weight:900;margin-top:2px;"><span id="bg-month">—</span>
+              <span style="font-size:13px;color:#8a8f98;font-weight:700;"> / <span id="bg-month-cap">—</span></span></div>
+            <div style="height:6px;background:#ECEFF3;border-radius:3px;overflow:hidden;margin-top:6px;">
+              <div id="bg-month-bar" style="height:100%;width:0%;background:#047647;transition:width .4s;"></div></div>
+          </div>
+          <div>
+            <div style="font-size:11px;letter-spacing:.12em;color:#8a8f98;font-weight:800;">上限を変える</div>
+            <div style="display:flex;gap:6px;align-items:center;margin-top:6px;">
+              <input id="bg-in-day" type="number" min="100" step="100" placeholder="1日"
+                style="width:90px;padding:7px 9px;border:1.5px solid #e3e7ee;border-radius:7px;font-size:13px;font-family:inherit;">
+              <input id="bg-in-month" type="number" min="100" step="1000" placeholder="1ヶ月"
+                style="width:100px;padding:7px 9px;border:1.5px solid #e3e7ee;border-radius:7px;font-size:13px;font-family:inherit;">
+              <button id="bg-save" style="background:#16202B;color:#fff;border:none;padding:8px 14px;border-radius:7px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;">保存</button>
+            </div>
+            <label style="display:flex;align-items:center;gap:6px;margin-top:8px;font-size:12.5px;color:#4b5563;cursor:pointer;">
+              <input id="bg-enabled" type="checkbox"> 上限に達したら自動で止める
+            </label>
+            <div id="bg-msg" style="font-size:12px;margin-top:6px;min-height:16px;"></div>
+          </div>
+        </div>
+        <div style="font-size:12px;color:#8a8f98;margin-top:12px;line-height:1.8;">
+          上限の8割で警告、超えたら AI を止めて LINE で知らせます。日付が変われば自動で戻ります。
+          止まっている間に失敗した議事録は、再開後に自動で作り直されます。
+        </div>
+      </div>
+
       <div class="sec">
         <div class="sec-head">
           <div><div class="sec-label">Daily Cost</div><div class="sec-title">日別 推移 (当月)</div></div>
@@ -430,6 +472,7 @@ table.ledger tbody td.rank { font-family: var(--num); font-size: 11px; color: va
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
   import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut, browserLocalPersistence, setPersistence } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
   import { getFirestore, initializeFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+  import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-functions.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyAmVAEe9l9e1Yo_dzzJdbTVU35wWKd2sH4",
@@ -475,6 +518,7 @@ table.ledger tbody td.rank { font-family: var(--num); font-size: 11px; color: va
       $('gate').style.display = 'none';
       $('main').style.display = 'block';
       await loadCost();
+      await loadBudget();
       await loadQuestions();
     } else {
       if (user) await signOut(auth);
@@ -490,6 +534,55 @@ table.ledger tbody td.rank { font-family: var(--num); font-size: 11px; color: va
   });
   $('gate-pw').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('gate-btn').click(); });
   $('logout').addEventListener('click', () => signOut(auth));
+
+  // ---- AI 予算 ----
+  const _fns = getFunctions(app, 'asia-northeast1');
+  async function loadBudget() {
+    const setMsg = (t, c) => { const e = $('bg-msg'); if (e) { e.textContent = t || ''; e.style.color = c || '#8a8f98'; } };
+    try {
+      const r = (await httpsCallable(_fns, 'getAiBudget')()).data;
+      const yen = (n) => '¥' + Math.round(Number(n || 0)).toLocaleString('ja-JP');
+      const pct = (a, b) => Math.max(0, Math.min(100, b > 0 ? (a / b) * 100 : 0));
+      $('bg-today').textContent = yen(r.todaySpentJPY);
+      $('bg-today-cap').textContent = yen(r.dailyLimitJPY);
+      $('bg-month').textContent = yen(r.monthSpentJPY);
+      $('bg-month-cap').textContent = yen(r.monthlyLimitJPY);
+      const pd = pct(r.todaySpentJPY, r.dailyLimitJPY), pm = pct(r.monthSpentJPY, r.monthlyLimitJPY);
+      const col = (p) => (p >= 100 ? '#DC2B2B' : p >= 80 ? '#B5530F' : '#047647');
+      const bd = $('bg-today-bar'), bm = $('bg-month-bar');
+      if (bd) { bd.style.width = pd + '%'; bd.style.background = col(pd); }
+      if (bm) { bm.style.width = pm + '%'; bm.style.background = col(pm); }
+      if ($('bg-in-day') && !$('bg-in-day').value) $('bg-in-day').value = r.dailyLimitJPY;
+      if ($('bg-in-month') && !$('bg-in-month').value) $('bg-in-month').value = r.monthlyLimitJPY;
+      if ($('bg-enabled')) $('bg-enabled').checked = !!r.enabled;
+      const stopped = r.stoppedToday || r.stoppedThisMonth;
+      const st = $('budget-state');
+      if (st) {
+        st.textContent = !r.enabled ? '上限なし (自動停止 OFF)' : stopped ? '⚠ 自動停止中' : '稼働中';
+        st.style.color = !r.enabled ? '#8a8f98' : stopped ? '#DC2B2B' : '#047647';
+        st.style.fontWeight = '800';
+      }
+    } catch (e) {
+      const st = $('budget-state');
+      if (st) { st.textContent = '読込失敗'; st.style.color = '#DC2B2B'; }
+      setMsg((e && e.message) || String(e), '#991B1B');
+    }
+  }
+  document.getElementById('bg-save')?.addEventListener('click', async () => {
+    const btn = $('bg-save'); const setMsg = (t, c) => { const e = $('bg-msg'); if (e) { e.textContent = t || ''; e.style.color = c || '#8a8f98'; } };
+    btn.disabled = true; btn.textContent = '保存中…'; setMsg('');
+    try {
+      await httpsCallable(_fns, 'setAiBudget')({
+        dailyLimitJPY: $('bg-in-day').value,
+        monthlyLimitJPY: $('bg-in-month').value,
+        enabled: $('bg-enabled').checked,
+      });
+      setMsg('保存しました', '#047647');
+      await loadBudget();
+    } catch (e) {
+      setMsg((e && e.message) || String(e), '#991B1B');
+    } finally { btn.disabled = false; btn.textContent = '保存'; }
+  });
 
   // COST
   async function loadCost() {
