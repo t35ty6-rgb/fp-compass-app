@@ -11,7 +11,7 @@
 /* ★ 2026-09-16 自動更新チェック
    これが無いと iPhone のホーム画面アプリが古い index.html を握ったままになり、
    何を直しても画面が変わらない。version.txt はデプロイ時に自動生成される。 */
-window.FP_VER = "20261004A";
+window.FP_VER = "20261030A";
 (function () {
   function check() {
     fetch('/version.txt?t=' + Date.now(), { cache: 'no-store' })
@@ -69,10 +69,10 @@ window.FP_VER = "20261004A";
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20261004A">
-<link rel="stylesheet" href="styles-v2.css?v=20261004A">
-<link rel="stylesheet" href="styles-v3.css?v=20261004A">
-<link rel="stylesheet" href="styles-v8-workspace.css?v=20261004A">
+<link rel="stylesheet" href="styles.css?v=20261030A">
+<link rel="stylesheet" href="styles-v2.css?v=20261030A">
+<link rel="stylesheet" href="styles-v3.css?v=20261030A">
+<link rel="stylesheet" href="styles-v8-workspace.css?v=20261030A">
 <!-- ★ 2026-06-26 perf: lucide(350KB) と chart.js(201KB) を defer 化 -->
 <!--   どちらも DOMContentLoaded 後ハイドレートで OK (lucide: setInterval scan / chart: tryRender polling) -->
 <script defer src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
@@ -2726,7 +2726,7 @@ window.fpReadyAfterAuth = function() {
 <script>
 (function(){
   // 最新の ver を 1 箇所に集約 (fpReadyAfterAuth 側と一致させる必要あり)
-    const FP_VERSION = "20261004A";
+    const FP_VERSION = "20261030A";
   try { window.FP_VERSION = FP_VERSION; } catch(_) {}
 
   // 2026-07-13 v11: Chrome拡張 (Zoom タブ音声 レコーダー) 検知
@@ -3109,6 +3109,87 @@ window.fpReadyAfterAuth = function() {
 })();
 </script>
 <!-- ====== /芽吹くん チャットボット ====== -->
+
+
+<!-- ====== アプリとして追加 (PWA) · 2026-10-30 ====== -->
+<script>
+(function () {
+  'use strict';
+
+  /* 1) Service Worker 登録。
+        これが無いと Android Chrome が 「アプリをインストール」 を 出して くれない。
+        sw.js は HTML/JS/CSS を 一切 キャッシュ しない (アイコン だけ)。 */
+  if ('serviceWorker' in navigator && location.protocol === 'https:') {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('/sw.js').catch(function () {});
+    });
+  }
+
+  /* 2) 「ホーム画面に追加」の 案内バー */
+  var KEY = 'fp-a2hs-hidden-until';
+  var deferred = null;
+
+  function installed() {
+    try {
+      if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) return true;
+    } catch (_) {}
+    return navigator.standalone === true;
+  }
+  function hidden() {
+    try { return Number(localStorage.getItem(KEY) || 0) > Date.now(); } catch (_) { return false; }
+  }
+  function hide(days) {
+    try { localStorage.setItem(KEY, String(Date.now() + days * 86400000)); } catch (_) {}
+    var el = document.getElementById('fp-a2hs');
+    if (el) el.remove();
+  }
+  var ua = navigator.userAgent || '';
+  var isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  var isSafari = isIOS && !/CriOS|FxiOS|EdgiOS|Line\//.test(ua);
+
+  function bar(html) {
+    if (document.getElementById('fp-a2hs')) return;
+    var d = document.createElement('div');
+    d.id = 'fp-a2hs';
+    d.style.cssText = 'position:fixed;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 14px);z-index:2147482000;background:#FFFFFF;color:#1F2430;border:1px solid #E3E6EC;border-radius:14px;box-shadow:0 14px 34px rgba(15,23,42,.18);padding:13px 14px;font-family:"Noto Sans JP",-apple-system,sans-serif;font-size:13.5px;line-height:1.7;display:flex;align-items:center;gap:11px;max-width:560px;margin:0 auto;';
+    d.innerHTML =
+      '<img src="/icons/icon-96.png" alt="" width="38" height="38" style="border-radius:9px;flex:0 0 auto;">' +
+      '<div style="flex:1;min-width:0;">' + html + '</div>' +
+      '<button type="button" id="fp-a2hs-x" aria-label="閉じる" style="flex:0 0 auto;width:38px;height:44px;border:0;background:#F2F4F8;color:#7A8294;border-radius:9px;font-size:17px;line-height:1;cursor:pointer;font-family:inherit;">×</button>';
+    document.body.appendChild(d);
+    document.getElementById('fp-a2hs-x').addEventListener('click', function () { hide(30); });
+  }
+
+  window.addEventListener('beforeinstallprompt', function (e) {
+    e.preventDefault();
+    deferred = e;
+    if (installed() || hidden()) return;
+    bar('<b style="font-weight:800;">アプリとして追加できます</b><br><span style="color:#5C6472;">ホーム画面から1タップで開けます</span>' +
+        '<div style="margin-top:9px;"><button type="button" id="fp-a2hs-go" style="min-height:40px;padding:0 18px;border:0;border-radius:9px;background:#5B5BF0;color:#fff;font-weight:800;font-size:13.5px;cursor:pointer;font-family:inherit;">追加する</button></div>');
+    var go = document.getElementById('fp-a2hs-go');
+    if (go) go.addEventListener('click', function () {
+      if (!deferred) return;
+      deferred.prompt();
+      deferred.userChoice.finally(function () { deferred = null; hide(365); });
+    });
+  });
+
+  window.addEventListener('appinstalled', function () { hide(3650); });
+
+  /* iOS は beforeinstallprompt が 無い ので 手順 を 出す */
+  if (isIOS && isSafari) {
+    window.addEventListener('load', function () {
+      if (installed() || hidden()) return;
+      setTimeout(function () {
+        bar('<b style="font-weight:800;">アプリとして追加できます</b><br>' +
+            '<span style="color:#5C6472;">下の <b style="color:#1F2430;">共有ボタン</b> → ' +
+            '<b style="color:#1F2430;">「ホーム画面に追加」</b></span>');
+      }, 4000);
+    });
+  }
+})();
+</script>
+<!-- ====== /アプリとして追加 ====== -->
 
 </body>
 </html>
