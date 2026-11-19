@@ -8989,14 +8989,23 @@ ${ctxText}${surveyTxt}`;
             //   LINE 成功 / 失敗 / 未連携 の 全 case で joinUrl を copy 可能 な UI で 常に 表示。
             //   これ が SSOT: owner が copy → 電話/SMS/メール で 客 に 伝えれば 面談 は 走る。
             const joinUrl = data.joinUrl || '';
+            // 2026-11-19: 「ミーティングID と パスコード を 教えて ほしい」 客 向け に、 URL だけ で なく 一式 を コピー できる よう に
+            const _zid = String(data.meetingId || '').replace(/\D/g, '');
+            const _zidLabel = _zid.length === 11 ? _zid.replace(/^(\d{3})(\d{4})(\d{4})$/, '$1 $2 $3')
+              : _zid.length === 10 ? _zid.replace(/^(\d{3})(\d{3})(\d{4})$/, '$1 $2 $3') : _zid;
+            const inviteText = [
+              'Zoom 参加URL: ' + joinUrl,
+              _zidLabel ? 'ミーティング ID: ' + _zidLabel : '',
+              data.passcode ? 'パスコード: ' + data.passcode : '',
+            ].filter(Boolean).join('\n');
             const urlBlock = joinUrl ? (`
               <div style="margin-top:10px;padding:10px 12px;background:#F9FAFB;border:1px solid #E5E7EB;border-radius:8px;">
-                <div style="font-size:12px;font-weight:800;color:#6B7280;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:5px;">客 に 伝える URL</div>
-                <div style="display:flex;align-items:center;gap:8px;">
-                  <input type="text" readonly value="${escapeHtml(joinUrl)}" id="fp-zoom-url-${Date.now()}" style="flex:1;min-width:0;font-size:13.5px;padding:6px 8px;border:1px solid #D1D5DB;border-radius:5px;background:#fff;font-family:'JetBrains Mono',monospace;color:#1F2937;" onclick="this.select()">
-                  <button type="button" data-copy-url="${escapeHtml(joinUrl)}" style="background:#1F2937;color:#fff;border:none;padding:6px 12px;border-radius:5px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;flex-shrink:0;">コピー</button>
+                <div style="font-size:12px;font-weight:800;color:#6B7280;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:5px;">客 に 伝える 内容</div>
+                <div style="display:flex;align-items:flex-start;gap:8px;">
+                  <textarea readonly rows="3" id="fp-zoom-url-${Date.now()}" style="flex:1;min-width:0;font-size:13.5px;line-height:1.6;padding:6px 8px;border:1px solid #D1D5DB;border-radius:5px;background:#fff;color:#1F2937;resize:none;font-family:inherit;" onclick="this.select()">${escapeHtml(inviteText)}</textarea>
+                  <button type="button" data-copy-url="${escapeHtml(inviteText)}" style="background:#1F2937;color:#fff;border:none;padding:6px 12px;border-radius:5px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;flex-shrink:0;">コピー</button>
                 </div>
-                <div style="font-size:12px;color:#6B7280;margin-top:5px;">電話 / SMS / メール で 客 に 伝えて 開始 して ください</div>
+                <div style="font-size:12px;color:#6B7280;margin-top:5px;">URL・ミーティングID・パスコード を まとめて コピー できます。 電話 / SMS / メール で 伝えて ください</div>
               </div>`) : '';
             if (data.lineSent) {
               status.style.color = '#059669';
@@ -9021,7 +9030,7 @@ ${ctxText}${surveyTxt}`;
                   ev.preventDefault();
                   const url = copyBtn.dataset.copyUrl;
                   try { await navigator.clipboard.writeText(url); copyBtn.textContent = '✓ コピー 済'; copyBtn.style.background = '#059669'; setTimeout(() => { copyBtn.textContent = 'コピー'; copyBtn.style.background = '#1F2937'; }, 2000); }
-                  catch (_) { const inp = status.querySelector('input'); if (inp) { inp.select(); document.execCommand('copy'); copyBtn.textContent = '✓ コピー 済'; setTimeout(() => copyBtn.textContent = 'コピー', 2000); } }
+                  catch (_) { const inp = status.querySelector('textarea, input'); if (inp) { inp.select(); document.execCommand('copy'); copyBtn.textContent = '✓ コピー 済'; setTimeout(() => copyBtn.textContent = 'コピー', 2000); } }
                 });
               }
             } catch (_) {}
