@@ -432,7 +432,7 @@
   //   - ブラウザ back / forward → popstate → URL読取 → activateTab(name, {fromPopstate:true})
   //   - リロード / 直アクセス → 初期 URL 読取 → activateTab で 復元
   //   メリット: F5でも 同じ画面戻る / Playwright E2E URL直アクセス / Bug再現が URL共有 だけで済む
-  const VALID_VIEWS = ['dashboard','clients','timeline','meetingHistory','lineChat','leadHub','distributionHub','birthdayTab','calendarTab','settingsHub','dormantFollowup','tagsHub','kpi'];
+  const VALID_VIEWS = ['dashboard','clients','timeline','meetingHistory','followups','lineChat','leadHub','distributionHub','birthdayTab','calendarTab','settingsHub','dormantFollowup','tagsHub','kpi'];
   function activateTab(name, options) {
     options = options || {};
     state.activeTab = name;
@@ -445,7 +445,16 @@
     });
     if (name === 'dashboard') renderDashboard();
     if (name === 'clients') renderClients();
-    if (name === 'timeline') renderGlobalTimeline();
+    if (name === 'timeline') {
+      renderGlobalTimeline();
+      // 2026-11-20: まだ 読んで いない 議事録 から 年齢・予定 を 拾い、 ライフイベント を 自動 で 作る (lifesync.js)
+      try { if (window.FpLifeSync) window.FpLifeSync.onOpenTimeline(renderGlobalTimeline); } catch (e) { console.warn('[lifesync] timeline fail:', e); }
+    }
+    // 2026-11-20: アフターフォロー 一覧 (followups.js)。 後 読み なので 未 load の 間 は 何も しない
+    //   (followups.js 側 が load 完了 時 に 自分 で 描く)。
+    if (name === 'followups') {
+      try { if (window.FpFollowups) window.FpFollowups.render(); } catch (e) { console.warn('[followups] render fail:', e); }
+    }
     if (name === 'meetingHistory') {
       if (window.LineApp && window.LineApp.renderMeetingHistory) {
         if (!window._lineInited) { window.LineApp.init(); window._lineInited = true; }
@@ -5281,9 +5290,11 @@
       const dayDisplay = isUncontacted ? '記録なし' : (dslRaw < 0 ? `${Math.abs(dslRaw)}日後 予定` : (dslRaw === 0 ? '今日' : `${dslRaw}日前`));
       // localStorage に保存されたタスク件数
       const taskCount = (JSON.parse(localStorage.getItem('fp-tasks-' + (c.lineFriendId || c.id)) || '[]')).length;
-      const childCount = (c.family || []).filter(m => m.rel === 'child').length;
-      const familyTxt = childCount > 0 ? `配偶者+子${childCount}` :
-        ((c.family || []).find(m => m.rel === 'spouse') ? '夫婦' : '単身');
+      // 2026-11-20: 家系図 の 続柄 (長男 / 長女 …) も 子 と して 数える (顧客 カード の プロフィール 欄 と 同じ 数え方)
+      const _fam = (c.family || []).filter(Boolean);
+      const childCount = _fam.filter(m => (window.LifeEvents.isChildRel ? window.LifeEvents.isChildRel(m.rel) : m.rel === 'child')).length;
+      const _hasSpouse = _fam.some(m => m.rel === 'spouse');
+      const familyTxt = childCount > 0 ? `${_hasSpouse ? '配偶者+' : ''}子${childCount}` : (_hasSpouse ? '夫婦' : '単身');
       const initial = (c.name || '?').replace(/\s+/g, '').slice(0, 1);
       const hue = (initial.charCodeAt(0) || 0) % 360;
       return `
@@ -5546,10 +5557,10 @@
           <div class="tl-card-body">
             <div class="tl-card-head">
               <span class="tl-card-date">${ev.date.getMonth() + 1}/${ev.date.getDate()}</span>
-              <span class="tl-card-label">${escapeHtml(ev.label)}${ev.major ? ' <span class="tl-major-tag">重要</span>' : ''}</span>
+              <span class="tl-card-label">${escapeHtml(ev.label)}${ev.major ? ' <span class="tl-major-tag">重要</span>' : ''}${window.FpLifeSync ? window.FpLifeSync.tagHtml(ev) : ''}</span>
             </div>
             <div class="tl-card-sub">
-              <span class="tl-card-client">${escapeHtml(ev.client.name)} (${window.LifeEvents.currentAge(ev.client)}歳)</span>
+              <span class="tl-card-client">${escapeHtml(ev.client.name)}${window.LifeEvents.currentAge(ev.client) != null ? ' (' + window.LifeEvents.currentAge(ev.client) + '歳)' : ''}</span>
               <span class="tl-card-who">対象: ${escapeHtml(ev.who)}</span>
             </div>
           </div>
@@ -5572,9 +5583,11 @@
     }).join('');
 
     document.getElementById('timeline-area').innerHTML = `
+      <div id="lf-bar"></div>
       ${toolbarHtml}
       ${monthsHtml || '<div class="empty">該当するイベントがありません。期間や分類を広げてみてください。</div>'}
     `;
+    try { if (window.FpLifeSync) window.FpLifeSync.paintBar(); } catch (_) {}
 
     // ピル
     document.querySelectorAll('#timeline-area [data-range]').forEach(b => {
@@ -5960,6 +5973,24 @@
     }
   }
 
+  // 2026-11-20: Firestore の customer docId から カルテ を 開く (followups.js 用)。
+  //   画面 側 の id は 'fs-xxxx' だったり 生 の docId だったり する ので 両方 見る。
+  window.__fpOpenClientByFsId = function (fsId, subtab) {
+    const want = String(fsId || '');
+    if (!want) return false;
+    const c = clients.find(x => _persistFsDocId(x) === want || x.id === want || x.id === 'fs-' + want);
+    if (!c) return false;
+    openClientModal(c.id);
+    if (subtab) {
+      setTimeout(() => {
+        try {
+          const b = document.querySelector('.cd-tab[data-cdtab="' + subtab + '"]');
+          if (b && !b.classList.contains('cd-tab-active')) b.click();
+        } catch (_) {}
+      }, 350);
+    }
+    return true;
+  };
   function openClientModal(id, options) {
     options = options || {};
     const c = clients.find(x => x.id === id);
@@ -6107,7 +6138,9 @@
     // ★ 議事録 → タイムライン 自動キャッチアップ
     //   録画時 autoSaveAIResult が走った時 client が未sync なら lifeEventCandidates の customEvents merge を 取りこぼす
     //   モーダル開く度に GAS ai_results + localStorage fp-ai-backup 両方 走査して 救済 merge
-    try {
+    //   2026-11-20: lifesync.js (サーバー 側 で 議事録 を 読み Firestore に 保存) が ある とき は そちら に 任せる。
+    //   両方 動かす と 同じ 予定 が 2 つ 出る。
+    if (!window.FpLifeSync) try {
       const liveAi = (window.LineAppLiveData && window.LineAppLiveData.ai_results) || [];
       const lsBackupKeys = Object.keys(localStorage).filter(k => k.startsWith('fp-ai-backup-'));
       const lsBackupEntries = [];
@@ -6622,9 +6655,15 @@
     // ====== NEW PREMIUM 2-COLUMN MODAL ======
     const initial = (c.name || '?').replace(/\s+/g, '').slice(0, 1);
     const age = window.LifeEvents.currentAge(c);
-    const childCount = (c.family || []).filter(m => m.rel === 'child').length;
-    const familyShort = childCount > 0 ? `配偶者 + 子${childCount}` :
-      ((c.family || []).find(m => m.rel === 'spouse') ? '夫婦' : '単身');
+    // 2026-11-20: 家系図 の 続柄 (長男 / 長女 …) も 子 と して 数える。 旧: rel === 'child' だけ で、 家系図 に 子 が 居て も 「単身」 と 出て いた。
+    const familyShortOf = (cc) => {
+      const fam = (cc.family || []).filter(Boolean);
+      const kids = fam.filter(m => (window.LifeEvents.isChildRel ? window.LifeEvents.isChildRel(m.rel) : m.rel === 'child')).length;
+      const sp = fam.some(m => m.rel === 'spouse');
+      if (kids > 0) return (sp ? '配偶者 + ' : '') + '子' + kids;
+      return sp ? '夫婦' : '単身';
+    };
+    const familyShort = familyShortOf(c);
     const days = daysSince(c.lastContact);
     // ★ 2026-08-10 bug fix: c.aum が undefined/null/'' で 「¥NaN万」 or 誤 「¥0万」 表示 されて た
     //   意図: null/undefined/'' は 「未 記録」 = '—' · 数値 0 は 「¥0万」 (owner 明示 0 円)
@@ -6645,20 +6684,26 @@
     const eventsByCat = events.reduce((acc, ev) => { acc[ev.cat] = (acc[ev.cat] || 0) + 1; return acc; }, {});
 
     // Family avatar + meta list
-    const familyHtml2 = (c.family || []).length === 0
-      ? '<div class="cd-empty">単身</div>'
-      : (c.family || []).map(m => {
-          const relLabel = m.rel === 'spouse' ? '配偶者' : (m.rel === 'child' ? 'お子様' : m.rel);
-          const mAge = window.LifeEvents.currentAge({ birth: m.birth });
-          const mInit = (m.name || '?').replace(/\s+/g, '').slice(0, 1);
-          return `<div class="cd-family-row">
+    // 2026-11-20: 家系図 から 入れた 家族 は 続柄 が 英字 (son_1st) の まま 出て いた。 年齢 が 分からない 人 は 「null歳」 だった。
+    //   日本語 の 続柄 に 直し、 議事録 から 家族 が 増えた とき に 作り直せる よう 関数 に した。
+    const familyListHtml = (cc) => {
+      const fam = (cc.family || []).filter(Boolean);
+      if (fam.length === 0) return '<div class="cd-empty">単身</div>';
+      return fam.map(m => {
+        const relLabel = (window.LifeEvents.relLabel && window.LifeEvents.relLabel(m.rel)) || m.rel || 'ご家族';
+        const mAge = window.LifeEvents.currentAge({ birth: m.birth });
+        const mName = m.name || relLabel;
+        const mInit = String(mName || '?').replace(/\s+/g, '').slice(0, 1);
+        return `<div class="cd-family-row">
             <span class="cd-family-avatar">${escapeHtml(mInit)}</span>
             <div class="cd-family-body">
-              <div class="cd-family-name">${escapeHtml(m.name)}</div>
-              <div class="cd-family-meta">${relLabel} · ${mAge}歳</div>
+              <div class="cd-family-name">${escapeHtml(mName)}</div>
+              <div class="cd-family-meta">${[m.name ? relLabel : '', mAge != null ? mAge + '歳' : ''].filter(Boolean).map(escapeHtml).join(' · ') || '年齢は未登録'}</div>
             </div>
           </div>`;
-        }).join('');
+      }).join('');
+    };
+    const familyHtml2 = familyListHtml(c);
 
     // Timeline (次Zoom繋ぎ KPI 達成率方式 — オーナーfb「1回目→2回目に繋ぐKPI / 2回目→3回目に繋ぐKPI」)
     const timelineHtml2 = (function () {
@@ -7115,7 +7160,7 @@
             <dl class="cd-dl">
               <dt>職業</dt><dd>${escapeHtml(c.occupation || '—')}</dd>
               <dt>流入経路</dt><dd>${escapeHtml(c.source || '—')}</dd>
-              <dt>家族</dt><dd>${familyShort}</dd>
+              <dt>家族</dt><dd id="cd-family-short">${familyShort}</dd>
               ${c.mortgage ? `<dt>住宅ローン</dt><dd>残${c.mortgage.remainingYears}年 / 月¥${c.mortgage.monthly.toLocaleString()}</dd>` : ''}
             </dl>
           </div>
@@ -7655,7 +7700,11 @@
       btn.addEventListener('click', () => openHearingSheetModal(c));
     });
     // ★ ライフイベント空状態 CTA ウィザード
-    if (document.getElementById('life-cta-form')) {
+    //   2026-11-20: 「ライフ」 タブ は 押した とき に 中身 を 作る (後 描き)。 カード を 開いた 時点 では この フォーム が まだ
+    //   画面 に 無い ため、 ボタン が 1 つ も 結ばれず、 押して も 何 も 起きて いなかった。
+    //   関数 に して、 タブ の 中身 を 描いた 後 に も 呼ぶ。
+    function bindLifeCta() {
+      if (!document.getElementById('life-cta-form')) return;
       const childrenWrap = document.getElementById('life-cta-children');
       // 既存 family[child] あれば 初期表示
       let childInputs = (c.family || []).filter(m => m.rel === 'child').map(m => ({ name: m.name || '', birth: m.birth || '' }));
@@ -7706,10 +7755,18 @@
         c.birth = birthVal;
         c.family = others.concat(newChildren);
         try { localStorage.setItem('fp-crm-clients-v1', JSON.stringify(clients)); } catch (_) {}
+        // 2026-11-20: ブラウザ の 中 に しか 保存 して いなかった (開き 直す と 消えて いた) → Firestore に も 保存 する
+        try { if (window.LifeEvents.invalidate) window.LifeEvents.invalidate(c); } catch (_) {}
+        try { persistClientToFirestore(c).catch(e => console.warn('[life-cta] Firestore 保存 失敗:', e && e.message)); } catch (_) {}
         // モーダル再描画 (ライフイベント自動展開を見せる)
         openClientModal(c.id);
+        try { const tb = document.querySelector('.cd-tab[data-cdtab="timeline"]'); if (tb) tb.click(); } catch (_) {}
       });
     }
+    bindLifeCta();
+    //   フォーム を 出す か どうか は 描く 時点 の データ で 決める (開いた 後 に 議事録 から 年齢 が 入る こと が ある)
+    const lifeCtaNow = () => ((!c.birth || c.birth === '1985-01-01' || !((c.family || []).length))
+      && !events.some(e => e.kind !== 'meeting' && e.kind !== 'task')) ? lifeCtaCard : '';
 
     // 2026-08-27 owner「段階的 に 数字 変わる、 シンプル に」対応: modal open で badge count 推定/更新 撤廃。
     //   tab を click してから fetch → skeleton → 完了 で render + badge 同期 の 単一 flow のみ に する。
@@ -8037,6 +8094,8 @@
     // ★ 家系図 タブ: AI 抽出 / 追加 / 編集 / 保存
     function persistFamily() {
       try { localStorage.setItem('fp-crm-clients-v1', JSON.stringify(window.DUMMY_CLIENTS || [])); } catch (_) {}
+      // 2026-11-20: 家族 の 生年月日 を 直したら 「ライフ」 タブ の 進学 の 年 も すぐ 変わる よう に する
+      try { refreshLifePanels(true); } catch (e) { console.warn('[lifesync] refresh after family edit fail:', e); }
       // ★ Firestore docId は 20文字 英数字。 c._fsCustomerId or c.id (Firestore docId format) で fallback
       const fsDocId = c._fsCustomerId || (typeof c.id === 'string' && /^[A-Za-z0-9]{20}$/.test(c.id) ? c.id : null);
       if (fsDocId && window.__fp?.db && window.__fp?.tenantId) {
@@ -8218,6 +8277,15 @@
           note: overlay.querySelector('#fp-fam-note').value.trim() || '',
         };
         if (!Array.isArray(c.family)) c.family = [];
+        // 2026-11-20: 生年月日 を 変えて いない なら 「議事録 から の 推定」 の 印 を 残す (名前 だけ 足した とき など)。
+        //   生年月日 を 入れ直したら 印 は 外れ、 正確 な 日付 と して 扱う。
+        if (!isNew && m && m.birthApprox && updated.birth === m.birth) {
+          ['addedByAI', 'birthApprox', 'aiAge', 'aiGrade', 'aiEvidence', 'aiMeetingId', 'aiMeetingDay', 'aiAddedAt'].forEach(k => { if (m[k] !== undefined) updated[k] = m[k]; });
+        }
+        //   退職 の 予定 年齢 は 編集 画面 に 欄 が 無い ので 引き継ぐ
+        if (!isNew && m && m.retireAge != null && updated.rel === 'spouse') {
+          ['retireAge', 'retireAgeAuto', 'retireEvidence'].forEach(k => { if (m[k] !== undefined) updated[k] = m[k]; });
+        }
         if (isNew) c.family.push(updated);
         else c.family[memberIdx] = updated;
         persistFamily();
@@ -8341,6 +8409,33 @@ ${ctxText}${surveyTxt}`;
       });
     }
     bindFamilyHandlers();
+    // 2026-11-20: 面談 で 聞いた 年齢・予定 から の 自動 入力 (lifesync.js)。
+    //   ライフイベント を 計算 し 直して、 「ライフ」 「家族」 タブ の 中身 を 作り直す。
+    //   (家族 の 生年月日 を 直した とき / 議事録 から 新しく 入った とき / 退職 の 年齢 を 変えた とき)
+    function refreshLifePanels(skipFamily) {
+      try { if (window.LifeEvents.invalidate) window.LifeEvents.invalidate(c); } catch (_) {}
+      const keep = events.filter(e => e.kind === 'meeting' || e.kind === 'task');
+      events = keep.concat(window.LifeEvents.generate(c)).sort((a, b) => new Date(a.date) - new Date(b.date));
+      const tlCount = document.querySelector('.cd-tab[data-cdtab="timeline"] .cd-tab-count');
+      if (tlCount) tlCount.textContent = events.filter(e => e.kind !== 'meeting' && e.kind !== 'task').length;
+      const tlPanel = document.querySelector('.cd-tabpanel[data-cdpanel="timeline"]');
+      if (tlPanel && tlPanel.dataset.cacheHasContent === '1') {
+        tlPanel.innerHTML = buildLifePlanPanel(c, events, lifeCtaNow());
+        try { bindLifeCta(); } catch (_) {}
+      }
+      const famShortEl = document.getElementById('cd-family-short');
+      if (famShortEl) famShortEl.textContent = familyShortOf(c);
+      const famListEl = document.querySelector('.cd-family-list');
+      if (famListEl) famListEl.innerHTML = familyListHtml(c);
+      if (!skipFamily) {
+        const famPanel = document.querySelector('.cd-tabpanel[data-cdpanel="family"]');
+        if (famPanel && famPanel.dataset.cacheHasContent === '1') refreshFamilyPanel();
+        else { const t = document.querySelector('[data-cdtab="family"] .cd-tab-count'); if (t) t.textContent = (c.family || []).length + 1; }
+      }
+      try { if (window.lucide && window.lucide.createIcons) window.lucide.createIcons(); } catch (_) {}
+    }
+    //   まだ 読んで いない 議事録 が あれば 読み、 増えた 分 を この カード に 反映 する。
+    try { if (window.FpLifeSync) window.FpLifeSync.onOpenClient(c, refreshLifePanels); } catch (e) { console.warn('[lifesync] open fail:', e); }
     // Tab switching inside new modal
     document.querySelectorAll('.cd-tab').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -8535,8 +8630,9 @@ ${ctxText}${surveyTxt}`;
             } else if (key === 'files') {
               try { renderCustomerFilesPanel(c, panel); } catch (e) { console.warn('filesPanel:', e); }
             } else if (key === 'timeline' && panel.dataset.cacheHasContent !== '1') {
-              panel.innerHTML = buildLifePlanPanel(c, events, lifeCtaCard);
+              panel.innerHTML = buildLifePlanPanel(c, events, lifeCtaNow());
               panel.dataset.cacheHasContent = '1';
+              try { bindLifeCta(); } catch (_) {}
             } else if (key === 'family' && typeof renderFamilyTreeBlock === 'function' && panel.dataset.cacheHasContent !== '1') {
               panel.innerHTML = renderFamilyTreeBlock(c);
               panel.dataset.cacheHasContent = '1';
@@ -9791,16 +9887,26 @@ ${ctxText}${surveyTxt}`;
       { ageAt: 18, label: '大学入学 (教育費ピーク)', icon: '🎓' },
       { ageAt: 22, label: '就職', icon: '💼' },
     ];
+    // 2026-11-20: 進学 は 年齢 では なく 「小学校 に 入る 年」 から 数える。
+    //   旧: 「6 歳 に なる 年」 で 出して いた ため、 4/2 以降 生まれ (ほとんど の 子) で 1 年 早かった。
     const childNextMilestone = (child) => {
       if (!child.birth) return null;
-      const curAge = ageOf(child.birth);
-      if (curAge == null) return null;
-      const next = CHILD_MILESTONES.find(m => m.ageAt > curAge);
-      if (!next) return null;
-      const yearsUntil = next.ageAt - curAge;
-      const yr = TODAY_LP.getFullYear() + yearsUntil;
-      return { ...next, yr, yearsUntil };
+      const entry = window.LifeEvents.elemEntryYear ? window.LifeEvents.elemEntryYear(child.birth) : null;
+      if (!entry) return null;
+      const PLUS = { 6: 0, 12: 6, 15: 9, 18: 12, 22: 16 };
+      for (const m of CHILD_MILESTONES) {
+        const yr = entry + PLUS[m.ageAt];
+        const at = new Date(yr, 3, 1);
+        if (at >= TODAY_LP) {
+          // 「あと ○ 年」 は 下 の 予定 表 と 同じ 数え方 (四捨五入) に そろえる。 1 年 未満 は 月 で 出す。
+          const months = (at.getFullYear() - TODAY_LP.getFullYear()) * 12 + (at.getMonth() - TODAY_LP.getMonth());
+          const rel = months < 12 ? 'あと' + Math.max(1, months) + 'か月' : 'あと' + Math.round((at - TODAY_LP) / (365.25 * 86400000)) + '年';
+          return { ...m, yr, rel };
+        }
+      }
+      return null;
     };
+    const lfMemberTag = (m) => (window.FpLifeSync ? window.FpLifeSync.memberTagHtml(m) : '');
 
     const relLabel = (rel) => {
       const MAP = { spouse:'配偶者', child:'お子様', son_1st:'長男', daughter_1st:'長女', son_2nd:'次男', daughter_2nd:'次女', son_3rd:'三男', daughter_3rd:'三女', child_other:'お子様' };
@@ -9816,7 +9922,7 @@ ${ctxText}${surveyTxt}`;
           <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#5B5BF0,#4338CA);display:flex;align-items:center;justify-content:center;font-size:17px;color:#fff;font-weight:800;flex-shrink:0;">${escapeHtml((c.name || '?').slice(0,1))}</div>
           <div style="flex:1;min-width:0;">
             <div style="font-size:13.5px;font-weight:800;color:#0F172A;">${escapeHtml(c.name || 'お客様')}</div>
-            <div style="font-size:13px;color:#5B5BF0;font-weight:600;">${selfAge != null ? selfAge + '歳' : ''}${c.occupation ? ' · ' + escapeHtml(c.occupation) : ''}</div>
+            <div style="font-size:13px;color:#5B5BF0;font-weight:600;">${selfAge != null ? selfAge + '歳' : ''}${c.occupation ? ' · ' + escapeHtml(c.occupation) : ''}${(c.birthApprox && c.birthSource && c.birthSource.birth === c.birth) ? lfMemberTag({ birthApprox: true }) : ''}</div>
           </div>
           <div style="text-align:right;">
             <span style="display:inline-block;background:#EEF2FF;color:#5B5BF0;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:700;">本人</span>
@@ -9825,10 +9931,10 @@ ${ctxText}${surveyTxt}`;
         <!-- 配偶者 -->
         ${spouse ? `
         <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:#FFF1F2;border-radius:10px;">
-          <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#EF4444,#DC2626);display:flex;align-items:center;justify-content:center;font-size:17px;color:#fff;font-weight:800;flex-shrink:0;">${escapeHtml((spouse.name || '?').slice(0,1))}</div>
+          <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#EF4444,#DC2626);display:flex;align-items:center;justify-content:center;font-size:17px;color:#fff;font-weight:800;flex-shrink:0;">${escapeHtml((spouse.name || '配').slice(0,1))}</div>
           <div style="flex:1;min-width:0;">
             <div style="font-size:13.5px;font-weight:800;color:#0F172A;">${escapeHtml(spouse.name || '配偶者')}</div>
-            <div style="font-size:13px;color:#EF4444;font-weight:600;">${spouseAge != null ? spouseAge + '歳' : '年齢未設定'}${spouse.note ? ' · ' + escapeHtml(spouse.note) : ''}</div>
+            <div style="font-size:13px;color:#EF4444;font-weight:600;">${spouseAge != null ? spouseAge + '歳' : '年齢未設定'}${spouse.note ? ' · ' + escapeHtml(spouse.note) : ''}${lfMemberTag(spouse)}</div>
           </div>
           <div style="text-align:right;">
             <span style="display:inline-block;background:#FFF1F2;border:1px solid #FCA5A5;color:#DC2626;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:700;">配偶者</span>
@@ -9840,10 +9946,10 @@ ${ctxText}${surveyTxt}`;
           const next = childNextMilestone(child);
           return `
           <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:#FFF7ED;border-radius:10px;">
-            <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#EA580C,#C2410C);display:flex;align-items:center;justify-content:center;font-size:17px;color:#fff;font-weight:800;flex-shrink:0;">${escapeHtml((child.name || '?').slice(0,1))}</div>
+            <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#EA580C,#C2410C);display:flex;align-items:center;justify-content:center;font-size:17px;color:#fff;font-weight:800;flex-shrink:0;">${escapeHtml((child.name || relLabel(child.rel) || '?').slice(0,1))}</div>
             <div style="flex:1;min-width:0;">
-              <div style="font-size:13.5px;font-weight:800;color:#0F172A;">${escapeHtml(child.name || 'お子様')} <span style="font-size:12.5px;color:#EA580C;font-weight:600;">${childAge != null ? childAge + '歳' : ''}${child.note ? ' · ' + escapeHtml(child.note) : ''}</span></div>
-              ${next ? `<div style="font-size:12.5px;color:#7C3AED;font-weight:700;margin-top:2px;">${next.icon} ${next.yr}年 → ${next.label} (あと${next.yearsUntil}年)</div>` : ''}
+              <div style="font-size:13.5px;font-weight:800;color:#0F172A;">${escapeHtml(child.name || 'お子様')} <span style="font-size:12.5px;color:#EA580C;font-weight:600;">${childAge != null ? childAge + '歳' : ''}${child.note ? ' · ' + escapeHtml(child.note) : ''}</span>${lfMemberTag(child)}</div>
+              ${next ? `<div style="font-size:12.5px;color:#7C3AED;font-weight:700;margin-top:2px;">${next.icon} ${next.yr}年4月 → ${next.label} (${next.rel})</div>` : ''}
             </div>
             <div style="text-align:right;">
               <span style="display:inline-block;background:#FFF7ED;border:1px solid #FDBA74;color:#EA580C;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:700;">${relLabel(child.rel)}</span>
@@ -9885,6 +9991,7 @@ ${ctxText}${surveyTxt}`;
           <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
             <span style="background:${color}18;color:${color};padding:2px 8px;border-radius:99px;font-size:11.5px;font-weight:700;">${catLabel[ev.cat] || ev.cat}</span>
             ${ev.major ? '<span style="background:#FEF3C7;color:#92400E;padding:2px 8px;border-radius:99px;font-size:11.5px;font-weight:700;">★ 重要</span>' : ''}
+            ${window.FpLifeSync ? window.FpLifeSync.tagHtml(ev) : ''}
           </div>
           <div style="font-size:13.5px;font-weight:${ev.major ? '800' : '700'};color:#0F172A;margin-top:4px;">${escapeHtml(ev.label)}</div>
           ${ev.who && ev.who !== c.name ? `<div style="font-size:12.5px;color:#64748B;margin-top:2px;">対象: ${escapeHtml(ev.who)}</div>` : ''}
@@ -9955,7 +10062,14 @@ ${ctxText}${surveyTxt}`;
       </div>`;
     })() : '';
 
-    return familySectionHtml + timelineSectionHtml + aiSectionHtml;
+    // 2026-11-20: ライフプラン 年表 (lifesync.js)。 年 の 順 に、 その 年 の 家族 の 年齢 と できごと を 並べる。
+    //   年表 が 出せる とき は、 同じ 内容 の 旧 一覧 (15 件 まで・1 件 1 行) は 出さない。
+    //   まだ 何 も 無い とき は、 これ まで どおり 生年月日 の 入力 フォーム を 出す。
+    const lifeAutoHtml = window.FpLifeSync ? window.FpLifeSync.cardHtml(c) : '';
+    const lifeHasPlan = !!(window.FpLifeSync && window.FpLifeSync.hasPlan && window.FpLifeSync.hasPlan(c));
+    //   いちばん 上 の 「ご家族 と 年齢」 も 同じ 見た目 に そろえた もの (lifesync.js) に 差し替える。
+    const lifeFamilyHtml = (window.FpLifeSync && window.FpLifeSync.familyHtml) ? window.FpLifeSync.familyHtml(c) : familySectionHtml;
+    return lifeFamilyHtml + lifeAutoHtml + (lifeHasPlan ? '' : timelineSectionHtml) + aiSectionHtml;
   }
 
   function renderFamilyTreeBlock(client) {
@@ -10068,7 +10182,7 @@ ${ctxText}${surveyTxt}`;
       return `<div class="fp-fam-card" data-fam-idx="${isSelf ? 'self' : m._idx}" style="background:${color}10;border:2px solid ${color};cursor:${isSelf?'default':'pointer'};">
         <div class="fp-fam-rel" style="color:${color};">${isSelf ? '👤 本人' : meta.label}</div>
         <div class="fp-fam-name">${escapeHtml(isSelf ? (client.name || 'お客様') : (m.name || '(未設定)'))}</div>
-        <div class="fp-fam-age">${age(isSelf ? client.birth : m.birth) ?? '?'}歳${(isSelf ? client.occupation : m.note) ? ' / ' + escapeHtml(String(isSelf ? client.occupation : m.note)).slice(0,20) : ''}</div>
+        <div class="fp-fam-age">${age(isSelf ? client.birth : m.birth) ?? '?'}歳${(isSelf ? client.occupation : m.note) ? ' / ' + escapeHtml(String(isSelf ? client.occupation : m.note)).slice(0,20) : ''}${!isSelf && window.FpLifeSync ? window.FpLifeSync.memberTagHtml(m) : ''}</div>
         ${isSelf ? '' : `<button class="fp-fam-edit" data-fam-edit-idx="${m._idx}" title="編集">✏</button>`}
       </div>`;
     };

@@ -69,6 +69,8 @@
     try { data = await res.json(); } catch (_) {}
     if (!data.ok) throw new Error(data.error || ('保存 に 失敗 しました (HTTP ' + res.status + ')'));
     if (data.skipped) throw new Error('内容 が 空 と 判定 され 保存 され ません でした');
+    // 2026-11-20: 手入力 の メモ (「長男 5 歳、 65 で 定年」) から も ライフイベント を 自動 で 作る (lifesync.js)
+    try { if (window.FpLifeSync) window.FpLifeSync.afterMeetingSaved({ customerId: opts.customerId, userId: opts.lineFriendId, name: opts.customerName }); } catch (_) {}
 
     // ※ ここで window.LineAppLiveData.ai_results に push しない。
     //   議事録 タブ は click の たび に ai_results を空にして サーバから 取り直す 作り なので

@@ -1,0 +1,215 @@
+/* ============================================================
+   FP Compass — ライフイベント の 自動 作成 (2026-11-20)
+   lifesync.js が 描く カード・帯・小さな 印 の 見た目。
+   v8 より 後 に 読む (途中 の 「防御」 ブロック に 負けない よう 後勝ち に する)。
+   ============================================================ */
+
+/* ---- 小さな 印 (議事録 から / おおよそ) ---- */
+.lf-tag { display: inline-flex; align-items: center; height: 20px; padding: 0 8px; margin: 0; border-radius: 99px;
+  background: #EEF1FE; color: #4242C9; font-family: "Noto Sans JP", -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-serif;
+  font-size: 11.5px; font-weight: 700; line-height: 1; letter-spacing: 0; white-space: nowrap; vertical-align: middle; flex: none; text-transform: none; }
+.lf-tag.lf-tag-approx { background: #F4F4F2; color: #6B6B6B; }
+.lf-tag.lf-tag-inline, .tl-card-label .lf-tag { margin-left: 6px; }   /* 文字 の すぐ 後ろ に 置く とき だけ すき間 を 空ける */
+
+/* ---- 顧客 カード 「ライフ」 タブ の 年表 ---- */
+/* クラス 名 に つい て: 古い CSS に 「名前 の 一部 が 合えば 当たる」 指定 が 残って いる
+     [class*="card"]  → 角丸 10px !important
+     [class*="sub"]   → 文字色 #475569
+     .cd-modal [class*="-title"] (スマホ) → 金色・11.5px・大文字 !important
+   ので、 それら の 文字列 を 含まない 名前 (lf-box / lf-next / lf-h) に して ある。 card / sub / -title を 含む 名前 に 戻さない こと。 */
+.lf-box { background: #fff; border: 1px solid #E2E8F0; border-radius: 14px; padding: 18px 20px 16px; margin: 0 0 14px;
+  color: #0F172A; font-family: "Noto Sans JP", -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-serif; font-size: 13.5px; line-height: 1.6; text-align: left;
+  container-type: inline-size; container-name: lf; }   /* 画面 幅 では なく、 この 箱 の 幅 で 表 の 形 を 切り替える */
+.lf-box *, .lf-box *::before, .lf-box *::after { box-sizing: border-box; }
+.lf-box .lf-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 6px; padding: 0; border: 0; background: none; }
+.lf-box .lf-h { display: flex; align-items: center; gap: 8px; min-width: 0; margin: 0; padding: 0; border: 0;
+  font-family: inherit; font-size: 14.5px; font-weight: 700; line-height: 1.4; letter-spacing: 0; color: #0F172A; text-transform: none; }
+.lf-box .lf-h .lf-svg { width: 17px; height: 17px; color: #5B5BF0; flex: none; }
+.lf-box .lf-state { flex: none; font-size: 12px; font-weight: 600; line-height: 1.4; color: #64748B; white-space: nowrap; }
+.lf-box .lf-state:empty { display: none; }
+.lf-box .lf-state.is-busy::before { content: ""; display: inline-block; width: 11px; height: 11px; margin-right: 6px; vertical-align: -1px;
+  border: 2px solid #C7CCF7; border-top-color: #5B5BF0; border-radius: 50%; animation: lf-spin .8s linear infinite; }
+.lf-box .lf-state.is-warn { color: #B5530F; white-space: normal; text-align: right; }
+.lf-box .lf-lead { margin: 0 0 10px; padding: 0; font-size: 12.5px; line-height: 1.75; color: #64748B; }
+
+.lf-box .lf-rows { display: flex; flex-direction: column; border-top: 1px solid #EEF2F6; }
+.lf-box .lf-row { display: grid; grid-template-columns: 92px minmax(0, 1fr) auto; align-items: start; column-gap: 12px; padding: 11px 0; border-bottom: 1px solid #EEF2F6; }
+.lf-box .lf-k { padding-top: 1px; font-size: 12.5px; font-weight: 700; line-height: 1.6; color: #475569; overflow-wrap: anywhere; }
+.lf-box .lf-v { min-width: 0; }
+.lf-box .lf-main { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; font-size: 13.5px; line-height: 1.6; color: #0F172A; }
+.lf-box .lf-main b { font-weight: 700; font-variant-numeric: tabular-nums; }
+.lf-box .lf-heard { color: #334155; font-variant-numeric: tabular-nums; }
+.lf-box .lf-arrow { color: #94A3B8; font-size: 12.5px; }
+.lf-box .lf-ev-label { min-width: 0; overflow-wrap: anywhere; }
+.lf-box .lf-muted { color: #94A3B8; font-size: 12.5px; }
+.lf-box .lf-q { margin-top: 2px; font-size: 12px; line-height: 1.6; color: #94A3B8; overflow-wrap: anywhere; }
+.lf-box .lf-err { flex-basis: 100%; font-size: 12px; font-weight: 600; color: #B42318; }
+
+/* これから の 見通し: 1 つ の 箱 = 1 つ の 時期 (5 年 ごと)。
+   左 = いつ・本人 の 年齢・ひとこと ／ 右 = その 時期 の できごと (年 の 順)。
+   箱 が 狭い とき (スマホ) は 左 を 上 に 載せて 縦 に 積む。 */
+.lf-box .lf-bands { display: flex; flex-direction: column; gap: 10px; margin: 0; }
+.lf-box .lf-band { display: grid; grid-template-columns: minmax(0, 1fr); margin: 0; padding: 0; border: 1px solid #E2E8F0; border-radius: 12px; background: #fff; overflow: hidden; }
+.lf-box .lf-band-l { display: flex; flex-direction: column; gap: 1px; min-width: 0; padding: 12px 14px 10px; background: #F8FAFC; }
+.lf-box .lf-band-t { margin: 0; padding: 0; border: 0; font-family: inherit; font-size: 15px; font-weight: 700; line-height: 1.5; letter-spacing: 0; color: #0F172A; text-transform: none; }
+.lf-box .lf-band-rg { margin: 0; font-size: 12.5px; line-height: 1.6; color: #475569; font-variant-numeric: tabular-nums; }
+.lf-box .lf-band-hl { align-self: flex-start; max-width: 100%; margin: 6px 0 0; padding: 2px 10px; border-radius: 12px; font-size: 12.5px; font-weight: 700; line-height: 1.6; }
+.lf-box .lf-band-r { display: flex; flex-direction: column; gap: 3px; min-width: 0; padding: 11px 14px 12px; }
+.lf-box .lf-band.is-peak { border-color: #F3D38A; }
+.lf-box .lf-band.is-peak .lf-band-l { background: #FEF9E7; }
+.lf-box .lf-ln { display: grid; grid-template-columns: 104px minmax(0, 1fr) auto; column-gap: 10px; align-items: start; font-size: 13.5px; line-height: 1.7; color: #1E293B; }
+.lf-box .lf-ln[hidden] { display: none; }
+.lf-box .lf-ln-d { color: #475569; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.lf-box .lf-ln-t { min-width: 0; overflow-wrap: anywhere; }
+.lf-box .lf-ln-t b { font-weight: 700; color: #0F172A; }
+.lf-box .lf-ln.lf-ln-none { display: block; color: #64748B; }
+@container lf (min-width: 600px) {
+  .lf-box .lf-band { grid-template-columns: 232px minmax(0, 1fr); }
+  .lf-box .lf-band-l { padding: 14px 16px; }
+  .lf-box .lf-band-r { padding: 13px 16px; justify-content: center; }
+  .lf-box .lf-band-hl { margin-top: 8px; }
+}
+/* 続き を 開く */
+.lf-box .lf-more { -webkit-appearance: none; appearance: none; align-self: flex-start; display: inline-flex; align-items: center; height: 30px; min-height: 0; margin: 4px 0 0 114px; padding: 0 2px;
+  border: 0; border-radius: 4px; background: none; box-shadow: none; color: #4242C9; font-family: inherit; font-size: 13px; font-weight: 700; line-height: 1; letter-spacing: 0; cursor: pointer;
+  text-decoration: underline; text-underline-offset: 3px; text-decoration-color: rgba(66,66,201,.32); }
+.lf-box .lf-more:focus-visible, .lf-box .lf-src > summary:focus-visible { outline: 2px solid #5B5BF0; outline-offset: 2px; }
+@media (hover: hover) { .lf-box .lf-more:hover { text-decoration-color: currentColor; } }
+/* 退職 の 予定 (見通し に すぐ 反映) */
+.lf-box .lf-retire-row { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; margin: 12px 0 0; padding: 9px 12px; border-radius: 10px; background: #F8FAFC; font-size: 13.5px; line-height: 1.6; }
+.lf-box .lf-retire-row .lf-k { padding: 0; }
+.lf-box .lf-retire-row b { font-weight: 700; font-variant-numeric: tabular-nums; }
+/* 議事録 から 読み取った 内容 (畳んで おく) */
+.lf-box .lf-src { margin: 12px 0 0; }
+.lf-box .lf-src > summary { display: inline-flex; align-items: center; gap: 6px; padding: 4px 0; list-style: none; cursor: pointer; border-radius: 4px;
+  font-size: 12.5px; font-weight: 700; line-height: 1.6; color: #4242C9; }
+.lf-box .lf-src > summary::-webkit-details-marker { display: none; }
+.lf-box .lf-src > summary::before { content: ""; width: 6px; height: 6px; margin: 0 3px 0 2px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(-45deg); transition: transform .12s; flex: none; }
+.lf-box .lf-src[open] > summary::before { transform: rotate(45deg); }
+.lf-box .lf-src .lf-rows { margin-top: 6px; }
+
+/* 退職 の 予定 年齢 (入力) */
+.lf-box .lf-retire { display: inline-flex; align-items: center; gap: 6px; margin: 0; font-size: 13.5px; font-weight: 400; color: #0F172A; cursor: text; }
+.lf-box input.lf-retire-input { -webkit-appearance: none; appearance: textfield; -moz-appearance: textfield; width: 60px; height: 34px; margin: 0; padding: 0 8px;
+  border: 1px solid #CBD5E1 !important; border-radius: 8px !important; background: #fff !important; box-shadow: none !important; outline: none;
+  color: #0F172A; font-family: inherit; font-size: 14px !important; font-weight: 700; line-height: 1; text-align: center; font-variant-numeric: tabular-nums; }
+.lf-box input.lf-retire-input::-webkit-outer-spin-button, .lf-box input.lf-retire-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.lf-box input.lf-retire-input::placeholder { color: #B6BCC8; font-weight: 400; }
+.lf-box input.lf-retire-input:hover { border-color: #94A3B8 !important; }
+/* styles-v2.css の input:focus { 金色 !important } に 負けない よう に */
+.lf-box input.lf-retire-input:focus, .lf-box input.lf-retire-input:focus-visible { border-color: #5B5BF0 !important; box-shadow: 0 0 0 3px rgba(91,91,240,.16) !important; outline: none !important; }
+.lf-box input.lf-retire-input.is-error { border-color: #D92D20 !important; box-shadow: 0 0 0 3px rgba(217,45,32,.12) !important; }
+
+/* 取り消す (×) */
+.lf-box .lf-x { -webkit-appearance: none; appearance: none; display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 22px; margin: 0 -4px 0 0; padding: 0;
+  border: 0; border-radius: 8px; background: transparent; color: #94A3B8; cursor: pointer; flex: none; box-shadow: none; min-height: 0; }
+.lf-box .lf-x .lf-svg { width: 16px; height: 16px; }
+.lf-box .lf-x:focus-visible, .lf-box .lf-link:focus-visible { outline: 2px solid #5B5BF0; outline-offset: 2px; }
+@media (hover: hover) { .lf-box .lf-x:hover { background: #FEF3F2; color: #B42318; } }
+
+.lf-box .lf-foot { margin: 10px 0 0; padding: 0; font-size: 12px; line-height: 1.75; color: #64748B; }
+.lf-box .lf-link { -webkit-appearance: none; appearance: none; display: inline; margin: 0; padding: 0; border: 0; background: none; box-shadow: none; min-height: 0;
+  color: #4242C9; font-family: inherit; font-size: inherit; font-weight: 700; line-height: inherit; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: rgba(66,66,201,.32); border-radius: 3px; }
+
+/* ---- ライフイベント 画面 の 上 に 出す 帯 ----
+   × ボタン の aria-label を 「閉じる」 だけ に しない こと (v8 の button[aria-label="閉じる"] が 白い 丸 ボタン に 変える)。 */
+#lf-bar:empty { display: none; }
+#lf-bar { margin: 0 0 14px; }
+.lf-bar { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border: 1px solid #DCE1FB; border-radius: 12px; background: #F7F8FF;
+  color: #1E293B; font-family: "Noto Sans JP", -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-serif; font-size: 13.5px; font-weight: 500; line-height: 1.6; }
+.lf-bar > .lf-svg { width: 17px; height: 17px; color: #5B5BF0; flex: none; }
+.lf-bar .lf-bar-text { flex: 1; min-width: 0; }
+.lf-bar .lf-bar-text b { font-weight: 700; font-variant-numeric: tabular-nums; }
+.lf-bar .lf-bar-num { color: #64748B; font-size: 12.5px; }
+.lf-bar.is-ok { border-color: #CDEBD9; background: #F4FBF7; }
+.lf-bar.is-ok > .lf-svg { color: #17794A; }
+.lf-bar.is-warn { border-color: #F3DDC4; background: #FFFAF3; color: #7A4410; }
+.lf-bar.is-warn > .lf-svg { color: #B5530F; }
+.lf-bar .lf-bar-btn { -webkit-appearance: none; appearance: none; height: 34px; padding: 0 14px; border: 1px solid #C9CFFA; border-radius: 9px; background: #fff; color: #4242C9;
+  font-family: inherit; font-size: 13px; font-weight: 700; line-height: 1; white-space: nowrap; cursor: pointer; flex: none; box-shadow: none; min-height: 0; }
+.lf-bar .lf-bar-x { -webkit-appearance: none; appearance: none; display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; margin: -2px -6px -2px 0; padding: 0;
+  border: 0; border-radius: 8px; background: transparent; color: #64748B; cursor: pointer; flex: none; box-shadow: none; min-height: 0; }
+.lf-bar .lf-bar-x .lf-svg { width: 16px; height: 16px; }
+.lf-bar .lf-bar-btn:focus-visible, .lf-bar .lf-bar-x:focus-visible { outline: 2px solid #5B5BF0; outline-offset: 2px; }
+@media (hover: hover) { .lf-bar .lf-bar-btn:hover { background: #F1F3FF; border-color: #AEB6F6; } .lf-bar .lf-bar-x:hover { background: rgba(15,23,42,.06); } }
+.lf-spin { width: 15px; height: 15px; border: 2px solid #C7CCF7; border-top-color: #5B5BF0; border-radius: 50%; animation: lf-spin .8s linear infinite; flex: none; }
+@keyframes lf-spin { to { transform: rotate(360deg); } }
+
+/* ---- お知らせ (画面 下) ---- */
+.lf-toast { position: fixed; left: 0; right: 0; bottom: 28px; z-index: 10600; display: flex; align-items: center; gap: 12px; width: max-content; max-width: calc(100vw - 32px); margin: 0 auto; padding: 10px 10px 10px 18px;
+  background: #fff; border: 1px solid #DCDCD8; border-radius: 12px; box-shadow: 0 10px 30px rgba(15,23,42,.14);
+  color: #0A0A0A; font-family: "Noto Sans JP", -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-serif; font-size: 13.5px; font-weight: 600; line-height: 1.5; animation: lf-toast-in .18s ease-out; }
+.lf-toast:not(:has(.lf-toast-btn)) { padding-right: 18px; }
+.lf-toast.is-error { border-color: #F3C4C4; color: #A32020; }
+.lf-toast .lf-toast-msg { min-width: 0; }
+.lf-toast .lf-toast-btn { -webkit-appearance: none; appearance: none; height: 34px; padding: 0 12px; border: 0; border-radius: 8px; background: #EEF1FE; color: #4242C9;
+  font-family: inherit; font-size: 13px; font-weight: 700; white-space: nowrap; cursor: pointer; flex: none; }
+@media (hover: hover) { .lf-toast .lf-toast-btn:hover { background: #E3E7FD; } }
+@keyframes lf-toast-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) { .lf-toast, .lf-spin, .lf-box .lf-state.is-busy::before { animation: none; } }
+
+/* ---- スマホ ---- */
+@media (max-width: 768px) {
+  .lf-box { padding: 16px 14px 14px; border-radius: 12px; }
+  .lf-box .lf-head { align-items: flex-start; flex-direction: column; gap: 2px; }
+  .lf-box .lf-row { grid-template-columns: 76px minmax(0, 1fr) auto; column-gap: 10px; }
+  .lf-box .lf-ln { grid-template-columns: 96px minmax(0, 1fr) auto; column-gap: 8px; }
+  .lf-box .lf-more { height: 44px; margin-left: 104px; }
+  .lf-box .lf-src > summary { min-height: 44px; }
+  .lf-box input.lf-retire-input { height: 44px; width: 64px; font-size: 16px !important; }   /* 16px 未満 だと iPhone が 画面 を 拡大 する */
+  .lf-box .lf-ln.lf-ln-x { min-height: 44px; align-items: center; }   /* × を 44px に する ぶん、 その 行 だけ 背 を 高く して 上下 の × と 重ねない */
+  .lf-box .lf-x { width: 44px; height: 44px; margin: 0 -10px 0 0; }
+  .lf-box .lf-link { padding: 6px 0; }
+  .lf-bar { align-items: flex-start; flex-wrap: wrap; padding: 12px 14px; }
+  .lf-bar > .lf-svg, .lf-bar .lf-spin { margin-top: 3px; }
+  .lf-bar .lf-bar-num { display: block; }
+  .lf-bar .lf-bar-btn { height: 44px; width: 100%; margin-top: 4px; }
+  .lf-bar .lf-bar-x { width: 44px; height: 44px; margin: -8px -10px -8px 0; }
+  .lf-toast { bottom: calc(68px + env(safe-area-inset-bottom, 0px) + 14px); }
+  .lf-toast .lf-toast-btn { height: 44px; }
+}
+
+.lf-svg { display: inline-block; flex: none; vertical-align: middle; }
+
+/* ---- 「ライフ」 タブ の 生年月日 入力 フォーム (前 から ある もの)
+        ボタン が 反応 する よう に 直した 結果、 お子様 の 行 が 初めて 表示 される よう に なった。
+        スマホ で 日付 欄 と 削除 ボタン が 画面 の 外 に 出て いた ので 収める。 ---- */
+#life-cta-form input { min-width: 0; max-width: 100%; box-sizing: border-box; }
+#life-cta-children > div { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 36px !important; }
+#life-cta-children > div > input { width: 100%; }
+#life-cta-children > div > button { min-height: 36px; }
+@media (max-width: 768px) {
+  #life-cta-form { grid-template-columns: minmax(0, 1fr) !important; padding: 12px !important; }
+  #life-cta-form > div { grid-column: 1 / -1 !important; min-width: 0; }
+  #life-cta-form input { font-size: 16px !important; min-height: 44px; }   /* 16px 未満 だと iPhone が 画面 を 拡大 する */
+  #life-cta-form button { min-height: 44px; }
+  #life-cta-children > div { grid-template-columns: minmax(0, 1fr) 44px !important; }
+  #life-cta-children > div > input { grid-column: 1; }
+  #life-cta-children > div > button { grid-column: 2; grid-row: 1 / span 2; align-self: stretch; }
+  #life-cta-form > div:last-child { flex-wrap: wrap; }
+  #life-cta-form > div:last-child > button { flex: 1 1 auto; }
+}
+
+/* ---- ご家族 と 年齢 (「ライフ」 タブ の いちばん 上)。 下 の 「これから の 見通し」 と 同じ 箱・同じ 文字 に そろえる。
+        クラス 名 に family / name / avatar / meta を 入れない (古い CSS の [class*="…"] が 当たる)。 ---- */
+.lf-box.lf-ppl .lf-head { margin-bottom: 12px; }
+.lf-box .lf-ppl-list { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; margin: 0; padding: 0; list-style: none; }
+.lf-box .lf-p { display: flex; align-items: flex-start; gap: 12px; min-width: 0; margin: 0; padding: 11px 14px; border: 1px solid #E2E8F0; border-radius: 12px; background: #fff; list-style: none; }
+.lf-box .lf-p-av { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; flex: none;
+  background: #EEF1FE; color: #4242C9; font-size: 15px; font-weight: 700; line-height: 1; }
+.lf-box .lf-p-spouse .lf-p-av { background: #FDECF0; color: #BE123C; }
+.lf-box .lf-p-child .lf-p-av { background: #FDF1E3; color: #9A3412; }
+.lf-box .lf-p-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.lf-box .lf-p-top { display: flex; align-items: baseline; flex-wrap: wrap; gap: 2px 8px; min-width: 0; }
+.lf-box .lf-p-nm { min-width: 0; font-size: 14px; font-weight: 700; line-height: 1.6; color: #0F172A; overflow-wrap: anywhere; }
+.lf-box .lf-p-role { font-size: 12px; font-weight: 600; line-height: 1.6; color: #475569; white-space: nowrap; }
+.lf-box .lf-p-info { font-size: 13px; line-height: 1.7; color: #334155; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.lf-box .lf-p-next { font-size: 12.5px; font-weight: 600; line-height: 1.6; color: #4242C9; font-variant-numeric: tabular-nums; }
+.lf-box.lf-ppl .lf-head .lf-link { flex: none; font-size: 12.5px; white-space: nowrap; }
+@container lf (min-width: 600px) {
+  .lf-box .lf-ppl-list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+}
+@media (max-width: 768px) {
+  .lf-box.lf-ppl .lf-head { flex-direction: row; align-items: center; }
+  .lf-box.lf-ppl .lf-head .lf-link { min-height: 44px; display: inline-flex; align-items: center; padding: 0 2px; }
+}

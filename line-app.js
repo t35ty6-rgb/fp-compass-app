@@ -4937,6 +4937,11 @@
       transcript_summary: result.transcript_summary || '',
       key_concerns: result.key_concerns || [],
       next_meeting_suggestion: result.next_meeting_suggestion || '',
+      // 2026-11-20: アフターフォロー 一覧 用 (proxy が Firestore の meetings doc に 書く)。
+      //   これ まで PC の 対面録音 は tasks を 保存 して おらず、 一覧 に 出せなかった。
+      tasks: Array.isArray(result.tasks) ? result.tasks : [],
+      next_meeting_kpis: Array.isArray(result.next_meeting_kpis) ? result.next_meeting_kpis : [],
+      compliance_flags: Array.isArray(result.compliance_flags) ? result.compliance_flags : [],
       lifeEventCandidates: result.lifeEventCandidates || [],
       extractedProfile: result.extractedProfile || {},
       title: '',  // ★ 2026-08-12: generateMeetingTitle で 埋める (A-1)
@@ -4945,7 +4950,8 @@
     // ★ ライフイベント自動抽出: 抽出された 候補 を 該当顧客の customEvents[] に積む
     try {
       const cands = Array.isArray(result.lifeEventCandidates) ? result.lifeEventCandidates : [];
-      if (cands.length > 0 && window.DUMMY_CLIENTS) {
+      // 2026-11-20: lifesync.js (サーバー 側 で 議事録 を 読み Firestore に 保存) が ある とき は そちら に 任せる
+      if (cands.length > 0 && window.DUMMY_CLIENTS && !window.FpLifeSync) {
         const c = window.DUMMY_CLIENTS.find(x =>
           (x.lineFriendId && x.lineFriendId === userId) ||
           (x.name && (x.name === nameKey || x.name === customerName))
@@ -5071,6 +5077,8 @@
       .then(d => {
       if (d.ok) {
         console.log('[autoSaveAIResult] GAS 保存 OK · title:', entry.title || '(空)');
+        // 2026-11-20: 保存 した 議事録 から 年齢・予定 を 拾って ライフイベント を 自動 で 作る (lifesync.js)
+        try { if (window.FpLifeSync) window.FpLifeSync.afterMeetingSaved({ userId: userId, name: nameKey || customerName }); } catch (_) {}
         // 成功 → pending-sync から persistKey 削除 (まだ蓄積してなくても無害)
         try {
           const pending = JSON.parse(localStorage.getItem('fp-ai-pending-sync') || '[]');

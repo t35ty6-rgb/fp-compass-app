@@ -34,9 +34,9 @@
   const SELF_EVENTS = [
     { age: 50, label: '住宅ローン総点検', cat: 'finance',
       cond: c => !!(c.mortgage) || clientHas(c, /住宅ローン|住宅ロ|住宅L/) },
-    { age: 55, label: '退職金準備強化期', cat: 'retirement',
+    { age: 55, label: '退職金準備強化期', cat: 'retirement', key: 'preRetire',
       cond: c => clientOccMatches(c, /会社員|公務員|専門職/) },
-    { age: 60, label: '定年・退職金受取検討', cat: 'retirement', major: true,
+    { age: 60, label: '定年・退職金受取検討', cat: 'retirement', major: true, key: 'retire',
       cond: c => clientOccMatches(c, /会社員|公務員|専門職/) },
     { age: 65, label: '年金受給開始 / 繰下げ判定', cat: 'retirement', major: true }, // 全員
     { age: 70, label: 'NISA出口戦略', cat: 'finance',
@@ -47,14 +47,39 @@
     { age: 80, label: '相続対策最終調整', cat: 'inherit' }, // 全員
   ];
 
+  // 2026-11-20: 進学 は 年齢 では なく 「小学校 に 入る 年」 から 数える (plus = 入学 から 何 年 後 の 4 月 か)。
+  //   旧: 6 歳 の 誕生日 の 年 の 4 月 → 4/2〜12 月 生まれ (= ほとんど の 子) で 1 年 早く 出て いた。
   const CHILD_EVENTS = [
-    { age: 6, label: '小学校入学', cat: 'education' },
-    { age: 12, label: '中学校入学', cat: 'education' },
-    { age: 15, label: '高校入学', cat: 'education' },
-    { age: 18, label: '大学入学 (教育費ピーク)', cat: 'education', major: true },
-    { age: 22, label: '就職', cat: 'family' },
+    { plus: 0, label: '小学校入学', cat: 'education' },
+    { plus: 6, label: '中学校入学', cat: 'education' },
+    { plus: 9, label: '高校入学', cat: 'education' },
+    { plus: 12, label: '大学入学 (教育費ピーク)', cat: 'education', major: true },
+    { plus: 16, label: '就職', cat: 'family' },
     { age: 30, label: '結婚適齢期', cat: 'family' },
   ];
+  // 家系図 の 続柄 (長男 / 長女 …) も お子様 と して 扱う。 旧: rel === 'child' だけ で、 家系図 から 入れた 子 は 進学 が 出なかった。
+  const CHILD_RELS = { child: 1, son_1st: 1, daughter_1st: 1, son_2nd: 1, daughter_2nd: 1, son_3rd: 1, daughter_3rd: 1, child_other: 1 };
+  const REL_JA = { spouse: '配偶者', child: 'お子様', son_1st: '長男', daughter_1st: '長女', son_2nd: '次男', daughter_2nd: '次女', son_3rd: '三男', daughter_3rd: '三女', child_other: 'お子様' };
+  function isChildRel(rel) { return !!CHILD_RELS[String(rel || '')]; }
+  function parseBirth(birth) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(birth || ''));
+    if (!m) return null;
+    const d = new Date(+m[1], +m[2] - 1, +m[3]);
+    return isNaN(d.getTime()) ? null : d;
+  }
+  // 小学校 に 入る 年。 4/2 〜 翌 4/1 生まれ が 同じ 学年 (早生まれ は 6 歳 に なる 年、 それ 以外 は 7 歳 に なる 年)。
+  function elemEntryYear(birth) {
+    const b = parseBirth(birth);
+    if (!b) return null;
+    const mo = b.getMonth() + 1, da = b.getDate();
+    const early = mo < 4 || (mo === 4 && da === 1);
+    return b.getFullYear() + (early ? 6 : 7);
+  }
+  function validAge(v, lo, hi) {
+    if (v === null || v === undefined || v === '') return null;
+    const n = Number(v);
+    return (isFinite(n) && n >= lo && n <= hi) ? Math.round(n) : null;
+  }
 
   const SPOUSE_EVENTS = [
     { age: 60, label: '配偶者・定年', cat: 'retirement' },
@@ -88,52 +113,89 @@
     const events = [];
     // ★ オーナーfb「29歳客で2件しか出ない」: 30年固定 → 「82歳到達まで」 動的化
     //   何歳の客でも 50/55/60/65/70/75/80 節目 全部 + 子の進学 全部 が必ず表示される
-    const myAge = client.birth ? age(client.birth, TODAY) : 40;
+    const myAge = parseBirth(client.birth) ? age(client.birth, TODAY) : 40;
     const horizonYears = Math.max(30, 82 - myAge); // 最低30年、 上は82歳まで
     const horizonDate = new Date(TODAY);
     horizonDate.setFullYear(TODAY.getFullYear() + horizonYears);
 
     // 本人イベント (条件付きテンプレ — 持ってない商品/該当しない職業 は スキップ)
-    SELF_EVENTS.forEach(tpl => {
-      if (tpl.cond && !tpl.cond(client)) return; // 条件不一致なら スキップ
-      const d = eventDate(client.birth, tpl.age);
+    //   2026-11-20: 退職 の 予定 年齢 (client.retireAge) が 分かって いる とき は、 60 歳 固定 では なく その 年齢 で 出す。
+    //   生年月日 が 面談 で 聞いた 年齢 から の 逆算 (birthApprox) の とき は approx = おおよそ の 印 を 付ける。
+    const selfBirthOk = !!parseBirth(client.birth);
+    const selfApprox = !!(client.birthApprox && client.birthSource && client.birthSource.birth === client.birth);
+    const selfSrc = selfApprox ? 'minutes' : '';
+    const retireAge = validAge(client.retireAge, 45, 85);
+    if (selfBirthOk) SELF_EVENTS.forEach(tpl => {
+      let atAge = tpl.age, label = tpl.label, src = selfSrc;
+      if (retireAge !== null && tpl.key === 'retire') {
+        atAge = retireAge; label = '退職の予定 (' + retireAge + '歳)';
+        if (client.retireAgeAuto) src = 'minutes';
+      } else if (retireAge !== null && tpl.key === 'preRetire') {
+        atAge = retireAge - 5;
+      } else if (tpl.cond && !tpl.cond(client)) return; // 条件不一致なら スキップ
+      const d = eventDate(client.birth, atAge);
       if (d >= TODAY && d <= horizonDate) {
         events.push({
           date: d,
           who: client.name,
-          label: tpl.label,
+          label: label,
           cat: tpl.cat,
           major: !!tpl.major,
+          by: parseBirth(client.birth).getFullYear(),
+          subject: 'self',
+          approx: selfApprox,
+          src: src,
         });
       }
     });
 
     // 家族イベント
     (client.family || []).forEach(member => {
-      if (member.rel === 'child') {
+      if (!member || !parseBirth(member.birth)) return;   // 生年月日 が 無い 人 は 計算 できない
+      const who = member.name || REL_JA[member.rel] || 'ご家族';
+      const src = member.addedByAI || member.birthApprox ? 'minutes' : '';
+      if (isChildRel(member.rel)) {
+        const entry = elemEntryYear(member.birth);
+        // 学年 から 逆算 した 子 (aiGrade) は 進学 の 年 が ずれない。 年齢 だけ から の 子 は 1 年 ずれる こと が ある。
+        const schoolApprox = !!member.birthApprox && !member.aiGrade;
         CHILD_EVENTS.forEach(tpl => {
-          let d = eventDate(member.birth, tpl.age);
-          if (tpl.cat === 'education') d = adjustEducationToApril(d);
+          const bySchool = tpl.plus !== undefined;
+          const d = bySchool ? new Date(entry + tpl.plus, 3, 1) : eventDate(member.birth, tpl.age);
           if (d >= TODAY && d <= horizonDate) {
             events.push({
               date: d,
-              who: member.name,
+              who: who,
               label: tpl.label,
               cat: tpl.cat,
               major: !!tpl.major,
+              by: parseBirth(member.birth).getFullYear(),
+              subject: 'child',
+              approx: bySchool ? schoolApprox : !!member.birthApprox,
+              month: bySchool,          // 進学 は 4 月 と 決まって いる
+              src: src,
             });
           }
         });
       } else if (member.rel === 'spouse') {
+        const spRetire = validAge(member.retireAge, 45, 85);
         SPOUSE_EVENTS.forEach(tpl => {
-          const d = eventDate(member.birth, tpl.age);
+          let atAge = tpl.age, label = tpl.label, s2 = src;
+          if (spRetire !== null && tpl.age === 60) {
+            atAge = spRetire; label = '配偶者・退職の予定 (' + spRetire + '歳)';
+            if (member.retireAgeAuto) s2 = 'minutes';
+          }
+          const d = eventDate(member.birth, atAge);
           if (d >= TODAY && d <= horizonDate) {
             events.push({
               date: d,
-              who: member.name,
-              label: tpl.label,
+              who: who,
+              label: label,
               cat: tpl.cat,
               major: !!tpl.major,
+              by: parseBirth(member.birth).getFullYear(),
+              subject: 'spouse',
+              approx: !!member.birthApprox,
+              src: s2,
             });
           }
         });
@@ -168,11 +230,16 @@
         events.push({
           date: d,
           who: ev.who || client.name,
-          label: '🎙 ' + (ev.label || '面談で言及'),
+          // 自動 で 作った 予定 (auto) は 「議事録 から」 の 印 を 画面 側 で 付ける ので、 絵文字 は 付けない
+          label: (ev.auto ? '' : '🎙 ') + (ev.label || '面談で言及'),
           cat: ev.cat || 'family',
           major: (ev.confidence || 0) >= 0.8,
           source: ev.source || 'AI抽出',
           confidence: ev.confidence,
+          approx: /^\d{4}$/.test(String(ev.date)),   // 年 だけ 分かって いる 予定
+          month: /^\d{4}-\d{2}/.test(String(ev.date)),
+          src: 'minutes',
+          customId: ev.id || '',
         });
       }
     });
@@ -213,10 +280,23 @@
     return r;
   }
 
+  // 画面 に 出す 小さな 印 の 文言。 src='minutes' = 面談 の 記録 から 自動 で 入れた もの、 approx = 時期 が おおよそ。
+  function tagText(ev) {
+    if (!ev) return '';
+    if (ev.src === 'minutes') return ev.approx ? '議事録から・おおよそ' : '議事録から';
+    return ev.approx ? 'おおよそ' : '';
+  }
+
   window.LifeEvents = {
     generate: generateEventsCached,
     currentAge: currentAge,
     formatRelative: formatRelative,
     TODAY: TODAY,
+    // 家族 / 生年月日 / 予定 を 書き換えた 後 に 呼ぶ (同じ client の 計算 結果 を 捨てる)
+    invalidate: function (client) { try { if (client && typeof client === 'object') _genCache.delete(client); } catch (_) {} },
+    isChildRel: isChildRel,
+    elemEntryYear: elemEntryYear,
+    relLabel: function (rel) { return REL_JA[rel] || ''; },
+    tagText: tagText,
   };
 })();

@@ -1,0 +1,240 @@
+/* ============================================================
+   FP Compass — アフターフォロー 一覧 (2026-11-20)
+   followups.js が #fu-root に 描く 画面 の 見た目。
+   v8 より 後 に 読む (途中 の 「防御」 ブロック に 負けない よう 後勝ち に する)。
+   ============================================================ */
+
+/* ---- サイドバー: 古い .tabs { padding: 4px 32px 0 !important } (styles-v2.css) が 生き残って いて、
+        ナビ が 左右 32px ずつ 細く なり 「ご無沙汰フォロー」 が 「ご無沙汰フォ…」 に 切れて いた。
+        v8 の 意図 どおり 余白 0 に 戻す (ラベル 欄 105px → 169px)。 ---- */
+.sidebar .sidebar-nav.tabs { padding-left: 0 !important; padding-right: 0 !important; }
+
+#fu-root { --fu-line: var(--line, #ECECEA); --fu-line-2: var(--line-2, #DCDCD8); --fu-accent: var(--accent, #5B5BF0); --fu-accent-2: var(--accent-2, #4242C9);
+  --fu-accent-soft: var(--accent-soft, #EEF1FE); --fu-ink: var(--ink, #0A0A0A); --fu-ink-2: var(--ink-2, #3F3F46); --fu-ink-3: var(--ink-3, #6B6B6B);
+  --fu-crit: var(--critical, #DC2B2B); --fu-warn: var(--warn, #B5530F); }
+
+.fu { max-width: 1080px; margin: 0 auto; color: var(--fu-ink); font-family: var(--font-body, "Noto Sans JP", sans-serif); font-size: 14px; line-height: 1.6; }
+.fu *, .fu *::before, .fu *::after { box-sizing: border-box; }
+.fu svg.lucide, .fu i[data-lucide] { flex: none; }
+
+/* ---- 見出し ---- */
+.fu-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin: 4px 0 20px; }
+.fu-head-text { min-width: 0; }
+.fu .fu-title { margin: 0; font-family: var(--font-body, "Noto Sans JP", sans-serif); font-size: 24px; font-weight: 700; line-height: 1.35; letter-spacing: -0.01em; color: var(--fu-ink); }
+.fu .fu-sub { margin: 6px 0 0; font-size: 13.5px; line-height: 1.7; color: var(--fu-ink-3); }
+.fu-sub span { display: inline-block; }   /* 文 の 途中 で 折り返さない (「終\nわった」 を 防ぐ) */
+
+/* ---- ボタン ---- */
+.fu .fu-btn { -webkit-appearance: none; appearance: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 36px; padding: 0 14px;
+  border: 1px solid var(--fu-line-2); border-radius: 9px; background: #fff; color: var(--fu-ink-2);
+  font-family: inherit; font-size: 13px; font-weight: 600; line-height: 1; letter-spacing: 0; white-space: nowrap; cursor: pointer; flex: none;
+  transition: background .12s, border-color .12s, color .12s; box-shadow: none; text-transform: none; }
+.fu .fu-btn:hover { background: #FAFAF9; border-color: #C8C8C2; color: var(--fu-ink); }
+.fu .fu-btn:active { background: #F3F3F1; }
+.fu .fu-btn:focus-visible, .fu .fu-seg-btn:focus-visible, .fu .fu-stat:focus-visible, .fu .fu-check:focus-visible,
+.fu .fu-row-main:focus-visible, .fu .fu-link:focus-visible, .fu .fu-more:focus-visible { outline: 2px solid var(--fu-accent); outline-offset: 2px; }
+.fu .fu-btn svg.lucide { width: 15px; height: 15px; }
+.fu .fu-btn-sm { height: 32px; padding: 0 11px; font-size: 12.5px; border-radius: 8px; }
+.fu .fu-btn-sm svg.lucide { width: 14px; height: 14px; }
+.fu .fu-btn-primary { background: var(--fu-accent); border-color: var(--fu-accent); color: #fff; }
+.fu .fu-btn-primary:hover { background: var(--fu-accent-2); border-color: var(--fu-accent-2); color: #fff; }
+.fu .fu-btn.is-ok { border-color: #86C9A2; color: #17794A; background: #F2FBF6; }
+.fu .fu-refresh.is-busy svg.lucide { animation: fu-spin .9s linear infinite; }
+@keyframes fu-spin { to { transform: rotate(360deg); } }
+.fu .fu-link { -webkit-appearance: none; appearance: none; background: none; border: 0; padding: 6px 2px; font-family: inherit; font-size: 12.5px; font-weight: 600; line-height: 1.5;
+  color: var(--fu-accent-2); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: rgba(66,66,201,.32); border-radius: 4px; text-align: right; }
+.fu .fu-link:hover { text-decoration-color: currentColor; }
+
+/* ---- 件数 タイル (押す と その 期間 だけ に 絞る) ---- */
+.fu-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 16px; }
+.fu .fu-stat { -webkit-appearance: none; appearance: none; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; min-width: 0;
+  padding: 14px 16px 13px; background: #fff; border: 1px solid var(--fu-line); border-radius: 14px; cursor: pointer; text-align: left;
+  font-family: inherit; color: var(--fu-ink); transition: border-color .12s, box-shadow .12s; box-shadow: none; }
+.fu .fu-stat:hover { border-color: #CFCFCA; }
+.fu .fu-stat.is-on { border-color: var(--fu-accent); box-shadow: 0 0 0 3px rgba(91,91,240,.14); }
+.fu-stat-num { font-family: var(--font-display, "Manrope", "Noto Sans JP", sans-serif); font-size: 26px; font-weight: 700; line-height: 1.1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; color: var(--fu-ink); }
+.fu-stat.is-overdue .fu-stat-num { color: var(--fu-crit); }
+.fu-stat.is-zero .fu-stat-num { color: #B6B6B0; }
+.fu-stat-label { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; line-height: 1.3; color: var(--fu-ink-3); white-space: nowrap; }
+.fu-stat-label::before, .fu-group-title::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: #B6B6B0; flex: none; }
+.fu-stat.is-overdue .fu-stat-label::before, .fu-group.is-overdue .fu-group-title::before { background: var(--fu-crit); }
+.fu-stat.is-week .fu-stat-label::before, .fu-group.is-week .fu-group-title::before { background: #E08A1E; }
+.fu-stat.is-month .fu-stat-label::before, .fu-group.is-month .fu-group-title::before { background: var(--fu-accent); }
+.fu-group.is-done .fu-group-title::before { background: #2E9B63; }
+
+/* ---- 道具 バー ---- */
+.fu-toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+.fu-seg { display: inline-flex; gap: 2px; padding: 3px; background: #EFEFEC; border-radius: 10px; flex: none; }
+.fu .fu-seg-btn { -webkit-appearance: none; appearance: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 32px; padding: 0 14px; border: 0; border-radius: 8px;
+  background: transparent; color: var(--fu-ink-3); font-family: inherit; font-size: 13px; font-weight: 600; line-height: 1; white-space: nowrap; cursor: pointer;
+  transition: background .12s, color .12s; box-shadow: none; }
+.fu .fu-seg-btn:hover { color: var(--fu-ink); }
+.fu .fu-seg-btn.is-on { background: #fff; color: var(--fu-ink); box-shadow: 0 1px 2px rgba(16,24,40,.08); }
+.fu-seg-num { font-size: 11.5px; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--fu-ink-3); }
+.fu-search { position: relative; display: flex; align-items: center; flex: 1 1 240px; min-width: 0; margin: 0; }
+.fu .fu-search svg.lucide { position: absolute; left: 12px; top: 50%; width: 16px; height: 16px; margin-top: -8px; color: #8A8A84; pointer-events: none; }
+.fu .fu-search-input { -webkit-appearance: none; appearance: none; width: 100%; height: 38px; margin: 0; padding: 0 12px 0 36px; border: 1px solid var(--fu-line-2); border-radius: 10px;
+  background: #fff; color: var(--fu-ink); font-family: inherit; font-size: 14px; font-weight: 400; line-height: 1.2; box-shadow: none; outline: none; transition: border-color .12s, box-shadow .12s; }
+.fu .fu-search-input::placeholder { color: #9A9A94; }
+/* styles-v2.css の 古い input:focus (金色 !important) が 残って いる ので、 ここ は 明示 的 に 勝たせる */
+.fu .fu-search-input:focus { border-color: var(--fu-accent) !important; box-shadow: 0 0 0 3px rgba(91,91,240,.14) !important; outline: none !important; }
+.fu .fu-search-input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
+.fu-inline-error { margin: -6px 0 14px; padding: 10px 14px; border: 1px solid #F3C4C4; background: #FFF6F6; color: #A32020; border-radius: 10px; font-size: 13px; }
+
+/* ---- グループ (期限 ごと / お客様 ごと) ---- */
+.fu-group, .fu-cust, .fu-empty { background: #fff; border: 1px solid var(--fu-line); border-radius: 14px; overflow: hidden; }
+.fu-group, .fu-cust { margin-bottom: 14px; }
+.fu-group-head { display: flex; align-items: center; gap: 4px 10px; min-height: 50px; padding: 9px 18px; border-bottom: 1px solid var(--fu-line); }
+.fu .fu-group-title { display: inline-flex; align-items: center; gap: 8px; margin: 0; font-family: inherit; font-size: 14px; font-weight: 700; line-height: 1.4; letter-spacing: 0; color: var(--fu-ink); }
+.fu-group-count { font-size: 12.5px; font-variant-numeric: tabular-nums; color: var(--fu-ink-3); }
+.fu-group-note { font-size: 12px; color: #8A8A84; }
+.fu-group-head .fu-link, .fu-group-head .fu-confirm { margin-left: auto; }
+.fu-confirm { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.fu-confirm-text { font-size: 12.5px; font-weight: 600; color: var(--fu-ink-2); }
+
+/* ---- 行 ---- */
+.fu .fu-rows { list-style: none; margin: 0; padding: 0; }
+.fu .fu-row { display: grid; grid-template-columns: 52px minmax(0, 1fr); margin: 0; padding: 0; border-bottom: 1px solid var(--fu-line); background: #fff; transition: background .12s; }
+.fu .fu-row:last-child { border-bottom: 0; }
+@media (hover: hover) { .fu .fu-row:hover { background: #FCFCFB; } .fu .fu-check:hover .fu-check-box { border-color: var(--fu-accent); color: var(--fu-accent); } }
+.fu .fu-row.is-open { background: #FCFCFB; }
+.fu .fu-check { -webkit-appearance: none; appearance: none; grid-column: 1; grid-row: 1; display: flex; align-items: center; justify-content: center; width: 52px; height: 52px; margin: 0; padding: 0;
+  background: none; border: 0; border-radius: 10px; cursor: pointer; box-shadow: none; }
+.fu-check-box { display: flex; align-items: center; justify-content: center; width: 20px; height: 20px; border: 1.5px solid #BDBDB7; border-radius: 50%; background: #fff; color: transparent; transition: border-color .12s, background .12s, color .12s; }
+.fu .fu-check-box svg.lucide { width: 12px; height: 12px; stroke-width: 3; }
+.fu .fu-check[aria-checked="true"] .fu-check-box { background: var(--fu-accent); border-color: var(--fu-accent); color: #fff; }
+.fu .fu-row-main { -webkit-appearance: none; appearance: none; grid-column: 2; grid-row: 1; display: grid; grid-template-columns: minmax(0, 1fr) 208px 176px 20px; align-items: center; column-gap: 16px;
+  width: 100%; min-height: 52px; margin: 0; padding: 12px 16px 12px 0; background: none; border: 0; border-radius: 0; cursor: pointer; text-align: left;
+  font-family: inherit; font-size: inherit; line-height: inherit; color: inherit; box-shadow: none; }
+.fu .no-who .fu-row-main { grid-template-columns: minmax(0, 1fr) 176px 20px; }
+.fu-row-title { font-size: 14.5px; font-weight: 600; line-height: 1.6; color: var(--fu-ink); overflow-wrap: anywhere; word-break: auto-phrase; text-wrap: pretty; }
+.fu-row.is-done .fu-row-title { color: var(--fu-ink-3); font-weight: 500; text-decoration: line-through; text-decoration-color: #C6C6C0; }
+.fu-who { min-width: 0; font-size: 13px; font-weight: 500; line-height: 1.5; color: var(--fu-ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fu-due { display: inline-flex; align-items: center; gap: 8px; min-width: 0; font-size: 12.5px; line-height: 1.5; font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--fu-ink-2); }
+.fu-due-date { min-width: 66px; font-weight: 500; }   /* 日付 の 桁 が 違って も 「◯日超過」 の 位置 を そろえる */
+.fu-due-rel { padding: 1px 8px; border-radius: 999px; font-size: 11.5px; font-weight: 700; line-height: 1.6; background: #F1F1EE; color: var(--fu-ink-3); }
+.fu-due.is-overdue .fu-due-rel { background: #FEF0F0; color: var(--fu-crit); }
+.fu-due.is-soon .fu-due-rel { background: #FFF3E3; color: var(--fu-warn); }
+.fu-due.is-none, .fu-due.is-done { color: #8A8A84; }
+.fu-chev { display: flex; align-items: center; justify-content: center; width: 20px; height: 20px; color: #A6A6A0; }
+.fu .fu-chev svg.lucide { width: 16px; height: 16px; transition: transform .16s; }
+.fu .fu-row.is-open .fu-chev svg.lucide { transform: rotate(180deg); }
+
+/* ---- 行 を 開いた とき ---- */
+.fu-detail { grid-column: 2; grid-row: 2; display: grid; gap: 14px; padding: 2px 18px 18px 0; }
+.fu-detail-label { margin-bottom: 4px; font-size: 11.5px; font-weight: 700; line-height: 1.5; letter-spacing: .04em; color: var(--fu-ink-3); }
+.fu .fu-detail-text { margin: 0; font-size: 13.5px; line-height: 1.8; color: var(--fu-ink-2); overflow-wrap: anywhere; }
+.fu-draft { display: flex; align-items: flex-start; gap: 12px; padding: 12px 12px 12px 14px; background: #fff; border: 1px solid var(--fu-line-2); border-radius: 10px; }
+.fu .fu-draft-text { flex: 1; min-width: 0; margin: 0; font-size: 13.5px; line-height: 1.8; color: var(--fu-ink); white-space: pre-wrap; overflow-wrap: anywhere; }
+.fu-detail-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px 12px; flex-wrap: wrap; }
+.fu-detail-src { display: flex; flex-wrap: wrap; gap: 2px 12px; min-width: 0; font-size: 12px; line-height: 1.6; color: #8A8A84; }
+.fu-detail-who { font-weight: 600; color: var(--fu-ink-2); overflow-wrap: anywhere; }
+
+.fu .fu-more { -webkit-appearance: none; appearance: none; display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; height: 44px; margin: 0; padding: 0;
+  border: 0; border-top: 1px solid var(--fu-line); border-radius: 0; background: #fff; color: var(--fu-ink-2); font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; box-shadow: none; }
+.fu .fu-more:hover { background: #FAFAF9; color: var(--fu-ink); }
+.fu .fu-more svg.lucide { width: 15px; height: 15px; color: #A6A6A0; }
+
+/* ---- お客様 ごと ---- */
+.fu-cust-head { display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-bottom: 1px solid var(--fu-line); }
+.fu-avatar { display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; background: var(--fu-accent-soft); color: var(--fu-accent-2); font-size: 14px; font-weight: 700; line-height: 1; flex: none; }
+.fu-cust-id { flex: 1; min-width: 0; }
+.fu .fu-lbl-short { display: none; }
+.fu .fu-cust-name { margin: 0; font-family: inherit; font-size: 15px; font-weight: 700; line-height: 1.45; letter-spacing: 0; color: var(--fu-ink); overflow-wrap: anywhere; }
+.fu .fu-cust-sub { display: flex; flex-wrap: wrap; gap: 2px 10px; margin: 2px 0 0; font-size: 12.5px; line-height: 1.6; font-variant-numeric: tabular-nums; color: var(--fu-ink-3); }
+.fu-cust-od { font-weight: 600; color: var(--fu-crit); }
+.fu .fu-next { display: flex; align-items: baseline; gap: 10px; margin: 0; padding: 10px 18px; border-bottom: 1px solid var(--fu-line); background: #FBFBFF; font-size: 13px; line-height: 1.7; color: var(--fu-ink-2); }
+.fu-next-label { flex: none; padding: 1px 9px; border-radius: 999px; background: var(--fu-accent-soft); color: var(--fu-accent-2); font-size: 11.5px; font-weight: 700; line-height: 1.7; }
+.fu-next-text { min-width: 0; overflow-wrap: anywhere; }
+.fu-cust-foot { display: flex; align-items: center; justify-content: flex-end; min-height: 46px; padding: 6px 18px; border-top: 1px solid var(--fu-line); }
+
+/* ---- 空 / 読み込み中 ---- */
+.fu-empty { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 56px 24px 60px; text-align: center; }
+.fu-empty-icon { display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; margin-bottom: 8px; border-radius: 12px; background: #F1F1EE; color: var(--fu-ink-3); }
+.fu .fu-empty-icon svg.lucide { width: 22px; height: 22px; }
+.fu .fu-empty-title { margin: 0; font-size: 15px; font-weight: 700; line-height: 1.5; color: var(--fu-ink); }
+.fu .fu-empty-sub { max-width: 440px; margin: 0 0 12px; font-size: 13px; line-height: 1.8; color: var(--fu-ink-3); word-break: auto-phrase; text-wrap: pretty; }
+.fu-stats.is-blank .fu-stat-num { color: #B6B6B0; }
+.fu-empty.is-error .fu-empty-icon { background: #FEF0F0; color: var(--fu-crit); }
+.fu .fu-skel { display: flex; align-items: center; gap: 16px; min-height: 52px; padding: 0 18px 0 16px; }
+.fu .fu-skel:hover { background: #fff; }
+.fu-skel-box { width: 20px; height: 20px; border-radius: 50%; background: #EFEFEC; flex: none; }
+.fu-skel-line { height: 12px; border-radius: 6px; background: linear-gradient(90deg, #EFEFEC 0%, #F7F7F5 50%, #EFEFEC 100%); background-size: 200% 100%; animation: fu-shimmer 1.3s linear infinite; }
+.fu-skel-short { width: 72px; margin-left: auto; flex: none; }
+@keyframes fu-shimmer { to { background-position: -200% 0; } }
+
+/* ---- お知らせ (完了 に した 直後 の 「元に戻す」) ---- */
+.fu-toast { position: fixed; left: 0; right: 0; bottom: 28px; z-index: 9000; display: flex; align-items: center; gap: 12px; width: max-content; max-width: calc(100vw - 32px); margin: 0 auto; padding: 10px 10px 10px 18px;
+  background: #fff; border: 1px solid #D6D6D1; border-radius: 12px; box-shadow: 0 12px 32px rgba(16,24,40,.16), 0 2px 6px rgba(16,24,40,.06);
+  color: #0A0A0A; font-family: "Noto Sans JP", -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-serif; font-size: 13.5px; font-weight: 600; line-height: 1.5; animation: fu-toast-in .18s ease-out; }
+.fu-toast:not(:has(.fu-toast-btn)) { padding-right: 18px; }
+.fu-toast.is-error { border-color: #F3C4C4; color: #A32020; }
+.fu-toast-btn { -webkit-appearance: none; appearance: none; height: 34px; padding: 0 12px; border: 0; border-radius: 8px; background: #EEF1FE; color: #4242C9; font-family: inherit; font-size: 13px; font-weight: 700; white-space: nowrap; cursor: pointer; flex: none; }
+.fu-toast-btn:hover { background: #E3E7FD; }
+@keyframes fu-toast-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) { .fu-toast, .fu-skel-line, .fu .fu-refresh.is-busy svg.lucide { animation: none; } }
+
+/* ---- 一覧 の 幅 が 狭い とき (スマホ / タブレット / サイドバー を 開いた 小さい PC):
+        「内容 | お客様 | 期限」 の 3 列 を やめて、 内容 の 下 に お客様 と 期限 を 並べる。
+        画面 幅 では なく 一覧 そのもの の 幅 で 切り替える。 ---- */
+#fu-root { container-type: inline-size; container-name: fu; }
+@container fu (max-width: 860px) {
+  .fu .fu-row-main, .fu .no-who .fu-row-main { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: 5px 10px; padding: 12px 44px 12px 0; }
+  .fu-row-title { flex: 1 1 100%; }
+  .fu-who { max-width: 100%; }
+  .fu-due-date { min-width: 0; }
+  .fu-chev { position: absolute; top: 15px; right: 16px; }
+}
+
+/* ---- スマホ ---- */
+@media (max-width: 768px) {
+  .fu-head { align-items: center; gap: 12px; margin: 0 0 14px; }
+  /* 画面 上 の 帯 に 同じ 題 が 出て いる ので、 ここ の 見出し は 読み上げ 用 に だけ 残す */
+  .fu .fu-title { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+  .fu .fu-sub { margin: 0; font-size: 13px; line-height: 1.65; }
+  .fu .fu-refresh { width: 44px; padding: 0; }
+  .fu .fu-refresh span { display: none; }
+  .fu .fu-refresh svg.lucide { width: 17px; height: 17px; }
+
+  .fu .fu-btn { height: 44px; }
+  .fu .fu-btn-sm { height: 44px; padding: 0 13px; font-size: 13px; }
+  .fu-stats { gap: 8px; margin-bottom: 14px; }
+  .fu .fu-stat { gap: 5px; padding: 12px 10px 11px; border-radius: 12px; }
+  .fu-stat-num { font-size: 22px; }
+  .fu-stat-label { gap: 5px; font-size: 11.5px; }
+  .fu-toolbar { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; margin-bottom: 14px; }
+  .fu-seg { display: flex; }
+  .fu .fu-seg-btn { height: 38px; padding: 0 10px; flex: 1; }
+  .fu-search { grid-column: 1 / -1; grid-row: 2; }
+  .fu .fu-search-input { height: 44px; font-size: 16px; }   /* 16px 未満 だと iPhone が 勝手 に 拡大 する */
+  .fu-group-head { flex-wrap: wrap; padding: 9px 14px; }
+  .fu-group-head .fu-confirm { width: 100%; padding: 2px 0 4px; }
+  .fu .fu-row { grid-template-columns: 48px minmax(0, 1fr); }
+  .fu .fu-check { width: 48px; height: 50px; }
+  .fu .fu-row-main, .fu .no-who .fu-row-main { min-height: 50px; }
+  .fu-chev { right: 12px; }
+  .fu-detail { padding: 0 14px 16px 0; }
+  .fu-draft { flex-direction: column; align-items: stretch; gap: 10px; padding: 12px; }
+  .fu-draft .fu-btn { align-self: flex-end; }
+  .fu-cust-head { gap: 10px; padding: 12px 10px 12px 14px; }
+  .fu .fu-lbl-full { display: none; }
+  .fu .fu-lbl-short { display: inline; }
+  .fu-detail-foot .fu-btn { margin-left: auto; }
+  .fu .fu-next { flex-direction: column; align-items: flex-start; gap: 4px; padding: 10px 14px; }
+  .fu-cust-foot { padding: 4px 14px; }
+  .fu .fu-link { padding: 10px 2px; }
+  .fu-empty { padding: 44px 18px 48px; }
+  .fu-toast { bottom: calc(68px + env(safe-area-inset-bottom, 0px) + 14px); }
+}
+
+/* ---- 幅 の 狭い スマホ ---- */
+@media (max-width: 380px) {
+  .fu .fu-seg-btn { gap: 4px; padding: 0 7px; font-size: 12.5px; }
+  .fu .fu-stat { padding: 11px 8px 10px; }
+  .fu-stat-label { gap: 4px; font-size: 11px; }
+}
+@media (max-width: 340px) {
+  .fu-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .fu-toolbar { grid-template-columns: minmax(0, 1fr); }
+  .fu-search { grid-row: auto; }
+}
