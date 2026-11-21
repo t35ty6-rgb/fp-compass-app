@@ -10924,22 +10924,22 @@ ${ctxText}${surveyTxt}`;
               ${aiData.transcript ? `
                 <div class="fp-meeting-block">
                   <div class="fp-meeting-block-label" style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
-                    <span>AI 文字起こし (Whisper)</span>
+                    <span>文字起こし（全文）</span>
                     <div class="fp-transcript-view-toggle" data-transcript-toggle style="display:inline-flex;background:#F1F5F9;border-radius:8px;padding:2px;gap:2px;font-family:inherit;">
                       <button type="button" class="fp-tv-btn fp-tv-active" data-tv-mode="chat" style="background:#fff;color:#0F172A;border:none;padding:5px 12px;border-radius:6px;font-size:12.5px;font-weight:800;letter-spacing:0.04em;cursor:pointer;box-shadow:0 1px 3px rgba(15,23,42,0.08);font-family:inherit;">💬 会話</button>
                       <button type="button" class="fp-tv-btn" data-tv-mode="raw" style="background:transparent;color:#64748B;border:none;padding:5px 12px;border-radius:6px;font-size:12.5px;font-weight:700;letter-spacing:0.04em;cursor:pointer;font-family:inherit;">📄 プレーン</button>
                     </div>
                   </div>
-                  <details open style="background:#fff;border:1px solid var(--fp-line);">
-                    <summary style="padding:11px 16px;cursor:pointer;font-size:13.5px;color:var(--fp-ink);font-weight:700;background:var(--fp-paper);border-bottom:1px solid var(--fp-line);font-family:Manrope,sans-serif;letter-spacing:0.04em;">AI 文字起こし 全文 (${(aiData.transcript||'').length}文字) — クリックで折りたたみ</summary>
+                  <details class="fp-tr-fold" style="background:#fff;border:1px solid var(--fp-line);">
+                    <summary style="padding:11px 16px;cursor:pointer;font-size:13.5px;color:var(--fp-ink);font-weight:700;background:var(--fp-paper);border-bottom:1px solid var(--fp-line);font-family:Manrope,sans-serif;letter-spacing:0.04em;">文字起こしの全文を見る（${(aiData.transcript||'').length.toLocaleString()}文字）</summary>
                     <div class="fp-transcript-chat" style="padding:14px 18px;max-height:420px;overflow-y:auto;background:linear-gradient(180deg,#F8FAFC 0%,#F1F5F9 100%);">
-                      ${splitTranscriptToTurns(aiData.transcript).map((turn, i) => turn.speaker === 'fp'
-                        ? `<div style="display:flex;justify-content:flex-end;margin-bottom:10px;"><div style="max-width:78%;background:linear-gradient(135deg,#059669,#047857);color:#fff;padding:9px 13px;border-radius:14px 14px 4px 14px;font-size:12.5px;line-height:1.7;box-shadow:0 2px 6px rgba(5,150,105,0.22);"><div style="font-size:11.5px;font-weight:800;opacity:0.9;letter-spacing:0.08em;margin-bottom:3px;">FP先生</div><div>${escapeHtml(turn.text)}</div></div></div>`
-                        : `<div style="display:flex;justify-content:flex-start;margin-bottom:10px;"><div style="max-width:78%;background:#fff;color:#0F172A;padding:9px 13px;border-radius:14px 14px 14px 4px;font-size:12.5px;line-height:1.7;box-shadow:0 1px 3px rgba(15,23,42,0.10);border:1px solid #E2E8F0;"><div style="font-size:11.5px;font-weight:800;color:#64748B;letter-spacing:0.08em;margin-bottom:3px;">お客様</div><div>${escapeHtml(turn.text)}</div></div></div>`
+                      ${splitTranscriptToTurns(aiData.transcript, client.name).map((turn, i) => turn.speaker === 'fp'
+                        ? `<div style="display:flex;justify-content:flex-end;margin-bottom:10px;"><div style="max-width:78%;background:linear-gradient(135deg,#059669,#047857);color:#fff;padding:9px 13px;border-radius:14px 14px 4px 14px;font-size:12.5px;line-height:1.7;box-shadow:0 2px 6px rgba(5,150,105,0.22);"><div style="font-size:11.5px;font-weight:800;opacity:0.9;letter-spacing:0.08em;margin-bottom:3px;">${escapeHtml(turn.name || 'FP先生')}</div><div>${escapeHtml(turn.text)}</div></div></div>`
+                        : `<div style="display:flex;justify-content:flex-start;margin-bottom:10px;"><div style="max-width:78%;background:#fff;color:#0F172A;padding:9px 13px;border-radius:14px 14px 14px 4px;font-size:12.5px;line-height:1.7;box-shadow:0 1px 3px rgba(15,23,42,0.10);border:1px solid #E2E8F0;"><div style="font-size:11.5px;font-weight:800;color:#64748B;letter-spacing:0.08em;margin-bottom:3px;">${escapeHtml(turn.name || 'お客様')}</div><div>${escapeHtml(turn.text)}</div></div></div>`
                       ).join('')}
                     </div>
                     <div class="fp-transcript-raw" style="display:none;padding:14px 18px;font-size:12.5px;line-height:1.95;white-space:pre-wrap;max-height:420px;overflow-y:auto;color:var(--fp-ink);">${escapeHtml(aiData.transcript)}</div>
-                    <div style="padding:6px 16px;background:#F8FAFC;border-top:1px solid var(--fp-line);font-size:12px;color:#94A3B8;font-style:italic;letter-spacing:0.02em;">※ 話者 は AI が 会話 の 流れ から 推定。 実際 と 違う 場合 は 「📄 プレーン」 で 全文 確認 を。</div>
+                    <div style="padding:6px 16px;background:#F8FAFC;border-top:1px solid var(--fp-line);font-size:12px;color:#94A3B8;font-style:italic;letter-spacing:0.02em;">${window.fpNamedTranscriptTurns(aiData.transcript, client.name) ? '発言者の名前は、文字起こしに記録されたとおりです。' : '※ 話者 は AI が 会話 の 流れ から 推定。 実際 と 違う 場合 は 「📄 プレーン」 で 全文 確認 を。'}</div>
                   </details>
                 </div>` : ''}
               <div class="fp-meeting-block" data-minutes-editor data-booking-ts="${escapeHtml(b.ts || '')}" data-client-id="${escapeHtml(client.id)}">
@@ -11064,9 +11064,9 @@ ${ctxText}${surveyTxt}`;
                 <div class="fp-meeting-card-body" data-meeting-body hidden>
                 ${a.transcript ? `
                   <div class="fp-meeting-block">
-                    <div class="fp-meeting-block-label">AI 文字起こし (Whisper)</div>
-                    <details open style="background:#fff;border:1px solid var(--fp-line);">
-                      <summary style="padding:11px 16px;cursor:pointer;font-size:13.5px;color:var(--fp-ink);font-weight:700;background:var(--fp-paper);border-bottom:1px solid var(--fp-line);font-family:Manrope,sans-serif;letter-spacing:0.04em;">AI 文字起こし 全文 (${(a.transcript||'').length}文字) — クリックで折りたたみ</summary>
+                    <div class="fp-meeting-block-label">文字起こし（全文）</div>
+                    <details class="fp-tr-fold" style="background:#fff;border:1px solid var(--fp-line);">
+                      <summary style="padding:11px 16px;cursor:pointer;font-size:13.5px;color:var(--fp-ink);font-weight:700;background:var(--fp-paper);border-bottom:1px solid var(--fp-line);font-family:Manrope,sans-serif;letter-spacing:0.04em;">文字起こしの全文を見る（${(a.transcript||'').length.toLocaleString()}文字）</summary>
                       <div style="padding:14px 18px;font-size:12.5px;line-height:1.95;white-space:pre-wrap;max-height:320px;overflow-y:auto;color:var(--fp-ink);">${escapeHtml(a.transcript)}</div>
                     </details>
                   </div>` : ''}
@@ -15966,9 +15966,59 @@ ${client.name}さん、ありがとうございます。
 
   // 2026-07-11 v6: transcript を 話者ターン に heuristic 分割 (Whisper 出力 に 話者情報 が 無い ので 推定)
   // ルール: (1) 段落改行 で 区切る → (2) 「?」 で 終わる 短文 は 質問 = 上位ターン から 交互、 (3) 「はい」「そうですね」「うーん」 で 始まる ターン は 応答 = 反対側、 (4) デフォルト は 交互 で FP先生(右) 開始
-  window.splitTranscriptToTurns = function splitTranscriptToTurns(text) {
+  window.fpNamedTranscriptTurns = (function () {
+    // 「名前: 発言」が1行ずつ並ぶ文字起こし（Zoom・テキスト取込）を、発言者ごとのまとまりにする。
+    // 名前つきの形でなければ null を返す（そのときは従来どおり会話の流れから推定する）。
+    const LINE_RE = /^([^:：\n]{1,24})[:：][ \t　]?(\S.*)$/;
+    const BAD_NAME = /[。、？！?!「」『』（）()]|https?|^\d+$|^\d{1,2}$/;
+    const norm = (v) => String(v || '').replace(/様|さん|先生|さま/g, '').replace(/[\s　]/g, '').toLowerCase();
+    const joinText = (a, b) => (/[\x21-\x7e]$/.test(a) && /^[\x21-\x7e]/.test(b)) ? a + ' ' + b : a + b;
+    let cache = { t: null, n: null, r: null };
+    return function (text, clientName) {
+      const raw = String(text || '').trim();
+      if (!raw) return null;
+      if (cache.t === raw && cache.n === (clientName || '')) return cache.r;
+      const done = (r) => { cache = { t: raw, n: clientName || '', r }; return r; };
+      const lines = raw.split(/\n+/).map(l => l.trim()).filter(Boolean);
+      if (lines.length < 4) return done(null);
+      const parsed = lines.map(l => { const m = l.match(LINE_RE); if (!m) return { name: '', text: l }; const name = m[1].trim(); if (!name || BAD_NAME.test(name)) return { name: '', text: l }; return { name, text: m[2].trim() }; });
+      const named = parsed.filter(p => p.name);
+      if (named.length < lines.length * 0.8) return done(null);
+      const count = {}; const chars = {}; const order = [];
+      named.forEach(p => { if (!(p.name in count)) { count[p.name] = 0; chars[p.name] = 0; order.push(p.name); } count[p.name]++; chars[p.name] += p.text.length; });
+      if (order.length > 8) return done(null);
+      const top2 = order.map(n => count[n]).sort((a, b) => b - a).slice(0, 2).reduce((a, b) => a + b, 0);
+      if (top2 < named.length * 0.7) return done(null);
+      // だれがお客様で、だれが FP か
+      const cn = norm(clientName);
+      const family = norm(String(clientName || '').trim().split(/[\s　]+/)[0]);
+      const isClient = (name) => { const n = norm(name); if (!n || !cn) return false; if (n === cn || n.indexOf(cn) >= 0) return true; if (n.length >= 2 && cn.indexOf(n) >= 0) return true; return family.length >= 2 && family !== cn && n.indexOf(family) === 0; };
+      const fpHints = [];
+      try { const f = window.__fp || {}; [f.tenantName, f.userName, f.displayName, f.fpName].forEach(v => { const n = norm(String(v || '').replace(/ — DEMO ビュー/, '')); if (n.length >= 2) fpHints.push(n); }); } catch (_) {}
+      const isFpHint = (name) => { const n = norm(name); return n.length >= 2 && fpHints.some(h => h.indexOf(n) >= 0 || n.indexOf(h) >= 0); };
+      const clients = order.filter(isClient);
+      let fpName = order.find(n => !isClient(n) && isFpHint(n)) || '';
+      if (!fpName) {
+        const rest = order.filter(n => clients.indexOf(n) < 0);
+        if (clients.length && rest.length) fpName = rest.slice().sort((a, b) => chars[b] - chars[a])[0];
+        else if (!clients.length) fpName = order[0];
+      }
+      const turns = [];
+      parsed.forEach(p => {
+        const last = turns[turns.length - 1];
+        if (!p.name) { if (last) last.text = joinText(last.text, p.text); else turns.push({ speaker: 'client', name: '', text: p.text, hint: '' }); return; }
+        if (last && last.name === p.name) { last.text = joinText(last.text, p.text); return; }
+        turns.push({ speaker: p.name === fpName ? 'fp' : 'client', name: p.name, text: p.text, hint: '' });
+      });
+      turns.named = true;
+      return done(turns);
+    };
+  })();
+  window.splitTranscriptToTurns = function splitTranscriptToTurns(text, clientName) {
     const raw = String(text || '').trim();
     if (!raw) return [];
+    const namedTurns = window.fpNamedTranscriptTurns(raw, clientName);
+    if (namedTurns) return namedTurns;
     // paragraph split
     let paragraphs = raw.split(/\n{2,}/).map(p => p.trim()).filter(Boolean);
     if (paragraphs.length < 3) {

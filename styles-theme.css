@@ -304,3 +304,105 @@ html body .cd-modal #cd-tags-section #cd-tags-edit {
   /* 右上の丸（縦長になっていた） */
   html body #mobile-topbar #mobile-user-btn { width: 44px !important; height: 44px !important; border-radius: 50% !important; }
 }
+
+/* ---------- 12. 議事録：文字起こしの全文は折りたたみ、黒い塗りのラベルをやめる ---------- */
+/* 折りたたみの行（押しやすい高さに） */
+html body details.fp-tr-fold { border-color: var(--th-line) !important; border-radius: 10px !important; overflow: hidden; }
+html body details.fp-tr-fold > summary {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  min-height: 44px !important;
+  box-sizing: border-box !important;
+  padding: 8px 14px !important;
+  background: #FFFFFF !important;
+  border-bottom: 0 !important;
+  color: var(--th-pri-ink) !important;
+  font-family: inherit !important;
+  font-size: 13.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0 !important;
+  list-style: none !important;
+  cursor: pointer;
+}
+html body details.fp-tr-fold > summary::-webkit-details-marker { display: none !important; }
+html body details.fp-tr-fold > summary::before {
+  content: '' !important;
+  flex: none;
+  width: 7px; height: 7px;
+  border-right: 2px solid var(--th-pri); border-bottom: 2px solid var(--th-pri);
+  transform: rotate(-45deg);
+  margin: 0 4px 0 2px;
+  transition: transform 0.15s;
+}
+html body details.fp-tr-fold[open] > summary { border-bottom: 1px solid var(--th-line) !important; }
+html body details.fp-tr-fold[open] > summary::before { transform: rotate(45deg); }
+/* 閉じている間は「会話／プレーン」の切り替えを出さない */
+html body .fp-meeting-block:has(details.fp-tr-fold:not([open])) .fp-transcript-view-toggle { display: none !important; }
+
+/* 見出しラベル（黒い塗り → うす紫） */
+html body .fp-meeting-block-label > span:first-child,
+html body .fp-meeting-block:not(:has(> .fp-meeting-block-label > span)) .fp-meeting-block-label {
+  background: var(--th-pri-soft) !important;
+  color: var(--th-pri-ink) !important;
+}
+html body .fp-mai-qa .fp-meeting-block-label { flex-wrap: wrap !important; row-gap: 6px !important; color: var(--th-ink) !important; }
+/* 数字の強調（黒い塗り → 太字だけ） */
+html body .fp-summary-structured .fp-sum-num {
+  background: transparent !important;
+  color: inherit !important;
+  padding: 0 1px !important;
+  font-family: inherit !important;
+  font-size: inherit !important;
+  font-weight: 800 !important;
+}
+html body .fp-summary-structured .fp-sum-more-count {
+  background: var(--th-pri-soft) !important;
+  color: var(--th-pri-ink) !important;
+}
+html body .fp-summary-structured .fp-sum-h4.fp-sum-tone-mono,
+html body .fp-summary-structured .fp-sum-h4.fp-sum-tone-ink {
+  background: var(--th-pri-soft) !important;
+  color: var(--th-pri-ink) !important;
+}
+
+/* 文字起こしの見出し行：ラベルは左、「会話／プレーン」は右。狭いときは折り返す */
+html body .fp-meeting-block-label:has(.fp-transcript-view-toggle) {
+  flex-wrap: wrap !important;
+  justify-content: flex-start !important;
+  gap: 8px !important;
+}
+html body .fp-meeting-block-label .fp-transcript-view-toggle { margin-left: auto !important; flex: none !important; }
+html body .fp-meeting-block-label .fp-transcript-view-toggle .fp-tv-btn { white-space: nowrap !important; }
+html body .fp-meeting-block-label:has(.fp-transcript-view-toggle) > span:first-child { white-space: nowrap !important; }
+
+/* 会話表示：濃い緑の二重の吹き出し → うす紫（FP）と白（お客様）の一重の吹き出しに */
+html body .fp-transcript-chat { background: var(--th-canvas) !important; }
+html body .fp-transcript-chat > div > div {
+  box-shadow: none !important;
+  color: var(--th-ink) !important;
+  font-size: 13px !important;
+}
+html body .fp-transcript-chat > div[style*="flex-end"] > div {
+  background: var(--th-pri-soft) !important;
+  border: 1px solid var(--th-pri-ring) !important;
+}
+html body .fp-transcript-chat > div[style*="flex-start"] > div {
+  background: #FFFFFF !important;
+  border: 1px solid var(--th-line) !important;
+}
+html body .fp-transcript-chat > div > div > div,
+html body .fp-transcript-chat > div[style*="flex-end"] > div > div:last-child,
+html body .fp-transcript-chat > div[style*="flex-start"] > div > div:last-child {
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  color: var(--th-ink) !important;
+  opacity: 1 !important;
+}
+html body .fp-transcript-chat > div[style*="flex-end"] > div > div:first-child { color: var(--th-pri-ink) !important; text-align: left !important; }
+html body .fp-transcript-chat > div[style*="flex-start"] > div > div:first-child { color: var(--th-sub) !important; }
