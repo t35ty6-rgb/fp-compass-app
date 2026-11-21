@@ -1,0 +1,306 @@
+/* ============================================================
+   styles-theme.css — 全体の見た目を「細部1 ふっくら」に整える層
+   2026-11-21
+   ・色は青むらさきに統一（金・紺・緑の塗りボタンをやめる）
+   ・主ボタン = やわらかい影つきの塗り / 副ボタン = 白 + 細い枠 + 小さな影
+   ・カード = 淡い影 / 入力欄 = うっすら内側の影
+   必ずいちばん最後に読み込む（古い層に !important が多いので後勝ちにする）。
+   LINE まわりの画面（トーク・配信など）は触っていない。
+   ============================================================ */
+:root {
+  --th-pri: #4F46E5;
+  --th-pri-ink: #3730A3;
+  --th-pri-soft: #EEF0FE;
+  --th-pri-ring: #DADDFB;
+  --th-pri-grad: linear-gradient(180deg, #5B54EA 0%, #4A41E0 100%);
+  --th-line: #E6E8EC;
+  --th-line-2: #D5D9E0;
+  --th-canvas: #F7F8FA;
+  --th-ink: #0F172A;
+  --th-sub: #475569;
+  --th-sh-card: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 20px rgba(15, 23, 42, 0.05);
+  --th-sh-btn: 0 1px 2px rgba(15, 23, 42, 0.06);
+  --th-sh-pri: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 1px 2px rgba(49, 46, 129, 0.35), 0 6px 14px rgba(79, 70, 229, 0.25);
+  --th-sh-pri-sm: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 1px 2px rgba(49, 46, 129, 0.3), 0 3px 8px rgba(79, 70, 229, 0.2);
+  --th-sh-in: inset 0 1px 2px rgba(15, 23, 42, 0.05);
+}
+
+/* ---------- 1. 地の色 ---------- */
+html body .main,
+html body main.workspace { background: var(--th-canvas) !important; }
+
+/* ---------- 2. 左メニュー ---------- */
+html body .sidebar .brand-logo-inner {
+  background: var(--th-pri-grad) !important;
+  border-radius: 10px !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 2px 6px rgba(79, 70, 229, 0.3) !important;
+}
+html body .sidebar .sidebar-search {
+  background: #FFFFFF !important;
+  border-color: var(--th-line-2) !important;
+  border-radius: 10px !important;
+  box-shadow: var(--th-sh-in) !important;
+}
+html body .sidebar .tab.active {
+  background: var(--th-pri-soft) !important;
+  box-shadow: inset 0 0 0 1px var(--th-pri-ring) !important;
+  color: var(--th-pri-ink) !important;
+}
+html body .sidebar .tab.active span { color: var(--th-pri-ink) !important; }
+/* LINE トークだけ緑の塗りだったのを、ほかの項目と同じ形にそろえる */
+html body .sidebar .tab.tab-linechat {
+  background: transparent !important;
+  box-shadow: none !important;
+  color: #334155 !important;
+}
+html body .sidebar .tab.tab-linechat span:not(.nav-count) { color: #334155 !important; }
+html body .sidebar .tab.tab-linechat svg { color: #06A94A !important; stroke: currentColor !important; }
+html body .sidebar .tab.tab-linechat:hover { background: #F4F5F8 !important; }
+html body .sidebar .tab.tab-linechat.active {
+  background: var(--th-pri-soft) !important;
+  box-shadow: inset 0 0 0 1px var(--th-pri-ring) !important;
+  color: var(--th-pri-ink) !important;
+}
+html body .sidebar .tab.tab-linechat.active span:not(.nav-count) { color: var(--th-pri-ink) !important; }
+html body .sidebar .tab.tab-linechat .nav-count { background: #FEECEC !important; color: #B42318 !important; }
+
+/* ---------- 3. 主ボタン（ふっくら） ---------- */
+html body .v3h-cta-add-todo,
+html body button.primary,
+html body #add-client-btn,
+html body #cd-tags-edit,
+html body #fp-fam-ai,
+html body #cd-audio-upload-btn,
+html body #cd-audio-upload-btn-mega,
+html body .cd-left button[style*="#1B3A5C"] {
+  background: var(--th-pri-grad) !important;
+  border: 0 !important;
+  border-radius: 10px !important;
+  box-shadow: var(--th-sh-pri) !important;
+  color: #FFFFFF !important;
+  text-shadow: none !important;
+}
+html body #cd-audio-upload-btn,
+html body #cd-audio-upload-btn-mega { border-radius: 12px !important; }
+html body .v3h-cta-add-todo:hover,
+html body button.primary:hover,
+html body #add-client-btn:hover,
+html body #cd-tags-edit:hover,
+html body #fp-fam-ai:hover,
+html body #cd-audio-upload-btn:hover,
+html body #cd-audio-upload-btn-mega:hover,
+html body .cd-left button[style*="#1B3A5C"]:hover { filter: brightness(1.06); }
+html body .v3h-cta-add-todo:active,
+html body button.primary:active,
+html body #add-client-btn:active,
+html body #cd-tags-edit:active,
+html body #fp-fam-ai:active,
+html body #cd-audio-upload-btn:active,
+html body #cd-audio-upload-btn-mega:active,
+html body .cd-left button[style*="#1B3A5C"]:active {
+  box-shadow: inset 0 1px 2px rgba(30, 27, 75, 0.35) !important;
+  transform: translateY(1px);
+}
+
+/* ---------- 4. 副ボタン（白 + 細い枠 + 小さな影） ---------- */
+html body .v3h-cta-gcal,
+html body #export-csv-btn,
+html body #export-all-btn,
+html body #client-col-config,
+html body .cd-qa-btn,
+html body .fp-tool,
+html body .fu-btn,
+html body #fp-meetings-retry,
+html body #fp-fam-add,
+html body .lf-rm,
+html body #cd-transcript-paste-btn,
+html body #cd-manual-meeting-btn {
+  background: #FFFFFF !important;
+  border: 1px solid var(--th-line-2) !important;
+  box-shadow: var(--th-sh-btn) !important;
+  color: var(--th-ink) !important;
+}
+html body .v3h-cta-gcal,
+html body #export-csv-btn,
+html body #export-all-btn,
+html body #client-col-config,
+html body .cd-qa-btn,
+html body .fp-tool,
+html body .fu-btn,
+html body #fp-meetings-retry,
+html body #fp-fam-add { border-radius: 10px !important; }
+html body #cd-transcript-paste-btn,
+html body #cd-manual-meeting-btn { color: var(--th-pri-ink) !important; }
+html body .v3h-cta-gcal:hover,
+html body #export-csv-btn:hover,
+html body #export-all-btn:hover,
+html body #client-col-config:hover,
+html body .cd-qa-btn:hover,
+html body .fp-tool:hover,
+html body .fu-btn:hover,
+html body #fp-meetings-retry:hover,
+html body #fp-fam-add:hover,
+html body .lf-rm:hover,
+html body #cd-transcript-paste-btn:hover,
+html body #cd-manual-meeting-btn:hover {
+  background: #FAFAFC !important;
+  border-color: #C3C8D2 !important;
+}
+
+/* ---------- 5. 選んでいる状態（チップ・切り替え） ---------- */
+html body .tl-pill.on,
+html body .c1s-chip.active,
+html body #contact-filter-bar button[style*="#1f2937"] {
+  background: var(--th-pri) !important;
+  border-color: var(--th-pri) !important;
+  color: #FFFFFF !important;
+}
+html body #contact-filter-bar {
+  background: #FFFFFF !important;
+  border-color: var(--th-line) !important;
+}
+
+/* ---------- 6. カード（淡い影） ---------- */
+html body .v3h-shell {
+  background: #FFFFFF !important;
+  border-color: var(--th-line) !important;
+  border-radius: 14px !important;
+  box-shadow: var(--th-sh-card) !important;
+  overflow: hidden;
+}
+html body .v3h-shell .v3h-main,
+html body .v3h-shell .v3h-header { background: #FFFFFF !important; }
+html body details.home-collapsible,
+html body .kpi,
+html body .tl-toolbar,
+html body .tl-card,
+html body .fu-stat,
+html body .fu-empty,
+html body .cd-flow,
+html body .lf-box {
+  border-color: var(--th-line) !important;
+  box-shadow: var(--th-sh-card) !important;
+}
+html body .tl-toolbar { border-radius: 14px !important; }
+html body .stat { box-shadow: var(--th-sh-btn) !important; }
+html body .fp-pcard {
+  border-color: var(--th-line) !important;
+  border-radius: 12px !important;
+  box-shadow: var(--th-sh-btn) !important;
+}
+html body .fp-pcard.fp-pcard-recommended {
+  background: #F6F6FE !important;
+  border-color: #C7CBF5 !important;
+}
+
+/* ---------- 7. 入力欄 ---------- */
+html body #client-search,
+html body #status-filter,
+html body .client-toolbar select,
+html body .fu-search-input {
+  border-color: var(--th-line-2) !important;
+  border-radius: 10px !important;
+  box-shadow: var(--th-sh-in) !important;
+}
+html body #client-search:focus,
+html body #status-filter:focus,
+html body .client-toolbar select:focus,
+html body .fu-search-input:focus {
+  border-color: var(--th-pri) !important;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.16) !important;
+  outline: none !important;
+}
+
+/* ---------- 8. PC：一覧表・お客様カードの外枠 ---------- */
+@media (min-width: 769px) {
+  html body table.clients {
+    border-color: var(--th-line) !important;
+    box-shadow: var(--th-sh-card) !important;
+  }
+  html body #modal-content.modal:has(> .cd-modal) {
+    border-color: var(--th-line) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06), 0 24px 60px rgba(15, 23, 42, 0.18) !important;
+  }
+}
+
+/* ---------- 9. スマホ：上のバーを白に、下メニューの選択色を青むらさきに ---------- */
+@media (max-width: 768px) {
+  html body #mobile-topbar {
+    background: #FFFFFF !important;
+    border-bottom: 1px solid var(--th-line) !important;
+    box-shadow: none !important;
+    color: var(--th-ink) !important;
+  }
+  html body #mobile-topbar #mobile-current-title { color: var(--th-ink) !important; }
+  html body #mobile-topbar .m-eyebrow { color: var(--th-sub) !important; }
+  html body #mobile-topbar #mobile-hamburger .mh-bar { background: #334155 !important; }
+  html body #mobile-topbar #mobile-hamburger:hover { background: #F1F3F6 !important; }
+  html body #mobile-topbar #mobile-user-btn {
+    background: var(--th-pri-soft) !important;
+    border-color: var(--th-pri-ring) !important;
+    color: var(--th-pri-ink) !important;
+  }
+  html body #mobile-topbar #mobile-user-avatar { color: var(--th-pri-ink) !important; }
+  html body #mobile-bottomnav { border-top-color: var(--th-line) !important; }
+  html body #mobile-bottomnav .m-tab.is-active:not(.m-tab-kompa),
+  html body #mobile-bottomnav .m-tab.is-active:not(.m-tab-kompa) span,
+  html body #mobile-bottomnav .m-tab.is-active:not(.m-tab-kompa) svg { color: var(--th-pri) !important; }
+  html body .view.active,
+  html body table.clients,
+  html body #client-tbody { background-color: var(--th-canvas) !important; }
+  html body #client-tbody tr { box-shadow: var(--th-sh-card) !important; }
+}
+
+/* ---------- 10. ホーム：やることの板に付いていた緑の帯を取る（古い指定の巻き込み） ---------- */
+html body .action-list > .fp-kanban-board {
+  background: transparent !important;
+  border-left: 0 !important;
+}
+
+/* ---------- 11. お客様カード：金色の飾りを青むらさきに ---------- */
+html body .cd-modal .cd-flow .cd-flow-eyebrow-pill {
+  background: var(--th-pri-soft) !important;
+  border: 1px solid var(--th-pri-ring) !important;
+  color: var(--th-pri-ink) !important;
+}
+html body .cd-modal .cd-flow .cd-flow-eyebrow-pill svg { color: var(--th-pri) !important; stroke: currentColor !important; }
+html body .cd-modal #modal-edit-btn,
+html body .cd-modal button.fp-tool,
+html body .cd-modal .c1s-jump-overview {
+  background: #FFFFFF !important;
+  border: 1px solid var(--th-line-2) !important;
+  border-radius: 10px !important;
+  box-shadow: var(--th-sh-btn) !important;
+  color: var(--th-ink) !important;
+}
+html body .cd-modal #cd-tags-section #cd-tags-edit {
+  background: var(--th-pri-grad) !important;
+  border: 0 !important;
+  border-radius: 10px !important;
+  box-shadow: var(--th-sh-pri-sm) !important;
+  color: #FFFFFF !important;
+}
+
+@media (max-width: 768px) {
+  /* 見出しの金色の縦線・金色の文字 → 青むらさき（同じ強さの指定で後勝ちにする。もっと細かい既存の上書きはそのまま効く） */
+  .cd-modal .cd-section-title,
+  .cd-modal .cd-card-title,
+  .cd-modal h3,
+  .cd-modal [class*="-title"] {
+    border-left-color: #4F46E5 !important;
+    color: #3730A3 !important;
+  }
+  .cd-modal .cd-section-label,
+  .cd-modal .cd-kpi-label,
+  .cd-modal .cd-flow-eyebrow,
+  .cd-modal .cd-stat-label {
+    background: #F6F6FE !important;
+    border-left-color: #4F46E5 !important;
+    color: #475569 !important;
+  }
+  /* 一覧の右端の矢印（金色 → 灰色） */
+  html body table.clients tbody tr::after { color: #94A3B8 !important; }
+  /* 右上の丸（縦長になっていた） */
+  html body #mobile-topbar #mobile-user-btn { width: 44px !important; height: 44px !important; border-radius: 50% !important; }
+}

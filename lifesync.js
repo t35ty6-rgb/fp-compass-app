@@ -566,8 +566,10 @@
     }
     evs.forEach(function (e) {
       var q = quote(e.evidence, e.meetingDay);
+      // スマホ では 見通し の 行 の × を 出さない (行 の 高さ が そろわなく なる) ので、 ここ から 取り消せる よう に する
       srcRows.push('<div class="lf-row"><div class="lf-k">予定</div><div class="lf-v"><div class="lf-main"><b>' + esc(dateLabel(e.date)) + '</b><span class="lf-ev-label">' +
-        (e.who ? esc(e.who) + 'の' : '') + esc(e.label) + '</span></div>' + (q ? '<div class="lf-q">' + esc(q) + '</div>' : '') + '</div></div>');
+        (e.who ? esc(e.who) + 'の' : '') + esc(e.label) + '</span></div>' + (q ? '<div class="lf-q">' + esc(q) + '</div>' : '') + '</div>' +
+        '<button type="button" class="lf-rm" data-lf-act="remove-event" data-id="' + esc(e.id) + '">取り消す</button></div>');
     });
     var srcHtml = srcRows.length
       ? '<details class="lf-src" data-lf-src="' + esc(id) + '"' + (st.src[id] ? ' open' : '') + '><summary>議事録から読み取った内容（' + srcRows.length + '件）</summary>' +

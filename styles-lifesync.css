@@ -157,8 +157,7 @@
   .lf-box .lf-more { height: 44px; margin-left: 104px; }
   .lf-box .lf-src > summary { min-height: 44px; }
   .lf-box input.lf-retire-input { height: 44px; width: 64px; font-size: 16px !important; }   /* 16px 未満 だと iPhone が 画面 を 拡大 する */
-  .lf-box .lf-ln.lf-ln-x { min-height: 44px; align-items: center; }   /* × を 44px に する ぶん、 その 行 だけ 背 を 高く して 上下 の × と 重ねない */
-  .lf-box .lf-x { width: 44px; height: 44px; margin: 0 -10px 0 0; }
+  .lf-box .lf-ln .lf-x { display: none; }   /* スマホ では 行 の × を 出さない (44px に する と 行 の 高さ が ばらつく)。 取り消し は 「読み取った 内容」 の 中 から */
   .lf-box .lf-link { padding: 6px 0; }
   .lf-bar { align-items: flex-start; flex-wrap: wrap; padding: 12px 14px; }
   .lf-bar > .lf-svg, .lf-bar .lf-spin { margin-top: 3px; }
@@ -212,4 +211,61 @@
 @media (max-width: 768px) {
   .lf-box.lf-ppl .lf-head { flex-direction: row; align-items: center; }
   .lf-box.lf-ppl .lf-head .lf-link { min-height: 44px; display: inline-flex; align-items: center; padding: 0 2px; }
+}
+
+/* 「読み取った 内容」 の 中 の 取り消す ボタン */
+.lf-box .lf-rm { -webkit-appearance: none; appearance: none; align-self: center; height: 30px; min-height: 0; margin: 0; padding: 0 10px; border: 1px solid #E2E8F0; border-radius: 8px; background: #fff; box-shadow: none;
+  color: #475569; font-family: inherit; font-size: 12.5px; font-weight: 600; line-height: 1; letter-spacing: 0; white-space: nowrap; cursor: pointer; flex: none; }
+.lf-box .lf-rm:focus-visible { outline: 2px solid #5B5BF0; outline-offset: 2px; }
+@media (hover: hover) { .lf-box .lf-rm:hover { border-color: #F3C4C4; background: #FEF3F2; color: #B42318; } }
+
+/* ============================================================
+   スマホ の 最適化 (2026-11-21  owner 「携帯 の UI とか も 最適化 して」)
+   ============================================================ */
+@media (max-width: 768px) {
+  /* ① 顧客 カード の タブ (概観 / ライフ / 議事録 …) が 上 に 貼り付かず、 「戻る」 ボタン が 中身 の 上 に かぶって いた。
+        原因: #modal-content に PC 用 の overflow:auto が 残って いて、 貼り付き (sticky) の 基準 が そこ に なって いた
+        (その 箱 自体 は スクロール しない ので 一度 も 貼り付かない)。 スクロール する の は 外側 の #modal-overlay。
+        顧客 カード の とき だけ visible に 戻す → タブ が 上 に 残り、 「戻る」 は タブ の 左 の 空き に 収まる。 */
+  #modal-overlay #modal-content.modal:has(> .cd-modal) { overflow: visible !important; }
+
+  /* ② 箱 の 中 の 箱 で 左右 が 狭く なって いた → 外 の 箱 は 画面 いっぱい の 白い 帯 に して、 中身 を 広く 使う */
+  .lf-box { margin: 0 0 10px; padding: 16px 16px 14px; border-left: 0; border-right: 0; border-radius: 0; }
+  .lf-box .lf-h { font-size: 16px; }
+  .lf-box .lf-lead { font-size: 13px; }
+
+  .lf-tag { font-size: 12px; }
+  .lf-box .lf-ln { font-size: 14px; line-height: 1.65; }
+  .lf-box .lf-p-info { font-size: 13.5px; }
+  .lf-box .lf-retire-row { padding: 8px 12px; }
+  .lf-box .lf-rm { height: 44px; padding: 0 12px; font-size: 13px; }
+
+  /* ⑤ ライフイベント の 画面: 期間・分類 の ボタン が 4 段 に 折り返して 画面 の 3 割 を 使って いた → 1 段 ずつ 横 に 送る */
+  #timeline-area .tl-toolbar { position: relative; padding-bottom: 34px; }
+  #timeline-area .tl-toolbar-row { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; margin-right: -14px; padding-right: 14px; }
+  #timeline-area .tl-toolbar-row::-webkit-scrollbar { display: none; }
+  #timeline-area .tl-toolbar-row > * { flex: none; }
+  #timeline-area .tl-toolbar-row .tl-pill { min-height: 40px; padding: 0 14px; white-space: nowrap; }
+  #timeline-area .tl-toolbar .tl-count { position: absolute; right: 14px; bottom: 10px; margin: 0; }
+}
+
+/* ③④ 箱 が 狭い とき (スマホ、 小さい PC) の 詰め方。 画面 幅 では なく 箱 の 幅 で 決める
+       (768px の タブレット は 箱 が 広い ので、 ここ は 当てず 2 列 の まま に する)。 */
+@container lf (max-width: 599.98px) {
+  /* ③ ご家族: 1 人 ずつ の 枠 を やめ、 線 で 区切った 一覧 に。 名前 と 年齢 は 同じ 行 に 並べる (4 人 で 380px → 約 240px) */
+  .lf-box .lf-ppl-list { gap: 0; border-top: 1px solid #EEF2F6; }
+  .lf-box .lf-p { padding: 10px 0; border: 0; border-bottom: 1px solid #EEF2F6; border-radius: 0; background: none; }
+  .lf-box .lf-p-av { width: 32px; height: 32px; font-size: 14px; margin-top: 1px; }
+  .lf-box .lf-p-body { flex-direction: row; flex-wrap: wrap; align-items: baseline; gap: 0 12px; }
+  .lf-box .lf-p-next { flex-basis: 100%; }
+  .lf-box.lf-ppl .lf-head { margin-bottom: 8px; }
+  /* ④ 見通し: 時期 の 名前 と ひとこと を 1 行 に 並べて 背 を 低く (1 つ 96px → 約 66px) */
+  .lf-box .lf-bands { gap: 12px; }
+  .lf-box .lf-band-l { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 2px 8px; padding: 10px 12px; }
+  .lf-box .lf-band-t { order: 1; font-size: 15.5px; white-space: nowrap; }
+  .lf-box .lf-band-hl { order: 2; margin: 0 0 0 auto; align-self: center; max-width: 100%; }   /* 長い ひとこと は 並ばず に 次 の 行 へ 落ちる */
+  .lf-box .lf-band-rg { order: 3; flex-basis: 100%; }
+  .lf-box .lf-band-r { padding: 10px 12px 12px; gap: 5px; }
+  .lf-box .lf-ln { grid-template-columns: 100px minmax(0, 1fr) auto; }
+  .lf-box .lf-more { margin-left: 108px; }
 }
