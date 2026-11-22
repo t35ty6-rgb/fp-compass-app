@@ -10916,6 +10916,7 @@ ${ctxText}${surveyTxt}`;
                 </div>
                 <div class="fp-meeting-card-actions" style="display:flex;gap:6px;flex-wrap:wrap;">
                   ${b.driveUrl ? `<a href="${escapeHtml(b.driveUrl)}" target="_blank" class="fp-btn fp-btn-sm fp-btn-gold">🎥 録画を見る</a>` : ''}
+                  ${window.FpMinutesReport ? window.FpMinutesReport.buttonHtml(aiData, client, b, zN) : ''}
                   <button class="fp-meeting-todo-review" data-booking-ts="${escapeHtml(b.ts || '')}" data-ai-ts="${escapeHtml(aiData.ts || aiData.createdAt || '')}" data-client-id="${escapeHtml(client?.id || '')}" data-client-name="${escapeHtml(client?.name || '')}" style="background:#EEF0FF;border:1.5px solid #5B5BF0;color:#5B5BF0;font-size:13px;font-weight:700;padding:5px 11px;border-radius:5px;cursor:pointer;font-family:inherit;">📋 TODO 候補 レビュー</button>
                   <button class="fp-meeting-delete" data-booking-ts="${escapeHtml(b.ts || '')}" data-ai-ts="${escapeHtml(aiData.ts || aiData.createdAt || '')}" data-client-id="${escapeHtml(client?.id || '')}" data-client-name="${escapeHtml(client?.name || '')}" style="background:#fff;border:1.5px solid #FCA5A5;color:#DC2626;font-size:13px;font-weight:700;padding:5px 11px;border-radius:5px;cursor:pointer;font-family:inherit;">🗑 削除</button>
                 </div>
@@ -11057,6 +11058,7 @@ ${ctxText}${surveyTxt}`;
                     ${(a.ts || a.createdAt) && !_isManualAi(a) ? `<div class="fp-meeting-card-recstart" style="font-size:13px;color:#6B7280;font-weight:600;margin-top:3px;">録画開始: ${escapeHtml(fmtJstTime(a.ts || a.createdAt))} (${escapeHtml(fmtDateRobust(a.ts || a.createdAt))})</div>` : ''}
                   </div>
                   <div class="fp-meeting-card-actions" style="display:flex;gap:6px;flex-wrap:wrap;">
+                    ${window.FpMinutesReport ? window.FpMinutesReport.buttonHtml(Object.assign({}, a, { manual: _isManualAi(a) }), client, null, zN) : ''}
                     <button class="fp-meeting-todo-review" data-booking-ts="${escapeHtml(a.bookingTs || '')}" data-ai-ts="${escapeHtml(a.ts || a.createdAt || '')}" data-client-id="${escapeHtml(client?.id || '')}" data-client-name="${escapeHtml(client?.name || a.customerName || '')}" style="background:#EEF0FF;border:1.5px solid #5B5BF0;color:#5B5BF0;font-size:13px;font-weight:700;padding:5px 11px;border-radius:5px;cursor:pointer;font-family:inherit;">📋 TODO 候補 レビュー</button>
                     <button class="fp-meeting-delete" data-booking-ts="${escapeHtml(a.bookingTs || '')}" data-ai-ts="${escapeHtml(a.ts || a.createdAt || '')}" data-client-id="${escapeHtml(client?.id || '')}" data-client-name="${escapeHtml(client?.name || a.customerName || '')}" style="background:#fff;border:1.5px solid #FCA5A5;color:#DC2626;font-size:13px;font-weight:700;padding:5px 11px;border-radius:5px;cursor:pointer;font-family:inherit;">🗑 削除</button>
                   </div>
