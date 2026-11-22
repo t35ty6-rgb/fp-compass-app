@@ -1881,6 +1881,8 @@
   async function startGcalOauthPopup() {
     const fp = window.__fp;
     if (!fp?.auth?.currentUser) throw new Error('Firebase Auth 未初期化');
+    // iPhone アプリの中では別窓を開けないので、 途中で行き止まりにならないよう先に案内する
+    if (window.FP_NATIVE) throw new Error('Google カレンダーの連携は、パソコンのブラウザから設定してください。');
     const state = generateGcalOauthState();
     sessionStorage.setItem('fp-gcal-oauth-state', state);
     const redirectUri = location.origin + GCAL_OAUTH_REDIRECT_PATH;

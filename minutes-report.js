@@ -338,7 +338,7 @@
         '</div>' +
         '<div class="fpmr-ft"><span class="fpmr-msg" role="status" aria-live="polite"></span>' +
           '<button type="button" class="fpmr-2nd" data-fpmr-act="print">印刷・PDF</button>' +
-          (navigator.share ? '<button type="button" class="fpmr-2nd" data-fpmr-act="share">共有</button>' : '') +
+          ((navigator.share || window.FP_NATIVE) ? '<button type="button" class="fpmr-2nd" data-fpmr-act="share">共有</button>' : '') +
           '<button type="button" class="fpmr-go" data-fpmr-act="copy">コピーする</button>' +
         '</div>' +
       '</div>';
@@ -398,8 +398,15 @@
     var text = ov.querySelector('.fpmr-ta').value;
     if (a === 'close') close();
     else if (a === 'copy') copyText(text);
-    else if (a === 'print') printText(text);
-    else if (a === 'share') { try { navigator.share({ text: text }).catch(function () {}); } catch (_) { copyText(text); } }
+    else if (a === 'print') {
+      // iPhone アプリの中: 画面の印刷は使えないので、 アプリ本体の印刷を呼ぶ
+      if (window.FP_NATIVE && window.FpNative) window.FpNative.printText(text, '面談の報告書').catch(function () { copyText(text); });
+      else printText(text);
+    }
+    else if (a === 'share') {
+      if (window.FP_NATIVE && window.FpNative && window.FpNative.info()) window.FpNative.share(text, '面談の報告書').catch(function () {});
+      else { try { navigator.share({ text: text }).catch(function () {}); } catch (_) { copyText(text); } }
+    }
   }, true);
   document.addEventListener('change', function (e) {
     var t = e.target;

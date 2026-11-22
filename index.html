@@ -11,7 +11,19 @@
 /* ★ 2026-09-16 自動更新チェック
    これが無いと iPhone のホーム画面アプリが古い index.html を握ったままになり、
    何を直しても画面が変わらない。version.txt はデプロイ時に自動生成される。 */
-window.FP_VER = "20261121E";
+window.FP_VER = "20261122A";
+/* ★ 2026-11-22 アプリ内モード (App Store 版)
+   iPhone アプリの中では、 新規登録・料金・購入の案内を出さない (Apple の決まり)。
+   ブラウザで開いたときは今までどおり。 */
+window.FP_NATIVE = (function () {
+  try {
+    if (/FPCompassApp\//.test(navigator.userAgent || '')) return true;
+    var c = window.Capacitor;
+    if (c && typeof c.isNativePlatform === 'function' && c.isNativePlatform()) return true;
+  } catch (_) {}
+  return false;
+})();
+if (window.FP_NATIVE) document.documentElement.classList.add('fp-native');
 (function () {
   function check() {
     fetch('/version.txt?t=' + Date.now(), { cache: 'no-store' })
@@ -69,13 +81,13 @@ window.FP_VER = "20261121E";
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20261121E">
-<link rel="stylesheet" href="styles-v2.css?v=20261121E">
-<link rel="stylesheet" href="styles-v3.css?v=20261121E">
-<link rel="stylesheet" href="styles-v8-workspace.css?v=20261121E">
-<link rel="stylesheet" href="styles-followups.css?v=20261121E">
-<link rel="stylesheet" href="styles-lifesync.css?v=20261121E">
-<link rel="stylesheet" href="styles-theme.css?v=20261121E">
+<link rel="stylesheet" href="styles.css?v=20261122A">
+<link rel="stylesheet" href="styles-v2.css?v=20261122A">
+<link rel="stylesheet" href="styles-v3.css?v=20261122A">
+<link rel="stylesheet" href="styles-v8-workspace.css?v=20261122A">
+<link rel="stylesheet" href="styles-followups.css?v=20261122A">
+<link rel="stylesheet" href="styles-lifesync.css?v=20261122A">
+<link rel="stylesheet" href="styles-theme.css?v=20261122A">
 <!-- ★ 2026-06-26 perf: lucide(350KB) と chart.js(201KB) を defer 化 -->
 <!--   どちらも DOMContentLoaded 後ハイドレートで OK (lucide: setInterval scan / chart: tryRender polling) -->
 <script defer src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
@@ -101,6 +113,29 @@ window.FP_VER = "20261121E";
      判定書_FP-Compass_多視点10_Performance_2026-09-02.md P0 fix
 -->
 
+<style id="fp-native-css">
+/* アプリ内モード: 登録・料金・購入につながるものを隠す */
+html.fp-native #fp-gate-tabs,
+html.fp-native #fp-row-fpname,
+html.fp-native #fp-row-pwconfirm,
+html.fp-native #fp-row-coupon,
+html.fp-native #fp-row-terms,
+html.fp-native #fp-row-demo,
+html.fp-native #fp-gate-google-divider,
+html.fp-native #fp-gate-google,
+html.fp-native .fp-web-only,
+html.fp-native .upgrade-mini,
+html.fp-native a[href="./referral.html"],
+html.fp-native a[href*="specified-commercial"],
+html.fp-native #fp-a2hs,
+html.fp-native:not(.fp-native-v2) [data-fpmr-act="print"] { display: none !important; }
+html:not(.fp-native) .fp-native-only { display: none !important; }
+html.fp-native #fp-gate-overlay::before { display: none; }
+/* 背の低い iPhone でもカードの上が切れないように (収まるときは今までどおり中央) */
+html.fp-native #fp-gate-overlay { align-items: flex-start; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-top: calc(env(safe-area-inset-top, 0px) + 16px); padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 16px); box-sizing: border-box; }
+html.fp-native #fp-gate-card { margin: auto; }
+#fp-gate-native-note { margin-top: 14px; font-size: 12.5px; color: #6B7280; text-align: center; line-height: 1.8; }
+</style>
 <style id="fp-gate-css">
 /* 2026-07-13 v11 elite critic 修正: dark navy → 業務ツール 白 base + 紺 accent (信頼感) */
 #fp-gate-overlay{position:fixed;inset:0;background:#F7F6F2;z-index:2147483647;display:flex;align-items:center;justify-content:center;font-family:'Noto Sans JP',-apple-system,sans-serif;color:#1A2138;padding:20px}
@@ -196,8 +231,9 @@ window.FP_VER = "20261121E";
     </div>
     <div id="fp-gate-msg"></div>
     <div id="fp-gate-help">サポート → <a href="mailto:support@skeleton-inc.jp">support@skeleton-inc.jp</a></div>
+    <div id="fp-gate-native-note" class="fp-native-only">ご契約済みの事務所さま向けのアプリです。</div>
     <div id="fp-gate-legal" style="margin-top:14px;font-size:12px;color:#6B7280;text-align:center;line-height:1.9;">
-      申込前に必ずご確認ください:<br>
+      <span class="fp-web-only">申込前に必ずご確認ください:<br></span>
       <a href="./legal/specified-commercial.html" style="color:#1E3A5F;text-decoration:underline;display:inline-block;padding:10px 8px;min-height:44px;line-height:24px;font-weight:700;">特商法表記</a>
       <a href="./legal/privacy.html" style="color:#1E3A5F;text-decoration:underline;display:inline-block;padding:10px 8px;min-height:44px;line-height:24px;font-weight:700;">プライバシー</a>
       <a href="./legal/terms.html" style="color:#1E3A5F;text-decoration:underline;display:inline-block;padding:10px 8px;min-height:44px;line-height:24px;font-weight:700;">利用規約</a>
@@ -420,6 +456,7 @@ window.FP_VER = "20261121E";
 
   let mode = "login";
   function setMode(m) {
+    if (window.FP_NATIVE) m = "login";   // アプリ内では新規登録を出さない
     mode = m;
     $("fp-tab-login").classList.toggle("on", m === "login");
     $("fp-tab-signup").classList.toggle("on", m === "signup");
@@ -441,6 +478,14 @@ window.FP_VER = "20261121E";
   }
   $("fp-tab-login").addEventListener("click", () => setMode("login"));
   $("fp-tab-signup").addEventListener("click", () => setMode("signup"));
+  if (window.FP_NATIVE) {
+    const _sub = $("fp-gate-sub");
+    _sub.dataset.login = "ご契約時に登録したメールアドレスとパスワードでログインしてください。";
+    _sub.textContent = _sub.dataset.login;
+    $("fp-gate-title").textContent = "ログイン";
+    // 法務ページは Safari で開く (アプリの中に戻るボタンが無いため)
+    document.querySelectorAll("#fp-gate-legal a").forEach(a => a.setAttribute("target", "_blank"));
+  }
   // ★ 0円 デモ申込ボタン → フラグ立てて signup フロー (既存の createCheckoutSession 経路) が demo:true を渡す
   $("fp-demo-signup-btn").addEventListener("click", () => {
     sessionStorage.setItem('fpDemoSignup', '1');
@@ -779,7 +824,30 @@ window.FP_VER = "20261121E";
       return snap.docs.map(x => x.data());
     } catch (e) { console.warn('fetchFullLineHistory fail', e.message); return null; }
   };
+  // ★ アプリ内モード用: 支払い・再加入のボタンは出さず、 サポートの案内だけにする
+  function showBillingGateNative() {
+    const existing = document.getElementById("fp-billing-gate");
+    if (existing) existing.remove();
+    const overlay = document.createElement("div");
+    overlay.id = "fp-billing-gate";
+    overlay.style.cssText = "position:fixed;inset:0;background:#F7F8FA;z-index:2147483647;display:flex;align-items:center;justify-content:center;font-family:-apple-system,'Hiragino Sans','Noto Sans JP',sans-serif;color:#1F2430;padding:24px;";
+    overlay.innerHTML = `
+      <div style="max-width:440px;width:100%;background:#fff;border:1px solid #E6E8EC;border-radius:16px;padding:32px 24px;box-shadow:0 4px 18px rgba(26,33,56,0.06);">
+        <h2 style="font-weight:800;font-size:20px;line-height:1.45;margin:0 0 12px;">このアカウントでは、現在ご利用いただけません</h2>
+        <p style="font-size:14px;line-height:1.85;color:#4B5563;margin:0 0 22px;">ご利用の状況を確認できませんでした。お手数ですが、サポートまでお問い合わせください。</p>
+        <div style="font-size:13px;color:#6B7280;line-height:1.7;margin-bottom:6px;">サポート</div>
+        <div style="font-size:15px;font-weight:700;color:#1F2430;word-break:break-all;margin-bottom:22px;">support@skeleton-inc.jp</div>
+        <button id="fp-bgate-logout" style="width:100%;min-height:48px;background:#fff;color:#1F2430;border:1px solid #D5D9E0;border-radius:12px;padding:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;">別のアカウントでログイン</button>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    document.getElementById("fp-bgate-logout").addEventListener("click", async () => {
+      await signOut(auth);
+      location.reload();
+    });
+  }
   function showBillingGate(status, tenantId) {
+    if (window.FP_NATIVE) { showBillingGateNative(); return; }
     // 既存ゲートがあれば消す
     const existing = document.getElementById("fp-billing-gate");
     if (existing) existing.remove();
@@ -2004,6 +2072,7 @@ window.fpReadyAfterAuth = function() {
     "line-app.js?v=" + ver,
     "charts.js?v=" + ver,
   ];
+  if (window.FP_NATIVE) deferred.push("native-app.js?v=" + ver);
   function loadCritical(i) {
     if (i >= critical.length) {
       window.UPCOMING_BOOKINGS = [];
@@ -2743,7 +2812,7 @@ window.fpReadyAfterAuth = function() {
 <script>
 (function(){
   // 最新の ver を 1 箇所に集約 (fpReadyAfterAuth 側と一致させる必要あり)
-    const FP_VERSION = "20261121E";
+    const FP_VERSION = "20261122A";
   try { window.FP_VERSION = FP_VERSION; } catch(_) {}
 
   // 2026-07-13 v11: Chrome拡張 (Zoom タブ音声 レコーダー) 検知
@@ -3147,6 +3216,7 @@ window.fpReadyAfterAuth = function() {
   var deferred = null;
 
   function installed() {
+    if (window.FP_NATIVE) return true;   // アプリの中では出さない
     try {
       if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) return true;
     } catch (_) {}

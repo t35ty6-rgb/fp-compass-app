@@ -2,12 +2,38 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>アカウント設定 — FP Compass</title>
 <link rel="icon" type="image/svg+xml" href="./favicon.svg">
 <link rel="apple-touch-icon" href="./favicon.svg">
 <meta name="theme-color" content="#0E1116">
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Noto+Sans+JP:wght@400;500;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<script>
+/* ★ 2026-11-22 アプリ内モード (App Store 版)
+   iPhone アプリの中では、 新規登録・料金・購入の案内を出さない (Apple の決まり)。
+   ブラウザで開いたときは今までどおり。 */
+window.FP_NATIVE = (function () {
+  try {
+    if (/FPCompassApp\//.test(navigator.userAgent || '')) return true;
+    var c = window.Capacitor;
+    if (c && typeof c.isNativePlatform === 'function' && c.isNativePlatform()) return true;
+  } catch (_) {}
+  return false;
+})();
+if (window.FP_NATIVE) document.documentElement.classList.add('fp-native');
+</script>
+<style id="fp-native-css">
+html.fp-native .fp-web-only { display: none !important; }
+html:not(.fp-native) .fp-native-only { display: none !important; }
+html.fp-native .topbar { padding-top: calc(env(safe-area-inset-top, 0px) + 10px); }
+html.fp-native .main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 40px); }
+html.fp-native .topbar-actions .link { min-height: 44px; display: inline-flex; align-items: center; padding: 0 12px; white-space: nowrap; }
+html.fp-native .topbar-h { white-space: nowrap; }
+html.fp-native .row { grid-template-columns: 84px minmax(0, 1fr); gap: 12px; }
+html.fp-native .row-val { min-width: 0; overflow-wrap: anywhere; }
+.fpn-del { font-size: 13.5px; color: #475569; line-height: 1.8; margin: 0; }
+.fpn-del b { color: #0F172A; word-break: break-all; }
+</style>
 <style>
   :root {
     --ink:#0F172A; --ink-2:#475569; --ink-3:#94A3B8;
@@ -100,7 +126,7 @@
       FP Compass · アカウント
     </div>
     <div style="font-size:13px;color:var(--ink-2);margin-bottom:18px;line-height:1.7;">
-      アカウント設定 / 紹介リンク / データダウンロード / サブスク管理
+      <span class="fp-web-only">アカウント設定 / 紹介リンク / データダウンロード / サブスク管理</span><span class="fp-native-only">アカウントとアプリの設定</span>
     </div>
     <label class="lbl" for="email">メールアドレス</label>
     <input id="email" class="lin" type="email">
@@ -113,16 +139,16 @@
 
 <div id="app">
   <div class="topbar">
-    <div class="topbar-h"><span class="topbar-dot"></span>FP Compass · アカウント設定</div>
+    <div class="topbar-h"><span class="topbar-dot"></span><span class="fp-web-only">FP Compass · アカウント設定</span><span class="fp-native-only">アカウント</span></div>
     <div class="topbar-actions">
-      <a class="link" href="./">CRM に戻る</a>
+      <a class="link" href="./"><span class="fp-web-only">CRM に戻る</span><span class="fp-native-only">戻る</span></a>
       <button class="link" id="logout-btn">ログアウト</button>
     </div>
   </div>
 
   <div class="main">
     <h1 class="page-h">アカウント設定</h1>
-    <p class="page-sub">ログイン情報・紹介リンク・データ管理・サブスク管理</p>
+    <p class="page-sub"><span class="fp-web-only">ログイン情報・紹介リンク・データ管理・サブスク管理</span><span class="fp-native-only">ログイン情報とアプリの設定</span></p>
 
     <!-- 基本情報 -->
     <div class="section">
@@ -134,14 +160,23 @@
         <div class="row"><div class="row-lbl">事務所名</div><div class="row-val" id="info-fpname">—</div></div>
         <div class="row"><div class="row-lbl">メアド</div><div class="row-val" id="info-email">—</div></div>
         <div class="row"><div class="row-lbl">テナント ID</div><div class="row-val" id="info-tenant" style="font-family:'JetBrains Mono',monospace;font-size:12px;">—</div></div>
-        <div class="row"><div class="row-lbl">プラン</div><div class="row-val" id="info-plan">—</div></div>
-        <div class="row"><div class="row-lbl">契約日</div><div class="row-val" id="info-since">—</div></div>
-        <div class="row"><div class="row-lbl">課金状態</div><div class="row-val" id="info-billing">—</div></div>
+        <div class="row fp-web-only"><div class="row-lbl">プラン</div><div class="row-val" id="info-plan">—</div></div>
+        <div class="row fp-web-only"><div class="row-lbl">契約日</div><div class="row-val" id="info-since">—</div></div>
+        <div class="row fp-web-only"><div class="row-lbl">課金状態</div><div class="row-val" id="info-billing">—</div></div>
       </div>
     </div>
 
+    <!-- アプリの設定 (iPhone アプリの中だけ) -->
+    <div class="section fp-native-only" id="fp-native-settings">
+      <div class="section-h">
+        <div class="section-title">アプリの設定</div>
+        <p class="section-sub">この iPhone での使い方</p>
+      </div>
+      <div class="section-body"><div id="fp-native-settings-host"></div></div>
+    </div>
+
     <!-- 音声設定 (Bluetooth ヘッドホン で Zoom 相手 の 声 も 議事録録音) -->
-    <div class="section">
+    <div class="section fp-web-only">
       <div class="section-h">
         <div class="section-title">音声設定 (Zoom 議事録録音)</div>
         <p class="section-sub">Bluetooth ヘッドホン 使用時 に 相手 の 声 も 録音 する 設定</p>
@@ -222,7 +257,7 @@
     </div>
 
     <!-- データダウンロード -->
-    <div class="section">
+    <div class="section fp-web-only">
       <div class="section-h">
         <div class="section-title">データダウンロード</div>
         <p class="section-sub">あなたのテナントの全データを JSON 形式で取得</p>
@@ -238,7 +273,7 @@
     </div>
 
     <!-- 紹介リンク -->
-    <div class="section">
+    <div class="section fp-web-only">
       <div class="section-h">
         <div class="section-title">紹介リンク・割引状況</div>
         <p class="section-sub">同業の FP を紹介すると 1 人あたり 月 ¥3,500 割引 (6 人で実質無料)</p>
@@ -452,8 +487,18 @@
       </div>
     </div>
 
+    <!-- アカウントの削除 (iPhone アプリの中だけ) -->
+    <div class="section fp-native-only">
+      <div class="section-h">
+        <div class="section-title">アカウントの削除</div>
+        <p class="section-sub">アカウントとデータを消したいとき</p>
+      </div>
+      <div class="section-body">
+        <p class="fpn-del">アカウントと保存されているデータの削除は、サポートで承ります。ご登録のメールアドレスから、下記までご連絡ください。<br><b>support@skeleton-inc.jp</b></p>
+      </div>
+    </div>
     <!-- サブスク管理 -->
-    <div class="section danger-zone">
+    <div class="section danger-zone fp-web-only">
       <div class="section-h">
         <div class="section-title">サブスク管理</div>
         <p class="section-sub">カード変更 / 領収書ダウンロード / 解約手続き</p>
@@ -572,7 +617,7 @@
     $("info-billing").innerHTML = `<span style="display:inline-block;padding:3px 10px;border-radius:999px;background:${billStatus==='active'?'#ECFDF5':'#FEF7E1'};color:${billStatus==='active'?'#065F46':'#92400E'};font-family:'JetBrains Mono',monospace;font-size:11.5px;font-weight:700;letter-spacing:0.06em;">${(billStatus||'').toUpperCase()}</span>`;
 
     // 解約済 / past_due → 再加入バナー (ページ上部に prepend)
-    if (billStatus === "canceled" || billStatus === "past_due") {
+    if (!window.FP_NATIVE && (billStatus === "canceled" || billStatus === "past_due")) {
       const banner = document.createElement("div");
       banner.style.cssText = "max-width:760px;margin:0 auto 18px;background:linear-gradient(135deg,#FEF3C7,#FDE68A);border:2px solid #F59E0B;border-radius:12px;padding:18px 22px;display:flex;align-items:center;gap:16px;justify-content:space-between;flex-wrap:wrap;font-family:inherit;";
       banner.innerHTML = `
@@ -1069,6 +1114,18 @@
       }
     });
   }
+</script>
+<script>
+/* アプリの中だけ: 設定の部品を読み込んで差し込む */
+(function () {
+  if (!window.FP_NATIVE) return;
+  var s = document.createElement('script');
+  s.src = './native-app.js?v=' + Date.now().toString(36);
+  s.onload = function () {
+    try { window.FpNative.mountSettings(document.getElementById('fp-native-settings-host')); } catch (_) {}
+  };
+  document.body.appendChild(s);
+})();
 </script>
 </body>
 </html>
