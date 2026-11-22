@@ -321,6 +321,16 @@ html.fp-native .row-val { min-width: 0; overflow-wrap: anywhere; }
         <p class="section-sub">あなたの LINE 公式アカウント を 接続 → アンケート / 友だち追加QR が 自動 で セットアップ されます</p>
       </div>
       <div class="section-body">
+        <!-- LINEマーケ (Lハーネス) の入口。 使える事務所にだけ出す -->
+        <div id="fp-lh-card" hidden>
+          <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:#fff;border:1px solid #D5D9E0;border-radius:12px;padding:14px 16px;margin-bottom:18px;">
+            <div style="flex:1;min-width:200px;">
+              <div style="font-weight:800;font-size:14.5px;color:#1F2430;line-height:1.5;">LINEマーケ</div>
+              <div style="font-size:12.5px;color:#6B7280;line-height:1.7;">ステップ配信・タグ・リッチメニューを、専用の管理画面で使えます。</div>
+            </div>
+            <a href="./line-marketing.html" style="display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 18px;border-radius:12px;background:linear-gradient(180deg,#5B54EA,#4A41E0);color:#fff;font-weight:800;font-size:14px;text-decoration:none;white-space:nowrap;">開く</a>
+          </div>
+        </div>
         <!-- ★ LINE Console / LIFF Console に 設定 する URL (オーナーが いつでも コピー できる ように 常時表示) -->
         <div id="line-setup-urls" style="background:#F8FAFC;border:1px solid var(--line);border-radius:10px;padding:14px 18px;margin-bottom:18px;">
           <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:11px;letter-spacing:0.14em;color:var(--ink-3);text-transform:uppercase;margin-bottom:10px;">📋 LINE Console / LIFF に 設定 する URL</div>
@@ -610,6 +620,12 @@ html.fp-native .row-val { min-width: 0; overflow-wrap: anywhere; }
     $("info-fpname").textContent = t.name || "—";
     $("info-email").textContent = user.email;
     $("info-tenant").textContent = uData.tenantId;
+    // LINEマーケ (Lハーネス): 使える事務所にだけ入口を出す (失敗しても何も起きない)
+    try {
+      httpsCallable(functions, "lineHarness")({ action: "state" }).then((r) => {
+        if (r && r.data && r.data.available === true) { const el = document.getElementById("fp-lh-card"); if (el) el.hidden = false; }
+      }).catch(() => {});
+    } catch (_) {}
     $("info-plan").textContent = t.plan || "—";
     const since = t.contractStartedAt?.toDate?.()?.toISOString?.()?.slice(0,10) || "—";
     $("info-since").textContent = since;

@@ -11,7 +11,7 @@
 /* ★ 2026-09-16 自動更新チェック
    これが無いと iPhone のホーム画面アプリが古い index.html を握ったままになり、
    何を直しても画面が変わらない。version.txt はデプロイ時に自動生成される。 */
-window.FP_VER = "20261122A";
+window.FP_VER = "20261123A";
 /* ★ 2026-11-22 アプリ内モード (App Store 版)
    iPhone アプリの中では、 新規登録・料金・購入の案内を出さない (Apple の決まり)。
    ブラウザで開いたときは今までどおり。 */
@@ -81,13 +81,13 @@ if (window.FP_NATIVE) document.documentElement.classList.add('fp-native');
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20261122A">
-<link rel="stylesheet" href="styles-v2.css?v=20261122A">
-<link rel="stylesheet" href="styles-v3.css?v=20261122A">
-<link rel="stylesheet" href="styles-v8-workspace.css?v=20261122A">
-<link rel="stylesheet" href="styles-followups.css?v=20261122A">
-<link rel="stylesheet" href="styles-lifesync.css?v=20261122A">
-<link rel="stylesheet" href="styles-theme.css?v=20261122A">
+<link rel="stylesheet" href="styles.css?v=20261123A">
+<link rel="stylesheet" href="styles-v2.css?v=20261123A">
+<link rel="stylesheet" href="styles-v3.css?v=20261123A">
+<link rel="stylesheet" href="styles-v8-workspace.css?v=20261123A">
+<link rel="stylesheet" href="styles-followups.css?v=20261123A">
+<link rel="stylesheet" href="styles-lifesync.css?v=20261123A">
+<link rel="stylesheet" href="styles-theme.css?v=20261123A">
 <!-- ★ 2026-06-26 perf: lucide(350KB) と chart.js(201KB) を defer 化 -->
 <!--   どちらも DOMContentLoaded 後ハイドレートで OK (lucide: setInterval scan / chart: tryRender polling) -->
 <script defer src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
@@ -2812,7 +2812,7 @@ window.fpReadyAfterAuth = function() {
 <script>
 (function(){
   // 最新の ver を 1 箇所に集約 (fpReadyAfterAuth 側と一致させる必要あり)
-    const FP_VERSION = "20261122A";
+    const FP_VERSION = "20261123A";
   try { window.FP_VERSION = FP_VERSION; } catch(_) {}
 
   // 2026-07-13 v11: Chrome拡張 (Zoom タブ音声 レコーダー) 検知
@@ -3277,6 +3277,46 @@ window.fpReadyAfterAuth = function() {
 })();
 </script>
 <!-- ====== /アプリとして追加 ====== -->
+
+<!-- ====== LINEマーケ (Lハーネス) の入口 · 2026-11-23 ====== -->
+<script>
+(function () {
+  'use strict';
+  /* 使える事務所にだけ、 左メニューの「LINE オートメーション」に「LINEマーケ」を足す。
+     使えない事務所では何も足さない (今までと同じ画面)。 入口を足すだけで、 ほかの部品には触らない。 */
+  var tries = 0, done = false;
+  function add() {
+    if (document.getElementById('fp-lh-entry')) return;
+    var anchor = document.querySelector('.sidebar-nav .tab[data-tab="settingsHub"]');
+    if (!anchor || !anchor.parentNode) return;
+    var a = document.createElement('a');
+    a.id = 'fp-lh-entry';
+    a.className = 'tab tab-line';
+    a.href = './line-marketing.html';
+    a.style.textDecoration = 'none';
+    a.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;" aria-hidden="true"><circle cx="5" cy="6" r="2.2"/><circle cx="19" cy="12" r="2.2"/><circle cx="5" cy="18" r="2.2"/><path d="M7.2 6h4.3a3 3 0 0 1 3 3v0a3 3 0 0 0 3 3M7.2 18h4.3a3 3 0 0 0 3-3v0"/></svg><span>LINEマーケ</span>';
+    /* ほかのタブの切り替え処理を巻き込まず、 そのままページを移る */
+    a.addEventListener('click', function (e) { e.stopPropagation(); }, true);
+    anchor.parentNode.insertBefore(a, anchor);
+  }
+  function check() {
+    if (done) return;
+    var fp = window.__fp;
+    if (!fp || !fp.tenantId || !fp.functions || !fp.httpsCallable || !fp.auth || !fp.auth.currentUser) {
+      if (++tries < 90) setTimeout(check, 2000);
+      return;
+    }
+    done = true;
+    try {
+      fp.httpsCallable(fp.functions, 'lineHarness')({ action: 'state' }).then(function (r) {
+        if (r && r.data && r.data.available === true) add();
+      }).catch(function () {});
+    } catch (_) {}
+  }
+  setTimeout(check, 3000);
+})();
+</script>
+<!-- ====== /LINEマーケの入口 ====== -->
 
 </body>
 </html>

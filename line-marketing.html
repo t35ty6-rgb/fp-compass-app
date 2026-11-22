@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>LINEマーケ — FP Compass</title>
+<link rel="icon" type="image/svg+xml" href="./favicon.svg">
+<meta name="theme-color" content="#FFFFFF">
+<script>
+/* iPhone アプリの中かどうか (index.html と同じ見分け方) */
+window.FP_NATIVE = (function () {
+  try {
+    if (/FPCompassApp\//.test(navigator.userAgent || '')) return true;
+    var c = window.Capacitor;
+    if (c && typeof c.isNativePlatform === 'function' && c.isNativePlatform()) return true;
+  } catch (_) {}
+  return false;
+})();
+if (window.FP_NATIVE) document.documentElement.classList.add('fp-native');
+</script>
+<style>
+  :root {
+    --pri: #4F46E5; --pri-grad: linear-gradient(180deg, #5B54EA, #4A41E0); --pri-soft: #EEF0FE;
+    --ink: #1F2430; --ink-2: #4B5563; --ink-3: #6B7280; --ink-4: #9AA1AD;
+    --line: #E6E8EC; --line-2: #D5D9E0; --canvas: #F7F8FA; --ok: #15803D; --ok-soft: #ECFDF3; --warn: #B45309; --warn-soft: #FFF7ED; --err: #B91C1C; --err-soft: #FEF2F2;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--canvas); color: var(--ink); -webkit-text-size-adjust: 100%; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", "Yu Gothic UI", "Segoe UI", sans-serif; font-size: 15px; line-height: 1.75; -webkit-font-smoothing: antialiased; }
+  .lm-top { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; gap: 12px; min-height: 56px; padding: calc(env(safe-area-inset-top, 0px) + 6px) 16px 6px; background: #fff; border-bottom: 1px solid var(--line); }
+  .lm-back { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 14px 0 10px; border: 1px solid var(--line-2); border-radius: 12px; background: #fff; color: var(--ink); font-size: 14px; font-weight: 700; text-decoration: none; white-space: nowrap; }
+  .lm-back svg { flex: 0 0 auto; }
+  .lm-ttl { font-size: 17px; font-weight: 800; white-space: nowrap; }
+  .lm-office { margin-left: auto; min-width: 0; font-size: 13px; color: var(--ink-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  main { max-width: 680px; margin: 0 auto; padding: 20px 16px calc(env(safe-area-inset-bottom, 0px) + 48px); }
+  .lm-card { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 22px 20px; box-shadow: 0 1px 2px rgba(31, 36, 48, .04); }
+  .lm-card + .lm-card { margin-top: 14px; }
+  .lm-center { text-align: center; color: var(--ink-3); padding: 48px 20px; }
+  h1 { font-size: 20px; font-weight: 800; line-height: 1.45; margin: 0 0 8px; }
+  h2 { font-size: 16px; font-weight: 800; line-height: 1.5; margin: 0 0 10px; }
+  p { margin: 0 0 10px; color: var(--ink-2); }
+  p:last-child { margin-bottom: 0; }
+  .lm-lead { font-size: 15px; }
+  .lm-list { margin: 10px 0 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+  .lm-list li { display: flex; gap: 10px; align-items: flex-start; color: var(--ink-2); font-size: 14.5px; }
+  .lm-list li::before { content: ""; flex: 0 0 auto; width: 6px; height: 6px; margin-top: 10px; border-radius: 50%; background: var(--pri); }
+  .lm-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 0 22px; border: 0; border-radius: 12px; background: var(--pri-grad); color: #fff; font-family: inherit; font-size: 15.5px; font-weight: 800; cursor: pointer; box-shadow: 0 6px 16px -8px rgba(79, 70, 229, .7); -webkit-tap-highlight-color: transparent; text-decoration: none; }
+  .lm-btn:disabled { background: #D5D9E0; color: #fff; box-shadow: none; cursor: default; }
+  .lm-btn.wide { width: 100%; }
+  .lm-btn2 { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 16px; border: 1px solid var(--line-2); border-radius: 12px; background: #fff; color: var(--ink); font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer; text-decoration: none; white-space: nowrap; -webkit-tap-highlight-color: transparent; }
+  .lm-btn2:disabled { opacity: .55; cursor: default; }
+  .lm-note { font-size: 13px; color: var(--ink-3); line-height: 1.7; }
+  .lm-box { border-radius: 12px; padding: 12px 14px; font-size: 14px; line-height: 1.75; margin: 0 0 14px; }
+  .lm-box.err { background: var(--err-soft); color: var(--err); border: 1px solid #FECACA; }
+  .lm-box.warn { background: var(--warn-soft); color: var(--warn); border: 1px solid #FED7AA; }
+  .lm-row { border: 1px solid var(--line); border-radius: 14px; padding: 14px 14px; }
+  .lm-row + .lm-row { margin-top: 10px; }
+  .lm-row-h { display: flex; align-items: center; gap: 10px; }
+  .lm-num { flex: 0 0 auto; width: 26px; height: 26px; border-radius: 50%; background: var(--pri-soft); color: var(--pri); font-size: 13px; font-weight: 800; display: flex; align-items: center; justify-content: center; }
+  .lm-row.done .lm-num { background: var(--ok-soft); color: var(--ok); }
+  .lm-row-name { flex: 1; min-width: 0; font-weight: 800; font-size: 15px; line-height: 1.5; text-wrap: balance; }
+  .lm-row-sub { font-size: 12.5px; color: var(--ink-3); line-height: 1.7; margin-top: 8px; overflow-wrap: anywhere; }
+  .lm-tag { flex: 0 0 auto; font-size: 12px; font-weight: 800; border-radius: 999px; padding: 3px 10px; white-space: nowrap; }
+  .lm-tag.ok { background: var(--ok-soft); color: var(--ok); }
+  .lm-tag.ng { background: #F3F4F6; color: var(--ink-3); }
+  .lm-field { margin-top: 12px; }
+  .lm-in { width: 100%; min-height: 48px; padding: 10px 12px; border: 1.5px solid var(--line-2); border-radius: 12px; background: #fff; color: var(--ink); font-family: inherit; font-size: 16px; outline: none; }
+  .lm-in:focus { border-color: var(--pri); box-shadow: 0 0 0 3px rgba(79, 70, 229, .14); }
+  .lm-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 14px; }
+  .lm-msg { font-size: 13.5px; line-height: 1.7; min-height: 0; margin-top: 10px; }
+  .lm-msg.ok { color: var(--ok); } .lm-msg.err { color: var(--err); }
+  .lm-msg:empty { display: none; }
+  .lm-bar { height: 10px; border-radius: 999px; background: #EEF0F3; overflow: hidden; margin: 14px 0 8px; }
+  .lm-bar > i { display: block; height: 100%; border-radius: 999px; background: var(--pri-grad); transition: width .5s; }
+  .lm-steps { margin: 14px 0 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+  .lm-steps li { display: flex; gap: 10px; align-items: center; font-size: 14.5px; color: var(--ink-4); }
+  .lm-steps li .dot { flex: 0 0 auto; width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--line-2); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; color: transparent; }
+  .lm-steps li.done { color: var(--ink-2); } .lm-steps li.done .dot { border-color: var(--ok); background: var(--ok); color: #fff; }
+  .lm-steps li.now { color: var(--ink); font-weight: 800; } .lm-steps li.now .dot { border-color: var(--pri); }
+  .lm-steps li.now .dot::after { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--pri); }
+  .lm-link { color: var(--pri); font-weight: 700; text-decoration: underline; overflow-wrap: anywhere; }
+  .lm-open-fallback { margin-top: 12px; }
+  [hidden] { display: none !important; }
+  @media (max-width: 480px) {
+    .lm-card { padding: 18px 16px; } h1 { font-size: 19px; } .lm-office { display: none; }
+    /* せまい画面では、項目名を 1 行に収めるため「登録済み／未登録」を名前の下に置く */
+    .lm-row-h { flex-wrap: wrap; row-gap: 6px; }
+    .lm-row-name { flex: 1 1 calc(100% - 36px); }
+    .lm-tag { margin-left: 36px; }
+  }
+</style>
+</head>
+<body>
+<header class="lm-top">
+  <a class="lm-back" href="./" id="lm-back"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>戻る</a>
+  <div class="lm-ttl">LINEマーケ</div>
+  <div class="lm-office" id="lm-office"></div>
+</header>
+<main id="lm-main"><div class="lm-card lm-center">読み込み中…</div></main>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+  import { getAuth, onAuthStateChanged, setPersistence, browserSessionPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
+  import { getFirestore, initializeFirestore, doc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+  import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-functions.js";
+
+  const __isStaging = /^stg\.|staging|skeleton-fp-compass-staging/.test(location.hostname);
+  const firebaseConfig = __isStaging ? {
+    apiKey: "AIzaSyAV9SEZZ5Tqu8pHUmmjMZ3RhrN_jFgMevs",
+    authDomain: "skeleton-fp-compass-staging.firebaseapp.com",
+    projectId: "skeleton-fp-compass-staging",
+    storageBucket: "skeleton-fp-compass-staging.firebasestorage.app",
+    messagingSenderId: "991197809601",
+    appId: "1:991197809601:web:6f59df4d7c505e16bc3d40",
+  } : {
+    apiKey: "AIzaSyAmVAEe9l9e1Yo_dzzJdbTVU35wWKd2sH4",
+    authDomain: "skeleton-fp-compass-632026.firebaseapp.com",
+    projectId: "skeleton-fp-compass-632026",
+    storageBucket: "skeleton-fp-compass-632026.firebasestorage.app",
+    messagingSenderId: "833972948597",
+    appId: "1:833972948597:web:b7310cc22ce41d9738f23c",
+  };
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  let db;
+  try { db = initializeFirestore(app, { experimentalAutoDetectLongPolling: true }); } catch (_) { db = getFirestore(app); }
+  const functions = getFunctions(app, "asia-northeast1");
+  // ログインの持ち方は index.html と同じ (スマホは保存・パソコンはタブを閉じるまで)
+  const _mobile = /iPhone|iPad|iPod|Android/.test(navigator.userAgent) || window.innerWidth < 640;
+  setPersistence(auth, _mobile ? browserLocalPersistence : browserSessionPersistence).catch(console.error);
+  const callLh = httpsCallable(functions, "lineHarness");
+
+  const main = document.getElementById("lm-main");
+  const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const STEPS = ["LINE の設定を確認", "プログラムを準備", "専用の管理画面を構築（3〜5分）", "友だち追加用の LIFF を登録", "仕上げ"];
+  let S = null;            // サーバーから受け取った状態
+  let view = "";           // いま出している画面
+  let editLogin = false;   // ④ を入れ直す
+  let unsub = null, timer = null, poll = null;
+  let ssoUrl = "";
+
+  function errText(e) {
+    const m = (e && e.message) ? String(e.message) : "";
+    if (!m || /^internal$/i.test(m) || /INTERNAL/.test(m)) return "うまくいきませんでした。少し待ってから、もう一度お試しください。";
+    return m;
+  }
+  function card(html, cls) { return '<div class="lm-card' + (cls ? " " + cls : "") + '">' + html + "</div>"; }
+
+  // ---------- 画面: まだ使えない / ログインしていない ----------
+  function showMessage(title, body, linkHtml) {
+    view = "msg";
+    main.innerHTML = card("<h1>" + esc(title) + "</h1><p>" + esc(body) + "</p>" + (linkHtml || ""));
+  }
+
+  // ---------- 画面: 設定 ----------
+  function row(n, name, sub, done, extra) {
+    return '<div class="lm-row' + (done ? " done" : "") + '" data-row="' + n + '"><div class="lm-row-h"><div class="lm-num">' + n + '</div><div class="lm-row-name">' + esc(name) + "</div>" +
+      '<span class="lm-tag ' + (done ? "ok" : "ng") + '">' + (done ? "登録済み" : "未登録") + '</span></div><div class="lm-row-sub">' + sub + "</div>" + (extra || "") + "</div>";
+  }
+  function showSetup() {
+    view = "setup";
+    const n = S.need;
+    const lineReady = n.token && n.secret;
+    const all = lineReady && n.liffId && n.loginSecret;
+    const needSecretInput = !n.loginSecret || editLogin;
+    // ③ は、公式LINE 連携に登録済みのものがあればそれを使う。LINEマーケ用に入れたものは、④ と一緒に入れ直せる
+    const needLiffInput = !n.liffId || (!S.liffFromLineSettings && needSecretInput);
+    let h = "";
+    h += card(
+      "<h1>LINEマーケを使えるようにする</h1>" +
+      '<p class="lm-lead">ステップ配信・タグ・リッチメニュー・一斉配信を、専用の管理画面でまとめて使えるようにします。</p>' +
+      '<p class="lm-note">いまお使いの LINE の機能（トーク・配信・アンケート）は、そのまま使えます。</p>');
+    let body = "<h2>必要な設定</h2>";
+    if (S.error) body += '<div class="lm-box err" role="alert">前回の準備で止まりました：' + esc(S.error) + "</div>";
+    if (S.tokenExpired) body += '<div class="lm-box warn">LINE のアクセストークンが失効しています。先に「公式LINE 連携」で登録し直してください。</div>';
+    body += row("①", "チャネルアクセストークン", "Messaging API チャネルのもの。「公式LINE 連携」で登録します。", n.token);
+    body += row("②", "チャネルシークレット", "Messaging API チャネルのもの。「公式LINE 連携」で登録します。", n.secret);
+    if (!lineReady) body += '<div class="lm-actions"><a class="lm-btn2" href="./account.html#line">公式LINE 連携を開く</a></div><div style="height:10px"></div>';
+    body += row("③", "LIFF ID", n.liffId ? esc(S.liffId) + (S.liffFromLineSettings ? "（公式LINE 連携に登録済みのもの）" : "") : "「LINEログイン」チャネル ＞「LIFF」タブ ＞ LIFF ID（例 2010123456-AbCdEfGh）", n.liffId,
+      needLiffInput ? '<div class="lm-field"><input class="lm-in" id="lm-liff" type="text" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="' + (n.liffId ? "変えるときだけ貼り付け" : "LIFF ID を貼り付け") + '" aria-label="LIFF ID"></div>' : "");
+    body += row("④", "LINEログインのチャネルシークレット", "③ の LIFF がある「LINEログイン」チャネル ＞「チャネル基本設定」タブ ＞ チャネルシークレット（英数字 32 文字）。Messaging API のものとは別です。", n.loginSecret,
+      needSecretInput ? '<div class="lm-field"><input class="lm-in" id="lm-secret" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="チャネルシークレットを貼り付け" aria-label="LINEログインのチャネルシークレット"></div>' : "");
+    if (needLiffInput || needSecretInput) {
+      body += '<div class="lm-actions"><button type="button" class="lm-btn2" id="lm-save">③④ を保存する</button>' + (editLogin ? '<button type="button" class="lm-btn2" id="lm-edit-cancel">やめる</button>' : "") + "</div>";
+    } else {
+      body += '<div class="lm-actions"><button type="button" class="lm-btn2" id="lm-edit">' + (S.liffFromLineSettings ? "④ を入れ直す" : "③④ を入れ直す") + "</button></div>";
+    }
+    body += '<div class="lm-msg" id="lm-save-msg" role="status" aria-live="polite"></div>';
+    body += '<p class="lm-note" style="margin-top:12px">LINE Developers の同じプロバイダーの中に、「Messaging API」と「LINEログイン」の 2 つのチャネルが必要です。</p>';
+    h += card(body);
+    h += card(
+      "<h2>準備を始める</h2>" +
+      "<p>" + (all ? "ボタンを押すと、専用の管理画面を自動で用意します。5〜10 分ほどかかります。" : "① 〜 ④ がすべて「登録済み」になると、ボタンを押せます。") + "</p>" +
+      '<div class="lm-actions"><button type="button" class="lm-btn wide" id="lm-go"' + (all && !S.tokenExpired ? "" : " disabled") + ">LINEマーケを有効にする</button></div>" +
+      '<div class="lm-msg" id="lm-go-msg" role="status" aria-live="polite"></div>');
+    main.innerHTML = h;
+
+    const saveMsg = document.getElementById("lm-save-msg");
+    const say = (el, kind, t) => { el.className = "lm-msg " + (kind || ""); el.textContent = t || ""; };
+    const save = document.getElementById("lm-save");
+    if (save) save.addEventListener("click", async () => {
+      const liffEl = document.getElementById("lm-liff"), secEl = document.getElementById("lm-secret");
+      const liffId = liffEl ? liffEl.value.trim() : "", sec = secEl ? secEl.value.trim() : "";
+      if (!liffId && !sec) { say(saveMsg, "err", "貼り付けてから「保存する」を押してください。"); (liffEl || secEl).focus(); return; }
+      if (sec && !/^[0-9a-f]{32}$/.test(sec)) {
+        const kind = sec.length > 100 ? "アクセストークン" : /^\d{8,12}$/.test(sec) ? "チャネル ID（数字）" : /^\d{6,}-[A-Za-z0-9]+$/.test(sec) ? "LIFF ID" : sec.length + " 文字の値";
+        say(saveMsg, "err", "④ に貼り付けた値は「" + kind + "」の形です。「チャネル基本設定」タブの「チャネルシークレット」（英数字 32 文字）を貼ってください。"); secEl.focus(); return;
+      }
+      save.disabled = true; const orig = save.textContent; save.textContent = "LINE に確認しています…"; say(saveMsg, "", "");
+      try {
+        const r = await callLh({ action: "saveLogin", liffId, loginChannelSecret: sec });
+        S = r.data; editLogin = false; showSetup();
+        say(document.getElementById("lm-save-msg"), "ok", "保存しました。");
+      } catch (e) {
+        save.disabled = false; save.textContent = orig; say(saveMsg, "err", errText(e));
+      }
+    });
+    const edit = document.getElementById("lm-edit");
+    if (edit) edit.addEventListener("click", () => { editLogin = true; showSetup(); const el = document.getElementById("lm-secret"); if (el) el.focus(); });
+    const cancel = document.getElementById("lm-edit-cancel");
+    if (cancel) cancel.addEventListener("click", () => { editLogin = false; showSetup(); });
+    const go = document.getElementById("lm-go"), goMsg = document.getElementById("lm-go-msg");
+    go.addEventListener("click", async () => {
+      go.disabled = true; go.textContent = "申し込んでいます…"; say(goMsg, "", "");
+      try {
+        const r = await callLh({ action: "request" });
+        S = r.data; route();
+      } catch (e) {
+        go.disabled = false; go.textContent = "LINEマーケを有効にする"; say(goMsg, "err", errText(e));
+      }
+    });
+  }
+
+  // ---------- 画面: 準備中 ----------
+  function showProgress() {
+    const m = /^(\d)\/5 (.*)$/.exec(S.step || "");
+    const n = S.status === "provisioning" && m ? Math.min(5, Math.max(1, +m[1])) : 0;
+    const since = S.requestedAtMs || Date.now();
+    const head = S.status === "requested" ? "受け付けました。まもなく準備を始めます。" : "準備しています（" + n + " / 5）";
+    view = "progress";
+    main.innerHTML = card(
+      "<h1>" + esc(head) + "</h1>" +
+      '<div class="lm-bar" role="progressbar" aria-valuemin="0" aria-valuemax="5" aria-valuenow="' + n + '"><i style="width:' + Math.max(4, n * 20) + '%"></i></div>' +
+      '<p class="lm-note">申し込みから <b id="lm-elapsed">-</b> 経過 ／ 目安は 5〜10 分</p>' +
+      '<ol class="lm-steps">' + STEPS.map((x, i) => '<li class="' + (i + 1 < n ? "done" : i + 1 === n ? "now" : "") + '"><span class="dot">' + (i + 1 < n ? "✓" : "") + "</span><span>" + esc(x) + "</span></li>").join("") + "</ol>" +
+      '<div class="lm-box warn" id="lm-slow" hidden style="margin:16px 0 0">30 分以上たっています。止まっている可能性があります。サポート（support@skeleton-inc.jp）までご連絡ください。</div>') +
+      card('<p class="lm-note">この画面は閉じても大丈夫です。準備は続きます。開いたままにしておくと、終わったら自動で切り替わります。</p>');
+    clearInterval(timer);
+    const tick = () => {
+      const el = document.getElementById("lm-elapsed"); if (!el) return;
+      const sec = Math.max(0, Math.floor((Date.now() - since) / 1000));
+      el.textContent = Math.floor(sec / 60) + " 分 " + String(sec % 60).padStart(2, "0") + " 秒";
+      const slow = document.getElementById("lm-slow"); if (slow) slow.hidden = sec <= 1800;
+    };
+    tick(); timer = setInterval(tick, 1000);
+  }
+
+  // ---------- 画面: 使える ----------
+  function showReady() {
+    view = "ready";
+    clearInterval(timer);
+    main.innerHTML = card(
+      "<h1>LINEマーケの管理画面</h1>" +
+      '<p class="lm-lead">ボタンを押すと管理画面が開き、自動でログインします。</p>' +
+      '<div class="lm-actions"><button type="button" class="lm-btn wide" id="lm-open">管理画面を開く</button></div>' +
+      '<div class="lm-msg" id="lm-open-msg" role="status" aria-live="polite"></div>' +
+      '<div class="lm-open-fallback" id="lm-open-fallback" hidden><a class="lm-link" id="lm-open-link" target="_blank" rel="noopener">開かないときは、こちらを押してください</a><div class="lm-note">2 分以内に押してください。</div></div>') +
+      card("<h2>管理画面でできること</h2>" +
+        '<ul class="lm-list"><li>ステップ配信（友だち追加からの日数に合わせて、順番にメッセージを送る）</li><li>タグ（お客さまを分けて、送る相手をしぼる）</li><li>リッチメニュー（トーク画面の下のメニュー）</li><li>一斉配信・予約配信</li><li>友だち追加の流入元の分析</li></ul>' +
+        '<p class="lm-note" style="margin-top:12px">FPコンパスの LINE トーク・配信・アンケートは、今までどおり使えます。</p>');
+    const btn = document.getElementById("lm-open"), msg = document.getElementById("lm-open-msg");
+    btn.addEventListener("click", async () => {
+      // 先に空のタブを開いておく (押してすぐでないと、ブラウザが新しいタブを止めるため)
+      let w = null;
+      if (!window.FP_NATIVE) { try { w = window.open("about:blank", "_blank"); } catch (_) { w = null; } }
+      btn.disabled = true; btn.textContent = "開いています…"; msg.className = "lm-msg"; msg.textContent = "";
+      try {
+        const r = await callLh({ action: "sso" });
+        ssoUrl = String(r.data.url || "");
+        if (!/^https:\/\/[a-z0-9.-]+\.workers\.dev\/admin\/sso\?token=[A-Za-z0-9_.-]+$/.test(ssoUrl)) throw new Error("うまくいきませんでした。少し待ってから、もう一度お試しください。");
+        if (window.FP_NATIVE) { location.href = ssoUrl; }           // アプリの中: Safari で開く
+        else if (w) { w.location.href = ssoUrl; }
+        else {                                                       // 新しいタブを止められた
+          const fb = document.getElementById("lm-open-fallback"); document.getElementById("lm-open-link").href = ssoUrl; fb.hidden = false;
+        }
+      } catch (e) {
+        if (w) { try { w.close(); } catch (_) {} }
+        msg.className = "lm-msg err"; msg.textContent = errText(e);
+      } finally {
+        btn.disabled = false; btn.textContent = "管理画面を開く";
+      }
+    });
+  }
+
+  function route() {
+    if (!S || !S.available) { showMessage("LINEマーケ", "この機能は、まだご利用いただけません。", '<div class="lm-actions"><a class="lm-btn2" href="./">戻る</a></div>'); return; }
+    if (S.ready) { showReady(); return; }
+    if (S.status === "requested" || S.status === "provisioning") { showProgress(); return; }
+    clearInterval(timer);
+    showSetup();
+  }
+  async function refresh() {
+    const r = await callLh({ action: "state" });
+    S = r.data; route();
+  }
+
+  onAuthStateChanged(auth, async (user) => {
+    if (unsub) { try { unsub(); } catch (_) {} unsub = null; }
+    clearInterval(poll);
+    if (!user) { showMessage("ログインが必要です", "FPコンパスにログインしてから、もう一度開いてください。", '<div class="lm-actions"><a class="lm-btn" href="./">ログイン画面へ</a></div>'); return; }
+    try {
+      const u = (await getDoc(doc(db, "users", user.uid))).data() || {};
+      const tid = u.tenantId;
+      if (!tid) throw new Error("no tenant");
+      await refresh();
+      // 準備の進み具合を、 その場で反映する
+      let last = "";
+      unsub = onSnapshot(doc(db, "tenants", tid), (snap) => {
+        const t = snap.data() || {};
+        const off = document.getElementById("lm-office"); if (off) off.textContent = t.name || "";
+        const lh = t.lh || {};
+        const sig = [lh.status || "", lh.step || "", lh.error || ""].join("|");
+        if (sig === last) return;
+        const first = last === ""; last = sig;
+        if (first || !S || !S.available) return;
+        if (lh.status === "provisioning" && S.status !== "ready") { S.status = "provisioning"; S.step = String(lh.step || ""); if (view === "progress" || view === "setup") showProgress(); return; }
+        refresh().catch(() => {});
+      }, () => {});
+      // 念のため (通知が届かない環境向け): 準備中は 15 秒ごとに確かめる
+      poll = setInterval(() => { if (S && (S.status === "requested" || S.status === "provisioning") && !document.hidden) refresh().catch(() => {}); }, 15000);
+    } catch (e) {
+      showMessage("読み込めませんでした", "ページを開き直して、もう一度お試しください。", '<div class="lm-actions"><a class="lm-btn2" href="./">戻る</a></div>');
+    }
+  });
+</script>
+</body>
+</html>
