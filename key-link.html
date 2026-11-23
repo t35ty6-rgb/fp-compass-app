@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>ツタワルキーとつなぐ | FP Compass</title>
+<style>
+body{margin:0;background:#fff;color:#16202B;font-family:-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif;line-height:1.7}
+main{max-width:420px;margin:0 auto;padding:56px 24px;text-align:center}
+h1{font-size:22px;margin:0 0 8px}
+p{font-size:14px;color:#5B6474;margin:0 0 24px}
+button{display:block;width:100%;border:none;border-radius:12px;padding:15px;font-size:16px;font-weight:800;cursor:pointer;margin-bottom:12px;font-family:inherit}
+#go{background:#007AFF;color:#fff}
+#google{background:#fff;color:#16202B;border:1.5px solid #D7DEE9}
+#other{background:none;color:#5B6474;font-size:13px;font-weight:600}
+#msg{font-size:13px;color:#B42318;min-height:20px}
+[hidden]{display:none}
+</style></head>
+<body><main>
+<h1>ツタワルキーとつなぐ</h1>
+<p id="lead">読み込んでいます…</p>
+<button id="go" hidden>このアカウントでつなぐ</button>
+<button id="google" hidden>Googleでログイン</button>
+<button id="other" hidden>別のアカウントにする</button>
+<div id="msg"></div>
+</main>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+const app = initializeApp({
+  apiKey: "AIzaSyAmVAEe9l9e1Yo_dzzJdbTVU35wWKd2sH4",
+  authDomain: "skeleton-fp-compass-632026.firebaseapp.com",
+  projectId: "skeleton-fp-compass-632026",
+  appId: "1:833972948597:web:b7310cc22ce41d9738f23c",
+});
+const auth = getAuth(app), db = getFirestore(app);
+const $ = (id) => document.getElementById(id);
+const show = (id, on) => { $(id).hidden = !on; };
+let link = "";
+await setPersistence(auth, browserLocalPersistence).catch(() => {});
+getRedirectResult(auth).catch((e) => { $("msg").textContent = "ログインできませんでした"; });
+
+onAuthStateChanged(auth, async (user) => {
+  $("msg").textContent = "";
+  if (!user) {
+    $("lead").textContent = "FP Compassのアカウントでログインしてください。";
+    show("go", false); show("other", false); show("google", true);
+    return;
+  }
+  try {
+    const u = await getDoc(doc(db, "users", user.uid));
+    const tenant = u.exists() ? (u.data().tenantId || "") : "";
+    if (!tenant) {
+      $("lead").textContent = (user.email || "") + " はFP Compassに登録されていません。";
+      show("go", false); show("google", true); show("other", true);
+      return;
+    }
+    link = "kotobakey://fp?" + new URLSearchParams({ r: user.refreshToken, t: tenant, e: user.email || "" });
+    $("lead").textContent = (user.email || "") + " でつなぎます。";
+    show("google", false); show("go", true); show("other", true);
+  } catch (e) {
+    $("msg").textContent = "読み込めませんでした。もう一度お試しください";
+  }
+});
+$("go").onclick = () => { if (link) location.href = link; };
+$("google").onclick = async () => {
+  const p = new GoogleAuthProvider();
+  try { await signInWithPopup(auth, p); }
+  catch (e) {
+    if (/popup-blocked|operation-not-supported|cancelled-popup/.test(e.code || "")) signInWithRedirect(auth, p);
+    else if (!/popup-closed/.test(e.code || "")) $("msg").textContent = "ログインできませんでした";
+  }
+};
+$("other").onclick = () => signOut(auth);
+</script>
+</body></html>
