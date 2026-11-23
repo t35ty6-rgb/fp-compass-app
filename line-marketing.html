@@ -59,7 +59,7 @@ if (window.FP_NATIVE) document.documentElement.classList.add('fp-native');
   .lm-row-h { display: flex; align-items: center; gap: 10px; }
   .lm-num { flex: 0 0 auto; width: 26px; height: 26px; border-radius: 50%; background: var(--pri-soft); color: var(--pri); font-size: 13px; font-weight: 800; display: flex; align-items: center; justify-content: center; }
   .lm-row.done .lm-num { background: var(--ok-soft); color: var(--ok); }
-  .lm-row-name { flex: 1; min-width: 0; font-weight: 800; font-size: 15px; line-height: 1.5; text-wrap: balance; }
+  .lm-row-name { flex: 1; min-width: 0; font-weight: 800; font-size: 15px; line-height: 1.5; word-break: keep-all; overflow-wrap: anywhere; }
   .lm-row-sub { font-size: 12.5px; color: var(--ink-3); line-height: 1.7; margin-top: 8px; overflow-wrap: anywhere; }
   .lm-tag { flex: 0 0 auto; font-size: 12px; font-weight: 800; border-radius: 999px; padding: 3px 10px; white-space: nowrap; }
   .lm-tag.ok { background: var(--ok-soft); color: var(--ok); }
@@ -155,17 +155,19 @@ if (window.FP_NATIVE) document.documentElement.classList.add('fp-native');
 
   // ---------- 画面: 設定 ----------
   function row(n, name, sub, done, extra) {
-    return '<div class="lm-row' + (done ? " done" : "") + '" data-row="' + n + '"><div class="lm-row-h"><div class="lm-num">' + n + '</div><div class="lm-row-name">' + esc(name) + "</div>" +
+    return '<div class="lm-row' + (done ? " done" : "") + '" data-row="' + n + '"><div class="lm-row-h"><div class="lm-num">' + n + '</div><div class="lm-row-name">' + esc(name).replace("LINEログインの", "LINEログインの<wbr>") + "</div>" +
       '<span class="lm-tag ' + (done ? "ok" : "ng") + '">' + (done ? "登録済み" : "未登録") + '</span></div><div class="lm-row-sub">' + sub + "</div>" + (extra || "") + "</div>";
   }
   function showSetup() {
     view = "setup";
     const n = S.need;
     const lineReady = n.token && n.secret;
-    const all = lineReady && n.liffId && n.loginSecret;
+    const hasCh = !!(n.loginChannel || n.liffId);
+    const all = lineReady && hasCh && n.loginSecret;
     const needSecretInput = !n.loginSecret || editLogin;
-    // ③ は、公式LINE 連携に登録済みのものがあればそれを使う。LINEマーケ用に入れたものは、④ と一緒に入れ直せる
-    const needLiffInput = !n.liffId || (!S.liffFromLineSettings && needSecretInput);
+    // ③ は、公式LINE 連携に LIFF が登録済みならそこから分かる。LINEマーケ用に入れたものは、④ と一緒に入れ直せる
+    const needChInput = !hasCh || (!S.liffFromLineSettings && needSecretInput);
+    const chText = S.loginChannelId || (S.liffId ? String(S.liffId).split("-")[0] : "");
     let h = "";
     h += card(
       "<h1>LINEマーケを使えるようにする</h1>" +
@@ -177,17 +179,17 @@ if (window.FP_NATIVE) document.documentElement.classList.add('fp-native');
     body += row("①", "チャネルアクセストークン", "Messaging API チャネルのもの。「公式LINE 連携」で登録します。", n.token);
     body += row("②", "チャネルシークレット", "Messaging API チャネルのもの。「公式LINE 連携」で登録します。", n.secret);
     if (!lineReady) body += '<div class="lm-actions"><a class="lm-btn2" href="./account.html#line">公式LINE 連携を開く</a></div><div style="height:10px"></div>';
-    body += row("③", "LIFF ID", n.liffId ? esc(S.liffId) + (S.liffFromLineSettings ? "（公式LINE 連携に登録済みのもの）" : "") : "「LINEログイン」チャネル ＞「LIFF」タブ ＞ LIFF ID（例 2010123456-AbCdEfGh）", n.liffId,
-      needLiffInput ? '<div class="lm-field"><input class="lm-in" id="lm-liff" type="text" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="' + (n.liffId ? "変えるときだけ貼り付け" : "LIFF ID を貼り付け") + '" aria-label="LIFF ID"></div>' : "");
-    body += row("④", "LINEログインのチャネルシークレット", "③ の LIFF がある「LINEログイン」チャネル ＞「チャネル基本設定」タブ ＞ チャネルシークレット（英数字 32 文字）。Messaging API のものとは別です。", n.loginSecret,
+    body += row("③", "LINEログインのチャネルID", hasCh ? esc(chText) + (S.liffFromLineSettings ? "（公式LINE 連携の LIFF から読み取りました）" : "") : "「LINEログイン」チャネル ＞「チャネル基本設定」タブ ＞ チャネルID（数字 10 桁）", hasCh,
+      needChInput ? '<div class="lm-field"><input class="lm-in" id="lm-ch" type="text" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="' + (hasCh ? "変えるときだけ貼り付け" : "チャネルID を貼り付け") + '" aria-label="LINEログインのチャネルID"></div>' : "");
+    body += row("④", "LINEログインのチャネルシークレット", "③ と同じ「LINEログイン」チャネル ＞「チャネル基本設定」タブ ＞ チャネルシークレット（英数字 32 文字）。Messaging API のものとは別です。", n.loginSecret,
       needSecretInput ? '<div class="lm-field"><input class="lm-in" id="lm-secret" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="チャネルシークレットを貼り付け" aria-label="LINEログインのチャネルシークレット"></div>' : "");
-    if (needLiffInput || needSecretInput) {
+    if (needChInput || needSecretInput) {
       body += '<div class="lm-actions"><button type="button" class="lm-btn2" id="lm-save">③④ を保存する</button>' + (editLogin ? '<button type="button" class="lm-btn2" id="lm-edit-cancel">やめる</button>' : "") + "</div>";
     } else {
       body += '<div class="lm-actions"><button type="button" class="lm-btn2" id="lm-edit">' + (S.liffFromLineSettings ? "④ を入れ直す" : "③④ を入れ直す") + "</button></div>";
     }
     body += '<div class="lm-msg" id="lm-save-msg" role="status" aria-live="polite"></div>';
-    body += '<p class="lm-note" style="margin-top:12px">LINE Developers の同じプロバイダーの中に、「Messaging API」と「LINEログイン」の 2 つのチャネルが必要です。</p>';
+    body += '<p class="lm-note" style="margin-top:12px">LINE Developers の同じプロバイダーの中に、「Messaging API」と「LINEログイン」の 2 つのチャネルが必要です。「LINEログイン」チャネルが無いときは新しく作り、「公開済み」にして、「リンクされたLINE公式アカウント」で自分の公式アカウントを選んでください。</p>';
     h += card(body);
     h += card(
       "<h2>準備を始める</h2>" +
@@ -200,16 +202,20 @@ if (window.FP_NATIVE) document.documentElement.classList.add('fp-native');
     const say = (el, kind, t) => { el.className = "lm-msg " + (kind || ""); el.textContent = t || ""; };
     const save = document.getElementById("lm-save");
     if (save) save.addEventListener("click", async () => {
-      const liffEl = document.getElementById("lm-liff"), secEl = document.getElementById("lm-secret");
-      const liffId = liffEl ? liffEl.value.trim() : "", sec = secEl ? secEl.value.trim() : "";
-      if (!liffId && !sec) { say(saveMsg, "err", "貼り付けてから「保存する」を押してください。"); (liffEl || secEl).focus(); return; }
+      const chEl = document.getElementById("lm-ch"), secEl = document.getElementById("lm-secret");
+      const ch = chEl ? chEl.value.trim() : "", sec = secEl ? secEl.value.trim() : "";
+      if (!ch && !sec) { say(saveMsg, "err", "貼り付けてから「保存する」を押してください。"); (chEl || secEl).focus(); return; }
+      if (ch && !/^\d{9,12}$/.test(ch.replace(/[\s,]/g, "")) && !/\d{6,}-[A-Za-z0-9]+/.test(ch)) {
+        const kind = /^[0-9a-f]{32}$/i.test(ch) ? "チャネルシークレット（英数字 32 文字）" : ch.length > 100 ? "アクセストークン" : ch.length + " 文字の値";
+        say(saveMsg, "err", "③ に貼り付けた値は「" + kind + "」の形です。「チャネル基本設定」タブの「チャネルID」（数字 10 桁）を貼ってください。"); chEl.focus(); return;
+      }
       if (sec && !/^[0-9a-f]{32}$/.test(sec)) {
         const kind = sec.length > 100 ? "アクセストークン" : /^\d{8,12}$/.test(sec) ? "チャネル ID（数字）" : /^\d{6,}-[A-Za-z0-9]+$/.test(sec) ? "LIFF ID" : sec.length + " 文字の値";
         say(saveMsg, "err", "④ に貼り付けた値は「" + kind + "」の形です。「チャネル基本設定」タブの「チャネルシークレット」（英数字 32 文字）を貼ってください。"); secEl.focus(); return;
       }
       save.disabled = true; const orig = save.textContent; save.textContent = "LINE に確認しています…"; say(saveMsg, "", "");
       try {
-        const r = await callLh({ action: "saveLogin", liffId, loginChannelSecret: sec });
+        const r = await callLh({ action: "saveLogin", loginChannel: ch, loginChannelSecret: sec });
         S = r.data; editLogin = false; showSetup();
         say(document.getElementById("lm-save-msg"), "ok", "保存しました。");
       } catch (e) {
