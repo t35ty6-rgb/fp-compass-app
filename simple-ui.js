@@ -89,6 +89,21 @@
     plus: '<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>'
   };
 
+  /* 公式キャラクター（mascot/ の画像） */
+  var MV = '?v=' + (window.FP_VER || '1');
+  function M(name, size, cls) {
+    return '<img class="fps-m' + (cls ? ' ' + cls : '') + '" src="mascot/' + name + '.png' + MV + '" alt="" width="' + size + '" style="width:' + size + 'px" onerror="this.remove()">';
+  }
+  function decorate(el) {
+    if (!el) return;
+    [['.fps-empty', 'think', 78], ['.fps-loading', 'laptop', 78]].forEach(function (d) {
+      Array.prototype.forEach.call(el.querySelectorAll(d[0]), function (n) {
+        if (n.querySelector('.fps-m')) return;
+        n.insertAdjacentHTML('afterbegin', M(n.getAttribute('data-face') || d[1], d[2], 'top'));
+      });
+    });
+  }
+
   /* ---------- データ ---------- */
   function fp() { return window.__fp || {}; }
   function tenantId() { return fp().tenantId || (window.AccountInfo && window.AccountInfo.tenantId) || lsGet('fp-tenantId') || ''; }
@@ -331,14 +346,15 @@
   }
   function toast(msg, ms) {
     var old = $('.fps-toast'); if (old) old.remove();
-    var t = document.createElement('div'); t.className = 'fps-toast'; t.setAttribute('role', 'status'); t.textContent = msg;
+    var t = document.createElement('div'); t.className = 'fps-toast'; t.setAttribute('role', 'status'); t.innerHTML = M(/できません|すぎ|入れてください|準備中/.test(msg) ? 'oh' : 'smile', 34) + '<span>' + esc(msg) + '</span>';
     document.body.appendChild(t);
     setTimeout(function () { t.remove(); }, ms || 3200);
   }
-  function modal(html, onMount) {
+  function modal(html, onMount, face) {
     closeModal();
     var bg = document.createElement('div'); bg.className = 'fps-modal-bg';
-    bg.innerHTML = '<div class="fps-modal" role="dialog" aria-modal="true">' + html + '</div>';
+    bg.innerHTML = '<div class="fps-modal' + (face ? ' has-m' : '') + '" role="dialog" aria-modal="true">' + (face ? M(face, 84, 'modal-m') : '') + html + '</div>';
+    decorate(bg);
     bg.addEventListener('mousedown', function (e) { if (e.target === bg) closeModal(); });
     document.body.appendChild(bg);
     document.addEventListener('keydown', escClose);
@@ -390,7 +406,7 @@
       return '<button type="button" data-go="' + n[0] + '"' + (on ? ' aria-current="page"' : '') + '>' + n[1] + '</button>';
     }).join('');
     return '<header class="fps-head">' +
-      '<button type="button" class="fps-logo" data-go="home"><i>' + ICON.logo + '</i>FP Compass</button>' +
+      '<button type="button" class="fps-logo" data-go="home"><i>' + M('smile', 30) + '</i>FP Compass</button>' +
       '<nav class="fps-nav" aria-label="メニュー">' + nav + '</nav>' +
       '<div class="fps-head-right">' +
         '<button type="button" class="fps-menu-btn" id="fps-menu-btn" aria-haspopup="true">' + esc(who || 'メニュー') + ' ▾</button>' +
@@ -417,7 +433,7 @@
     return '<tr><td class="num" style="width:150px">' + esc(p.at ? fmtDay(p.at) + ' ' + fmtTime(p.at) : '') +
       '<span style="display:block;font-size:12px" class="fps-sub">' + esc(p.kind) + '</span></td>' +
       '<td><b>' + esc(p.name || 'お客様') + ' 様</b><span class="lead">いま議事録を作っています。できたら、ここに出ます。</span></td>' +
-      '<td style="width:96px"><span class="fps-chip wait">作成中</span></td></tr>';
+      '<td style="width:96px"><span class="fps-chip wait">' + M('laptop', 24) + '作成中</span></td></tr>';
   }
 
   function viewHome() {
@@ -438,21 +454,21 @@
             '<a class="fps-btn primary sm" href="' + esc(x.c.hostZoomUrl || x.c.zoomUrl) + '" target="_blank" rel="noopener">Zoomを開く</a>' +
             '<button type="button" class="fps-btn ghost sm" data-copy="' + esc(x.c.zoomUrl) + '">URLをコピー</button></div>' : '') +
         '</div></div>';
-    }).join('') : '<div class="fps-empty">今日の面談の予定はありません。<br>「Zoomで面談」から、すぐに始められます。</div>';
+    }).join('') : '<div class="fps-empty" data-face="sleep">今日の面談の予定はありません。<br>「Zoomで面談」から、すぐに始められます。</div>';
 
     var rows = pend.map(pendingRow).join('') + recent.map(function (r) { return minuteRow(r, clientOfMinute(r), true); }).join('');
 
     return '<div class="fps-wrap">' +
       '<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">' +
-        '<div style="flex:1;min-width:240px"><p class="fps-eyebrow num">' + now.getFullYear() + '.' + pad(now.getMonth() + 1) + '.' + pad(now.getDate()) + '（' + WD[now.getDay()] + '）</p>' +
+        M('kira', 92, 'hello') + '<div style="flex:1;min-width:200px"><p class="fps-eyebrow num">' + now.getFullYear() + '.' + pad(now.getMonth() + 1) + '.' + pad(now.getDate()) + '（' + WD[now.getDay()] + '）</p>' +
           '<h1 class="fps-title">' + hello + '</h1></div>' +
         '<button type="button" class="fps-btn" data-act="upload">' + ICON.mic + '録音から議事録を作る</button>' +
-        '<button type="button" class="fps-btn primary" data-act="zoom">' + ICON.video + 'Zoomで面談</button>' +
+        '<button type="button" class="fps-btn primary with-m" data-act="zoom">' + M('wink', 58, 'peek') + ICON.video + 'Zoomで面談</button>' +
       '</div>' +
       '<div class="fps-stats">' +
-        '<div class="fps-panel fps-stat"><i style="background:var(--fps-mint)">' + ICON.cal + '</i><span><span class="fps-sub" style="display:block;font-size:13px;font-weight:700">今日の面談</span><b class="num">' + today.length + '</b><span style="font-size:13px;margin-left:3px">件</span></span></div>' +
-        '<div class="fps-panel fps-stat"><i style="background:var(--fps-red-soft)">' + ICON.doc + '</i><span><span class="fps-sub" style="display:block;font-size:13px;font-weight:700">議事録を作成中</span><b class="num"' + (pend.length ? ' style="color:var(--fps-red-text)"' : '') + '>' + pend.length + '</b><span style="font-size:13px;margin-left:3px">件</span></span></div>' +
-        '<button type="button" class="fps-panel fps-stat" data-go="customers" style="border:none;text-align:left;color:inherit"><i style="background:var(--fps-soft);border:1px solid var(--fps-line)">' + ICON.people + '</i><span><span class="fps-sub" style="display:block;font-size:13px;font-weight:700">お客様</span><b class="num">' + list.length + '</b><span style="font-size:13px;margin-left:3px">名</span></span></button>' +
+        '<div class="fps-panel fps-stat"><i>' + M('ic-cal', 60) + '</i><span><span class="fps-sub" style="display:block;font-size:13px;font-weight:700">今日の面談</span><b class="num">' + today.length + '</b><span style="font-size:13px;margin-left:3px">件</span></span></div>' +
+        '<div class="fps-panel fps-stat"><i>' + M('ic-doc', 60) + '</i><span><span class="fps-sub" style="display:block;font-size:13px;font-weight:700">議事録を作成中</span><b class="num"' + (pend.length ? ' style="color:var(--fps-red-text)"' : '') + '>' + pend.length + '</b><span style="font-size:13px;margin-left:3px">件</span></span></div>' +
+        '<button type="button" class="fps-panel fps-stat" data-go="customers" style="border:none;text-align:left;color:inherit"><i>' + M('ic-people', 60) + '</i><span><span class="fps-sub" style="display:block;font-size:13px;font-weight:700">お客様</span><b class="num">' + list.length + '</b><span style="font-size:13px;margin-left:3px">名</span></span></button>' +
       '</div>' +
       '<div style="display:flex;gap:22px;flex-wrap:wrap;align-items:flex-start">' +
         '<section class="fps-panel" style="flex:1 1 340px;min-width:0;padding:24px 26px"><h2 class="fps-h">今日の予定</h2>' + todayHtml + '</section>' +
@@ -503,7 +519,7 @@
     var body;
     if (st.tab === 'todo') {
       body = todos.length ? '<div class="fps-todo" style="margin-top:8px">' + todos.map(function (x) { return '<div><span>' + esc(x.t) + '<span class="fps-sub" style="display:block;font-size:12px">' + esc(fmtDay(x.at)) + ' の面談から</span></span></div>'; }).join('') + '</div>'
-        : '<div class="fps-empty">次にやることは、議事録ができると自動で出ます。</div>';
+        : '<div class="fps-empty" data-face="idea">次にやることは、議事録ができると自動で出ます。</div>';
     } else {
       body = mins.length ? '<div class="fps-table-wrap"><table class="fps-table"><thead><tr><th>日時</th><th>内容</th><th></th></tr></thead><tbody>' +
           mins.map(function (r) { return minuteRow(r, c, false); }).join('') + '</tbody></table></div>'
@@ -525,11 +541,11 @@
             '<div class="fps-row"><span class="fps-sub">前回</span><span class="num" style="font-weight:700">' + esc(last ? fmtDay(last) : 'まだ') + '</span></div>' +
             (next ? '<div class="fps-row"><span class="fps-sub">次回</span><span class="num" style="font-weight:700;color:var(--fps-red-text)">' + esc(fmtDay(next) + ' ' + fmtTime(next)) + '</span></div>' : '') +
           '</div>' +
-          '<button type="button" class="fps-btn primary" data-act="zoom" style="margin-top:auto;height:52px;font-size:16px">' + ICON.video + 'Zoomで面談</button>' +
+          '<button type="button" class="fps-btn primary with-m" data-act="zoom" style="margin-top:auto;height:56px;font-size:16px">' + M('wink', 58, 'peek') + ICON.video + 'Zoomで面談</button>' +
           '<button type="button" class="fps-btn" data-act="upload" style="height:44px;font-size:14px">' + ICON.mic + '録音から議事録を作る</button>' +
         '</aside>' +
         '<section class="fps-main">' +
-          (pend.length ? '<div style="background:var(--fps-amber-soft);color:var(--fps-amber-text);border-radius:12px;padding:12px 16px;font-size:14px;font-weight:700">いま議事録を作っています。できたら、下の一覧に出ます。</div>' : '') +
+          (pend.length ? '<div style="background:var(--fps-amber-soft);color:var(--fps-amber-text);border-radius:12px;padding:12px 16px;font-size:14px;font-weight:700;display:flex;align-items:center;gap:12px">' + M('laptop', 52) + '<span>いま議事録を作っています。できたら、下の一覧に出ます。</span></div>' : '') +
           '<div><h1 class="fps-h" style="font-size:17px">お客様データ</h1>' +
             (kv ? '<dl class="fps-kv">' + kv + '</dl>' : '<div class="fps-empty">まだ情報がありません。「お客様の情報を直す」から入れられます。</div>') + '</div>' +
           '<div><div class="fps-tabs" role="tablist">' +
@@ -572,7 +588,7 @@
             (r.zoomDurationMin ? '<span class="fps-chip plain num">' + esc(r.zoomDurationMin) + '分</span>' : '') + '</div>' +
             '<h1 class="fps-title" style="line-height:1.45">' + esc(mTitle(r)) + '</h1>' +
             '<p class="fps-sub num" style="margin:6px 0 0;font-size:14px">' + esc(d ? fmtDateTime(d) : '') + (c ? '　' + esc(c.name) + ' 様' : (r.customerName ? '　' + esc(r.customerName) + ' 様' : '')) + '</p></header>' +
-          (gist ? '<section class="fps-gist"><p class="fps-eyebrow" style="margin-bottom:8px">ひとことで言うと</p><p>' + esc(gist) + '</p></section>' : '') +
+          (gist ? '<section class="fps-gist">' + M('idea', 70, 'corner') + '<p class="fps-eyebrow" style="margin-bottom:8px">ひとことで言うと</p><p>' + esc(gist) + '</p></section>' : '') +
           '<div id="fps-sum">' + renderSummary(r.summary || r.transcript_summary || '') + '</div>' +
           (kc.length ? '<section class="fps-sec"><h3>お客様の関心ごと</h3><ul>' + kc.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul></section>' : '') +
           (r.next_meeting_suggestion ? '<section class="fps-sec"><h3>次回に向けて</h3><p>' + esc(r.next_meeting_suggestion) + '</p></section>' : '') +
@@ -581,7 +597,7 @@
         '</div></article>' +
         '<aside style="flex:1 1 280px;min-width:0;display:flex;flex-direction:column;gap:16px">' +
           '<section class="fps-panel" style="padding:20px 22px"><h2 class="fps-h">次にやること</h2>' +
-            (tasks.length ? '<div class="fps-todo">' + tasks.map(function (t) { return '<div><span>' + esc(t) + '</span></div>'; }).join('') + '</div>' : '<div class="fps-empty" style="padding:16px 0 4px">この面談からの宿題はありません。</div>') + '</section>' +
+            (tasks.length ? '<div class="fps-todo">' + tasks.map(function (t) { return '<div><span>' + esc(t) + '</span></div>'; }).join('') + '</div>' : '<div class="fps-empty" data-face="smile" style="padding:16px 0 4px">この面談からの宿題はありません。</div>') + '</section>' +
           '<section class="fps-panel" style="padding:20px 22px;display:flex;flex-direction:column;gap:10px"><h2 class="fps-h">この議事録を使う</h2>' +
             '<button type="button" class="fps-btn primary" data-act="copy-minute">要点をコピーする</button>' +
             '<button type="button" class="fps-btn ghost" data-act="edit-minute">内容を直す</button>' +
@@ -594,6 +610,7 @@
     var body = st.view === 'customers' ? viewCustomers() : st.view === 'customer' ? viewCustomer() : st.view === 'minutes' ? viewMinutes() : st.view === 'minute' ? viewMinute() : viewHome();
     var keepQ = document.activeElement && document.activeElement.id === 'fps-q';
     root.innerHTML = header() + body + '<input type="file" id="fps-file" accept="audio/*,video/mp4,.m4a,.mp3,.wav,.aac,.webm" hidden>';
+    decorate(root);
     if (keepQ) { var q = $('#fps-q', root); if (q) { q.focus(); try { q.setSelectionRange(q.value.length, q.value.length); } catch (_) {} } }
   }
 
@@ -605,6 +622,7 @@
       '<input class="fps-input" id="fps-pick-q" type="search" placeholder="名前でさがす・新しい人の名前を入れる" autocomplete="off">' +
       '<div class="fps-pick" id="fps-pick-list"></div>' +
       '<div class="fps-actions"><button type="button" class="fps-btn ghost" data-close>やめる</button></div>', function (el) {
+      el.insertAdjacentHTML('afterbegin', M('think', 84, 'modal-m')); el.classList.add('has-m');
       var draw = function () {
         var q = $('#fps-pick-q', el).value.trim(), ql = q.toLowerCase();
         var list = clients().filter(function (c) { return !ql || String(c.name).toLowerCase().indexOf(ql) >= 0 || String(c.kana || '').toLowerCase().indexOf(ql) >= 0; })
@@ -673,7 +691,7 @@
   }
 
   function startZoom(c) {
-    modal('<h2>' + esc(c.name) + ' 様とZoomで面談</h2><p>Zoomを用意しています…</p><div class="fps-loading">10秒ほどかかります</div>', null);
+    modal('<h2>' + esc(c.name) + ' 様とZoomで面談</h2><p>Zoomを用意しています…</p><div class="fps-loading">10秒ほどかかります</div>', null, null);
     api.call('startInstantZoom', { customerId: fsId(c), lineFriendId: null }).then(function (d) {
       if (!d || !d.joinUrl) throw new Error((d && d.error) || 'Zoomを用意できませんでした');
       try { if (typeof window.armTabRecorder === 'function') window.armTabRecorder(fsId(c), c.name, tenantId()); } catch (_) {}
@@ -690,14 +708,14 @@
         '<div class="fps-actions"><button type="button" class="fps-btn ghost sm" data-close>とじる</button></div>', function (el) {
         $('[data-close]', el).addEventListener('click', closeModal);
         $('#fps-copy-invite', el).addEventListener('click', async function () { this.textContent = (await copyText(invite)) ? 'コピーしました' : 'コピーできませんでした'; });
-      });
+      }, 'kira');
       try { if (window.refreshFirestoreCustomers) window.refreshFirestoreCustomers(); } catch (_) {}
     }).catch(function (e) {
       var msg = String((e && e.message) || e);
       var noZoom = /Zoom 未連携|failed-precondition/.test(msg);
       modal('<h2>Zoomを用意できませんでした</h2><p>' + (noZoom ? 'まだZoomとつながっていません。アカウントの設定で、Zoomの連携をしてください。' : esc(msg.slice(0, 200))) + '</p>' +
         '<div class="fps-actions">' + (noZoom ? '<a class="fps-btn primary" href="/account.html" target="_blank" rel="noopener">アカウントの設定をひらく</a>' : '') +
-        '<button type="button" class="fps-btn ghost" data-close>とじる</button></div>', function (el) { $('[data-close]', el).addEventListener('click', closeModal); });
+        '<button type="button" class="fps-btn ghost" data-close>とじる</button></div>', function (el) { $('[data-close]', el).addEventListener('click', closeModal); }, 'oh');
     });
   }
 

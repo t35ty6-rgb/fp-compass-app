@@ -148,6 +148,27 @@ html.fps-on #fps-switch { display: none; }
 .fps-sec + .fps-sec { margin-top: 18px; }
 #fps-sum { display: flex; flex-direction: column; }
 button.fps-stat { font: inherit; cursor: pointer; }
+/* 公式キャラクター */
+.fps-m { display: inline-block; height: auto; flex: none; vertical-align: middle; pointer-events: none; user-select: none; }
+.fps-m.top { display: block; margin: 0 auto 10px; }
+.fps-m.hello { margin: -6px -2px -6px 0; animation: fps-bob 3.2s ease-in-out infinite; }
+.fps-logo i { width: 38px; height: 38px; overflow: visible; }
+.fps-logo i .fps-m { margin-top: -5px; }
+.fps-btn.with-m { position: relative; padding-left: 62px; overflow: visible; }
+.fps-btn.with-m .fps-m.peek { position: absolute; left: 4px; bottom: -1px; filter: drop-shadow(0 2px 0 rgba(120,40,0,.18)); transition: transform .18s ease; transform-origin: 50% 100%; }
+.fps-btn.with-m:hover .fps-m.peek { transform: translateY(-3px) rotate(-4deg); }
+.fps-stat i { background: none !important; border: none !important; width: 60px; height: 60px; }
+.fps-chip .fps-m { margin: -3px 4px -1px -4px; }
+.fps-gist { position: relative; }
+.fps-gist .fps-m.corner { position: absolute; right: 14px; top: -34px; }
+.fps-modal.has-m { margin-top: 44px; overflow: visible; }
+.fps-m.modal-m { position: absolute; left: 50%; top: -52px; transform: translateX(-50%); }
+.fps-modal { position: relative; }
+.fps-modal.has-m > h2 { padding-top: 22px; text-align: center; }
+.fps-toast { display: flex; align-items: center; gap: 10px; }
+.fps-empty, .fps-loading { text-align: center; }
+@keyframes fps-bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+@media (prefers-reduced-motion: reduce) { .fps-m.hello { animation: none; } .fps-btn.with-m .fps-m.peek { transition: none; } }
 @media (max-width: 760px) {
   .fps-head { gap: 0 12px; min-height: 0; padding-top: 6px; }
   .fps-logo { order: 1; height: 44px; }
@@ -182,3 +203,4 @@ button.fps-stat { font: inherit; cursor: pointer; }
 
 .fps-input { box-sizing: border-box; max-width: 100%; }
 .fps-modal { box-sizing: border-box; }
+.fps-toast { background: var(--fps-surface) !important; color: var(--fps-ink) !important; border: 1.5px solid var(--fps-line); padding: 8px 18px 8px 12px !important; }
