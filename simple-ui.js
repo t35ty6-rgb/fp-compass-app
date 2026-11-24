@@ -496,7 +496,7 @@
       '<div class="fps-head-right">' +
         '<button type="button" class="fps-menu-btn" id="fps-menu-btn" aria-haspopup="true">' + '<span class="fps-who">' + esc(who || 'メニュー') + '</span><span class="fps-who-sm">メニュー</span> ▾</button>' +
         '<div class="fps-menu" id="fps-menu">' +
-          '<button type="button" data-act="account">アカウントの設定</button>' +
+          '<button type="button" data-act="account">' + (window.FP_NATIVE ? 'アカウントとアプリの設定' : 'アカウントの設定') + '</button>' +
           '<button type="button" data-act="manual">使い方</button>' +
           '<button type="button" data-act="classic">前の画面に切り替える</button>' +
           '<button type="button" data-act="logout">ログアウト</button>' +
@@ -957,7 +957,16 @@
       '</nav>';
   }
 
+  var renderFails = 0;
   function render() {
+    try { renderInner(); renderFails = 0; }
+    catch (e) {
+      // 新しい画面でつまずいたら、画面を真っ白にせず前の画面に戻す
+      console.error('[fps] render error', e);
+      if (++renderFails >= 2) { try { setEnabled(false); } catch (_) {} }
+    }
+  }
+  function renderInner() {
     if (!mounted || !root) return;
     var body = st.view === 'customers' ? viewCustomers() : st.view === 'customer' ? viewCustomer() : st.view === 'minutes' ? viewMinutes() : st.view === 'minute' ? viewMinute() : viewHome();
     var keepQ = document.activeElement && /^fps-m?q$/.test(document.activeElement.id) ? document.activeElement.id : '';
@@ -1147,8 +1156,8 @@
       }
       case 'edit-minute': { var r2 = findMinute(c, st.mid); return r2 ? editMinute(r2, c || clientOfMinute(r2)) : null; }
       case 'classic': return setEnabled(false);
-      case 'account': return window.open('/account.html', '_blank', 'noopener');
-      case 'manual': return window.open('/manual.html', '_blank', 'noopener');
+      case 'account': return window.FP_NATIVE ? location.assign('/account.html') : window.open('/account.html', '_blank', 'noopener');
+      case 'manual': return window.FP_NATIVE ? location.assign('/manual.html') : window.open('/manual.html', '_blank', 'noopener');
       case 'logout':
         if (fp().signOut && fp().auth) { fp().signOut(fp().auth).then(function () { location.reload(); }).catch(function () { location.reload(); }); }
         return;
@@ -1220,15 +1229,8 @@
   function boot() {
     if (!loggedIn()) { if (mounted) unmount(); switchButton(false); return; }
     var pref = lsGet(LS_KEY);
-    if (pref === '1') { if (!mounted) mount(); return; }
-    if (pref === '0') { switchButton(true); return; }
-    if (!flagChecked) {
-      flagChecked = true;
-      api.tenantFlag().then(function (f) {
-        if (f && f.name) st.office = f.name;
-        if (f && f.simple && lsGet(LS_KEY) == null && loggedIn()) mount();
-      });
-    }
+    if (pref === '0') { switchButton(true); return; }   // 本人が「前の画面」を選んだときだけ、前の画面のまま
+    if (!mounted) mount();                               // それ以外は、新しい画面（ハカドル）を出す
   }
   setInterval(boot, 1500);
   setTimeout(boot, 300);
