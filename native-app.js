@@ -190,7 +190,7 @@
         var want = swRem.getAttribute('aria-checked') !== 'true';
         swRem.disabled = true; msg.textContent = '';
         setRemindersEnabled(want).then(function (res) {
-          if (res && res.denied) msg.textContent = '通知が許可されていません。iPhone の「設定」→「通知」→「FP Compass」で許可してください。';
+          if (res && res.denied) msg.textContent = '通知が許可されていません。iPhone の「設定」→「通知」→「ハカドル」で許可してください。';
           paint();
         }, function () { msg.textContent = 'お知らせを切り替えられませんでした。'; }).then(function () { swRem.disabled = false; });
       });
