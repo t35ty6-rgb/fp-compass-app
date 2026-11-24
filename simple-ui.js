@@ -127,9 +127,12 @@
     for (var i = 0; i < list.length; i++) { if (String(list[i].id) === String(key) || fsId(list[i]) === String(key)) return list[i]; }
     return null;
   }
+  // サーバーが「このお客様の議事録」として返した、別のID（LINEのIDや、まとめる前のID）をおぼえておく
+  var aliasOf = {};      // 別のID -> fsId
   function idsOf(c) {
-    var o = {};
-    [c.id, fsId(c), c.lineFriendId, c._fsCustomerId].forEach(function (v) { if (v) { o[String(v)] = 1; o['fs-' + String(v)] = 1; } });
+    var o = {}, me = fsId(c);
+    [c.id, me, c.lineFriendId, c._fsCustomerId].forEach(function (v) { if (v) { o[String(v)] = 1; o['fs-' + String(v)] = 1; } });
+    for (var k in aliasOf) { if (aliasOf[k] === me) o[k] = 1; }
     return o;
   }
   // だれの議事録かの見分け。まず ID で合わせる。名前で合わせるのは、ID が無く、同じ名前のお客様が1人だけのときに限る
@@ -204,8 +207,22 @@
     var live = window.LineAppLiveData || {};
     return (Array.isArray(live.ai_results) ? live.ai_results : []).filter(function (r) { return r && r.deleted !== true && (r.summary || r.transcript_summary || r.transcript || r._transcriptStripped); });
   }
+  // 一覧に出す議事録：お客様ごとに読み込んだ分と、最近の分を合わせる。だれのものか分からない議事録は orphans に分ける
+  function allMinutes() {
+    var lists = [], k;
+    for (k in cache) lists.push(cache[k]);
+    var att = [], orphans = [];
+    liveMinutes().forEach(function (r) { var c = clientOfMinute(r); if (c) { if (!r._cid) r._cid = fsId(c); att.push(r); } else orphans.push(r); });
+    var seen = {}, out = [];
+    lists.concat([att]).forEach(function (l) { (l || []).forEach(function (r) {
+      var key = (r._cid || '') + '|' + (r.zoomMeetingId ? 'z' + r.zoomMeetingId : mKey(r));
+      if (seen[key]) return; seen[key] = 1; out.push(r);
+    }); });
+    return { list: out.sort(byTimeDesc), orphans: orphans.sort(byTimeDesc) };
+  }
   function byTimeDesc(a, b) { return (mTime(b) ? mTime(b).getTime() : 0) - (mTime(a) ? mTime(a).getTime() : 0); }
   function clientOfMinute(r) {
+    if (r && r._cid) { var cc = findClient(r._cid); if (cc) return cc; }
     var list = clients();
     for (var i = 0; i < list.length; i++) { if (belongs(r, list[i])) return list[i]; }
     return null;
@@ -350,11 +367,20 @@
     var ids = idsOf(c);
     var fromLive = liveMinutes().filter(function (r) { return belongs(r, c, ids); });
     loading[id] = Promise.all([api.detail(c), api.fsMeetings(c)]).then(function (res) {
-      cache[id] = mergeMinutes([res[0].filter(function (r) {
+      var cn = String(c.name || '').replace(/\s+/g, ''), ow = owners(), learned = false;
+      var mine = res[0].filter(function (r) {
         if (belongs(r, c, ids)) return true;
-        var hasId = !!(r.userId || r.customerId), nm = String(r.customerName || '').replace(/\s+/g, '');
-        return !hasId && (!nm || nm === String(c.name || '').replace(/\s+/g, ''));   // ID も名前も別人を指していないものだけ
-      }), res[1], fromLive]);
+        // サーバーはお客様ごとに返してくる。別のお客様のID・名前が付いているものだけ外す
+        var rid = [r.userId, r.customerId].filter(Boolean).map(String);
+        for (var i = 0; i < rid.length; i++) { if (ow.ids[rid[i]]) return false; }
+        var nm = String(r.customerName || '').replace(/\s+/g, '');
+        if (nm && nm !== 'お客様' && nm !== cn && ow.names[nm]) return false;
+        rid.forEach(function (x) { if (!aliasOf[x]) { aliasOf[x] = id; learned = true; } });
+        return true;
+      });
+      if (learned) ownerIdx.n = -1;
+      cache[id] = mergeMinutes([mine, res[1], liveMinutes().filter(function (r) { return belongs(r, c, idsOf(c)); })]);
+      cache[id].forEach(function (r) { r._cid = id; });
       return cache[id];
     }).catch(function () { cache[id] = mergeMinutes([fromLive]); return cache[id]; });
     return loading[id];
@@ -541,7 +567,7 @@
     var d = mTime(r);
     return '<button type="button" class="fps-mrow" data-open-minute="' + esc(c ? fsId(c) : '') + '" data-mid="' + esc(mKey(r) + (c ? '' : '~~' + whoOf(r))) + '">' +
       '<span class="fps-mrow-d num">' + (d ? '<b>' + (d.getMonth() + 1) + '/' + d.getDate() + '</b><small>' + WD[d.getDay()] + ' ' + fmtTime(d) + '</small>' : '<b>—</b>') + '</span>' +
-      '<span class="fps-mrow-b">' + (withName ? '<small>' + esc(c ? c.name : (r.customerName || '')) + ' 様 ・ ' + esc(mKind(r)) + '</small>' : '<small>' + esc(mKind(r)) + '</small>') +
+      '<span class="fps-mrow-b">' + (withName ? '<small>' + (c ? esc(c.name) + ' 様' : (String(r.customerName || '').trim() && String(r.customerName).trim() !== 'お客様' ? esc(r.customerName) + ' 様' : 'お客様未設定')) + ' ・ ' + esc(mKind(r)) + '</small>' : '<small>' + esc(mKind(r)) + '</small>') +
         '<b>' + esc(mTitle(r)) + '</b></span>' +
       '<span class="fps-mrow-go" aria-hidden="true">›</span></button>';
   }
@@ -574,7 +600,7 @@
     var today = list.map(function (c) { return { c: c, at: nextSlotOf(c) }; }).filter(function (x) { return x.at && sameDay(x.at, now); })
       .sort(function (a, b) { return a.at - b.at; });
     var pend = pendingList();
-    var recent = liveMinutes().slice().sort(byTimeDesc).slice(0, 6);
+    var recent = allMinutes().list.slice(0, 6);
     var u = fp().auth && fp().auth.currentUser;
     var hello = (u && u.displayName) ? 'こんにちは、' + esc(u.displayName.split(/\s+/)[0]) + 'さん' : 'ホーム';
 
@@ -921,11 +947,13 @@
 
   function viewMinutes() {
     var pend = pendingList();
-    var rows = pend.map(pendingRow).join('') + liveMinutes().slice().sort(byTimeDesc).map(function (r) { return minuteRow(r, clientOfMinute(r), true); }).join('');
+    var am = allMinutes();
+    var rows = pend.map(pendingRow).join('') + am.list.map(function (r) { return minuteRow(r, clientOfMinute(r), true); }).join('');
+    var orph = am.orphans.length ? '<details class="fps-fold" style="margin-top:4px"><summary><span class="fps-fold-t"><b>お客様が決まっていない議事録</b><small>お試しの録音や、台帳から消したお客様の分です</small></span><em class="num">' + am.orphans.length + '</em><span class="fps-fold-go" aria-hidden="true">›</span></summary><div class="fps-mlist" style="padding:0 10px 8px">' + am.orphans.map(function (r) { return minuteRow(r, null, true); }).join('') + '</div></details>' : '';
     return '<div class="fps-wrap"><div style="display:flex;align-items:center;gap:12px">' + M('read', 64, 'hello') + '<div><h1 class="fps-title">議事録</h1><p class="fps-sub" style="margin:2px 0 0;font-size:14px">お客様と題名だけをならべています。押すと中身が開きます。</p></div></div><section class="fps-panel" style="padding:10px 18px 14px">' +
       (rows ? '<div class="fps-mlist">' + rows + '</div>'
             : '<div class="fps-empty">まだ議事録がありません。</div>') +
-      '</section><p class="fps-sub" style="font-size:13px;margin:0">新しいものから並んでいます。古い議事録は、お客様のページから見られます。</p></div>';
+      '</section>' + orph + '<p class="fps-sub" style="font-size:13px;margin:0">新しいものから並んでいます。</p></div>';
   }
 
   // 議事録を1件さがす。同じ時刻の議事録が別のお客様にもあるので、かならず「だれの」まで合わせる
@@ -1227,6 +1255,7 @@
     setTimeout(function () { if (mounted && !$('.fps-modal-bg')) render(); }, 9200);
     api.tenantFlag().then(function (f) { if (f && f.name && !st.office) { st.office = f.name; render(); } });
     refreshSoon();
+    setTimeout(warmUp, 1200);
     tick = setInterval(function () {
       if (!mounted || document.hidden || $('.fps-modal-bg')) return;
       var a = document.activeElement; if (a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA')) return;
@@ -1235,6 +1264,29 @@
     }, 4000);
   }
   var tick = null, lastSig = '', prevTitle = '';
+  var warming = false;
+  function warmUp() {
+    if (warming || !mounted) return;
+    var list = clients().filter(function (c) { return !cache[fsId(c)]; });
+    if (!list.length) { if (!clients().length) setTimeout(warmUp, 2000); return; }
+    if (list.length > 80) return;            // 人数が多い事務所では、開いたお客様の分だけ読む
+    warming = true;
+    var i = 0, running = 0, lastDraw = 0;
+    var next = function () {
+      if (!mounted) { warming = false; return; }
+      while (running < 3 && i < list.length) {
+        running++;
+        loadMinutes(list[i++]).then(function () {
+          running--;
+          var a = document.activeElement, typing = a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA');
+          if ((st.view === 'home' || st.view === 'minutes' || st.view === 'customers') && !typing && !$('.fps-modal-bg') && Date.now() - lastDraw > 2500) { lastDraw = Date.now(); render(); }
+          next();
+        });
+      }
+      if (i >= list.length && running === 0) { warming = false; if (!$('.fps-modal-bg')) render(); }
+    };
+    next();
+  }
   function onHash() { if (mounted) applyHash(); }
   function unmount() {
     if (!mounted) return;
