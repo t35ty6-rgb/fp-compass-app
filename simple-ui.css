@@ -205,6 +205,62 @@ button.fps-stat { font: inherit; cursor: pointer; }
 .fps-modal { box-sizing: border-box; }
 .fps-toast { background: var(--fps-surface) !important; color: var(--fps-ink) !important; border: 1.5px solid var(--fps-line); padding: 8px 18px 8px 12px !important; }
 
+/* 読み込み中のうごく絵（白い地を消してなじませる） */
+.fps-load { display: block; margin: 0 auto 4px; height: auto; mix-blend-mode: multiply; pointer-events: none; }
+.fps-loading[data-small] { padding: 10px 12px 4px; font-size: 13px; }
+/* お客様ごとの議事録の一覧 */
+.fps-tl { list-style: none; margin: 14px 0 0; padding: 0 0 0 18px; border-left: 2px solid var(--fps-line); display: flex; flex-direction: column; gap: 12px; }
+.fps-tl-year { margin-left: -29px; font-size: 13px; font-weight: 800; color: var(--fps-red-text); display: flex; align-items: center; gap: 8px; }
+.fps-tl-year::before { content: ""; width: 20px; height: 20px; border-radius: 50%; background: var(--fps-red); box-shadow: 0 0 0 4px var(--fps-surface); }
+.fps-tl-item { position: relative; }
+.fps-tl-item::before { content: ""; position: absolute; left: -25px; top: 26px; width: 12px; height: 12px; border-radius: 50%; background: var(--fps-mint); box-shadow: 0 0 0 3px var(--fps-surface); }
+.fps-tl-card { width: 100%; display: flex; gap: 16px; align-items: flex-start; text-align: left; font: inherit; color: inherit; background: var(--fps-surface); border: 1px solid var(--fps-line); border-radius: 14px; padding: 16px 18px; cursor: pointer; transition: border-color .15s, box-shadow .15s, transform .15s; }
+.fps-tl-card:hover { border-color: var(--fps-red); box-shadow: 0 14px 28px -20px rgba(240,35,0,.55); transform: translateY(-1px); }
+.fps-tl-date { flex: none; width: 76px; display: flex; flex-direction: column; }
+.fps-tl-date b { font-size: 22px; font-weight: 700; line-height: 1.2; }
+.fps-tl-date small { font-size: 12px; color: var(--fps-sub); }
+.fps-tl-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.fps-tl-meta, .fps-tl-kc { display: flex; gap: 6px; flex-wrap: wrap; }
+.fps-tl-title { font-size: 16px; font-weight: 800; line-height: 1.5; }
+.fps-tl-gist { font-size: 14px; line-height: 1.75; color: var(--fps-sub); }
+.fps-tl-kc span { font-size: 12px; font-weight: 700; color: var(--fps-mint-text); background: #E4F2EE; border-radius: 6px; padding: 3px 8px; }
+.fps-tl-go { flex: none; align-self: center; font-size: 13px; font-weight: 800; color: var(--fps-red-text); white-space: nowrap; }
+@media (prefers-reduced-motion: reduce) { .fps-tl-card { transition: none; } }
+@media (max-width: 760px) {
+  .fps-tl { padding-left: 14px; }
+  .fps-tl-year { margin-left: -25px; }
+  .fps-tl-item::before { left: -21px; }
+  .fps-tl-card { flex-wrap: wrap; gap: 8px 12px; padding: 14px; }
+  .fps-tl-date { width: auto; flex-direction: row; align-items: baseline; gap: 8px; flex: 1 1 100%; }
+  .fps-tl-date b { font-size: 19px; }
+  .fps-tl-go { flex: 1 1 100%; text-align: right; }
+}
+/* 契約の一覧 */
+.fps-contracts { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
+.fps-contract { width: 100%; display: flex; gap: 16px; align-items: center; text-align: left; font: inherit; color: inherit; background: var(--fps-surface); border: 1px solid var(--fps-line); border-left: 5px solid var(--fps-mint); border-radius: 12px; padding: 14px 16px; cursor: pointer; }
+.fps-contract:hover { border-color: var(--fps-red); border-left-color: var(--fps-red); }
+.fps-contract-date { flex: none; width: 70px; display: flex; flex-direction: column; }
+.fps-contract-date small, .fps-contract-fee small { font-size: 12px; color: var(--fps-sub); }
+.fps-contract-date b { font-size: 20px; }
+.fps-contract-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; font-size: 14px; }
+.fps-contract-body > b { font-size: 16px; font-weight: 800; }
+.fps-contract-fee { flex: none; display: flex; flex-direction: column; align-items: flex-end; }
+.fps-contract-fee b { font-size: 16px; }
+select.fps-input { appearance: auto; height: 48px; }
+.fps-tabs { gap: 20px; }
+.fps-tabs button { white-space: nowrap; }
+@media (max-width: 760px) {
+  .fps-tabs { gap: 0; flex-wrap: nowrap; }
+  .fps-tabs button { font-size: 14px; padding: 12px 2px; }
+  .fps-tabs .fps-chip { margin-left: 3px !important; padding: 0 6px; }
+  .fps-contract { flex-wrap: wrap; gap: 6px 12px; }
+  .fps-contract-date { width: auto; flex-direction: row; align-items: baseline; gap: 6px; }
+  .fps-contract-body { flex: 1 1 100%; order: 3; }
+  .fps-contract .fps-tl-go { display: none; }
+  .fps-contract-fee { margin-left: auto; flex-direction: row; align-items: baseline; gap: 6px; }
+  .fps-aside .fps-block { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+  .fps-aside .fps-block .fps-row { padding: 8px; font-size: 12px; }
+}
 /* ---------- スマホ用の最適化 ---------- */
 .fps-bnav { display: none; }
 @media (max-width: 760px) {
@@ -266,4 +322,10 @@ button.fps-stat { font: inherit; cursor: pointer; }
   .fps-doc .fps-title { font-size: 20px; }
   .fps-sec p, .fps-sec ul { font-size: 15px; }
   .fps-transcript { font-size: 14px; }
+}
+@media (max-width: 760px) {
+  .fps-aside .fps-block { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; gap: 6px !important; }
+  .fps-modal.has-m { overflow-y: auto; }
+  .fps-modal.has-m .fps-m.modal-m { position: static; display: block; margin: -6px auto 0; transform: none; width: 72px !important; }
+  .fps-modal.has-m > h2 { padding-top: 6px; }
 }

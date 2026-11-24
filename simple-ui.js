@@ -96,7 +96,12 @@
   }
   function decorate(el) {
     if (!el) return;
-    [['.fps-empty', 'think', 78], ['.fps-loading', 'laptop', 78]].forEach(function (d) {
+    Array.prototype.forEach.call(el.querySelectorAll('.fps-loading'), function (n) {
+      if (n.querySelector('.fps-load')) return;
+      var w = n.getAttribute('data-small') ? 96 : 168;
+      n.insertAdjacentHTML('afterbegin', '<img class="fps-load" src="mascot/loading.gif' + MV + '" alt="" width="' + w + '" style="width:' + w + 'px" onerror="this.remove()">');
+    });
+    [['.fps-empty', 'think', 78]].forEach(function (d) {
       Array.prototype.forEach.call(el.querySelectorAll(d[0]), function (n) {
         if (n.querySelector('.fps-m')) return;
         n.insertAdjacentHTML('afterbegin', M(n.getAttribute('data-face') || d[1], d[2], 'top'));
@@ -259,6 +264,14 @@
       await fs.setDoc(fs.doc(fp().db, 'tenants', tid, 'customers', id), data, { merge: true });
       return id;
     },
+    getCustomer: async function (id) {
+      var tid = tenantId(); if (!tid || !id || !fp().db) return null;
+      try {
+        var fs = await import(FS_URL);
+        var d = await fs.getDoc(fs.doc(fp().db, 'tenants', tid, 'customers', id));
+        return d.exists() ? d.data() : null;
+      } catch (e) { console.warn('[fps] customer read fail:', e && e.message); return null; }
+    },
     saveSummary: async function (entry) {
       var h = window.getFpAuthHeaders ? await window.getFpAuthHeaders() : { 'Content-Type': 'application/json' };
       var res = await fetch(CLOUD_RUN + '/api/save-ai-result', { method: 'POST', headers: h, body: JSON.stringify({ entry: entry, tasks: [] }) });
@@ -316,7 +329,7 @@
   }
 
   /* ---------- 画面の状態 ---------- */
-  var st = { view: 'home', cid: '', mid: '', q: '', tab: 'minutes', office: '', showTranscript: false };
+  var st = { view: 'home', cid: '', mid: '', q: '', mq: '', tab: 'minutes', office: '', showTranscript: false };
   var root = null, mounted = false;
 
   function parseHash() {
@@ -332,7 +345,7 @@
   function applyHash() {
     var p = parseHash() || { view: 'home', cid: '', mid: '' };
     st.view = p.view; st.cid = p.cid; st.mid = p.mid; st.showTranscript = false;
-    if (st.view === 'customer') st.tab = st.tab || 'minutes';
+    if (st.view === 'customer' && ['minutes', 'todo', 'contracts', 'data'].indexOf(st.tab) < 0) st.tab = 'minutes';
     render();
     if (root) root.scrollTop = 0;
   }
@@ -429,6 +442,19 @@
         '<span class="lead">' + esc(mGist(r, 90)) + '</span></td>' +
       '<td style="width:96px"><span class="fps-chip ok">できました</span></td></tr>';
   }
+  function minuteCard(r, c) {
+    var d = mTime(r), tasks = mTasks(r);
+    var kc = asArray(r.key_concerns).map(function (x) { return typeof x === 'string' ? x : (x.text || x.title || ''); }).filter(Boolean).slice(0, 3);
+    return '<li class="fps-tl-item"><button type="button" class="fps-tl-card" data-open-minute="' + esc(fsId(c)) + '" data-mid="' + esc(mKey(r)) + '">' +
+      '<span class="fps-tl-date num">' + (d ? '<b>' + (d.getMonth() + 1) + '/' + d.getDate() + '</b><small>' + WD[d.getDay()] + '曜 ' + fmtTime(d) + '</small>' : '<b>—</b>') + '</span>' +
+      '<span class="fps-tl-body">' +
+        '<span class="fps-tl-meta"><span class="fps-chip plain">' + esc(mKind(r)) + '</span>' + (r.zoomDurationMin ? '<span class="fps-chip plain num">' + esc(r.zoomDurationMin) + '分</span>' : '') +
+          (tasks.length ? '<span class="fps-chip ok">やること ' + tasks.length + '件</span>' : '') + '</span>' +
+        '<b class="fps-tl-title">' + esc(mTitle(r)) + '</b>' +
+        '<span class="fps-tl-gist">' + esc(mGist(r, 130)) + '</span>' +
+        (kc.length ? '<span class="fps-tl-kc">' + kc.map(function (x) { return '<span>' + esc(String(x).slice(0, 24)) + '</span>'; }).join('') + '</span>' : '') +
+      '</span><span class="fps-tl-go" aria-hidden="true">ひらく ›</span></button></li>';
+  }
   function pendingRow(p) {
     return '<tr><td class="num" style="width:150px">' + esc(p.at ? fmtDay(p.at) + ' ' + fmtTime(p.at) : '') +
       '<span style="display:block;font-size:12px" class="fps-sub">' + esc(p.kind) + '</span></td>' +
@@ -436,7 +462,11 @@
       '<td style="width:96px"><span class="fps-chip wait">' + M('laptop', 24) + '作成中</span></td></tr>';
   }
 
+  var mountedAt = 0;
+  function booting() { return Date.now() - mountedAt < 9000 && !clients().length && !liveMinutes().length; }
+  function bootView() { return '<div class="fps-wrap"><div class="fps-panel fps-loading" style="padding:70px 16px">お客様と議事録を読み込んでいます…</div></div>'; }
   function viewHome() {
+    if (booting()) return bootView();
     var list = clients(), now = new Date();
     var today = list.map(function (c) { return { c: c, at: nextSlotOf(c) }; }).filter(function (x) { return x.at && sameDay(x.at, now); })
       .sort(function (a, b) { return a.at - b.at; });
@@ -480,6 +510,7 @@
   }
 
   function viewCustomers() {
+    if (booting()) return bootView();
     var q = st.q.trim().toLowerCase();
     var list = clients().map(function (c) { return { c: c, last: lastMeetingOf(c), next: nextSlotOf(c) }; })
       .filter(function (x) { return !q || String(x.c.name).toLowerCase().indexOf(q) >= 0 || String(x.c.kana || '').toLowerCase().indexOf(q) >= 0; })
@@ -503,11 +534,141 @@
       '</section></div>';
   }
 
+  /* 契約（買ってもらった保険など）: tenants/{tid}/customers/{id}.contracts に入れる */
+  var contractsCache = {};   // fsId -> [] （読み込み前は undefined）
+  function loadContracts(c) {
+    var id = fsId(c);
+    if (contractsCache[id] || loading['c:' + id]) return;
+    loading['c:' + id] = api.getCustomer(id).then(function (d) {
+      contractsCache[id] = (d && Array.isArray(d.contracts) ? d.contracts : []).filter(Boolean);
+      if (st.view === 'customer' && st.cid === id && !$('.fps-modal-bg')) render();
+    });
+  }
+  function yen(v) { var n = Number(String(v || '').replace(/[^0-9.]/g, '')); return n ? n.toLocaleString('ja-JP') + '円' : ''; }
+  function contractsHtml(c) {
+    var list = contractsCache[fsId(c)];
+    if (!list) return '<div class="fps-loading">契約を読み込んでいます…</div>';
+    var sorted = list.slice().sort(function (a, b) { return String(b.date || '').localeCompare(String(a.date || '')); });
+    return '<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:14px;flex-wrap:wrap">' +
+        '<p class="fps-sub" style="margin:0;font-size:14px">買っていただいた保険などを、商品名と日付でのこせます。</p>' +
+        '<button type="button" class="fps-btn primary sm" data-act="new-contract">' + ICON.plus + '契約を足す</button></div>' +
+      (sorted.length ? '<div class="fps-contracts">' + sorted.map(function (k) {
+        var d = toDate(k.date);
+        return '<button type="button" class="fps-contract" data-contract="' + esc(k.id) + '">' +
+          '<span class="fps-contract-date num">' + (d ? '<small>' + d.getFullYear() + '年</small><b>' + (d.getMonth() + 1) + '/' + d.getDate() + '</b>' : '<b>—</b>') + '</span>' +
+          '<span class="fps-contract-body"><b>' + esc(k.product || '（商品名なし）') + '</b>' +
+            '<span class="fps-sub">' + esc([k.company, k.kind].filter(Boolean).join(' ・ ')) + '</span>' +
+            (k.note ? '<span class="fps-sub" style="font-size:13px">' + esc(k.note) + '</span>' : '') + '</span>' +
+          '<span class="fps-contract-fee num">' + (yen(k.premium) ? '<b>' + yen(k.premium) + '</b><small>' + esc(k.cycle || '月払い') + '</small>' : '') + '</span>' +
+          '<span class="fps-tl-go" aria-hidden="true">直す ›</span></button>';
+      }).join('') + '</div>' : '<div class="fps-empty" data-face="read">まだ契約の記録がありません。<br>「契約を足す」から入れられます。</div>');
+  }
+  function contractForm(c, k) {
+    var isNew = !k; k = k || { date: new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10), cycle: '月払い' };
+    var f = function (id, label, val, ph, type) {
+      return '<label class="fps-field"><span>' + label + '</span><input class="fps-input" id="' + id + '" type="' + (type || 'text') + '" value="' + esc(val || '') + '" placeholder="' + esc(ph || '') + '" autocomplete="off"' + (type === 'number' ? ' inputmode="numeric"' : '') + '></label>';
+    };
+    var sel = function (id, label, val, opts) {
+      return '<label class="fps-field"><span>' + label + '</span><select class="fps-input" id="' + id + '">' + opts.map(function (o) { return '<option' + (o === val ? ' selected' : '') + '>' + o + '</option>'; }).join('') + '</select></label>';
+    };
+    modal('<h2>' + (isNew ? '契約を足す' : '契約を直す') + '</h2><p>' + esc(c.name) + ' 様が買ってくださったものを書きます。商品名と日付だけでも大丈夫です。</p>' +
+      f('fps-k-product', '商品名', k.product, '例：終身医療保険 ○○') + f('fps-k-company', '保険会社', k.company, '例：○○生命') +
+      sel('fps-k-kind', '種類', k.kind || '', ['', '医療保険', 'がん保険', '死亡保険', '学資保険', '個人年金', '変額保険', '火災・地震保険', '自動車保険', '投資信託・NISA', 'iDeCo', 'そのほか']) +
+      f('fps-k-date', '契約した日', k.date, '', 'date') +
+      '<div style="display:grid;grid-template-columns:minmax(0,1fr) 130px;gap:10px">' + f('fps-k-premium', '保険料（円）', k.premium, '例：8500', 'number') + sel('fps-k-cycle', '払い方', k.cycle || '月払い', ['月払い', '年払い', '一括']) + '</div>' +
+      '<label class="fps-field"><span>メモ</span><textarea class="fps-input" id="fps-k-note" style="min-height:80px" placeholder="証券番号の下4けた、特約、見直しの時期など">' + esc(k.note || '') + '</textarea></label>' +
+      '<div class="fps-actions">' + (isNew ? '' : '<button type="button" class="fps-btn ghost" id="fps-k-del" style="margin-right:auto">この契約を消す</button>') +
+        '<button type="button" class="fps-btn ghost" data-close>やめる</button><button type="button" class="fps-btn primary" id="fps-k-save">' + (isNew ? '足す' : '保存する') + '</button></div>', function (el) {
+      var id = fsId(c);
+      var write = async function (next, btn, label, done) {
+        btn.disabled = true; btn.textContent = '保存しています…';
+        try { await api.saveCustomer(id, { contracts: next }, false); contractsCache[id] = next; closeModal(); toast(done); render(); }
+        catch (err) { btn.disabled = false; btn.textContent = label; toast('保存できませんでした：' + (err.message || err), 5000); }
+      };
+      $('[data-close]', el).addEventListener('click', closeModal);
+      $('#fps-k-save', el).addEventListener('click', function () {
+        var v = { id: k.id || ('k' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6)), product: $('#fps-k-product', el).value.trim(), company: $('#fps-k-company', el).value.trim(),
+          kind: $('#fps-k-kind', el).value, date: $('#fps-k-date', el).value, premium: $('#fps-k-premium', el).value.trim(), cycle: $('#fps-k-cycle', el).value, note: $('#fps-k-note', el).value.trim() };
+        if (!v.product) { toast('商品名を入れてください'); $('#fps-k-product', el).focus(); return; }
+        var cur = (contractsCache[id] || []).filter(function (x) { return x.id !== v.id; });
+        write(cur.concat([v]), this, isNew ? '足す' : '保存する', isNew ? '契約を足しました' : '保存しました');
+      });
+      var del = $('#fps-k-del', el);
+      if (del) del.addEventListener('click', function () {
+        if (!this.dataset.sure) { this.dataset.sure = '1'; this.textContent = 'もう一度押すと消えます'; this.style.color = 'var(--fps-red-text)'; this.style.borderColor = 'var(--fps-red)'; return; }
+        write((contractsCache[id] || []).filter(function (x) { return x.id !== k.id; }), this, 'この契約を消す', '契約を消しました');
+      });
+    });
+  }
+
+  /* 手で書く議事録（録音がないとき） */
+  function manualMinuteForm(c) {
+    var today = new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);
+    modal('<h2>メモから議事録を書く</h2><p>録音がないときは、ここに ' + esc(c.name) + ' 様との話を書いてのこせます。</p>' +
+      '<div style="display:grid;grid-template-columns:minmax(0,1fr) 130px;gap:10px"><label class="fps-field"><span>面談した日</span><input class="fps-input" id="fps-n-date" type="date" value="' + today + '"></label>' +
+      '<label class="fps-field"><span>時刻</span><input class="fps-input" id="fps-n-time" type="time" value="10:00"></label></div>' +
+      '<label class="fps-field"><span>題名</span><input class="fps-input" id="fps-n-title" placeholder="例：医療保険の見直し" autocomplete="off"></label>' +
+      '<label class="fps-field"><span>話した内容</span><textarea class="fps-input" id="fps-n-body" style="min-height:200px" placeholder="例：\n・いまの医療保険は入院1日5,000円。先進医療の特約なし\n・上のお子さんが来年小学校。教育費が気になっている\n・次回までに見積もりを2つ用意する"></textarea></label>' +
+      '<div class="fps-actions"><button type="button" class="fps-btn ghost" data-close>やめる</button><button type="button" class="fps-btn primary" id="fps-n-save">保存する</button></div>', function (el) {
+      $('[data-close]', el).addEventListener('click', closeModal);
+      $('#fps-n-save', el).addEventListener('click', async function () {
+        var btn = this, date = $('#fps-n-date', el).value, body = $('#fps-n-body', el).value.trim();
+        if (!date) { toast('面談した日を入れてください'); return; }
+        if (body.length < 10) { toast('話した内容を10文字以上入れてください'); $('#fps-n-body', el).focus(); return; }
+        var iso = date + 'T' + ($('#fps-n-time', el).value || '10:00') + ':00+09:00';
+        var entry = { bookingTs: 'manual-' + Date.parse(iso) + '-' + Math.random().toString(36).slice(2, 7), ts: iso, createdAt: iso,
+          userId: fsId(c) || c.lineFriendId || '', customerName: c.name || '', date: date, title: $('#fps-n-title', el).value.trim() || '面談の記録',
+          transcript: '', summary: body, transcript_summary: '', key_concerns: [], predicted_next_questions: [], next_meeting_suggestion: '', source: 'manual' };
+        btn.disabled = true; btn.textContent = '保存しています…';
+        try {
+          var d = await api.saveSummary(entry);
+          if (d && d.skipped) throw new Error('内容が空と判定されて、保存されませんでした');
+          try { if (window.FpLifeSync) window.FpLifeSync.afterMeetingSaved({ customerId: fsId(c), userId: c.lineFriendId, name: c.name }); } catch (_) {}
+          var id = fsId(c); cache[id] = mergeMinutes([[entry], cache[id] || minutesOf(c)]);
+          closeModal(); toast('議事録をのこしました'); st.tab = 'minutes'; render();
+        } catch (err) { btn.disabled = false; btn.textContent = '保存する'; toast(String(err.message || err), 5000); }
+      });
+    }, 'read');
+  }
+
+  /* 会社に出す報告文（いまある議事録を、報告の形にならべ直すだけ。新しく文を作りはしない） */
+  function reportText(r, c) {
+    var d = mTime(r), u = fp().auth && fp().auth.currentUser, tasks = mTasks(r);
+    var kc = asArray(r.key_concerns).map(function (x) { return typeof x === 'string' ? x : (x.text || x.title || ''); }).filter(Boolean);
+    var bodyTxt = String(r.summary || r.transcript_summary || '')
+      .replace(/^##?#?\s+[^\n]+\n\s*[（(]?\s*該当なし\s*[)）]?\s*$/gim, '')
+      .replace(/^#{1,4}\s+(.+)$/gm, '\n■ $1').replace(/\*\*([^*]+)\*\*/g, '$1').replace(/^\s*[-•*●▪]\s+/gm, '・').replace(/\n{3,}/g, '\n\n').trim();
+    if (bodyTxt && !/^■/.test(bodyTxt)) bodyTxt = '■ 内容\n' + bodyTxt;
+    var who = c ? c.name : (r.customerName || '');
+    return ['【面談報告】',
+      '日時：' + (d ? d.getFullYear() + '年' + (d.getMonth() + 1) + '月' + d.getDate() + '日（' + WD[d.getDay()] + '）' + fmtTime(d) + '〜' + (r.zoomDurationMin ? '（' + r.zoomDurationMin + '分）' : '') : ''),
+      'お客様：' + who + ' 様',
+      '方法：' + ({ 'Zoom': 'Zoom', '録音': '対面（録音）', '手入力': '対面' }[mKind(r)] || mKind(r)),
+      '担当：' + ((u && (u.displayName || u.email)) || ''),
+      '件名：' + mTitle(r), '',
+      '■ 要点', mGist(r, 200), '',
+      bodyTxt,
+      kc.length ? '\n■ お客様の関心ごと\n' + kc.map(function (x) { return '・' + x; }).join('\n') : '',
+      tasks.length ? '\n■ 次にやること\n' + tasks.map(function (x) { return '・' + x; }).join('\n') : '',
+      r.next_meeting_suggestion ? '\n■ 次回に向けて\n' + r.next_meeting_suggestion : '',
+      '', '以上'].filter(function (x, i, a) { return x !== '' || (a[i - 1] !== ''); }).join('\n').replace(/\n{3,}/g, '\n\n');
+  }
+  function reportModal(r, c) {
+    modal('<h2>会社への報告文</h2><p>議事録を報告の形にならべました。足りないところは、ここで直してからコピーできます。</p>' +
+      '<textarea class="fps-input" id="fps-r-text" style="min-height:340px;font-size:14px;line-height:1.8">' + esc(reportText(r, c)) + '</textarea>' +
+      '<div class="fps-actions"><button type="button" class="fps-btn ghost" data-close>とじる</button><button type="button" class="fps-btn primary" id="fps-r-copy">コピーする</button></div>', function (el) {
+      $('[data-close]', el).addEventListener('click', closeModal);
+      $('#fps-r-copy', el).addEventListener('click', async function () { this.textContent = (await copyText($('#fps-r-text', el).value)) ? 'コピーしました' : 'コピーできませんでした'; });
+    });
+  }
+
   function viewCustomer() {
     var c = findClient(st.cid);
     if (!c) return '<div class="fps-wrap"><div class="fps-panel fps-empty">このお客様が見つかりませんでした。<br><a data-go="customers">お客様の一覧にもどる</a></div></div>';
     var id = fsId(c);
     if (!cache[id]) loadMinutes(c).then(function () { if (st.view === 'customer' && st.cid === id) render(); });
+    loadContracts(c);
+    var kn = contractsCache[id] ? contractsCache[id].length : 0;
     var mins = minutesOf(c), last = mins[0] ? mTime(mins[0]) : toDate(c.lastContact), next = nextSlotOf(c);
     var todos = []; mins.slice(0, 3).forEach(function (r) { mTasks(r).forEach(function (t) { todos.push({ t: t, at: mTime(r) }); }); });
     var fam = Array.isArray(c.family) ? c.family.map(function (f) { return typeof f === 'string' ? f : [f.relation || f.rel || '', f.name || '', f.age ? f.age + '歳' : ''].filter(Boolean).join(' '); }).filter(Boolean).join('・') : '';
@@ -520,10 +681,24 @@
     if (st.tab === 'todo') {
       body = todos.length ? '<div class="fps-todo" style="margin-top:8px">' + todos.map(function (x) { return '<div><span>' + esc(x.t) + '<span class="fps-sub" style="display:block;font-size:12px">' + esc(fmtDay(x.at)) + ' の面談から</span></span></div>'; }).join('') + '</div>'
         : '<div class="fps-empty" data-face="idea">次にやることは、議事録ができると自動で出ます。</div>';
+    } else if (st.tab === 'contracts') {
+      body = contractsHtml(c);
+    } else if (st.tab === 'data') {
+      body = kv ? '<dl class="fps-kv" style="margin-top:14px">' + kv + '</dl>' : '<div class="fps-empty">まだ情報がありません。「お客様の情報を直す」から入れられます。</div>';
     } else {
-      body = mins.length ? '<div class="fps-table-wrap"><table class="fps-table"><thead><tr><th>日時</th><th>内容</th><th></th></tr></thead><tbody>' +
-          mins.map(function (r) { return minuteRow(r, c, false); }).join('') + '</tbody></table></div>'
-        : (cache[id] ? '<div class="fps-empty">まだ議事録がありません。<br>左の「Zoomで面談」か「録音から議事録を作る」で作れます。</div>' : '<div class="fps-loading">議事録を読み込んでいます…</div>');
+      var q = st.mq.trim().toLowerCase();
+      var shown = !q ? mins : mins.filter(function (r) { return (mTitle(r) + ' ' + (r.summary || '') + ' ' + (r.transcript_summary || '') + ' ' + asArray(r.key_concerns).join(' ')).toLowerCase().indexOf(q) >= 0; });
+      var year = '', tl = '';
+      shown.forEach(function (r) {
+        var d = mTime(r), y = d ? String(d.getFullYear()) : '';
+        if (y && y !== year) { year = y; tl += '<li class="fps-tl-year num">' + y + '年</li>'; }
+        tl += minuteCard(r, c);
+      });
+      body = (mins.length > 4 ? '<label style="display:block;margin-top:14px"><span style="position:absolute;width:1px;height:1px;overflow:hidden">議事録の中をさがす</span><input id="fps-mq" class="fps-input" type="search" placeholder="議事録の中をさがす（例：保険、教育費）" value="' + esc(st.mq) + '"></label>' : '') +
+        (shown.length ? '<ol class="fps-tl">' + tl + '</ol>' : '') +
+        (!shown.length && mins.length ? '<div class="fps-empty">「' + esc(st.mq) + '」が出てくる議事録はありません。</div>' : '') +
+        (!cache[id] ? '<div class="fps-loading"' + (mins.length ? ' data-small="1"' : '') + '>' + (mins.length ? 'もっと前の議事録をさがしています…' : '議事録を読み込んでいます…') + '</div>'
+          : (!mins.length ? '<div class="fps-empty">まだ議事録がありません。<br>「Zoomで面談」か「録音から議事録を作る」で作れます。</div>' : ''));
     }
     var pend = pendingList().filter(function (p) { return p.customerId && (p.customerId === id || p.customerId === c.id); });
 
@@ -539,18 +714,21 @@
           '<div class="fps-block"><b>面談</b>' +
             '<div class="fps-row"><span class="fps-sub">これまで</span><span class="num" style="font-weight:700">' + mins.length + '回</span></div>' +
             '<div class="fps-row"><span class="fps-sub">前回</span><span class="num" style="font-weight:700">' + esc(last ? fmtDay(last) : 'まだ') + '</span></div>' +
+            '<div class="fps-row"><span class="fps-sub">契約</span><span class="num" style="font-weight:700">' + kn + '件</span></div>' +
             (next ? '<div class="fps-row"><span class="fps-sub">次回</span><span class="num" style="font-weight:700;color:var(--fps-red-text)">' + esc(fmtDay(next) + ' ' + fmtTime(next)) + '</span></div>' : '') +
           '</div>' +
           '<button type="button" class="fps-btn primary with-m" data-act="zoom" style="margin-top:auto;height:56px;font-size:16px">' + M('wink', 58, 'peek') + ICON.video + 'Zoomで面談</button>' +
           '<button type="button" class="fps-btn" data-act="upload" style="height:44px;font-size:14px">' + ICON.mic + '録音から議事録を作る</button>' +
+          '<button type="button" class="fps-btn ghost" data-act="manual-minute" style="height:44px;font-size:14px">メモから議事録を書く</button>' +
         '</aside>' +
         '<section class="fps-main">' +
           (pend.length ? '<div style="background:var(--fps-amber-soft);color:var(--fps-amber-text);border-radius:12px;padding:12px 16px;font-size:14px;font-weight:700;display:flex;align-items:center;gap:12px">' + M('laptop', 52) + '<span>いま議事録を作っています。できたら、下の一覧に出ます。</span></div>' : '') +
-          '<div><h1 class="fps-h" style="font-size:17px">お客様データ</h1>' +
-            (kv ? '<dl class="fps-kv">' + kv + '</dl>' : '<div class="fps-empty">まだ情報がありません。「お客様の情報を直す」から入れられます。</div>') + '</div>' +
-          '<div><div class="fps-tabs" role="tablist">' +
-            '<button type="button" role="tab" data-tab="minutes" aria-selected="' + (st.tab !== 'todo') + '">議事録</button>' +
-            '<button type="button" role="tab" data-tab="todo" aria-selected="' + (st.tab === 'todo') + '">次にやること' + (todos.length ? '<span class="fps-chip ok num" style="margin-left:6px">' + todos.length + '</span>' : '') + '</button>' +
+          '<div><h1 class="fps-h" style="font-size:17px">' + esc(c.name) + ' 様の記録</h1>' +
+          '<div class="fps-tabs" role="tablist">' +
+            '<button type="button" role="tab" data-tab="minutes" aria-selected="' + (st.tab === 'minutes') + '">議事録<span class="fps-chip plain num" style="margin-left:6px">' + mins.length + '</span></button>' +
+            '<button type="button" role="tab" data-tab="todo" aria-selected="' + (st.tab === 'todo') + '">やること' + (todos.length ? '<span class="fps-chip ok num" style="margin-left:6px">' + todos.length + '</span>' : '') + '</button>' +
+            '<button type="button" role="tab" data-tab="contracts" aria-selected="' + (st.tab === 'contracts') + '">契約' + (kn ? '<span class="fps-chip plain num" style="margin-left:6px">' + kn + '</span>' : '') + '</button>' +
+            '<button type="button" role="tab" data-tab="data" aria-selected="' + (st.tab === 'data') + '">データ</button>' +
           '</div>' + body + '</div>' +
         '</section></div></div>';
   }
@@ -599,9 +777,10 @@
           '<section class="fps-panel" style="padding:20px 22px"><h2 class="fps-h">次にやること</h2>' +
             (tasks.length ? '<div class="fps-todo">' + tasks.map(function (t) { return '<div><span>' + esc(t) + '</span></div>'; }).join('') + '</div>' : '<div class="fps-empty" data-face="smile" style="padding:16px 0 4px">この面談からの宿題はありません。</div>') + '</section>' +
           '<section class="fps-panel" style="padding:20px 22px;display:flex;flex-direction:column;gap:10px"><h2 class="fps-h">この議事録を使う</h2>' +
-            '<button type="button" class="fps-btn primary" data-act="copy-minute">要点をコピーする</button>' +
+            '<button type="button" class="fps-btn primary" data-act="report">会社への報告文をつくる</button>' +
+            '<button type="button" class="fps-btn" data-act="copy-minute">要点をコピーする</button>' +
             '<button type="button" class="fps-btn ghost" data-act="edit-minute">内容を直す</button>' +
-            '<p class="fps-sub" style="margin:0;font-size:13px">コピーした要点は、自分のLINEやメールに貼って送れます。</p></section>' +
+            '<p class="fps-sub" style="margin:0;font-size:13px">報告文は、日時・お客様・要点・次にやることを報告の形にならべたものです。コピーして、メールや社内チャットに貼れます。</p></section>' +
         '</aside></div></div>';
   }
 
@@ -625,10 +804,10 @@
   function render() {
     if (!mounted || !root) return;
     var body = st.view === 'customers' ? viewCustomers() : st.view === 'customer' ? viewCustomer() : st.view === 'minutes' ? viewMinutes() : st.view === 'minute' ? viewMinute() : viewHome();
-    var keepQ = document.activeElement && document.activeElement.id === 'fps-q';
+    var keepQ = document.activeElement && /^fps-m?q$/.test(document.activeElement.id) ? document.activeElement.id : '';
     root.innerHTML = header() + body + bottomNav() + '<input type="file" id="fps-file" accept="audio/*,video/mp4,.m4a,.mp3,.wav,.aac,.webm" hidden>';
     decorate(root);
-    if (keepQ) { var q = $('#fps-q', root); if (q) { q.focus(); try { q.setSelectionRange(q.value.length, q.value.length); } catch (_) {} } }
+    if (keepQ) { var q = $('#' + keepQ, root); if (q) { q.focus(); try { q.setSelectionRange(q.value.length, q.value.length); } catch (_) {} } }
   }
 
   /* ---------- 操作 ---------- */
@@ -785,18 +964,22 @@
     if (t.closest('#fps-menu-btn')) { menu.classList.toggle('open'); return; }
     if (menu && menu.classList.contains('open') && !t.closest('#fps-menu')) menu.classList.remove('open');
 
-    var el = t.closest('[data-go],[data-open-client],[data-open-minute],[data-act],[data-tab],[data-copy]');
+    var el = t.closest('[data-go],[data-open-client],[data-open-minute],[data-act],[data-tab],[data-copy],[data-contract]');
     if (!el) return;
     if (el.dataset.go) { e.preventDefault(); if (el.dataset.go !== 'customers') st.q = ''; return go(el.dataset.go); }
-    if (el.dataset.openClient) { e.preventDefault(); st.tab = 'minutes'; return go('customer', el.dataset.openClient); }
+    if (el.dataset.openClient) { e.preventDefault(); st.tab = 'minutes'; st.mq = ''; return go('customer', el.dataset.openClient); }
     if (el.hasAttribute('data-open-minute')) { return go('minute', el.dataset.openMinute || '_', el.dataset.mid); }
     if (el.dataset.tab) { st.tab = el.dataset.tab; return render(); }
     if (el.dataset.copy) { copyText(el.dataset.copy).then(function (ok) { toast(ok ? 'コピーしました' : 'コピーできませんでした'); }); return; }
+    if (el.dataset.contract) { var cc = findClient(st.cid); var kk = cc && (contractsCache[fsId(cc)] || []).filter(function (x) { return x.id === el.dataset.contract; })[0]; return kk ? contractForm(cc, kk) : null; }
     var c = (st.view === 'customer' || st.view === 'minute') && st.cid && st.cid !== '_' ? findClient(st.cid) : null;
     switch (el.dataset.act) {
       case 'zoom': return c && st.view === 'customer' ? startZoom(c) : pickClient('だれとZoomで面談しますか？', 'お客様を選ぶと、Zoomの用意をします。', startZoom);
       case 'upload': return c && st.view === 'customer' ? startUpload(c) : pickClient('だれとの面談の録音ですか？', 'お客様を選ぶと、録音のファイルを選べます。', startUpload);
       case 'new-client': return clientForm(null);
+      case 'new-contract': return c ? contractForm(c, null) : null;
+      case 'manual-minute': return c ? manualMinuteForm(c) : null;
+      case 'report': { var r3 = findMinute(c, st.mid); return r3 ? reportModal(r3, c || clientOfMinute(r3)) : null; }
       case 'edit-client': return c ? clientForm(c) : null;
       case 'toggle-transcript': st.showTranscript = !st.showTranscript; return render();
       case 'copy-minute': {
@@ -823,12 +1006,14 @@
     root.addEventListener('click', onClick);
     root.addEventListener('input', function (e) {
       if (e.target.id === 'fps-q') { st.q = e.target.value; render(); }
+      if (e.target.id === 'fps-mq') { st.mq = e.target.value; render(); }
     });
     root.addEventListener('change', function (e) { if (e.target.id === 'fps-file') onFile(e.target.files && e.target.files[0]); });
     window.addEventListener('hashchange', onHash);
     document.documentElement.classList.add('fps-on');
-    mounted = true;
+    mounted = true; mountedAt = Date.now();
     applyHash();
+    setTimeout(function () { if (mounted && !$('.fps-modal-bg')) render(); }, 9200);
     api.tenantFlag().then(function (f) { if (f && f.name && !st.office) { st.office = f.name; render(); } });
     refreshSoon();
     tick = setInterval(function () {
