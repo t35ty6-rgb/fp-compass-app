@@ -1260,6 +1260,12 @@
     document.documentElement.classList.add('fps-on');
     mounted = true; mountedAt = Date.now();
     dropSplash();
+    // 前の画面は、アドレスの ?view=…&customer=… を見てお客様カードを勝手に開く。新しい画面では使わないので外す
+    try {
+      var u = new URL(location.href), ch = false;
+      ['view', 'customer', 'tab'].forEach(function (k) { if (u.searchParams.has(k)) { u.searchParams.delete(k); ch = true; } });
+      if (ch) history.replaceState(history.state, '', u.pathname + (u.search || '') + u.hash);
+    } catch (_) {}
     applyHash();
     setTimeout(function () { if (mounted && !$('.fps-modal-bg')) render(); }, 9200);
     api.tenantFlag().then(function (f) { if (f && f.name && !st.office) { st.office = f.name; render(); } });
