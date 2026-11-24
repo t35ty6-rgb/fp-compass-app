@@ -1541,6 +1541,9 @@
         if (fx.identityConfirmed) cl.identityConfirmed = true;
         if (fx.lineDisplayName && !cl.lineDisplayName) cl.lineDisplayName = fx.lineDisplayName;
         if (Array.isArray(fx.mergedFrom)) cl.mergedFrom = fx.mergedFrom;
+        // 2026-11-24: キーボード (ツタワルキー) で つけた 区分 と、 LINE 友だち に つけた 名前 を 反映
+        if (fx.relation) cl.relation = fx.relation;
+        if (fx.identityConfirmed && fx.name && cl.name !== fx.name && cl.source === 'line_follow' && (!cl.name || cl.name === cl.lineDisplayName || cl.name === fx.lineDisplayName || cl.name === 'お客様')) cl.name = fx.name;
       });
     } catch (e) { console.warn('[fsSync] identity refresh:', e); }
 
@@ -1578,6 +1581,7 @@
         // ★ 2026-09-22: 「この人は誰ですか?」 名寄せ 用
         lineDisplayName: c.lineDisplayName || '',
         identityConfirmed: !!c.identityConfirmed,
+        relation: c.relation || '',
         mergedFrom: Array.isArray(c.mergedFrom) ? c.mergedFrom : [],
         lastContact: (c.lastContactAt?.toDate?.()?.toISOString?.() || c.confirmedAt?.toDate?.()?.toISOString?.() || c.createdAt?.toDate?.()?.toISOString?.() || new Date().toISOString()).slice(0,10),
         confirmedSlot: c.confirmedSlot || null,
