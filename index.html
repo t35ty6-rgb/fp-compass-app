@@ -11,7 +11,7 @@
 /* ★ 2026-09-16 自動更新チェック
    これが無いと iPhone のホーム画面アプリが古い index.html を握ったままになり、
    何を直しても画面が変わらない。version.txt はデプロイ時に自動生成される。 */
-window.FP_VER = "20261124O";
+window.FP_VER = "20261125A";
 /* ★ 2026-11-22 アプリ内モード (App Store 版)
    iPhone アプリの中では、 新規登録・料金・購入の案内を出さない (Apple の決まり)。
    ブラウザで開いたときは今までどおり。 */
@@ -81,14 +81,14 @@ if (window.FP_NATIVE) document.documentElement.classList.add('fp-native');
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20261124O">
-<link rel="stylesheet" href="styles-v2.css?v=20261124O">
-<link rel="stylesheet" href="styles-v3.css?v=20261124O">
-<link rel="stylesheet" href="styles-v8-workspace.css?v=20261124O">
-<link rel="stylesheet" href="styles-followups.css?v=20261124O">
-<link rel="stylesheet" href="styles-lifesync.css?v=20261124O">
-<link rel="stylesheet" href="styles-theme.css?v=20261124O">
-<link rel="stylesheet" href="simple-ui.css?v=20261124O">
+<link rel="stylesheet" href="styles.css?v=20261125A">
+<link rel="stylesheet" href="styles-v2.css?v=20261125A">
+<link rel="stylesheet" href="styles-v3.css?v=20261125A">
+<link rel="stylesheet" href="styles-v8-workspace.css?v=20261125A">
+<link rel="stylesheet" href="styles-followups.css?v=20261125A">
+<link rel="stylesheet" href="styles-lifesync.css?v=20261125A">
+<link rel="stylesheet" href="styles-theme.css?v=20261125A">
+<link rel="stylesheet" href="simple-ui.css?v=20261125A">
 <!-- ★ 2026-06-26 perf: lucide(350KB) と chart.js(201KB) を defer 化 -->
 <!--   どちらも DOMContentLoaded 後ハイドレートで OK (lucide: setInterval scan / chart: tryRender polling) -->
 <script defer src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
@@ -946,7 +946,7 @@ html.fp-native #fp-gate-card { margin: auto; }
         };
         const out = {
           _meta: {
-            サービス名: "FP Compass",
+            サービス名: "ハカドル",
             書き出し日時: new Date().toISOString(),
             テナントID: tenantId,
             説明: "解約後のデータ書き出し。 顧客ごとに 面談記録 / 議事録 / LINE履歴 / アンケート回答 を格納しています。",
@@ -973,7 +973,7 @@ html.fp-native #fp-gate-card { margin: auto; }
         const url = URL.createObjectURL(blob);
         const a3 = document.createElement("a");
         a3.href = url;
-        a3.download = `FPCompass全データ_${new Date().toISOString().slice(0,10)}.json`;
+        a3.download = `ハカドル全データ_${new Date().toISOString().slice(0,10)}.json`;
         document.body.appendChild(a3); a3.click(); document.body.removeChild(a3);
         setTimeout(() => URL.revokeObjectURL(url), 1000);
         msgEl.style.color = "#A7F3D0";
@@ -1398,7 +1398,7 @@ html.fp-native #fp-gate-card { margin: auto; }
     <span class="mh-bar"></span><span class="mh-bar"></span><span class="mh-bar"></span>
   </button>
   <div id="mobile-title-wrap">
-    <div class="m-eyebrow">FP COMPASS</div>
+    <div class="m-eyebrow">ハカドル</div>
     <div id="mobile-current-title">ホーム</div>
   </div>
   <button id="mobile-user-btn" aria-label="アカウント" type="button">
@@ -1451,7 +1451,7 @@ html.fp-native #fp-gate-card { margin: auto; }
         <span class="brand-logo-glow"></span>
       </span>
       <div class="brand-text">
-        <div class="brand-name">FP Compass <span class="brand-badge">Pro</span></div>
+        <div class="brand-name">ハカドル <span class="brand-badge">Pro</span></div>
         <div class="brand-sub">Skeleton Inc.</div>
       </div>
     </div>
@@ -1625,7 +1625,7 @@ html.fp-native #fp-gate-card { margin: auto; }
     <header class="topbar">
       <div class="topbar-left">
         <div class="breadcrumb">
-          <span class="crumb">FP Compass</span>
+          <span class="crumb">ハカドル</span>
           <i data-lucide="chevron-right"></i>
           <span class="crumb crumb-current" id="current-crumb">ホーム</span>
         </div>
@@ -2645,7 +2645,7 @@ window.fpReadyAfterAuth = function() {
       sessionStorage.removeItem('fp_new_signup');
       const steps = [
         {
-          icon: '✨', title: 'FP Compass へ ようこそ',
+          icon: '✨', title: 'ハカドル へ ようこそ',
           body: 'Zoom 面談を 録画 → AI が 文字起こし + 議事録 + LINE 文面を 自動生成。 月20件 商談 でも 月800円 (粗利95%) で 動きます。',
           cta: '次へ',
         },
@@ -2849,7 +2849,7 @@ window.fpReadyAfterAuth = function() {
 <script>
 (function(){
   // 最新の ver を 1 箇所に集約 (fpReadyAfterAuth 側と一致させる必要あり)
-    const FP_VERSION = "20261124O";
+    const FP_VERSION = "20261125A";
   try { window.FP_VERSION = FP_VERSION; } catch(_) {}
 
   // 2026-07-13 v11: Chrome拡張 (Zoom タブ音声 レコーダー) 検知
