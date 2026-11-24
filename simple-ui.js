@@ -132,12 +132,29 @@
     [c.id, fsId(c), c.lineFriendId, c._fsCustomerId].forEach(function (v) { if (v) { o[String(v)] = 1; o['fs-' + String(v)] = 1; } });
     return o;
   }
+  // だれの議事録かの見分け。まず ID で合わせる。名前で合わせるのは、ID が無く、同じ名前のお客様が1人だけのときに限る
+  // （同じ名前の人が2人いる・ID が別の人を指している、という議事録を、ちがうお客様に出さないため）
+  var ownerIdx = { src: null, n: -1, ids: {}, names: {} };
+  function owners() {
+    var list = clients();
+    if (ownerIdx.src === window.DUMMY_CLIENTS && ownerIdx.n === list.length) return ownerIdx;
+    var ids = {}, names = {};
+    list.forEach(function (c) {
+      Object.keys(idsOf(c)).forEach(function (k) { ids[k] = (ids[k] || 0) + 1; });
+      var nm = String(c.name || '').replace(/\s+/g, ''); if (nm) names[nm] = (names[nm] || 0) + 1;
+    });
+    ownerIdx = { src: window.DUMMY_CLIENTS, n: list.length, ids: ids, names: names };
+    return ownerIdx;
+  }
   function belongs(r, c, ids) {
     if (!r || r.deleted === true) return false;
     ids = ids || idsOf(c);
-    if (r.userId && ids[String(r.userId)]) return true;
-    if (r.customerId && ids[String(r.customerId)]) return true;
-    return !!(r.customerName && String(r.customerName).trim() === String(c.name).trim());
+    var rid = [r.userId, r.customerId].filter(Boolean).map(String);
+    for (var i = 0; i < rid.length; i++) { if (ids[rid[i]]) return true; }
+    var ow = owners();
+    for (var j = 0; j < rid.length; j++) { if (ow.ids[rid[j]]) return false; }   // その ID は別のお客様のもの
+    var rn = String(r.customerName || '').replace(/\s+/g, ''), cn = String(c.name || '').replace(/\s+/g, '');
+    return !!(rn && rn === cn && ow.names[cn] === 1);
   }
   function mTime(r) { return toDate(r.ts || r.createdAt || r.date || r.zoomStartTime); }
   function mKey(r) { return String(r.bookingTs || r._fsMeetingDocId || r.zoomMeetingId || r.ts || r.createdAt || ''); }
@@ -321,7 +338,11 @@
     var ids = idsOf(c);
     var fromLive = liveMinutes().filter(function (r) { return belongs(r, c, ids); });
     loading[id] = Promise.all([api.detail(c), api.fsMeetings(c)]).then(function (res) {
-      cache[id] = mergeMinutes([res[0].filter(function (r) { return belongs(r, c, ids) || !r.customerName; }), res[1], fromLive]);
+      cache[id] = mergeMinutes([res[0].filter(function (r) {
+        if (belongs(r, c, ids)) return true;
+        var hasId = !!(r.userId || r.customerId), nm = String(r.customerName || '').replace(/\s+/g, '');
+        return !hasId && (!nm || nm === String(c.name || '').replace(/\s+/g, ''));   // ID も名前も別人を指していないものだけ
+      }), res[1], fromLive]);
       return cache[id];
     }).catch(function () { cache[id] = mergeMinutes([fromLive]); return cache[id]; });
     return loading[id];
