@@ -605,11 +605,28 @@
         '</aside></div></div>';
   }
 
+  var NAVI = {
+    home: '<svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11l8-7 8 7v8a1 1 0 01-1 1h-4v-6h-6v6H5a1 1 0 01-1-1z"/></svg>',
+    people: '<svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 010 7M18 14.6c1.8.7 3 2.5 3.5 5.4"/></svg>',
+    doc: '<svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v13a1 1 0 01-1 1H6a1 1 0 01-1-1V4a1 1 0 011-1z"/><path d="M9 11h7M9 15h7"/></svg>'
+  };
+  // スマホ用：画面の下に出す、親指でとどくメニュー
+  function bottomNav() {
+    var cur = function (v) { return (st.view === v || (v === 'customers' && st.view === 'customer') || (v === 'minutes' && st.view === 'minute')) ? ' aria-current="page"' : ''; };
+    return '<nav class="fps-bnav" aria-label="メニュー">' +
+      '<button type="button" data-go="home"' + cur('home') + '>' + NAVI.home + '<span>ホーム</span></button>' +
+      '<button type="button" data-go="customers"' + cur('customers') + '>' + NAVI.people + '<span>お客様</span></button>' +
+      '<button type="button" class="fps-bnav-main" data-act="zoom"><i>' + ICON.video + '</i><span>Zoom面談</span></button>' +
+      '<button type="button" data-go="minutes"' + cur('minutes') + '>' + NAVI.doc + '<span>議事録</span></button>' +
+      '<button type="button" data-act="upload">' + ICON.mic + '<span>録音</span></button>' +
+      '</nav>';
+  }
+
   function render() {
     if (!mounted || !root) return;
     var body = st.view === 'customers' ? viewCustomers() : st.view === 'customer' ? viewCustomer() : st.view === 'minutes' ? viewMinutes() : st.view === 'minute' ? viewMinute() : viewHome();
     var keepQ = document.activeElement && document.activeElement.id === 'fps-q';
-    root.innerHTML = header() + body + '<input type="file" id="fps-file" accept="audio/*,video/mp4,.m4a,.mp3,.wav,.aac,.webm" hidden>';
+    root.innerHTML = header() + body + bottomNav() + '<input type="file" id="fps-file" accept="audio/*,video/mp4,.m4a,.mp3,.wav,.aac,.webm" hidden>';
     decorate(root);
     if (keepQ) { var q = $('#fps-q', root); if (q) { q.focus(); try { q.setSelectionRange(q.value.length, q.value.length); } catch (_) {} } }
   }

@@ -204,3 +204,66 @@ button.fps-stat { font: inherit; cursor: pointer; }
 .fps-input { box-sizing: border-box; max-width: 100%; }
 .fps-modal { box-sizing: border-box; }
 .fps-toast { background: var(--fps-surface) !important; color: var(--fps-ink) !important; border: 1.5px solid var(--fps-line); padding: 8px 18px 8px 12px !important; }
+
+/* ---------- スマホ用の最適化 ---------- */
+.fps-bnav { display: none; }
+@media (max-width: 760px) {
+  #fps-root { padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px)); -webkit-tap-highlight-color: transparent; overscroll-behavior-y: contain; }
+  /* 上は1段だけ。メニューは下に出す */
+  .fps-head { flex-wrap: nowrap; padding-top: max(4px, env(safe-area-inset-top, 0px)); padding-bottom: 4px; min-height: 52px; }
+  .fps-nav { display: none; }
+  .fps-logo { height: 44px; font-size: 17px; }
+  .fps-menu-btn { min-height: 40px; max-width: 46vw; }
+  .fps-menu button { padding: 15px 14px; font-size: 16px; }
+  .fps-bnav { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); position: fixed; left: 0; right: 0; bottom: 0; z-index: 6;
+    background: var(--fps-surface); border-top: 1px solid var(--fps-line); padding: 6px 6px calc(6px + env(safe-area-inset-bottom, 0px)); box-shadow: 0 -10px 30px -18px rgba(60,45,25,.35); }
+  .fps-bnav button { background: none; border: none; min-height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; color: var(--fps-sub); font: inherit; font-size: 11px; font-weight: 700; border-radius: 12px; }
+  .fps-bnav button[aria-current="page"] { color: var(--fps-red-text); background: var(--fps-red-soft); }
+  .fps-bnav button:active { background: var(--fps-soft); }
+  .fps-bnav-main { color: var(--fps-red-text) !important; }
+  .fps-bnav-main i { width: 52px; height: 52px; margin-top: -24px; border-radius: 50%; background: var(--fps-red); color: #fff; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 5px var(--fps-surface), 0 10px 18px -8px rgba(240,35,0,.8); }
+  .fps-bnav-main i svg { width: 24px; height: 24px; }
+  .fps-toast { bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
+  /* 文字と押しやすさ */
+  .fps-wrap { padding: 16px 14px 24px; gap: 16px; }
+  .fps-input { font-size: 16px; min-height: 48px; }
+  .fps-btn { min-height: 48px; }
+  .fps-btn.sm { min-height: 42px; }
+  .fps-tabs button { min-height: 46px; flex: 1; }
+  .fps-m.hello { width: 68px !important; }
+  /* ホーム：大きなボタンは下のメニューにあるので、ここは横に2つ */
+  .fps-wrap > div:first-child > .fps-btn { flex: 1 1 0; padding: 0 10px; font-size: 14px; white-space: nowrap; }
+  .fps-wrap > div:first-child > .fps-btn.with-m { padding-left: 50px; }
+  .fps-wrap > div:first-child > .fps-btn.with-m .fps-m.peek { width: 46px !important; }
+  .fps-wrap > div:first-child > .fps-btn:not(.with-m) svg { display: none; }
+  /* 一覧は1行ごとに大きく押せる */
+  .fps-table tr.click { padding: 14px 4px; border-radius: 10px; }
+  .fps-table tr.click:active { background: var(--fps-soft); }
+  .fps-panel[style*="padding:24px 26px"], .fps-panel[style*="padding:30px 32px"] { padding: 18px 16px !important; }
+  .fps-panel[style*="padding:10px 18px"] { padding: 4px 12px 8px !important; }
+  /* お客様のページ：顔と名前を横ならびにして、すぐ下にボタン */
+  .fps-card { display: block; }
+  .fps-aside { padding: 18px 16px; gap: 14px; }
+  .fps-person { display: grid; grid-template-columns: 76px minmax(0, 1fr); column-gap: 14px; align-items: center; text-align: left; justify-items: start; }
+  .fps-person .fps-avatar { width: 76px !important; height: 76px !important; font-size: 30px !important; grid-row: 1 / span 3; box-shadow: 0 0 0 4px var(--fps-page); }
+  .fps-kana { margin-top: 0; }
+  .fps-name { font-size: 22px; }
+  .fps-person .fps-btn { margin-top: 4px !important; }
+  .fps-aside .fps-block { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; border-top: 1px solid var(--fps-line); padding-top: 12px; }
+  .fps-aside .fps-block > b { display: none; }
+  .fps-aside .fps-block:has(.fps-tag) { display: block; }
+  .fps-aside .fps-block .fps-row { flex-direction: column; align-items: flex-start; gap: 0; background: var(--fps-soft); border-radius: 10px; padding: 8px 10px; font-size: 13px; }
+  .fps-aside .fps-btn { margin-top: 0 !important; }
+  .fps-kv > div { grid-template-columns: 88px minmax(0, 1fr); padding: 10px 12px; }
+  /* ポップアップは下から出す */
+  .fps-modal-bg { align-items: flex-end; padding: 0; }
+  .fps-modal { max-width: none; border-radius: 22px 22px 0 0; padding: 22px 18px calc(18px + env(safe-area-inset-bottom, 0px)); max-height: 88vh; }
+  .fps-modal.has-m { margin-top: 0; }
+  .fps-pick { max-height: 46vh; }
+  .fps-pick button { min-height: 54px; font-size: 16px; }
+  .fps-copybox { font-size: 14px; word-break: break-all; }
+  /* 議事録 */
+  .fps-doc .fps-title { font-size: 20px; }
+  .fps-sec p, .fps-sec ul { font-size: 15px; }
+  .fps-transcript { font-size: 14px; }
+}
