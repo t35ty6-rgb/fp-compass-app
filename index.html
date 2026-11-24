@@ -11,7 +11,7 @@
 /* ★ 2026-09-16 自動更新チェック
    これが無いと iPhone のホーム画面アプリが古い index.html を握ったままになり、
    何を直しても画面が変わらない。version.txt はデプロイ時に自動生成される。 */
-window.FP_VER = "20261125A";
+window.FP_VER = "20261125B";
 /* ★ 2026-11-22 アプリ内モード (App Store 版)
    iPhone アプリの中では、 新規登録・料金・購入の案内を出さない (Apple の決まり)。
    ブラウザで開いたときは今までどおり。 */
@@ -81,14 +81,14 @@ if (window.FP_NATIVE) document.documentElement.classList.add('fp-native');
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20261125A">
-<link rel="stylesheet" href="styles-v2.css?v=20261125A">
-<link rel="stylesheet" href="styles-v3.css?v=20261125A">
-<link rel="stylesheet" href="styles-v8-workspace.css?v=20261125A">
-<link rel="stylesheet" href="styles-followups.css?v=20261125A">
-<link rel="stylesheet" href="styles-lifesync.css?v=20261125A">
-<link rel="stylesheet" href="styles-theme.css?v=20261125A">
-<link rel="stylesheet" href="simple-ui.css?v=20261125A">
+<link rel="stylesheet" href="styles.css?v=20261125B">
+<link rel="stylesheet" href="styles-v2.css?v=20261125B">
+<link rel="stylesheet" href="styles-v3.css?v=20261125B">
+<link rel="stylesheet" href="styles-v8-workspace.css?v=20261125B">
+<link rel="stylesheet" href="styles-followups.css?v=20261125B">
+<link rel="stylesheet" href="styles-lifesync.css?v=20261125B">
+<link rel="stylesheet" href="styles-theme.css?v=20261125B">
+<link rel="stylesheet" href="simple-ui.css?v=20261125B">
 <!-- ★ 2026-06-26 perf: lucide(350KB) と chart.js(201KB) を defer 化 -->
 <!--   どちらも DOMContentLoaded 後ハイドレートで OK (lucide: setInterval scan / chart: tryRender polling) -->
 <script defer src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
@@ -2849,7 +2849,7 @@ window.fpReadyAfterAuth = function() {
 <script>
 (function(){
   // 最新の ver を 1 箇所に集約 (fpReadyAfterAuth 側と一致させる必要あり)
-    const FP_VERSION = "20261125A";
+    const FP_VERSION = "20261125B";
   try { window.FP_VERSION = FP_VERSION; } catch(_) {}
 
   // 2026-07-13 v11: Chrome拡張 (Zoom タブ音声 レコーダー) 検知

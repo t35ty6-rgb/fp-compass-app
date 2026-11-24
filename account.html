@@ -57,7 +57,7 @@ html.fp-native .row-val { min-width: 0; overflow-wrap: anywhere; }
     input, textarea, select { font-size: 16px !important; }
   }
   .lin:focus { outline:none; border-color:var(--indigo); box-shadow:0 0 0 4px rgba(240,35,0,0.12); }
-  .lbtn { width:100%; padding:13px; margin-top:18px; background:var(--ink); color:#fff;
+  .lbtn { width:100%; padding:13px; margin-top:18px; background:#F02300; color:#fff;
     border:none; border-radius:10px; font-family:'Manrope',sans-serif; font-weight:800;
     font-size:14px; cursor:pointer; }
   .lmsg { margin-top:14px; padding:12px 14px; border-radius:8px; font-size:13px; display:none; }
@@ -100,11 +100,11 @@ html.fp-native .row-val { min-width: 0; overflow-wrap: anywhere; }
   .btn { padding:10px 18px; border:1px solid var(--ink); background:#fff; color:var(--ink);
     border-radius:8px; font-family:'Manrope',sans-serif; font-weight:700; font-size:13px;
     cursor:pointer; }
-  .btn:hover { background:var(--ink); color:#fff; }
+  .btn:hover { background:#F02300; color:#fff; }
   .btn.danger { border-color:var(--err); color:var(--err); }
   .btn.danger:hover { background:var(--err); color:#fff; }
-  .btn.primary { background:var(--ink); color:#fff; }
-  .btn.primary:hover { background:#000; }
+  .btn.primary { background:#F02300; color:#fff; }
+  .btn.primary:hover { background:#F02300; }
   .btn-row { display:flex; gap:10px; flex-wrap:wrap; margin-top:14px; }
 
   .danger-zone { border-color:#FCA5A5; }
@@ -199,7 +199,7 @@ html.fp-native .row-val { min-width: 0; overflow-wrap: anywhere; }
           </ul>
           <div style="display:flex;gap:10px;flex-wrap:wrap;">
             <a href="/recorder-manual.html" target="_blank" style="display:inline-block;background:#10B981;color:#fff;padding:11px 20px;border-radius:6px;text-decoration:none;font-weight:800;font-size:13.5px;letter-spacing:0.02em;">使い方マニュアル を 見る</a>
-            <a href="/audio-setup.html#chrome-ext" target="_blank" style="display:inline-block;background:#0F1729;color:#fff;padding:11px 20px;border-radius:6px;text-decoration:none;font-weight:800;font-size:13.5px;letter-spacing:0.02em;">install 手順 を 見る</a>
+            <a href="/audio-setup.html#chrome-ext" target="_blank" style="display:inline-block;background:#F02300;color:#fff;padding:11px 20px;border-radius:6px;text-decoration:none;font-weight:800;font-size:13.5px;letter-spacing:0.02em;">install 手順 を 見る</a>
             <a href="/FP-Compass-拡張機能.zip" download style="display:inline-block;background:#fff;color:#10B981;padding:11px 20px;border-radius:6px;text-decoration:none;font-weight:800;font-size:13.5px;letter-spacing:0.02em;border:1.5px solid #10B981;">拡張ファイル (12KB)</a>
           </div>
           <div id="fp-audio-ext-status" style="margin-top:12px;font-size:12px;font-weight:700;padding:8px 12px;border-radius:6px;display:none;"></div>
@@ -213,7 +213,7 @@ html.fp-native .row-val { min-width: 0; overflow-wrap: anywhere; }
             <li>会社支給 Mac は <b>NG</b> (管理者権限 が 要る)</li>
             <li>Zoom は アプリ版 / Web版 どちらでも OK</li>
           </ul>
-          <a href="/audio-setup.html" target="_blank" style="display:inline-block;background:#0F172A;color:#fff;padding:11px 20px;border-radius:6px;text-decoration:none;font-weight:800;font-size:13.5px;letter-spacing:0.02em;">BlackHole 手順 を 見る</a>
+          <a href="/audio-setup.html" target="_blank" style="display:inline-block;background:#F02300;color:#fff;padding:11px 20px;border-radius:6px;text-decoration:none;font-weight:800;font-size:13.5px;letter-spacing:0.02em;">BlackHole 手順 を 見る</a>
         </div>
 
         <script>
@@ -338,14 +338,14 @@ html.fp-native .row-val { min-width: 0; overflow-wrap: anywhere; }
             <div style="font-size:11.5px;font-weight:700;color:var(--ink-2);margin-bottom:4px;">アンケート URL <span style="font-weight:400;color:var(--ink-3);">— LIFF エンドポイントURL or リッチメニュー直URL</span></div>
             <div style="display:flex;gap:6px;align-items:stretch;flex-wrap:wrap;">
               <code id="setup-survey-url" style="flex:1;min-width:200px;background:#fff;padding:9px 12px;border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#065F46;word-break:break-all;line-height:1.5;border:1px solid var(--line);">読込中…</code>
-              <button data-copy-target="setup-survey-url" class="btn primary" style="padding:8px 16px;font-size:11.5px;background:#0F1729;color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;">コピー</button>
+              <button data-copy-target="setup-survey-url" class="btn primary" style="padding:8px 16px;font-size:11.5px;background:#F02300;color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;">コピー</button>
             </div>
           </div>
           <div>
             <div style="font-size:11.5px;font-weight:700;color:var(--ink-2);margin-bottom:4px;">Webhook URL <span style="font-weight:400;color:var(--ink-3);">— LINE Developers Console の Messaging API設定 Webhook URL 欄</span></div>
             <div style="display:flex;gap:6px;align-items:stretch;flex-wrap:wrap;">
               <code id="setup-webhook-url" style="flex:1;min-width:200px;background:#fff;padding:9px 12px;border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#1E3A8A;word-break:break-all;line-height:1.5;border:1px solid var(--line);">https://asia-northeast1-skeleton-fp-compass-632026.cloudfunctions.net/lineWebhook</code>
-              <button data-copy-target="setup-webhook-url" class="btn primary" style="padding:8px 16px;font-size:11.5px;background:#0F1729;color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;">コピー</button>
+              <button data-copy-target="setup-webhook-url" class="btn primary" style="padding:8px 16px;font-size:11.5px;background:#F02300;color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;">コピー</button>
             </div>
           </div>
         </div>
@@ -645,7 +645,7 @@ html.fp-native .row-val { min-width: 0; overflow-wrap: anywhere; }
               : "前回の引き落としが 失敗しています。 <b>カード再設定 で 再加入</b> してください (滞納から 7 日でデータアクセス遮断)"}
           </div>
         </div>
-        <button id="resume-btn" style="background:#0E1116;color:#fff;border:none;padding:11px 24px;border-radius:6px;font-family:'Manrope',sans-serif;font-weight:800;font-size:13px;letter-spacing:0.06em;cursor:pointer;white-space:nowrap;">サブスク再加入</button>
+        <button id="resume-btn" style="background:#F02300;color:#fff;border:none;padding:11px 24px;border-radius:6px;font-family:'Manrope',sans-serif;font-weight:800;font-size:13px;letter-spacing:0.06em;cursor:pointer;white-space:nowrap;">サブスク再加入</button>
       `;
       const appWrap = document.querySelector(".app-wrap, .page-wrap, body");
       if (appWrap) {
@@ -842,7 +842,7 @@ html.fp-native .row-val { min-width: 0; overflow-wrap: anywhere; }
           <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:10.5px;letter-spacing:0.16em;color:var(--ink-3);text-transform:uppercase;margin-bottom:8px;">友だち追加 LINE URL</div>
           <div style="display:flex;gap:8px;align-items:stretch;flex-wrap:wrap;">
             <code id="line-friend-url" style="flex:1;min-width:200px;background:#F8FAFC;padding:10px 14px;border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:11.5px;word-break:break-all;line-height:1.5;">${friendUrl}</code>
-            <button data-copy-target="line-friend-url" class="btn" style="padding:9px 18px;font-size:12.5px;background:#0F172A;color:#fff;border:none;border-radius:6px;font-weight:700;cursor:pointer;">コピー</button>
+            <button data-copy-target="line-friend-url" class="btn" style="padding:9px 18px;font-size:12.5px;background:#F02300;color:#fff;border:none;border-radius:6px;font-weight:700;cursor:pointer;">コピー</button>
           </div>
         </div>` : ''}
         `;

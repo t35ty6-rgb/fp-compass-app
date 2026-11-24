@@ -11,24 +11,24 @@
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; background: #F6F6F4; color: #0A0A0A; font-family: 'Noto Sans JP', -apple-system, sans-serif; -webkit-font-smoothing: antialiased; }
 
-  .topbar { background: #0F1117; color: #E4E6EB; padding: 14px 32px; display: flex; align-items: center; gap: 14px; font-size: 12.5px; }
+  .topbar { background: #F02300; color: #FFFFFF; padding: 14px 32px; display: flex; align-items: center; gap: 14px; font-size: 12.5px; }
   .topbar .brand { font-family: 'Manrope', sans-serif; font-weight: 800; font-size: 14px; color: #FFF; }
-  .topbar .brand::before { content: ''; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #F02300; box-shadow: 0 0 0 4px rgba(240,35,0,0.18); margin-right: 10px; vertical-align: middle; transform: translateY(-1px); }
-  .topbar .crumb { color: #7A8194; }
-  .topbar .crumb b { color: #E4E6EB; font-weight: 600; }
-  .topbar .env { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px 4px 8px; background: rgba(240,35,0,0.14); color: #A5A5F8; border: 1px solid rgba(240,35,0,0.28); border-radius: 999px; font-family: 'Manrope', sans-serif; font-size: 10.5px; font-weight: 700; letter-spacing: 0.08em; }
+  .topbar .brand::before { content: ''; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #FFFFFF; box-shadow: 0 0 0 4px rgba(240,35,0,0.18); margin-right: 10px; vertical-align: middle; transform: translateY(-1px); }
+  .topbar .crumb { color: #FFE3DC; }
+  .topbar .crumb b { color: #FFFFFF; font-weight: 600; }
+  .topbar .env { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px 4px 8px; background: rgba(255,255,255,0.2); color: #FFFFFF; border: 1px solid rgba(240,35,0,0.28); border-radius: 999px; font-family: 'Manrope', sans-serif; font-size: 10.5px; font-weight: 700; letter-spacing: 0.08em; }
   .topbar .env::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: #F02300; box-shadow: 0 0 6px rgba(240,35,0,0.6); }
 
   .wrap { max-width: 900px; margin: 0 auto; padding: 48px 32px 96px; }
 
   .kicker { display: inline-flex; align-items: center; gap: 8px; font-family: 'Manrope', sans-serif; font-size: 11px; font-weight: 700; color: #0A0A0A; letter-spacing: 0.14em; margin-bottom: 14px; }
-  .kicker::before { content: ''; width: 20px; height: 1.5px; background: #0A0A0A; }
+  .kicker::before { content: ''; width: 20px; height: 1.5px; background: #F02300; }
   h1 { font-family: 'Manrope', 'Noto Sans JP', sans-serif; font-weight: 800; font-size: clamp(28px, 3.4vw, 40px); letter-spacing: -0.02em; line-height: 1.15; margin: 0 0 14px; }
   .sub { color: #3F3F46; font-size: 15px; line-height: 1.8; max-width: 68ch; margin: 0 0 24px; }
   .sub .hl { font-weight: 700; background: linear-gradient(transparent 55%, #FFF176 55%, #FFEB3B 88%, transparent 88%); padding: 0 2px; }
 
   .who-panel { display: grid; grid-template-columns: auto 1fr; gap: 14px 16px; padding: 18px 22px; background: #FFFFFF; border: 1px solid #ECECEA; border-radius: 14px; box-shadow: 0 1px 2px rgba(16,24,40,0.04); margin-bottom: 32px; }
-  .who-panel .wp-icon { width: 36px; height: 36px; border-radius: 10px; background: #0A0A0A; color: #FFF; display: inline-flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; grid-row: span 2; }
+  .who-panel .wp-icon { width: 36px; height: 36px; border-radius: 10px; background: #F02300; color: #FFFFFF; display: inline-flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; grid-row: span 2; }
   .who-panel .wp-title { font-family: 'Manrope', sans-serif; font-size: 13.5px; font-weight: 700; color: #0A0A0A; }
   .who-panel .wp-body { font-size: 13px; line-height: 1.75; color: #3F3F46; grid-column: 2; }
 
@@ -37,17 +37,17 @@
   }
   .overview-flow .of-step { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 8px; background: #F6F6F4; border-radius: 8px; text-align: center; position: relative; }
   .overview-flow .of-step:not(:last-child)::after { content: '→'; position: absolute; right: -10px; top: 50%; transform: translateY(-50%); color: #DCDCD8; font-weight: 700; z-index: 1; background: #FFF; padding: 0 2px; }
-  .overview-flow .of-num { width: 20px; height: 20px; border-radius: 50%; background: #0A0A0A; color: #FFF; display: inline-flex; align-items: center; justify-content: center; font-family: 'Manrope', sans-serif; font-size: 10px; font-weight: 800; }
+  .overview-flow .of-num { width: 20px; height: 20px; border-radius: 50%; background: #F02300; color: #FFFFFF; display: inline-flex; align-items: center; justify-content: center; font-family: 'Manrope', sans-serif; font-size: 10px; font-weight: 800; }
   .overview-flow .of-title { font-size: 11.5px; font-weight: 700; color: #0A0A0A; line-height: 1.4; }
   .overview-flow .of-sub { font-size: 10px; color: #6B6B6B; line-height: 1.4; }
 
   .toc { display: flex; gap: 10px; flex-wrap: wrap; margin: 20px 0 40px; padding: 16px 20px; background: #FFFFFF; border: 1px solid #ECECEA; border-radius: 12px; }
-  .toc a { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: #0A0A0A; color: #FFFFFF; text-decoration: none; border-radius: 6px; font-size: 12px; font-weight: 700; font-family: 'Manrope', sans-serif; letter-spacing: 0.02em; }
+  .toc a { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: #F02300; color: #FFFFFF; text-decoration: none; border-radius: 6px; font-size: 12px; font-weight: 700; font-family: 'Manrope', sans-serif; letter-spacing: 0.02em; }
   .toc a:hover { background: #3F3F46; }
   .toc-label { font-size: 12px; color: #6B6B6B; font-family: 'Manrope', sans-serif; letter-spacing: 0.14em; font-weight: 700; align-self: center; margin-right: 4px; }
 
   .chapter { margin: 64px 0 0; }
-  .chapter-head { padding: 16px 22px; background: #0A0A0A; color: #FFF; border-radius: 12px 12px 0 0; display: flex; align-items: center; gap: 14px; }
+  .chapter-head { padding: 16px 22px; background: #F02300; color: #FFFFFF; border-radius: 12px 12px 0 0; display: flex; align-items: center; gap: 14px; }
   .chapter-idx { font-family: 'JetBrains Mono', 'Manrope', monospace; font-size: 11px; font-weight: 700; color: #A5A5F8; letter-spacing: 0.06em; }
   .chapter-title { font-family: 'Manrope', 'Noto Sans JP', sans-serif; font-size: 20px; font-weight: 800; letter-spacing: -0.01em; color: #FFF; }
   .chapter-time { margin-left: auto; font-size: 11px; color: #A5A5F8; font-family: 'Manrope', sans-serif; letter-spacing: 0.08em; padding: 4px 10px; background: rgba(240,35,0,0.14); border: 1px solid rgba(240,35,0,0.28); border-radius: 999px; }
@@ -57,7 +57,7 @@
     background: #F8F8F6; border: 1px solid #ECECEA; border-radius: 10px; overflow: hidden; margin-bottom: 16px;
   }
   .step-head { display: flex; align-items: center; gap: 12px; padding: 12px 18px; background: #FFF; border-bottom: 1px solid #ECECEA; }
-  .step-num { width: 26px; height: 26px; border-radius: 50%; background: #0A0A0A; color: #FFF; display: inline-flex; align-items: center; justify-content: center; font-family: 'Manrope', sans-serif; font-size: 12px; font-weight: 800; flex-shrink: 0; }
+  .step-num { width: 26px; height: 26px; border-radius: 50%; background: #F02300; color: #FFFFFF; display: inline-flex; align-items: center; justify-content: center; font-family: 'Manrope', sans-serif; font-size: 12px; font-weight: 800; flex-shrink: 0; }
   .step-title { font-size: 14.5px; font-weight: 800; color: #0A0A0A; font-family: 'Manrope', 'Noto Sans JP', sans-serif; }
   .step-body { padding: 14px 18px; font-size: 13px; line-height: 1.85; color: #1A1A1A; }
   .step-body p { margin: 0 0 8px; }
@@ -65,7 +65,7 @@
   .step-body code { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; background: #F0F0EE; padding: 2px 6px; border-radius: 4px; color: #0A0A0A; }
   .step-body ul, .step-body ol { margin: 6px 0; padding-left: 22px; }
   .step-body li { margin-bottom: 4px; }
-  .step-body a.btn-link { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; background: #0A0A0A; color: #FFF; text-decoration: none; border-radius: 6px; font-size: 12.5px; font-weight: 700; margin-top: 6px; }
+  .step-body a.btn-link { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; background: #F02300; color: #FFFFFF; text-decoration: none; border-radius: 6px; font-size: 12.5px; font-weight: 700; margin-top: 6px; }
 
   .shot-frame { margin: 12px 0; background: #F0F0EE; border: 1px solid #DCDCD8; border-radius: 10px; padding: 8px; }
   .shot-frame img { display: block; width: 100%; height: auto; border-radius: 6px; box-shadow: 0 2px 6px rgba(16,24,40,0.08); }

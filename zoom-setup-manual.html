@@ -75,13 +75,13 @@
   .sn-foot a { font-family: 'Manrope', sans-serif; font-size: 11.5px; color: var(--dim); text-decoration: none; padding: 4px 6px; font-weight: 700; transition: color .12s; }
   .sn-foot a:hover { color: var(--primary-dark); }
 
-  .sn-toggle { display: none; position: fixed; top: 12px; left: 12px; z-index: 50; background: var(--ink); color: #fff; border: none; width: 42px; height: 42px; border-radius: 10px; font-size: 20px; cursor: pointer; box-shadow: 0 4px 12px rgba(11,18,32,0.24); }
+  .sn-toggle { display: none; position: fixed; top: 12px; left: 12px; z-index: 50; background: #F02300; color: #fff; border: none; width: 42px; height: 42px; border-radius: 10px; font-size: 20px; cursor: pointer; box-shadow: 0 4px 12px rgba(11,18,32,0.24); }
   .sn-scrim { display: none; position: fixed; inset: 0; background: rgba(15,23,41,0.42); z-index: 40; }
 
   /* Content column */
   .content { min-width: 0; }
 
-  .head { background: var(--ink); color: #FFFFFF; padding: 44px 38px 34px; position: relative; overflow: hidden; }
+  .head { background: #F02300; color: #FFFFFF; padding: 44px 38px 34px; position: relative; overflow: hidden; }
   .head::after { content: ''; position: absolute; top: -40px; right: -30px; width: 320px; height: 320px; background: radial-gradient(circle at 60% 40%, rgba(0,132,74,0.32), transparent 65%); pointer-events: none; }
   .head-wrap { max-width: 780px; margin: 0 auto; position: relative; }
   .kicker { font-family: 'Manrope', 'Noto Sans JP', sans-serif; font-size: 11.5px; letter-spacing: 0.08em; font-weight: 700; color: rgba(255,255,255,0.78); margin-bottom: 12px; }
@@ -102,7 +102,7 @@
 
   .step { background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 22px 24px; margin-bottom: 12px; box-shadow: 0 1px 2px rgba(11,18,32,0.03); }
   .step-head { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 12px; }
-  .step-num { flex-shrink: 0; background: var(--ink); color: #FFFFFF; width: 30px; height: 30px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; font-weight: 900; font-size: 13px; font-family: 'Manrope', sans-serif; margin-top: 2px; }
+  .step-num { flex-shrink: 0; background: #F02300; color: #FFFFFF; width: 30px; height: 30px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; font-weight: 900; font-size: 13px; font-family: 'Manrope', sans-serif; margin-top: 2px; }
   .step-title { font-family: 'Manrope', 'Noto Sans JP', sans-serif; font-size: 17px; font-weight: 900; color: var(--ink); letter-spacing: -0.01em; line-height: 1.4; margin: 0; }
   .step-body { padding-left: 44px; }
   .step-body p { margin: 0 0 10px; }
@@ -113,17 +113,17 @@
 
   .cta { display: inline-block; background: var(--primary); color: #FFFFFF; padding: 12px 24px; border-radius: 10px; text-decoration: none; font-weight: 800; font-size: 14px; letter-spacing: 0.02em; margin: 4px 8px 4px 0; transition: background .15s; border: none; cursor: pointer; font-family: inherit; }
   .cta:hover { background: #06703F; }
-  .cta.dark { background: var(--ink); }
-  .cta.dark:hover { background: #000000; }
+  .cta.dark { background: #F02300; }
+  .cta.dark:hover { background: #F02300; }
 
   /* Copy-paste blocks */
-  .copy-block { background: #0F1729; color: #E5E7EB; border-radius: 10px; padding: 14px 18px; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 13px; margin: 10px 0; word-break: break-all; overflow-wrap: anywhere; position: relative; line-height: 1.7; }
+  .copy-block { background: #F02300; color: #E5E7EB; border-radius: 10px; padding: 14px 18px; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 13px; margin: 10px 0; word-break: break-all; overflow-wrap: anywhere; position: relative; line-height: 1.7; }
   .copy-block .copy-btn { position: absolute; top: 8px; right: 8px; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); color: #E5E7EB; font-family: 'Manrope', sans-serif; font-size: 10px; font-weight: 800; letter-spacing: 0.08em; padding: 5px 10px; border-radius: 5px; cursor: pointer; text-transform: uppercase; transition: background .15s; }
   .copy-block .copy-btn:hover { background: rgba(255,255,255,0.22); }
   .copy-block .copy-btn.copied { background: var(--primary); border-color: var(--primary); color: #fff; }
   .copy-list { list-style: none; padding: 0; margin: 8px 0; }
   .copy-list li { background: var(--surface-2); border: 1px solid var(--rule); border-radius: 8px; padding: 10px 14px; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; color: var(--ink); font-weight: 600; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; gap: 12px; word-break: break-all; }
-  .copy-list li .copy-btn-inline { flex-shrink: 0; background: var(--ink); color: #fff; font-family: 'Manrope', sans-serif; font-size: 10px; font-weight: 800; letter-spacing: 0.08em; padding: 4px 10px; border-radius: 4px; border: none; cursor: pointer; text-transform: uppercase; }
+  .copy-list li .copy-btn-inline { flex-shrink: 0; background: #F02300; color: #fff; font-family: 'Manrope', sans-serif; font-size: 10px; font-weight: 800; letter-spacing: 0.08em; padding: 4px 10px; border-radius: 4px; border: none; cursor: pointer; text-transform: uppercase; }
   .copy-list li .copy-btn-inline.copied { background: var(--primary); }
   .copy-list li .cb-label { color: var(--dim); font-size: 11px; font-weight: 700; letter-spacing: 0.02em; font-family: 'Noto Sans JP', sans-serif; margin-bottom: 4px; display: block; }
   .copy-list li .cb-value { flex: 1; }
