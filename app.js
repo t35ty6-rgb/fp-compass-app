@@ -7042,6 +7042,8 @@
               <span class="status-pill ${c.status}">${statusLabel(c.status)}</span>
               ${c.lineFriendId
                 ? '<span class="cd-line-pill"><i data-lucide="message-circle"></i>LINE連携</span>'
+                : c.viaKeyboard
+                ? '<button type="button" id="cd-line-link-btn" style="display:inline-flex;align-items:center;gap:5px;background:#DCFCE7;color:#166534;border:1px solid #BBF7D0;padding:4px 11px;border-radius:999px;font-size:11.5px;font-weight:800;letter-spacing:0.04em;cursor:pointer;font-family:inherit;line-height:1.5;" title="キーボード (ツタワルキー) から 登録 した お客様 です。 やりとり は 個人 の LINE で 行います。 公式LINE と つなぐ 場合 は ここ を 押します">個人LINEでやりとり</button>'
                 : '<button type="button" id="cd-line-link-btn" style="display:inline-flex;align-items:center;gap:5px;background:#FEF3C7;color:#92400E;border:1px solid #FDE68A;padding:4px 11px;border-radius:999px;font-size:11.5px;font-weight:800;letter-spacing:0.04em;cursor:pointer;font-family:inherit;line-height:1.5;" title="押すと LINE の 友だち一覧 から この お客様 を 選べます">⚠ LINE 未連携 — 紐付ける</button>'}
               ${(Array.isArray(c.mergedFrom) && c.mergedFrom.length > 0)
                 ? '<button type="button" id="cd-unmerge-btn" style="display:inline-flex;align-items:center;gap:5px;background:#fff;color:#B45309;border:1px solid #FDBA74;padding:4px 11px;border-radius:999px;font-size:11.5px;font-weight:800;letter-spacing:0.04em;cursor:pointer;font-family:inherit;line-height:1.5;" title="まちがえて まとめた 場合 は ここ から 元 に 戻せます">↩ まとめを元に戻す</button>'
