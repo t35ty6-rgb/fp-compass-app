@@ -438,6 +438,95 @@ html.fps-on #fps-switch { display: none; }
 :is(#fps-root, #fps-modal-root, #fps-toast) .fps-life.major::after { content: "大きな節目"; margin-left: auto; font-size: 11px; font-weight: 800; color: var(--fps-red-text); background: #FDE4DD; border-radius: 999px; padding: 3px 10px; white-space: nowrap; }
 @media (max-width: 760px) { :is(#fps-root, #fps-modal-root, #fps-toast) .fps-banner .fps-btn { flex: 1 1 100%; } :is(#fps-root, #fps-modal-root, #fps-toast) .fps-banner { flex-wrap: wrap; } :is(#fps-root, #fps-modal-root, #fps-toast) .fps-banner .fps-m { width: 54px !important; } }
 
+/* 第3弾：ロゴ・戻る・短い一覧・大事なところ・家族 */:is(#fps-root, #fps-modal-root, #fps-toast) .fps-m.is-top { display: block; margin: 0 auto 10px; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-hub-card.is-hot { background: var(--fps-red) !important; color: #fff !important; border-color: var(--fps-red); box-shadow: 0 12px 22px -14px rgba(240,35,0,.9); }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-hub-card.is-hot::before { --tint: rgba(255,255,255,.2); }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-hub-card.is-hot .fps-hub-t b { font-size: 18px; color: #fff !important; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-hub-card.is-hot .fps-hub-t small { color: #fff !important; opacity: .95; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-hub-card.is-hot .fps-hub-go { background: #fff; color: var(--fps-red-text); opacity: 1; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-hub-card.is-hot:active { background: #D61F00 !important; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-logo { background: #FFFDF8; border-radius: 0 0 16px 16px; padding: 6px 14px 8px; height: auto; align-self: flex-start; box-shadow: 0 6px 14px -8px rgba(90,30,0,.5); }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-logo img { display: block; height: 34px; width: auto; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-back { display: inline-flex; align-items: center; gap: 4px; min-height: 40px; padding: 0 14px 0 8px; border: none; border-radius: 999px; background: rgba(255,255,255,.18); color: #fff; font-size: 14px; font-weight: 800; cursor: pointer; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-back span { font-size: 22px; line-height: 1; margin-top: -3px; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-back:hover, :is(#fps-root, #fps-modal-root, #fps-toast) .fps-back:active { background: rgba(255,255,255,.3); color: #fff; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-who-sm { display: none; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-x { position: absolute; right: 10px; top: 10px; width: 40px; height: 40px; border-radius: 50%; border: none; background: var(--fps-soft); color: var(--fps-sub); font-size: 22px; line-height: 1; cursor: pointer; z-index: 2; padding: 0; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-x:hover { background: var(--fps-line); color: var(--fps-ink); }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-mlist { display: flex; flex-direction: column; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-mrow { display: flex; align-items: center; gap: 14px; width: 100%; min-width: 0; text-align: left; background: none; border: none; border-bottom: 1px solid var(--fps-line); padding: 12px 6px; color: var(--fps-ink); cursor: pointer; border-radius: 0; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-mrow:last-child { border-bottom: none; }
+:is(#fps-root, #fps-modal-root, #fps-toast) button.fps-mrow:hover, :is(#fps-root, #fps-modal-root, #fps-toast) button.fps-mrow:active { background: var(--fps-soft); border-radius: 10px; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-mrow.is-wait { cursor: default; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-mrow-d { flex: none; width: 58px; display: flex; flex-direction: column; line-height: 1.3; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-mrow-d b { font-size: 18px; font-weight: 700; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-mrow-d small { font-size: 11px; color: var(--fps-sub); }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-mrow-b { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-mrow-b small { font-size: 12px; color: var(--fps-sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-mrow-b b { font-size: 15px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-mrow-go { flex: none; width: 28px; height: 28px; border-radius: 50%; background: var(--fps-soft); color: var(--fps-red-text); display: flex; align-items: center; justify-content: center; font-weight: 800; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-tl-gist { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-tl-title { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-tl-kc span { max-width: 12em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-keys { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-key { --c: #1D4A42; --bg: #AAD7CD; --soft: #EEF8F5; border-radius: 18px; overflow: hidden; background: var(--soft); border: 2px solid var(--bg); min-width: 0; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-key.k-next { --c: #fff; --bg: #F02300; --soft: #FFF4F0; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-key.k-worry { --c: #5E3F00; --bg: #F3CE74; --soft: #FFF9EA; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-key h3 { margin: 0; display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--bg); color: var(--c); font-size: 17px; font-weight: 800; line-height: 1.35; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-key h3 > span:nth-child(2) { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-key h3 small { font-size: 11px; font-weight: 700; letter-spacing: .1em; opacity: .9; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-key h3 em { font-style: normal; font-size: 22px; font-weight: 700; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-key .fps-sec-ic { background: rgba(255,255,255,.9); color: #2B2622; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-key.k-next .fps-sec-ic { color: #C41D00; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-key .fps-sec-body { padding: 8px 16px 12px; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-key .fps-item { font-size: 16px; font-weight: 600; line-height: 1.7; padding: 10px 0; border-top: 1px solid rgba(60,45,25,.1); }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-key .fps-item:first-child { border-top: none; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-key .fps-item > i { width: 24px; height: 24px; margin: 2px 0 0; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-style: normal; font-size: 13px; font-weight: 700; background: #AAD7CD; color: #1D4A42; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-key.k-next .fps-item > i { background: #F02300; color: #fff; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-key.k-worry .fps-item > i { background: #F3CE74; width: 10px; height: 10px; margin: 9px 7px 0; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-key .fps-item.kv > i { display: none; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-key .fps-item.kv .k { color: #2B2622; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-more > summary { list-style: none; cursor: pointer; margin: 0 16px 12px; padding: 8px 12px; border-radius: 10px; background: rgba(255,255,255,.8); font-size: 13px; font-weight: 800; color: var(--fps-red-text); text-align: center; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-more > summary::-webkit-details-marker { display: none; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-fold > summary::-webkit-details-marker { display: none; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-more[open] > summary { display: none; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-folds { display: flex; flex-direction: column; gap: 8px; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-fold { --c: var(--fps-sub); --bg: var(--fps-soft); border: 1px solid var(--fps-line); border-radius: 14px; background: var(--fps-surface); }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-fold > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 12px; padding: 12px 14px; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-fold-t { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-fold-t b { font-size: 15px; font-weight: 800; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-fold-t small { font-size: 12px; color: var(--fps-sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-fold > summary em { font-style: normal; font-size: 12px; font-weight: 700; color: var(--fps-sub); background: var(--fps-soft); border-radius: 999px; padding: 2px 10px; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-fold-go { font-size: 20px; color: var(--fps-sub); transition: transform .15s; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-fold[open] .fps-fold-go { transform: rotate(90deg); }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-fold[open] > summary { border-bottom: 1px dashed var(--fps-line); }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-fold[open] .fps-fold-t small { display: none; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-fold > .fps-sec-body { padding: 10px 16px 14px; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-sub-h { margin: 20px 0 10px; font-size: 14px; font-weight: 800; color: var(--fps-red-text); letter-spacing: .08em; display: flex; align-items: center; gap: 10px; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-sub-h::after { content: ""; flex: 1; height: 1px; background: var(--fps-line); }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-fam { display: grid; grid-template-columns: repeat(auto-fill, minmax(138px, 1fr)); gap: 10px; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-fam-c { display: flex; flex-direction: column; gap: 2px; align-items: flex-start; text-align: left; background: var(--fps-surface); border: 1px solid var(--fps-line); border-top: 5px solid #E6DCC8; border-radius: 14px; padding: 12px 14px; min-width: 0; color: var(--fps-ink); }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-fam-c.me { border-top-color: var(--fps-red); background: #FFF6F3; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-fam-c.child { border-top-color: var(--fps-mint); background: #F3FAF8; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-fam-r { font-size: 11px; font-weight: 800; color: var(--fps-sub); background: var(--fps-soft); border-radius: 999px; padding: 2px 10px; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-fam-c b { font-size: 16px; font-weight: 800; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-fam-a { font-size: 13px; font-weight: 700; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-fam-a em { font-style: normal; font-size: 26px; font-weight: 700; margin-right: 2px; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-fam-c small { font-size: 12px; color: var(--fps-sub); }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-fam-c.add { align-items: center; justify-content: center; border: 1.5px dashed var(--fps-line); background: none; cursor: pointer; min-height: 96px; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-fam-c.add span { font-size: 24px; color: var(--fps-red-text); }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-life-who { font-weight: 800; color: var(--fps-mint-text); background: #E4F2EE; border-radius: 6px; padding: 1px 8px; }
+@media (max-width: 760px) {
+  :is(#fps-root, #fps-modal-root, #fps-toast) .fps-logo { padding: 4px 10px 6px; border-radius: 0 0 14px 14px; }
+  :is(#fps-root, #fps-modal-root, #fps-toast) .fps-logo img { height: 30px; }
+  :is(#fps-root, #fps-modal-root, #fps-toast) .fps-head { gap: 0 8px; padding-top: env(safe-area-inset-top, 0px); align-items: center; }
+  :is(#fps-root, #fps-modal-root, #fps-toast) .fps-back { padding: 0 12px 0 6px; min-height: 38px; font-size: 13px; }
+  :is(#fps-root, #fps-modal-root, #fps-toast) .fps-who { display: none; }
+  :is(#fps-root, #fps-modal-root, #fps-toast) .fps-who-sm { display: inline; }
+  :is(#fps-root, #fps-modal-root, #fps-toast) .fps-fam { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  :is(#fps-root, #fps-modal-root, #fps-toast) .fps-key h3 { font-size: 16px; }
+}
+
 /* ---------- 古い画面の見た目が入りこまないようにする ---------- */
 html body #fps-root, html body #fps-root *, html body #fps-modal-root, html body #fps-modal-root *, html body #fps-toast, html body #fps-toast *, html body #fps-switch {
   font-family: "Noto Sans JP", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif !important; text-transform: none; }
@@ -455,3 +544,6 @@ html body #fps-modal-root { z-index: 10650 !important; }
 html body #fps-toast { z-index: 10660 !important; }
 html.fps-on body .sidebar, html.fps-on body #mobile-topbar, html.fps-on body #mobile-bottomnav, html.fps-on body .sidebar-backdrop, html.fps-on body .mobile-nav-backdrop { display: none !important; }
 #fps-modal-root .fps-modal:focus { outline: none; }
+
+html body #fps-root { overflow-x: hidden; }
+:is(#fps-root, #fps-modal-root) .fps-eyebrow { line-height: 1.6; }
