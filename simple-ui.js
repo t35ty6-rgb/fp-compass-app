@@ -187,7 +187,15 @@
     var t = asArray(r.tasks).map(function (x) { return typeof x === 'string' ? x : (x.task || x.title || ''); }).filter(Boolean);
     if (!t.length) {
       var live = window.LineAppLiveData || {};
-      t = (live.ai_tasks || []).filter(function (x) { return (x.bookingTs || '') === (r.bookingTs || '_'); })
+      var rw = String(r.userId || ''), rn = String(r.customerName || '').replace(/\s+/g, '');
+      t = (live.ai_tasks || []).filter(function (x) {
+        if ((x.bookingTs || '') !== (r.bookingTs || '_')) return false;
+        // 同じ時刻でも、別のお客様の宿題はまぜない
+        if (x.userId && rw && String(x.userId) !== rw) return false;
+        var xn = String(x.customerName || '').replace(/\s+/g, '');
+        if (xn && rn && xn !== rn) return false;
+        return true;
+      })
         .map(function (x) { return x.task || x.title || ''; }).filter(Boolean);
     }
     return t;
@@ -283,7 +291,11 @@
         var ref = await fs.addDoc(fs.collection(fp().db, 'tenants', tid, 'customers'), data);
         return ref.id;
       }
-      await fs.setDoc(fs.doc(fp().db, 'tenants', tid, 'customers', id), data, { merge: true });
+      // 台帳に無いIDへ書くと、中身のない別のお客様ができてしまうので、先にあるか確かめる
+      var ref0 = fs.doc(fp().db, 'tenants', tid, 'customers', id);
+      var cur = await fs.getDoc(ref0);
+      if (!cur.exists()) throw new Error('このお客様は台帳にまだ登録されていないため、保存できません');
+      await fs.setDoc(ref0, data, { merge: true });
       return id;
     },
     getCustomer: async function (id) {
@@ -527,7 +539,7 @@
 
   function minuteRow(r, c, withName) {
     var d = mTime(r);
-    return '<button type="button" class="fps-mrow" data-open-minute="' + esc(c ? fsId(c) : '') + '" data-mid="' + esc(mKey(r)) + '">' +
+    return '<button type="button" class="fps-mrow" data-open-minute="' + esc(c ? fsId(c) : '') + '" data-mid="' + esc(mKey(r) + (c ? '' : '~~' + whoOf(r))) + '">' +
       '<span class="fps-mrow-d num">' + (d ? '<b>' + (d.getMonth() + 1) + '/' + d.getDate() + '</b><small>' + WD[d.getDay()] + ' ' + fmtTime(d) + '</small>' : '<b>—</b>') + '</span>' +
       '<span class="fps-mrow-b">' + (withName ? '<small>' + esc(c ? c.name : (r.customerName || '')) + ' 様 ・ ' + esc(mKind(r)) + '</small>' : '<small>' + esc(mKind(r)) + '</small>') +
         '<b>' + esc(mTitle(r)) + '</b></span>' +
@@ -916,11 +928,19 @@
       '</section><p class="fps-sub" style="font-size:13px;margin:0">新しいものから並んでいます。古い議事録は、お客様のページから見られます。</p></div>';
   }
 
+  // 議事録を1件さがす。同じ時刻の議事録が別のお客様にもあるので、かならず「だれの」まで合わせる
+  function whoOf(r) { return String(r.customerName || r.userId || '').replace(/\s+/g, ''); }
   function findMinute(c, mid) {
-    var list = c ? minutesOf(c) : liveMinutes();
-    for (var i = 0; i < list.length; i++) { if (mKey(list[i]) === mid) return list[i]; }
+    var parts = String(mid || '').split('~~'), key = parts[0], who = parts.length > 1 ? parts[1] : null, i;
+    if (c) {
+      var list = minutesOf(c);
+      for (i = 0; i < list.length; i++) { if (mKey(list[i]) === key) return list[i]; }
+      var ids = idsOf(c), live = liveMinutes();
+      for (i = 0; i < live.length; i++) { if (mKey(live[i]) === key && belongs(live[i], c, ids)) return live[i]; }
+      return null;
+    }
     var all = liveMinutes();
-    for (var j = 0; j < all.length; j++) { if (mKey(all[j]) === mid) return all[j]; }
+    for (i = 0; i < all.length; i++) { if (mKey(all[i]) === key && (who === null || whoOf(all[i]) === who) && !clientOfMinute(all[i])) return all[i]; }
     return null;
   }
   function viewMinute() {
