@@ -163,7 +163,7 @@
   function mKey(r) { return String(r.bookingTs || r._fsMeetingDocId || r.zoomMeetingId || r.ts || r.createdAt || ''); }
   function mTitle(r) {
     var t = String(r.title || r.zoomTopic || '').trim();
-    if (t && !/^(zoom|quick|instant)/i.test(t) && t.length < 60) return t;
+    if (t && !/^(zoom|quick|instant)/i.test(t) && !/即時相談|FP\s?Compass|ハカドル|面談 記録 \(手入力\)/.test(t) && t.length < 60) return t;
     var kc = asArray(r.key_concerns);
     if (kc.length) return String(kc[0]).replace(/^[・\-\s]+/, '').slice(0, 40);
         return '面談の記録';
@@ -240,6 +240,9 @@
   function pendingList() {
     var out = [];
     (Array.isArray(window.FP_ZOOM_PENDING) ? window.FP_ZOOM_PENDING : []).forEach(function (p) {
+      // 何時間も前の「作成中」は、もう出来上がらない面談（録画なしなど）。いつまでも作成中と出さない
+      var at = toDate(p.startTime || p.updatedAt);
+      if (!at || Date.now() - at.getTime() > 6 * 3600 * 1000) return;
       out.push({ name: p.name || '', customerId: p.customerId || '', at: p.startTime || p.updatedAt, kind: 'Zoom' });
     });
     try {
