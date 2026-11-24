@@ -11,7 +11,7 @@
 /* ★ 2026-09-16 自動更新チェック
    これが無いと iPhone のホーム画面アプリが古い index.html を握ったままになり、
    何を直しても画面が変わらない。version.txt はデプロイ時に自動生成される。 */
-window.FP_VER = "20261124H";
+window.FP_VER = "20261124I";
 /* ★ 2026-11-22 アプリ内モード (App Store 版)
    iPhone アプリの中では、 新規登録・料金・購入の案内を出さない (Apple の決まり)。
    ブラウザで開いたときは今までどおり。 */
@@ -52,7 +52,7 @@ if (window.FP_NATIVE) document.documentElement.classList.add('fp-native');
 })();
 </script>
 <meta http-equiv="Expires" content="0">
-<title>FP Compass — ファイナンシャルプランナー向け 顧客管理 SaaS</title>
+<title>ハカドル — FPのための面談議事録とお客様の記録</title>
 <meta name="description" content="FP事業者向け 顧客管理 SaaS。 議事録 自動化 / LINE 統合 / 家族 タイムライン。 月¥19,800。 Skeleton Inc.">
 <link rel="icon" type="image/svg+xml" href="./favicon.svg">
 <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
@@ -64,31 +64,31 @@ if (window.FP_NATIVE) document.documentElement.classList.add('fp-native');
 <meta name="theme-color" content="#5B5BF0">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="FP Compass">
+<meta name="apple-mobile-web-app-title" content="ハカドル">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="application-name" content="FP Compass">
+<meta name="application-name" content="ハカドル">
 <meta name="msapplication-TileColor" content="#5B5BF0">
 <meta name="msapplication-TileImage" content="/icons/icon-192.png">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://app.skeleton-inc.jp/">
-<meta property="og:title" content="FP Compass — FP事業者特化型 顧客管理 SaaS">
+<meta property="og:title" content="ハカドル — FPのための面談議事録とお客様の記録">
 <meta property="og:description" content="議事録 自動化 / LINE 統合 / 家族 タイムライン。 月¥19,800。 Skeleton Inc.">
-<meta property="og:site_name" content="FP Compass">
+<meta property="og:site_name" content="ハカドル">
 <meta property="og:locale" content="ja_JP">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="FP Compass — FP事業者特化型 顧客管理 SaaS">
+<meta name="twitter:title" content="ハカドル — FPのための面談議事録とお客様の記録">
 <meta name="twitter:description" content="議事録自動化・LINE統合・AI推奨提案で月¥19,800。">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20261124H">
-<link rel="stylesheet" href="styles-v2.css?v=20261124H">
-<link rel="stylesheet" href="styles-v3.css?v=20261124H">
-<link rel="stylesheet" href="styles-v8-workspace.css?v=20261124H">
-<link rel="stylesheet" href="styles-followups.css?v=20261124H">
-<link rel="stylesheet" href="styles-lifesync.css?v=20261124H">
-<link rel="stylesheet" href="styles-theme.css?v=20261124H">
-<link rel="stylesheet" href="simple-ui.css?v=20261124H">
+<link rel="stylesheet" href="styles.css?v=20261124I">
+<link rel="stylesheet" href="styles-v2.css?v=20261124I">
+<link rel="stylesheet" href="styles-v3.css?v=20261124I">
+<link rel="stylesheet" href="styles-v8-workspace.css?v=20261124I">
+<link rel="stylesheet" href="styles-followups.css?v=20261124I">
+<link rel="stylesheet" href="styles-lifesync.css?v=20261124I">
+<link rel="stylesheet" href="styles-theme.css?v=20261124I">
+<link rel="stylesheet" href="simple-ui.css?v=20261124I">
 <!-- ★ 2026-06-26 perf: lucide(350KB) と chart.js(201KB) を defer 化 -->
 <!--   どちらも DOMContentLoaded 後ハイドレートで OK (lucide: setInterval scan / chart: tryRender polling) -->
 <script defer src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
@@ -165,12 +165,12 @@ html.fp-native #fp-gate-card { margin: auto; }
 </style>
 <div id="fp-gate-overlay">
   <div id="fp-gate-card">
-    <div id="fp-gate-brand">FP COMPASS · Skeleton Inc.</div>
+    <img src="mascot/logo.png" alt="ハカドル" style="display:block;height:56px;width:auto;margin:0 0 14px"><div id="fp-gate-brand">ハカドル · Skeleton Inc.</div>
     <div id="fp-gate-tabs">
       <button id="fp-tab-login" class="on">ログイン</button>
       <button id="fp-tab-signup">新規登録</button>
     </div>
-    <div id="fp-gate-title">FP Compass へ</div>
+    <div id="fp-gate-title">ハカドル へ</div>
     <div id="fp-gate-sub" data-login="登録済みのメアドとパスワードで入ってください。30日間ログイン維持。" data-signup="あなた専用の管理画面が30秒で作れます。">登録済みのメアドとパスワードで入ってください。30日間ログイン維持。</div>
 
     <div id="fp-row-fpname" style="display:none;">
@@ -2814,7 +2814,7 @@ window.fpReadyAfterAuth = function() {
 <script>
 (function(){
   // 最新の ver を 1 箇所に集約 (fpReadyAfterAuth 側と一致させる必要あり)
-    const FP_VERSION = "20261124H";
+    const FP_VERSION = "20261124I";
   try { window.FP_VERSION = FP_VERSION; } catch(_) {}
 
   // 2026-07-13 v11: Chrome拡張 (Zoom タブ音声 レコーダー) 検知
