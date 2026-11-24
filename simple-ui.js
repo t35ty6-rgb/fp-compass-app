@@ -1222,6 +1222,7 @@
     try { phoneMq.addEventListener('change', function () { if (mounted && !$('.fps-modal-bg')) render(); }); } catch (_) {}
     document.documentElement.classList.add('fps-on');
     mounted = true; mountedAt = Date.now();
+    dropSplash();
     applyHash();
     setTimeout(function () { if (mounted && !$('.fps-modal-bg')) render(); }, 9200);
     api.tenantFlag().then(function (f) { if (f && f.name && !st.office) { st.office = f.name; render(); } });
@@ -1246,7 +1247,9 @@
     if (root) { root.remove(); root = null; }
     if (/^#s\//.test(location.hash)) { try { history.replaceState(null, '', location.pathname + location.search); } catch (_) {} }
   }
+  function dropSplash() { var sp = document.getElementById('fps-splash'); if (sp) sp.remove(); }
   function switchButton(show) {
+    if (show) dropSplash();
     var b = document.getElementById('fps-switch');
     if (!show) { if (b) b.remove(); return; }
     if (b) return;
@@ -1273,8 +1276,11 @@
     if (pref === '0') { switchButton(true); return; }   // 本人が「前の画面」を選んだときだけ、前の画面のまま
     if (!mounted) mount();                               // それ以外は、新しい画面（ハカドル）を出す
   }
+  // ログインした直後に前の画面が見えないよう、出るまではこまめに確かめる
+  var fast = setInterval(function () { boot(); if (mounted) clearInterval(fast); }, 200);
+  setTimeout(function () { clearInterval(fast); }, 60000);
   setInterval(boot, 1500);
-  setTimeout(boot, 300);
+  boot();
 
   window.FPSimple = { on: function () { setEnabled(true); }, off: function () { setEnabled(false); }, render: render, _api: api, _state: st };
 })();

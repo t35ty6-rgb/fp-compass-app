@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>アカウント設定 — FP Compass</title>
+<title>アカウント設定 — ハカドル</title>
 <link rel="icon" type="image/svg+xml" href="./favicon.svg">
 <link rel="apple-touch-icon" href="./favicon.svg">
 <meta name="theme-color" content="#0E1116">
@@ -14,7 +14,7 @@
    ブラウザで開いたときは今までどおり。 */
 window.FP_NATIVE = (function () {
   try {
-    if (/FPCompassApp\//.test(navigator.userAgent || '')) return true;
+    if (/ハカドルApp\//.test(navigator.userAgent || '')) return true;
     var c = window.Capacitor;
     if (c && typeof c.isNativePlatform === 'function' && c.isNativePlatform()) return true;
   } catch (_) {}
@@ -37,7 +37,7 @@ html.fp-native .row-val { min-width: 0; overflow-wrap: anywhere; }
 <style>
   :root {
     --ink:#0F172A; --ink-2:#475569; --ink-3:#94A3B8;
-    --indigo:#5B5BF0; --indigo-deep:#3838CC;
+    --indigo:#F02300; --indigo-deep:#C41D00;
     --ok:#10B981; --warn:#F59E0B; --err:#E11D48;
     --bg:#F7F8FC; --paper:#fff; --line:#E2E8F0;
   }
@@ -46,7 +46,7 @@ html.fp-native .row-val { min-width: 0; overflow-wrap: anywhere; }
     -webkit-font-smoothing:antialiased; font-feature-settings:"palt"; }
 
   #login { min-height:100vh; display:grid; place-items:center; padding:20px;
-    background:radial-gradient(ellipse at top, #EEF2FF, var(--bg)); }
+    background:radial-gradient(ellipse at top, #F7F1E5, var(--bg)); }
   .login-card { max-width:420px; width:100%; background:#fff; border:1px solid var(--line);
     border-radius:18px; padding:36px 32px; box-shadow:0 20px 50px rgba(15,23,42,0.10); }
   .lbl { display:block; font-weight:700; font-size:12px; margin:14px 0 6px; }
@@ -56,7 +56,7 @@ html.fp-native .row-val { min-width: 0; overflow-wrap: anywhere; }
   @media (max-width: 768px) {
     input, textarea, select { font-size: 16px !important; }
   }
-  .lin:focus { outline:none; border-color:var(--indigo); box-shadow:0 0 0 4px rgba(91,91,240,0.12); }
+  .lin:focus { outline:none; border-color:var(--indigo); box-shadow:0 0 0 4px rgba(240,35,0,0.12); }
   .lbtn { width:100%; padding:13px; margin-top:18px; background:var(--ink); color:#fff;
     border:none; border-radius:10px; font-family:'Manrope',sans-serif; font-weight:800;
     font-size:14px; cursor:pointer; }
@@ -123,7 +123,7 @@ html.fp-native .row-val { min-width: 0; overflow-wrap: anywhere; }
   <div class="login-card">
     <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:18px;display:flex;align-items:center;gap:10px;margin-bottom:8px;">
       <span style="width:14px;height:14px;border-radius:4px;background:linear-gradient(135deg,var(--indigo),var(--indigo-deep));"></span>
-      FP Compass · アカウント
+      ハカドル · アカウント
     </div>
     <div style="font-size:13px;color:var(--ink-2);margin-bottom:18px;line-height:1.7;">
       <span class="fp-web-only">アカウント設定 / 紹介リンク / データダウンロード / サブスク管理</span><span class="fp-native-only">アカウントとアプリの設定</span>
@@ -139,7 +139,7 @@ html.fp-native .row-val { min-width: 0; overflow-wrap: anywhere; }
 
 <div id="app">
   <div class="topbar">
-    <div class="topbar-h"><span class="topbar-dot"></span><span class="fp-web-only">FP Compass · アカウント設定</span><span class="fp-native-only">アカウント</span></div>
+    <div class="topbar-h"><span class="topbar-dot"></span><span class="fp-web-only">ハカドル · アカウント設定</span><span class="fp-native-only">アカウント</span></div>
     <div class="topbar-actions">
       <a class="link" href="./"><span class="fp-web-only">CRM に戻る</span><span class="fp-native-only">戻る</span></a>
       <button class="link" id="logout-btn">ログアウト</button>
@@ -439,7 +439,7 @@ html.fp-native .row-val { min-width: 0; overflow-wrap: anywhere; }
       <div class="section-body">
         <div id="mobile-status" style="margin-bottom:16px;"></div>
 
-        <div style="background:#EEF2FF;border:1.5px solid #C7D2FE;border-radius:12px;padding:16px 18px;margin-bottom:18px;font-size:13px;line-height:1.85;color:#1E1B4B;">
+        <div style="background:#F7F1E5;border:1.5px solid #C7D2FE;border-radius:12px;padding:16px 18px;margin-bottom:18px;font-size:13px;line-height:1.85;color:#1E1B4B;">
           <strong style="display:block;margin-bottom:6px;font-size:13.5px;">使い方</strong>
           ① 下 の 「API キー を 発行」 で キー を 発行 → コピー<br>
           ② 「Shortcut を インストール」 を タップ → iOS ショートカット アプリ で 追加<br>
@@ -447,7 +447,7 @@ html.fp-native .row-val { min-width: 0; overflow-wrap: anywhere; }
           ④ 以降: Voice Memos で 録音 → ⋯ (共有) → 「FP Compass アップロード」 → 客 選択 → 送信 → 議事録 tab に 反映
         </div>
 
-        <button id="mobile-rotate-btn" style="padding:14px 28px;font-size:14px;font-weight:700;background:#5B5BF0;color:#fff;border:none;border-radius:8px;cursor:pointer;">
+        <button id="mobile-rotate-btn" style="padding:14px 28px;font-size:14px;font-weight:700;background:#F02300;color:#fff;border:none;border-radius:8px;cursor:pointer;">
           🔑 API キー を 発行 (再発行 も 同じ ボタン)
         </button>
         <p style="font-size:11px;color:var(--ink-3);margin-top:8px;line-height:1.6;">※ 再発行 する と 前 の キー は 無効。 iPhone Shortcut に 貼付 済 の 場合 は そちら も 更新 必要。</p>
@@ -687,9 +687,9 @@ html.fp-native .row-val { min-width: 0; overflow-wrap: anywhere; }
       $("ref-discount").textContent = discount > 0 ? `−¥${discount.toLocaleString()}` : "¥0";
       $("ref-next").textContent = `¥${nextAmount.toLocaleString()}`;
 
-      const shareMsg = `FP事業者向け 顧客管理SaaS「FP Compass」を紹介します。月¥19,800で議事録自動化・LINE統合・AI推奨提案が使えます。下記から登録できます。\n${refUrl}`;
+      const shareMsg = `FP事業者向け 顧客管理SaaS「ハカドル」を紹介します。月¥19,800で議事録自動化・LINE統合・AI推奨提案が使えます。下記から登録できます。\n${refUrl}`;
       $("ref-line").href = `https://line.me/R/msg/text/?${encodeURIComponent(shareMsg)}`;
-      $("ref-mail").href = `mailto:?subject=${encodeURIComponent("FP Compass のご紹介")}&body=${encodeURIComponent(shareMsg)}`;
+      $("ref-mail").href = `mailto:?subject=${encodeURIComponent("ハカドル のご紹介")}&body=${encodeURIComponent(shareMsg)}`;
 
       $("ref-copy").addEventListener("click", async () => {
         try {

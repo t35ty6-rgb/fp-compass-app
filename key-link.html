@@ -2,14 +2,14 @@
 <html lang="ja"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex">
-<title>ツタワルキーとつなぐ | FP Compass</title>
+<title>ツタワルキーとつなぐ | ハカドル</title>
 <style>
 body{margin:0;background:#fff;color:#16202B;font-family:-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif;line-height:1.7}
 main{max-width:420px;margin:0 auto;padding:56px 24px;text-align:center}
 h1{font-size:22px;margin:0 0 8px}
 p{font-size:14px;color:#5B6474;margin:0 0 24px}
 button{display:block;width:100%;border:none;border-radius:12px;padding:15px;font-size:16px;font-weight:800;cursor:pointer;margin-bottom:12px;font-family:inherit}
-#go{background:#007AFF;color:#fff}
+#go{background:#F02300;color:#fff}
 #google{background:#fff;color:#16202B;border:1.5px solid #D7DEE9}
 #other{background:none;color:#5B6474;font-size:13px;font-weight:600}
 #msg{font-size:13px;color:#B42318;min-height:20px}
@@ -43,7 +43,7 @@ getRedirectResult(auth).catch((e) => { $("msg").textContent = "ログインで�
 onAuthStateChanged(auth, async (user) => {
   $("msg").textContent = "";
   if (!user) {
-    $("lead").textContent = "FP Compassのアカウントでログインしてください。";
+    $("lead").textContent = "ハカドルのアカウントでログインしてください。";
     show("go", false); show("other", false); show("google", true);
     return;
   }
@@ -51,7 +51,7 @@ onAuthStateChanged(auth, async (user) => {
     const u = await getDoc(doc(db, "users", user.uid));
     const tenant = u.exists() ? (u.data().tenantId || "") : "";
     if (!tenant) {
-      $("lead").textContent = (user.email || "") + " はFP Compassに登録されていません。";
+      $("lead").textContent = (user.email || "") + " はハカドルに登録されていません。";
       show("go", false); show("google", true); show("other", true);
       return;
     }

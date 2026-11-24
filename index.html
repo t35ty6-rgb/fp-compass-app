@@ -11,7 +11,7 @@
 /* ★ 2026-09-16 自動更新チェック
    これが無いと iPhone のホーム画面アプリが古い index.html を握ったままになり、
    何を直しても画面が変わらない。version.txt はデプロイ時に自動生成される。 */
-window.FP_VER = "20261124K";
+window.FP_VER = "20261124L";
 /* ★ 2026-11-22 アプリ内モード (App Store 版)
    iPhone アプリの中では、 新規登録・料金・購入の案内を出さない (Apple の決まり)。
    ブラウザで開いたときは今までどおり。 */
@@ -81,14 +81,14 @@ if (window.FP_NATIVE) document.documentElement.classList.add('fp-native');
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20261124K">
-<link rel="stylesheet" href="styles-v2.css?v=20261124K">
-<link rel="stylesheet" href="styles-v3.css?v=20261124K">
-<link rel="stylesheet" href="styles-v8-workspace.css?v=20261124K">
-<link rel="stylesheet" href="styles-followups.css?v=20261124K">
-<link rel="stylesheet" href="styles-lifesync.css?v=20261124K">
-<link rel="stylesheet" href="styles-theme.css?v=20261124K">
-<link rel="stylesheet" href="simple-ui.css?v=20261124K">
+<link rel="stylesheet" href="styles.css?v=20261124L">
+<link rel="stylesheet" href="styles-v2.css?v=20261124L">
+<link rel="stylesheet" href="styles-v3.css?v=20261124L">
+<link rel="stylesheet" href="styles-v8-workspace.css?v=20261124L">
+<link rel="stylesheet" href="styles-followups.css?v=20261124L">
+<link rel="stylesheet" href="styles-lifesync.css?v=20261124L">
+<link rel="stylesheet" href="styles-theme.css?v=20261124L">
+<link rel="stylesheet" href="simple-ui.css?v=20261124L">
 <!-- ★ 2026-06-26 perf: lucide(350KB) と chart.js(201KB) を defer 化 -->
 <!--   どちらも DOMContentLoaded 後ハイドレートで OK (lucide: setInterval scan / chart: tryRender polling) -->
 <script defer src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
@@ -162,6 +162,30 @@ html.fp-native #fp-gate-card { margin: auto; }
 #fp-gate-msg.err{color:#B91C1C}
 #fp-gate-help{margin-top:24px;padding-top:18px;border-top:1px solid #E8E3D8;font-size:12px;color:#6B7280;line-height:1.7;text-align:center}
 #fp-gate-help a{color:#1E3A5F;text-decoration:none;font-weight:700}
+/* hakadoru-gate: ログイン画面をハカドルの色にそろえる（サンドベージュ・スカーレット・ミント） */
+#fp-gate-overlay{background:#F1E9DA;color:#2B2622;font-family:"Noto Sans JP","Hiragino Sans",sans-serif}
+#fp-gate-overlay::before{top:0;left:0;width:100%;height:10px;background:#F02300}
+#fp-gate-card{background:#FFFDF8;border:none;border-radius:20px;box-shadow:0 2px 0 rgba(60,45,25,.05),0 24px 50px -28px rgba(60,45,25,.45)}
+#fp-gate-brand{color:#6B6157;font-family:"Noto Sans JP",sans-serif;text-transform:none;letter-spacing:.08em}
+#fp-gate-tabs{background:#F7F1E5;border-radius:12px}
+#fp-gate-tabs button{border-radius:9px;color:#6B6157;font-family:"Noto Sans JP",sans-serif}
+#fp-gate-tabs button.on{background:#FFFDF8;color:#C41D00;box-shadow:0 1px 3px rgba(60,45,25,.12)}
+#fp-gate-title{color:#2B2622}
+#fp-gate-sub,#fp-gate-help{color:#6B6157}
+.fp-gate-label{color:#2B2622}
+.fp-gate-input{border-color:#E6DCC8;border-radius:10px;color:#2B2622;background:#fff}
+.fp-gate-input:focus{border-color:#5FB3A3}
+.fp-gate-input:focus-visible{outline:3px solid #AAD7CD;outline-offset:0}
+#fp-gate-btn{background:#F02300;border-radius:12px;font-size:16px;letter-spacing:.04em;box-shadow:0 10px 20px -12px rgba(240,35,0,.85)}
+#fp-gate-btn:hover:not(:disabled){background:#D61F00}
+#fp-gate-help{border-top-color:#E6DCC8}
+#fp-gate-help a,#fp-gate-overlay a{color:#C41D00}
+#fp-gate-msg.ok{color:#1D4A42}
+#fp-gate-msg.err{color:#C41D00}
+/* 新しい画面が出るまでの間、前の画面を見せない */
+#fps-splash{position:fixed;inset:0;z-index:10140;background:#F1E9DA;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-family:"Noto Sans JP","Hiragino Sans",sans-serif;color:#6B6157;font-size:14px;font-weight:700}
+#fps-splash img{display:block;height:auto}
+#fps-splash .l{width:170px;mix-blend-mode:multiply}
 </style>
 <div id="fp-gate-overlay">
   <div id="fp-gate-card">
@@ -1356,6 +1380,16 @@ html.fp-native #fp-gate-card { margin: auto; }
 
 </head>
 <body data-prod="1">
+<script>
+/* ハカドル: 前の画面が一瞬見えるのを防ぐ。本人が「前の画面」を選んでいるときは出さない */
+(function(){try{
+  if(localStorage.getItem('fp-simple-ui')==='0')return;
+  var d=document.createElement('div');d.id='fps-splash';
+  d.innerHTML='<img src="mascot/logo.png" alt="ハカドル" width="220"><img class="l" src="mascot/loading.gif" alt=""><span>読み込んでいます…</span>';
+  document.body.appendChild(d);
+  setTimeout(function(){var x=document.getElementById('fps-splash');if(x)x.remove();},15000);
+}catch(e){}})();
+</script>
 
 <!-- ★ 2026-06-22 roundP: モバイル トップバー (固定 56px) -->
 <header id="mobile-topbar" class="m-only">
@@ -2814,7 +2848,7 @@ window.fpReadyAfterAuth = function() {
 <script>
 (function(){
   // 最新の ver を 1 箇所に集約 (fpReadyAfterAuth 側と一致させる必要あり)
-    const FP_VERSION = "20261124K";
+    const FP_VERSION = "20261124L";
   try { window.FP_VERSION = FP_VERSION; } catch(_) {}
 
   // 2026-07-13 v11: Chrome拡張 (Zoom タブ音声 レコーダー) 検知

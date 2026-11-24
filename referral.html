@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>紹介プログラム — FP Compass</title>
+<title>紹介プログラム — ハカドル</title>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Noto+Sans+JP:wght@400;500;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --ink:#0F172A; --ink-2:#475569; --ink-3:#94A3B8;
-    --indigo:#5B5BF0; --indigo-deep:#3838CC;
+    --indigo:#F02300; --indigo-deep:#C41D00;
     --gold:#FFB300; --ok:#10B981; --warn:#F59E0B;
     --bg:#F7F8FC; --paper:#fff; --line:#E2E8F0;
   }
@@ -18,13 +18,13 @@
 
   /* Login */
   #login { min-height:100vh; display:grid; place-items:center;
-    background:radial-gradient(ellipse at top left, #EEF2FF, var(--bg)); padding:20px; }
+    background:radial-gradient(ellipse at top left, #F7F1E5, var(--bg)); padding:20px; }
   .login-card { max-width:420px; width:100%; background:#fff; border:1px solid var(--line);
     border-radius:20px; box-shadow:0 24px 64px rgba(15,23,42,0.10); padding:38px 34px; }
   .lbl { display:block; font-weight:700; font-size:12px; margin:14px 0 6px; }
   .lin { width:100%; padding:12px 14px; font-size:14px; border:1.5px solid var(--line);
     border-radius:10px; font-family:inherit; }
-  .lin:focus { outline:none; border-color:var(--indigo); box-shadow:0 0 0 4px rgba(91,91,240,0.12); }
+  .lin:focus { outline:none; border-color:var(--indigo); box-shadow:0 0 0 4px rgba(240,35,0,0.12); }
   .lbtn { width:100%; padding:13px; margin-top:18px; background:var(--indigo); color:#fff;
     border:none; border-radius:10px; font-family:'Manrope',sans-serif; font-weight:800; font-size:14px;
     cursor:pointer; }
@@ -38,7 +38,7 @@
   .topbar-h { display:flex; align-items:center; gap:8px; font-family:'Manrope',sans-serif; font-weight:800; font-size:17px; }
   .topbar-dot { width:11px; height:11px; border-radius:3px; background:linear-gradient(135deg,var(--indigo),var(--indigo-deep)); }
   .topbar-user { display:flex; align-items:center; gap:12px; font-size:13px; color:var(--ink-2); }
-  .topbar-tenant { background:#EEF2FF; color:var(--indigo-deep); padding:5px 12px; border-radius:6px;
+  .topbar-tenant { background:#F7F1E5; color:var(--indigo-deep); padding:5px 12px; border-radius:6px;
     font-family:'Manrope',sans-serif; font-weight:800; font-size:11px; letter-spacing:0.06em; }
   .topbar-actions { display:flex; gap:8px; }
   .top-link { padding:6px 12px; font-size:12px; font-weight:600;
@@ -140,7 +140,7 @@
   <div class="login-card">
     <div style="display:flex;align-items:center;gap:10px;font-family:'Manrope',sans-serif;font-weight:800;font-size:18px;margin-bottom:6px;">
       <span style="width:14px;height:14px;border-radius:4px;background:linear-gradient(135deg,var(--indigo),var(--indigo-deep));"></span>
-      FP Compass · 紹介プログラム
+      ハカドル · 紹介プログラム
     </div>
     <div style="font-size:13px;color:var(--ink-2);margin-bottom:24px;line-height:1.7;">FPアカウントでログインしてください。</div>
     <label class="lbl" for="email">メールアドレス</label>
@@ -154,7 +154,7 @@
 
 <div id="app">
   <div class="topbar">
-    <div class="topbar-h"><span class="topbar-dot"></span>FP Compass · 紹介プログラム</div>
+    <div class="topbar-h"><span class="topbar-dot"></span>ハカドル · 紹介プログラム</div>
     <div class="topbar-user">
       <span id="user-email"></span>
       <span class="topbar-tenant" id="user-tenant"></span>
@@ -167,7 +167,7 @@
 
   <div class="main">
     <h1 class="page-h">紹介プログラム</h1>
-    <p class="page-sub">他のFPさんに FP Compass を紹介すると、 あなたの月額が下がります。 6人で永久無料。</p>
+    <p class="page-sub">他のFPさんに ハカドル を紹介すると、 あなたの月額が下がります。 6人で永久無料。</p>
 
     <div class="stripe-banner" id="stripe-banner">
       <b>💡 ステータス:</b> Stripe 決済連携前のため、 数値はテスト表示です。 連携完了後、 リアルな請求額に切り替わります。
@@ -410,12 +410,12 @@
       $("qr-modal").style.display = "flex";
     });
     $("line-btn").addEventListener("click", () => {
-      const text = `FP Compass という顧客管理ツールおすすめです。 ここから登録すると私の月額も下がります → ${refUrl}`;
+      const text = `ハカドル という顧客管理ツールおすすめです。 ここから登録すると私の月額も下がります → ${refUrl}`;
       window.open(`https://line.me/R/msg/text/?${encodeURIComponent(text)}`, "_blank");
     });
     $("mail-btn").addEventListener("click", () => {
-      const subj = encodeURIComponent("FP Compass 紹介");
-      const body = encodeURIComponent(`こんにちは、\n\nFP顧客管理ツール 「FP Compass」 をご紹介します。\n月¥19,800、 私からの紹介リンクから登録いただくと利用開始できます。\n\n登録URL: ${refUrl}\n`);
+      const subj = encodeURIComponent("ハカドル 紹介");
+      const body = encodeURIComponent(`こんにちは、\n\nFP顧客管理ツール 「ハカドル」 をご紹介します。\n月¥19,800、 私からの紹介リンクから登録いただくと利用開始できます。\n\n登録URL: ${refUrl}\n`);
       window.open(`mailto:?subject=${subj}&body=${body}`, "_blank");
     });
   });
