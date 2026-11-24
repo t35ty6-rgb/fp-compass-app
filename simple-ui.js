@@ -373,7 +373,8 @@
     document.body.appendChild(bg);
     document.addEventListener('keydown', escClose);
     if (onMount) onMount(bg.firstChild);
-    var f = bg.querySelector('input,textarea,button'); if (f) try { f.focus(); } catch (_) {}
+    // 入力欄に勝手にカーソルを入れない（スマホでキーボードが出てしまうため）
+    try { bg.firstChild.setAttribute('tabindex', '-1'); bg.firstChild.focus({ preventScroll: true }); } catch (_) {}
     return bg.firstChild;
   }
   function escClose(e) { if (e.key === 'Escape') closeModal(); }

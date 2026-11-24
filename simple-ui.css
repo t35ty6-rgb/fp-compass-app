@@ -448,3 +448,10 @@ html body #fps-root .num, html body #fps-modal-root .num { font-family: "Inter",
 :is(#fps-root, #fps-modal-root) :is(input, select, textarea) { accent-color: #2E8B7A; color: var(--fps-ink); }
 :is(#fps-root, #fps-modal-root) ::selection { background: var(--fps-mint); color: #1D4A42; }
 :is(#fps-root, #fps-modal-root) a:hover { text-decoration: none; }
+
+/* 前の画面のサイドバー・上の帯（スマホ幅では z-index が 1万を超える）より上に出す */
+html body #fps-root { z-index: 10150 !important; }
+html body #fps-modal-root { z-index: 10650 !important; }
+html body #fps-toast { z-index: 10660 !important; }
+html.fps-on body .sidebar, html.fps-on body #mobile-topbar, html.fps-on body #mobile-bottomnav, html.fps-on body .sidebar-backdrop, html.fps-on body .mobile-nav-backdrop { display: none !important; }
+#fps-modal-root .fps-modal:focus { outline: none; }
