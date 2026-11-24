@@ -527,6 +527,19 @@ html.fps-on #fps-switch { display: none; }
   :is(#fps-root, #fps-modal-root, #fps-toast) .fps-key h3 { font-size: 16px; }
 }
 
+/* 第4弾：いつ面談するか・見出しの重なり */:is(#fps-root, #fps-modal-root, #fps-toast) .fps-sec-label { margin: 10px 0 0; line-height: 1.6; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-doc > .fps-sec-label, #fps-root #fps-sum > .fps-sec-label { margin-bottom: -6px; }
+#fps-root #fps-sum { gap: 12px; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-when { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 6px; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-when-c { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; background: var(--fps-surface); color: var(--fps-ink); border: 2px solid var(--fps-line); border-radius: 18px; padding: 18px 12px; cursor: pointer; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-when-c span { display: flex; flex-direction: column; gap: 2px; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-when-c b { font-size: 17px; font-weight: 800; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-when-c small { font-size: 12px; color: var(--fps-sub); line-height: 1.5; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-when-c:hover { border-color: var(--fps-red); }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-when-c.is-hot { border-color: var(--fps-red); background: #FFF4F0; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-when-c.is-hot b { color: var(--fps-red-text); }
+@media (max-width: 760px) { :is(#fps-root, #fps-modal-root, #fps-toast) .fps-modal [style*="grid-template-columns:minmax(0, :is(#fps-root, #fps-modal-root, #fps-toast) 1fr) 120px 110px"] { grid-template-columns: 1fr 1fr !important; } }
+
 /* ---------- 古い画面の見た目が入りこまないようにする ---------- */
 html body #fps-root, html body #fps-root *, html body #fps-modal-root, html body #fps-modal-root *, html body #fps-toast, html body #fps-toast *, html body #fps-switch {
   font-family: "Noto Sans JP", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif !important; text-transform: none; }

@@ -545,8 +545,8 @@
       return '<details class="fps-fold k-' + sec.kind + '"' + (i < openN ? ' open' : '') + '><summary>' + icon(sec.kind) + '<span class="fps-fold-t"><b>' + (sec.h ? inl(sec.h) : '内容') + '</b><small>' + esc(plain(first).slice(0, 40)) + '</small></span><em class="num">' + sec.items.length + '</em><span class="fps-fold-go" aria-hidden="true">›</span></summary>' +
         '<div class="fps-sec-body">' + rowsOf(sec, 0, sec.items.length) + '</div></details>';
     }).join('');
-    return (keyHtml ? '<p class="fps-eyebrow" style="margin:6px 0 -6px;position:relative;z-index:1">大事なところ</p><div class="fps-keys">' + keyHtml + '</div>' : '') +
-      (restHtml ? '<p class="fps-eyebrow" style="margin:8px 0 -6px">' + (keyHtml ? 'くわしい内容（押すと開きます）' : '内容') + '</p><div class="fps-folds">' + restHtml + '</div>' : '');
+    return (keyHtml ? '<p class="fps-eyebrow fps-sec-label">大事なところ</p><div class="fps-keys">' + keyHtml + '</div>' : '') +
+      (restHtml ? '<p class="fps-eyebrow fps-sec-label">' + (keyHtml ? 'くわしい内容（押すと開きます）' : '内容') + '</p><div class="fps-folds">' + restHtml + '</div>' : '');
   }
 
   /* ---------- 画面 ---------- */
@@ -609,7 +609,9 @@
     var today = list.map(function (c) { return { c: c, at: nextSlotOf(c) }; }).filter(function (x) { return x.at && sameDay(x.at, now); })
       .sort(function (a, b) { return a.at - b.at; });
     var pend = pendingList();
-    var recent = allMinutes().list.slice(0, 6);
+    var ready = recentReady();
+    var recent = ready ? allMinutes().list.slice(0, 6) : [];
+    var snap = ready ? [] : readSnap().slice(0, 6);
     var u = fp().auth && fp().auth.currentUser;
     var hello = (u && u.displayName) ? 'こんにちは、' + esc(u.displayName.split(/\s+/)[0]) + 'さん' : 'ホーム';
 
@@ -622,9 +624,21 @@
             '<a class="fps-btn is-main is-sm" href="' + esc(x.c.hostZoomUrl || x.c.zoomUrl) + '" target="_blank" rel="noopener">Zoomを開く</a>' +
             '<button type="button" class="fps-btn is-quiet is-sm" data-copy="' + esc(x.c.zoomUrl) + '">URLをコピー</button></div>' : '') +
         '</div></div>';
-    }).join('') : '<div class="fps-empty" data-face="sleep">今日の面談の予定はありません。<br>「Zoomで面談」から、すぐに始められます。</div>';
+    }).join('') : '<div class="fps-empty" data-face="sleep">今日の面談の予定はありません。<br>「Zoomで面談」で日時を決めると、ここに入ります。</div>';
+    var coming = list.map(function (c) { return { c: c, at: nextSlotOf(c) }; }).filter(function (x) { return x.at && !sameDay(x.at, now) && x.at > now; }).sort(function (a, b) { return a.at - b.at; }).slice(0, 5);
+    if (coming.length) todayHtml += '<h3 class="fps-sub-h" style="margin-top:22px">この先の予定</h3><div class="fps-mlist">' + coming.map(function (x) {
+      return '<button type="button" class="fps-mrow" data-open-client="' + esc(fsId(x.c)) + '"><span class="fps-mrow-d num"><b>' + (x.at.getMonth() + 1) + '/' + x.at.getDate() + '</b><small>' + WD[x.at.getDay()] + ' ' + fmtTime(x.at) + '</small></span>' +
+        '<span class="fps-mrow-b"><small>Zoom</small><b>' + esc(x.c.name) + ' 様</b></span><span class="fps-mrow-go" aria-hidden="true">›</span></button>';
+    }).join('') + '</div>';
 
-    var rows = pend.map(pendingRow).join('') + recent.map(function (r) { return minuteRow(r, clientOfMinute(r), true); }).join('');
+    var rows = pend.map(pendingRow).join('') + recent.map(function (r) { return minuteRow(r, clientOfMinute(r), true); }).join('') +
+      snap.map(function (x) {            // 前回の一覧をすぐ出しておく（新しい分は読み終わったら入れ替わる）
+        var c = findClient(x.cid), d = x.ts ? new Date(x.ts) : null;
+        return '<button type="button" class="fps-mrow" data-open-minute="' + esc(x.cid) + '" data-mid="' + esc(x.key) + '">' +
+          '<span class="fps-mrow-d num">' + (d ? '<b>' + (d.getMonth() + 1) + '/' + d.getDate() + '</b><small>' + WD[d.getDay()] + ' ' + fmtTime(d) + '</small>' : '<b>—</b>') + '</span>' +
+          '<span class="fps-mrow-b"><small>' + (c ? esc(c.name) + ' 様' : '') + ' ・ ' + esc(x.kind || '') + '</small><b>' + esc(x.t || '面談の記録') + '</b></span><span class="fps-mrow-go" aria-hidden="true">›</span></button>';
+      }).join('');
+    var recentNote = ready ? '' : (snap.length ? '<p class="fps-sub" style="margin:10px 0 0;font-size:12px">新しい議事録がないか確認しています…</p>' : '');
 
     return '<div class="fps-wrap">' +
       '<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">' +
@@ -641,8 +655,8 @@
       '<div style="display:flex;gap:22px;flex-wrap:wrap;align-items:flex-start">' +
         '<section class="fps-panel" style="flex:1 1 340px;min-width:0;padding:24px 26px"><h2 class="fps-h">今日の予定' + M('smile', 44, 'h-m') + '</h2>' + todayHtml + '</section>' +
         '<section class="fps-panel" style="flex:999 1 520px;min-width:0;padding:24px 26px"><h2 class="fps-h">最近の議事録<small><a data-go="minutes">すべて見る ›</a></small></h2>' +
-          (rows ? '<div class="fps-mlist">' + rows + '</div>'
-                : '<div class="fps-empty">まだ議事録がありません。<br>Zoomで面談するか、録音をアップロードすると、ここに出ます。</div>') +
+          (rows ? '<div class="fps-mlist">' + rows + '</div>' + recentNote
+                : (ready ? '<div class="fps-empty">まだ議事録がありません。<br>Zoomで面談するか、録音をアップロードすると、ここに出ます。</div>' : '<div class="fps-loading" data-small="1">最新の議事録を読み込んでいます…</div>')) +
         '</section>' +
       '</div></div>';
   }
@@ -962,7 +976,7 @@
     return '<div class="fps-wrap"><div style="display:flex;align-items:center;gap:12px">' + M('read', 64, 'hello') + '<div><h1 class="fps-title">議事録</h1><p class="fps-sub" style="margin:2px 0 0;font-size:14px">お客様と題名だけをならべています。押すと中身が開きます。</p></div></div><section class="fps-panel" style="padding:10px 18px 14px">' +
       (rows ? '<div class="fps-mlist">' + rows + '</div>'
             : '<div class="fps-empty">まだ議事録がありません。</div>') +
-      '</section>' + orph + '<p class="fps-sub" style="font-size:13px;margin:0">新しいものから並んでいます。</p></div>';
+      '</section>' + orph + '<p class="fps-sub" style="font-size:13px;margin:0">' + (warmDone ? '新しいものから並んでいます。' : 'ほかの議事録も読み込んでいます…（読み終わると、新しい順に並び直します）') + '</p></div>';
   }
 
   // 議事録を1件さがす。同じ時刻の議事録が別のお客様にもあるので、かならず「だれの」まで合わせる
@@ -1129,7 +1143,66 @@
     }, 'smile');
   }
 
+  // Zoomで面談：まず「いつ？」を聞く
   function startZoom(c) {
+    var d0 = new Date(Date.now() + 9 * 3600e3), today = d0.toISOString().slice(0, 10);
+    var hh = new Date(Date.now() + 3600e3).getHours();
+    modal('<h2>' + esc(c.name) + ' 様とZoomで面談</h2><p>いつ面談しますか？</p>' +
+      '<div class="fps-when">' +
+        '<button type="button" class="fps-when-c is-hot" data-when="now">' + M('wink', 56) + '<span><b>いますぐ</b><small>この場でZoomを用意します</small></span></button>' +
+        '<button type="button" class="fps-when-c" data-when="later">' + M('read', 56) + '<span><b>日時を決める</b><small>予定として入れて、案内を送ります</small></span></button>' +
+      '</div>' +
+      '<div id="fps-when-form" hidden>' +
+        '<div style="display:grid;grid-template-columns:minmax(0,1fr) 120px 110px;gap:10px;margin-top:6px">' +
+          '<label class="fps-field"><span>日にち</span><input class="fps-input" id="fps-z-date" type="date" min="' + today + '" value="' + today + '"></label>' +
+          '<label class="fps-field"><span>時刻</span><input class="fps-input" id="fps-z-time" type="time" step="300" value="' + pad(hh) + ':00"></label>' +
+          '<label class="fps-field"><span>長さ</span><select class="fps-input" id="fps-z-dur"><option value="30">30分</option><option value="60" selected>60分</option><option value="90">90分</option><option value="120">120分</option></select></label>' +
+        '</div>' +
+        (c.lineFriendId ? '<p style="margin:10px 0 0;font-size:13px;color:var(--fps-amber-text);background:var(--fps-amber-soft);border-radius:10px;padding:10px 12px">このお客様は公式LINEにつながっています。日時を決めると、公式LINEからも案内が届くことがあります。</p>' : '') +
+        '<div class="fps-actions"><button type="button" class="fps-btn is-quiet" data-close>やめる</button><button type="button" class="fps-btn is-main" id="fps-z-go">この日時でZoomを用意する</button></div>' +
+      '</div>', function (el) {
+      el.addEventListener('click', function (e) {
+        var b = e.target.closest('[data-when],[data-close],#fps-z-go'); if (!b) return;
+        if (b.hasAttribute('data-close')) return closeModal();
+        if (b.dataset.when === 'now') return startZoomNow(c);
+        if (b.dataset.when === 'later') { $('#fps-when-form', el).hidden = false; $('.fps-when', el).querySelectorAll('.fps-when-c').forEach(function (x) { x.classList.toggle('is-hot', x === b); }); return; }
+        if (b.id === 'fps-z-go') {
+          var date = $('#fps-z-date', el).value, time = $('#fps-z-time', el).value, dur = parseInt($('#fps-z-dur', el).value, 10) || 60;
+          if (!date || !time) { toast('日にちと時刻を入れてください'); return; }
+          if (toDate(date + ' ' + time) && toDate(date + ' ' + time).getTime() < Date.now() - 5 * 60000) { toast('これからの日時を入れてください'); return; }
+          return scheduleZoom(c, date, time, dur);
+        }
+      });
+    });
+  }
+  function scheduleZoom(c, date, time, dur) {
+    var when = toDate(date + ' ' + time);
+    var label = (when.getMonth() + 1) + '月' + when.getDate() + '日（' + WD[when.getDay()] + '）' + fmtTime(when);
+    modal('<h2>' + esc(label) + ' のZoomを用意しています…</h2><div class="fps-loading">10秒ほどかかります</div>', null, null);
+    api.call('scheduleZoomDirect', { customerId: fsId(c), confirmedSlot: date + ' ' + time, customMessage: '', durationMin: dur, lineFriendId: null, skipLine: true }).then(function (d) {
+      if (!d || !d.ok || !d.zoomUrl) throw new Error((d && d.error) || 'Zoomを用意できませんでした');
+      c.confirmedSlot = date + ' ' + time; c.zoomUrl = d.zoomUrl; c.hostZoomUrl = d.startUrl || d.zoomUrl; c.zoomMeetingId = String(d.zoomMeetingId || '');
+      try { lsSet('fp-crm-clients-v1', JSON.stringify(window.DUMMY_CLIENTS)); } catch (_) {}
+      var idn = String(d.zoomMeetingId || '').replace(/\D/g, '');
+      var idLabel = idn.length === 11 ? idn.replace(/^(\d{3})(\d{4})(\d{4})$/, '$1 $2 $3') : idn.length === 10 ? idn.replace(/^(\d{3})(\d{3})(\d{4})$/, '$1 $2 $3') : idn;
+      var invite = ['Zoomのご案内です。', '日時：' + label + '〜（' + dur + '分ほど）', '参加URL：' + d.zoomUrl, idLabel ? 'ミーティングID：' + idLabel : '', d.passcode ? 'パスコード：' + d.passcode : ''].filter(Boolean).join('\n');
+      modal('<h2>' + esc(label) + ' に予定を入れました</h2><p>① 下の案内をコピーして、自分のLINEなどで ' + esc(c.name) + ' 様に送ります。<br>② 当日は、ホームの「今日の予定」から Zoom を開けます。</p>' +
+        '<div class="fps-copybox">' + esc(invite) + '</div>' +
+        (d.lineSent ? '<p style="margin:12px 0 0;font-size:13px;color:var(--fps-amber-text)">公式LINEからも、このお客様に案内が送られました。</p>' : '') +
+        '<div class="fps-actions" style="justify-content:stretch"><button type="button" class="fps-btn is-main" id="fps-copy-invite" style="flex:1">案内をコピー</button><button type="button" class="fps-btn is-quiet" data-close style="flex:1">とじる</button></div>' +
+        '<p style="margin:14px 0 0;font-size:13px">面談が終わると、5〜15分ほどで議事録が ' + esc(c.name) + ' 様のページに入ります。</p>', function (el) {
+        $('[data-close]', el).addEventListener('click', function () { closeModal(); render(); });
+        $('#fps-copy-invite', el).addEventListener('click', async function () { this.textContent = (await copyText(invite)) ? 'コピーしました' : 'コピーできませんでした'; });
+      }, 'kira');
+      try { if (window.refreshFirestoreCustomers) window.refreshFirestoreCustomers(); } catch (_) {}
+    }).catch(function (e) {
+      var msg = String((e && e.message) || e), noZoom = /Zoom 未連携|failed-precondition/.test(msg);
+      modal('<h2>Zoomを用意できませんでした</h2><p>' + (noZoom ? 'まだZoomとつながっていません。アカウントの設定で、Zoomの連携をしてください。' : esc(msg.slice(0, 200))) + '</p>' +
+        '<div class="fps-actions">' + (noZoom ? '<a class="fps-btn is-main" href="/account.html" target="_blank" rel="noopener">アカウントの設定をひらく</a>' : '') +
+        '<button type="button" class="fps-btn is-quiet" data-close>とじる</button></div>', function (el) { $('[data-close]', el).addEventListener('click', closeModal); }, 'oh');
+    });
+  }
+  function startZoomNow(c) {
     modal('<h2>' + esc(c.name) + ' 様とZoomで面談</h2><p>Zoomを用意しています…</p><div class="fps-loading">10秒ほどかかります</div>', null, null);
     api.call('startInstantZoom', { customerId: fsId(c), lineFriendId: null }).then(function (d) {
       if (!d || !d.joinUrl) throw new Error((d && d.error) || 'Zoomを用意できませんでした');
@@ -1260,6 +1333,16 @@
     document.documentElement.classList.add('fps-on');
     mounted = true; mountedAt = Date.now();
     dropSplash();
+    // 開いたときは、いつもホームから。前の画面が「最後に見ていた場所」をアドレスごと復元するため、
+    // 何もしないと前回のお客様のページにいきなり飛んでしまう（再読み込みのときだけは、いまの場所を保つ）
+    try {
+      if (!firstMountDone) {
+        firstMountDone = true;
+        var nav = performance.getEntriesByType && performance.getEntriesByType('navigation')[0];
+        var ph = parseHash();
+        if (!(nav && nav.type === 'reload') && ph && ph.view !== 'home') history.replaceState(history.state, '', location.pathname + location.search + '#s/home');
+      }
+    } catch (_) {}
     // 前の画面は、アドレスの ?view=…&customer=… を見てお客様カードを勝手に開く。新しい画面では使わないので外す
     try {
       var u = new URL(location.href), ch = false;
@@ -1279,26 +1362,44 @@
     }, 4000);
   }
   var tick = null, lastSig = '', prevTitle = '';
+  var firstMountDone = false;
   var warming = false;
+  var warmLoaded = 0, warmTotal = 0, warmDone = false;
+  function recencyOf(c) { var d = toDate(c.lastInstantZoomAt) || toDate(c.lastContactAt) || toDate(c.lastContact) || toDate(c.createdAt); return d ? d.getTime() : 0; }
+  function snapKey() { return 'fp-simple-recent-' + tenantId(); }
+  function readSnap() { try { var v = JSON.parse(lsGet(snapKey()) || '[]'); return Array.isArray(v) ? v : []; } catch (_) { return []; } }
+  function saveSnap() {
+    try {
+      var top = allMinutes().list.slice(0, 8).map(function (r) { var d = mTime(r); return { cid: r._cid || '', key: mKey(r), t: mTitle(r), ts: d ? d.getTime() : 0, kind: mKind(r) }; });
+      lsSet(snapKey(), JSON.stringify(top));
+    } catch (_) {}
+  }
+  // 最近の議事録が「そろった」と言えるか（最近やりとりしたお客様の分が読めたら、上のほうはもう変わらない）
+  function recentReady() { return warmDone || (warmTotal > 0 && warmLoaded >= Math.min(6, warmTotal)); }
   function warmUp() {
     if (warming || !mounted) return;
     var list = clients().filter(function (c) { return !cache[fsId(c)]; });
-    if (!list.length) { if (!clients().length) setTimeout(warmUp, 2000); return; }
-    if (list.length > 80) return;            // 人数が多い事務所では、開いたお客様の分だけ読む
-    warming = true;
-    var i = 0, running = 0, lastDraw = 0;
+    if (!list.length) { if (!clients().length) setTimeout(warmUp, 2000); else { warmDone = true; } return; }
+    if (list.length > 80) { warmDone = true; return; }            // 人数が多い事務所では、開いたお客様の分だけ読む
+    list.sort(function (a, b) { return recencyOf(b) - recencyOf(a); });   // 最近やりとりしたお客様から読む
+    warming = true; warmTotal = list.length; warmLoaded = 0;
+    var i = 0, running = 0, wasReady = false;
+    var draw = function () {
+      var a = document.activeElement, typing = a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA');
+      if ((st.view === 'home' || st.view === 'minutes' || st.view === 'customers') && !typing && !$('.fps-modal-bg')) render();
+    };
     var next = function () {
       if (!mounted) { warming = false; return; }
-      while (running < 3 && i < list.length) {
+      while (running < 4 && i < list.length) {
         running++;
         loadMinutes(list[i++]).then(function () {
-          running--;
-          var a = document.activeElement, typing = a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA');
-          if ((st.view === 'home' || st.view === 'minutes' || st.view === 'customers') && !typing && !$('.fps-modal-bg') && Date.now() - lastDraw > 2500) { lastDraw = Date.now(); render(); }
+          running--; warmLoaded++;
+          // 1件ごとに描き直すと並びが何度も入れ替わるので、「そろった時」と「全部終わった時」だけ描く
+          if (!wasReady && recentReady()) { wasReady = true; draw(); }
           next();
         });
       }
-      if (i >= list.length && running === 0) { warming = false; if (!$('.fps-modal-bg')) render(); }
+      if (i >= list.length && running === 0 && !warmDone) { warming = false; warmDone = true; saveSnap(); draw(); }
     };
     next();
   }
