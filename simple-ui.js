@@ -55,6 +55,12 @@
     return d.getFullYear() + '/' + pad(d.getMonth() + 1) + '/' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
   }
   function fmtTime(v) { var d = toDate(v); return d ? pad(d.getHours()) + ':' + pad(d.getMinutes()) : ''; }
+  // 「予約 機能 が 整理 されて」のように、ひらがなの前後に入った空白を詰めて読みやすくする（氏名の空白は残す）
+  function tidy(t) {
+    return String(t == null ? '' : t)
+      .replace(/([ぁ-んー、。])[ \u3000]+(?=[ぁ-んァ-ヶ一-龠々A-Za-z0-9「（])/g, '$1')
+      .replace(/([ァ-ヶ一-龠々A-Za-z0-9」）])[ \u3000]+(?=[ぁ-ん、。])/g, '$1');
+  }
   function plain(md) {
     return String(md || '')
       .replace(/^#{1,6}\s+.*$/gm, '')
@@ -65,7 +71,7 @@
       .replace(/\n{2,}/g, '\n').trim();
   }
   function firstSentences(text, max) {
-    var t = plain(text).replace(/\n+/g, ' ');
+    var t = tidy(plain(text).replace(/\n+/g, ' '));
     if (t.length <= max) return t;
     var cut = t.slice(0, max);
     var i = Math.max(cut.lastIndexOf('。'), cut.lastIndexOf('．'));
@@ -162,10 +168,10 @@
   function mTime(r) { return toDate(r.ts || r.createdAt || r.date || r.zoomStartTime); }
   function mKey(r) { return String(r.bookingTs || r._fsMeetingDocId || r.zoomMeetingId || r.ts || r.createdAt || ''); }
   function mTitle(r) {
-    var t = String(r.title || r.zoomTopic || '').trim();
+    var t = tidy(String(r.title || r.zoomTopic || '').trim());
     if (t && !/^(zoom|quick|instant)/i.test(t) && !/即時相談|FP\s?Compass|ハカドル|面談 記録 \(手入力\)/.test(t) && t.length < 60) return t;
     var kc = asArray(r.key_concerns);
-    if (kc.length) return String(kc[0]).replace(/^[・\-\s]+/, '').slice(0, 40);
+    if (kc.length) return tidy(String(kc[0]).replace(/^[・\-\s]+/, '')).slice(0, 40);
         return '面談の記録';
   }
   function mGist(r, max) {
@@ -502,7 +508,7 @@
   function renderSummary(text) {
     var raw = String(text || '').replace(/^##\s+[^\n]+\n\s*[（(]?\s*該当なし\s*[)）]?\s*(?=\n##|\n*$)/gim, '').trim();
     if (!raw) return '<p class="fps-sub">まだ議事録の本文がありません。</p>';
-    var inl = function (x) { return esc(x).replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>'); };
+    var inl = function (x) { return esc(tidy(x)).replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>'); };
     var secs = [], cur = null;
     raw.split(/\n/).forEach(function (line) {
       var l = line.trim(); if (!l) return;
@@ -524,7 +530,7 @@
     var rowsOf = function (sec, from, to) { var n = from; return sec.items.slice(from, to).map(function (it) { if (it.li) n++; return itemHtml(it, sec.kind, n); }).join(''); };
     // 大事なところ：決まったこと → 次にやること → 気になっていること
     var key = [], rest = [];
-    ['done', 'next', 'worry'].forEach(function (k) { secs.forEach(function (x) { if (x.kind === k) key.push(x); }); });
+    ['done', 'next', 'worry'].forEach(function (k) { for (var q = 0; q < secs.length; q++) { if (secs[q].kind === k) { key.push(secs[q]); break; } } });
     secs.forEach(function (x) { if (key.indexOf(x) < 0) rest.push(x); });
     var LABEL = { done: '決まったこと', next: 'これからやること', worry: '気をつけること' };
     var keyHtml = key.map(function (sec) {
@@ -584,7 +590,7 @@
           (tasks.length ? '<span class="fps-chip ok">やること ' + tasks.length + '件</span>' : '') + '</span>' +
         '<b class="fps-tl-title">' + esc(mTitle(r)) + '</b>' +
         '<span class="fps-tl-gist">' + esc(mGist(r, 60)) + '</span>' +
-        (kc.length ? '<span class="fps-tl-kc">' + kc.map(function (x) { return '<span>' + esc(String(x).slice(0, 24)) + '</span>'; }).join('') + '</span>' : '') +
+        (kc.length ? '<span class="fps-tl-kc">' + kc.map(function (x) { return '<span>' + esc(tidy(x).slice(0, 24)) + '</span>'; }).join('') + '</span>' : '') +
       '</span><span class="fps-tl-go" aria-hidden="true">ひらく ›</span></button></li>';
   }
   function pendingRow(p) {
@@ -997,7 +1003,7 @@
               '<span><small>やること</small><b class="num">' + tasks.length + '件</b></span></div></header>' +
           (gist ? '<section class="fps-gist">' + M('idea', 70, 'corner') + '<p class="fps-eyebrow" style="margin-bottom:8px">ひとことで言うと</p><p>' + esc(gist) + '</p></section>' : '') +
           '<div id="fps-sum">' + renderSummary(r.summary || r.transcript_summary || '') + '</div>' +
-          ((kc.length || r.next_meeting_suggestion) ? renderSummary((kc.length ? '## お客様の関心ごと\n' + kc.map(function (x) { return '- ' + x; }).join('\n') + '\n' : '') + (r.next_meeting_suggestion ? '## 次回に向けて\n' + r.next_meeting_suggestion : '')) : '') +
+          ((function () { var body0 = String(r.summary || r.transcript_summary || ''); if (/^#{1,4}\s*.*(関心|懸念|気にな)/m.test(body0)) kc = []; return (kc.length || (r.next_meeting_suggestion && !/^#{1,4}\s*.*次回/m.test(body0))); })() ? renderSummary((kc.length ? '## お客様の関心ごと\n' + kc.map(function (x) { return '- ' + x; }).join('\n') + '\n' : '') + (r.next_meeting_suggestion && !/^#{1,4}\s*.*次回/m.test(String(r.summary || '')) ? '## 次回に向けて\n' + r.next_meeting_suggestion : '')) : '') +
           '<div><button type="button" class="fps-btn is-quiet" data-act="toggle-transcript">' + (st.showTranscript ? '話した内容の全文を閉じる' : '話した内容の全文を見る') + '</button>' +
             (st.showTranscript ? '<div class="fps-transcript" style="margin-top:12px">' + (hasT ? esc(r.transcript) : '全文はまだ読み込めていません。少し待ってから、もう一度開いてください。') + '</div>' : '') + '</div>' +
         '</div></article>' +
