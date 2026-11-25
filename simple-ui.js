@@ -390,15 +390,41 @@
       if (learned) ownerIdx.n = -1;
       cache[id] = mergeMinutes([mine, res[1], liveMinutes().filter(function (r) { return belongs(r, c, idsOf(c)); })]);
       cache[id].forEach(function (r) { r._cid = id; });
+      stash[id] = null; stashPut(id, cache[id]);
       return cache[id];
     }).catch(function () { cache[id] = mergeMinutes([fromLive]); return cache[id]; });
     return loading[id];
+  }
+  var stash = {};   // 端末に覚えてある分（開いた瞬間に出す用）
+  function stashKey(id) { return 'fp-simple-m:' + tenantId() + ':' + id; }
+  function stashPut(id, list) {
+    try {
+      var lite = list.slice(0, 20).map(function (r) {
+        var o = {}; for (var k in r) { if (k !== 'transcript' && k.charAt(0) !== '_') o[k] = r[k]; }
+        o.transcript = ''; if (typeof o.summary === 'string' && o.summary.length > 5000) o.summary = o.summary.slice(0, 5000);
+        return o;
+      });
+      localStorage.setItem(stashKey(id), JSON.stringify(lite));
+    } catch (e) {
+      // いっぱいになったら、覚えてある分をいったん全部消す
+      try { Object.keys(localStorage).forEach(function (k) { if (k.indexOf('fp-simple-m:') === 0) localStorage.removeItem(k); }); } catch (_) {}
+    }
+  }
+  function stashGet(id) {
+    if (id in stash) return stash[id];
+    var list = null;
+    try { var raw = localStorage.getItem(stashKey(id)); if (raw) { list = JSON.parse(raw); if (!Array.isArray(list)) list = null; } } catch (_) { list = null; }
+    if (list) list.forEach(function (r) { r._cid = id; r._stale = true; });
+    stash[id] = list;
+    return list;
   }
   function minutesOf(c) {
     var id = fsId(c);
     if (cache[id]) return cache[id];
     var ids = idsOf(c);
-    return mergeMinutes([liveMinutes().filter(function (r) { return belongs(r, c, ids); })]);
+    var live = liveMinutes().filter(function (r) { return belongs(r, c, ids); });
+    var old = stashGet(id);
+    return mergeMinutes(old ? [live, old] : [live]);
   }
 
   /* ---------- 画面の状態 ---------- */
@@ -417,7 +443,7 @@
     if (location.hash === h) { applyHash(); return; }
     location.hash = h;
   }
-  var TABS = ['minutes', 'todo', 'contracts', 'life', 'data', 'hub'];
+  var TABS = ['minutes', 'todo', 'contracts', 'reports', 'life', 'data', 'hub'];
   function applyHash() {
     var p = parseHash() || { view: 'home', cid: '', mid: '' };
     st.view = p.view; st.cid = p.cid; st.mid = p.mid; st.showTranscript = false;
@@ -689,11 +715,44 @@
 
   /* 契約（買ってもらった保険など）: tenants/{tid}/customers/{id}.contracts に入れる */
   var contractsCache = {};   // fsId -> [] （読み込み前は undefined）
+  var reportsCache = {};     // fsId -> [] つくった報告書（読み込み前は undefined）
+  /* つくった報告書を、お客様の記録にのこす（同じ議事録の分は上書き。新しい順に30件まで） */
+  async function saveReport(c, r, text, saved) {
+    try {
+      if (!c || !String(text || '').trim()) return;
+      var id = fsId(c); if (!id) return;
+      if (!reportsCache[id]) { var d0 = await api.getCustomer(id); if (!d0) return; reportsCache[id] = (Array.isArray(d0.reports) ? d0.reports : []).filter(Boolean); }
+      var key = saved ? saved.minuteKey : (r ? mKey(r) : '');
+      var when = saved ? saved.date : (r && mTime(r) ? mTime(r).toISOString() : '');
+      var title = saved ? saved.title : (r ? mTitle(r) : '面談の記録');
+      var list = reportsCache[id], prev = list.filter(function (x) { return x.minuteKey === key; })[0];
+      var body = String(text).slice(0, 8000);
+      if (prev && prev.text === body) return;
+      var entry = { id: prev ? prev.id : 'r' + Date.now().toString(36), minuteKey: key, title: title, date: when, text: body, createdAt: new Date().toISOString() };
+      var next = [entry].concat(list.filter(function (x) { return x.minuteKey !== key; })).slice(0, 30);
+      reportsCache[id] = next;
+      await api.saveCustomer(id, { reports: next }, false);
+    } catch (e) { console.warn('[fps] report save fail:', e && e.message); }
+  }
+  function reportsHtml(c) {
+    var list = reportsCache[fsId(c)];
+    if (!list) return '<div class="fps-loading">報告書を読み込んでいます…</div>';
+    if (!list.length) return '<div class="fps-empty" data-face="laptop">まだ報告書がありません。<br>議事録を開いて「会社への報告文をつくる」か「1枚の報告書（PDF）にする」を押すと、ここに残ります。</div>';
+    return banner('laptop', 'つくった報告書', '報告文をコピーしたり、PDFにしたりすると、ここに新しい順で残ります。押すと、また開けます。') +
+      '<div class="fps-mlist" style="margin-top:6px">' + list.map(function (x) {
+        var d = toDate(x.date), m = toDate(x.createdAt);
+        return '<button type="button" class="fps-mrow" data-report="' + esc(x.id) + '">' +
+          '<span class="fps-mrow-d num">' + (d ? '<b>' + (d.getMonth() + 1) + '/' + d.getDate() + '</b><small>' + WD[d.getDay()] + ' ' + fmtTime(d) + '</small>' : '<b>—</b>') + '</span>' +
+          '<span class="fps-mrow-b"><small>' + (m ? fmtDay(m) + ' に作成' : '報告書') + '</small><b>' + esc(x.title || '面談の記録') + '</b></span>' +
+          '<span class="fps-mrow-go" aria-hidden="true">›</span></button>';
+      }).join('') + '</div>';
+  }
   function loadContracts(c) {
     var id = fsId(c);
     if (contractsCache[id] || loading['c:' + id]) return;
     loading['c:' + id] = api.getCustomer(id).then(function (d) {
       contractsCache[id] = (d && Array.isArray(d.contracts) ? d.contracts : []).filter(Boolean);
+      if (!reportsCache[id]) reportsCache[id] = (d && Array.isArray(d.reports) ? d.reports : []).filter(Boolean);
       if (st.view === 'customer' && st.cid === id && !$('.fps-modal-bg')) render();
     });
   }
@@ -804,13 +863,13 @@
       r.next_meeting_suggestion ? '\n■ 次回に向けて\n' + r.next_meeting_suggestion : '',
       '', '以上'].filter(function (x, i, a) { return x !== '' || (a[i - 1] !== ''); }).join('\n').replace(/\n{3,}/g, '\n\n');
   }
-  function reportModal(r, c) {
-    modal('<h2>会社への報告文</h2><p>議事録を報告の形にならべました。足りないところは、ここで直してからコピーできます。</p>' +
-      '<textarea class="fps-input" id="fps-r-text" style="min-height:340px;font-size:14px;line-height:1.8">' + esc(reportText(r, c)) + '</textarea>' +
+  function reportModal(r, c, saved) {
+    modal('<h2>会社への報告文</h2><p>' + (saved ? '前につくった報告文です。' : '議事録を報告の形にならべました。') + '足りないところは、ここで直してからコピーできます。' + (c ? 'コピーやPDFにしたものは、' + esc(c.name) + ' 様の「報告書」に残ります。' : '') + '</p>' +
+      '<textarea class="fps-input" id="fps-r-text" style="min-height:340px;font-size:14px;line-height:1.8">' + esc(saved ? saved.text : reportText(r, c)) + '</textarea>' +
       '<div class="fps-actions"><button type="button" class="fps-btn is-quiet" data-close>とじる</button><button type="button" class="fps-btn" id="fps-r-pdf">1枚の報告書（PDF）にする</button><button type="button" class="fps-btn is-main" id="fps-r-copy">コピーする</button></div>', function (el) {
       $('[data-close]', el).addEventListener('click', closeModal);
-      $('#fps-r-pdf', el).addEventListener('click', function () { reportPdf($('#fps-r-text', el).value); });
-      $('#fps-r-copy', el).addEventListener('click', async function () { this.textContent = (await copyText($('#fps-r-text', el).value)) ? 'コピーしました' : 'コピーできませんでした'; });
+      $('#fps-r-pdf', el).addEventListener('click', function () { var t = $('#fps-r-text', el).value; saveReport(c, r, t, saved); reportPdf(t); });
+      $('#fps-r-copy', el).addEventListener('click', async function () { var t = $('#fps-r-text', el).value; this.textContent = (await copyText(t)) ? 'コピーしました' : 'コピーできませんでした'; saveReport(c, r, t, saved); });
     }, 'laptop');
   }
 
@@ -1004,6 +1063,7 @@
     if (!cache[id]) loadMinutes(c).then(function () { if (st.view === 'customer' && st.cid === id) render(); });
     loadContracts(c);
     var kn = contractsCache[id] ? contractsCache[id].length : 0;
+    var rn = reportsCache[id] ? reportsCache[id].length : 0;
     if (!isPhone() && st.tab === 'hub') st.tab = 'minutes';
     if (TABS.indexOf(st.tab) < 0) st.tab = isPhone() ? 'hub' : 'minutes';
     var mins = minutesOf(c), last = mins[0] ? mTime(mins[0]) : toDate(c.lastContact), next = nextSlotOf(c);
@@ -1022,6 +1082,8 @@
       body = lifeHtml(c);
     } else if (st.tab === 'contracts') {
       body = contractsHtml(c);
+    } else if (st.tab === 'reports') {
+      body = reportsHtml(c);
     } else if (st.tab === 'data') {
       body = kv ? banner('smile', 'お客様のこと', '生年月日やご家族を入れておくと、ライフプランに使われます。', isPhone() ? '' : '<button type="button" class="fps-btn is-quiet is-sm" data-act="edit-client">直す</button>') + '<dl class="fps-kv">' + kv + '</dl>' : '<div class="fps-empty">まだ情報がありません。「お客様の情報を直す」から入れられます。</div>';
     } else {
@@ -1053,12 +1115,13 @@
             hubCard('data-act="upload"', 'oh', '録音から作る', '録音を上げると議事録に', 't-mint') +
             hubCard('data-act="manual-minute"', 'idea', 'メモを取る', '録音がないときに書く', 't-sand') +
             hubCard('data-tab="contracts"', 'heart', '買った商品', kn ? kn + '件' : '保険などをのこす', 't-peach') +
+            hubCard('data-tab="reports"', 'laptop', '報告書を見る', rn ? rn + '件' : '会社への報告をのこす', 't-mint') +
             hubCard('data-tab="todo"', 'fight', 'やること', todos.length ? todos.length + '件' : 'ありません', 't-sand') +
             hubCard('data-tab="life"', 'kira', 'ライフプランを見る', 'ご家族と、進学・退職の節目', 't-mint') +
             hubCard('data-tab="data"', 'smile', 'お客様データ', '生年月日・ご家族・メモ', 't-peach') +
           '</div></div>';
       }
-      var ttl = { minutes: '議事録', todo: 'やること', contracts: '買った商品・契約', life: 'ライフプラン', data: 'お客様データ' }[st.tab] || '';
+      var ttl = { minutes: '議事録', todo: 'やること', contracts: '買った商品・契約', reports: '報告書', life: 'ライフプラン', data: 'お客様データ' }[st.tab] || '';
       return '<div class="fps-wrap"><div><a data-tab="hub" style="font-size:14px;font-weight:700">‹ ' + esc(c.name) + ' 様</a></div>' + (st.tab === 'minutes' ? pendBar : '') +
         '<section class="fps-panel" style="padding:18px 16px"><h1 class="fps-h" style="font-size:17px">' + ttl + '<small>' + esc(c.name) + ' 様</small></h1>' + body +
         (st.tab === 'data' ? '<button type="button" class="fps-btn is-quiet" data-act="edit-client" style="margin-top:14px;width:100%">お客様の情報を直す</button>' : '') + '</section></div>';
@@ -1090,6 +1153,7 @@
             '<button type="button" role="tab" data-tab="minutes" aria-selected="' + (st.tab === 'minutes') + '">議事録<span class="fps-chip plain num" style="margin-left:6px">' + mins.length + '</span></button>' +
             '<button type="button" role="tab" data-tab="todo" aria-selected="' + (st.tab === 'todo') + '">やること' + (todos.length ? '<span class="fps-chip ok num" style="margin-left:6px">' + todos.length + '</span>' : '') + '</button>' +
             '<button type="button" role="tab" data-tab="contracts" aria-selected="' + (st.tab === 'contracts') + '">契約' + (kn ? '<span class="fps-chip plain num" style="margin-left:6px">' + kn + '</span>' : '') + '</button>' +
+            '<button type="button" role="tab" data-tab="reports" aria-selected="' + (st.tab === 'reports') + '">報告書' + (rn ? '<span class="fps-chip plain num" style="margin-left:6px">' + rn + '</span>' : '') + '</button>' +
             '<button type="button" role="tab" data-tab="life" aria-selected="' + (st.tab === 'life') + '">ライフプラン</button>' +
             '<button type="button" role="tab" data-tab="data" aria-selected="' + (st.tab === 'data') + '">データ</button>' +
           '</div>' + body + '</div>' +
@@ -1459,6 +1523,7 @@
     if (el.hasAttribute('data-open-minute')) { return go('minute', el.dataset.openMinute || '_', el.dataset.mid); }
     if (el.dataset.tab) { e.preventDefault(); return go('customer', st.cid, el.dataset.tab === 'hub' ? '' : el.dataset.tab); }
     if (el.dataset.copy) { copyText(el.dataset.copy).then(function (ok) { toast(ok ? 'コピーしました' : 'コピーできませんでした'); }); return; }
+    if (el.dataset.report) { var rc = findClient(st.cid); var rr = rc && (reportsCache[fsId(rc)] || []).filter(function (x) { return x.id === el.dataset.report; })[0]; return rr ? reportModal(null, rc, rr) : null; }
     if (el.dataset.contract) { var cc = findClient(st.cid); var kk = cc && (contractsCache[fsId(cc)] || []).filter(function (x) { return x.id === el.dataset.contract; })[0]; return kk ? contractForm(cc, kk) : null; }
     var c = (st.view === 'customer' || st.view === 'minute') && st.cid && st.cid !== '_' ? findClient(st.cid) : null;
     switch (el.dataset.act) {
@@ -1469,7 +1534,7 @@
       case 'new-contract': return c ? contractForm(c, null) : null;
       case 'manual-minute': return c ? manualMinuteForm(c) : null;
       case 'report': { var r3 = findMinute(c, st.mid); return r3 ? reportModal(r3, c || clientOfMinute(r3)) : null; }
-      case 'report-pdf': { var r4 = findMinute(c, st.mid); return r4 ? reportPdf(reportText(r4, c || clientOfMinute(r4))) : null; }
+      case 'report-pdf': { var r4 = findMinute(c, st.mid); if (!r4) return null; var c4 = c || clientOfMinute(r4), t4 = reportText(r4, c4); saveReport(c4, r4, t4, null); return reportPdf(t4); }
       case 'edit-client': return c ? clientForm(c) : null;
       case 'toggle-transcript': st.showTranscript = !st.showTranscript; return render();
       case 'copy-minute': {
@@ -1550,7 +1615,15 @@
   // 最近の議事録が「そろった」と言えるか（最近やりとりしたお客様の分が読めたら、上のほうはもう変わらない）
   function recentReady() { return warmDone || (warmTotal > 0 && warmLoaded >= Math.min(6, warmTotal)); }
   var lastTouch = 0;
-  try { window.addEventListener('pointerdown', function () { lastTouch = Date.now(); }, { capture: true, passive: true }); } catch (_) {}
+  try { window.addEventListener('pointerdown', function (e) {
+    lastTouch = Date.now();
+    try {
+      var t = e.target && e.target.closest ? e.target.closest('[data-open-client],[data-open-minute]') : null;
+      var cid = t ? (t.getAttribute('data-open-client') || t.getAttribute('data-open-minute')) : '';
+      var cc = cid && cid !== '_' ? findClient(cid) : null;
+      if (cc && !cache[fsId(cc)]) loadMinutes(cc);
+    } catch (_) {}
+  }, { capture: true, passive: true }); } catch (_) {}
   function warmUp() {
     if (warming || !mounted) return;
     var list = clients().filter(function (c) { return !cache[fsId(c)]; });
@@ -1609,7 +1682,7 @@
   }
   function setEnabled(on) {
     lsSet(LS_KEY, on ? '1' : '0');
-    if (on) { switchButton(false); mount(); } else { unmount(); switchButton(true); }
+    if (on) { switchButton(false); mount(); } else { unmount(); switchButton(true); setTimeout(function () { try { window.dispatchEvent(new Event('resize')); } catch (_) {} }, 60); }
   }
   function loggedIn() { return !!(fp().auth && fp().auth.currentUser && tenantId()); }
 

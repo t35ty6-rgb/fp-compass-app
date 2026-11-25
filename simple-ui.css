@@ -576,3 +576,8 @@ html body #fps-root { overflow-x: hidden; }
   :is(#fps-root, #fps-modal-root, #fps-toast) .fps-usebar { flex-direction: column; }
   :is(#fps-root, #fps-modal-root, #fps-toast) .fps-usebar .fps-btn { flex: 0 0 auto; width: 100%; }
 }
+
+/* fps-fast：新しい画面の間は、前の画面を描かせない（裏で動く分の負担をなくす） */
+html.fps-on body .shell, html.fps-on body #mbFab, html.fps-on body #mbPanel { display: none !important; }
+#fps-root, #fps-modal-root { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+:is(#fps-root, #fps-modal-root) :is(.fps-btn, .fps-hub-card, .fps-mrow, .fps-tl-card, .fps-bnav button, [role=tab]):active { transform: scale(.975); filter: brightness(.97); transition: transform .05s; }
