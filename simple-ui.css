@@ -540,6 +540,13 @@ html.fps-on #fps-switch { display: none; }
 :is(#fps-root, #fps-modal-root, #fps-toast) .fps-when-c.is-hot b { color: var(--fps-red-text); }
 @media (max-width: 760px) { :is(#fps-root, #fps-modal-root, #fps-toast) .fps-modal [style*="grid-template-columns:minmax(0, :is(#fps-root, #fps-modal-root, #fps-toast) 1fr) 120px 110px"] { grid-template-columns: 1fr 1fr !important; } }
 
+/* ロゴは白い箱に入れず、帯に直接のせる（白ぬきの文字） */
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-logo { background: none !important; box-shadow: none; border-radius: 0; padding: 0 6px 0 2px; align-self: center; height: auto; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-logo img { display: block; height: 40px; width: auto; filter: drop-shadow(0 2px 0 rgba(120,20,0,.18)); transition: transform .18s ease; transform-origin: 20% 80%; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-logo:hover img { transform: rotate(-2deg) scale(1.03); }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-head { min-height: 56px; }
+@media (max-width: 760px) { :is(#fps-root, #fps-modal-root, #fps-toast) .fps-logo { padding: 0 2px; } :is(#fps-root, #fps-modal-root, #fps-toast) .fps-logo img { height: 36px; } }
+@media (prefers-reduced-motion: reduce) { :is(#fps-root, #fps-modal-root, #fps-toast) .fps-logo img { transition: none; } }
 /* ---------- 古い画面の見た目が入りこまないようにする ---------- */
 html body #fps-root, html body #fps-root *, html body #fps-modal-root, html body #fps-modal-root *, html body #fps-toast, html body #fps-toast *, html body #fps-switch {
   font-family: "Noto Sans JP", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif !important; text-transform: none; }

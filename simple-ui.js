@@ -559,7 +559,7 @@
     }).join('');
     return '<header class="fps-head">' +
       (st.view !== 'home' ? '<button type="button" class="fps-back" data-act="back" aria-label="前の画面に戻る"><span aria-hidden="true">‹</span>戻る</button>' : '') +
-      '<button type="button" class="fps-logo" data-go="home" aria-label="ハカドル ホームへ"><img src="mascot/logo.png' + MV + '" alt="ハカドル" height="34"></button>' +
+      '<button type="button" class="fps-logo" data-go="home" aria-label="ハカドル ホームへ"><img src="mascot/logo-white.png' + MV + '" alt="ハカドル" height="40"></button>' +
       '<nav class="fps-nav" aria-label="メニュー">' + nav + '</nav>' +
       '<div class="fps-head-right">' +
         '<button type="button" class="fps-menu-btn" id="fps-menu-btn" aria-haspopup="true">' + '<span class="fps-who">' + esc(who || 'メニュー') + '</span><span class="fps-who-sm">メニュー</span> ▾</button>' +
