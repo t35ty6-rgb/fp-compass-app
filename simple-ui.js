@@ -565,8 +565,9 @@
         '<button type="button" class="fps-menu-btn" id="fps-menu-btn" aria-haspopup="true">' + '<span class="fps-who">' + esc(who || 'メニュー') + '</span><span class="fps-who-sm">メニュー</span> ▾</button>' +
         '<div class="fps-menu" id="fps-menu">' +
           '<button type="button" data-act="account">' + (window.FP_NATIVE ? 'アカウントとアプリの設定' : 'アカウントの設定') + '</button>' +
-          '<button type="button" data-act="manual">使い方</button>' +
-          '<button type="button" data-act="classic">前の画面に切り替える</button>' +
+          // iPhoneアプリの中では、パソコン向けの「使い方」と「前の画面」は出さない
+          (window.FP_NATIVE ? '' : '<button type="button" data-act="manual">使い方</button>' +
+          '<button type="button" data-act="classic">前の画面に切り替える</button>') +
           '<button type="button" data-act="logout">ログアウト</button>' +
         '</div>' +
       '</div></header>';
