@@ -1460,14 +1460,28 @@
     onFile(file);
   }
   function startUpload(c) {
-    if (!window.FP_NATIVE || !window.Capacitor || typeof window.Capacitor.nativePromise !== 'function') { pickFile(c); return; }
+    var bridge = !!(window.FP_NATIVE && window.Capacitor && typeof window.Capacitor.nativePromise === 'function');
+    if (!bridge && !window.FP_NATIVE && !isPhone()) { pickFile(c); return; }
     modal('<h2>' + esc(c.name || 'お客様') + ' 様の録音を入れる</h2>' +
-      '<p>ボイスメモで録音を開き、「…」から「コピー」を押してから、下のボタンを押してください。ファイルに保存する必要はありません。</p>' +
+      '<p>ボイスメモで録音を開き、「…」から「コピー」を押します。そのあと、下の赤い枠を長押しして「ペースト」を押してください。ファイルに保存する必要はありません。</p>' +
       '<div class="fps-actions" style="flex-direction:column;align-items:stretch;gap:10px">' +
-      '<button type="button" class="fps-btn is-main" id="fps-paste-rec">コピーした録音を貼り付ける</button>' +
+      (bridge ? '<button type="button" class="fps-btn is-main" id="fps-paste-rec">コピーした録音を貼り付ける</button>' : '') +
+      '<div id="fps-paste-box" class="fps-pastebox" contenteditable="true" inputmode="none" role="textbox" aria-label="コピーした録音を貼り付ける場所">ここを長押しして「ペースト」</div>' +
       '<button type="button" class="fps-btn is-quiet" id="fps-pick-rec">ファイルから選ぶ</button></div>' +
       '<p style="margin:14px 0 0;font-size:13px">「ペーストを許可しますか」と出たら「許可」を押してください。送ったあと、数分で議事録ができます。</p>', function (el) {
-      $('#fps-paste-rec', el).addEventListener('click', function () { pasteRecording(c, this); });
+      var pb = $('#fps-paste-rec', el); if (pb) pb.addEventListener('click', function () { pasteRecording(c, this); });
+      var box = $('#fps-paste-box', el), hint = box.textContent;
+      // 長押し →「ペースト」で、コピーした録音のファイルをそのまま受け取る
+      box.addEventListener('paste', function (e) {
+        e.preventDefault();
+        var fl = (e.clipboardData && e.clipboardData.files) ? [].slice.call(e.clipboardData.files) : [];
+        var f = fl.filter(function (x) { return /^(audio|video)\//.test(x.type || '') || /\.(m4a|mp3|wav|aac|mp4|mov|webm|caf|qta)$/i.test(x.name || ''); })[0] || null;
+        box.textContent = hint; box.blur();
+        if (!f) { toast(fl.length ? 'コピーしたものが録音ではないようです' : '録音が見つかりません。ボイスメモで録音を「コピー」してから、もう一度ペーストしてください', 6500); return; }
+        closeModal(); uploadTarget = c; onFile(f);
+      });
+      box.addEventListener('beforeinput', function (e) { if (e.inputType && e.inputType.indexOf('insertFromPaste') !== 0) e.preventDefault(); });
+      box.addEventListener('input', function () { box.textContent = hint; });
       $('#fps-pick-rec', el).addEventListener('click', function () { closeModal(); pickFile(c); });
     }, 'laptop');
   }

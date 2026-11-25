@@ -581,3 +581,7 @@ html body #fps-root { overflow-x: hidden; }
 html.fps-on body .shell, html.fps-on body #mbFab, html.fps-on body #mbPanel { display: none !important; }
 #fps-root, #fps-modal-root { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 :is(#fps-root, #fps-modal-root) :is(.fps-btn, .fps-hub-card, .fps-mrow, .fps-tl-card, .fps-bnav button, [role=tab]):active { transform: scale(.975); filter: brightness(.97); transition: transform .05s; }
+
+/* コピーした録音を貼り付ける場所 */
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-pastebox { min-height: 76px; display: flex; align-items: center; justify-content: center; text-align: center; padding: 14px; border: 2px dashed #F02300; border-radius: 14px; background: #FFF4F0; color: #C41D00; font-size: 16px; font-weight: 700; outline: none; -webkit-user-select: text; user-select: text; caret-color: transparent; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-pastebox:focus { background: #FFE9E2; }
