@@ -37,6 +37,10 @@ const auth = getAuth(app), db = getFirestore(app);
 const $ = (id) => document.getElementById(id);
 const show = (id, on) => { $(id).hidden = !on; };
 let link = "";
+// ハカドルキー（?app=hakadoru）から来たときは、そちらのアプリに戻す
+const HK = new URLSearchParams(location.search).get("app") === "hakadoru";
+const SCHEME = HK ? "hakadorukey" : "kotobakey";
+if (HK) { document.title = "ハカドルキーとつなぐ | ハカドル"; document.querySelector("h1").textContent = "ハカドルキーとつなぐ"; }
 await setPersistence(auth, browserLocalPersistence).catch(() => {});
 getRedirectResult(auth).catch((e) => { $("msg").textContent = "ログインできませんでした"; });
 
@@ -55,7 +59,7 @@ onAuthStateChanged(auth, async (user) => {
       show("go", false); show("google", true); show("other", true);
       return;
     }
-    link = "kotobakey://fp?" + new URLSearchParams({ r: user.refreshToken, t: tenant, e: user.email || "" });
+    link = SCHEME + "://fp?" + new URLSearchParams({ r: user.refreshToken, t: tenant, e: user.email || "" });
     $("lead").textContent = (user.email || "") + " でつなぎます。";
     show("google", false); show("go", true); show("other", true);
   } catch (e) {
