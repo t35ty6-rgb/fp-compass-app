@@ -807,10 +807,137 @@
   function reportModal(r, c) {
     modal('<h2>会社への報告文</h2><p>議事録を報告の形にならべました。足りないところは、ここで直してからコピーできます。</p>' +
       '<textarea class="fps-input" id="fps-r-text" style="min-height:340px;font-size:14px;line-height:1.8">' + esc(reportText(r, c)) + '</textarea>' +
-      '<div class="fps-actions"><button type="button" class="fps-btn is-quiet" data-close>とじる</button><button type="button" class="fps-btn is-main" id="fps-r-copy">コピーする</button></div>', function (el) {
+      '<div class="fps-actions"><button type="button" class="fps-btn is-quiet" data-close>とじる</button><button type="button" class="fps-btn" id="fps-r-pdf">1枚の報告書（PDF）にする</button><button type="button" class="fps-btn is-main" id="fps-r-copy">コピーする</button></div>', function (el) {
       $('[data-close]', el).addEventListener('click', closeModal);
+      $('#fps-r-pdf', el).addEventListener('click', function () { reportPdf($('#fps-r-text', el).value); });
       $('#fps-r-copy', el).addEventListener('click', async function () { this.textContent = (await copyText($('#fps-r-text', el).value)) ? 'コピーしました' : 'コピーできませんでした'; });
     }, 'laptop');
+  }
+
+  /* ---------- 1枚の報告書（PDF） ---------- */
+  var SHEET_W = 794, SHEET_H = 1123;   // A4（96dpi）
+  function parseReport(text) {
+    var head = {}, secs = [], cur = null;
+    String(text || '').split('\n').forEach(function (ln) {
+      var t = ln.trim(), m;
+      if (/^【.*】$/.test(t) || t === '以上') return;
+      if ((m = t.match(/^■\s*(.+)$/))) { cur = { t: m[1].trim(), lines: [] }; secs.push(cur); return; }
+      if (!cur && (m = t.match(/^(日時|お客様|方法|担当|件名)[：:]\s*(.*)$/))) { head[m[1]] = m[2].trim(); return; }
+      if (cur && t) cur.lines.push(t);
+    });
+    return { head: head, secs: secs.filter(function (x) { return x.lines.length; }) };
+  }
+  function sheetSection(sec, kind) {
+    var num = 0;
+    var items = sec.lines.map(function (ln) {
+      var b = ln.match(/^[・\-•●▪]\s*(.+)$/);
+      if (kind === 'next') {
+        num++;
+        return '<div style="display:flex;gap:.7em;align-items:flex-start;margin:0 0 .55em"><span style="flex:0 0 auto;width:1.7em;height:1.7em;border-radius:50%;background:#F02300;color:#fff;font-weight:700;font-size:.85em;display:flex;align-items:center;justify-content:center">' + num + '</span><span style="flex:1;min-width:0;font-weight:600;line-height:1.6">' + esc(b ? b[1] : ln) + '</span></div>';
+      }
+      if (b) return '<div style="display:flex;gap:.55em;align-items:flex-start;margin:0 0 .35em"><span style="flex:0 0 auto;width:.42em;height:.42em;border-radius:50%;background:' + (kind === 'care' ? '#1D4A42' : '#C9B79A') + ';margin-top:.65em"></span><span style="flex:1;min-width:0;line-height:1.65">' + esc(b[1]) + '</span></div>';
+      return '<div style="margin:0 0 .4em;line-height:1.7">' + esc(ln) + '</div>';
+    }).join('');
+    var box = kind === 'next' ? 'background:#FFF4F0;border:1px solid #F8C9BD;' : kind === 'care' ? 'background:#EAF5F2;border:1px solid #C5E3DB;' : kind === 'plan' ? 'background:#F7F1E5;border:1px solid #E6DCC8;' : 'background:#fff;border:1px solid #E6DCC8;';
+    var col = kind === 'next' ? '#C41D00' : kind === 'care' ? '#1D4A42' : '#6B5A46';
+    return '<section style="' + box + 'border-radius:12px;padding:1.05em 1.2em .75em;margin:0 0 1em">' +
+      '<div style="font-size:.86em;font-weight:700;color:' + col + ';letter-spacing:.04em;margin:0 0 .6em">' + esc(sec.t) + '</div>' + items + '</section>';
+  }
+  function sheetHtml(text, fs) {
+    var p = parseReport(text), h = p.head;
+    var gist = null, side = [], main = [];
+    p.secs.forEach(function (x) {
+      if (!gist && /^要点/.test(x.t)) { gist = x; return; }
+      if (/次にやること|やること|宿題/.test(x.t)) { side.unshift({ s: x, k: 'next' }); return; }
+      if (/関心|懸念|気に/.test(x.t)) { side.push({ s: x, k: 'care' }); return; }
+      if (/次回/.test(x.t)) { side.push({ s: x, k: 'plan' }); return; }
+      main.push({ s: x, k: '' });
+    });
+    if (!main.length) { main = side; side = []; }
+    var tile = function (k, v) { return v ? '<div style="flex:1 1 0;min-width:0;background:#F7F1E5;border-radius:10px;padding:.7em .95em"><div style="font-size:.74em;color:#8A7762;font-weight:700;margin-bottom:.2em">' + k + '</div><div style="font-weight:700;line-height:1.45;word-break:break-all">' + esc(v) + '</div></div>' : ''; };
+    var now = new Date();
+    var cols = side.length
+      ? '<div style="display:flex;gap:1.3em;align-items:flex-start"><div style="flex:1.45 1 0;min-width:0">' + main.map(function (x) { return sheetSection(x.s, x.k); }).join('') + '</div><div style="flex:1 1 0;min-width:0">' + side.map(function (x) { return sheetSection(x.s, x.k); }).join('') + '</div></div>'
+      : main.map(function (x) { return sheetSection(x.s, x.k); }).join('');
+    return '<div data-sheet style="width:' + SHEET_W + 'px;height:' + SHEET_H + 'px;background:#fff;color:#2B2118;font-family:\'Noto Sans JP\',\'Hiragino Sans\',\'Yu Gothic\',sans-serif;font-size:' + fs + 'px;line-height:1.6;position:relative;overflow:hidden;box-sizing:border-box;text-align:left;letter-spacing:0">' +
+      '<div style="height:74px;background:#F02300;display:flex;align-items:center;justify-content:space-between;padding:0 38px">' +
+        '<img src="/mascot/logo-white.png" alt="" style="height:42px;width:auto;display:block">' +
+        '<div style="color:#fff;text-align:right"><div style="font-size:21px;font-weight:700;letter-spacing:.14em;line-height:1.2">面談報告書</div><div style="font-size:11px;opacity:.9;margin-top:3px">' + esc(h['日時'] || '') + '</div></div></div>' +
+      '<div data-body style="padding:26px 38px 0">' +
+        '<div style="font-size:1.62em;font-weight:700;line-height:1.4;margin:0 0 .65em">' + esc(h['件名'] || '面談の記録') + '</div>' +
+        '<div style="display:flex;gap:.7em;margin:0 0 1.1em">' + tile('お客様', h['お客様']) + tile('日時', h['日時']) + tile('方法', h['方法']) + tile('担当', h['担当']) + '</div>' +
+        (gist ? '<section style="background:#EAF5F2;border-left:6px solid #1D4A42;border-radius:0 12px 12px 0;padding:.95em 1.2em;margin:0 0 1.1em"><div style="font-size:.86em;font-weight:700;color:#1D4A42;letter-spacing:.04em;margin-bottom:.35em">要点</div><div style="font-size:1.08em;font-weight:600;line-height:1.75">' + gist.lines.map(esc).join('<br>') + '</div></section>' : '') +
+        cols +
+      '</div>' +
+      '<div style="position:absolute;left:38px;right:38px;bottom:20px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid #E6DCC8;padding-top:9px;font-size:10.5px;color:#8A7762">' +
+        '<span style="display:flex;align-items:center;gap:7px"><img src="/mascot/smile.png" alt="" style="height:22px;width:auto">ハカドルで作成</span>' +
+        '<span>作成日 ' + now.getFullYear() + '年' + (now.getMonth() + 1) + '月' + now.getDate() + '日</span></div>' +
+      '</div>';
+  }
+  /* 1枚に収まる文字の大きさをさがして、報告書を組む（画面の外に置く） */
+  function buildSheet(text) {
+    var host = document.getElementById('fps-sheet-host');
+    if (host) host.remove();
+    host = document.createElement('div'); host.id = 'fps-sheet-host';
+    host.style.cssText = 'position:fixed;left:-10000px;top:0;width:' + SHEET_W + 'px;height:' + SHEET_H + 'px;pointer-events:none;z-index:-1';
+    document.body.appendChild(host);
+    var fs = 14.5, limit = SHEET_H - 74 - 50, cut = false;
+    for (;;) {
+      host.innerHTML = sheetHtml(text, fs);
+      var body = host.querySelector('[data-body]');
+      if (body.offsetHeight <= limit || fs <= 8) { cut = body.offsetHeight > limit; break; }
+      fs -= 0.5;
+    }
+    return { host: host, node: host.firstChild, fontSize: fs, cut: cut };
+  }
+  var scriptCache = {};
+  function loadScript(url) {
+    if (!scriptCache[url]) scriptCache[url] = new Promise(function (ok, ng) {
+      var sc = document.createElement('script'); sc.src = url; sc.async = true;
+      sc.onload = ok; sc.onerror = function () { delete scriptCache[url]; ng(new Error('読み込めませんでした')); };
+      document.head.appendChild(sc);
+    });
+    return scriptCache[url];
+  }
+  async function reportPdf(text) {
+    var p = parseReport(text);
+    var name = ('面談報告_' + String(p.head['お客様'] || '').replace(/\s*様$/, '') + '_' + String(p.head['日時'] || '').replace(/[（(].*$/, '')).replace(/[\\/:*?"<>|\s]/g, '') + '.pdf';
+    modal('<h2>1枚の報告書をつくっています…</h2><div class="fps-loading">数秒かかります</div>', null, null);
+    try {
+      await Promise.all([
+        window.html2canvas ? null : loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'),
+        (window.jspdf && window.jspdf.jsPDF) ? null : loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js')
+      ]);
+      try { if (document.fonts && document.fonts.ready) await document.fonts.ready; } catch (_) {}
+      var sh = buildSheet(text);
+      await Promise.all([].map.call(sh.node.querySelectorAll('img'), function (im) { return im.complete ? null : new Promise(function (r) { im.onload = im.onerror = r; }); }));
+      var canvas = await window.html2canvas(sh.node, { scale: 2, backgroundColor: '#ffffff', useCORS: true, logging: false, width: SHEET_W, height: SHEET_H, windowWidth: SHEET_W });
+      sh.host.remove();
+      var doc = new window.jspdf.jsPDF({ unit: 'pt', format: 'a4', compress: true });
+      doc.addImage(canvas.toDataURL('image/jpeg', 0.93), 'JPEG', 0, 0, 595.28, 841.89);
+      var blob = doc.output('blob');
+      modal('<h2>1枚の報告書ができました</h2>' +
+        (sh.cut ? '<p>内容が多いため、下のほうが入りきっていません。「会社への報告文をつくる」で文章を短くしてから作ると、1枚に収まります。</p>' : '<p>A4・1枚のPDFです。会社へのメールや社内チャットに、そのまま添付できます。</p>') +
+        '<div style="border:1px solid var(--fps-line,#E6DCC8);border-radius:10px;overflow:hidden;background:#fff"><img alt="報告書の見本" src="' + canvas.toDataURL('image/jpeg', 0.7) + '" style="display:block;width:100%;height:auto"></div>' +
+        '<div class="fps-actions"><button type="button" class="fps-btn is-quiet" data-close>とじる</button><button type="button" class="fps-btn is-main" id="fps-pdf-save">' + ((isPhone() || window.FP_NATIVE) ? '保存・共有する' : 'PDFを保存する') + '</button></div>', function (el) {
+        $('[data-close]', el).addEventListener('click', closeModal);
+        $('#fps-pdf-save', el).addEventListener('click', async function () {
+          var file = null;
+          try { file = new File([blob], name, { type: 'application/pdf' }); } catch (_) {}
+          if (file && (isPhone() || window.FP_NATIVE) && navigator.canShare && navigator.canShare({ files: [file] })) {
+            try { await navigator.share({ files: [file], title: name }); } catch (_) {}
+            return;
+          }
+          var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
+          document.body.appendChild(a); a.click(); a.remove();
+          setTimeout(function () { try { URL.revokeObjectURL(a.href); } catch (_) {} }, 60000);
+          this.textContent = '保存しました';
+        });
+      }, null);
+    } catch (e) {
+      var hh = document.getElementById('fps-sheet-host'); if (hh) hh.remove();
+      closeModal(); toast('報告書をつくれませんでした。通信を確かめて、もう一度お試しください', 6000);
+    }
   }
 
   var phoneMq = window.matchMedia ? window.matchMedia('(max-width: 760px)') : { matches: false };
@@ -1016,6 +1143,8 @@
               '<span><small>お客様</small><b>' + esc(c ? c.name : (r.customerName || '—')) + ' 様</b></span>' +
               '<span><small>方法</small><b>' + esc(mKind(r)) + (r.zoomDurationMin ? '・' + esc(r.zoomDurationMin) + '分' : '') + '</b></span>' +
               '<span><small>やること</small><b class="num">' + tasks.length + '件</b></span></div></header>' +
+          '<div class="fps-usebar"><button type="button" class="fps-btn is-main" data-act="report">会社への報告文をつくる</button>' +
+            '<button type="button" class="fps-btn" data-act="report-pdf">1枚の報告書（PDF）にする</button></div>' +
           (gist ? '<section class="fps-gist">' + M('idea', 70, 'corner') + '<p class="fps-eyebrow" style="margin-bottom:8px">ひとことで言うと</p><p>' + esc(gist) + '</p></section>' : '') +
           '<div id="fps-sum">' + renderSummary(r.summary || r.transcript_summary || '') + '</div>' +
           ((function () { var body0 = String(r.summary || r.transcript_summary || ''); if (/^#{1,4}\s*.*(関心|懸念|気にな)/m.test(body0)) kc = []; return (kc.length || (r.next_meeting_suggestion && !/^#{1,4}\s*.*次回/m.test(body0))); })() ? renderSummary((kc.length ? '## お客様の関心ごと\n' + kc.map(function (x) { return '- ' + x; }).join('\n') + '\n' : '') + (r.next_meeting_suggestion && !/^#{1,4}\s*.*次回/m.test(String(r.summary || '')) ? '## 次回に向けて\n' + r.next_meeting_suggestion : '')) : '') +
@@ -1027,6 +1156,7 @@
             (tasks.length ? '<div class="fps-sec2 k-next bare"><div class="fps-sec-body">' + tasks.map(function (t, i) { return '<div class="fps-item"><i class="num">' + (i + 1) + '</i><span class="v">' + esc(t) + '</span></div>'; }).join('') + '</div></div>' : '<div class="fps-empty" data-face="smile" style="padding:16px 0 4px">この面談からの宿題はありません。</div>') + '</section>' +
           '<section class="fps-panel" style="padding:20px 22px;display:flex;flex-direction:column;gap:10px"><h2 class="fps-h">この議事録を使う' + M('laptop', 44, 'h-m') + '</h2>' +
             '<button type="button" class="fps-btn is-main" data-act="report">会社への報告文をつくる</button>' +
+            '<button type="button" class="fps-btn" data-act="report-pdf">1枚の報告書（PDF）にする</button>' +
             '<button type="button" class="fps-btn" data-act="copy-minute">要点をコピーする</button>' +
             '<button type="button" class="fps-btn is-quiet" data-act="edit-minute">内容を直す</button>' +
             '<p class="fps-sub" style="margin:0;font-size:13px">報告文は、日時・お客様・要点・次にやることを報告の形にならべたものです。コピーして、メールや社内チャットに貼れます。</p></section>' +
@@ -1339,6 +1469,7 @@
       case 'new-contract': return c ? contractForm(c, null) : null;
       case 'manual-minute': return c ? manualMinuteForm(c) : null;
       case 'report': { var r3 = findMinute(c, st.mid); return r3 ? reportModal(r3, c || clientOfMinute(r3)) : null; }
+      case 'report-pdf': { var r4 = findMinute(c, st.mid); return r4 ? reportPdf(reportText(r4, c || clientOfMinute(r4))) : null; }
       case 'edit-client': return c ? clientForm(c) : null;
       case 'toggle-transcript': st.showTranscript = !st.showTranscript; return render();
       case 'copy-minute': {
@@ -1418,6 +1549,8 @@
   }
   // 最近の議事録が「そろった」と言えるか（最近やりとりしたお客様の分が読めたら、上のほうはもう変わらない）
   function recentReady() { return warmDone || (warmTotal > 0 && warmLoaded >= Math.min(6, warmTotal)); }
+  var lastTouch = 0;
+  try { window.addEventListener('pointerdown', function () { lastTouch = Date.now(); }, { capture: true, passive: true }); } catch (_) {}
   function warmUp() {
     if (warming || !mounted) return;
     var list = clients().filter(function (c) { return !cache[fsId(c)]; });
@@ -1430,9 +1563,16 @@
       var a = document.activeElement, typing = a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA');
       if ((st.view === 'home' || st.view === 'minutes' || st.view === 'customers') && !typing && !$('.fps-modal-bg')) render();
     };
+    var waitTimer = null;
     var next = function () {
       if (!mounted) { warming = false; return; }
-      while (running < 4 && i < list.length) {
+      // さわった直後・お客様や議事録を開いている間は、裏の読み込みを待たせる（押した操作を先に通す）
+      var busyView = (st.view === 'customer' || st.view === 'minute') && Date.now() - lastTouch < 15000;
+      if (i < list.length && (Date.now() - lastTouch < 3500 || busyView || !!$('.fps-modal-bg'))) {
+        if (!waitTimer) waitTimer = setTimeout(function () { waitTimer = null; next(); }, 1500);
+        return;
+      }
+      while (running < 2 && i < list.length) {
         running++;
         loadMinutes(list[i++]).then(function () {
           running--; warmLoaded++;
@@ -1492,5 +1632,5 @@
   setInterval(boot, 1500);
   boot();
 
-  window.FPSimple = { on: function () { setEnabled(true); }, off: function () { setEnabled(false); }, render: render, _api: api, _state: st };
+  window.FPSimple = { _sheet: { build: buildSheet, html: sheetHtml, parse: parseReport, pdf: reportPdf }, on: function () { setEnabled(true); }, off: function () { setEnabled(false); }, render: render, _api: api, _state: st };
 })();

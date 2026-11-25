@@ -568,3 +568,11 @@ html.fps-on body .sidebar, html.fps-on body #mobile-topbar, html.fps-on body #mo
 
 html body #fps-root { overflow-x: hidden; }
 :is(#fps-root, #fps-modal-root) .fps-eyebrow { line-height: 1.6; }
+
+/* 議事録のいちばん上：よく使うボタン */
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-usebar { display: flex; gap: 10px; flex-wrap: wrap; }
+:is(#fps-root, #fps-modal-root, #fps-toast) .fps-usebar .fps-btn { flex: 1 1 220px; min-height: 52px; font-size: 16px; }
+@media (max-width: 760px) {
+  :is(#fps-root, #fps-modal-root, #fps-toast) .fps-usebar { flex-direction: column; }
+  :is(#fps-root, #fps-modal-root, #fps-toast) .fps-usebar .fps-btn { flex: 0 0 auto; width: 100%; }
+}
