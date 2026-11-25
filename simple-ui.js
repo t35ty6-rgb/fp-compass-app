@@ -1232,9 +1232,50 @@
     });
   }
 
-  function startUpload(c) {
+  function pickFile(c) {
     uploadTarget = c;
     var inp = $('#fps-file', root); if (inp) { inp.value = ''; inp.click(); }
+  }
+  function nativeCall(method, opts) {
+    var cap = window.Capacitor;
+    if (!cap || typeof cap.nativePromise !== 'function') return Promise.reject(new Error('no-bridge'));
+    return cap.nativePromise('FPNative', method, opts || {});
+  }
+  /* iPhoneアプリ：ボイスメモでコピーした録音を、そのまま貼り付けて送る */
+  async function pasteRecording(c, btn) {
+    var info = null;
+    if (btn) { btn.disabled = true; btn.textContent = '読み込んでいます…'; }
+    try { info = await nativeCall('pasteAudio', {}); }
+    catch (e) { if (btn) { btn.disabled = false; btn.textContent = 'コピーした録音を貼り付ける'; } toast('アプリを新しくすると、貼り付けが使えます。今回は「ファイルから選ぶ」をお使いください', 6000); return; }
+    if (!info || !info.ok || !info.size) {
+      if (btn) { btn.disabled = false; btn.textContent = 'コピーした録音を貼り付ける'; }
+      toast('コピーした録音が見つかりません。ボイスメモで録音を選んで「コピー」してから、もう一度押してください', 7000);
+      return;
+    }
+    closeModal();
+    var file = {
+      name: info.name || '録音.m4a', size: info.size, type: info.type || 'audio/m4a',
+      _nativePut: function (url, type) {
+        return nativeCall('uploadPasted', { url: url, contentType: type }).then(function (r) {
+          var st = r && r.status;
+          if (!(st >= 200 && st < 300)) throw new Error('Storage PUT HTTP ' + st);
+        }, function (e) { throw new Error('Storage PUT network error (' + ((e && e.message) || e) + ')'); });
+      }
+    };
+    uploadTarget = c;
+    onFile(file);
+  }
+  function startUpload(c) {
+    if (!window.FP_NATIVE || !window.Capacitor || typeof window.Capacitor.nativePromise !== 'function') { pickFile(c); return; }
+    modal('<h2>' + esc(c.name || 'お客様') + ' 様の録音を入れる</h2>' +
+      '<p>ボイスメモで録音を開き、「…」から「コピー」を押してから、下のボタンを押してください。ファイルに保存する必要はありません。</p>' +
+      '<div class="fps-actions" style="flex-direction:column;align-items:stretch;gap:10px">' +
+      '<button type="button" class="fps-btn is-main" id="fps-paste-rec">コピーした録音を貼り付ける</button>' +
+      '<button type="button" class="fps-btn is-quiet" id="fps-pick-rec">ファイルから選ぶ</button></div>' +
+      '<p style="margin:14px 0 0;font-size:13px">「ペーストを許可しますか」と出たら「許可」を押してください。送ったあと、数分で議事録ができます。</p>', function (el) {
+      $('#fps-paste-rec', el).addEventListener('click', function () { pasteRecording(c, this); });
+      $('#fps-pick-rec', el).addEventListener('click', function () { closeModal(); pickFile(c); });
+    }, 'laptop');
   }
   async function onFile(file) {
     var c = uploadTarget; uploadTarget = null;

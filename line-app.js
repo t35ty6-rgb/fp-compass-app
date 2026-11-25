@@ -4768,6 +4768,10 @@
           if (panel) { panel.dataset.customerId = customerId; panel.dataset.bookingTs = bookingTs; }
         } catch (_) {}
         // 4. PUT to signed URL (browser direct → Cloud Storage、 server memory pressure 回避)
+        if (file && typeof file._nativePut === 'function') {
+          // iPhoneアプリ：コピーした録音を、アプリ本体が直接送る
+          await file._nativePut(uploadUrl, file.type || 'audio/m4a');
+        } else
         await new Promise((resolve, reject) => {
           const xhr = new XMLHttpRequest();
           let lastPct = 0;
