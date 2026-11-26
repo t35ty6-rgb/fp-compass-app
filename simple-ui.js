@@ -599,13 +599,39 @@
       '</div></header>';
   }
 
+  /* 議事録の1行（日付のカード・お客様・方法・題名・ひとこと・やること） */
+  function dayTile(d) {
+    if (!d) return '<span class="fps-mr-date"><b>—</b></span>';
+    var now = new Date(), t0 = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    var dd = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime(), diff = Math.round((t0 - dd) / 86400000);
+    var lab = diff === 0 ? '今日' : diff === 1 ? '昨日' : (d.getMonth() + 1) + '月';
+    return '<span class="fps-mr-date num' + (diff === 0 ? ' is-today' : diff === 1 ? ' is-yday' : '') + '"><i>' + lab + '</i><b>' + d.getDate() + '</b><small>' + WD[d.getDay()] + ' ' + fmtTime(d) + '</small></span>';
+  }
+  var KIND_IC = {
+    '録音': '<svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v3"/></svg>',
+    'Zoom': '<svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="13" height="12" rx="2.5"/><path d="M15 10.5l6-3.5v10l-6-3.5z"/></svg>',
+    '手入力': '<svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l1-4L16 5l3 3L8 19z"/></svg>'
+  };
+  function kindChip(k) { return '<span class="fps-mr-kind k-' + ({ '録音': 'rec', 'Zoom': 'zoom', '手入力': 'memo' }[k] || 'rec') + '">' + (KIND_IC[k] || '') + esc(k) + '</span>'; }
   function minuteRow(r, c, withName) {
-    var d = mTime(r);
-    return '<button type="button" class="fps-mrow" data-open-minute="' + esc(c ? fsId(c) : '') + '" data-mid="' + esc(mKey(r) + (c ? '' : '~~' + whoOf(r))) + '">' +
-      '<span class="fps-mrow-d num">' + (d ? '<b>' + (d.getMonth() + 1) + '/' + d.getDate() + '</b><small>' + WD[d.getDay()] + ' ' + fmtTime(d) + '</small>' : '<b>—</b>') + '</span>' +
-      '<span class="fps-mrow-b">' + (withName ? '<small>' + (c ? esc(c.name) + ' 様' : (String(r.customerName || '').trim() && String(r.customerName).trim() !== 'お客様' ? esc(r.customerName) + ' 様' : 'お客様未設定')) + ' ・ ' + esc(mKind(r)) + '</small>' : '<small>' + esc(mKind(r)) + '</small>') +
-        '<b>' + esc(mTitle(r)) + '</b></span>' +
-      '<span class="fps-mrow-go" aria-hidden="true">›</span></button>';
+    var d = mTime(r), k = mKind(r), title = mTitle(r), tasks = mTasks(r);
+    var gist = mGist(r, 70);
+    if (title === '面談の記録' && gist) { title = gist.replace(/[。．.]\s*$/, ''); gist = ''; }
+    if (gist && (gist.indexOf(title) === 0 || title.indexOf(gist.slice(0, 20)) === 0)) gist = '';
+    var fresh = d && Date.now() - d.getTime() < 36 * 3600000;
+    var nm = c ? c.name : (String(r.customerName || '').trim() && String(r.customerName).trim() !== 'お客様' ? r.customerName : '');
+    return '<button type="button" class="fps-mrow is-rich" data-open-minute="' + esc(c ? fsId(c) : '') + '" data-mid="' + esc(mKey(r) + (c ? '' : '~~' + whoOf(r))) + '">' +
+      dayTile(d) +
+      '<span class="fps-mr-body">' +
+        '<span class="fps-mr-top">' +
+          (withName ? (c ? avatar(c, 24, 11) : '<span class="fps-avatar is-none" style="width:24px;height:24px;font-size:11px">?</span>') + '<em>' + (nm ? esc(nm) + ' 様' : 'お客様未設定') + '</em>' : '') +
+          kindChip(k) + (fresh ? '<span class="fps-mr-new">NEW</span>' : '') +
+        '</span>' +
+        '<b class="fps-mr-title">' + esc(title) + '</b>' +
+        (gist ? '<span class="fps-mr-gist">' + esc(gist) + '</span>' : '') +
+      '</span>' +
+      '<span class="fps-mr-side">' + (tasks.length ? '<span class="fps-mr-todo"><small>やること</small><b class="num">' + tasks.length + '</b></span>' : '') + '<span class="fps-mrow-go" aria-hidden="true">›</span></span>' +
+      '</button>';
   }
   function minuteCard(r, c) {
     var d = mTime(r), tasks = mTasks(r);
@@ -622,8 +648,8 @@
   }
   function pendingRow(p) {
     var d = toDate(p.at);
-    return '<div class="fps-mrow is-wait"><span class="fps-mrow-d num">' + (d ? '<b>' + (d.getMonth() + 1) + '/' + d.getDate() + '</b><small>' + WD[d.getDay()] + ' ' + fmtTime(d) + '</small>' : '<b>—</b>') + '</span>' +
-      '<span class="fps-mrow-b"><small>' + esc(p.name || 'お客様') + ' 様 ・ ' + esc(p.kind) + '</small><b>いま議事録を作っています</b></span>' +
+    return '<div class="fps-mrow is-rich is-wait">' + dayTile(d) +
+      '<span class="fps-mr-body"><span class="fps-mr-top"><em>' + esc(p.name || 'お客様') + ' 様</em>' + kindChip(p.kind) + '</span><b class="fps-mr-title">いま議事録を作っています</b><span class="fps-mr-gist">できたら、ここに中身が出ます（5〜15分ほど）</span></span>' +
       '<span class="fps-chip wait">' + M('laptop', 24) + '作成中</span></div>';
   }
 
@@ -665,7 +691,7 @@
           '<span class="fps-mrow-d num">' + (d ? '<b>' + (d.getMonth() + 1) + '/' + d.getDate() + '</b><small>' + WD[d.getDay()] + ' ' + fmtTime(d) + '</small>' : '<b>—</b>') + '</span>' +
           '<span class="fps-mrow-b"><small>' + (c ? esc(c.name) + ' 様' : '') + ' ・ ' + esc(x.kind || '') + '</small><b>' + esc(x.t || '面談の記録') + '</b></span><span class="fps-mrow-go" aria-hidden="true">›</span></button>';
       }).join('');
-    var recentNote = ready ? '' : (snap.length ? '<p class="fps-sub" style="margin:10px 0 0;font-size:12px">新しい議事録がないか確認しています…</p>' : '');
+    var recentNote = ready ? '' : (snap.length ? '<p class="fps-mr-note"><i></i>新しい議事録がないか確認しています…</p>' : '');
 
     return '<div class="fps-wrap">' +
       '<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">' +
